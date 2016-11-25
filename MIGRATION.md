@@ -4,7 +4,7 @@
 
 1.0.x
 
-```
+```java
 Radar.init(this);
 
 Radar.startTracking(userId, description);
@@ -12,7 +12,7 @@ Radar.startTracking(userId, description);
 Radar.trackOnce(userId, description);
 ```
 
-```
+```xml
 <intent-filter>
   <action android:name="com.onradar.sdk.EVENTS_RECEIVED" />
 </intent-filter>
@@ -20,7 +20,7 @@ Radar.trackOnce(userId, description);
 
 1.1.0
 
-```
+```java
 Radar.initialize(this);
 
 Radar.setUserId(userId);
@@ -36,7 +36,7 @@ Radar.trackOnce(new RadarCallback() {
 });
 ```
 
-```
+```xml
 <intent-filter>
   <action android:name="com.onradar.sdk.RECEIVED" />
 </intent-filter>
