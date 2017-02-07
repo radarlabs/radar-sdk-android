@@ -1,6 +1,6 @@
 ![Radar](https://raw.githubusercontent.com/RadarLabs/RadarSDK-Android/master/logo.png)
 
-[Radar](https://www.onradar.com) is a full-stack developer toolkit for location context and tracking. We help companies collect, analyze, and act on location data.
+[Radar](https://www.onradar.com) is the location platform for mobile apps. We help companies collect, analyze, and act on location data.
 
 ## Documentation
 
