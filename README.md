@@ -1,6 +1,6 @@
 ![Radar](https://raw.githubusercontent.com/RadarLabs/RadarSDK-Android/master/logo.png)
 
-[Radar](https://www.onradar.com) is the free location platform for mobile apps.
+[Radar](https://www.onradar.com) is the location platform for mobile apps.
 
 ## Documentation
 
