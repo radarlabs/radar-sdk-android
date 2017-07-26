@@ -1,5 +1,9 @@
 # Migration guides
 
+## 1.1.x to 1.2.0
+
+No code or project metadata changes are required to upgrade from 1.1.x to 1.2.0.
+
 ## 1.0.x to 1.1.0
 
 1.0.x
