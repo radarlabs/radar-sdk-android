@@ -59,8 +59,13 @@ public class MainActivity extends AppCompatActivity {
 
                             RadarGeofence[] geofences = user.getGeofences();
                             for (RadarGeofence geofence : geofences) {
-                                String geofenceString = Utils.stringForGeofence(geofence);
+                                String geofenceString = geofence.description;
                                 Log.i(TAG, geofenceString);
+                            }
+
+                            if (user.place != null) {
+                                String placeString = place.name;
+                                Log.i(TAG, placeString);
                             }
 
                             for (RadarEvent event : events) {

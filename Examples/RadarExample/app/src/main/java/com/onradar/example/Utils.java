@@ -41,17 +41,31 @@ class Utils {
 
     }
 
-    static String stringForGeofence(RadarGeofence geofence) {
-        String description = geofence.getDescription();
-        String tag = geofence.getTag() == null ? "null" : geofence.getTag();
-        String externalId = geofence.getExternalId() == null ? "null" : geofence.getExternalId();
-        return description + " / " + tag + " / " + externalId;
-    }
-
     static String stringForEvent(RadarEvent event) {
-        String type = event.getType() == RadarEvent.RadarEventType.USER_ENTERED_GEOFENCE ? "user.entered_geofence" : "user.exited_geofence";
-        String description = event.getGeofence().getDescription();
-        return type + " / " + description;
+        switch (event.getType()) {
+            case USER_ENTERED_GEOFENCE:
+                return "Entered geofence " + (event.getGeofence() != null ? event.getGeofence().getDescription() : "-");
+            case USER_EXITED_GEOFENCE:
+                return "Exited geofence " + (event.getGeofence() != null ? event.getGeofence().getDescription() : "-");
+            case USER_ENTERED_HOME:
+                return "Entered home";
+            case USER_EXITED_HOME:
+                return "Exited home";
+            case USER_ENTERED_OFFICE:
+                return "Entered office";
+            case USER_EXITED_OFFICE:
+                return "Exited office";
+            case USER_STARTED_TRAVELING:
+                return "Started traveling";
+            case USER_STOPPED_TRAVELING:
+                return "Stopped traveling";
+            case USER_ENTERED_PLACE:
+                return "Entered place " + (event.getPlace() != null ? event.getPlace().getName() : "-");
+            case USER_EXITED_PLACE:
+                return "Exited place " + (event.getPlace() != null ? event.getPlace().getName() : "-");
+            default:
+                return "-";
+        }
     }
 
 }
