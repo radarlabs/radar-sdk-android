@@ -1,10 +1,10 @@
 ![Radar](https://raw.githubusercontent.com/radarlabs/radar-sdk-android/master/logo.png?v=3)
 
-[Radar](https://www.onradar.com) is the location platform for mobile apps.
+[Radar](https://radar.io) is the location platform for mobile apps.
 
 ## Documentation
 
-See the full documentation [here](https://www.onradar.com/documentation).
+See the full documentation [here](https://radar.io/documentation).
 
 ## Migrating
 
@@ -18,4 +18,4 @@ To run the example app, clone this repository, add your publishable API key in `
 
 ## Support
 
-Have questions? We're here to help! Email us at [support@onradar.com](mailto:support@onradar.com).
+Have questions? We're here to help! Email us at [support@radar.io](mailto:support@radar.io).
