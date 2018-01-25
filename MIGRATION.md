@@ -1,5 +1,11 @@
 # Migration guides
 
+## 1.2.x to 1.3.0
+
+`userId` on `RadarUser` is now nullable and `reidentifyUser()` has been removed. To reidentify a user, simply call `setUserId()` with the new `userId`.
+
+No other code changes are required to upgrade from 1.2.x to 1.3.0.
+
 ## 1.1.x to 1.2.0
 
 No code changes are required to upgrade from 1.1.x to 1.2.0.
