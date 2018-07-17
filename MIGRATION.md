@@ -3,7 +3,7 @@
 ## 1.3.x to 2.0.x
 
 - The package has been renamed from `com.onradar.sdk.*` to `io.radar.sdk.*`.
-- The `Radar.initialize(activity)` and `Radar.initialize(activity, publishableKey)` methods have been removed. Use `Radar.initialize(publishableKey)` instead.
+- The `Radar.initialize(activity)` and `Radar.initialize(activity, publishableKey)` methods have been removed. Call `Radar.initialize(publishableKey)` instead.
 - The `RadarReceiver` action has been renamed from `com.onradar.sdk.RECEIVED` to `io.radar.sdk.RECEIVED`. Update the `intent-filter` in your manifest.
 - The `RadarCallback` class has moved from `com.onradar.sdk.RadarCallback` to `io.radar.sdk.Radar.RadarCallback`, and the `onCallback()` method has been renamed to `onComplete()`.
 - The `Radar.requestPermissions()` and `Radar.checkSelfPermissions()` helper methods have been removed. Use `ActivityCompat` and `ContextCompat` to request location permissions instead. https://developer.android.com/training/permissions/requesting
@@ -13,4 +13,4 @@
 ## 1.2.x to 1.3.x
 
 - `userId` on `RadarUser` is now nullable.
-- The `Radar.reidentifyUser()` method has been removed. To reidentify a user, simply call `setUserId()` with the new `userId`.
+- The `Radar.reidentifyUser()` method has been removed. To reidentify a user, call `setUserId()` with the new `userId` instead.
