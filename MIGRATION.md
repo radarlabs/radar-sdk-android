@@ -1,53 +1,16 @@
 # Migration guides
 
-## 1.2.x to 1.3.0
+## 1.3.x to 2.0.x
 
-`userId` on `RadarUser` is now nullable and `reidentifyUser()` has been removed. To reidentify a user, simply call `setUserId()` with the new `userId`.
+- The package has been renamed from `com.onradar.sdk.*` to `io.radar.sdk.*`.
+- The `Radar.initialize(activity)` and `Radar.initialize(activity, publishableKey)` methods have been removed. Use `Radar.initialize(publishableKey)` instead.
+- The `RadarReceiver` action has been renamed from `com.onradar.sdk.RECEIVED` to `io.radar.sdk.RECEIVED`. Update the `intent-filter` in your manifest.
+- The `RadarCallback` class has moved from `com.onradar.sdk.RadarCallback` to `io.radar.sdk.Radar.RadarCallback`, and the `onCallback()` method has been renamed to `onComplete()`.
+- The `Radar.requestPermissions()` and `Radar.checkSelfPermissions()` helper methods have been removed. Use `ActivityCompat` and `ContextCompat` to request location permissions instead. https://developer.android.com/training/permissions/requesting
+- The `RadarStatus.ERROR_USER_ID` and `RadarStatus.ERROR_PLACES` enum values have been removed. The SDK handles these cases gracefully.
+- The `Radar.setTrackingPriority()` method has been removed. The SDK avoids excessive wakeups and wi-fi scans by default.
 
-No other code changes are required to upgrade from 1.2.x to 1.3.0.
+## 1.2.x to 1.3.x
 
-## 1.1.x to 1.2.0
-
-No code changes are required to upgrade from 1.1.x to 1.2.0.
-
-## 1.0.x to 1.1.0
-
-1.0.x
-
-```java
-Radar.init(this);
-
-Radar.startTracking(userId, description);
-
-Radar.trackOnce(userId, description);
-```
-
-```xml
-<intent-filter>
-  <action android:name="com.onradar.sdk.EVENTS_RECEIVED" />
-</intent-filter>
-```
-
-1.1.0
-
-```java
-Radar.initialize(this);
-
-Radar.setUserId(userId);
-Radar.setDescription(description);
-
-Radar.startTracking();
-
-Radar.trackOnce(new RadarCallback() {
-  @Override
-  public void onCallback(RadarStatus status, Location location, RadarEvent[] events, RadarUser user) {
-    // do something with status, location, events, user
-  }
-});
-```
-
-```xml
-<intent-filter>
-  <action android:name="com.onradar.sdk.RECEIVED" />
-</intent-filter>
-```
+- `userId` on `RadarUser` is now nullable.
+- The `Radar.reidentifyUser()` method has been removed. To reidentify a user, simply call `setUserId()` with the new `userId`.
