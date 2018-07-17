@@ -13,4 +13,4 @@
 ## 1.2.x to 1.3.x
 
 - `userId` on `RadarUser` is now nullable.
-- The `Radar.reidentifyUser()` method has been removed. To reidentify a user, call `setUserId()` with the new `userId` instead.
+- The `Radar.reidentifyUser()` method has been removed. To reidentify a user, call `Radar.setUserId()` with the new `userId` instead.
