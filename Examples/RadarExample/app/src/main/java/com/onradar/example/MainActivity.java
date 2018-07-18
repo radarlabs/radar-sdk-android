@@ -1,8 +1,11 @@
 package com.onradar.example;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,11 +15,11 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.onradar.sdk.Radar;
-import com.onradar.sdk.RadarCallback;
-import com.onradar.sdk.model.RadarEvent;
-import com.onradar.sdk.model.RadarGeofence;
-import com.onradar.sdk.model.RadarUser;
+import io.radar.sdk.Radar;
+import io.radar.sdk.Radar.RadarCallback;
+import io.radar.sdk.model.RadarEvent;
+import io.radar.sdk.model.RadarGeofence;
+import io.radar.sdk.model.RadarUser;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,19 +31,19 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         String publishableKey = ""; // replace with your publishable API key
-        Radar.initialize(this, publishableKey);
+        Radar.initialize(publishableKey);
 
         String userId = Utils.getUserId(this);
         Radar.setUserId(userId);
 
-        if (!Radar.checkSelfPermissions()) {
-            Radar.requestPermissions(this);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.ACCESS_FINE_LOCATION }, 0);
         }
 
-        TextView userIdTextView = (TextView)findViewById(R.id.user_id_text_view);
+        TextView userIdTextView = findViewById(R.id.user_id_text_view);
         userIdTextView.setText(userId);
 
-        final Button trackOnceButton = (Button)findViewById(R.id.track_once_button);
+        final Button trackOnceButton = findViewById(R.id.track_once_button);
         trackOnceButton.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -48,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Radar.trackOnce(new RadarCallback() {
                     @Override
-                    public void onCallback(@NonNull Radar.RadarStatus status, Location location, RadarEvent[] events, RadarUser user) {
+                    public void onComplete(@NonNull Radar.RadarStatus status, Location location, RadarEvent[] events, RadarUser user) {
                         trackOnceButton.setEnabled(true);
 
                         String statusString = Utils.stringForStatus(status);
@@ -58,13 +61,15 @@ public class MainActivity extends AppCompatActivity {
                             Log.i(TAG, statusString);
 
                             RadarGeofence[] geofences = user.getGeofences();
-                            for (RadarGeofence geofence : geofences) {
-                                String geofenceString = geofence.description;
-                                Log.i(TAG, geofenceString);
+                            if (geofences != null) {
+                                for (RadarGeofence geofence : geofences) {
+                                    String geofenceString = geofence.getDescription();
+                                    Log.i(TAG, geofenceString);
+                                }
                             }
 
-                            if (user.place != null) {
-                                String placeString = place.name;
+                            if (user.getPlace() != null) {
+                                String placeString = user.getPlace().getName();
                                 Log.i(TAG, placeString);
                             }
 
@@ -80,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        final Switch trackingSwitch = (Switch)findViewById(R.id.tracking_switch);
+        final Switch trackingSwitch = findViewById(R.id.tracking_switch);
         trackingSwitch.setChecked(Radar.isTracking());
         trackingSwitch.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener() {
             @Override

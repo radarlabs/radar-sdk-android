@@ -3,9 +3,9 @@ package com.onradar.example;
 import android.content.Context;
 import android.provider.Settings;
 
-import com.onradar.sdk.Radar;
-import com.onradar.sdk.model.RadarEvent;
-import com.onradar.sdk.model.RadarGeofence;
+import io.radar.sdk.Radar;
+import io.radar.sdk.model.RadarEvent;
+import io.radar.sdk.model.RadarGeofence;
 
 class Utils {
 
@@ -23,8 +23,6 @@ class Utils {
                 return "Success";
             case ERROR_PUBLISHABLE_KEY:
                 return "Publishable Key Error";
-            case ERROR_USER_ID:
-                return "User ID Error";
             case ERROR_PERMISSIONS:
                 return "Permissions Error";
             case ERROR_LOCATION:

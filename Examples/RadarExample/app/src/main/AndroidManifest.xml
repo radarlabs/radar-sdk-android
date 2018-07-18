@@ -18,7 +18,7 @@
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.onradar.sdk.RECEIVED" />
+                <action android:name="io.radar.sdk.RECEIVED" />
             </intent-filter>
         </receiver>
     </application>

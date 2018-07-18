@@ -9,10 +9,10 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.onradar.sdk.Radar;
-import com.onradar.sdk.RadarReceiver;
-import com.onradar.sdk.model.RadarEvent;
-import com.onradar.sdk.model.RadarUser;
+import io.radar.sdk.Radar;
+import io.radar.sdk.RadarReceiver;
+import io.radar.sdk.model.RadarEvent;
+import io.radar.sdk.model.RadarUser;
 
 public class ExampleRadarReceiver extends RadarReceiver {
 
@@ -43,7 +43,7 @@ public class ExampleRadarReceiver extends RadarReceiver {
                 .setContentText(text)
                 .setAutoCancel(true)
                 .setContentIntent(pending)
-                .setSmallIcon(com.onradar.sdk.R.drawable.notification)
+                .setSmallIcon(io.radar.sdk.R.drawable.notification)
                 .setSound(Settings.System.DEFAULT_NOTIFICATION_URI)
                 .build();
 
