@@ -1,5 +1,7 @@
 ![Radar](https://raw.githubusercontent.com/radarlabs/radar-sdk-android/master/logo.png?v=3)
 
+[![Bintray](https://img.shields.io/bintray/v/radarlabs/maven/sdk2.svg)](https://bintray.com/radarlabs/maven/sdk2)
+
 [Radar](https://radar.io) is the location platform for mobile apps.
 
 ## Documentation
