@@ -38,15 +38,14 @@ public class ExampleRadarReceiver extends RadarReceiver {
         if (user.getStopped()) {
             state = "Stopped at";
         }
-        String locationMessage = String.format(Locale.getDefault(), "%s location (%f, %f) with accuracy %d meters",
+        String locationString = String.format(Locale.getDefault(), "%s location (%f, %f) with accuracy %d meters",
             state, location.getLatitude(), location.getLongitude(), (int)location.getAccuracy());
-        notify(context, "Location", locationMessage);
+        notify(context, "Location", locationString);
     }
 
     @Override
     public void onError(@NonNull Context context, @NonNull Radar.RadarStatus status) {
         String statusString = Utils.stringForStatus(status);
-        Log.e(TAG, statusString);
         notify(context, "Error", statusString);
     }
 
