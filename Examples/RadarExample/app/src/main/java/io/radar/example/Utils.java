@@ -1,11 +1,10 @@
-package com.onradar.example;
+package io.radar.example;
 
 import android.content.Context;
 import android.provider.Settings;
 
 import io.radar.sdk.Radar;
 import io.radar.sdk.model.RadarEvent;
-import io.radar.sdk.model.RadarGeofence;
 
 class Utils {
 
