@@ -1,4 +1,4 @@
-package com.onradar.example;
+package io.radar.example;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
