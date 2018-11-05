@@ -1,5 +1,10 @@
 # Migration guides
 
+## 2.0.x to 2.1.x
+
+- This update introduces `startTracking(trackingOptions)` to configure advanced tracking options. See https://radar.io/documentation/sdk#android-background.
+- The `setTrackingPriority(priority)` method has been removed. Use `RadarTrackingOptions.Builder().priority(priority)` and call `startTracking(trackingOptions)` instead. See https://radar.io/documentation/sdk#android-background.
+
 ## 1.3.x to 2.0.x
 
 - The package has been renamed from `com.onradar.sdk.*` to `io.radar.sdk.*`.
