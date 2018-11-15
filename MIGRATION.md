@@ -10,12 +10,10 @@
 RadarTrackingOptions trackingOptions = RadarTrackingOptions.Builder()
       .priority(RadarTrackingPriority.RESPONSIVENESS)
       .build();
-
 Radar.startTracking(trackingOptions);
 
 // 2.0.x
 Radar.setTrackingPriority(RadarPriority.EFFICIENCY);
-
 Radar.startTracking(trackingOptions);
 ```
 
