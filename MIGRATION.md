@@ -8,7 +8,7 @@
 ```java
 // 2.1.x
 RadarTrackingOptions trackingOptions = RadarTrackingOptions.Builder()
-      .priority(RadarTrackingPriority.RESPONSIVENESS)
+      .priority(RadarTrackingPriority.EFFICIENCY)
       .build();
 Radar.startTracking(trackingOptions);
 
