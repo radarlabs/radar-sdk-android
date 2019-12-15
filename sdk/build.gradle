@@ -78,9 +78,6 @@ publishing {
             pom.withXml {
                 def dependenciesNode = asNode().appendNode('dependencies')
                 configurations.implementation.allDependencies.each { dependency ->
-                    if (configurations.shadow.allDependencies.contains(dependency)) {
-                        return
-                    }
                     def dependencyNode = dependenciesNode.appendNode('dependency')
                     dependencyNode.appendNode('groupId', dependency.group)
                     dependencyNode.appendNode('artifactId', dependency.name)
