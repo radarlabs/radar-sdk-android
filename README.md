@@ -14,7 +14,7 @@ See migration guides in `MIGRATION.md`.
 
 ## Examples
 
-See an example app in `Examples/`.
+See an example app in `example/`.
 
 To run the example app, clone this repository, add your publishable API key in `MainActivity.java`, and build the app.
 

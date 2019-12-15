@@ -1,0 +1,124 @@
+package io.radar.sdk.model
+
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
+
+/**
+ * Represents a place. For more information about Places, see [](https://radar.io/documentation/places).
+ *
+ * @see [](https://radar.io/documentation/places)
+ */
+class RadarPlace(
+    /**
+     * The Radar ID of the place.
+     */
+    val id: String,
+
+    /**
+     * The name of the place.
+     */
+    val name: String,
+
+    /**
+     * The categories of the place. For a full list of categories, see [](https://radar.io/documentation/places/categories).
+     */
+    val categories: Array<String>,
+
+    /**
+     * The chain of the place, if known. May be `null` for places without a chain. For a full list of chains, see [](https://radar.io/documentation/places/chains).
+     */
+    val chain: RadarChain?,
+
+    /**
+     * The location of the place.
+     */
+    val location: RadarCoordinate,
+
+    /**
+     * The group for the place, if any. For a full list of groups, see [](https://radar.io/documentation/places/groups).
+     */
+    val group: String?,
+
+    /**
+     * The metadata for the place, if part of a group. For details of metadata fields see [](https://radar.io/documentation/places/groups).
+     */
+    val metadata: JSONObject?
+) {
+
+    internal companion object {
+        internal const val FIELD_ID = "_id"
+        internal const val FIELD_NAME = "name"
+        internal const val FIELD_CATEGORIES = "categories"
+        internal const val FIELD_CHAIN = "chain"
+        internal const val FIELD_LOCATION = "location"
+        internal const val FIELD_COORDINATES = "coordinates"
+        internal const val FIELD_GROUP = "group"
+        internal const val FIELD_METADATA = "metadata"
+
+        @Throws(JSONException::class)
+        fun fromJsonNullable(obj: JSONObject?): RadarPlace? {
+            if (obj == null) {
+                return null
+            }
+            return fromJson(obj)
+        }
+
+        @Throws(JSONException::class)
+        fun fromJson(obj: JSONObject): RadarPlace {
+            val id = obj.optString(FIELD_ID)
+            val name = obj.optString(FIELD_NAME)
+
+            val categories = obj.optJSONArray(FIELD_CATEGORIES)?.let { array ->
+                Array<String>(array.length()) {
+                    array.optString(it)
+                }
+            } ?: arrayOf()
+
+            val chain = obj.optJSONObject(FIELD_CHAIN)?.let(RadarChain.Companion::fromJson)
+
+            val locationObj = obj.optJSONObject(FIELD_LOCATION)
+            val coords = locationObj?.optJSONArray(FIELD_COORDINATES)
+            val location = RadarCoordinate(coords?.optDouble(1) ?: 0.0, coords?.optDouble(0) ?: 0.0)
+
+            val group: String? = obj.optString(FIELD_GROUP, null)
+            val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
+
+            return RadarPlace(
+                id,
+                name,
+                categories,
+                chain,
+                location,
+                group,
+                metadata
+            )
+        }
+
+        @Throws(JSONException::class)
+        fun fromJSONArray(array: JSONArray): Array<RadarPlace> {
+            return Array(array.length()) { index ->
+                fromJson(array.optJSONObject(index))
+            }
+        }
+    }
+
+    /**
+     * Returns a boolean indicating whether the place is part of the specified chain.
+     *
+     * @return A boolean indicating whether the place is part of the specified chain.
+     */
+    fun isChain(slug: String): Boolean {
+        return chain?.slug == slug
+    }
+
+    /**
+     * Returns a boolean indicating whether the place has the specified category.
+     *
+     * @return A boolean indicating whether the place has the specified category.
+     */
+    fun hasCategory(category: String): Boolean {
+        return category in categories
+    }
+
+}
