@@ -1,6 +1,7 @@
 package io.radar.sdk.model
 
 import io.radar.sdk.model.RadarCoordinate
+import org.json.JSONObject
 
 /**
  * Represents the full address output by the geocoding endpoints.
@@ -81,16 +82,16 @@ class RadarAddress(
      * The confidence levels for addresses
      */
     enum class RadarAddressConfidence {
-        RadarAddressConfidenceExact,
-        RadarAddressConfidenceInterpolated,
-        RadarAddressConfidenceFallback
+        EXACT,
+        INTERPOLATED,
+        FALLBACK
     }
 
     internal companion object {
         private const val FIELD_COORDINATE = "coordinate"
         private const val FIELD_FORMATTED_ADDRESS = "formattedAddress"
         private const val FIELD_COUNTRY = "country"
-        private const val FIElD_COUNTRY_CODE = "countryCode"
+        private const val FIELD_COUNTRY_CODE = "countryCode"
         private const val FIELD_COUNTRY_FLAG = "countryFlag"
         private const val FIELD_STATE = "state"
         private const val FIELD_STATE_CODE = "stateCode"
@@ -131,10 +132,10 @@ class RadarAddress(
 
             val number = obj.optString(FIELD_NUMBER, null)
 
-            val confidence = when(obj.optString(FIEND_CONFIDENCE)) {
-                "exact" -> RadarAddressConfidenceExact
-                "interpolated" -> RadarAddressConfidenceInterpolated
-                else -> RadarAddressConfidenceFallback
+            val confidence = when(obj.optString(FIELD_CONFIDENCE)) {
+                "exact" -> RadarAddressConfidence.EXACT
+                "interpolated" -> RadarAddressConfidence.INTERPOLATED
+                else -> RadarAddressConfidence.FALLBACK
             }
 
             return RadarAddress(
@@ -153,6 +154,12 @@ class RadarAddress(
                 number,
                 confidence
             )
+        }
+
+        fun fromJSONArray(array: JSONArray): Array<RadarAddress> {
+            return Array(array.length()) { index ->
+                fromJson(array.optJSONObject(index))
+            }.filterNotNull().toTypedArray()
         }
     }
 }

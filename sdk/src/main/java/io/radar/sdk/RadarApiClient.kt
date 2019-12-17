@@ -393,7 +393,7 @@ internal class RadarApiClient(
                 }
 
                 val addresses = res.optJSONArray("addresses")?.let { addressesArr ->
-                    RadarGeofence.fromJSONArray(addressesArr)
+                    RadarAddress.fromJSONArray(addressesArr)
                 }
                 if (addresses != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, addresses)
@@ -443,7 +443,7 @@ internal class RadarApiClient(
                 }
 
                 val addresses = res.optJSONArray("addresses")?.let { addressesArr ->
-                    RadarGeofence.fromJSONArray(addressesArr)
+                    RadarAddress.fromJSONArray(addressesArr)
                 }
                 if (addresses != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, addresses)
@@ -489,7 +489,7 @@ internal class RadarApiClient(
                 }
 
                 val regions = res.optJSONArray("regions")?.let { regionsArr ->
-                    RadarRegion.fromJson(regionsArr[0])
+                    RadarRegion.fromJSONArray(regionsArr)
                 }
                 if (regions != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, regions)

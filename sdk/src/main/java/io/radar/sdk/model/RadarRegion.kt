@@ -1,5 +1,6 @@
 package io.radar.sdk.model
 
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -42,6 +43,12 @@ class RadarRegion(
             val type = obj.optString(FIELD_TYPE)
 
             return RadarRegion(id, name, code, type)
+        }
+
+        fun fromJSONArray(array: JSONArray): Array<RadarRegion> {
+            return Array(array.length()) { index ->
+                fromJson(array.optJSONObject(index))
+            }.filterNotNull().toTypedArray()
         }
     }
 }

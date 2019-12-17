@@ -741,7 +741,7 @@ object Radar {
      */
     fun geocode(
         query: String,
-        block: (status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?)
+        block: (status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) -> Unit
     ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -763,7 +763,7 @@ object Radar {
      */
     fun reverseGeocode(
         location: Location,
-        block: (status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?)
+        block: (status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) -> Unit
     ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -782,7 +782,7 @@ object Radar {
      * Provide coordinates and address information corresponding to an IP address.
      */
     fun ipGeocode(
-        block: (status: RadarStatus, res: JSONObject?, region: RadarRegion?)
+        block: (status: RadarStatus, res: JSONObject?, region: RadarRegion?) -> Unit
     ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
