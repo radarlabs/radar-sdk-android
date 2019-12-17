@@ -1,6 +1,8 @@
 package io.radar.sdk.model
 
 import io.radar.sdk.model.RadarCoordinate
+
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**

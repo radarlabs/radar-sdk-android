@@ -39,7 +39,7 @@ internal class RadarApiClient(
     }
 
     interface RadarIPGeocodeApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, region: RadarRegion? = null)
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, region: Array<RadarRegion>? = null)
     }
 
     internal fun getConfig() {
