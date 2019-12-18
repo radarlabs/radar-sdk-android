@@ -115,7 +115,7 @@ class RadarAddress(
             val country = obj.optString(FIELD_COUNTRY, null)
 
             val countryCode = obj.optString(FIELD_COUNTRY_CODE, null)
-            
+
             val countryFlag = obj.optString(FIELD_COUNTRY_FLAG, null)
 
             val state = obj.optString(FIELD_STATE, null)
