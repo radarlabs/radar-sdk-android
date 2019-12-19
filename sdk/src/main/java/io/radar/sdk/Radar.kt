@@ -103,6 +103,42 @@ object Radar {
     }
 
     /**
+     * Called when a geocoding request succeeds, fails, or times out.
+     */
+    interface RadarGeocodeCallback {
+        /**
+         * Called when a geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the raw response and an array of addresses.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[res] JSONObject? If successful, the raw response.
+         * @param[addresses] Array<RadarAddress>? If successsful, an array of geocoded addresses.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            res: JSONObject? = null,
+            addresses: Array<RadarAddress>? = null
+        )
+    }
+
+    /**
+     * Called when an IP geocoding request succeeds, fails, or times out.
+     */
+    interface RadarIPGeocodeCallback {
+        /**
+         * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the raw response and an array of regions.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[res] JSONObject? If successful, the raw response.
+         * @param[addresses] Array<RadarAddress>? If successsful, an array of regions.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            res: JSONObject? = null,
+            regions: Array<RadarRegion>? = null
+        )
+    }
+
+    /**
      * The status types for a request. See [](https://radar.io/documentation/sdk#android-foreground).
      */
     enum class RadarStatus {
@@ -737,11 +773,11 @@ object Radar {
     /**
      * Provide coordinates and address information corresponding to a location query string.
      *
-     * @param[query] The address to search
+     * @param[query] The address string to geocode.
      */
     fun geocode(
         query: String,
-        block: (status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) -> Unit
+        callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -751,7 +787,7 @@ object Radar {
 
         apiClient.geocode(query, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
-                block(status, res, addresses)
+                callback(status, res, addresses)
             }
         })
     }
@@ -763,7 +799,7 @@ object Radar {
      */
     fun reverseGeocode(
         location: Location,
-        block: (status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) -> Unit
+        callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -773,7 +809,7 @@ object Radar {
 
         apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
-                block(status, res, addresses)
+                callback(status, res, addresses)
             }
         })
     }
@@ -782,7 +818,7 @@ object Radar {
      * Provide coordinates and address information corresponding to an IP address.
      */
     fun ipGeocode(
-        block: (status: RadarStatus, res: JSONObject?, region: RadarRegion?) -> Unit
+        callback: RadarIPGeocodeCallback
     ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -791,8 +827,8 @@ object Radar {
         }
 
         apiClient.ipGeocode(object: RadarApiClient.RadarIPGeocodeApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, region: RadarRegion?) {
-                block(status, res, region)
+            override fun onComplete(status: RadarStatus, res: JSONObject?, region: Array<RadarRegion>?) {
+                callback(status, res, region)
             }
         })
     }
