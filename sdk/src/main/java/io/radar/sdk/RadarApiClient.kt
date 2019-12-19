@@ -251,7 +251,7 @@ internal class RadarApiClient(
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
-            .appendEncodedPath("v1/places/search?${queryParams}")
+            .appendEncodedPath("v1/search/places?${queryParams}")
             .build()
         val url = URL(uri.toString())
 
@@ -314,7 +314,7 @@ internal class RadarApiClient(
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
-            .appendEncodedPath("v1/geofences/search?${queryParams}")
+            .appendEncodedPath("v1/search/geofences?${queryParams}")
             .build()
         val url = URL(uri.toString())
 
