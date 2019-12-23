@@ -115,7 +115,6 @@ object Radar {
          */
         fun onComplete(
             status: RadarStatus,
-            res: JSONObject? = null,
             addresses: Array<RadarAddress>? = null
         )
     }
@@ -133,7 +132,6 @@ object Radar {
          */
         fun onComplete(
             status: RadarStatus,
-            res: JSONObject? = null,
             country: RadarRegion? = null
         )
     }
@@ -787,7 +785,7 @@ object Radar {
 
         apiClient.geocode(query, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
-                callback.onComplete(status, res, addresses)
+                callback.onComplete(status, addresses)
             }
         })
     }
@@ -809,7 +807,7 @@ object Radar {
 
         apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
-                callback.onComplete(status, res, addresses)
+                callback.onComplete(status, addresses)
             }
         })
     }
@@ -828,7 +826,7 @@ object Radar {
 
         apiClient.ipGeocode(object: RadarApiClient.RadarIPGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, country: RadarRegion?) {
-                callback.onComplete(status, res, country)
+                callback.onComplete(status, country)
             }
         })
     }
