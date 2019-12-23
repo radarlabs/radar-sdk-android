@@ -134,7 +134,7 @@ object Radar {
         fun onComplete(
             status: RadarStatus,
             res: JSONObject? = null,
-            regions: Array<RadarRegion>? = null
+            country: RadarRegion? = null
         )
     }
 
@@ -827,8 +827,8 @@ object Radar {
         }
 
         apiClient.ipGeocode(object: RadarApiClient.RadarIPGeocodeApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, region: Array<RadarRegion>?) {
-                callback.onComplete(status, res, region)
+            override fun onComplete(status: RadarStatus, res: JSONObject?, country: RadarRegion?) {
+                callback.onComplete(status, res, country)
             }
         })
     }
