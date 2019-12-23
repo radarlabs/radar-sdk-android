@@ -791,6 +791,25 @@ object Radar {
     }
 
     /**
+     * Provide coordinates and address information corresponding to a location query string.
+     *
+     * @param[query] The address string to geocode.
+     */
+    fun geocode(
+        query: String,
+        block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
+    ) {
+        geocode(
+            query,
+            object: RadarGeocodeCallback {
+                override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
+                    block(status, addresses)
+                }
+            }
+        )
+    }
+
+    /**
      * Provide address information corresponding to a location point.
      *
      * @param[location] The location to geocode.
@@ -813,6 +832,25 @@ object Radar {
     }
 
     /**
+     * Provide address information corresponding to a location point.
+     *
+     * @param[location] The location to geocode.
+     */
+    fun reverseGeocode(
+        location: Location,
+        block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
+    ) {
+        reverseGeocode(
+            location,
+            object: RadarGeocodeCallback {
+                override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
+                    block(status, addresses)
+                }
+            }
+        )
+    }
+
+    /**
      * Provide coordinates and address information corresponding to an IP address.
      */
     fun ipGeocode(
@@ -829,6 +867,21 @@ object Radar {
                 callback.onComplete(status, country)
             }
         })
+    }
+
+    /**
+     * Provide coordinates and address information corresponding to an IP address.
+     */
+    fun ipGeocode(
+        block: (status: RadarStatus, country: RadarRegion?) -> Unit
+    ) {
+        ipGeocode(
+            object: RadarIPGeocodeCallback {
+                override fun onComplete(status: RadarStatus, country: RadarRegion?) {
+                    block(status, country)
+                }
+            }
+        )
     }
 
 
