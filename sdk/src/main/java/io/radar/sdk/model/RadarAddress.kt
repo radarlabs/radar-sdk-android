@@ -86,7 +86,8 @@ class RadarAddress(
     enum class RadarAddressConfidence {
         EXACT,
         INTERPOLATED,
-        FALLBACK
+        FALLBACK,
+        NONE
     }
 
     internal companion object {
@@ -137,7 +138,8 @@ class RadarAddress(
             val confidence = when(obj.optString(FIELD_CONFIDENCE)) {
                 "exact" -> RadarAddressConfidence.EXACT
                 "interpolated" -> RadarAddressConfidence.INTERPOLATED
-                else -> RadarAddressConfidence.FALLBACK
+                "fallback" -> RadarAddressConfidence.FALLBACK
+                else -> RadarAddressConfidence.NONE
             }
 
             return RadarAddress(
