@@ -653,7 +653,81 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_reverseGeocode_error() {
+    fun test_Radar_reverseGeocode_errorPermissions() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false;
+        locationClientMock.mockLocation = null
+
+        val latch = CountDownLatch(1)
+
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackAddresses: Array<RadarAddress>? = null
+
+        Radar.reverseGeocode { status, addresses ->
+            callbackStatus = status
+            callbackAddresses = addresses
+            latch.countDown()
+        }
+
+        latch.await(30, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_PERMISSIONS, callbackStatus)
+        assertNull(callbackAddresses)
+    }
+
+    @Test
+    fun test_Radar_reverseGeocode_errorLocation() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        locationClientMock.mockLocation = null
+
+        val latch = CountDownLatch(1)
+
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackAddresses: Array<RadarAddress>? = null
+
+        Radar.reverseGeocode { status, addresses ->
+            callbackStatus = status
+            callbackAddresses = addresses
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(30, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_LOCATION, callbackStatus)
+        assertNull(callbackAddresses)
+    }
+
+    @Test
+    fun test_Radar_reverseGeocode_success() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.783826
+        mockLocation.longitude = -73.975363
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/geocode.json")
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackAddresses: Array<RadarAddress>? = null
+
+        Radar.reverseGeocode { status, addresses ->
+            callbackStatus = status
+            callbackAddresses = addresses
+            latch.countDown()
+        }
+
+        latch.await(30, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertNotNull(callbackAddresses)
+        assertNotNull(callbackAddresses?.get(0)?.coordinate)
+    }
+
+    @Test
+    fun test_Radar_reverseGeocodeLocation_error() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_SERVER
 
@@ -679,7 +753,7 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_reverseGeocode_success() {
+    fun test_Radar_reverseGeocodeLocation_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/geocode.json")

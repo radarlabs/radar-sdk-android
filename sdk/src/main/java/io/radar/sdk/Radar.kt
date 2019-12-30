@@ -810,6 +810,54 @@ object Radar {
     }
 
     /**
+     * Gets the device's current location, then geocodes that location, returning an array of addresses.
+     *
+     * @param[callback] A callback.
+     */
+    fun reverseGeocode(
+        callback: RadarGeocodeCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        locationManager.getLocation(object: RadarLocationCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                if (status != RadarStatus.SUCCESS || location == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
+                    override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
+                        callback.onComplete(status, addresses)
+                    }
+                })
+            }
+        })
+    }
+
+    /**
+     * Gets the device's current location, then geocodes that location, returning an array of addresses.
+     *
+     * @param[block] A block callback.
+     */
+    fun reverseGeocode(
+        block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
+    ) {
+        reverseGeocode(
+            object: RadarGeocodeCallback {
+                override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
+                    block(status, addresses)
+                }
+            }
+        )
+    }
+
+    /**
      * Provide address information corresponding to a location point.
      *
      * @param[location] The location to geocode.
