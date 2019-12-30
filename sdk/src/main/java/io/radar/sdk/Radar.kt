@@ -770,6 +770,7 @@ object Radar {
      * Provide coordinates and address information corresponding to a location query string.
      *
      * @param[query] The address string to geocode.
+     * @param[callback] A callback.
      */
     fun geocode(
         query: String,
@@ -792,6 +793,7 @@ object Radar {
      * Provide coordinates and address information corresponding to a location query string.
      *
      * @param[query] The address string to geocode.
+     * @param[block] A block callback.
      */
     fun geocode(
         query: String,
