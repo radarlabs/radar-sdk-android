@@ -369,7 +369,7 @@ internal class RadarApiClient(
         }
 
         val queryParams = StringBuilder()
-        queryParams.append("text=${query}")
+        queryParams.append("query=${query}")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()

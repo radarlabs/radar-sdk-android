@@ -110,7 +110,6 @@ object Radar {
          * Called when a geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the raw response and an array of addresses.
          *
          * @param[status] RadarStatus The request status.
-         * @param[res] JSONObject? If successful, the raw response.
          * @param[addresses] Array<RadarAddress>? If successsful, an array of geocoded addresses.
          */
         fun onComplete(
@@ -127,8 +126,7 @@ object Radar {
          * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the raw response and an array of regions.
          *
          * @param[status] RadarStatus The request status.
-         * @param[res] JSONObject? If successful, the raw response.
-         * @param[addresses] Array<RadarAddress>? If successsful, an array of regions.
+         * @param[country] RadarRegion? If successsful, the region of the IP address.
          */
         fun onComplete(
             status: RadarStatus,
@@ -813,6 +811,7 @@ object Radar {
      * Provide address information corresponding to a location point.
      *
      * @param[location] The location to geocode.
+     * @param[callback] A callback.
      */
     fun reverseGeocode(
         location: Location,
@@ -835,6 +834,7 @@ object Radar {
      * Provide address information corresponding to a location point.
      *
      * @param[location] The location to geocode.
+     * @param[block] A block callback.
      */
     fun reverseGeocode(
         location: Location,
@@ -852,6 +852,8 @@ object Radar {
 
     /**
      * Provide coordinates and address information corresponding to an IP address.
+     *
+     * @param[callback] A callback.
      */
     fun ipGeocode(
         callback: RadarIPGeocodeCallback
@@ -871,6 +873,8 @@ object Radar {
 
     /**
      * Provide coordinates and address information corresponding to an IP address.
+     *
+     * @param[block] A block callback.
      */
     fun ipGeocode(
         block: (status: RadarStatus, country: RadarRegion?) -> Unit

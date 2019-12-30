@@ -649,6 +649,7 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertNotNull(callbackAddresses)
+        assertNotNull(callbackAddresses?.get(0)?.coordinate)
     }
 
     @Test
@@ -702,6 +703,7 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertNotNull(callbackAddresses)
+        assertNotNull(callbackAddresses?.get(0)?.coordinate)
     }
 
     @Test
@@ -747,5 +749,6 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertNotNull(callbackRegion)
+        assertNotNull(callbackRegion?.code)
     }
 }
