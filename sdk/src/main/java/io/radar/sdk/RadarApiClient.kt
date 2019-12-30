@@ -5,12 +5,14 @@ import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
-import io.radar.sdk.Radar.RadarLocationSource
-import io.radar.sdk.Radar.RadarStatus
+import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarRegion
+import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
 import java.net.URL
@@ -30,6 +32,14 @@ internal class RadarApiClient(
 
     interface RadarSearchGeofencesApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null, geofences: Array<RadarGeofence>? = null)
+    }
+
+    interface RadarGeocodeApiCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, addresses: Array<RadarAddress>? = null)
+    }
+
+    interface RadarIPGeocodeApiCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, country: RadarRegion? = null)
     }
 
     internal fun getConfig() {
@@ -347,4 +357,148 @@ internal class RadarApiClient(
         })
     }
 
+    internal fun geocode(
+        query: String,
+        callback: RadarGeocodeApiCallback
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val queryParams = StringBuilder()
+        queryParams.append("query=${query}")
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/geocode/forward?${queryParams}")
+            .build()
+        val url = URL(uri.toString())
+
+        val headers = mapOf(
+            "Authorization" to publishableKey,
+            "Content-Type" to "application/json",
+            "User-Agent" to RadarUtils.userAgent,
+            "X-Radar-Config" to "true"
+        )
+
+        apiHelper.request(context, "GET", url, headers, null, object: RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                val addresses = res.optJSONArray("addresses")?.let { addressesArr ->
+                    RadarAddress.fromJSONArray(addressesArr)
+                }
+                if (addresses != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, addresses)
+
+                    return
+                }
+
+                callback.onComplete(RadarStatus.ERROR_SERVER)
+            }
+        })
+    }
+
+    internal fun reverseGeocode(
+        location: Location,
+        callback: RadarGeocodeApiCallback
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val queryParams = StringBuilder()
+        queryParams.append("latitude=${location.latitude}")
+        queryParams.append("&longitude=${location.longitude}")
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/geocode/reverse?${queryParams}")
+            .build()
+        val url = URL(uri.toString())
+
+        val headers = mapOf(
+            "Authorization" to publishableKey,
+            "Content-Type" to "application/json",
+            "User-Agent" to RadarUtils.userAgent,
+            "X-Radar-Config" to "true"
+        )
+
+        apiHelper.request(context, "GET", url, headers, null, object: RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                val addresses = res.optJSONArray("addresses")?.let { addressesArr ->
+                    RadarAddress.fromJSONArray(addressesArr)
+                }
+                if (addresses != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, addresses)
+
+                    return
+                }
+
+                callback.onComplete(RadarStatus.ERROR_SERVER)
+            }
+        })
+    }
+
+    internal fun ipGeocode(
+        callback: RadarIPGeocodeApiCallback
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/geocode/ip")
+            .build()
+
+        val url = URL(uri.toString())
+
+        val headers = mapOf(
+            "Authorization" to publishableKey,
+            "Content-Type" to "application/json",
+            "User-Agent" to RadarUtils.userAgent,
+            "X-Radar-Config" to "true"
+        )
+
+        apiHelper.request(context, "GET", url, headers, null, object: RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                val region = res.optJSONObject("country")?.let { countryObj ->
+                    RadarRegion.fromJson(countryObj)
+                }
+                if (region != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, region)
+
+                    return
+                }
+
+                callback.onComplete(RadarStatus.ERROR_SERVER)
+            }
+        })
+    }
 }

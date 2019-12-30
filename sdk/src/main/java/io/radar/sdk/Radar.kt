@@ -7,10 +7,12 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.model.RadarGeofence
 import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarRegion
 import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
 
@@ -97,6 +99,38 @@ object Radar {
             status: RadarStatus,
             location: Location? = null,
             geofences: Array<RadarGeofence>? = null
+        )
+    }
+
+    /**
+     * Called when a geocoding request succeeds, fails, or times out.
+     */
+    interface RadarGeocodeCallback {
+        /**
+         * Called when a geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the raw response and an array of addresses.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[addresses] Array<RadarAddress>? If successsful, an array of geocoded addresses.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            addresses: Array<RadarAddress>? = null
+        )
+    }
+
+    /**
+     * Called when an IP geocoding request succeeds, fails, or times out.
+     */
+    interface RadarIPGeocodeCallback {
+        /**
+         * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the raw response and an array of regions.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[country] RadarRegion? If successsful, the region of the IP address.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            country: RadarRegion? = null
         )
     }
 
@@ -731,6 +765,131 @@ object Radar {
             }
         )
     }
+
+    /**
+     * Provide coordinates and address information corresponding to a location query string.
+     *
+     * @param[query] The address string to geocode.
+     * @param[callback] A callback.
+     */
+    fun geocode(
+        query: String,
+        callback: RadarGeocodeCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        apiClient.geocode(query, object: RadarApiClient.RadarGeocodeApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
+                callback.onComplete(status, addresses)
+            }
+        })
+    }
+
+    /**
+     * Provide coordinates and address information corresponding to a location query string.
+     *
+     * @param[query] The address string to geocode.
+     * @param[block] A block callback.
+     */
+    fun geocode(
+        query: String,
+        block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
+    ) {
+        geocode(
+            query,
+            object: RadarGeocodeCallback {
+                override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
+                    block(status, addresses)
+                }
+            }
+        )
+    }
+
+    /**
+     * Provide address information corresponding to a location point.
+     *
+     * @param[location] The location to geocode.
+     * @param[callback] A callback.
+     */
+    fun reverseGeocode(
+        location: Location,
+        callback: RadarGeocodeCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
+                callback.onComplete(status, addresses)
+            }
+        })
+    }
+
+    /**
+     * Provide address information corresponding to a location point.
+     *
+     * @param[location] The location to geocode.
+     * @param[block] A block callback.
+     */
+    fun reverseGeocode(
+        location: Location,
+        block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
+    ) {
+        reverseGeocode(
+            location,
+            object: RadarGeocodeCallback {
+                override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
+                    block(status, addresses)
+                }
+            }
+        )
+    }
+
+    /**
+     * Provide coordinates and address information corresponding to an IP address.
+     *
+     * @param[callback] A callback.
+     */
+    fun ipGeocode(
+        callback: RadarIPGeocodeCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        apiClient.ipGeocode(object: RadarApiClient.RadarIPGeocodeApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, country: RadarRegion?) {
+                callback.onComplete(status, country)
+            }
+        })
+    }
+
+    /**
+     * Provide coordinates and address information corresponding to an IP address.
+     *
+     * @param[block] A block callback.
+     */
+    fun ipGeocode(
+        block: (status: RadarStatus, country: RadarRegion?) -> Unit
+    ) {
+        ipGeocode(
+            object: RadarIPGeocodeCallback {
+                override fun onComplete(status: RadarStatus, country: RadarRegion?) {
+                    block(status, country)
+                }
+            }
+        )
+    }
+
 
     /**
      * Sets the log level for debug logs.
