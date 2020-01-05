@@ -901,11 +901,11 @@ object Radar {
     }
 
     /**
-     * Provide coordinates and address information corresponding to an IP address.
+     * Provide coordinates and address information corresponding to the device's IP address.
      *
      * @param[callback] A callback.
      */
-    fun ipGeocode(
+    fun geocodeDeviceIP(
         callback: RadarIPGeocodeCallback
     ) {
         if (!initialized) {
@@ -914,7 +914,7 @@ object Radar {
             return
         }
 
-        apiClient.ipGeocode(object: RadarApiClient.RadarIPGeocodeApiCallback {
+        apiClient.ipGeocode(null, object: RadarApiClient.RadarIPGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, country: RadarRegion?) {
                 callback.onComplete(status, country)
             }
@@ -922,14 +922,14 @@ object Radar {
     }
 
     /**
-     * Provide coordinates and address information corresponding to an IP address.
+     * Provide coordinates and address information corresponding to the device's IP address.
      *
      * @param[block] A block callback.
      */
-    fun ipGeocode(
+    fun geocodeDeviceIP(
         block: (status: RadarStatus, country: RadarRegion?) -> Unit
     ) {
-        ipGeocode(
+        geocodeDeviceIP(
             object: RadarIPGeocodeCallback {
                 override fun onComplete(status: RadarStatus, country: RadarRegion?) {
                     block(status, country)
@@ -938,6 +938,47 @@ object Radar {
         )
     }
 
+    /**
+     * Provide coordinates and address information corresponding to the given IP address.
+     * If no IP address is provided, the device's IP is used.
+     *
+     * @param[IP] The IP address to geocode.
+     * @param[callback] A callback.
+     */
+    fun geocodeIP(
+        IP: String,
+        callback: RadarIPGeocodeCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        apiClient.ipGeocode(IP, object: RadarApiClient.RadarIPGeocodeApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, country: RadarRegion?) {
+                callback.onComplete(status, country)
+            }
+        })
+    }
+
+    /**
+     * Provide coordinates and address information corresponding to the given IP address.
+     * If no IP address is provided, the device's IP is used.
+     *
+     * @param[IP] The IP address to geocode.
+     * @param[block] A block callback.
+     */
+    fun geocodeIP(
+        IP: String,
+        block: (status: RadarStatus, country: RadarRegion?) -> Unit
+    ) {
+        geocodeIP(IP, object: RadarIPGeocodeCallback {
+            override fun onComplete(status: RadarStatus, country: RadarRegion?) {
+                block(status, country)
+            }
+        })
+    }
 
     /**
      * Sets the log level for debug logs.

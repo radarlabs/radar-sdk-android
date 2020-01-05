@@ -781,7 +781,7 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_ipGeocode_error() {
+    fun test_Radar_geocodeDeviceIP_error() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_SERVER
 
@@ -790,7 +790,7 @@ class RadarTest {
         var callbackStatus: Radar.RadarStatus? = null
         var callbackRegion: RadarRegion? = null
 
-        Radar.ipGeocode() { status, region ->
+        Radar.geocodeDeviceIP() { status, region ->
             callbackStatus = status
             callbackRegion = region
             latch.countDown()
@@ -803,7 +803,7 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_ipGeocode_success() {
+    fun test_Radar_geocodeDeviceIP_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/ipGeocode.json")
@@ -813,7 +813,53 @@ class RadarTest {
         var callbackStatus: Radar.RadarStatus? = null
         var callbackRegion: RadarRegion? = null
 
-        Radar.ipGeocode() { status, region ->
+        Radar.geocodeDeviceIP() { status, region ->
+            callbackStatus = status
+            callbackRegion = region
+            latch.countDown()
+        }
+
+        latch.await(30, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertNotNull(callbackRegion)
+        assertNotNull(callbackRegion?.code)
+    }
+
+    @Test
+    fun test_Radar_geocodeIP_error() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_SERVER
+
+        val latch = CountDownLatch(1)
+
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackRegion: RadarRegion? = null
+
+        Radar.geocodeIP("192.0.2.28") { status, region ->
+            callbackStatus = status
+            callbackRegion = region
+            latch.countDown()
+        }
+
+        latch.await(30, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_SERVER, callbackStatus)
+        assertNull(callbackRegion)
+    }
+
+    @Test
+    fun test_Radar_geocodeIP_success() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/ipGeocode.json")
+
+        val latch = CountDownLatch(1)
+
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackRegion: RadarRegion? = null
+
+        Radar.geocodeIP("192.0.2.28") { status, region ->
             callbackStatus = status
             callbackRegion = region
             latch.countDown()

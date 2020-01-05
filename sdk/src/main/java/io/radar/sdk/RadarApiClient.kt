@@ -457,6 +457,7 @@ internal class RadarApiClient(
     }
 
     internal fun ipGeocode(
+        IP: String?,
         callback: RadarIPGeocodeApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -467,9 +468,20 @@ internal class RadarApiClient(
         }
 
         val host = RadarSettings.getHost(context)
-        val uri = Uri.parse(host).buildUpon()
-            .appendEncodedPath("v1/geocode/ip")
-            .build()
+        var uri: Uri?
+
+        if (IP != null && IP.isNotEmpty()) {
+            val queryParams = StringBuilder()
+            queryParams.append("ip=${IP}")
+
+            uri = Uri.parse(host).buildUpon()
+                .appendEncodedPath("v1/geocode/ip?${queryParams}")
+                .build()
+        } else {
+            uri = Uri.parse(host).buildUpon()
+                .appendEncodedPath("v1/geocode/ip")
+                .build()
+        }
 
         val url = URL(uri.toString())
 
