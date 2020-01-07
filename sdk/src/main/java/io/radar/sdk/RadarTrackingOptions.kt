@@ -96,7 +96,7 @@ data class RadarTrackingOptions(
             useStoppedGeofence = false,
             stoppedGeofenceRadius = 200,
             useMovingGeofence = false,
-            movingGeofenceRadius = 200
+            movingGeofenceRadius = 100
         )
 
         @JvmField
@@ -116,7 +116,7 @@ data class RadarTrackingOptions(
             useStoppedGeofence = true,
             stoppedGeofenceRadius = 200,
             useMovingGeofence = true,
-            movingGeofenceRadius = 200
+            movingGeofenceRadius = 100
         )
 
         @JvmField
@@ -136,7 +136,7 @@ data class RadarTrackingOptions(
             useStoppedGeofence = true,
             stoppedGeofenceRadius = 200,
             useMovingGeofence = false,
-            movingGeofenceRadius = 200
+            movingGeofenceRadius = 100
         )
 
         internal const val KEY_DESIRED_STOPPED_UPDATE_INTERVAL = "desiredStoppedUpdateInterval"
