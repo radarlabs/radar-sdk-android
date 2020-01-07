@@ -304,7 +304,7 @@ internal class RadarLocationManager(
                 return
             }
             distance = location.distanceTo(lastMovedLocation)
-            duration = location.time - lastMovedAt
+            duration = (location.time - lastMovedAt) / 1000
             stopped = (distance < options.stopDistance && duration > options.stopDuration)
 
             logger.d(this.context, "Calculating stopped | stopped = $stopped; distance = $distance; duration = $duration; location.time = ${location.time}; lastMovedAt = $lastMovedAt")
