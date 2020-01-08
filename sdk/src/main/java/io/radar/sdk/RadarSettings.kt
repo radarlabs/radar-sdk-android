@@ -14,6 +14,7 @@ internal object RadarSettings {
     private const val KEY_USER_ID = "user_id"
     private const val KEY_DESCRIPTION = "user_description"
     private const val KEY_METADATA = "user_metadata"
+    private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
     private const val KEY_TRACKING = "background_tracking"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
     private const val KEY_LOG_LEVEL = "log_level"
@@ -73,6 +74,14 @@ internal object RadarSettings {
     internal fun setMetadata(context: Context, metadata: JSONObject?) {
         val metadataJSON = metadata?.toString()
         getSharedPreferences(context).edit { putString(KEY_METADATA, metadataJSON) }
+    }
+
+    internal fun getAdIdEnabled(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_AD_ID_ENABLED, false)
+    }
+
+    internal fun setAdIdEnabled(context: Context, enabled: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_AD_ID_ENABLED, enabled) }
     }
 
     internal fun getTracking(context: Context): Boolean {

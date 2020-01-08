@@ -38,7 +38,7 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null, addresses: Array<RadarAddress>? = null)
     }
 
-    interface RadarIPGeocodeApiCallback {
+    interface RadarIpGeocodeApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null, country: RadarRegion? = null)
     }
 
@@ -102,7 +102,9 @@ internal class RadarApiClient(
         params.putOpt("deviceId", RadarUtils.getDeviceId(context))
         params.putOpt("description", RadarSettings.getDescription(context))
         params.putOpt("metadata", RadarSettings.getMetadata(context))
-        params.putOpt("adId", RadarUtils.getAdId(context))
+        if (RadarSettings.getAdIdEnabled(context)) {
+            params.putOpt("adId", RadarUtils.getAdId(context))
+        }
         params.putOpt("latitude", location.latitude)
         params.putOpt("longitude", location.longitude)
         params.putOpt("accuracy", location.accuracy)
@@ -458,7 +460,7 @@ internal class RadarApiClient(
 
     internal fun ipGeocode(
         IP: String?,
-        callback: RadarIPGeocodeApiCallback
+        callback: RadarIpGeocodeApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
