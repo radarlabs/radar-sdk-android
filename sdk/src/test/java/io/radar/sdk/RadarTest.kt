@@ -806,7 +806,7 @@ class RadarTest {
     fun test_Radar_ipGeocode_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
-        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("{\n   \"meta\": {\n      \"code\": 200\n   },\n   \"country\": {\n      \"name\": \"United States\",\n      \"code\": \"US\",\n      \"flag\": \"\uD83C\uDDFA\uD83C\uDDF8\"\n   }\n}\n")
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/geocode_ip.json")
 
         val latch = CountDownLatch(1)
 
