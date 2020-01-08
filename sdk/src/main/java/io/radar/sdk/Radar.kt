@@ -107,10 +107,10 @@ object Radar {
      */
     interface RadarGeocodeCallback {
         /**
-         * Called when a geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the raw response and an array of addresses.
+         * Called when a geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding results (an array of addresses).
          *
          * @param[status] RadarStatus The request status.
-         * @param[addresses] Array<RadarAddress>? If successsful, an array of geocoded addresses.
+         * @param[addresses] Array<RadarAddress>? If successful, the geocoding results (an array of addresses).
          */
         fun onComplete(
             status: RadarStatus,
@@ -123,10 +123,10 @@ object Radar {
      */
     interface RadarIpGeocodeCallback {
         /**
-         * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the raw response and an array of regions.
+         * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a country).
          *
          * @param[status] RadarStatus The request status.
-         * @param[country] RadarRegion? If successsful, the region of the IP address.
+         * @param[country] RadarRegion? If successful, the geocoding result (a country).
          */
         fun onComplete(
             status: RadarStatus,
