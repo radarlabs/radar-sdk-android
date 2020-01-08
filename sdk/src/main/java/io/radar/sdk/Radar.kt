@@ -324,9 +324,9 @@ object Radar {
     }
 
     /**
-     * Enables Android advertising ID collection.
+     * Enables `adId` (Android advertising ID) collection.
      *
-     * @param[enabled] A boolean indicating whether Android advertising ID should be collected.
+     * @param[enabled] A boolean indicating whether `adId` should be collected.
      */
     fun setAdIdEnabled(enabled: Boolean) {
         RadarSettings.setAdIdEnabled(context, enabled)
