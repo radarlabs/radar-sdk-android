@@ -213,6 +213,7 @@ object Radar {
      * @param[context] The context
      * @param[publishableKey] Your publishable API key
      */
+    @JvmStatic
     fun initialize(context: Context?, publishableKey: String? = null) {
         if (context == null) {
             return
@@ -250,6 +251,7 @@ object Radar {
      *
      * @param[userId] A stable unique ID for the user. If null, the previous `userId` will be cleared.
      */
+    @JvmStatic
     fun setUserId(userId: String?) {
         if (!initialized) {
             return
@@ -263,6 +265,7 @@ object Radar {
      *
      * @return The current `userId`.
      */
+    @JvmStatic
     fun getUserId(): String? {
         if (!initialized) {
             return null
@@ -276,6 +279,7 @@ object Radar {
      *
      * @param[description] A description for the user. If null, the previous `description` will be cleared.
      */
+    @JvmStatic
     fun setDescription(description: String?) {
         if (!initialized) {
             return
@@ -289,6 +293,7 @@ object Radar {
      *
      * @return The current `description`.
      */
+    @JvmStatic
     fun getDescription(): String? {
         if (!initialized) {
             return null
@@ -302,6 +307,7 @@ object Radar {
      *
      * @param[metadata] A set of custom key-value pairs for the user. Must have 16 or fewer keys and values of type string, boolean, or number. If `null`, the previous `metadata` will be cleared.
      */
+    @JvmStatic
     fun setMetadata(metadata: JSONObject?) {
         if (!initialized) {
             return
@@ -315,6 +321,7 @@ object Radar {
      *
      * @return The current `metadata`.
      */
+    @JvmStatic
     fun getMetadata(): JSONObject? {
         if (!initialized) {
             return null
@@ -328,6 +335,7 @@ object Radar {
      *
      * @param[enabled] A boolean indicating whether `adId` should be collected.
      */
+    @JvmStatic
     fun setAdIdEnabled(enabled: Boolean) {
         RadarSettings.setAdIdEnabled(context, enabled)
     }
@@ -337,6 +345,7 @@ object Radar {
      *
      * @param[callback] An optional callback.
      */
+    @JvmStatic
     fun getLocation(callback: RadarLocationCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -365,6 +374,7 @@ object Radar {
      *
      * @param[callback] An optional callback.
      */
+    @JvmStatic
     fun trackOnce(callback: RadarTrackCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -408,6 +418,7 @@ object Radar {
      * @param[location] A location for the user.
      * @param[callback] An optional callback.
      */
+    @JvmStatic
     fun trackOnce(location: Location, callback: RadarTrackCallback?) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -441,6 +452,7 @@ object Radar {
      *
      * @param[options] Configurable tracking options.
      */
+    @JvmStatic
     fun startTracking(options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT) {
         if (!initialized) {
             return
@@ -452,6 +464,7 @@ object Radar {
     /**
      * Stops tracking the user's location in the background. See [](https://radar.io/documentation/sdk#android-background).
      */
+    @JvmStatic
     fun stopTracking() {
         if (!initialized) {
             return
@@ -465,6 +478,7 @@ object Radar {
      *
      * @return A boolean indicating whether tracking has been started.
      */
+    @JvmStatic
     fun isTracking(): Boolean {
         if (!initialized) {
             return false
@@ -478,6 +492,7 @@ object Radar {
      *
      * @return The current tracking options.
      */
+    @JvmStatic
     fun getTrackingOptions(): RadarTrackingOptions? {
         if (!initialized) {
             return null
@@ -492,6 +507,7 @@ object Radar {
      * @param[eventId] The ID of the event to accept.
      * @param[verifiedPlaceId] For place entry events, the ID of the verified place. May be `null`.
      */
+    @JvmStatic
     fun acceptEvent(eventId: String, verifiedPlaceId: String? = null) {
         if (!initialized) {
             return
@@ -505,6 +521,7 @@ object Radar {
      *
      * @param[eventId] The ID of the event to reject.
      */
+    @JvmStatic
     fun rejectEvent(eventId: String) {
         if (!initialized) {
             return
@@ -523,6 +540,7 @@ object Radar {
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
+    @JvmStatic
     fun searchPlaces(
         radius: Int,
         chains: Array<String>?,
@@ -597,6 +615,7 @@ object Radar {
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
+    @JvmStatic
     fun searchPlaces(
         location: Location,
         radius: Int,
@@ -662,6 +681,7 @@ object Radar {
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
+    @JvmStatic
     fun searchGeofences(
         radius: Int,
         tags: Array<String>?,
@@ -726,6 +746,7 @@ object Radar {
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
+    @JvmStatic
     fun searchGeofences(
         location: Location,
         radius: Int,
@@ -781,6 +802,7 @@ object Radar {
      * @param[query] The address to geocode.
      * @param[callback] A callback.
      */
+    @JvmStatic
     fun geocode(
         query: String,
         callback: RadarGeocodeCallback
@@ -823,6 +845,7 @@ object Radar {
      *
      * @param[callback] A callback.
      */
+    @JvmStatic
     fun reverseGeocode(
         callback: RadarGeocodeCallback
     ) {
@@ -872,6 +895,7 @@ object Radar {
      * @param[location] The location to reverse geocode.
      * @param[callback] A callback.
      */
+    @JvmStatic
     fun reverseGeocode(
         location: Location,
         callback: RadarGeocodeCallback
@@ -914,6 +938,7 @@ object Radar {
      *
      * @param[callback] A callback.
      */
+    @JvmStatic
     fun ipGeocode(
         callback: RadarIpGeocodeCallback
     ) {
@@ -952,6 +977,7 @@ object Radar {
      *
      * @param[level] The log level.
      */
+    @JvmStatic
     fun setLogLevel(level: RadarLogLevel) {
         if (!initialized) {
             return
@@ -967,6 +993,7 @@ object Radar {
      *
      * @return A display string for the location source value.
      */
+    @JvmStatic
     fun stringForSource(source: RadarLocationSource): String? {
         return when (source) {
             RadarLocationSource.FOREGROUND_LOCATION -> "foregroundLocation"
