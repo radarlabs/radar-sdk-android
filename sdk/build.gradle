@@ -7,7 +7,7 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 ext {
-    radarVersion = '3.0.0-alpha.4'
+    radarVersion = '3.0.0-alpha.5'
 }
 
 android {
@@ -78,6 +78,9 @@ publishing {
             pom.withXml {
                 def dependenciesNode = asNode().appendNode('dependencies')
                 configurations.implementation.allDependencies.each { dependency ->
+                    if (dependency.group == null || dependency.name == null || dependency.version == null) {
+                        return
+                    }
                     def dependencyNode = dependenciesNode.appendNode('dependency')
                     dependencyNode.appendNode('groupId', dependency.group)
                     dependencyNode.appendNode('artifactId', dependency.name)
