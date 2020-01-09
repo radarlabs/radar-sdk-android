@@ -107,10 +107,10 @@ object Radar {
      */
     interface RadarGeocodeCallback {
         /**
-         * Called when a geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the raw response and an array of addresses.
+         * Called when a geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding results (an array of addresses).
          *
          * @param[status] RadarStatus The request status.
-         * @param[addresses] Array<RadarAddress>? If successsful, an array of geocoded addresses.
+         * @param[addresses] Array<RadarAddress>? If successful, the geocoding results (an array of addresses).
          */
         fun onComplete(
             status: RadarStatus,
@@ -121,12 +121,12 @@ object Radar {
     /**
      * Called when an IP geocoding request succeeds, fails, or times out.
      */
-    interface RadarIPGeocodeCallback {
+    interface RadarIpGeocodeCallback {
         /**
-         * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the raw response and an array of regions.
+         * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a country).
          *
          * @param[status] RadarStatus The request status.
-         * @param[country] RadarRegion? If successsful, the region of the IP address.
+         * @param[country] RadarRegion? If successful, the geocoding result (a country).
          */
         fun onComplete(
             status: RadarStatus,
@@ -321,6 +321,15 @@ object Radar {
         }
 
         return RadarSettings.getMetadata(context)
+    }
+
+    /**
+     * Enables `adId` (Android advertising ID) collection.
+     *
+     * @param[enabled] A boolean indicating whether `adId` should be collected.
+     */
+    fun setAdIdEnabled(enabled: Boolean) {
+        RadarSettings.setAdIdEnabled(context, enabled)
     }
 
     /**
@@ -767,9 +776,9 @@ object Radar {
     }
 
     /**
-     * Provide coordinates and address information corresponding to a location query string.
+     * Geocodes an address, converting address to coordinates.
      *
-     * @param[query] The address string to geocode.
+     * @param[query] The address to geocode.
      * @param[callback] A callback.
      */
     fun geocode(
@@ -790,9 +799,9 @@ object Radar {
     }
 
     /**
-     * Provide coordinates and address information corresponding to a location query string.
+     * Geocodes an addresss, converting address to coordinates.
      *
-     * @param[query] The address string to geocode.
+     * @param[query] The address to geocode.
      * @param[block] A block callback.
      */
     fun geocode(
@@ -810,7 +819,7 @@ object Radar {
     }
 
     /**
-     * Gets the device's current location, then geocodes that location, returning an array of addresses.
+     * Gets the device's current location, then reverse geocodes that location, converting coordinates to address.
      *
      * @param[callback] A callback.
      */
@@ -841,7 +850,7 @@ object Radar {
     }
 
     /**
-     * Gets the device's current location, then geocodes that location, returning an array of addresses.
+     * Gets the device's current location, then reverse geocodes that location, converting coordinates to address.
      *
      * @param[block] A block callback.
      */
@@ -858,9 +867,9 @@ object Radar {
     }
 
     /**
-     * Provide address information corresponding to a location point.
+     * Reverse geocodes a location, converting coordinates to address.
      *
-     * @param[location] The location to geocode.
+     * @param[location] The location to reverse geocode.
      * @param[callback] A callback.
      */
     fun reverseGeocode(
@@ -881,7 +890,7 @@ object Radar {
     }
 
     /**
-     * Provide address information corresponding to a location point.
+     * Reverse geocodes a location, converting coordinates to address.
      *
      * @param[location] The location to geocode.
      * @param[block] A block callback.
@@ -901,12 +910,12 @@ object Radar {
     }
 
     /**
-     * Provide coordinates and address information corresponding to the device's IP address.
+     * Geocodes the device's current IP address, converting IP address to country.
      *
      * @param[callback] A callback.
      */
-    fun geocodeDeviceIP(
-        callback: RadarIPGeocodeCallback
+    fun ipGeocode(
+        callback: RadarIpGeocodeCallback
     ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -914,7 +923,7 @@ object Radar {
             return
         }
 
-        apiClient.ipGeocode(null, object: RadarApiClient.RadarIPGeocodeApiCallback {
+        apiClient.ipGeocode(null, object: RadarApiClient.RadarIpGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, country: RadarRegion?) {
                 callback.onComplete(status, country)
             }
@@ -922,62 +931,20 @@ object Radar {
     }
 
     /**
-     * Provide coordinates and address information corresponding to the device's IP address.
+     * Geocodes the device's current IP address, converting IP address to country.
      *
      * @param[block] A block callback.
      */
-    fun geocodeDeviceIP(
+    fun ipGeocode(
         block: (status: RadarStatus, country: RadarRegion?) -> Unit
     ) {
-        geocodeDeviceIP(
-            object: RadarIPGeocodeCallback {
+        ipGeocode(
+            object: RadarIpGeocodeCallback {
                 override fun onComplete(status: RadarStatus, country: RadarRegion?) {
                     block(status, country)
                 }
             }
         )
-    }
-
-    /**
-     * Provide coordinates and address information corresponding to the given IP address.
-     * If no IP address is provided, the device's IP is used.
-     *
-     * @param[IP] The IP address to geocode.
-     * @param[callback] A callback.
-     */
-    fun geocodeIP(
-        IP: String,
-        callback: RadarIPGeocodeCallback
-    ) {
-        if (!initialized) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
-            return
-        }
-
-        apiClient.ipGeocode(IP, object: RadarApiClient.RadarIPGeocodeApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, country: RadarRegion?) {
-                callback.onComplete(status, country)
-            }
-        })
-    }
-
-    /**
-     * Provide coordinates and address information corresponding to the given IP address.
-     * If no IP address is provided, the device's IP is used.
-     *
-     * @param[IP] The IP address to geocode.
-     * @param[block] A block callback.
-     */
-    fun geocodeIP(
-        IP: String,
-        block: (status: RadarStatus, country: RadarRegion?) -> Unit
-    ) {
-        geocodeIP(IP, object: RadarIPGeocodeCallback {
-            override fun onComplete(status: RadarStatus, country: RadarRegion?) {
-                block(status, country)
-            }
-        })
     }
 
     /**

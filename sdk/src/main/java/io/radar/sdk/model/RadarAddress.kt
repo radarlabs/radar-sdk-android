@@ -15,32 +15,32 @@ class RadarAddress(
     val coordinate: RadarCoordinate,
 
     /**
-     * The fully formatted representation of the address.
+     * The formatted representation of the address.
      */
     val formattedAddress: String?,
 
     /**
-    * The country of the address.
+    * The name of the country of the address.
     */
     val country: String?,
 
     /**
-     * The country code of the address.
+     * The unique code of the country of the address.
      */
     val countryCode: String?,
 
     /**
-     * The country flag of the address.
+     * The flag of the country of the address.
      */
     val countryFlag: String?,
 
     /**
-     * The state of the address.
+     * The name of the state of the address.
      */
     val state: String?,
 
     /**
-     * The state code of the address.
+     * The unique code of the state of the address.
      */
     val stateCode: String?,
 
@@ -70,18 +70,18 @@ class RadarAddress(
     val neighborhood: String?,
 
     /**
-     * The number / house number of the address.
+     * The street number of the address.
      */
     val number: String?,
 
     /**
-     * Confidence in the address received from the API.
+     * The confidence level of the geocoding result.
      */
     val confidence: RadarAddressConfidence
 ) {
 
     /**
-     * The confidence levels for addresses
+     * The confidence levels for geocoding results.
      */
     enum class RadarAddressConfidence {
         EXACT,
@@ -91,7 +91,8 @@ class RadarAddress(
     }
 
     internal companion object {
-        private const val FIELD_COORDINATE = "coordinate"
+        private const val FIELD_LATITUDE = "latitude"
+        private const val FIELD_LONGITUDE = "longitude"
         private const val FIELD_FORMATTED_ADDRESS = "formattedAddress"
         private const val FIELD_COUNTRY = "country"
         private const val FIELD_COUNTRY_CODE = "countryCode"
@@ -108,31 +109,18 @@ class RadarAddress(
 
         fun fromJson(obj: JSONObject): RadarAddress {
 
-            val coords = obj.optJSONArray(FIELD_COORDINATE)
-            val coordinate = RadarCoordinate(coords?.optDouble(1) ?: 0.0, coords?.optDouble(0) ?: 0.0)
-
+            val coordinate = RadarCoordinate(obj.optDouble(FIELD_LATITUDE), obj.optDouble(FIELD_LONGITUDE))
             val formattedAddress = obj.optString(FIELD_FORMATTED_ADDRESS, null)
-
             val country = obj.optString(FIELD_COUNTRY, null)
-
             val countryCode = obj.optString(FIELD_COUNTRY_CODE, null)
-
             val countryFlag = obj.optString(FIELD_COUNTRY_FLAG, null)
-
             val state = obj.optString(FIELD_STATE, null)
-
             val stateCode = obj.optString(FIELD_STATE_CODE, null)
-
             val postalCode = obj.optString(FIELD_POSTAL_CODE, null)
-
             val city = obj.optString(FIELD_CITY, null)
-
             val borough = obj.optString(FIELD_BOROUGH, null)
-
             val county = obj.optString(FIELD_COUNTY, null)
-
             val neighborhood = obj.optString(FIELD_NEIGHBORHOOD, null)
-
             val number = obj.optString(FIELD_NUMBER, null)
 
             val confidence = when(obj.optString(FIELD_CONFIDENCE)) {

@@ -53,6 +53,18 @@ class MainActivity : AppCompatActivity() {
         ) { status, location, geofences ->
             Log.v("example", "Search geofences: status = $status; location = $location; geofences = $geofences")
         }
+
+        Radar.geocode("20 Jay Street, Brooklyn, NY") { status, addresses ->
+            Log.v("example", "Geocode: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
+        }
+
+        Radar.reverseGeocode { status, addresses ->
+            Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
+        }
+
+        Radar.ipGeocode { status, country ->
+            Log.v("example", "IP geocode: status = $status; code = ${country?.code}; flag = ${country?.flag}")
+        }
     }
 
 }
