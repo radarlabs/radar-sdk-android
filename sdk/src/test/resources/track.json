@@ -64,11 +64,32 @@
             "externalId": "2"
          }
       ],
-      "segments": [],
+      "segments": [
+         {
+            "description": "Starbucks Visitors",
+            "externalId": "starbucks-visitors"
+         }
+      ],
       "topChains": [
          {
-            "name": "TravelCenters of America",
-            "slug": "travelcenters-of-america"
+            "domain": "starbucks.com",
+            "name": "Starbucks",
+            "slug": "starbucks",
+            "externalId": "811",
+            "metadata": {
+               "category": "Coffee & Tea",
+               "loyalty": false
+            }
+         },
+         {
+            "domain": "walgreens.com",
+            "name": "Walgreens",
+            "slug": "walgreens",
+            "externalId": "5",
+            "metadata": {
+               "category": "Pharmacy",
+               "loyalty": false
+            }
          }
       ],
       "_id": "5bb8d4fbfd58d5002103ff5c",

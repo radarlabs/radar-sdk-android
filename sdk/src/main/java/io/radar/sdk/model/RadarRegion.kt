@@ -30,7 +30,7 @@ class RadarRegion(
     val type: String,
 
     /**
-     * The (optional) flag of the region
+     * The optional flag of the region
      */
     val flag: String
 ) {
