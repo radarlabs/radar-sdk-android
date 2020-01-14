@@ -69,6 +69,10 @@ internal class RadarLocationManager(
     }
 
     fun getLocation(callback: RadarLocationCallback?) {
+        getLocation(RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback)
+    }
+
+    fun getLocation(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, callback: RadarLocationCallback?) {
         this.addCallback(callback)
 
         if (!permissionsHelper.fineLocationPermissionGranted(context)) {
@@ -82,8 +86,14 @@ internal class RadarLocationManager(
 
         val locationManager = this
 
+        val desiredPriority = when(desiredAccuracy) {
+            RadarTrackingOptionsDesiredAccuracy.HIGH -> LocationRequest.PRIORITY_HIGH_ACCURACY
+            RadarTrackingOptionsDesiredAccuracy.MEDIUM -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+            RadarTrackingOptionsDesiredAccuracy.LOW -> LocationRequest.PRIORITY_LOW_POWER
+        }
+
         val locationRequest = LocationRequest().apply {
-            priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+            priority = desiredPriority
             interval = 5000L
             fastestInterval = 5000L
         }
