@@ -370,6 +370,37 @@ object Radar {
     }
 
     /**
+     * Gets the device's current location with the desired accuracy.
+     *
+     * @param[desiredAccuracy] The desired accuracy.
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun getLocation(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, callback: RadarLocationCallback? = null) {
+        if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        locationManager.getLocation(desiredAccuracy, callback)
+    }
+
+    /**
+     * Gets the device's current location with the desired accuracy.
+     *
+     * @param[desiredAccuracy] The desired accuracy.
+     * @param[block] A block callback.
+     */
+    fun getLocation(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (status: RadarStatus, location: Location?, stopped: Boolean) -> Unit) {
+        getLocation(desiredAccuracy, object : RadarLocationCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                block(status, location, stopped)
+            }
+        })
+    }
+
+    /**
      * Tracks the user's location once in the foreground.
      *
      * @param[callback] An optional callback.

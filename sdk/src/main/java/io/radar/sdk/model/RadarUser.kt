@@ -45,12 +45,12 @@ class RadarUser(
     val geofences: Array<RadarGeofence>?,
 
     /**
-     * The user's last known place. May be `null` if the user is not at a place, or if Places is turned off. See [](https://radar.io/documentation/places).
+     * The user's last known place. May be `null` if the user is not at a place, or if Places is not enabled. See [](https://radar.io/documentation/places).
      */
     val place: RadarPlace?,
 
     /**
-     * Learned insights for the user. May be `null` if no insights are available, or if Insights is turned off. See [](https://radar.io/documentation/insights).
+     * Learned insights for the user. May be `null` if no insights are available, or if Insights is not enabled. See [](https://radar.io/documentation/insights).
      */
     val insights: RadarUserInsights?,
 
@@ -65,29 +65,39 @@ class RadarUser(
     val foreground: Boolean,
 
     /**
-     * The user's last known country. May be `null` if country is not available or if Regions is turned off.
+     * The user's last known country. May be `null` if country is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
      */
     val country: RadarRegion?,
 
     /**
-     * The user's last known state. May be `null` if state is not available or if Regions is turned off.
+     * The user's last known state. May be `null` if state is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
      */
     val state: RadarRegion?,
 
     /**
-     * The user's last known designated market area (DMA). May be `null` if DMA is not available or if Regions is turned off.
+     * The user's last known designated market area (DMA). May be `null` if DMA is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
      */
     val dma: RadarRegion?,
 
     /**
-     * The user's last known postal code. May be `null` if postal code is not available or if Regions is turned off.
+     * The user's last known postal code. May be `null` if postal code is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
      */
     val postalCode: RadarRegion?,
 
     /**
      * An array of nearby chains. May be `null` if no chains are nearby or if nearby chains are not enabled.
      */
-    val nearbyPlaceChains: Array<RadarChain>?
+    val nearbyPlaceChains: Array<RadarChain>?,
+
+    /**
+     * The user's segments. May be `null` if segments are not enabled.
+     */
+    val segments: Array<RadarSegment>?,
+
+    /**
+     * The user's top chains. May be `null` if segments are not enabled.
+     */
+    val topChains: Array<RadarChain>?
 ) {
 
     internal companion object {
@@ -109,6 +119,8 @@ class RadarUser(
         private const val FIELD_DMA = "dma"
         private const val FIELD_POSTAL_CODE = "postalCode"
         private const val FIELD_NEARBY_PLACE_CHAINS = "nearbyPlaceChains"
+        private const val FIELD_SEGMENTS = "segments"
+        private const val FIELD_TOP_CHAINS = "topChains"
 
         internal fun fromJson(obj: JSONObject): RadarUser {
             val id = obj.optString(FIELD_ID)
@@ -118,36 +130,25 @@ class RadarUser(
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
             val stopped: Boolean = obj.optBoolean(FIELD_STOPPED)
             val foreground: Boolean = obj.optBoolean(FIELD_FOREGROUND)
-
             val locationObj = obj.optJSONObject(FIELD_LOCATION)
             val coords = locationObj?.optJSONArray(FIELD_COORDINATES)
-            val location = Location("radar").apply {
+            val location = Location("RadarSDK").apply {
                 longitude = coords?.optDouble(0) ?: 0.0
                 latitude = coords?.optDouble(1) ?: 0.0
                 if (obj.has(FIELD_LOCATION_ACCURACY)) {
                     accuracy = obj.optDouble(FIELD_LOCATION_ACCURACY).toFloat()
                 }
             }
-
-            val geofences = obj.optJSONArray(FIELD_GEOFENCES)?.let { array ->
-                Array(array.length()) { index ->
-                    array.optJSONObject(index)?.let(RadarGeofence.Companion::fromJson)
-                }.filterNotNull().toTypedArray()
-            }
-
+            val geofences = RadarGeofence.fromJSONArray(obj.optJSONArray(FIELD_GEOFENCES))
             val place = obj.optJSONObject(FIELD_PLACE)?.let(RadarPlace.Companion::fromJsonNullable)
             val insights = obj.optJSONObject(FIELD_INSIGHTS)?.let(RadarUserInsights.Companion::fromJson)
-
             val country = obj.optJSONObject(FIELD_COUNTRY)?.let(RadarRegion.Companion::fromJson)
             val state = obj.optJSONObject(FIELD_STATE)?.let(RadarRegion.Companion::fromJson)
             val dma = obj.optJSONObject(FIELD_DMA)?.let(RadarRegion.Companion::fromJson)
             val postalCode = obj.optJSONObject(FIELD_POSTAL_CODE)?.let(RadarRegion.Companion::fromJson)
-
-            val nearbyChains = obj.optJSONArray(FIELD_NEARBY_PLACE_CHAINS)?.let { nearbyArr ->
-                (0 until nearbyArr.length()).map { idx ->
-                    RadarChain.fromJson(nearbyArr.optJSONObject(idx) ?: JSONObject())
-                }
-            }?.toTypedArray()
+            val nearbyPlaceChains = RadarChain.fromJSONArray(obj.optJSONArray(FIELD_NEARBY_PLACE_CHAINS))
+            val segments = RadarSegment.fromJSONArray(obj.optJSONArray(FIELD_SEGMENTS))
+            val topChains = RadarChain.fromJSONArray(obj.optJSONArray(FIELD_TOP_CHAINS))
 
             return RadarUser(
                 id,
@@ -165,7 +166,9 @@ class RadarUser(
                 state,
                 dma,
                 postalCode,
-                nearbyChains
+                nearbyPlaceChains,
+                segments,
+                topChains
             )
         }
 

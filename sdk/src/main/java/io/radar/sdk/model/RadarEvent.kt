@@ -188,12 +188,6 @@ class RadarEvent(
         private const val FIELD_COORDINATES = "coordinates"
         private const val FIELD_LOCATION_ACCURACY = "locationAccuracy"
 
-        internal fun eventsFromJSONArray(array: JSONArray): Array<RadarEvent> {
-            return Array(array.length()) { index ->
-                fromJson(array.optJSONObject(index) ?: JSONObject())
-            }
-        }
-
         @SuppressLint("SimpleDateFormat")
         private fun fromJson(obj: JSONObject): RadarEvent {
             val id = obj.optString(FIELD_ID)
@@ -278,6 +272,13 @@ class RadarEvent(
                 alternatePlaces, verifiedPlace, verification, confidence, duration, location
             )
         }
+
+        internal fun fromJSONArray(array: JSONArray): Array<RadarEvent> {
+            return Array(array.length()) { index ->
+                fromJson(array.optJSONObject(index) ?: JSONObject())
+            }
+        }
+
     }
 
 }

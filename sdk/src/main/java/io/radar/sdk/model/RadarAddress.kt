@@ -108,7 +108,6 @@ class RadarAddress(
         private const val FIELD_CONFIDENCE = "confidence"
 
         fun fromJson(obj: JSONObject): RadarAddress {
-
             val coordinate = RadarCoordinate(obj.optDouble(FIELD_LATITUDE), obj.optDouble(FIELD_LONGITUDE))
             val formattedAddress = obj.optString(FIELD_FORMATTED_ADDRESS, null)
             val country = obj.optString(FIELD_COUNTRY, null)

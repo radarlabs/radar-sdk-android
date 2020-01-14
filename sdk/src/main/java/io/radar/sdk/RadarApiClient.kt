@@ -173,7 +173,7 @@ internal class RadarApiClient(
                 }
 
                 val events = res.optJSONArray("events")?.let { eventsArr ->
-                    RadarEvent.eventsFromJSONArray(eventsArr)
+                    RadarEvent.fromJSONArray(eventsArr)
                 }
                 val user = res.optJSONObject("user")?.let { userObj ->
                     RadarUser.fromJson(userObj)

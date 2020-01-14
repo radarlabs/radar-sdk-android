@@ -121,8 +121,8 @@ data class RadarTrackingOptions(
 
         @JvmField
         val EFFICIENT = RadarTrackingOptions(
-            desiredStoppedUpdateInterval = 0,
-            fastestStoppedUpdateInterval = 0,
+            desiredStoppedUpdateInterval = 3600,
+            fastestStoppedUpdateInterval = 900,
             desiredMovingUpdateInterval = 900,
             fastestMovingUpdateInterval = 150,
             desiredSyncInterval = 140,
@@ -133,8 +133,8 @@ data class RadarTrackingOptions(
             stopTrackingAfter = null,
             replay = RadarTrackingOptionsReplay.REPLAY_STOPS,
             sync = RadarTrackingOptionsSync.STOPS_AND_EXITS,
-            useStoppedGeofence = true,
-            stoppedGeofenceRadius = 200,
+            useStoppedGeofence = false,
+            stoppedGeofenceRadius = 0,
             useMovingGeofence = false,
             movingGeofenceRadius = 0
         )
