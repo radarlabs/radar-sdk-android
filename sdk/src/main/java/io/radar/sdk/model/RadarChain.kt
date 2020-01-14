@@ -1,5 +1,6 @@
 package io.radar.sdk.model
 
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -44,6 +45,16 @@ class RadarChain(
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
 
             return RadarChain(slug, name, externalId, metadata)
+        }
+
+        fun fromJSONArray(array: JSONArray?): Array<RadarChain>? {
+            if (array == null) {
+                return null
+            }
+
+            return Array(array.length()) { index ->
+                fromJson(array.optJSONObject(index))
+            }.filterNotNull().toTypedArray()
         }
 
     }

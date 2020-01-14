@@ -29,7 +29,11 @@ class RadarSegment(
             return RadarSegment(description, externalId)
         }
 
-        fun fromJSONArray(array: JSONArray): Array<RadarSegment> {
+        fun fromJSONArray(array: JSONArray?): Array<RadarSegment>? {
+            if (array == null) {
+                return null
+            }
+
             return Array(array.length()) { index ->
                 fromJson(array.optJSONObject(index))
             }.filterNotNull().toTypedArray()

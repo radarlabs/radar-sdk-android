@@ -130,48 +130,25 @@ class RadarUser(
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
             val stopped: Boolean = obj.optBoolean(FIELD_STOPPED)
             val foreground: Boolean = obj.optBoolean(FIELD_FOREGROUND)
-
             val locationObj = obj.optJSONObject(FIELD_LOCATION)
             val coords = locationObj?.optJSONArray(FIELD_COORDINATES)
-            val location = Location("radar").apply {
+            val location = Location("RadarSDK").apply {
                 longitude = coords?.optDouble(0) ?: 0.0
                 latitude = coords?.optDouble(1) ?: 0.0
                 if (obj.has(FIELD_LOCATION_ACCURACY)) {
                     accuracy = obj.optDouble(FIELD_LOCATION_ACCURACY).toFloat()
                 }
             }
-
-            val geofences = obj.optJSONArray(FIELD_GEOFENCES)?.let { array ->
-                Array(array.length()) { index ->
-                    array.optJSONObject(index)?.let(RadarGeofence.Companion::fromJson)
-                }.filterNotNull().toTypedArray()
-            }
-
+            val geofences = RadarGeofence.fromJSONArray(obj.optJSONArray(FIELD_GEOFENCES))
             val place = obj.optJSONObject(FIELD_PLACE)?.let(RadarPlace.Companion::fromJsonNullable)
             val insights = obj.optJSONObject(FIELD_INSIGHTS)?.let(RadarUserInsights.Companion::fromJson)
-
             val country = obj.optJSONObject(FIELD_COUNTRY)?.let(RadarRegion.Companion::fromJson)
             val state = obj.optJSONObject(FIELD_STATE)?.let(RadarRegion.Companion::fromJson)
             val dma = obj.optJSONObject(FIELD_DMA)?.let(RadarRegion.Companion::fromJson)
             val postalCode = obj.optJSONObject(FIELD_POSTAL_CODE)?.let(RadarRegion.Companion::fromJson)
-
-            val nearbyChains = obj.optJSONArray(FIELD_NEARBY_PLACE_CHAINS)?.let { nearbyChainsArr ->
-                (0 until nearbyChainsArr.length()).map { idx ->
-                    RadarChain.fromJson(nearbyChainsArr.optJSONObject(idx) ?: JSONObject())
-                }
-            }?.toTypedArray()
-
-            val segments = obj.optJSONArray(FIELD_SEGMENTS)?.let { segmentsArr ->
-                (0 until segmentsArr.length()).map { idx ->
-                    RadarSegment.fromJson(segmentsArr.optJSONObject(idx) ?: JSONObject())
-                }
-            }?.toTypedArray()
-
-            val topChains = obj.optJSONArray(FIELD_TOP_CHAINS)?.let { topChainsArr ->
-                (0 until topChainsArr.length()).map { idx ->
-                    RadarChain.fromJson(topChainsArr.optJSONObject(idx) ?: JSONObject())
-                }
-            }?.toTypedArray()
+            val nearbyPlaceChains = RadarChain.fromJSONArray(obj.optJSONArray(FIELD_NEARBY_PLACE_CHAINS))
+            val segments = RadarSegment.fromJSONArray(obj.optJSONArray(FIELD_SEGMENTS))
+            val topChains = RadarChain.fromJSONArray(obj.optJSONArray(FIELD_TOP_CHAINS))
 
             return RadarUser(
                 id,
@@ -189,7 +166,7 @@ class RadarUser(
                 state,
                 dma,
                 postalCode,
-                nearbyChains,
+                nearbyPlaceChains,
                 segments,
                 topChains
             )

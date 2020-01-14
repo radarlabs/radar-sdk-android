@@ -99,7 +99,11 @@ class RadarGeofence(
         }
 
         @Throws(JSONException::class)
-        fun fromJSONArray(array: JSONArray): Array<RadarGeofence> {
+        fun fromJSONArray(array: JSONArray?): Array<RadarGeofence>? {
+            if (array == null) {
+                return null
+            }
+
             return Array(array.length()) { index ->
                 fromJson(array.optJSONObject(index))
             }.filterNotNull().toTypedArray()
