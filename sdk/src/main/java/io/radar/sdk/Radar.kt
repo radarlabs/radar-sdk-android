@@ -234,6 +234,7 @@ object Radar {
         }
         if (!this::locationManager.isInitialized) {
             this.locationManager = RadarLocationManager(this.context, apiClient, logger)
+            this.locationManager.updateTracking()
         }
 
         this.logger.d(this.context, "Initializing")

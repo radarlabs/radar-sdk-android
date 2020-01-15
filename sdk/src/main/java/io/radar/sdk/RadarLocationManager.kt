@@ -168,7 +168,7 @@ internal class RadarLocationManager(
         }
     }
 
-    private fun updateTracking(location: Location? = null) {
+    internal fun updateTracking(location: Location? = null) {
         var tracking = RadarSettings.getTracking(context)
         val options = RadarSettings.getTrackingOptions(context)
 
