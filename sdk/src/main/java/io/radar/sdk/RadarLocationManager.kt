@@ -360,7 +360,7 @@ internal class RadarLocationManager(
         val now = System.currentTimeMillis()
         val lastSyncInterval = now - lastSentAt
         if (!ignoreSync) {
-            if (!force && stopped && wasStopped && distance < options.stopDistance && options.desiredStoppedUpdateInterval == 0) {
+            if (!force && stopped && wasStopped && distance < options.stopDistance && (options.desiredStoppedUpdateInterval == 0 || options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.ALL)) {
                 logger.d(this.context, "Skipping sync: already stopped | stopped = $stopped; wasStopped = $wasStopped")
 
                 return
