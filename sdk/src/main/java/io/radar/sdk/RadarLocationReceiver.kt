@@ -8,7 +8,6 @@ import android.content.Intent
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
 import com.google.android.gms.location.LocationResult
-import io.radar.sdk.Radar.RadarLocationSource
 
 class RadarLocationReceiver : BroadcastReceiver() {
 
@@ -42,9 +41,9 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 val event = GeofencingEvent.fromIntent(intent)
                 event?.triggeringLocation?.also {
                     val source = when (event.geofenceTransition) {
-                        Geofence.GEOFENCE_TRANSITION_ENTER -> RadarLocationSource.GEOFENCE_ENTER
-                        Geofence.GEOFENCE_TRANSITION_DWELL -> RadarLocationSource.GEOFENCE_DWELL
-                        else -> RadarLocationSource.GEOFENCE_EXIT
+                        Geofence.GEOFENCE_TRANSITION_ENTER -> Radar.RadarLocationSource.GEOFENCE_ENTER
+                        Geofence.GEOFENCE_TRANSITION_DWELL -> Radar.RadarLocationSource.GEOFENCE_DWELL
+                        else -> Radar.RadarLocationSource.GEOFENCE_EXIT
                     }
                     RadarJobScheduler.scheduleJob(context, it, source)
                 }
@@ -52,7 +51,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
             ACTION_LOCATION -> {
                 val result = LocationResult.extractResult(intent)
                 result?.lastLocation?.also {
-                    RadarJobScheduler.scheduleJob(context, it, RadarLocationSource.BACKGROUND_LOCATION)
+                    RadarJobScheduler.scheduleJob(context, it, Radar.RadarLocationSource.BACKGROUND_LOCATION)
                 }
             }
             Intent.ACTION_BOOT_COMPLETED -> {
