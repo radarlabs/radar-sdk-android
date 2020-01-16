@@ -29,6 +29,10 @@ internal class RadarLocationManager(
 
     internal var locationClient = FusedLocationProviderClient(context)
     internal var geofencingClient = GeofencingClient(context)
+    private var started = false
+    private var startedDesiredAccuracy = RadarTrackingOptionsDesiredAccuracy.NONE
+    private var startedInterval = 0
+    private var startedFastestInterval = 0
     private val callbacks = ArrayList<RadarLocationCallback>()
 
     internal companion object {
@@ -91,6 +95,7 @@ internal class RadarLocationManager(
             RadarTrackingOptionsDesiredAccuracy.HIGH -> LocationRequest.PRIORITY_HIGH_ACCURACY
             RadarTrackingOptionsDesiredAccuracy.MEDIUM -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
             RadarTrackingOptionsDesiredAccuracy.LOW -> LocationRequest.PRIORITY_LOW_POWER
+            else -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
         }
 
         val locationRequest = LocationRequest().apply {
@@ -125,22 +130,20 @@ internal class RadarLocationManager(
     }
 
     fun stopTracking() {
-        RadarState.setStarted(context, false)
+        this.started = false
         RadarSettings.setTracking(context, false)
         this.updateTracking()
     }
 
     private fun startLocationUpdates(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, interval: Int, fastestInterval: Int) {
-        val started = RadarState.getStarted(context)
-        val startedInterval = RadarState.getStartedInterval(context)
-        val startedFastestInterval = RadarState.getStartedFastestInterval(context)
-        val priority = when(desiredAccuracy) {
-            RadarTrackingOptionsDesiredAccuracy.HIGH -> LocationRequest.PRIORITY_HIGH_ACCURACY
-            RadarTrackingOptionsDesiredAccuracy.MEDIUM -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
-            RadarTrackingOptionsDesiredAccuracy.LOW -> LocationRequest.PRIORITY_LOW_POWER
-        }
+        if (!started || (desiredAccuracy != startedDesiredAccuracy) || (interval != startedInterval) || (fastestInterval != startedFastestInterval)) {
+            val priority = when(desiredAccuracy) {
+                RadarTrackingOptionsDesiredAccuracy.HIGH -> LocationRequest.PRIORITY_HIGH_ACCURACY
+                RadarTrackingOptionsDesiredAccuracy.MEDIUM -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+                RadarTrackingOptionsDesiredAccuracy.LOW -> LocationRequest.PRIORITY_LOW_POWER
+                else -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+            }
 
-        if (!started || (interval != startedInterval) || (fastestInterval != startedFastestInterval)) {
             val locationRequest = LocationRequest().apply {
                 this.priority = priority
                 this.interval = interval * 1000L
@@ -149,16 +152,17 @@ internal class RadarLocationManager(
 
             locationClient.requestLocationUpdates(locationRequest, RadarLocationReceiver.getLocationPendingIntent(context))
 
-            RadarState.setStarted(context, true)
-            RadarState.setStartedInterval(context, interval)
-            RadarState.setStartedFastestInterval(context, fastestInterval)
+            this.started = true
+            this.startedDesiredAccuracy = desiredAccuracy
+            this.startedInterval = interval
+            this.startedFastestInterval = fastestInterval
         }
     }
 
     private fun stopLocationUpdates() {
         locationClient.removeLocationUpdates(RadarLocationReceiver.getLocationPendingIntent(context))
 
-        RadarState.setStarted(context, false)
+        this.started = false
     }
 
     internal fun handleBootCompleted() {
@@ -411,7 +415,7 @@ internal class RadarLocationManager(
         }
     }
 
-    fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {
+    private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {
         logger.d(this.context, "Sending location | source = $source; location = $location; stopped = $stopped; replayed = $replayed")
 
         this.apiClient.track(location, stopped, source, replayed, object : RadarTrackApiCallback {

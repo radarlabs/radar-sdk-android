@@ -14,9 +14,6 @@ internal object RadarState {
     private const val KEY_LAST_MOVED_LOCATION_TIME = "last_moved_location_time"
     private const val KEY_LAST_MOVED_AT = "last_moved_at"
     private const val KEY_STOPPED = "stopped"
-    private const val KEY_STARTED = "started"
-    private const val KEY_STARTED_INTERVAL = "started_interval"
-    private const val KEY_STARTED_FASTEST_INTERVAL = "started_fastest_interval"
     private const val KEY_LAST_SENT_AT = "last_sent_at"
     private const val KEY_CAN_EXIT = "can_exit"
     private const val KEY_LAST_FAILED_STOPPED_LOCATION_LATITUDE = "last_failed_stopped_location_latitude"
@@ -76,30 +73,6 @@ internal object RadarState {
 
     internal fun setStopped(context: Context, stopped: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_STOPPED, stopped) }
-    }
-
-    internal fun getStarted(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_STARTED, false)
-    }
-
-    internal fun setStarted(context: Context, started: Boolean) {
-        getSharedPreferences(context).edit { putBoolean(KEY_STARTED, started) }
-    }
-
-    internal fun getStartedInterval(context: Context): Int {
-        return getSharedPreferences(context).getInt(KEY_STARTED_INTERVAL, 0)
-    }
-
-    internal fun setStartedInterval(context: Context, interval: Int) {
-        getSharedPreferences(context).edit { putInt(KEY_STARTED_INTERVAL, interval) }
-    }
-
-    internal fun getStartedFastestInterval(context: Context): Int {
-        return getSharedPreferences(context).getInt(KEY_STARTED_FASTEST_INTERVAL, 0)
-    }
-
-    internal fun setStartedFastestInterval(context: Context, fastestInterval: Int) {
-        getSharedPreferences(context).edit { putInt(KEY_STARTED_FASTEST_INTERVAL, fastestInterval) }
     }
 
     internal fun updateLastSentAt(context: Context) {
