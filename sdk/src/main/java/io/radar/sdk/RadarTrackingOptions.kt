@@ -123,7 +123,7 @@ data class RadarTrackingOptions(
         @JvmField
         val EFFICIENT = RadarTrackingOptions(
             desiredStoppedUpdateInterval = 3600,
-            fastestStoppedUpdateInterval = 900,
+            fastestStoppedUpdateInterval = 150,
             desiredMovingUpdateInterval = 900,
             fastestMovingUpdateInterval = 150,
             desiredSyncInterval = 140,
