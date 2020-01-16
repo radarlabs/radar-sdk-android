@@ -29,8 +29,8 @@ internal class RadarLocationManager(
 
     internal var locationClient = FusedLocationProviderClient(context)
     internal var geofencingClient = GeofencingClient(context)
-    private var startedDesiredAccuracy = RadarTrackingOptionsDesiredAccuracy.NONE
     private var started = false
+    private var startedDesiredAccuracy = RadarTrackingOptionsDesiredAccuracy.NONE
     private var startedInterval = 0
     private var startedFastestInterval = 0
     private val callbacks = ArrayList<RadarLocationCallback>()
