@@ -29,10 +29,10 @@ internal class RadarLocationManager(
 
     internal var locationClient = FusedLocationProviderClient(context)
     internal var geofencingClient = GeofencingClient(context)
+    private var startedDesiredAccuracy = RadarTrackingOptionsDesiredAccuracy.NONE
     private var started = false
     private var startedInterval = 0
     private var startedFastestInterval = 0
-    private var startedDesiredAccuracy = RadarTrackingOptionsDesiredAccuracy.MEDIUM
     private val callbacks = ArrayList<RadarLocationCallback>()
 
     internal companion object {
@@ -95,6 +95,7 @@ internal class RadarLocationManager(
             RadarTrackingOptionsDesiredAccuracy.HIGH -> LocationRequest.PRIORITY_HIGH_ACCURACY
             RadarTrackingOptionsDesiredAccuracy.MEDIUM -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
             RadarTrackingOptionsDesiredAccuracy.LOW -> LocationRequest.PRIORITY_LOW_POWER
+            else -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
         }
 
         val locationRequest = LocationRequest().apply {
@@ -135,11 +136,12 @@ internal class RadarLocationManager(
     }
 
     private fun startLocationUpdates(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, interval: Int, fastestInterval: Int) {
-        if (!started || (interval != startedInterval) || (fastestInterval != startedFastestInterval) || (desiredAccuracy != startedDesiredAccuracy)) {
+        if (!started || (desiredAccuracy != startedDesiredAccuracy) || (interval != startedInterval) || (fastestInterval != startedFastestInterval)) {
             val priority = when(desiredAccuracy) {
                 RadarTrackingOptionsDesiredAccuracy.HIGH -> LocationRequest.PRIORITY_HIGH_ACCURACY
                 RadarTrackingOptionsDesiredAccuracy.MEDIUM -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
                 RadarTrackingOptionsDesiredAccuracy.LOW -> LocationRequest.PRIORITY_LOW_POWER
+                else -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
             }
 
             val locationRequest = LocationRequest().apply {
@@ -151,9 +153,9 @@ internal class RadarLocationManager(
             locationClient.requestLocationUpdates(locationRequest, RadarLocationReceiver.getLocationPendingIntent(context))
 
             this.started = true
+            this.startedDesiredAccuracy = desiredAccuracy
             this.startedInterval = interval
             this.startedFastestInterval = fastestInterval
-            this.startedDesiredAccuracy = desiredAccuracy
         }
     }
 

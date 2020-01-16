@@ -30,7 +30,8 @@ data class RadarTrackingOptions(
     enum class RadarTrackingOptionsDesiredAccuracy(internal val desiredAccuracy: Int) {
         HIGH(3),
         MEDIUM(2),
-        LOW(1);
+        LOW(1),
+        NONE(0);
 
         internal companion object {
             fun fromInt(desiredAccuracy: Int?): RadarTrackingOptionsDesiredAccuracy {
