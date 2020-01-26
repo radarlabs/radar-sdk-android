@@ -124,7 +124,7 @@ data class RadarTrackingOptions(
         val EFFICIENT = RadarTrackingOptions(
             desiredStoppedUpdateInterval = 3600,
             fastestStoppedUpdateInterval = 150,
-            desiredMovingUpdateInterval = 900,
+            desiredMovingUpdateInterval = 1200,
             fastestMovingUpdateInterval = 150,
             desiredSyncInterval = 140,
             desiredAccuracy = RadarTrackingOptionsDesiredAccuracy.MEDIUM,
