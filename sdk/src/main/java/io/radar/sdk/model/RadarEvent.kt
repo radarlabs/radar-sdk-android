@@ -19,6 +19,8 @@ import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_STATE
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_NEARBY_PLACE_CHAIN
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STARTED_TRAVELING
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STOPPED_TRAVELING
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STARTED_COMMUTING
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STOPPED_COMMUTING
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -124,6 +126,10 @@ class RadarEvent(
         USER_STARTED_TRAVELING,
         /** `user.stopped_traveling` */
         USER_STOPPED_TRAVELING,
+        /** `user.started_commuting` */
+        USER_STARTED_COMMUTING,
+        /** `user.stopped_commuting` */
+        USER_STOPPED_COMMUTING,
         /** `user.entered_place` */
         USER_ENTERED_PLACE,
         /** `user.exited_place` */
@@ -213,6 +219,8 @@ class RadarEvent(
                 "user.exited_office" -> USER_EXITED_OFFICE
                 "user.started_traveling" -> USER_STARTED_TRAVELING
                 "user.stopped_traveling" -> USER_STOPPED_TRAVELING
+                "user.started_commuting" -> USER_STARTED_COMMUTING
+                "user.stopped_commuting" -> USER_STOPPED_COMMUTING
                 "user.entered_place" -> USER_ENTERED_PLACE
                 "user.exited_place" -> USER_EXITED_PLACE
                 "user.nearby_place_chain" -> USER_NEARBY_PLACE_CHAIN
