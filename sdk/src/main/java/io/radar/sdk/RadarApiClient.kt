@@ -124,17 +124,21 @@ internal class RadarApiClient(
         params.putOpt("sdkVersion", RadarUtils.sdkVersion)
         params.putOpt("deviceModel", RadarUtils.deviceModel)
         params.putOpt("deviceOS", RadarUtils.deviceOS)
+        params.putOpt("deviceType", RadarUtils.deviceType)
+        params.putOpt("deviceMake", RadarUtils.deviceMake)
+        params.putOpt("sdkVersion", RadarUtils.sdkVersion)
+        params.putOpt("deviceModel", RadarUtils.deviceModel)
+        params.putOpt("deviceOS", RadarUtils.deviceOS)
         params.putOpt("country", RadarUtils.country)
         params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
         params.putOpt("uaChannelId", RadarUtils.getUaChannelId())
         params.putOpt("uaNamedUserId", RadarUtils.getUaNamedUserId())
         params.putOpt("uaSessionId", RadarUtils.getUaSessionId())
         params.putOpt("source", Radar.stringForSource(source))
-        params.putOpt("deviceType", RadarUtils.deviceType)
-        params.putOpt("deviceMake", RadarUtils.deviceMake)
-        params.putOpt("sdkVersion", RadarUtils.sdkVersion)
-        params.putOpt("deviceModel", RadarUtils.deviceModel)
-        params.putOpt("deviceOS", RadarUtils.deviceOS)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            val mocked = location.isFromMockProvider
+            params.putOpt("mocked", mocked)
+        }
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
