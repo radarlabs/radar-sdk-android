@@ -980,7 +980,7 @@ object Radar {
             return
         }
 
-        apiClient.ipGeocode(null, object: RadarApiClient.RadarIpGeocodeApiCallback {
+        apiClient.ipGeocode(object: RadarApiClient.RadarIpGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, country: RadarRegion?) {
                 callback.onComplete(status, country)
             }

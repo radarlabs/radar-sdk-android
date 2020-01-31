@@ -69,8 +69,6 @@ internal object RadarUtils {
 
     internal val deviceMake =  Build.MANUFACTURER
 
-    internal val userAgent = "RadarSDK/$sdkVersion ($deviceType; $deviceMake; $deviceModel; $deviceOS)"
-
     internal fun getLocationEnabled(context: Context): Boolean {
         val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return manager.isProviderEnabled(LocationManager.GPS_PROVIDER) || manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
