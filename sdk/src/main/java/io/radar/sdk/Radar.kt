@@ -7,14 +7,10 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import io.radar.sdk.model.RadarAddress
-import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
-import io.radar.sdk.model.RadarGeofence
-import io.radar.sdk.model.RadarPlace
-import io.radar.sdk.model.RadarRegion
-import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
+import java.util.*
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -119,6 +115,22 @@ object Radar {
     }
 
     /**
+     * Called when a routing request succeeds, fails, or times out.
+     */
+    interface RadarRouteCallback {
+        /**
+         * Called when a routing request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding results (an array of addresses).
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[routes] RadarRoutes? If successful, the routing results.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            routes: RadarRoutes? = null
+        )
+    }
+
+    /**
      * Called when an IP geocoding request succeeds, fails, or times out.
      */
     interface RadarIpGeocodeCallback {
@@ -148,8 +160,12 @@ object Radar {
         ERROR_LOCATION,
         /** The network was unavailable, or the network connection timed out */
         ERROR_NETWORK,
+        /** One or more parameters were invalid */
+        ERROR_BAD_REQUEST,
         /** The publishable API key is invalid */
         ERROR_UNAUTHORIZED,
+        /** Use of the API is forbidden for the publishable API key */
+        ERROR_FORBIDDEN,
         /** An internal server error occurred */
         ERROR_SERVER,
         /** Exceeded rate limit */
@@ -199,6 +215,30 @@ object Radar {
                 return values().first { it.value == value }
             }
         }
+    }
+
+    /**
+     * The travel modes for routes.
+     */
+    enum class RadarRouteMode {
+        /** Foot */
+        FOOT,
+        /** Bike */
+        BIKE,
+        /** Car */
+        CAR,
+        /** Transit */
+        TRANSIT
+    }
+
+    /**
+     * The distance units for routes.
+     */
+    enum class RadarRouteUnits {
+        /** Imperial (feet) */
+        IMPERIAL,
+        /** Metric (meters) */
+        METRIC
     }
 
     private var initialized = false
@@ -639,7 +679,7 @@ object Radar {
     /**
      * Search for places near a location, sorted by distance.
      *
-     * @param[location] The location to search.
+     * @param[near] The location to search.
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[chains] An array of chain slugs to filter. See [](https://radar.io/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
@@ -649,7 +689,7 @@ object Radar {
      */
     @JvmStatic
     fun searchPlaces(
-        location: Location,
+        near: Location,
         radius: Int,
         chains: Array<String>?,
         categories: Array<String>?,
@@ -663,9 +703,9 @@ object Radar {
             return
         }
 
-        apiClient.searchPlaces(location, radius, chains, categories, groups, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
+        apiClient.searchPlaces(near, radius, chains, categories, groups, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, places: Array<RadarPlace>?) {
-                callback.onComplete(status, location, places)
+                callback.onComplete(status, near, places)
             }
         })
     }
@@ -673,7 +713,7 @@ object Radar {
     /**
      * Search for places near a location, sorted by distance.
      *
-     * @param[location] The location to search.
+     * @param[near] The location to search.
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[chains] An array of chain slugs to filter. See [](https://radar.io/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
@@ -682,7 +722,7 @@ object Radar {
      * @param[block] A block callback.
      */
     fun searchPlaces(
-        location: Location,
+        near: Location,
         radius: Int,
         chains: Array<String>?,
         categories: Array<String>?,
@@ -691,7 +731,7 @@ object Radar {
         block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
     ) {
         searchPlaces(
-            location,
+            near,
             radius,
             chains,
             categories,
@@ -772,7 +812,7 @@ object Radar {
     /**
      * Search for geofences near a location, sorted by distance.
      *
-     * @param[location] The location to search.
+     * @param[near] The location to search.
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
@@ -780,7 +820,7 @@ object Radar {
      */
     @JvmStatic
     fun searchGeofences(
-        location: Location,
+        near: Location,
         radius: Int,
         tags: Array<String>?,
         limit: Int?,
@@ -792,9 +832,9 @@ object Radar {
             return
         }
 
-        apiClient.searchGeofences(location, radius, tags, limit, object : RadarApiClient.RadarSearchGeofencesApiCallback {
+        apiClient.searchGeofences(near, radius, tags, limit, object : RadarApiClient.RadarSearchGeofencesApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) {
-                callback.onComplete(status, location, geofences)
+                callback.onComplete(status, near, geofences)
             }
         })
     }
@@ -802,27 +842,81 @@ object Radar {
     /**
      * Search for geofences near a location, sorted by distance.
      *
-     * @param[location] The location to search.
+     * @param[near] The location to search.
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
     fun searchGeofences(
-        location: Location,
+        near: Location,
         radius: Int,
         tags: Array<String>?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
         searchGeofences(
-            location,
+            near,
             radius,
             tags,
             limit,
             object : RadarSearchGeofencesCallback {
                 override fun onComplete(status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) {
                     block(status, location, geofences)
+                }
+            }
+        )
+    }
+
+    /**
+     * Autocompletes partial addresses and place names, sorted by relevance.
+     *
+     * @param[query] The partial address or place name to autocomplete.
+     * @param[near] A location for the search.
+     * @param[limit] The max number of addresses to return. A number between 1 and 100.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun autocomplete(
+        query: String,
+        near: Location,
+        limit: Int,
+        callback: RadarGeocodeCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        apiClient.autocomplete(query, near, limit, object : RadarApiClient.RadarGeocodeApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
+                callback.onComplete(status, addresses)
+            }
+        })
+    }
+
+    /**
+     * Autocompletes partial addresses and place names, sorted by relevance.
+     *
+     * @param[query] The partial address or place name to autocomplete.
+     * @param[near] A location for the search.
+     * @param[limit] The max number of addresses to return. A number between 1 and 100.
+     * @param[block] A block callback.
+     */
+    fun autocomplete(
+        query: String,
+        near: Location,
+        limit: Int,
+        block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
+    ) {
+        autocomplete(
+            query,
+            near,
+            limit,
+            object : RadarGeocodeCallback {
+                override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
+                    block(status, addresses)
                 }
             }
         )
@@ -999,6 +1093,137 @@ object Radar {
             object: RadarIpGeocodeCallback {
                 override fun onComplete(status: RadarStatus, country: RadarRegion?) {
                     block(status, country)
+                }
+            }
+        )
+    }
+
+    /**
+     * Gets the device's current location, then calculates the travel distance and duration to a destination.
+     *
+     * @param[destination] The destination.
+     * @param[modes] The travel modes.
+     * @param[units] The distance units.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun getDistance(
+        destination: Location,
+        modes: EnumSet<RadarRouteMode>,
+        units: RadarRouteUnits,
+        callback: RadarRouteCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        locationManager.getLocation(object: RadarLocationCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                if (status != RadarStatus.SUCCESS || location == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                apiClient.getDistance(location, destination, modes, units, object : RadarApiClient.RadarRouteApiCallback {
+                    override fun onComplete(
+                        status: RadarStatus,
+                        res: JSONObject?,
+                        routes: RadarRoutes?
+                    ) {
+                        callback.onComplete(status, routes)
+                    }
+                })
+            }
+        })
+    }
+
+    /**
+     * Gets the device's current location, then calculates the travel distance and duration to a destination.
+     *
+     * @param[destination] The destination.
+     * @param[modes] The travel modes.
+     * @param[units] The distance units.
+     * @param[block] A block callback.
+     */
+    fun getDistance(
+        destination: Location,
+        modes: EnumSet<RadarRouteMode>,
+        units: RadarRouteUnits,
+        block: (status: RadarStatus, routes: RadarRoutes?) -> Unit
+    ) {
+        getDistance(
+            destination,
+            modes,
+            units,
+            object: RadarRouteCallback {
+                override fun onComplete(status: RadarStatus, routes: RadarRoutes?) {
+                    block(status, routes)
+                }
+            }
+        )
+    }
+
+    /**
+     * Calculates the travel distance and duration from an origin to a destination.
+     *
+     * @param[origin] The origin.
+     * @param[destination] The destination.
+     * @param[modes] The travel modes.
+     * @param[units] The distance units.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun getDistance(
+        origin: Location,
+        destination: Location,
+        modes: EnumSet<RadarRouteMode>,
+        units: RadarRouteUnits,
+        callback: RadarRouteCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        apiClient.getDistance(origin, destination, modes, units, object : RadarApiClient.RadarRouteApiCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                routes: RadarRoutes?
+            ) {
+                callback.onComplete(status, routes)
+            }
+        })
+    }
+
+    /**
+     * Calculates the travel distance and duration from an origin to a destination.
+     *
+     * @param[origin] The origin.
+     * @param[destination] The destination.
+     * @param[modes] The travel modes.
+     * @param[units] The distance units.
+     * @param[block] A block callback.
+     */
+    fun getDistance(
+        origin: Location,
+        destination: Location,
+        modes: EnumSet<RadarRouteMode>,
+        units: RadarRouteUnits,
+        block: (status: RadarStatus, routes: RadarRoutes?) -> Unit
+    ) {
+        getDistance(
+            origin,
+            destination,
+            modes,
+            units,
+            object: RadarRouteCallback {
+                override fun onComplete(status: RadarStatus, routes: RadarRoutes?) {
+                    block(status, routes)
                 }
             }
         )
