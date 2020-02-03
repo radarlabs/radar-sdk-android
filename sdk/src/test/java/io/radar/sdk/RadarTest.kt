@@ -11,12 +11,7 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.tasks.Task
-import io.radar.sdk.model.RadarAddress
-import io.radar.sdk.model.RadarEvent
-import io.radar.sdk.model.RadarGeofence
-import io.radar.sdk.model.RadarPlace
-import io.radar.sdk.model.RadarRegion
-import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.*
 import org.json.JSONObject
 import org.junit.Test
 import org.junit.Assert.*
@@ -605,11 +600,37 @@ class RadarTest {
     }
 
     @Test
+    fun test_Radar_autocomplete_success() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete.json")
+
+        val near = Location("RadarSDK")
+        near.latitude = 40.783826
+        near.longitude = -73.975363
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackAddresses: Array<RadarAddress>? = null
+
+        Radar.autocomplete("brooklyn roasting", near, 10) { status, addresses ->
+            callbackStatus = status
+            callbackAddresses = addresses
+            latch.countDown()
+        }
+
+        latch.await(30, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertNotNull(callbackAddresses)
+    }
+
+    @Test
     fun test_Radar_geocode_error() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_SERVER
 
-        val query = "20 Jay Street, Brooklyn, NY"
+        val query = "20 jay street brooklyn"
 
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
@@ -633,7 +654,7 @@ class RadarTest {
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/geocode.json")
 
-        val query = "20 Jay Street, Brooklyn, NY"
+        val query = "20 jay street brooklyn"
 
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
@@ -824,6 +845,38 @@ class RadarTest {
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertNotNull(callbackCountry)
         assertNotNull(callbackCountry?.code)
+    }
+
+    @Test
+    fun test_Radar_getDistance_success() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.783826
+        mockLocation.longitude = -73.975363
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/route_distance.json")
+
+        val destination = Location("RadarSDK")
+        destination.latitude = 40.783826
+        destination.longitude = -73.975363
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackRoutes: RadarRoutes? = null
+
+        Radar.getDistance(destination, EnumSet.of(Radar.RadarRouteMode.FOOT, Radar.RadarRouteMode.CAR), Radar.RadarRouteUnits.IMPERIAL) { status, routes ->
+            callbackStatus = status
+            callbackRoutes = routes
+            latch.countDown()
+        }
+
+        latch.await(30, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertNotNull(callbackRoutes)
     }
 
 }

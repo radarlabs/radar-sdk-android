@@ -5,17 +5,13 @@ import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
-import io.radar.sdk.model.RadarAddress
-import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
-import io.radar.sdk.model.RadarGeofence
 import io.radar.sdk.Radar.RadarLocationSource
-import io.radar.sdk.model.RadarPlace
-import io.radar.sdk.model.RadarRegion
 import io.radar.sdk.Radar.RadarStatus
-import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.*
 import org.json.JSONObject
 import java.net.URL
+import java.util.*
 
 internal class RadarApiClient(
     private val context: Context,
@@ -42,6 +38,23 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null, country: RadarRegion? = null)
     }
 
+    interface RadarRouteApiCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, routes: RadarRoutes? = null)
+    }
+
+    internal fun headers(publishableKey: String): Map<String, String> {
+        return mapOf(
+            "Authorization" to publishableKey,
+            "Content-Type" to "application/json",
+            "X-Radar-Config" to "true",
+            "X-Radar-Device-Make" to RadarUtils.deviceMake,
+            "X-Radar-Device-Model" to RadarUtils.deviceModel,
+            "X-Radar-Device-OS" to RadarUtils.deviceOS,
+            "X-Radar-Device-Type" to RadarUtils.deviceType,
+            "X-Radar-SDK-Version" to RadarUtils.sdkVersion
+        )
+    }
+
     internal fun getConfig() {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
@@ -55,11 +68,6 @@ internal class RadarApiClient(
         if (deviceId != null) {
             queryParams.append("&deviceId=$deviceId")
         }
-        queryParams.append("&deviceType=${RadarUtils.deviceType}")
-        queryParams.append("&deviceMake=${RadarUtils.deviceMake}")
-        queryParams.append("&sdkVersion=${RadarUtils.sdkVersion}")
-        queryParams.append("&deviceModel=${RadarUtils.deviceModel}")
-        queryParams.append("&deviceOS=${RadarUtils.deviceOS}")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -67,12 +75,7 @@ internal class RadarApiClient(
             .build()
         val url = URL(uri.toString())
 
-        val headers = mapOf(
-            "Authorization" to publishableKey,
-            "Content-Type" to "application/json",
-            "User-Agent" to RadarUtils.userAgent,
-            "X-Radar-Config" to "true"
-        )
+        val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", url, headers, null, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
@@ -107,7 +110,11 @@ internal class RadarApiClient(
         }
         params.putOpt("latitude", location.latitude)
         params.putOpt("longitude", location.longitude)
-        params.putOpt("accuracy", location.accuracy)
+        var accuracy = location.accuracy
+        if (accuracy <= 0) {
+            accuracy = 1F
+        }
+        params.putOpt("accuracy", accuracy)
         val foreground = RadarActivityLifecycleCallbacks.foreground
         if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
@@ -121,17 +128,18 @@ internal class RadarApiClient(
         params.putOpt("sdkVersion", RadarUtils.sdkVersion)
         params.putOpt("deviceModel", RadarUtils.deviceModel)
         params.putOpt("deviceOS", RadarUtils.deviceOS)
+        params.putOpt("deviceType", RadarUtils.deviceType)
+        params.putOpt("deviceMake", RadarUtils.deviceMake)
         params.putOpt("country", RadarUtils.country)
         params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
         params.putOpt("uaChannelId", RadarUtils.getUaChannelId())
         params.putOpt("uaNamedUserId", RadarUtils.getUaNamedUserId())
         params.putOpt("uaSessionId", RadarUtils.getUaSessionId())
         params.putOpt("source", Radar.stringForSource(source))
-        params.putOpt("deviceType", RadarUtils.deviceType)
-        params.putOpt("deviceMake", RadarUtils.deviceMake)
-        params.putOpt("sdkVersion", RadarUtils.sdkVersion)
-        params.putOpt("deviceModel", RadarUtils.deviceModel)
-        params.putOpt("deviceOS", RadarUtils.deviceOS)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            val mocked = location.isFromMockProvider
+            params.putOpt("mocked", mocked)
+        }
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -139,12 +147,7 @@ internal class RadarApiClient(
             .build()
         val url = URL(uri.toString())
 
-        val headers = mapOf(
-            "Authorization" to publishableKey,
-            "Content-Type" to "application/json",
-            "User-Agent" to RadarUtils.userAgent,
-            "X-Radar-Config" to "true"
-        )
+        val headers = headers(publishableKey)
 
         apiHelper.request(context, "POST", url, headers, params, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
@@ -201,11 +204,6 @@ internal class RadarApiClient(
         val params = JSONObject()
         params.putOpt("verification", verification)
         params.putOpt("verifiedPlaceId", verifiedPlaceId)
-        params.putOpt("deviceType", RadarUtils.deviceType)
-        params.putOpt("deviceMake", RadarUtils.deviceMake)
-        params.putOpt("sdkVersion", RadarUtils.sdkVersion)
-        params.putOpt("deviceModel", RadarUtils.deviceModel)
-        params.putOpt("deviceOS", RadarUtils.deviceOS)
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -215,12 +213,7 @@ internal class RadarApiClient(
             .build()
         val url = URL(uri.toString())
 
-        val headers = mapOf(
-            "Authorization" to publishableKey,
-            "Content-Type" to "application/json",
-            "User-Agent" to RadarUtils.userAgent,
-            "X-Radar-Config" to "true"
-        )
+        val headers = headers(publishableKey)
 
         apiHelper.request(context, "PUT", url, headers, params)
     }
@@ -242,8 +235,7 @@ internal class RadarApiClient(
         }
 
         val queryParams = StringBuilder()
-        queryParams.append("latitude=${location.latitude}")
-        queryParams.append("&longitude=${location.longitude}")
+        queryParams.append("near=${location.latitude},${location.longitude}")
         queryParams.append("&radius=${radius}")
         queryParams.append("&limit=${limit}")
         if (chains?.isNotEmpty() == true) {
@@ -255,11 +247,6 @@ internal class RadarApiClient(
         if (groups?.isNotEmpty() == true) {
             queryParams.append("&groups=${groups.joinToString(separator = ",")}")
         }
-        queryParams.append("&deviceType=${RadarUtils.deviceType}")
-        queryParams.append("&deviceMake=${RadarUtils.deviceMake}")
-        queryParams.append("&sdkVersion=${RadarUtils.sdkVersion}")
-        queryParams.append("&deviceModel=${RadarUtils.deviceModel}")
-        queryParams.append("&deviceOS=${RadarUtils.deviceOS}")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -267,12 +254,7 @@ internal class RadarApiClient(
             .build()
         val url = URL(uri.toString())
 
-        val headers = mapOf(
-            "Authorization" to publishableKey,
-            "Content-Type" to "application/json",
-            "User-Agent" to RadarUtils.userAgent,
-            "X-Radar-Config" to "true"
-        )
+        val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", url, headers, null, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
@@ -311,18 +293,12 @@ internal class RadarApiClient(
         }
 
         val queryParams = StringBuilder()
-        queryParams.append("latitude=${location.latitude}")
-        queryParams.append("&longitude=${location.longitude}")
+        queryParams.append("near=${location.latitude},${location.longitude}")
         queryParams.append("&radius=${radius}")
         queryParams.append("&limit=${limit}")
         if (tags?.isNotEmpty() == true) {
             queryParams.append("&tags=${tags.joinToString(separator = ",")}")
         }
-        queryParams.append("&deviceType=${RadarUtils.deviceType}")
-        queryParams.append("&deviceMake=${RadarUtils.deviceMake}")
-        queryParams.append("&sdkVersion=${RadarUtils.sdkVersion}")
-        queryParams.append("&deviceModel=${RadarUtils.deviceModel}")
-        queryParams.append("&deviceOS=${RadarUtils.deviceOS}")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -330,12 +306,7 @@ internal class RadarApiClient(
             .build()
         val url = URL(uri.toString())
 
-        val headers = mapOf(
-            "Authorization" to publishableKey,
-            "Content-Type" to "application/json",
-            "User-Agent" to RadarUtils.userAgent,
-            "X-Radar-Config" to "true"
-        )
+        val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", url, headers, null, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
@@ -350,6 +321,54 @@ internal class RadarApiClient(
                 }
                 if (geofences != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, geofences)
+
+                    return
+                }
+
+                callback.onComplete(RadarStatus.ERROR_SERVER)
+            }
+        })
+    }
+
+    internal fun autocomplete(
+        query: String,
+        near: Location,
+        limit: Int,
+        callback: RadarGeocodeApiCallback
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val queryParams = StringBuilder()
+        queryParams.append("query=${query}")
+        queryParams.append("&near=${near.latitude},${near.longitude}")
+        queryParams.append("&limit=${limit}")
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/search/autocomplete?${queryParams}")
+            .build()
+        val url = URL(uri.toString())
+
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "GET", url, headers, null, object : RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                val addresses = res.optJSONArray("addresses")?.let { addressesArr ->
+                    RadarAddress.fromJSONArray(addressesArr)
+                }
+                if (addresses != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, addresses)
 
                     return
                 }
@@ -379,12 +398,7 @@ internal class RadarApiClient(
             .build()
         val url = URL(uri.toString())
 
-        val headers = mapOf(
-            "Authorization" to publishableKey,
-            "Content-Type" to "application/json",
-            "User-Agent" to RadarUtils.userAgent,
-            "X-Radar-Config" to "true"
-        )
+        val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", url, headers, null, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
@@ -420,8 +434,7 @@ internal class RadarApiClient(
         }
 
         val queryParams = StringBuilder()
-        queryParams.append("latitude=${location.latitude}")
-        queryParams.append("&longitude=${location.longitude}")
+        queryParams.append("coordinates=${location.latitude},${location.longitude}")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -429,12 +442,7 @@ internal class RadarApiClient(
             .build()
         val url = URL(uri.toString())
 
-        val headers = mapOf(
-            "Authorization" to publishableKey,
-            "Content-Type" to "application/json",
-            "User-Agent" to RadarUtils.userAgent,
-            "X-Radar-Config" to "true"
-        )
+        val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", url, headers, null, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
@@ -459,7 +467,6 @@ internal class RadarApiClient(
     }
 
     internal fun ipGeocode(
-        IP: String?,
         callback: RadarIpGeocodeApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -470,29 +477,13 @@ internal class RadarApiClient(
         }
 
         val host = RadarSettings.getHost(context)
-        var uri: Uri?
-
-        if (IP != null && IP.isNotEmpty()) {
-            val queryParams = StringBuilder()
-            queryParams.append("ip=${IP}")
-
-            uri = Uri.parse(host).buildUpon()
-                .appendEncodedPath("v1/geocode/ip?${queryParams}")
-                .build()
-        } else {
-            uri = Uri.parse(host).buildUpon()
-                .appendEncodedPath("v1/geocode/ip")
-                .build()
-        }
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/geocode/ip")
+            .build()
 
         val url = URL(uri.toString())
 
-        val headers = mapOf(
-            "Authorization" to publishableKey,
-            "Content-Type" to "application/json",
-            "User-Agent" to RadarUtils.userAgent,
-            "X-Radar-Config" to "true"
-        )
+        val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", url, headers, null, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
@@ -515,4 +506,72 @@ internal class RadarApiClient(
             }
         })
     }
+
+    internal fun getDistance(
+        origin: Location,
+        destination: Location,
+        modes: EnumSet<Radar.RadarRouteMode>,
+        units: Radar.RadarRouteUnits,
+        callback: RadarRouteApiCallback
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val queryParams = StringBuilder()
+        queryParams.append("origin=${origin.latitude},${origin.longitude}")
+        queryParams.append("&destination=${destination.latitude},${destination.longitude}")
+        val modesList = mutableListOf<String>()
+        if (modes.contains(Radar.RadarRouteMode.FOOT)) {
+            modesList.add("foot")
+        }
+        if (modes.contains(Radar.RadarRouteMode.BIKE)) {
+            modesList.add("bike")
+        }
+        if (modes.contains(Radar.RadarRouteMode.CAR)) {
+            modesList.add("car")
+        }
+        if (modes.contains(Radar.RadarRouteMode.TRANSIT)) {
+            modesList.add("transit")
+        }
+        queryParams.append("&modes=${modesList.joinToString(",")}")
+        if (units == Radar.RadarRouteUnits.METRIC) {
+            queryParams.append("&units=metric")
+        } else {
+            queryParams.append("&units=imperial")
+        }
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/route/distance?${queryParams}")
+            .build()
+        val url = URL(uri.toString())
+
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "GET", url, headers, null, object : RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                val routes = res.optJSONObject("routes")?.let { routesObj ->
+                    RadarRoutes.fromJson(routesObj)
+                }
+                if (routes != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, routes)
+
+                    return
+                }
+
+                callback.onComplete(RadarStatus.ERROR_SERVER)
+            }
+        })
+    }
+
 }

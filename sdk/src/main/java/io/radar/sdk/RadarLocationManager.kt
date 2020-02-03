@@ -100,9 +100,10 @@ internal class RadarLocationManager(
 
         val locationRequest = LocationRequest().apply {
             priority = desiredPriority
-            interval = 5000L
-            fastestInterval = 5000L
-        }
+            interval = 1000L
+            fastestInterval = 1000L
+            numUpdates = 1
+        }.setExpirationDuration(20000L)
 
         logger.d(this.context, "Requesting location")
 

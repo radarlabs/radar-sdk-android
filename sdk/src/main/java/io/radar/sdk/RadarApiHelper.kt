@@ -57,8 +57,9 @@ internal open class RadarApiHelper {
                     callback?.onComplete(Radar.RadarStatus.SUCCESS, res)
                 } else {
                     val status = when (urlConnection.responseCode) {
-                        400 -> Radar.RadarStatus.ERROR_LOCATION
+                        400 -> Radar.RadarStatus.ERROR_BAD_REQUEST
                         401 -> Radar.RadarStatus.ERROR_UNAUTHORIZED
+                        403 -> Radar.RadarStatus.ERROR_FORBIDDEN
                         429 -> Radar.RadarStatus.ERROR_RATE_LIMIT
                         in (500 until 600) -> Radar.RadarStatus.ERROR_SERVER
                         else -> Radar.RadarStatus.ERROR_UNKNOWN

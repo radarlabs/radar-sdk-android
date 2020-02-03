@@ -1,6 +1,7 @@
 package io.radar.example
 
 import android.Manifest
+import android.location.Location
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -9,6 +10,7 @@ import androidx.core.app.ActivityCompat
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.model.RadarPlace
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -54,7 +56,7 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Search geofences: status = $status; location = $location; geofences = $geofences")
         }
 
-        Radar.geocode("20 Jay Street, Brooklyn, NY") { status, addresses ->
+        Radar.geocode("20 jay street brooklyn") { status, addresses ->
             Log.v("example", "Geocode: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
         }
 
@@ -64,6 +66,31 @@ class MainActivity : AppCompatActivity() {
 
         Radar.ipGeocode { status, country ->
             Log.v("example", "IP geocode: status = $status; code = ${country?.code}; flag = ${country?.flag}")
+        }
+
+        val origin = Location("example")
+        origin.latitude = 40.70390
+        origin.longitude = -73.98670
+
+        val destination = Location("example")
+        destination.latitude = 40.78382
+        destination.longitude = -73.97536
+
+        Radar.autocomplete(
+            "brooklyn roasting",
+            origin,
+            10
+        ) { status, addresses ->
+            Log.v("example", "Autocomplete: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
+        }
+
+        Radar.getDistance(
+            origin,
+            destination,
+            EnumSet.of(Radar.RadarRouteMode.FOOT, Radar.RadarRouteMode.CAR),
+            Radar.RadarRouteUnits.IMPERIAL
+        ) { status, routes ->
+            Log.v("example", "Distance: status = $status; routes.car.distance.value = ${routes?.car?.distance?.value}; routes.car.distance.text = ${routes?.car?.distance?.text}; routes.car.duration.value = ${routes?.car?.duration?.value}; routes.car.duration.text = ${routes?.car?.duration?.text}")
         }
     }
 

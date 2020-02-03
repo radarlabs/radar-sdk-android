@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "code": 200
+  },
+  "addresses": [
+    {
+      "latitude": 40.7039,
+      "longitude": -73.9867,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9867,
+          40.7039
+        ]
+      },
+      "formattedAddress": "Brooklyn Roasting Company, Brooklyn, New York, NY 11201 USA",
+      "name": "Brooklyn Roasting Company",
+      "country": "United States",
+      "countryCode": "US",
+      "countryFlag": "🇺🇸",
+      "state": "New York",
+      "stateCode": "NY",
+      "postalCode": "11201",
+      "city": "New York",
+      "borough": "Brooklyn",
+      "county": "Kings County",
+      "neighborhood": "DUMBO",
+      "number": "25",
+      "confidence": "exact"
+    }
+  ]
+}
