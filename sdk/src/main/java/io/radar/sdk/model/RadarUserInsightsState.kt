@@ -22,7 +22,7 @@ class RadarUserInsightsState(
     /**
      * A boolean indicating whether the user is traveling, based on learned home location.
      */
-    val traveling: Boolean
+    val traveling: Boolean,
 
     /**
     * A boolean indicating whether the user is commuting, based on learned home and work locations.
@@ -41,7 +41,7 @@ class RadarUserInsightsState(
             val home = obj.optBoolean(FIELD_HOME)
             val office = obj.optBoolean(FIELD_OFFICE)
             val traveling = obj.optBoolean(FIELD_TRAVELING)
-            val commuting = obj.obtBoolean(FIELD_COMMUTING)
+            val commuting = obj.optBoolean(FIELD_COMMUTING)
 
             return RadarUserInsightsState(home, office, traveling, commuting)
         }
