@@ -33,6 +33,8 @@ class Utils {
                 RadarEvent.RadarEventType.USER_EXITED_OFFICE -> "Exited office with $confidenceStr"
                 RadarEvent.RadarEventType.USER_STARTED_TRAVELING -> "Started traveling with $confidenceStr"
                 RadarEvent.RadarEventType.USER_STOPPED_TRAVELING -> "Stopped traveling with $confidenceStr"
+                RadarEvent.RadarEventType.USER_STARTED_COMMUTING -> "Started commuting with $confidenceStr"
+                RadarEvent.RadarEventType.USER_STOPPED_COMMUTING -> "Stopped commuting with $confidenceStr"
                 RadarEvent.RadarEventType.USER_ENTERED_PLACE -> "Entered place ${event.place?.name} with $confidenceStr"
                 RadarEvent.RadarEventType.USER_EXITED_PLACE -> "Exited place ${event.place?.name} with $confidenceStr"
                 RadarEvent.RadarEventType.USER_NEARBY_PLACE_CHAIN -> "Nearby chain ${event.place?.chain?.name} with $confidenceStr"

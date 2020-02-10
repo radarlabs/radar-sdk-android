@@ -22,21 +22,28 @@ class RadarUserInsightsState(
     /**
      * A boolean indicating whether the user is traveling, based on learned home location.
      */
-    val traveling: Boolean
+    val traveling: Boolean,
+
+    /**
+    * A boolean indicating whether the user is commuting, based on learned home and work locations.
+    */
+    val commuting: Boolean
 ) {
 
     internal companion object {
         private const val FIELD_HOME = "home"
         private const val FIELD_OFFICE = "office"
         private const val FIELD_TRAVELING = "traveling"
+        private const val FIELD_COMMUTING = "commuting"
 
         @Throws(JSONException::class)
         fun fromJson(obj: JSONObject): RadarUserInsightsState {
             val home = obj.optBoolean(FIELD_HOME)
             val office = obj.optBoolean(FIELD_OFFICE)
             val traveling = obj.optBoolean(FIELD_TRAVELING)
+            val commuting = obj.optBoolean(FIELD_COMMUTING)
 
-            return RadarUserInsightsState(home, office, traveling)
+            return RadarUserInsightsState(home, office, traveling, commuting)
         }
     }
 
