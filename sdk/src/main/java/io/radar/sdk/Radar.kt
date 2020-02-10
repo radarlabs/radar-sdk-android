@@ -147,6 +147,25 @@ object Radar {
     }
 
     /**
+     * Called when a get context request succeeds, fails, or times out.
+     */
+    interface RadarContextCallback {
+
+        /**
+         * Called when a get context request succeeds, fails, or times out. Receives the request status and, if successful, the location context results.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[location] Location? If successful, the location.
+         * @param[context] RadarContext? If successful, the location context.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            location: Location? = null,
+            context: RadarContext? = null
+        )
+    }
+
+    /**
      * The status types for a request. See [](https://radar.io/documentation/sdk#android-foreground).
      */
     enum class RadarStatus {
@@ -1227,6 +1246,87 @@ object Radar {
                 }
             }
         )
+    }
+
+    /**
+     * TODO(coryp): descriptions.
+     * Gets context for a location without server-side persistence
+     *
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun getContext(
+        callback: RadarContextCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        locationManager.getLocation(object: RadarLocationCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                if (status != RadarStatus.SUCCESS || location == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                apiClient.getContext(location, object : RadarApiClient.RadarContextApiCallback {
+                    override fun onComplete(status: RadarStatus, res: JSONObject?, context: RadarContext?) {
+                        callback.onComplete(status, location, context)
+                    }
+                })
+            }
+        })
+    }
+
+    /**
+     * Gets context for a location without server-side persistence
+     *
+     * @param[block] A block callback.
+     */
+    fun getContext(block: (status: RadarStatus, location: Location?, context: RadarContext?) -> Unit) {
+        getContext(object : RadarContextCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, context: RadarContext?) {
+                block(status, location, context)
+            }
+        })
+    }
+
+    /**
+     * Gets context for a specified location without server-side persistence. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk#android-manual).
+     *
+     * @param[location] A location to get context for.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun getContext(location: Location, callback: RadarContextCallback) {
+        if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        apiClient.getContext(location, object : RadarApiClient.RadarContextApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, context: RadarContext?) {
+                callback?.onComplete(status, location, context)
+            }
+        })
+    }
+
+    /**
+     * Gets context for a specified location without server-side persistence. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk#android-manual).
+     *
+     * @param[location] A location to get context for.
+     * @param[block] An a block callback.
+     */
+    fun getContext(location: Location, block: (status: RadarStatus, location: Location?, context: RadarContext?) -> Unit) {
+        getContext(location, object : RadarContextCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, context: RadarContext?) {
+                block(status, location, context)
+            }
+        })
     }
 
     /**
