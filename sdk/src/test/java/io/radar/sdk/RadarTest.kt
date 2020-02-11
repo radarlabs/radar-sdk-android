@@ -403,6 +403,105 @@ class RadarTest {
         Radar.rejectEvent("eventId")
     }
 
+
+    @Test
+    fun test_Radar_getContext_errorPermissions() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        locationClientMock.mockLocation = null
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.getContext { status, location, context ->
+            callbackStatus = status
+            latch.countDown()
+        }
+
+        latch.await(30, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_PERMISSIONS, callbackStatus)
+    }
+
+    @Test
+    fun test_Radar_getContext_errorLocation() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        locationClientMock.mockLocation = null
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.getContext { status, location, context ->
+            callbackStatus = status
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(30, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_LOCATION, callbackStatus)
+    }
+
+    @Test
+    fun test_Radar_getContext_success() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.783826
+        mockLocation.longitude = -73.975363
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/context.json")
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackLocation: Location? = null
+        var callbackContext: RadarContext? = null
+
+        Radar.getContext { status, location, context ->
+            callbackStatus = status
+            callbackLocation = location
+            callbackContext = context
+            latch.countDown()
+        }
+
+        latch.await(30, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertEquals(mockLocation, callbackLocation)
+        assertNotNull(callbackContext)
+    }
+
+    @Test
+    fun test_Radar_getContext_location_success() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.783826
+        mockLocation.longitude = -73.975363
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/context.json")
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackLocation: Location? = null
+        var callbackContext: RadarContext? = null
+
+        Radar.getContext(mockLocation) { status, location, context ->
+            callbackStatus = status
+            callbackLocation = location
+            callbackContext = context
+            latch.countDown()
+        }
+
+        latch.await(30, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertEquals(mockLocation, callbackLocation)
+        assertNotNull(callbackContext)
+    }
+
     @Test
     fun test_Radar_searchPlaces_errorPermissions() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
@@ -879,102 +978,4 @@ class RadarTest {
         assertNotNull(callbackRoutes)
     }
 
-
-    @Test
-    fun test_Radar_getContext_errorPermissions() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = false
-        locationClientMock.mockLocation = null
-
-        val latch = CountDownLatch(1)
-        var callbackStatus: Radar.RadarStatus? = null
-
-        Radar.getContext { status, location, context ->
-            callbackStatus = status
-            latch.countDown()
-        }
-
-        latch.await(30, TimeUnit.SECONDS)
-
-        assertEquals(Radar.RadarStatus.ERROR_PERMISSIONS, callbackStatus)
-    }
-
-    @Test
-    fun test_Radar_getContext_errorLocation() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = true
-        locationClientMock.mockLocation = null
-
-        val latch = CountDownLatch(1)
-        var callbackStatus: Radar.RadarStatus? = null
-
-        Radar.getContext { status, location, context ->
-            callbackStatus = status
-            latch.countDown()
-        }
-
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
-        latch.await(30, TimeUnit.SECONDS)
-
-        assertEquals(Radar.RadarStatus.ERROR_LOCATION, callbackStatus)
-    }
-
-    @Test
-    fun test_Radar_getContext_success() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = true
-        val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
-        mockLocation.accuracy = 65f
-        mockLocation.time = System.currentTimeMillis()
-        locationClientMock.mockLocation = mockLocation
-        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
-        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/context.json")
-
-        val latch = CountDownLatch(1)
-        var callbackStatus: Radar.RadarStatus? = null
-        var callbackLocation: Location? = null
-        var callbackContext: RadarContext? = null
-
-        Radar.getContext { status, location, context ->
-            callbackStatus = status
-            callbackLocation = location
-            callbackContext = context
-            latch.countDown()
-        }
-
-        latch.await(30, TimeUnit.SECONDS)
-
-        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertEquals(mockLocation, callbackLocation)
-        assertNotNull(callbackContext)
-    }
-
-    @Test
-    fun test_Radar_getContext_location_success() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = false
-        val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
-        mockLocation.accuracy = 65f
-        mockLocation.time = System.currentTimeMillis()
-        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
-        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/context.json")
-
-        val latch = CountDownLatch(1)
-        var callbackStatus: Radar.RadarStatus? = null
-        var callbackLocation: Location? = null
-        var callbackContext: RadarContext? = null
-
-        Radar.getContext(mockLocation) { status, location, context ->
-            callbackStatus = status
-            callbackLocation = location
-            callbackContext = context
-            latch.countDown()
-        }
-
-        latch.await(30, TimeUnit.SECONDS)
-
-        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertEquals(mockLocation, callbackLocation)
-        assertNotNull(callbackContext)
-    }
 }

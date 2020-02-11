@@ -222,6 +222,50 @@ internal class RadarApiClient(
         apiHelper.request(context, "PUT", url, headers, params)
     }
 
+    internal fun getContext(
+        location: Location,
+        callback: RadarContextApiCallback
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val queryParams = StringBuilder()
+        queryParams.append("coordinates=${location.latitude},${location.longitude}")
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/context?${queryParams}")
+        val url = URL(uri.toString())
+
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "GET", url, headers, null, object: RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                val context = res.optJSONObject("context")?.let { contextObj ->
+                    RadarContext.fromJson(contextObj)
+                }
+                if (context != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, context)
+
+                    return
+                }
+
+                callback.onComplete(RadarStatus.ERROR_SERVER)
+            }
+        })
+
+    }
+
     internal fun searchPlaces(
         location: Location,
         radius: Int,
@@ -576,51 +620,6 @@ internal class RadarApiClient(
                 callback.onComplete(RadarStatus.ERROR_SERVER)
             }
         })
-    }
-
-
-    internal fun getContext(
-        location: Location,
-        callback: RadarContextApiCallback
-    ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
-        if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
-            return
-        }
-
-        val queryParams = StringBuilder()
-        queryParams.append("coordinates=${location.latitude},${location.longitude}")
-
-        val host = RadarSettings.getHost(context)
-        val uri = Uri.parse(host).buildUpon()
-            .appendEncodedPath("v1/context?${queryParams}")
-        val url = URL(uri.toString())
-
-        val headers = headers(publishableKey)
-
-        apiHelper.request(context, "GET", url, headers, null, object: RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
-
-                    return
-                }
-
-                val context = res.optJSONObject("context")?.let { contextObj ->
-                    RadarContext.fromJson(contextObj)
-                }
-                if (context != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, context)
-
-                    return
-                }
-
-                callback.onComplete(RadarStatus.ERROR_SERVER)
-            }
-        })
-
     }
 
 }

@@ -3,47 +3,43 @@ package io.radar.sdk.model
 import org.json.JSONObject
 
 /**
- * TODO(coryp): RadarContext description and documentation reference
+ * The context for a location.
+ *
+ * @see [](https://radar.io/documentation/api#context)
  */
 class RadarContext(
     /**
-     * A Boolean indicating whether the location context was generated with your live API key.
-     */
-    val live: Boolean,
-
-    /**
-     * An array of the geofences the location is in. May be empty if the location is not in any geofences. See [](https://radar.io/documentation/geofences).
+     * An array of the geofences for the location. May be empty if the location is not in any geofences. See [](https://radar.io/documentation/geofences).
      */
     val geofences: Array<RadarGeofence>,
 
     /**
-     * The place a location is at. May be `null` if the location is not at a place, or if Places is not enabled. See [](https://radar.io/documentation/places).
+     * The place for the location. May be `null` if the location is not at a place or if Places is not enabled. See [](https://radar.io/documentation/places).
      */
     val place: RadarPlace?,
 
     /**
-     * The location's country. May be `null` if country is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The country of the location. May be `null` if country is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
      */
     val country: RadarRegion?,
 
     /**
-     * The location's state. May be `null` if state is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The state of the location. May be `null` if state is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
      */
     val state: RadarRegion?,
 
     /**
-     * The location's designated market area (DMA). May be `null` if DMA is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The designated market area (DMA) of the location. May be `null` if DMA is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
      */
     val dma: RadarRegion?,
 
     /**
-     * The location's postal code. May be `null` if postal code is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The postal code of the location. May be `null` if postal code is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
      */
     val postalCode: RadarRegion?
 ) {
 
     internal companion object {
-        private const val FIELD_LIVE = "live"
         private const val FIELD_GEOFENCES = "geofences"
         private const val FIELD_PLACE = "place"
         private const val FIELD_COUNTRY = "country"
@@ -52,7 +48,6 @@ class RadarContext(
         private const val FIELD_POSTAL_CODE = "postalCode"
 
         internal fun fromJson(obj: JSONObject): RadarContext {
-            val live = obj.optBoolean(FIELD_LIVE)
             val geofences = RadarGeofence.fromJSONArray(obj.getJSONArray(FIELD_GEOFENCES))!!
             val place = obj.optJSONObject(FIELD_PLACE)?.let(RadarPlace.Companion::fromJsonNullable)
             val country = obj.optJSONObject(FIELD_COUNTRY)?.let(RadarRegion.Companion::fromJson)
@@ -61,7 +56,6 @@ class RadarContext(
             val postalCode = obj.optJSONObject(FIELD_POSTAL_CODE)?.let(RadarRegion.Companion::fromJson)
 
             return RadarContext(
-                live,
                 geofences,
                 place,
                 country,

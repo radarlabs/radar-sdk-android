@@ -63,6 +63,25 @@ object Radar {
     }
 
     /**
+     * Called when a context request succeeds, fails, or times out.
+     */
+    interface RadarContextCallback {
+
+        /**
+         * Called when a context request succeeds, fails, or times out. Receives the request status and, if successful, the location and the context.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[location] Location? If successful, the location.
+         * @param[context] RadarContext? If successful, the context.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            location: Location? = null,
+            context: RadarContext? = null
+        )
+    }
+
+    /**
      * Called when a place search request succeeds, fails, or times out.
      */
     interface RadarSearchPlacesCallback {
@@ -143,25 +162,6 @@ object Radar {
         fun onComplete(
             status: RadarStatus,
             country: RadarRegion? = null
-        )
-    }
-
-    /**
-     * Called when a get context request succeeds, fails, or times out.
-     */
-    interface RadarContextCallback {
-
-        /**
-         * Called when a get context request succeeds, fails, or times out. Receives the request status and, if successful, the location context results.
-         *
-         * @param[status] RadarStatus The request status.
-         * @param[location] Location? If successful, the location.
-         * @param[context] RadarContext? If successful, the location context.
-         */
-        fun onComplete(
-            status: RadarStatus,
-            location: Location? = null,
-            context: RadarContext? = null
         )
     }
 
@@ -528,7 +528,7 @@ object Radar {
      * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk#android-manual).
      *
      * @param[location] A location for the user.
-     * @param[block] An a block callback.
+     * @param[block] A block callback.
      */
     fun trackOnce(location: Location, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
         trackOnce(location, object : RadarTrackCallback {
@@ -1249,8 +1249,7 @@ object Radar {
     }
 
     /**
-     * TODO(coryp): descriptions.
-     * Gets context for a location without server-side persistence
+     * Gets the device's current location, then gets context for that location without sending device or user identifiers to the server.
      *
      * @param[callback] A callback.
      */
@@ -1282,7 +1281,7 @@ object Radar {
     }
 
     /**
-     * Gets context for a location without server-side persistence
+     * Gets the device's current location, then gets context for that location without sending device or user identifiers to the server.
      *
      * @param[block] A block callback.
      */
@@ -1295,9 +1294,9 @@ object Radar {
     }
 
     /**
-     * Gets context for a specified location without server-side persistence. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk#android-manual).
+     * Gets context for a location without sending device or user identifiers to the server.
      *
-     * @param[location] A location to get context for.
+     * @param[location] The location.
      * @param[callback] A callback.
      */
     @JvmStatic
@@ -1316,10 +1315,10 @@ object Radar {
     }
 
     /**
-     * Gets context for a specified location without server-side persistence. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk#android-manual).
+     * Gets context for a location without sending device or user identifiers to the server.
      *
-     * @param[location] A location to get context for.
-     * @param[block] An a block callback.
+     * @param[location] The location.
+     * @param[block] A block callback.
      */
     fun getContext(location: Location, block: (status: RadarStatus, location: Location?, context: RadarContext?) -> Unit) {
         getContext(location, object : RadarContextCallback {

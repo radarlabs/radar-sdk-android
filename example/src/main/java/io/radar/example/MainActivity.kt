@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
+import io.radar.sdk.model.RadarContext
 import io.radar.sdk.model.RadarPlace
 import java.util.*
 
@@ -37,6 +38,10 @@ class MainActivity : AppCompatActivity() {
         val options = RadarTrackingOptions.RESPONSIVE
         options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.ALL
         Radar.startTracking(options)
+
+        Radar.getContext { status, location, context ->
+            Log.v("example", "Context: status = $status; location = $location; context?.geofences = ${context?.geofences}; context?.place = ${context?.place}; context?.country = ${context?.country}")
+        }
 
         Radar.searchPlaces(
             1000,

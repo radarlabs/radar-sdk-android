@@ -45,12 +45,12 @@ class RadarUser(
     val geofences: Array<RadarGeofence>?,
 
     /**
-     * The user's last known place. May be `null` if the user is not at a place, or if Places is not enabled. See [](https://radar.io/documentation/places).
+     * The user's last known place. May be `null` if the user is not at a place or if Places is not enabled. See [](https://radar.io/documentation/places).
      */
     val place: RadarPlace?,
 
     /**
-     * Learned insights for the user. May be `null` if no insights are available, or if Insights is not enabled. See [](https://radar.io/documentation/insights).
+     * Learned insights for the user. May be `null` if no insights are available or if Insights is not enabled. See [](https://radar.io/documentation/insights).
      */
     val insights: RadarUserInsights?,
 

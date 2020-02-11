@@ -2,7 +2,7 @@
 
 [![Bintray](https://img.shields.io/bintray/v/radarlabs/maven/sdk2.svg)](https://bintray.com/radarlabs/maven/sdk2)
 
-[Radar](https://radar.io) is the location platform for mobile apps.
+[Radar](https://radar.io) is location data infrastructure. You can use Radar SDKs and APIs to add location context to your apps with just a few lines of code.
 
 ## Documentation
 
