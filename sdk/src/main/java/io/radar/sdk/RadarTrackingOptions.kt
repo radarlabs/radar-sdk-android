@@ -188,7 +188,7 @@ data class RadarTrackingOptions(
         )
 
         /**
-         * A preset that updates about every 2.5 minutes when moving, shuts down when stopped, and only syncs stops and exits to the server.
+         * A preset that updates as fast as every 2.5 minutes while moving, shuts down when stopped, and only syncs stops and exits to the server.
          *
          * Low battery usage, but may exceed Android vitals bad behavior thresholds for excessive wakeups and excessive wi-fi scans. See [](https://developer.android.com/topic/performance/vitals/wakeup.html) and [](https://developer.android.com/topic/performance/vitals/bg-wifi.html).
          *
@@ -215,7 +215,7 @@ data class RadarTrackingOptions(
         )
 
         /**
-         * A preset that updates between every 2.5 to 20 minutes when moving, between every 20 to 60 minutes when stopped, and only syncs stops and exits to the server.
+         * A preset that updates as fast as every 6 minutes while moving, periodically when stopped, and only syncs stops and exits to the server.
          *
          * Lowest battery usage and will not exceed Android vitals bad behavior thresholds.
          *
@@ -226,7 +226,7 @@ data class RadarTrackingOptions(
             desiredStoppedUpdateInterval = 3600,
             fastestStoppedUpdateInterval = 1200,
             desiredMovingUpdateInterval = 1200,
-            fastestMovingUpdateInterval = 150,
+            fastestMovingUpdateInterval = 360,
             desiredSyncInterval = 140,
             desiredAccuracy = RadarTrackingOptionsDesiredAccuracy.MEDIUM,
             stopDuration = 140,
