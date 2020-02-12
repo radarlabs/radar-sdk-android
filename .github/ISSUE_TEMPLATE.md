@@ -1,7 +1,7 @@
 <!--
-Please only file issues here that represent bugs or feature requests for the Radar Android SDK.
+Please only open issues here for bugs or feature requests.
 
-If you're having general trouble with your Radar integration, please email us at support@radar.io.
+If you have questions about your Radar integration, please email us at support@radar.io instead.
 -->
 
 ## Summary
