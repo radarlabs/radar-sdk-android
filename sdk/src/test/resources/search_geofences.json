@@ -1,0 +1,43 @@
+{
+   "meta": {
+      "code": 200
+   },
+   "geofences": [
+      {
+         "_id": "5de6e9ea4c1c38002db008cb",
+         "createdAt": "2019-12-03T23:04:10.051Z",
+         "updatedAt": "2019-12-03T23:04:10.051Z",
+         "live": true,
+         "description": "Geofence of the Admiralty Station in Hong Kong",
+         "type": "polygon",
+         "enabled": true,
+         "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+               [
+                  [
+                     114.165405,
+                     22.27772
+                  ],
+                  [
+                     114.16718,
+                     22.27772
+                  ],
+                  [
+                     114.16718,
+                     22.279448
+                  ],
+                  [
+                     114.165405,
+                     22.279448
+                  ],
+                  [
+                     114.165405,
+                     22.27772
+                  ]
+               ]
+            ]
+         }
+      }
+   ]
+}

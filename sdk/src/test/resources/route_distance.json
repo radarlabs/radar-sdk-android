@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "code": 200
+  },
+  "routes": {
+    "geodesic": {
+      "value": 18453.39824345505,
+      "text": "3.5 mi"
+    },
+    "foot": {
+      "distance": {
+        "value": 38873.56095524,
+        "text": "7.4 mi"
+      },
+      "duration": {
+        "value": 142,
+        "text": "2 hrs 22 mins"
+      }
+    },
+    "car": {
+      "distance": {
+        "value": 38358.7774742,
+        "text": "7.3 mi"
+      },
+      "duration": {
+        "value": 11,
+        "text": "11 mins"
+      }
+    }
+  }
+}
