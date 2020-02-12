@@ -95,7 +95,7 @@ internal class RadarLocationManager(
             RadarTrackingOptionsDesiredAccuracy.HIGH -> LocationRequest.PRIORITY_HIGH_ACCURACY
             RadarTrackingOptionsDesiredAccuracy.MEDIUM -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
             RadarTrackingOptionsDesiredAccuracy.LOW -> LocationRequest.PRIORITY_LOW_POWER
-            else -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+            else -> LocationRequest.PRIORITY_NO_POWER
         }
 
         val locationRequest = LocationRequest().apply {

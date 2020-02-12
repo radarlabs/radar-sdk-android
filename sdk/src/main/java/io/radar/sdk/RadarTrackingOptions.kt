@@ -9,28 +9,102 @@ import java.util.Date
  * @see [](https://radar.io/documentation/sdk#android-background)
  */
 data class RadarTrackingOptions(
+    /**
+     * Determines the desired location update interval in seconds when stopped. Use 0 to shut down when stopped.
+     *
+     * Note that location updates may be delayed significantly by Android Doze Mode and App Standby and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled. To avoid these restrictions, you can start a foreground service.
+     */
     var desiredStoppedUpdateInterval: Int,
+
+    /**
+     * Determines the fastest location update interval in seconds when stopped.
+     */
     var fastestStoppedUpdateInterval: Int,
+
+    /**
+     * Determines the desired location update interval in seconds when moving.
+     *
+     * Note that location updates may be delayed significantly by Android Doze Mode and App Standby and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled. To avoid these restrictions, you can start a foreground service.
+     */
     var desiredMovingUpdateInterval: Int,
+
+    /**
+     * Determines the fastest location update interval in seconds when stopped.
+     */
     var fastestMovingUpdateInterval: Int,
+
+    /**
+     * Determines the desired sync interval in seconds.
+     */
     var desiredSyncInterval: Int,
+
+    /**
+     * Determines the desired accuracy of location updates.
+     */
     var desiredAccuracy: RadarTrackingOptionsDesiredAccuracy,
+
+    /**
+     * With `stopDistance`, determines the duration in seconds after which the device is considered stopped.
+     */
     var stopDuration: Int,
+
+    /**
+     * With `stopDuration`, determines the distance in meters within which the device is considered stopped.
+     */
     var stopDistance: Int,
+
+    /**
+     * Determines when to start tracking. Use `null` to start tracking when {@link Radar#startTracking} is called.
+     */
     var startTrackingAfter: Date?,
+
+    /**
+     * Determines when to stop tracking. Use `null` to track until {@link Radar#stopTracking} is called.
+     */
     var stopTrackingAfter: Date?,
+
+    /**
+     * Determines which failed location updates to replay to the server.
+     */
     var replay: RadarTrackingOptionsReplay,
+
+    /**
+     * Determines which location updates to sync to the server.
+     */
     var sync: RadarTrackingOptionsSync,
+
+    /**
+     * Determines whether to create a client geofence around the device's current location when stopped. See [](https://developer.android.com/training/location/geofencing).
+     */
     var useStoppedGeofence: Boolean,
+
+    /**
+     * Determines the radius in meters of the client geofence around the device's current location when stopped.
+     */
     var stoppedGeofenceRadius: Int,
+
+    /**
+     * Determines whether to create a client geofence around the device's current location when moving. See [](https://developer.android.com/training/location/geofencing).
+     */
     var useMovingGeofence: Boolean,
+
+    /**
+     * Determines the radius in meters of the client geofence around the device's current location when stopped.
+     */
     var movingGeofenceRadius: Int
 ) {
 
+    /**
+     * The location accuracy options.
+     */
     enum class RadarTrackingOptionsDesiredAccuracy(internal val desiredAccuracy: Int) {
+        /** Uses PRIORITY_HIGH_ACCURACY */
         HIGH(3),
+        /** Uses PRIORITY_BALANCED_POWER_ACCURACY */
         MEDIUM(2),
+        /** Uses PRIORITY_LOW_POWER */
         LOW(1),
+        /** Uses PRIORITY_NO_POWER */
         NONE(0);
 
         internal companion object {
@@ -45,8 +119,13 @@ data class RadarTrackingOptions(
         }
     }
 
+    /**
+     * The replay options for failed location updates.
+     */
     enum class RadarTrackingOptionsReplay(internal val replay: Int) {
+        /** Replays failed stops */
         REPLAY_STOPS(1),
+        /** Replays no location updates */
         REPLAY_OFF(0);
 
         internal companion object {
@@ -62,8 +141,11 @@ data class RadarTrackingOptions(
     }
 
     enum class RadarTrackingOptionsSync(internal val sync: Int) {
+        /** Syncs no location updates to the server */
         NONE(0),
+        /** Syncs only stops and exits to the server */
         STOPS_AND_EXITS(1),
+        /** Syncs all location updates to the server */
         ALL(2);
 
         internal companion object {
@@ -80,6 +162,11 @@ data class RadarTrackingOptions(
 
     companion object {
 
+        /**
+         * A preset that updates every 30 seconds and syncs all location updates to the server.
+         *
+         * High battery usage and should be used with a foreground service. See [](https://developer.android.com/about/versions/oreo/background-location-limits).
+         */
         @JvmField
         val CONTINUOUS = RadarTrackingOptions(
             desiredStoppedUpdateInterval = 30,
@@ -100,6 +187,13 @@ data class RadarTrackingOptions(
             movingGeofenceRadius = 0
         )
 
+        /**
+         * A preset that updates about every 2.5 minutes when moving, shuts down when stopped, and only syncs stops and exits to the server.
+         *
+         * Low battery usage, but may exceed Android vitals bad behavior thresholds for excessive wakeups and excessive wi-fi scans. See [](https://developer.android.com/topic/performance/vitals/wakeup.html) and [](https://developer.android.com/topic/performance/vitals/bg-wifi.html).
+         *
+         * Note that location updates may be delayed significantly by Android Doze Mode and App Standby and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.
+         */
         @JvmField
         val RESPONSIVE = RadarTrackingOptions(
             desiredStoppedUpdateInterval = 0,
@@ -120,10 +214,17 @@ data class RadarTrackingOptions(
             movingGeofenceRadius = 100
         )
 
+        /**
+         * A preset that updates between every 2.5 to 20 minutes when moving, between every 20 to 60 minutes when stopped, and only syncs stops and exits to the server.
+         *
+         * Lowest battery usage and will not exceed Android vitals bad behavior thresholds.
+         *
+         * Note that location updates may be delayed significantly by Android Doze Mode and App Standby and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.
+         */
         @JvmField
         val EFFICIENT = RadarTrackingOptions(
-            desiredStoppedUpdateInterval = 1200,
-            fastestStoppedUpdateInterval = 150,
+            desiredStoppedUpdateInterval = 3600,
+            fastestStoppedUpdateInterval = 1200,
             desiredMovingUpdateInterval = 1200,
             fastestMovingUpdateInterval = 150,
             desiredSyncInterval = 140,
