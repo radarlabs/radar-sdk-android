@@ -1,5 +1,27 @@
 # Migration guides
 
+## 2.1.x to 3.0.x
+
+- Support Library dependencies have been migrated to [AndroidX](https://developer.android.com/jetpack/androidx). The `WorkManager` dependency has been removed.
+- The `Radar.initialize(context, publishableKey)` method now requires `context` and `publishableKey`.
+- The `Radar.updateLocation(location, callback)` method has been renamed to `Radar.trackOnce(location, callback)`.
+- This update introduces new tracking options and presets. If you were using `RadarTrackingOptions.Builder().priority(RadarTrackingPriority.EFFICIENCY)`, use the preset `RadarTrackingOptions.EFFICIENT` instead.
+
+```java
+// 3.0.x
+Radar.initialize(context, publishableKey);
+Radar.trackOnce(location, callback);
+Radar.startTracking(RadarTrackingOptions.EFFICIENT);
+
+// 2.1.x
+Radar.initialize(publishableKey);
+Radar.updateLocation(location, callback);
+RadarTrackingOptions trackingOptions = new RadarTrackingOptions.Builder()
+      .priority(RadarTrackingPriority.EFFICIENCY)
+      .build();
+Radar.startTracking(trackingOptions);
+```
+
 ## 2.0.x to 2.1.x
 
 - This update introduces `Radar.startTracking(trackingOptions)` to configure advanced tracking options. See https://radar.io/documentation/sdk#android-background.
