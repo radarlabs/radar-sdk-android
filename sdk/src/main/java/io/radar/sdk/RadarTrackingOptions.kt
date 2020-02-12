@@ -54,12 +54,12 @@ data class RadarTrackingOptions(
     var stopDistance: Int,
 
     /**
-     * Determines when to start tracking. Use `null` to start tracking when {@link Radar#startTracking} is called.
+     * Determines when to start tracking. Use `null` to start tracking when `startTracking()` is called.
      */
     var startTrackingAfter: Date?,
 
     /**
-     * Determines when to stop tracking. Use `null` to track until {@link Radar#stopTracking} is called.
+     * Determines when to stop tracking. Use `null` to track until `stopTracking()` is called.
      */
     var stopTrackingAfter: Date?,
 
