@@ -10,7 +10,7 @@ If you have questions about your Radar integration, please email us at support@r
 
 ## Steps to reproduce
 
-## Android version
+## OS version
 
 ## SDK installation method
 
