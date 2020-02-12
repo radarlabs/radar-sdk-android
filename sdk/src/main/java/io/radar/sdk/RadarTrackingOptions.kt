@@ -188,9 +188,7 @@ data class RadarTrackingOptions(
         )
 
         /**
-         * A preset that updates as fast as every 2.5 minutes while moving, shuts down when stopped, and only syncs stops and exits to the server.
-         *
-         * Low battery usage, but may exceed Android vitals bad behavior thresholds for excessive wakeups and excessive wi-fi scans. See [](https://developer.android.com/topic/performance/vitals/wakeup.html) and [](https://developer.android.com/topic/performance/vitals/bg-wifi.html).
+         * A preset that updates as fast as every 2.5 minutes while moving, shuts down when stopped, and only syncs stops and exits to the server. Low battery usage, but may exceed Android vitals bad behavior thresholds for excessive wakeups and excessive wi-fi scans. See [](https://developer.android.com/topic/performance/vitals/wakeup.html) and [](https://developer.android.com/topic/performance/vitals/bg-wifi.html).
          *
          * Note that location updates may be delayed significantly by Android Doze Mode and App Standby and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.
          */
@@ -215,9 +213,7 @@ data class RadarTrackingOptions(
         )
 
         /**
-         * A preset that updates as fast as every 6 minutes while moving, periodically when stopped, and only syncs stops and exits to the server.
-         *
-         * Lowest battery usage and will not exceed Android vitals bad behavior thresholds.
+         * A preset that updates as fast as every 6 minutes while moving, periodically when stopped, and only syncs stops and exits to the server. The default, lowest battery usage and will not exceed Android vitals bad behavior thresholds.
          *
          * Note that location updates may be delayed significantly by Android Doze Mode and App Standby and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.
          */
