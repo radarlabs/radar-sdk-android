@@ -7,7 +7,7 @@ import androidx.core.content.edit
 
 internal object RadarState {
 
-    private const val KEY_STARTED = "started"
+    private const val KEY_STARTED = "has_started"
     private const val KEY_LAST_MOVED_LOCATION_LATITUDE = "last_moved_location_latitude"
     private const val KEY_LAST_MOVED_LOCATION_LONGITUDE = "last_moved_location_longitude"
     private const val KEY_LAST_MOVED_LOCATION_ACCURACY = "last_moved_location_accuracy"
