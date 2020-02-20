@@ -1356,13 +1356,13 @@ object Radar {
     @JvmStatic
     fun stringForSource(source: RadarLocationSource): String? {
         return when (source) {
-            RadarLocationSource.FOREGROUND_LOCATION -> "foregroundLocation"
-            RadarLocationSource.BACKGROUND_LOCATION -> "backgroundLocation"
-            RadarLocationSource.MANUAL_LOCATION -> "manualLocation"
-            RadarLocationSource.GEOFENCE_ENTER -> "geofenceEnter"
-            RadarLocationSource.GEOFENCE_DWELL -> "geofenceDwell"
-            RadarLocationSource.GEOFENCE_EXIT -> "geofenceExit"
-            else -> "unknown"
+            RadarLocationSource.FOREGROUND_LOCATION -> "FOREGROUND_LOCATION"
+            RadarLocationSource.BACKGROUND_LOCATION -> "BACKGROUND_LOCATION"
+            RadarLocationSource.MANUAL_LOCATION -> "MANUAL_LOCATION"
+            RadarLocationSource.GEOFENCE_ENTER -> "GEOFENCE_ENTER"
+            RadarLocationSource.GEOFENCE_DWELL -> "GEOFENCE_DWELL"
+            RadarLocationSource.GEOFENCE_EXIT -> "GEOFENCE_EXIT"
+            else -> "UNKNOWN"
         }
     }
 
