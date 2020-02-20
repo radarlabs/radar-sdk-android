@@ -126,10 +126,6 @@ class RadarEvent(
         USER_STARTED_TRAVELING,
         /** `user.stopped_traveling` */
         USER_STOPPED_TRAVELING,
-        /** `user.started_commuting` */
-        USER_STARTED_COMMUTING,
-        /** `user.stopped_commuting` */
-        USER_STOPPED_COMMUTING,
         /** `user.entered_place` */
         USER_ENTERED_PLACE,
         /** `user.exited_place` */
@@ -147,7 +143,11 @@ class RadarEvent(
         /** `user.entered_region_dma` */
         USER_ENTERED_REGION_DMA,
         /** `user.exited_region_dma` */
-        USER_EXITED_REGION_DMA
+        USER_EXITED_REGION_DMA,
+        /** `user.started_commuting` */
+        USER_STARTED_COMMUTING,
+        /** `user.stopped_commuting` */
+        USER_STOPPED_COMMUTING
     }
 
     /**

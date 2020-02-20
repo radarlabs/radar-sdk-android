@@ -9,8 +9,6 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
-import io.radar.sdk.model.RadarContext
-import io.radar.sdk.model.RadarPlace
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
