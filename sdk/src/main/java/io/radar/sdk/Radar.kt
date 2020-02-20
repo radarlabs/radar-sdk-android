@@ -169,27 +169,31 @@ object Radar {
      * The status types for a request. See [](https://radar.io/documentation/sdk#android-foreground).
      */
     enum class RadarStatus {
-        /** The request succeeded */
+        /** Success */
         SUCCESS,
-        /** The SDK was not initialized with a publishable API key */
+        /** SDK not initialized */
         ERROR_PUBLISHABLE_KEY,
-        /** Location permissions have not been granted */
+        /** Location permissions not granted */
         ERROR_PERMISSIONS,
-        /** The user has not granted location permissions for the app */
+        /** Location services error */
         ERROR_LOCATION,
-        /** The network was unavailable, or the network connection timed out */
+        /** Network error */
         ERROR_NETWORK,
-        /** One or more parameters were invalid */
+        /** Bad request (missing or invalid params) */
         ERROR_BAD_REQUEST,
-        /** The publishable API key is invalid */
+        /** Unauthorized (invalid API key) */
         ERROR_UNAUTHORIZED,
-        /** Use of the API is forbidden for the publishable API key */
+        /** Payment required (organization disabled or usage exceeded) */
+        ERROR_PAYMENT_REQUIRED,
+        /** Forbidden (insufficient permissions or no beta access) */
         ERROR_FORBIDDEN,
-        /** An internal server error occurred */
-        ERROR_SERVER,
-        /** Exceeded rate limit */
+        /** Not found */
+        ERROR_NOT_FOUND,
+        /** Too many requests (rate limit exceeded) */
         ERROR_RATE_LIMIT,
-        /** An unknown error occurred */
+        /** Internal server error */
+        ERROR_SERVER,
+        /** Unknown error */
         ERROR_UNKNOWN
     }
 

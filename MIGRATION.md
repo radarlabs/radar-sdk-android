@@ -6,6 +6,8 @@
 - The `Radar.initialize(context, publishableKey)` method now requires `context` and `publishableKey`.
 - The `Radar.updateLocation(location, callback)` method has been renamed to `Radar.trackOnce(location, callback)`.
 - This update introduces new tracking options and presets. See https://radar.io/blog/open-source-radar-sdk-v3-custom-tracking-options-public-beta. If you were using `RadarTrackingOptions.Builder().priority(RadarTrackingPriority.EFFICIENCY)`, use the preset `RadarTrackingOptions.EFFICIENT` instead.
+- `adId` collection is now optional. To collect `adId`, call `Radar.setAdIdEnabled(true)`.
+- `Radar.setPlacesProvider(placesProvider)` has been removed.
 
 ```java
 // 3.0.x
@@ -14,6 +16,8 @@ Radar.initialize(context, publishableKey);
 Radar.trackOnce(location, callback);
 
 Radar.startTracking(RadarTrackingOptions.EFFICIENT);
+
+Radar.setAdIdEnabled(true);
 
 // 2.1.x
 Radar.initialize(publishableKey);
