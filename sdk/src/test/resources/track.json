@@ -123,10 +123,8 @@
             "residence-other",
             "apartment-condo-building"
          ],
-         "_id": "59bb1dc10d8998dc02510033",
-         "facebookId": "296482633802114",
-         "name": "129 West 81st Street",
-         "facebookPlaceId": "397481977035512"
+         "_id": "59bb1dc10d8998dc02510033"
+         "name": "129 West 81st Street"
       },
       "deviceType": "iOS",
       "nearbyPlaceChains": [
@@ -723,9 +721,7 @@
                "apartment-condo-building"
             ],
             "_id": "59bb1dc10d8998dc02510033",
-            "facebookId": "296482633802114",
-            "name": "129 West 81st Street",
-            "facebookPlaceId": "397481977035512"
+            "name": "129 West 81st Street"
          },
          "alternatePlaces": [
             {
@@ -744,10 +740,8 @@
                   "landmark",
                   "public-services-government"
                ],
-               "_id": "59e289a9a064b45aefe78b82",
-               "facebookId": "104670483298109",
-               "name": "Things in Jerry Seinfeld's Apartment",
-               "facebookPlaceId": "104670519964772"
+               "_id": "59e289a9a064b45aefe78b82"
+               "name": "Things in Jerry Seinfeld's Apartment"
             },
             {
                "location": {
@@ -766,15 +760,13 @@
                   "commercial-industrial",
                   "commercial-industrial-equipment"
                ],
-               "_id": "59e289a9a064b45aefe78b85",
-               "facebookId": "120549141899",
+               "_id": "59e289a9a064b45aefe78b85"
                "name": "Amazon",
                "chain": {
                   "domain": "amazon.com",
                   "name": "Amazon",
                   "slug": "amazon"
-               },
-               "facebookPlaceId": "10151134806961900"
+               }
             },
             {
                "location": {
@@ -793,10 +785,8 @@
                   "shopping-retail",
                   "mobile-phone-shop"
                ],
-               "_id": "59bc68ec8be4c5ce94087563",
-               "facebookId": "135686466481221",
-               "name": "Endicott",
-               "facebookPlaceId": "135686476481220"
+               "_id": "59bc68ec8be4c5ce94087563"
+               "name": "Endicott"
             },
             {
                "location": {
@@ -814,10 +804,8 @@
                   "travel-company",
                   "travel-agency"
                ],
-               "_id": "59da3785a064b45aefe1e2ef",
-               "facebookId": "150814944940136",
-               "name": "Cook Travel",
-               "facebookPlaceId": "234903243197972"
+               "_id": "59da3785a064b45aefe1e2ef"
+               "name": "Cook Travel"
             }
          ],
          "_id": "5dcee0e67e71e80027a7eec9",
@@ -904,7 +892,6 @@
                "restaurant"
             ],
             "_id": "5adc6759a4e7ae6c68b63307",
-            "facebookId": "140376312681050",
             "name": "TravelCenters of America",
             "chain": {
                "domain": "ta-petro.com",
@@ -914,8 +901,7 @@
                "metadata": {
                   "category": "gas"
                }
-            },
-            "facebookPlaceId": "1573444479374219"
+            }
          },
          "_id": "5dcee0e67e71e80027a7eeca",
          "country": {
@@ -1103,8 +1089,7 @@
                "cafe",
                "coffee-shop"
             ],
-            "_id": "59bc68ec8be4c5ce9408755f",
-            "facebookId": "134372489940687",
+            "_id": "59bc68ec8be4c5ce9408755f"
             "name": "Starbucks",
             "chain": {
                "domain": "starbucks.com",
@@ -1117,8 +1102,7 @@
                   "pwi": false,
                   "tlog": false
                }
-            },
-            "facebookPlaceId": "1105309749513618"
+            }
          },
          "_id": "5dcee0e67e71e80027a7eecc",
          "country": {
