@@ -123,7 +123,7 @@
             "residence-other",
             "apartment-condo-building"
          ],
-         "_id": "59bb1dc10d8998dc02510033"
+         "_id": "59bb1dc10d8998dc02510033",
          "name": "129 West 81st Street"
       },
       "deviceType": "iOS",
@@ -740,7 +740,7 @@
                   "landmark",
                   "public-services-government"
                ],
-               "_id": "59e289a9a064b45aefe78b82"
+               "_id": "59e289a9a064b45aefe78b82",
                "name": "Things in Jerry Seinfeld's Apartment"
             },
             {
@@ -760,7 +760,7 @@
                   "commercial-industrial",
                   "commercial-industrial-equipment"
                ],
-               "_id": "59e289a9a064b45aefe78b85"
+               "_id": "59e289a9a064b45aefe78b85",
                "name": "Amazon",
                "chain": {
                   "domain": "amazon.com",
@@ -785,7 +785,7 @@
                   "shopping-retail",
                   "mobile-phone-shop"
                ],
-               "_id": "59bc68ec8be4c5ce94087563"
+               "_id": "59bc68ec8be4c5ce94087563",
                "name": "Endicott"
             },
             {
@@ -804,7 +804,7 @@
                   "travel-company",
                   "travel-agency"
                ],
-               "_id": "59da3785a064b45aefe1e2ef"
+               "_id": "59da3785a064b45aefe1e2ef",
                "name": "Cook Travel"
             }
          ],
@@ -1089,7 +1089,7 @@
                "cafe",
                "coffee-shop"
             ],
-            "_id": "59bc68ec8be4c5ce9408755f"
+            "_id": "59bc68ec8be4c5ce9408755f",
             "name": "Starbucks",
             "chain": {
                "domain": "starbucks.com",
