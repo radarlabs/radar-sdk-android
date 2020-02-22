@@ -47,7 +47,7 @@ class RadarContext(
         private const val FIELD_DMA = "dma"
         private const val FIELD_POSTAL_CODE = "postalCode"
 
-        internal fun deserialize(obj: JSONObject): RadarContext {
+        fun deserialize(obj: JSONObject): RadarContext {
             val geofences = RadarGeofence.deserializeArray(obj.getJSONArray(FIELD_GEOFENCES)) ?: emptyArray()
             val place = RadarPlace.deserialize(obj.optJSONObject(FIELD_PLACE))
             val country = RadarRegion.deserialize(obj.optJSONObject(FIELD_COUNTRY))

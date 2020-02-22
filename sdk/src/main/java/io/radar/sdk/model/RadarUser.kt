@@ -122,7 +122,7 @@ class RadarUser(
         private const val FIELD_SEGMENTS = "segments"
         private const val FIELD_TOP_CHAINS = "topChains"
 
-        internal fun deserialize(obj: JSONObject?): RadarUser? {
+        fun deserialize(obj: JSONObject?): RadarUser? {
             if (obj == null) {
                 return null
             }
