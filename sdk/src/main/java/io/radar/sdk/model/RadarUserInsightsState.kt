@@ -37,7 +37,11 @@ class RadarUserInsightsState(
         private const val FIELD_COMMUTING = "commuting"
 
         @Throws(JSONException::class)
-        fun fromJson(obj: JSONObject): RadarUserInsightsState {
+        fun deserialize(obj: JSONObject?): RadarUserInsightsState? {
+            if (obj == null) {
+                return null
+            }
+
             val home = obj.optBoolean(FIELD_HOME)
             val office = obj.optBoolean(FIELD_OFFICE)
             val traveling = obj.optBoolean(FIELD_TRAVELING)
@@ -45,6 +49,15 @@ class RadarUserInsightsState(
 
             return RadarUserInsightsState(home, office, traveling, commuting)
         }
+    }
+
+    fun serialize(): JSONObject {
+        val obj = JSONObject()
+        obj.putOpt(FIELD_HOME, this.home)
+        obj.putOpt(FIELD_OFFICE, this.office)
+        obj.putOpt(FIELD_TRAVELING, this.traveling)
+        obj.putOpt(FIELD_COMMUTING, this.commuting)
+        return obj
     }
 
 }

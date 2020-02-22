@@ -180,10 +180,10 @@ internal class RadarApiClient(
                 }
 
                 val events = res.optJSONArray("events")?.let { eventsArr ->
-                    RadarEvent.fromJSONArray(eventsArr)
+                    RadarEvent.deserializeArray(eventsArr)
                 }
                 val user = res.optJSONObject("user")?.let { userObj ->
-                    RadarUser.fromJson(userObj)
+                    RadarUser.deserialize(userObj)
                 }
                 if (events != null && user != null) {
                     val successIntent = RadarReceiver.createSuccessIntent(res, location)
@@ -252,7 +252,7 @@ internal class RadarApiClient(
                 }
 
                 val context = res.optJSONObject("context")?.let { contextObj ->
-                    RadarContext.fromJson(contextObj)
+                    RadarContext.deserialize(contextObj)
                 }
                 if (context != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, context)
@@ -313,7 +313,7 @@ internal class RadarApiClient(
                 }
 
                 val places = res.optJSONArray("places")?.let { placesArr ->
-                    RadarPlace.fromJSONArray(placesArr)
+                    RadarPlace.deserializeArray(placesArr)
                 }
                 if (places != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, places)
@@ -365,7 +365,7 @@ internal class RadarApiClient(
                 }
 
                 val geofences = res.optJSONArray("geofences")?.let { geofencesArr ->
-                    RadarGeofence.fromJSONArray(geofencesArr)
+                    RadarGeofence.deserializeArray(geofencesArr)
                 }
                 if (geofences != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, geofences)
@@ -413,7 +413,7 @@ internal class RadarApiClient(
                 }
 
                 val addresses = res.optJSONArray("addresses")?.let { addressesArr ->
-                    RadarAddress.fromJSONArray(addressesArr)
+                    RadarAddress.deserializeArray(addressesArr)
                 }
                 if (addresses != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, addresses)
@@ -457,7 +457,7 @@ internal class RadarApiClient(
                 }
 
                 val addresses = res.optJSONArray("addresses")?.let { addressesArr ->
-                    RadarAddress.fromJSONArray(addressesArr)
+                    RadarAddress.deserializeArray(addressesArr)
                 }
                 if (addresses != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, addresses)
@@ -501,7 +501,7 @@ internal class RadarApiClient(
                 }
 
                 val addresses = res.optJSONArray("addresses")?.let { addressesArr ->
-                    RadarAddress.fromJSONArray(addressesArr)
+                    RadarAddress.deserializeArray(addressesArr)
                 }
                 if (addresses != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, addresses)
@@ -542,7 +542,7 @@ internal class RadarApiClient(
                 }
 
                 val region = res.optJSONObject("country")?.let { countryObj ->
-                    RadarRegion.fromJson(countryObj)
+                    RadarRegion.deserialize(countryObj)
                 }
                 if (region != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, region)
@@ -609,7 +609,7 @@ internal class RadarApiClient(
                 }
 
                 val routes = res.optJSONObject("routes")?.let { routesObj ->
-                    RadarRoutes.fromJson(routesObj)
+                    RadarRoutes.deserialize(routesObj)
                 }
                 if (routes != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, routes)

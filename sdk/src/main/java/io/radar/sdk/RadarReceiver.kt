@@ -78,13 +78,15 @@ abstract class RadarReceiver : BroadcastReceiver() {
             try {
                 val response = JSONObject(res)
                 val eventsArr = response.getJSONArray("events")
-                val events = RadarEvent.fromJSONArray(eventsArr)
-                val user = RadarUser.fromJson(response.getJSONObject("user"))
+                val events = RadarEvent.deserializeArray(eventsArr)
+                val user = RadarUser.deserialize(response.getJSONObject("user"))
 
-                if (events.isNotEmpty()) {
-                    onEventsReceived(context, events, user)
+                if (user != null) {
+                    if (events != null && events.isNotEmpty()) {
+                        onEventsReceived(context, events, user)
+                    }
+                    onLocationUpdated(context, location, user)
                 }
-                onLocationUpdated(context, location, user)
             } catch (e: JSONException) {
                 onError(context, RadarStatus.ERROR_UNKNOWN)
             } catch (e: ParseException) {

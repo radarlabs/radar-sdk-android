@@ -13,7 +13,7 @@ class RadarGeofence(
     /**
      * The Radar ID of the geofence.
      */
-    val id: String,
+    val _id: String,
 
     /**
      * The description of the geofence.
@@ -38,7 +38,7 @@ class RadarGeofence(
     /**
      * The geometry of the geofence.
      */
-    val geometry: RadarGeofenceGeometry
+    val geometry: RadarGeofenceGeometry?
 ) {
 
     internal companion object {
@@ -57,7 +57,7 @@ class RadarGeofence(
         internal const val TYPE_POLYGON = "polygon"
 
         @JvmStatic
-        fun fromJson(obj: JSONObject?): RadarGeofence? {
+        fun deserialize(obj: JSONObject?): RadarGeofence? {
             if (obj == null) {
                 return null
             }
@@ -67,29 +67,31 @@ class RadarGeofence(
             val tag: String? = obj.optString(FIELD_TAG)
             val externalId: String? = obj.optString(FIELD_EXTERNAL_ID)
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
-
-            val type = obj.optString(FIELD_TYPE)
-
-            val geometry = when (type) {
+            val geometry = when (obj.optString(FIELD_TYPE)) {
                 TYPE_CIRCLE -> {
-                    val locationObj = obj.optJSONObject(FIELD_GEOMETRY_CENTER)
-                    locationObj?.optJSONArray(FIELD_COORDINATES)?.let { coordinates ->
+                    val centerObj = obj.optJSONObject(FIELD_GEOMETRY_CENTER)
+                    centerObj?.optJSONArray(FIELD_COORDINATES)?.let { coordinate ->
                         RadarCircleGeometry(
-                            RadarCoordinate(coordinates.optDouble(1), coordinates.optDouble(0)),
+                            RadarCoordinate(
+                                coordinate.optDouble(1),
+                                coordinate.optDouble(0)),
                             obj.optDouble(FIELD_GEOMETRY_RADIUS)
                         )
                     }
                 }
                 TYPE_POLYGON -> {
-                    val locationObj = obj.optJSONObject(FIELD_GEOMETRY_POLYGON)
-                    val coords = locationObj?.optJSONArray(FIELD_COORDINATES)
-                    coords?.optJSONArray(0)?.let { array ->
-                        val vertices = Array(array.length()) { index ->
-                            array.optJSONArray(index)?.let { coord ->
-                                RadarCoordinate(coord.optDouble(1), coord.optDouble(0))
+                    val polygonObj = obj.optJSONObject(FIELD_GEOMETRY_POLYGON)
+                    val coordinatesArr = polygonObj?.optJSONArray(FIELD_COORDINATES)
+                    coordinatesArr?.optJSONArray(0)?.let { coordinates ->
+                        val polygonCoordinatesArr = Array(coordinates.length()) { index ->
+                            coordinates.optJSONArray(index)?.let { coordinate ->
+                                RadarCoordinate(
+                                    coordinate.optDouble(1),
+                                    coordinate.optDouble(0)
+                                )
                             } ?: RadarCoordinate(0.0, 0.0)
                         }
-                        RadarPolygonGeometry(vertices)
+                        RadarPolygonGeometry(polygonCoordinatesArr)
                     }
                 }
                 else -> null
@@ -99,15 +101,37 @@ class RadarGeofence(
         }
 
         @Throws(JSONException::class)
-        fun fromJSONArray(array: JSONArray?): Array<RadarGeofence>? {
+        fun deserializeArray(array: JSONArray?): Array<RadarGeofence>? {
             if (array == null) {
                 return null
             }
 
             return Array(array.length()) { index ->
-                fromJson(array.optJSONObject(index))
+                deserialize(array.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
+
+        fun serializeArray(geofences: Array<RadarGeofence> ?): JSONArray? {
+            if (geofences == null) {
+                return null
+            }
+
+            val arr = JSONArray()
+            geofences.forEach { geofence ->
+                arr.put(geofence.serialize())
+            }
+            return arr
+        }
+    }
+
+    fun serialize(): JSONObject {
+        val obj = JSONObject()
+        obj.putOpt(FIELD_ID, this._id)
+        obj.putOpt(FIELD_TAG, this.tag)
+        obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
+        obj.putOpt(FIELD_DESCRIPTION, this.description)
+        obj.putOpt(FIELD_METADATA, this.metadata)
+        return obj
     }
 
 }

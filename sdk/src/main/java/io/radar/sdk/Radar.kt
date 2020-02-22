@@ -1306,14 +1306,14 @@ object Radar {
     @JvmStatic
     fun getContext(location: Location, callback: RadarContextCallback) {
         if (!initialized) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
 
         apiClient.getContext(location, object : RadarApiClient.RadarContextApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, context: RadarContext?) {
-                callback?.onComplete(status, location, context)
+                callback.onComplete(status, location, context)
             }
         })
     }

@@ -1,7 +1,5 @@
 package io.radar.sdk.model
 
-import io.radar.sdk.model.RadarCoordinate
-
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -107,21 +105,24 @@ class RadarAddress(
         private const val FIELD_NUMBER = "number"
         private const val FIELD_CONFIDENCE = "confidence"
 
-        fun fromJson(obj: JSONObject): RadarAddress {
-            val coordinate = RadarCoordinate(obj.optDouble(FIELD_LATITUDE), obj.optDouble(FIELD_LONGITUDE))
-            val formattedAddress = obj.optString(FIELD_FORMATTED_ADDRESS, null)
-            val country = obj.optString(FIELD_COUNTRY, null)
-            val countryCode = obj.optString(FIELD_COUNTRY_CODE, null)
-            val countryFlag = obj.optString(FIELD_COUNTRY_FLAG, null)
-            val state = obj.optString(FIELD_STATE, null)
-            val stateCode = obj.optString(FIELD_STATE_CODE, null)
-            val postalCode = obj.optString(FIELD_POSTAL_CODE, null)
-            val city = obj.optString(FIELD_CITY, null)
-            val borough = obj.optString(FIELD_BOROUGH, null)
-            val county = obj.optString(FIELD_COUNTY, null)
-            val neighborhood = obj.optString(FIELD_NEIGHBORHOOD, null)
-            val number = obj.optString(FIELD_NUMBER, null)
+        fun deserialize(obj: JSONObject?): RadarAddress? {
+            if (obj == null) {
+                return null
+            }
 
+            val coordinate = RadarCoordinate(obj.optDouble(FIELD_LATITUDE), obj.optDouble(FIELD_LONGITUDE))
+            val formattedAddress = obj.optString(FIELD_FORMATTED_ADDRESS)
+            val country = obj.optString(FIELD_COUNTRY)
+            val countryCode = obj.optString(FIELD_COUNTRY_CODE)
+            val countryFlag = obj.optString(FIELD_COUNTRY_FLAG)
+            val state = obj.optString(FIELD_STATE)
+            val stateCode = obj.optString(FIELD_STATE_CODE)
+            val postalCode = obj.optString(FIELD_POSTAL_CODE)
+            val city = obj.optString(FIELD_CITY)
+            val borough = obj.optString(FIELD_BOROUGH)
+            val county = obj.optString(FIELD_COUNTY)
+            val neighborhood = obj.optString(FIELD_NEIGHBORHOOD)
+            val number = obj.optString(FIELD_NUMBER)
             val confidence = when(obj.optString(FIELD_CONFIDENCE)) {
                 "exact" -> RadarAddressConfidence.EXACT
                 "interpolated" -> RadarAddressConfidence.INTERPOLATED
@@ -147,10 +148,56 @@ class RadarAddress(
             )
         }
 
-        fun fromJSONArray(array: JSONArray): Array<RadarAddress> {
-            return Array(array.length()) { index ->
-                fromJson(array.optJSONObject(index))
+        fun deserializeArray(arr: JSONArray?): Array<RadarAddress>? {
+            if (arr == null) {
+                return null
+            }
+
+            return Array(arr.length()) { index ->
+                deserialize(arr.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
+
+        fun serializeArray(addresses: Array<RadarAddress>?): JSONArray? {
+            if (addresses == null) {
+                return null
+            }
+
+            val arr = JSONArray()
+            addresses.forEach { address ->
+                arr.put(address.serialize())
+            }
+            return arr
+        }
+
+        fun stringForConfidence(confidence: RadarAddressConfidence): String {
+            return when(confidence) {
+                RadarAddressConfidence.EXACT -> "exact"
+                RadarAddressConfidence.INTERPOLATED -> "interpolated"
+                RadarAddressConfidence.FALLBACK -> "fallback"
+                else -> "none"
+            }
+        }
     }
+
+    fun serialize(): JSONObject {
+        val obj = JSONObject()
+        obj.putOpt(FIELD_LATITUDE, this.coordinate.latitude)
+        obj.putOpt(FIELD_LONGITUDE, this.coordinate.latitude)
+        obj.putOpt(FIELD_FORMATTED_ADDRESS, this.formattedAddress)
+        obj.putOpt(FIELD_COUNTRY, this.country)
+        obj.putOpt(FIELD_COUNTRY_CODE, this.countryCode)
+        obj.putOpt(FIELD_COUNTRY_FLAG, this.countryFlag)
+        obj.putOpt(FIELD_STATE, this.state)
+        obj.putOpt(FIELD_STATE_CODE, this.stateCode)
+        obj.putOpt(FIELD_POSTAL_CODE, this.postalCode)
+        obj.putOpt(FIELD_CITY, this.city)
+        obj.putOpt(FIELD_BOROUGH, this.borough)
+        obj.putOpt(FIELD_COUNTY, this.county)
+        obj.putOpt(FIELD_NEIGHBORHOOD, this.neighborhood)
+        obj.putOpt(FIELD_NUMBER, this.number)
+        obj.putOpt(FIELD_CONFIDENCE, stringForConfidence(this.confidence))
+        return obj
+    }
+
 }

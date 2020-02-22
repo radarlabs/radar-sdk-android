@@ -47,13 +47,13 @@ class RadarContext(
         private const val FIELD_DMA = "dma"
         private const val FIELD_POSTAL_CODE = "postalCode"
 
-        internal fun fromJson(obj: JSONObject): RadarContext {
-            val geofences = RadarGeofence.fromJSONArray(obj.getJSONArray(FIELD_GEOFENCES))!!
-            val place = obj.optJSONObject(FIELD_PLACE)?.let(RadarPlace.Companion::fromJsonNullable)
-            val country = obj.optJSONObject(FIELD_COUNTRY)?.let(RadarRegion.Companion::fromJson)
-            val state = obj.optJSONObject(FIELD_STATE)?.let(RadarRegion.Companion::fromJson)
-            val dma = obj.optJSONObject(FIELD_DMA)?.let(RadarRegion.Companion::fromJson)
-            val postalCode = obj.optJSONObject(FIELD_POSTAL_CODE)?.let(RadarRegion.Companion::fromJson)
+        internal fun deserialize(obj: JSONObject): RadarContext {
+            val geofences = RadarGeofence.deserializeArray(obj.getJSONArray(FIELD_GEOFENCES)) ?: emptyArray()
+            val place = RadarPlace.deserialize(obj.optJSONObject(FIELD_PLACE))
+            val country = RadarRegion.deserialize(obj.optJSONObject(FIELD_COUNTRY))
+            val state = RadarRegion.deserialize(obj.optJSONObject(FIELD_STATE))
+            val dma = RadarRegion.deserialize(obj.optJSONObject(FIELD_DMA))
+            val postalCode = RadarRegion.deserialize(obj.optJSONObject(FIELD_POSTAL_CODE))
 
             return RadarContext(
                 geofences,
@@ -64,7 +64,17 @@ class RadarContext(
                 postalCode
             )
         }
+    }
 
+    fun serialize(): JSONObject {
+        val obj = JSONObject()
+        obj.putOpt(FIELD_GEOFENCES, RadarGeofence.serializeArray(this.geofences))
+        obj.putOpt(FIELD_PLACE, this.place?.serialize())
+        obj.putOpt(FIELD_COUNTRY, this.country?.serialize())
+        obj.putOpt(FIELD_STATE, this.state?.serialize())
+        obj.putOpt(FIELD_DMA, this.dma?.serialize())
+        obj.putOpt(FIELD_POSTAL_CODE, this.postalCode?.serialize())
+        return obj
     }
 
 }

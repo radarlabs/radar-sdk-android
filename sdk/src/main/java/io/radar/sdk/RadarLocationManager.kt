@@ -15,7 +15,6 @@ import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
-import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
 
