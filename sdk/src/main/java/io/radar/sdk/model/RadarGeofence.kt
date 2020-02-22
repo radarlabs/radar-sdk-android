@@ -42,19 +42,19 @@ class RadarGeofence(
 ) {
 
     internal companion object {
-        internal const val FIELD_ID = "_id"
-        internal const val FIELD_DESCRIPTION = "description"
-        internal const val FIELD_TAG = "tag"
-        internal const val FIELD_EXTERNAL_ID = "externalId"
-        internal const val FIELD_METADATA = "metadata"
-        internal const val FIELD_TYPE = "type"
-        internal const val FIELD_GEOMETRY_RADIUS = "geometryRadius"
-        internal const val FIELD_GEOMETRY_CENTER = "geometryCenter"
-        internal const val FIELD_GEOMETRY_POLYGON = "geometry"
-        internal const val FIELD_COORDINATES = "coordinates"
+        private const val FIELD_ID = "_id"
+        private const val FIELD_DESCRIPTION = "description"
+        private const val FIELD_TAG = "tag"
+        private const val FIELD_EXTERNAL_ID = "externalId"
+        private const val FIELD_METADATA = "metadata"
+        private const val FIELD_TYPE = "type"
+        private const val FIELD_GEOMETRY_RADIUS = "geometryRadius"
+        private const val FIELD_GEOMETRY_CENTER = "geometryCenter"
+        private const val FIELD_GEOMETRY_POLYGON = "geometry"
+        private const val FIELD_COORDINATES = "coordinates"
 
-        internal const val TYPE_CIRCLE = "circle"
-        internal const val TYPE_POLYGON = "polygon"
+        private const val TYPE_CIRCLE = "circle"
+        private const val TYPE_POLYGON = "polygon"
 
         @JvmStatic
         fun deserialize(obj: JSONObject?): RadarGeofence? {

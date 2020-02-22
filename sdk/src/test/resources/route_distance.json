@@ -17,7 +17,27 @@
         "text": "2 hrs 22 mins"
       }
     },
+    "bike": {
+      "distance": {
+        "value": 38358.7774742,
+        "text": "7.3 mi"
+      },
+      "duration": {
+        "value": 11,
+        "text": "11 mins"
+      }
+    },
     "car": {
+      "distance": {
+        "value": 38358.7774742,
+        "text": "7.3 mi"
+      },
+      "duration": {
+        "value": 11,
+        "text": "11 mins"
+      }
+    },
+    "transit": {
       "distance": {
         "value": 38358.7774742,
         "text": "7.3 mi"

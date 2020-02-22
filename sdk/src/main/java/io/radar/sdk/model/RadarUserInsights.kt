@@ -29,10 +29,10 @@ class RadarUserInsights private constructor(
 ) {
 
     internal companion object {
-        internal const val FIELD_HOME_LOCATION = "homeLocation"
-        internal const val FIELD_OFFICE_LOCATION = "officeLocation"
-        internal const val FIELD_LOCATIONS = "locations"
-        internal const val FIELD_STATE = "state"
+        private const val FIELD_HOME_LOCATION = "homeLocation"
+        private const val FIELD_OFFICE_LOCATION = "officeLocation"
+        private const val FIELD_LOCATIONS = "locations"
+        private const val FIELD_STATE = "state"
 
         @Throws(JSONException::class, ParseException::class)
         fun deserialize(obj: JSONObject?): RadarUserInsights? {

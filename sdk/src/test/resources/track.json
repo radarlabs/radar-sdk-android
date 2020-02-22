@@ -92,6 +92,11 @@
             }
          }
       ],
+      "metadata": {
+         "customId": "123",
+         "customFlag": false
+      },
+      "description": "User 1",
       "_id": "5bb8d4fbfd58d5002103ff5c",
       "ip": "68.129.209.28",
       "locationAccuracy": 5,
@@ -538,7 +543,10 @@
             "type": "circle",
             "geometryRadius": 100,
             "tag": "ta-petro",
-            "externalId": "123"
+            "externalId": "123",
+            "metadata": {
+               "foo": "bar"
+            }
          },
          "_id": "5dcee0e67e71e80027a7eec7",
          "country": {
@@ -901,7 +909,11 @@
             "chain": {
                "domain": "ta-petro.com",
                "name": "TravelCenters of America",
-               "slug": "travelcenters-of-america"
+               "slug": "travelcenters-of-america",
+               "externalId": "TA",
+               "metadata": {
+                  "category": "gas"
+               }
             },
             "facebookPlaceId": "1573444479374219"
          },

@@ -47,14 +47,14 @@ class RadarPlace(
 ) {
 
     internal companion object {
-        internal const val FIELD_ID = "_id"
-        internal const val FIELD_NAME = "name"
-        internal const val FIELD_CATEGORIES = "categories"
-        internal const val FIELD_CHAIN = "chain"
-        internal const val FIELD_LOCATION = "location"
-        internal const val FIELD_COORDINATES = "coordinates"
-        internal const val FIELD_GROUP = "group"
-        internal const val FIELD_METADATA = "metadata"
+        private const val FIELD_ID = "_id"
+        private const val FIELD_NAME = "name"
+        private const val FIELD_CATEGORIES = "categories"
+        private const val FIELD_CHAIN = "chain"
+        private const val FIELD_LOCATION = "location"
+        private const val FIELD_COORDINATES = "coordinates"
+        private const val FIELD_GROUP = "group"
+        private const val FIELD_METADATA = "metadata"
 
         @Throws(JSONException::class)
         fun deserialize(obj: JSONObject?): RadarPlace? {

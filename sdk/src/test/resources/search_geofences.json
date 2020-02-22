@@ -11,6 +11,11 @@
          "description": "Geofence of the Admiralty Station in Hong Kong",
          "type": "polygon",
          "enabled": true,
+         "metadata": {
+            "foo": "bar"
+         },
+         "tag": "station",
+         "externalId": "admiralty",
          "geometry": {
             "type": "Polygon",
             "coordinates": [

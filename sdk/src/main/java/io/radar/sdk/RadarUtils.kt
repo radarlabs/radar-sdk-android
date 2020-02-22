@@ -28,7 +28,7 @@ internal object RadarUtils {
     internal val country: String
         get() = Locale.getDefault().country
 
-    internal val sdkVersion: String = BuildConfig.VERSION_NAME
+    internal const val sdkVersion: String = BuildConfig.VERSION_NAME
 
     internal val timeZoneOffset: Int
         get() {
@@ -65,7 +65,7 @@ internal object RadarUtils {
         return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
     }
 
-    internal val deviceType = "Android"
+    internal const val deviceType = "Android"
 
     internal val deviceMake =  Build.MANUFACTURER
 

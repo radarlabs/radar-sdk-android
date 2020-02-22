@@ -46,7 +46,7 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null, context: RadarContext? = null)
     }
 
-    internal fun headers(publishableKey: String): Map<String, String> {
+    private fun headers(publishableKey: String): Map<String, String> {
         return mapOf(
             "Authorization" to publishableKey,
             "Content-Type" to "application/json",

@@ -3,14 +3,8 @@ package io.radar.sdk
 import android.content.Context
 import android.location.Location
 import android.os.Build
-import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.tasks.Task
 import io.radar.sdk.model.*
 import org.json.JSONObject
 import org.junit.Test
@@ -19,7 +13,6 @@ import org.junit.Before
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
-import java.net.URL
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -28,70 +21,232 @@ import java.util.concurrent.TimeUnit
 @Config(sdk=[Build.VERSION_CODES.P])
 class RadarTest {
 
-    internal class RadarApiHelperMock : RadarApiHelper() {
-
-        internal var mockStatus: Radar.RadarStatus = Radar.RadarStatus.ERROR_UNKNOWN
-        internal var mockResponse: JSONObject? = null
-
-        override fun request(context: Context,
-                                 method: String,
-                                 url: URL,
-                                 headers: Map<String, String>?,
-                                 params: JSONObject?,
-                                 callback: RadarApiCallback?) {
-            callback?.onComplete(mockStatus, mockResponse)
-        }
-
-    }
-
-    internal class RadarPermissionsHelperMock : RadarPermissionsHelper() {
-
-        internal var mockFineLocationPermissionGranted: Boolean = false
-
-        override fun fineLocationPermissionGranted(context: Context): Boolean {
-            return mockFineLocationPermissionGranted
-        }
-
-    }
-
-    internal class FusedLocationProviderClientMock(
-        context: Context
-    ) : FusedLocationProviderClient(context) {
-
-        internal var mockLocation: Location? = null
-
-        override fun requestLocationUpdates(
-            request: LocationRequest?,
-            callback: LocationCallback?,
-            looper: Looper?
-        ): Task<Void> {
-            if (mockLocation != null) {
-                callback?.onLocationResult(LocationResult.create(listOf(mockLocation)))
-            }
-            return super.requestLocationUpdates(request, callback, looper)
-        }
-
-    }
-
-    internal class RadarTestUtils {
-
-        internal companion object {
-
-            fun jsonObjectFromResource(resource: String): JSONObject? {
-                val str = RadarTest::class.java.getResource(resource)!!.readText()
-                return JSONObject(str)
-            }
-
-        }
-
-    }
-
     companion object {
         const val publishableKey = "prj_test_pk_0000000000000000000000000000000000000000"
         private val context: Context = ApplicationProvider.getApplicationContext()
         private val apiHelperMock = RadarApiHelperMock()
         private val locationClientMock = FusedLocationProviderClientMock(context)
         private val permissionsHelperMock = RadarPermissionsHelperMock()
+    }
+
+    private fun assertGeofencesOk(geofences: Array<RadarGeofence>?) {
+        assertNotNull(geofences)
+        geofences?.let {
+            for (geofence in geofences) {
+                assertGeofenceOk(geofence)
+            }
+        }
+    }
+
+    private fun assertGeofenceOk(geofence: RadarGeofence?) {
+        assertNotNull(geofence)
+        assertNotNull(geofence?.description)
+        assertNotNull(geofence?.tag)
+        assertNotNull(geofence?.externalId)
+        assertNotNull(geofence?.metadata)
+        assertNotNull(geofence?.geometry)
+    }
+
+    private fun assertChainsOk(chains: Array<RadarChain>?) {
+        assertNotNull(chains)
+        chains?.let {
+            for (chain in chains) {
+                assertChainOk(chain)
+            }
+        }
+    }
+
+    private fun assertChainOk(chain: RadarChain?) {
+        assertNotNull(chain)
+        assertNotNull(chain?.slug)
+        assertNotNull(chain?.name)
+        assertNotNull(chain?.externalId)
+        assertNotNull(chain?.metadata)
+    }
+
+    private fun assertPlacesOk(places: Array<RadarPlace>?) {
+        assertNotNull(places)
+        places?.let {
+            for (place in places) {
+                assertPlaceOk(place)
+            }
+        }
+    }
+
+    private fun assertPlaceOk(place: RadarPlace?) {
+        assertNotNull(place)
+        assertNotNull(place?._id)
+        assertNotNull(place?.categories)
+        place?.categories?.let {
+            assertTrue(place.categories.count() > 0)
+        }
+        place?.chain?.let {
+            assertChainOk(place.chain)
+        }
+        assertNotNull(place?.location)
+    }
+
+    private fun assertInsightsOk(insights: RadarUserInsights?) {
+        assertNotNull(insights)
+        assertNotNull(insights?.homeLocation)
+        assertNotNull(insights?.homeLocation?.updatedAt)
+        assertNotEquals(insights?.homeLocation?.confidence, RadarUserInsightsLocation.RadarUserInsightsLocationConfidence.NONE)
+        assertNotNull(insights?.officeLocation)
+        assertNotNull(insights?.officeLocation?.updatedAt)
+        assertNotEquals(insights?.officeLocation?.confidence, RadarUserInsightsLocation.RadarUserInsightsLocationConfidence.NONE)
+        assertNotNull(insights?.state)
+    }
+
+    private fun assertRegionOk(region: RadarRegion?) {
+        assertNotNull(region)
+        assertNotNull(region?._id)
+        assertNotNull(region?.name)
+        assertNotNull(region?.code)
+        assertNotNull(region?.type)
+    }
+
+    private fun assertSegmentsOk(segments: Array<RadarSegment>?) {
+        assertNotNull(segments)
+        segments?.let {
+            for (segment in segments) {
+                assertSegmentOk(segment)
+            }
+        }
+    }
+
+    private fun assertSegmentOk(segment: RadarSegment?) {
+        assertNotNull(segment)
+        assertNotNull(segment?.description)
+        assertNotNull(segment?.externalId)
+    }
+
+    private fun assertUserOk(user: RadarUser?) {
+        assertNotNull(user)
+        assertNotNull(user?._id)
+        assertNotNull(user?.userId)
+        assertNotNull(user?.deviceId)
+        assertNotNull(user?.description)
+        assertNotNull(user?.metadata)
+        assertNotNull(user?.location)
+        assertGeofencesOk(user?.geofences)
+        assertPlaceOk(user?.place)
+        assertInsightsOk(user?.insights)
+        assertRegionOk(user?.country)
+        assertRegionOk(user?.state)
+        assertRegionOk(user?.dma)
+        assertRegionOk(user?.postalCode)
+        assertChainsOk(user?.nearbyPlaceChains)
+        assertSegmentsOk(user?.segments)
+        assertChainsOk(user?.topChains)
+    }
+
+    private fun assertEventsOk(events: Array<RadarEvent>?) {
+        assertNotNull(events)
+        events?.let {
+            for (event in events) {
+                assertEventOk(event)
+            }
+        }
+    }
+
+    private fun assertEventOk(event: RadarEvent?) {
+        assertNotNull(event)
+        assertNotNull(event?._id)
+        assertNotNull(event?.createdAt)
+        assertNotNull(event?.actualCreatedAt)
+        assertNotEquals(event?.type, RadarEvent.RadarEventType.UNKNOWN)
+        assertNotEquals(event?.confidence, RadarEvent.RadarEventConfidence.NONE)
+        assertNotNull(event?.location)
+        if (event?.type == RadarEvent.RadarEventType.USER_ENTERED_GEOFENCE) {
+            assertGeofenceOk(event.geofence)
+        } else if (event?.type == RadarEvent.RadarEventType.USER_EXITED_GEOFENCE) {
+            assertGeofenceOk(event.geofence)
+            assertTrue(event.duration > 0)
+        } else if (event?.type == RadarEvent.RadarEventType.USER_ENTERED_PLACE) {
+            assertPlaceOk(event.place)
+        } else if (event?.type == RadarEvent.RadarEventType.USER_EXITED_PLACE) {
+            assertPlaceOk(event.place)
+            assertTrue(event.duration > 0)
+        } else if (event?.type == RadarEvent.RadarEventType.USER_NEARBY_PLACE_CHAIN) {
+            assertPlaceOk(event.place)
+        } else if (event?.type == RadarEvent.RadarEventType.USER_ENTERED_REGION_COUNTRY) {
+            assertRegionOk(event.region)
+        } else if (event?.type == RadarEvent.RadarEventType.USER_EXITED_REGION_COUNTRY) {
+            assertRegionOk(event.region)
+        } else if (event?.type == RadarEvent.RadarEventType.USER_ENTERED_REGION_STATE) {
+            assertRegionOk(event.region)
+        } else if (event?.type == RadarEvent.RadarEventType.USER_EXITED_REGION_STATE) {
+            assertRegionOk(event.region)
+        } else if (event?.type == RadarEvent.RadarEventType.USER_ENTERED_REGION_DMA) {
+            assertRegionOk(event.region)
+        } else if (event?.type == RadarEvent.RadarEventType.USER_EXITED_REGION_DMA) {
+            assertRegionOk(event.region)
+        }
+    }
+
+    private fun assertAddressesOk(addresses: Array<RadarAddress>?) {
+        assertNotNull(addresses)
+        addresses?.let {
+            for (address in addresses) {
+                assertAddressOk(address)
+            }
+        }
+    }
+
+    private fun assertAddressOk(address: RadarAddress?) {
+        assertNotNull(address)
+        assertNotEquals(address?.coordinate?.latitude, 0)
+        assertNotEquals(address?.coordinate?.longitude, 0)
+        assertNotNull(address?.formattedAddress)
+        assertNotNull(address?.country)
+        assertNotNull(address?.countryCode)
+        assertNotNull(address?.countryFlag)
+        assertNotNull(address?.state)
+        assertNotNull(address?.stateCode)
+        assertNotNull(address?.postalCode)
+        assertNotNull(address?.city)
+        assertNotNull(address?.borough)
+        assertNotNull(address?.county)
+        assertNotNull(address?.neighborhood)
+        assertNotNull(address?.number)
+        assertNotEquals(address?.confidence, RadarAddress.RadarAddressConfidence.NONE)
+    }
+
+    private fun assertContextOk(context: RadarContext?) {
+        assertNotNull(context)
+        assertGeofencesOk(context?.geofences)
+        assertPlaceOk(context?.place)
+        assertRegionOk(context?.country)
+        assertRegionOk(context?.state)
+        assertRegionOk(context?.dma)
+        assertRegionOk(context?.postalCode)
+    }
+
+    private fun assertRoutesOk(routes: RadarRoutes?) {
+        assertNotNull(routes)
+        assertNotNull(routes?.geodesic)
+        assertNotNull(routes?.geodesic?.text)
+        assertNotEquals(routes?.geodesic?.value, 0)
+        assertNotNull(routes?.foot)
+        assertNotNull(routes?.foot?.distance?.text)
+        assertNotEquals(routes?.foot?.distance?.value, 0)
+        assertNotNull(routes?.foot?.duration?.text)
+        assertNotEquals(routes?.foot?.duration?.value, 0)
+        assertNotNull(routes?.bike)
+        assertNotNull(routes?.bike?.distance?.text)
+        assertNotEquals(routes?.bike?.distance?.value, 0)
+        assertNotNull(routes?.bike?.duration?.text)
+        assertNotEquals(routes?.bike?.duration?.value, 0)
+        assertNotNull(routes?.car)
+        assertNotNull(routes?.car?.distance?.text)
+        assertNotEquals(routes?.car?.distance?.value, 0)
+        assertNotNull(routes?.car?.duration?.text)
+        assertNotEquals(routes?.car?.duration?.value, 0)
+        assertNotNull(routes?.transit)
+        assertNotNull(routes?.transit?.distance?.text)
+        assertNotEquals(routes?.transit?.distance?.value, 0)
+        assertNotNull(routes?.transit?.duration?.text)
+        assertNotEquals(routes?.transit?.duration?.value, 0)
     }
 
     @Before
@@ -155,7 +310,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.getLocation { status, location, stopped ->
+        Radar.getLocation { status, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -173,7 +328,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.getLocation { status, location, stopped ->
+        Radar.getLocation { status, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -198,7 +353,7 @@ class RadarTest {
         var callbackStatus: Radar.RadarStatus? = null
         var callbackLocation: Location? = null
 
-        Radar.getLocation { status, location, stopped ->
+        Radar.getLocation { status, location, _ ->
             callbackStatus = status
             callbackLocation = location
             latch.countDown()
@@ -218,7 +373,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.trackOnce { status, location, events, user ->
+        Radar.trackOnce { status, _, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -236,7 +391,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.trackOnce { status, location, events, user ->
+        Radar.trackOnce { status, _, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -277,8 +432,8 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertEquals(mockLocation, callbackLocation)
-        assertNotNull(callbackEvents)
-        assertNotNull(callbackUser)
+        assertEventsOk(callbackEvents)
+        assertUserOk(callbackUser)
     }
 
     @Test
@@ -310,8 +465,8 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertEquals(mockLocation, callbackLocation)
-        assertNotNull(callbackEvents)
-        assertNotNull(callbackUser)
+        assertEventsOk(callbackEvents)
+        assertUserOk(callbackUser)
     }
 
     @Test
@@ -412,7 +567,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.getContext { status, location, context ->
+        Radar.getContext { status, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -430,7 +585,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.getContext { status, location, context ->
+        Radar.getContext { status, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -469,7 +624,7 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertEquals(mockLocation, callbackLocation)
-        assertNotNull(callbackContext)
+        assertContextOk(callbackContext)
     }
 
     @Test
@@ -499,7 +654,7 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertEquals(mockLocation, callbackLocation)
-        assertNotNull(callbackContext)
+        assertContextOk(callbackContext)
     }
 
     @Test
@@ -510,7 +665,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.searchPlaces(1000, arrayOf("walmart"), null, null, 100) { status, location, places ->
+        Radar.searchPlaces(1000, arrayOf("walmart"), null, null, 100) { status, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -528,7 +683,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.searchPlaces(1000, arrayOf("walmart"), null, null, 100) { status, location, places ->
+        Radar.searchPlaces(1000, arrayOf("walmart"), null, null, 100) { status, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -567,7 +722,7 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertEquals(mockLocation, callbackLocation)
-        assertNotNull(callbackPlaces)
+        assertPlacesOk(callbackPlaces)
     }
 
     @Test
@@ -597,7 +752,7 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertEquals(mockLocation, callbackLocation)
-        assertNotNull(callbackPlaces)
+        assertPlacesOk(callbackPlaces)
     }
 
     @Test
@@ -608,7 +763,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.searchGeofences(1000, arrayOf("store"), 100) { status, location, geofences ->
+        Radar.searchGeofences(1000, arrayOf("store"), 100) { status, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -626,7 +781,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.searchGeofences(1000, arrayOf("store"), 100) { status, location, geofences ->
+        Radar.searchGeofences(1000, arrayOf("store"), 100) { status, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -665,7 +820,7 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertEquals(mockLocation, callbackLocation)
-        assertNotNull(callbackGeofences)
+        assertGeofencesOk(callbackGeofences)
     }
 
     @Test
@@ -695,7 +850,7 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertEquals(mockLocation, callbackLocation)
-        assertNotNull(callbackGeofences)
+        assertGeofencesOk(callbackGeofences)
     }
 
     @Test
@@ -721,7 +876,7 @@ class RadarTest {
         latch.await(30, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertNotNull(callbackAddresses)
+        assertAddressesOk(callbackAddresses)
     }
 
     @Test
@@ -749,7 +904,7 @@ class RadarTest {
 
     @Test
     fun test_Radar_geocode_success() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = false;
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/geocode.json")
 
@@ -768,13 +923,12 @@ class RadarTest {
         latch.await(30, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertNotNull(callbackAddresses)
-        assertNotNull(callbackAddresses?.get(0)?.coordinate)
+        assertAddressesOk(callbackAddresses)
     }
 
     @Test
     fun test_Radar_reverseGeocode_errorPermissions() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = false;
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
         locationClientMock.mockLocation = null
 
         val latch = CountDownLatch(1)
@@ -842,8 +996,7 @@ class RadarTest {
         latch.await(30, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertNotNull(callbackAddresses)
-        assertNotNull(callbackAddresses?.get(0)?.coordinate)
+        assertAddressesOk(callbackAddresses)
     }
 
     @Test
@@ -896,8 +1049,7 @@ class RadarTest {
         latch.await(30, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertNotNull(callbackAddresses)
-        assertNotNull(callbackAddresses?.get(0)?.coordinate)
+        assertAddressesOk(callbackAddresses)
     }
 
     @Test
@@ -910,7 +1062,7 @@ class RadarTest {
         var callbackStatus: Radar.RadarStatus? = null
         var callbackCountry: RadarRegion? = null
 
-        Radar.ipGeocode() { status, country ->
+        Radar.ipGeocode { status, country ->
             callbackStatus = status
             callbackCountry = country
             latch.countDown()
@@ -933,7 +1085,7 @@ class RadarTest {
         var callbackStatus: Radar.RadarStatus? = null
         var callbackCountry: RadarRegion? = null
 
-        Radar.ipGeocode() { status, country ->
+        Radar.ipGeocode { status, country ->
             callbackStatus = status
             callbackCountry = country
             latch.countDown()
@@ -942,8 +1094,7 @@ class RadarTest {
         latch.await(30, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertNotNull(callbackCountry)
-        assertNotNull(callbackCountry?.code)
+        assertRegionOk(callbackCountry)
     }
 
     @Test
@@ -975,7 +1126,7 @@ class RadarTest {
         latch.await(30, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertNotNull(callbackRoutes)
+        assertRoutesOk(callbackRoutes)
     }
 
 }
