@@ -175,9 +175,9 @@ object Radar {
         ERROR_PUBLISHABLE_KEY,
         /** Location permissions not granted */
         ERROR_PERMISSIONS,
-        /** Location services error */
+        /** Location services error or timeout (10 seconds) */
         ERROR_LOCATION,
-        /** Network error */
+        /** Network error or timeout (10 seconds) */
         ERROR_NETWORK,
         /** Bad request (missing or invalid params) */
         ERROR_BAD_REQUEST,
