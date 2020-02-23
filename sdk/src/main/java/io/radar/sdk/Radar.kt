@@ -548,7 +548,7 @@ object Radar {
      * @param[options] Configurable tracking options.
      */
     @JvmStatic
-    fun startTracking(options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT) {
+    fun startTracking(options: RadarTrackingOptions) {
         if (!initialized) {
             return
         }

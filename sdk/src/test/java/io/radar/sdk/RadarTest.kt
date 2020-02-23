@@ -470,15 +470,6 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_startTracking_default() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = true
-
-        Radar.startTracking()
-        assertEquals(RadarTrackingOptions.EFFICIENT, Radar.getTrackingOptions())
-        assertTrue(Radar.isTracking())
-    }
-
-    @Test
     fun test_Radar_startTracking_continuous() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
 
