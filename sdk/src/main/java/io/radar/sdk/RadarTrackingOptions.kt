@@ -124,9 +124,9 @@ data class RadarTrackingOptions(
      */
     enum class RadarTrackingOptionsReplay(internal val replay: Int) {
         /** Replays failed stops */
-        REPLAY_STOPS(1),
+        STOPS(1),
         /** Replays no location updates */
-        REPLAY_NONE(0);
+        NONE(0);
 
         internal companion object {
             fun fromInt(replay: Int?): RadarTrackingOptionsReplay {
@@ -135,7 +135,7 @@ data class RadarTrackingOptions(
                         return value
                     }
                 }
-                return REPLAY_NONE
+                return NONE
             }
         }
     }
@@ -177,7 +177,7 @@ data class RadarTrackingOptions(
             stopDistance = 0,
             startTrackingAfter = null,
             stopTrackingAfter = null,
-            replay = RadarTrackingOptionsReplay.REPLAY_NONE,
+            replay = RadarTrackingOptionsReplay.NONE,
             sync = RadarTrackingOptionsSync.ALL,
             useStoppedGeofence = false,
             stoppedGeofenceRadius = 0,
@@ -202,7 +202,7 @@ data class RadarTrackingOptions(
             stopDistance = 70,
             startTrackingAfter = null,
             stopTrackingAfter = null,
-            replay = RadarTrackingOptionsReplay.REPLAY_STOPS,
+            replay = RadarTrackingOptionsReplay.STOPS,
             sync = RadarTrackingOptionsSync.STOPS_AND_EXITS,
             useStoppedGeofence = true,
             stoppedGeofenceRadius = 200,
@@ -227,7 +227,7 @@ data class RadarTrackingOptions(
             stopDistance = 70,
             startTrackingAfter = null,
             stopTrackingAfter = null,
-            replay = RadarTrackingOptionsReplay.REPLAY_STOPS,
+            replay = RadarTrackingOptionsReplay.STOPS,
             sync = RadarTrackingOptionsSync.STOPS_AND_EXITS,
             useStoppedGeofence = false,
             stoppedGeofenceRadius = 0,

@@ -157,7 +157,7 @@ internal class RadarApiClient(
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     val options = RadarSettings.getTrackingOptions(context)
-                    if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.REPLAY_STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
+                    if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
                         RadarState.setLastFailedStoppedLocation(context, location)
                     }
 

@@ -353,7 +353,7 @@ internal class RadarLocationManager(
 
         val lastFailedStoppedLocation = RadarState.getLastFailedStoppedLocation(context)
         var replayed = false
-        if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.REPLAY_STOPS && lastFailedStoppedLocation != null && !justStopped) {
+        if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && lastFailedStoppedLocation != null && !justStopped) {
             sendLocation = lastFailedStoppedLocation
             stopped = true
             replayed = true
