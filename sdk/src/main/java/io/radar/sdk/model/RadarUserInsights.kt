@@ -29,16 +29,22 @@ class RadarUserInsights private constructor(
 ) {
 
     internal companion object {
-        internal const val FIELD_LOCATIONS = "locations"
-        internal const val FIELD_STATE = "state"
+        private const val FIELD_HOME_LOCATION = "homeLocation"
+        private const val FIELD_OFFICE_LOCATION = "officeLocation"
+        private const val FIELD_LOCATIONS = "locations"
+        private const val FIELD_STATE = "state"
 
         @Throws(JSONException::class, ParseException::class)
-        fun fromJson(obj: JSONObject): RadarUserInsights {
+        fun deserialize(obj: JSONObject?): RadarUserInsights? {
+            if (obj == null) {
+                return null
+            }
+
             var homeLocation: RadarUserInsightsLocation? = null
             var officeLocation: RadarUserInsightsLocation? = null
             obj.optJSONArray(FIELD_LOCATIONS)?.let { locations ->
                 for (i in 0 until locations.length()) {
-                    val location = RadarUserInsightsLocation.fromJson(locations.optJSONObject(i))
+                    val location = RadarUserInsightsLocation.deserialize(locations.optJSONObject(i))
                     when (location?.type) {
                         HOME -> homeLocation = location
                         OFFICE -> officeLocation = location
@@ -46,11 +52,18 @@ class RadarUserInsights private constructor(
                     }
                 }
             }
-
-            val state = obj.optJSONObject(FIELD_STATE)?.let(RadarUserInsightsState.Companion::fromJson)
+            val state = obj.optJSONObject(FIELD_STATE)?.let(RadarUserInsightsState.Companion::deserialize)
 
             return RadarUserInsights(homeLocation, officeLocation, state)
         }
+    }
+
+    fun serialize(): JSONObject {
+        val obj = JSONObject()
+        obj.putOpt(FIELD_HOME_LOCATION, this.homeLocation?.serialize())
+        obj.putOpt(FIELD_OFFICE_LOCATION, this.officeLocation?.serialize())
+        obj.putOpt(FIELD_STATE, this.state?.serialize())
+        return obj
     }
 
 }

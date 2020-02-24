@@ -21,11 +21,23 @@ class RadarRouteDistance(
         private const val FIELD_VALUE = "value"
         private const val FIELD_TEXT = "text"
 
-        fun fromJson(obj: JSONObject): RadarRouteDistance {
+        fun deserialize(obj: JSONObject?): RadarRouteDistance? {
+            if (obj == null) {
+                return null
+            }
+
             val value = obj.optDouble(FIELD_VALUE)
             val text = obj.optString(FIELD_TEXT)
 
             return RadarRouteDistance(value, text)
         }
     }
+
+    fun serialize(): JSONObject {
+        val obj = JSONObject()
+        obj.putOpt(FIELD_VALUE, this.value)
+        obj.putOpt(FIELD_TEXT, this.value)
+        return obj
+    }
+
 }

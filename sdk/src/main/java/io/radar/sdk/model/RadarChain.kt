@@ -38,25 +38,54 @@ class RadarChain(
         private const val FIELD_METADATA = "metadata"
 
         @Throws(JSONException::class)
-        fun fromJson(obj: JSONObject): RadarChain {
+        fun deserialize(obj: JSONObject?): RadarChain? {
+            if (obj == null) {
+                return null
+            }
+
             val slug = obj.optString(FIELD_SLUG)
             val name = obj.optString(FIELD_NAME)
-            val externalId: String? = obj.optString(FIELD_EXTERNAL_ID, null)
+            val externalId: String? = obj.optString(FIELD_EXTERNAL_ID)
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
 
-            return RadarChain(slug, name, externalId, metadata)
+            return RadarChain(
+                slug,
+                name,
+                externalId,
+                metadata
+            )
         }
 
-        fun fromJSONArray(array: JSONArray?): Array<RadarChain>? {
+        fun deserializeArray(array: JSONArray?): Array<RadarChain>? {
             if (array == null) {
                 return null
             }
 
             return Array(array.length()) { index ->
-                fromJson(array.optJSONObject(index))
+                deserialize(array.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
 
+        fun serializeArray(chains: Array<RadarChain>?): JSONArray? {
+            if (chains == null) {
+                return null
+            }
+
+            val arr = JSONArray()
+            chains.forEach { chain ->
+                arr.put(chain.serialize())
+            }
+            return arr
+        }
+    }
+
+    fun serialize(): JSONObject {
+        val obj = JSONObject()
+        obj.putOpt(FIELD_SLUG, this.slug)
+        obj.putOpt(FIELD_NAME, this.name)
+        obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
+        obj.putOpt(FIELD_METADATA, this.metadata)
+        return obj
     }
 
 }

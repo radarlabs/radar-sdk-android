@@ -12,7 +12,7 @@ data class RadarTrackingOptions(
     /**
      * Determines the desired location update interval in seconds when stopped. Use 0 to shut down when stopped.
      *
-     * Note that location updates may be delayed significantly by Android Doze Mode and App Standby and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled. To avoid these restrictions, you can start a foreground service.
+     * Note that location updates may be delayed significantly by Doze Mode, App Standby, and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled. To avoid these restrictions, you can start a foreground service.
      */
     var desiredStoppedUpdateInterval: Int,
 
@@ -24,7 +24,7 @@ data class RadarTrackingOptions(
     /**
      * Determines the desired location update interval in seconds when moving.
      *
-     * Note that location updates may be delayed significantly by Android Doze Mode and App Standby and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled. To avoid these restrictions, you can start a foreground service.
+     * Note that location updates may be delayed significantly by Doze Mode, App Standby, and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled. To avoid these restrictions, you can start a foreground service.
      */
     var desiredMovingUpdateInterval: Int,
 
@@ -89,7 +89,7 @@ data class RadarTrackingOptions(
     var useMovingGeofence: Boolean,
 
     /**
-     * Determines the radius in meters of the client geofence around the device's current location when stopped.
+     * Determines the radius in meters of the client geofence around the device's current location when moving.
      */
     var movingGeofenceRadius: Int
 ) {
@@ -124,9 +124,9 @@ data class RadarTrackingOptions(
      */
     enum class RadarTrackingOptionsReplay(internal val replay: Int) {
         /** Replays failed stops */
-        REPLAY_STOPS(1),
+        STOPS(1),
         /** Replays no location updates */
-        REPLAY_OFF(0);
+        NONE(0);
 
         internal companion object {
             fun fromInt(replay: Int?): RadarTrackingOptionsReplay {
@@ -135,7 +135,7 @@ data class RadarTrackingOptions(
                         return value
                     }
                 }
-                return REPLAY_OFF
+                return NONE
             }
         }
     }
@@ -163,9 +163,7 @@ data class RadarTrackingOptions(
     companion object {
 
         /**
-         * A preset that updates every 30 seconds and syncs all location updates to the server.
-         *
-         * High battery usage and should be used with a foreground service. See [](https://developer.android.com/about/versions/oreo/background-location-limits).
+         * A preset that updates every 30 seconds and syncs all location updates to the server. High battery usage. Should be used with a foreground service. See [](https://developer.android.com/about/versions/oreo/background-location-limits).
          */
         @JvmField
         val CONTINUOUS = RadarTrackingOptions(
@@ -179,7 +177,7 @@ data class RadarTrackingOptions(
             stopDistance = 0,
             startTrackingAfter = null,
             stopTrackingAfter = null,
-            replay = RadarTrackingOptionsReplay.REPLAY_OFF,
+            replay = RadarTrackingOptionsReplay.NONE,
             sync = RadarTrackingOptionsSync.ALL,
             useStoppedGeofence = false,
             stoppedGeofenceRadius = 0,
@@ -188,9 +186,9 @@ data class RadarTrackingOptions(
         )
 
         /**
-         * A preset that updates as fast as every 2.5 minutes while moving, shuts down when stopped, and only syncs stops and exits to the server. Low battery usage, but may exceed Android vitals bad behavior thresholds for excessive wakeups and excessive wi-fi scans. See [](https://developer.android.com/topic/performance/vitals/wakeup.html) and [](https://developer.android.com/topic/performance/vitals/bg-wifi.html).
+         * A preset that updates as fast as every 2.5 minutes while moving, shuts down when stopped, and only syncs stops and exits to the server. Must move at least 200 meters to start moving again after a stop. Low battery usage, but may exceed Android vitals bad behavior thresholds for excessive wakeups and excessive wi-fi scans. See [](https://developer.android.com/topic/performance/vitals/wakeup.html) and [](https://developer.android.com/topic/performance/vitals/bg-wifi.html).
          *
-         * Note that location updates may be delayed significantly by Android Doze Mode and App Standby and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.
+         * Note that location updates may be delayed significantly by Doze Mode, App Standby, and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.
          */
         @JvmField
         val RESPONSIVE = RadarTrackingOptions(
@@ -204,7 +202,7 @@ data class RadarTrackingOptions(
             stopDistance = 70,
             startTrackingAfter = null,
             stopTrackingAfter = null,
-            replay = RadarTrackingOptionsReplay.REPLAY_STOPS,
+            replay = RadarTrackingOptionsReplay.STOPS,
             sync = RadarTrackingOptionsSync.STOPS_AND_EXITS,
             useStoppedGeofence = true,
             stoppedGeofenceRadius = 200,
@@ -213,9 +211,9 @@ data class RadarTrackingOptions(
         )
 
         /**
-         * A preset that updates as fast as every 6 minutes while moving, periodically when stopped, and only syncs stops and exits to the server. The default, lowest battery usage and will not exceed Android vitals bad behavior thresholds.
+         * A preset that updates as fast as every 6 minutes while moving, periodically when stopped, and only syncs stops and exits to the server. Must move a significant distance to start moving again after a stop. Lowest battery usage and will not exceed Android vitals bad behavior thresholds. Recommended.
          *
-         * Note that location updates may be delayed significantly by Android Doze Mode and App Standby and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.
+         * Note that location updates may be delayed significantly by Doze Mode, App Standby, and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.
          */
         @JvmField
         val EFFICIENT = RadarTrackingOptions(
@@ -229,7 +227,7 @@ data class RadarTrackingOptions(
             stopDistance = 70,
             startTrackingAfter = null,
             stopTrackingAfter = null,
-            replay = RadarTrackingOptionsReplay.REPLAY_STOPS,
+            replay = RadarTrackingOptionsReplay.STOPS,
             sync = RadarTrackingOptionsSync.STOPS_AND_EXITS,
             useStoppedGeofence = false,
             stoppedGeofenceRadius = 0,

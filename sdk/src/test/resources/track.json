@@ -92,6 +92,11 @@
             }
          }
       ],
+      "metadata": {
+         "customId": "123",
+         "customFlag": false
+      },
+      "description": "User 1",
       "_id": "5bb8d4fbfd58d5002103ff5c",
       "ip": "68.129.209.28",
       "locationAccuracy": 5,
@@ -119,9 +124,7 @@
             "apartment-condo-building"
          ],
          "_id": "59bb1dc10d8998dc02510033",
-         "facebookId": "296482633802114",
-         "name": "129 West 81st Street",
-         "facebookPlaceId": "397481977035512"
+         "name": "129 West 81st Street"
       },
       "deviceType": "iOS",
       "nearbyPlaceChains": [
@@ -538,7 +541,10 @@
             "type": "circle",
             "geometryRadius": 100,
             "tag": "ta-petro",
-            "externalId": "123"
+            "externalId": "123",
+            "metadata": {
+               "foo": "bar"
+            }
          },
          "_id": "5dcee0e67e71e80027a7eec7",
          "country": {
@@ -715,9 +721,7 @@
                "apartment-condo-building"
             ],
             "_id": "59bb1dc10d8998dc02510033",
-            "facebookId": "296482633802114",
-            "name": "129 West 81st Street",
-            "facebookPlaceId": "397481977035512"
+            "name": "129 West 81st Street"
          },
          "alternatePlaces": [
             {
@@ -737,9 +741,7 @@
                   "public-services-government"
                ],
                "_id": "59e289a9a064b45aefe78b82",
-               "facebookId": "104670483298109",
-               "name": "Things in Jerry Seinfeld's Apartment",
-               "facebookPlaceId": "104670519964772"
+               "name": "Things in Jerry Seinfeld's Apartment"
             },
             {
                "location": {
@@ -759,14 +761,12 @@
                   "commercial-industrial-equipment"
                ],
                "_id": "59e289a9a064b45aefe78b85",
-               "facebookId": "120549141899",
                "name": "Amazon",
                "chain": {
                   "domain": "amazon.com",
                   "name": "Amazon",
                   "slug": "amazon"
-               },
-               "facebookPlaceId": "10151134806961900"
+               }
             },
             {
                "location": {
@@ -786,9 +786,7 @@
                   "mobile-phone-shop"
                ],
                "_id": "59bc68ec8be4c5ce94087563",
-               "facebookId": "135686466481221",
-               "name": "Endicott",
-               "facebookPlaceId": "135686476481220"
+               "name": "Endicott"
             },
             {
                "location": {
@@ -807,9 +805,7 @@
                   "travel-agency"
                ],
                "_id": "59da3785a064b45aefe1e2ef",
-               "facebookId": "150814944940136",
-               "name": "Cook Travel",
-               "facebookPlaceId": "234903243197972"
+               "name": "Cook Travel"
             }
          ],
          "_id": "5dcee0e67e71e80027a7eec9",
@@ -896,14 +892,16 @@
                "restaurant"
             ],
             "_id": "5adc6759a4e7ae6c68b63307",
-            "facebookId": "140376312681050",
             "name": "TravelCenters of America",
             "chain": {
                "domain": "ta-petro.com",
                "name": "TravelCenters of America",
-               "slug": "travelcenters-of-america"
-            },
-            "facebookPlaceId": "1573444479374219"
+               "slug": "travelcenters-of-america",
+               "externalId": "TA",
+               "metadata": {
+                  "category": "gas"
+               }
+            }
          },
          "_id": "5dcee0e67e71e80027a7eeca",
          "country": {
@@ -1092,7 +1090,6 @@
                "coffee-shop"
             ],
             "_id": "59bc68ec8be4c5ce9408755f",
-            "facebookId": "134372489940687",
             "name": "Starbucks",
             "chain": {
                "domain": "starbucks.com",
@@ -1105,8 +1102,7 @@
                   "pwi": false,
                   "tlog": false
                }
-            },
-            "facebookPlaceId": "1105309749513618"
+            }
          },
          "_id": "5dcee0e67e71e80027a7eecc",
          "country": {

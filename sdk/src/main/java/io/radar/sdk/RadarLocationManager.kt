@@ -15,8 +15,7 @@ import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
-import java.lang.Exception
-import java.util.*
+import java.util.Date
 import kotlin.collections.ArrayList
 
 @SuppressLint("MissingPermission")
@@ -29,7 +28,6 @@ internal class RadarLocationManager(
 
     internal var locationClient = FusedLocationProviderClient(context)
     internal var geofencingClient = GeofencingClient(context)
-    private var started = false
     private var startedDesiredAccuracy = RadarTrackingOptionsDesiredAccuracy.NONE
     private var startedInterval = 0
     private var startedFastestInterval = 0
@@ -95,7 +93,7 @@ internal class RadarLocationManager(
             RadarTrackingOptionsDesiredAccuracy.HIGH -> LocationRequest.PRIORITY_HIGH_ACCURACY
             RadarTrackingOptionsDesiredAccuracy.MEDIUM -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
             RadarTrackingOptionsDesiredAccuracy.LOW -> LocationRequest.PRIORITY_LOW_POWER
-            else -> LocationRequest.PRIORITY_NO_POWER
+            RadarTrackingOptionsDesiredAccuracy.NONE -> LocationRequest.PRIORITY_NO_POWER
         }
 
         val locationRequest = LocationRequest().apply {
@@ -131,12 +129,13 @@ internal class RadarLocationManager(
     }
 
     fun stopTracking() {
-        this.started = false
+        RadarState.setStarted(context, false)
         RadarSettings.setTracking(context, false)
         this.updateTracking()
     }
 
     private fun startLocationUpdates(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, interval: Int, fastestInterval: Int) {
+        val started = RadarState.getStarted(context)
         if (!started || (desiredAccuracy != startedDesiredAccuracy) || (interval != startedInterval) || (fastestInterval != startedFastestInterval)) {
             val priority = when(desiredAccuracy) {
                 RadarTrackingOptionsDesiredAccuracy.HIGH -> LocationRequest.PRIORITY_HIGH_ACCURACY
@@ -153,7 +152,7 @@ internal class RadarLocationManager(
 
             locationClient.requestLocationUpdates(locationRequest, RadarLocationReceiver.getLocationPendingIntent(context))
 
-            this.started = true
+            RadarState.setStarted(context, true)
             this.startedDesiredAccuracy = desiredAccuracy
             this.startedInterval = interval
             this.startedFastestInterval = fastestInterval
@@ -163,10 +162,11 @@ internal class RadarLocationManager(
     private fun stopLocationUpdates() {
         locationClient.removeLocationUpdates(RadarLocationReceiver.getLocationPendingIntent(context))
 
-        this.started = false
+        RadarState.setStarted(context, false)
     }
 
     internal fun handleBootCompleted() {
+        RadarState.setStarted(context, false)
         RadarState.setStopped(context, false)
 
         locationClient.lastLocation.addOnSuccessListener { location: Location? ->
@@ -353,7 +353,7 @@ internal class RadarLocationManager(
 
         val lastFailedStoppedLocation = RadarState.getLastFailedStoppedLocation(context)
         var replayed = false
-        if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.REPLAY_STOPS && lastFailedStoppedLocation != null && !justStopped) {
+        if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && lastFailedStoppedLocation != null && !justStopped) {
             sendLocation = lastFailedStoppedLocation
             stopped = true
             replayed = true

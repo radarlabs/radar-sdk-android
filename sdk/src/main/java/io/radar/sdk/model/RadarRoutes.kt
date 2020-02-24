@@ -41,14 +41,29 @@ class RadarRoutes(
         private const val FIELD_CAR = "car"
         private const val FIELD_TRANSIT = "transit"
 
-        fun fromJson(obj: JSONObject): RadarRoutes {
-            val geodesic = obj.optJSONObject(FIELD_GEODESIC)?.let(RadarRouteDistance.Companion::fromJson)
-            val foot = obj.optJSONObject(FIELD_FOOT)?.let(RadarRoute.Companion::fromJson)
-            val bike = obj.optJSONObject(FIELD_BIKE)?.let(RadarRoute.Companion::fromJson)
-            val car = obj.optJSONObject(FIELD_CAR)?.let(RadarRoute.Companion::fromJson)
-            val transit = obj.optJSONObject(FIELD_TRANSIT)?.let(RadarRoute.Companion::fromJson)
+        fun deserialize(obj: JSONObject?): RadarRoutes? {
+            if (obj == null) {
+                return null
+            }
+
+            val geodesic = obj.optJSONObject(FIELD_GEODESIC)?.let(RadarRouteDistance.Companion::deserialize)
+            val foot = obj.optJSONObject(FIELD_FOOT)?.let(RadarRoute.Companion::deserialize)
+            val bike = obj.optJSONObject(FIELD_BIKE)?.let(RadarRoute.Companion::deserialize)
+            val car = obj.optJSONObject(FIELD_CAR)?.let(RadarRoute.Companion::deserialize)
+            val transit = obj.optJSONObject(FIELD_TRANSIT)?.let(RadarRoute.Companion::deserialize)
 
             return RadarRoutes(geodesic, foot, bike, car, transit)
         }
     }
+
+    fun serialize(): JSONObject {
+        val obj = JSONObject()
+        obj.putOpt(FIELD_GEODESIC, this.geodesic?.serialize())
+        obj.putOpt(FIELD_FOOT, this.foot?.serialize())
+        obj.putOpt(FIELD_BIKE, this.bike?.serialize())
+        obj.putOpt(FIELD_CAR, this.car?.serialize())
+        obj.putOpt(FIELD_TRANSIT, this.transit?.serialize())
+        return obj
+    }
+
 }

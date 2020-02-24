@@ -169,27 +169,31 @@ object Radar {
      * The status types for a request. See [](https://radar.io/documentation/sdk#android-foreground).
      */
     enum class RadarStatus {
-        /** The request succeeded */
+        /** Success */
         SUCCESS,
-        /** The SDK was not initialized with a publishable API key */
+        /** SDK not initialized */
         ERROR_PUBLISHABLE_KEY,
-        /** Location permissions have not been granted */
+        /** Location permissions not granted */
         ERROR_PERMISSIONS,
-        /** The user has not granted location permissions for the app */
+        /** Location services error or timeout (10 seconds) */
         ERROR_LOCATION,
-        /** The network was unavailable, or the network connection timed out */
+        /** Network error or timeout (10 seconds) */
         ERROR_NETWORK,
-        /** One or more parameters were invalid */
+        /** Bad request (missing or invalid params) */
         ERROR_BAD_REQUEST,
-        /** The publishable API key is invalid */
+        /** Unauthorized (invalid API key) */
         ERROR_UNAUTHORIZED,
-        /** Use of the API is forbidden for the publishable API key */
+        /** Payment required (organization disabled or usage exceeded) */
+        ERROR_PAYMENT_REQUIRED,
+        /** Forbidden (insufficient permissions or no beta access) */
         ERROR_FORBIDDEN,
-        /** An internal server error occurred */
-        ERROR_SERVER,
-        /** Exceeded rate limit */
+        /** Not found */
+        ERROR_NOT_FOUND,
+        /** Too many requests (rate limit exceeded) */
         ERROR_RATE_LIMIT,
-        /** An unknown error occurred */
+        /** Internal server error */
+        ERROR_SERVER,
+        /** Unknown error */
         ERROR_UNKNOWN
     }
 
@@ -544,7 +548,7 @@ object Radar {
      * @param[options] Configurable tracking options.
      */
     @JvmStatic
-    fun startTracking(options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT) {
+    fun startTracking(options: RadarTrackingOptions) {
         if (!initialized) {
             return
         }
@@ -1302,14 +1306,14 @@ object Radar {
     @JvmStatic
     fun getContext(location: Location, callback: RadarContextCallback) {
         if (!initialized) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
 
         apiClient.getContext(location, object : RadarApiClient.RadarContextApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, context: RadarContext?) {
-                callback?.onComplete(status, location, context)
+                callback.onComplete(status, location, context)
             }
         })
     }
@@ -1352,13 +1356,13 @@ object Radar {
     @JvmStatic
     fun stringForSource(source: RadarLocationSource): String? {
         return when (source) {
-            RadarLocationSource.FOREGROUND_LOCATION -> "foregroundLocation"
-            RadarLocationSource.BACKGROUND_LOCATION -> "backgroundLocation"
-            RadarLocationSource.MANUAL_LOCATION -> "manualLocation"
-            RadarLocationSource.GEOFENCE_ENTER -> "geofenceEnter"
-            RadarLocationSource.GEOFENCE_DWELL -> "geofenceDwell"
-            RadarLocationSource.GEOFENCE_EXIT -> "geofenceExit"
-            else -> "unknown"
+            RadarLocationSource.FOREGROUND_LOCATION -> "FOREGROUND_LOCATION"
+            RadarLocationSource.BACKGROUND_LOCATION -> "BACKGROUND_LOCATION"
+            RadarLocationSource.MANUAL_LOCATION -> "MANUAL_LOCATION"
+            RadarLocationSource.GEOFENCE_ENTER -> "GEOFENCE_ENTER"
+            RadarLocationSource.GEOFENCE_DWELL -> "GEOFENCE_DWELL"
+            RadarLocationSource.GEOFENCE_EXIT -> "GEOFENCE_EXIT"
+            else -> "UNKNOWN"
         }
     }
 

@@ -12,7 +12,7 @@ class RadarRegion(
     /**
      * The Radar ID of the region.
      */
-    val id: String,
+    val _id: String,
 
     /**
      * The name of the region.
@@ -32,7 +32,7 @@ class RadarRegion(
     /**
      * The optional flag of the region
      */
-    val flag: String
+    val flag: String?
 ) {
 
     internal companion object {
@@ -42,7 +42,11 @@ class RadarRegion(
         private const val FIELD_CODE = "code"
         private const val FIELD_FLAG = "flag"
 
-        fun fromJson(obj: JSONObject): RadarRegion {
+        fun deserialize(obj: JSONObject?): RadarRegion? {
+            if (obj == null) {
+                return null
+            }
+
             val id = obj.optString(FIELD_ID)
             val name = obj.optString(FIELD_NAME)
             val code = obj.optString(FIELD_CODE)
@@ -52,10 +56,25 @@ class RadarRegion(
             return RadarRegion(id, name, code, type, flag)
         }
 
-        fun fromJSONArray(array: JSONArray): Array<RadarRegion> {
-            return Array(array.length()) { index ->
-                fromJson(array.optJSONObject(index))
+        fun deserializeArray(arr: JSONArray?): Array<RadarRegion>? {
+            if (arr == null) {
+                return null
+            }
+
+            return Array(arr.length()) { index ->
+                deserialize(arr.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
     }
+
+    fun serialize(): JSONObject {
+        val obj = JSONObject()
+        obj.putOpt(FIELD_ID, this._id)
+        obj.putOpt(FIELD_NAME, this.name)
+        obj.putOpt(FIELD_CODE, this.code)
+        obj.putOpt(FIELD_TYPE, this.type)
+        obj.putOpt(FIELD_FLAG, this.flag)
+        return obj
+    }
+
 }
