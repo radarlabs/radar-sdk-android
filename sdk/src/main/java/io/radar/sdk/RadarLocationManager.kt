@@ -15,7 +15,7 @@ import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
-import java.util.*
+import java.util.Date
 import kotlin.collections.ArrayList
 
 @SuppressLint("MissingPermission")
