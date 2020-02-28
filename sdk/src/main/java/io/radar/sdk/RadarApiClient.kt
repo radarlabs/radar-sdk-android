@@ -30,6 +30,10 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null, geofences: Array<RadarGeofence>? = null)
     }
 
+    interface RadarSearchPointsApiCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, points: Array<RadarPoint>? = null)
+    }
+
     interface RadarGeocodeApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null, addresses: Array<RadarAddress>? = null)
     }
@@ -378,6 +382,57 @@ internal class RadarApiClient(
         })
     }
 
+    internal fun searchPoints(
+        location: Location,
+        radius: Int,
+        tags: Array<String>?,
+        limit: Int?,
+        callback: RadarSearchPointsApiCallback
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val queryParams = StringBuilder()
+        queryParams.append("near=${location.latitude},${location.longitude}")
+        queryParams.append("&radius=${radius}")
+        queryParams.append("&limit=${limit}")
+        if (tags?.isNotEmpty() == true) {
+            queryParams.append("&tags=${tags.joinToString(separator = ",")}")
+        }
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/search/points?${queryParams}")
+            .build()
+        val url = URL(uri.toString())
+
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "GET", url, headers, null, object : RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                val points = res.optJSONArray("points")?.let { pointsArr ->
+                    RadarPoint.deserializeArray(pointsArr)
+                }
+                if (points != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, points)
+
+                    return
+                }
+
+                callback.onComplete(RadarStatus.ERROR_SERVER)
+            }
+        })
+    }
     internal fun autocomplete(
         query: String,
         near: Location,
