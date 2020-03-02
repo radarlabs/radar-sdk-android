@@ -60,8 +60,12 @@ class RadarPoint (
                     coordinate.optDouble(1),
                     coordinate.optDouble(0)
                 )
-            } ?: RadarCoordinate(0.0, 0.0)
-            return RadarPoint(id, description, tag, externalId, metadata, location)
+            };
+
+            if (description.isNotEmpty() && id.isNotEmpty() && location != null) {
+                return RadarPoint(id, description, tag, externalId, metadata, location)
+            }
+            return null
         }
 
         @Throws(JSONException::class)
