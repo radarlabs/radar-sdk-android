@@ -118,6 +118,24 @@ object Radar {
     }
 
     /**
+     * Called when a point search request succeeds, fails, or times out.
+     */
+    interface RadarSearchPointsCallback {
+        /**
+         * Called when a point search request succeeds, fails, or times out. Receives the request status and, if successful, the location and an array of points sorted by distance.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[location] Location? If successful, the location.
+         * @param[points] Array<RadarPoint>? If successful, an array of points sorted by distance.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            location: Location? = null,
+            points: Array<RadarPoint>? = null
+        )
+    }
+
+    /**
      * Called when a geocoding request succeeds, fails, or times out.
      */
     interface RadarGeocodeCallback {
@@ -891,6 +909,128 @@ object Radar {
         )
     }
 
+    /**
+     * Gets the device's current location, then searches for points near that location, sorted by distance.
+     *
+     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[tags] An array of tags to filter. See [](TODO: doc link)
+     * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun searchPoints(
+        radius: Int,
+        tags: Array<String>?,
+        limit: Int?,
+        callback: RadarSearchPointsCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        locationManager.getLocation(object : RadarLocationCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                if (status != RadarStatus.SUCCESS || location == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                apiClient.searchPoints(location, radius, tags, limit, object : RadarApiClient.RadarSearchPointsApiCallback {
+                    override fun onComplete(status: RadarStatus, res: JSONObject?, points: Array<RadarPoint>?) {
+                        callback.onComplete(status, location, points)
+                    }
+                })
+            }
+        })
+    }
+
+    /**
+     * Gets the device's current location, then searches for points near that location, sorted by distance.
+     *
+     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/points)
+     * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[block] A block callback.
+     */
+    fun searchPoints(
+        radius: Int,
+        tags: Array<String>?,
+        limit: Int?,
+        block: (status: RadarStatus, location: Location?, points: Array<RadarPoint>?) -> Unit
+    ) {
+        searchPoints(
+            radius,
+            tags,
+            limit,
+            object : RadarSearchPointsCallback {
+                override fun onComplete(status: RadarStatus, location: Location?, points: Array<RadarPoint>?) {
+                    block(status, location, points)
+                }
+            }
+        )
+    }
+
+    /**
+     * Search for points near a location, sorted by distance.
+     *
+     * @param[near] The location to search.
+     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/points)
+     * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun searchPoints(
+        near: Location,
+        radius: Int,
+        tags: Array<String>?,
+        limit: Int?,
+        callback: RadarSearchPointsCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        apiClient.searchPoints(near, radius, tags, limit, object : RadarApiClient.RadarSearchPointsApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, points: Array<RadarPoint>?) {
+                callback.onComplete(status, near, points)
+            }
+        })
+    }
+
+    /**
+     * Search for points near a location, sorted by distance.
+     *
+     * @param[near] The location to search.
+     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/points)
+     * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[block] A block callback.
+     */
+    fun searchPoints(
+        near: Location,
+        radius: Int,
+        tags: Array<String>?,
+        limit: Int?,
+        block: (status: RadarStatus, location: Location?, points: Array<RadarPoint>?) -> Unit
+    ) {
+        searchPoints(
+            near,
+            radius,
+            tags,
+            limit,
+            object : RadarSearchPointsCallback {
+                override fun onComplete(status: RadarStatus, location: Location?, points: Array<RadarPoint>?) {
+                    block(status, location, points)
+                }
+            }
+        )
+    }
     /**
      * Autocompletes partial addresses and place names, sorted by relevance.
      *
