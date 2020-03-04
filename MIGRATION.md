@@ -1,38 +1,5 @@
 # Migration guides
 
-## 2.1.x to 3.0.x
-
-- This update introduces new tracking options and presets. See the [announcement](https://radar.io/blog/open-source-radar-sdk-v3-custom-tracking-options-public-beta), the [background tracking documentation](https://radar.io/documentation/sdk-v3#android-background), and the [tracking options reference](https://radar.io/documentation/sdk/tracking#android).
-  - If you were using `Radar.startTracking()`, you must choose a preset. v2 default behavior was similar to `Radar.startTracking(RadarTrackingOptions.RESPONSIVE)`.
-  - If you were using `RadarTrackingOptions.Builder().priority(RadarTrackingPriority.EFFICIENCY)`, use the preset `RadarTrackingOptions.EFFICIENT` instead.
-- Support Library dependencies have been migrated to [AndroidX](https://developer.android.com/jetpack/androidx). The `WorkManager` dependency has been removed.
-- The `Radar.initialize(context, publishableKey)` method now requires `context` and `publishableKey`.
-- The `Radar.updateLocation(location, callback)` method has been renamed to `Radar.trackOnce(location, callback)`.
-- The `onClientLocationUpdated()` method is now required in `RadarReceiver`. It tells the receiver that the client's location was updated, but not necessarily synced to the server. To receive only server-synced location updates and user state, use `onLocationUpdated()` instead.
-- `adId` collection is now optional. To collect `adId`, call `Radar.setAdIdEnabled(true)`.
-- `Radar.setPlacesProvider(placesProvider)` has been removed.
-
-```java
-// 3.0.x
-Radar.initialize(context, publishableKey);
-
-Radar.trackOnce(location, callback);
-
-Radar.startTracking(RadarTrackingOptions.EFFICIENT);
-
-Radar.setAdIdEnabled(true);
-
-// 2.1.x
-Radar.initialize(publishableKey);
-
-Radar.updateLocation(location, callback);
-
-RadarTrackingOptions trackingOptions = new RadarTrackingOptions.Builder()
-      .priority(RadarTrackingPriority.EFFICIENCY)
-      .build();
-Radar.startTracking(trackingOptions);
-```
-
 ## 2.0.x to 2.1.x
 
 - This update introduces `Radar.startTracking(trackingOptions)` to configure advanced tracking options. See https://radar.io/documentation/sdk#android-background.
