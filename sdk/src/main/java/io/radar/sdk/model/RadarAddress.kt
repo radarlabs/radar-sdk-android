@@ -139,6 +139,7 @@ class RadarAddress(
             val city = obj.optString(FIELD_CITY)
             val borough = obj.optString(FIELD_BOROUGH)
             val county = obj.optString(FIELD_COUNTY)
+            val neighborhood = obj.optString(FIELD_NEIGHBORHOOD)
             val street = obj.optString(FIELD_STREET)
             val number = obj.optString(FIELD_NUMBER)
             val addressLabel = obj.optString(FIELD_ADDRESS_LABEL)
@@ -162,6 +163,7 @@ class RadarAddress(
                 city,
                 borough,
                 county,
+                neighborhood,
                 street,
                 number,
                 addressLabel,
@@ -216,6 +218,7 @@ class RadarAddress(
         obj.putOpt(FIELD_CITY, this.city)
         obj.putOpt(FIELD_BOROUGH, this.borough)
         obj.putOpt(FIELD_COUNTY, this.county)
+        obj.putOpt(FIELD_NEIGHBORHOOD, this.neighborhood)
         obj.putOpt(FIELD_STREET, this.street)
         obj.putOpt(FIELD_NUMBER, this.number)
         obj.putOpt(FIELD_ADDRESS_LABEL, this.addressLabel)
