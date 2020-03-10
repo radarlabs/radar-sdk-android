@@ -13,8 +13,7 @@
           40.7039
         ]
       },
-      "formattedAddress": "Brooklyn Roasting Company, Brooklyn, New York, NY 11201 USA",
-      "name": "Brooklyn Roasting Company",
+      "formattedAddress": "25 Jay Street, Brooklyn, New York, NY 11201 USA",
       "country": "United States",
       "countryCode": "US",
       "countryFlag": "🇺🇸",
@@ -25,7 +24,9 @@
       "borough": "Brooklyn",
       "county": "Kings County",
       "neighborhood": "DUMBO",
+      "street": "Jay Street",
       "number": "25",
+      "placeLabel": "Brooklyn Roasting Company",
       "confidence": "exact"
     }
   ]

@@ -24,7 +24,9 @@
          "borough": "Brooklyn",
          "county": "Kings County",
          "neighborhood": "DUMBO",
+         "street": "Jay Street",
          "number": "20",
+         "addressLabel": "20 Jay Street",
          "confidence": "exact"
       }
    ]

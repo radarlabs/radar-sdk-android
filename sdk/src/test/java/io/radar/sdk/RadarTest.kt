@@ -226,6 +226,7 @@ class RadarTest {
         assertNotNull(address?.borough)
         assertNotNull(address?.county)
         assertNotNull(address?.neighborhood)
+        assertNotNull(address?.street)
         assertNotNull(address?.number)
         assertNotEquals(address?.confidence, RadarAddress.RadarAddressConfidence.NONE)
     }
