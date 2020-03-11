@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
 import com.google.android.gms.location.LocationResult
@@ -45,13 +46,24 @@ class RadarLocationReceiver : BroadcastReceiver() {
                         Geofence.GEOFENCE_TRANSITION_DWELL -> Radar.RadarLocationSource.GEOFENCE_DWELL
                         else -> Radar.RadarLocationSource.GEOFENCE_EXIT
                     }
-                    RadarJobScheduler.scheduleJob(context, it, source)
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        RadarJobScheduler.scheduleJob(context, it, source)
+                    } else {
+                        Radar.handleLocation(context, it, source)
+                    }
                 }
             }
             ACTION_LOCATION -> {
                 val result = LocationResult.extractResult(intent)
                 result?.lastLocation?.also {
-                    RadarJobScheduler.scheduleJob(context, it, Radar.RadarLocationSource.BACKGROUND_LOCATION)
+                    val source = Radar.RadarLocationSource.BACKGROUND_LOCATION
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        RadarJobScheduler.scheduleJob(context, it, source)
+                    } else {
+                        Radar.handleLocation(context, it, source)
+                    }
                 }
             }
             Intent.ACTION_BOOT_COMPLETED -> {
