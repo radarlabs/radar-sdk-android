@@ -81,6 +81,7 @@ internal object RadarUtils {
         return latitudeValid && longitudeValid && accuracyValid
     }
 
+    @Suppress("SENSELESS_COMPARISON")
     internal fun getUaChannelId(): String? {
         try {
             val urbanAirshipClass = Class.forName("com.urbanairship.UAirship")
@@ -111,6 +112,7 @@ internal object RadarUtils {
         return null
     }
 
+    @Suppress("SENSELESS_COMPARISON")
     internal fun getUaNamedUserId(): String? {
         try {
             val urbanAirshipClass = Class.forName("com.urbanairship.UAirship")
@@ -141,6 +143,7 @@ internal object RadarUtils {
         return null
     }
 
+    @Suppress("SENSELESS_COMPARISON")
     internal fun getUaSessionId(): String? {
         try {
             val urbanAirshipClass = Class.forName("com.urbanairship.UAirship")

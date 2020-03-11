@@ -13,11 +13,19 @@ ext {
 android {
     compileSdkVersion 29
     buildToolsVersion '29.0.1'
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 29
         versionCode 1
         versionName radarVersion
+        javaCompileOptions {
+            annotationProcessorOptions {
+                includeCompileClasspath true
+            }
+        }
     }
     buildTypes {
         release {
@@ -36,7 +44,7 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.core:core-ktx:1.1.0'
+    implementation 'androidx.core:core-ktx:1.2.0'
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
     implementation 'com.google.android.gms:play-services-ads-identifier:17.0.0'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
