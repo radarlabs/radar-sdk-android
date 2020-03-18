@@ -68,9 +68,24 @@ class RadarAddress(
     val neighborhood: String?,
 
     /**
+     * The street of the address.
+     */
+    val street: String?,
+
+    /**
      * The street number of the address.
      */
     val number: String?,
+
+    /**
+     * The name of the address.
+     */
+    val addressLabel: String?,
+
+    /**
+     * The place name of the address.
+     */
+    val placeLabel: String?,
 
     /**
      * The confidence level of the geocoding result.
@@ -102,7 +117,10 @@ class RadarAddress(
         private const val FIELD_BOROUGH = "borough"
         private const val FIELD_COUNTY = "county"
         private const val FIELD_NEIGHBORHOOD = "neighborhood"
+        private const val FIELD_STREET = "street"
         private const val FIELD_NUMBER = "number"
+        private const val FIELD_ADDRESS_LABEL = "addressLabel"
+        private const val FIELD_PLACE_LABEL = "placeLabel"
         private const val FIELD_CONFIDENCE = "confidence"
 
         fun deserialize(obj: JSONObject?): RadarAddress? {
@@ -122,7 +140,10 @@ class RadarAddress(
             val borough = obj.optString(FIELD_BOROUGH)
             val county = obj.optString(FIELD_COUNTY)
             val neighborhood = obj.optString(FIELD_NEIGHBORHOOD)
+            val street = obj.optString(FIELD_STREET)
             val number = obj.optString(FIELD_NUMBER)
+            val addressLabel = obj.optString(FIELD_ADDRESS_LABEL)
+            val placeLabel = obj.optString(FIELD_PLACE_LABEL)
             val confidence = when(obj.optString(FIELD_CONFIDENCE)) {
                 "exact" -> RadarAddressConfidence.EXACT
                 "interpolated" -> RadarAddressConfidence.INTERPOLATED
@@ -143,7 +164,10 @@ class RadarAddress(
                 borough,
                 county,
                 neighborhood,
+                street,
                 number,
+                addressLabel,
+                placeLabel,
                 confidence
             )
         }
@@ -195,7 +219,10 @@ class RadarAddress(
         obj.putOpt(FIELD_BOROUGH, this.borough)
         obj.putOpt(FIELD_COUNTY, this.county)
         obj.putOpt(FIELD_NEIGHBORHOOD, this.neighborhood)
+        obj.putOpt(FIELD_STREET, this.street)
         obj.putOpt(FIELD_NUMBER, this.number)
+        obj.putOpt(FIELD_ADDRESS_LABEL, this.addressLabel)
+        obj.putOpt(FIELD_PLACE_LABEL, this.placeLabel)
         obj.putOpt(FIELD_CONFIDENCE, stringForConfidence(this.confidence))
         return obj
     }
