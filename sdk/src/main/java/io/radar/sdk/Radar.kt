@@ -175,11 +175,11 @@ object Radar {
          * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a country).
          *
          * @param[status] RadarStatus The request status.
-         * @param[country] RadarRegion? If successful, the geocoding result (a country).
+         * @param[address] RadarAddress? If successful, the geocoding result (an address).
          */
         fun onComplete(
             status: RadarStatus,
-            country: RadarRegion? = null
+            address: RadarAddress? = null
         )
     }
 
@@ -1223,7 +1223,7 @@ object Radar {
     }
 
     /**
-     * Geocodes the device's current IP address, converting IP address to country.
+     * Geocodes the device's current IP address, converting IP address to RadarAddress.
      *
      * @param[callback] A callback.
      */
@@ -1238,24 +1238,24 @@ object Radar {
         }
 
         apiClient.ipGeocode(object: RadarApiClient.RadarIpGeocodeApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, country: RadarRegion?) {
-                callback.onComplete(status, country)
+            override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?) {
+                callback.onComplete(status, RadarAddress)
             }
         })
     }
 
     /**
-     * Geocodes the device's current IP address, converting IP address to country.
+     * Geocodes the device's current IP address, converting IP address to RadarAddress.
      *
      * @param[block] A block callback.
      */
     fun ipGeocode(
-        block: (status: RadarStatus, country: RadarRegion?) -> Unit
+        block: (status: RadarStatus, country: RadarAddress?) -> Unit
     ) {
         ipGeocode(
             object: RadarIpGeocodeCallback {
-                override fun onComplete(status: RadarStatus, country: RadarRegion?) {
-                    block(status, country)
+                override fun onComplete(status: RadarStatus, address: RadarAddress?) {
+                    block(status, address)
                 }
             }
         )

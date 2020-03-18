@@ -1168,18 +1168,18 @@ class RadarTest {
         val latch = CountDownLatch(1)
 
         var callbackStatus: Radar.RadarStatus? = null
-        var callbackCountry: RadarRegion? = null
+        var callbackAddress: RadarAddress? = null
 
-        Radar.ipGeocode { status, country ->
+        Radar.ipGeocode { status, address ->
             callbackStatus = status
-            callbackCountry = country
+            callbackAddress = address
             latch.countDown()
         }
 
         latch.await(30, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.ERROR_SERVER, callbackStatus)
-        assertNull(callbackCountry)
+        assertNull(callbackAddress)
     }
 
     @Test
@@ -1191,18 +1191,18 @@ class RadarTest {
         val latch = CountDownLatch(1)
 
         var callbackStatus: Radar.RadarStatus? = null
-        var callbackCountry: RadarRegion? = null
+        var callbackAddress: RadarAddress? = null
 
-        Radar.ipGeocode { status, country ->
+        Radar.ipGeocode { status, address ->
             callbackStatus = status
-            callbackCountry = country
+            callbackAddress = address
             latch.countDown()
         }
 
         latch.await(30, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertRegionOk(callbackCountry)
+        assertAddressOk(callbackAddress)
     }
 
     @Test
