@@ -244,8 +244,8 @@ class RadarTest {
     private fun assertRoutesOk(routes: RadarRoutes?) {
         assertNotNull(routes)
         assertNotNull(routes?.geodesic)
-        assertNotNull(routes?.geodesic?.text)
-        assertNotEquals(routes?.geodesic?.value, 0)
+        assertNotNull(routes?.geodesic?.distance?.text)
+        assertNotEquals(routes?.geodesic?.distance?.value, 0)
         assertNotNull(routes?.foot)
         assertNotNull(routes?.foot?.distance?.text)
         assertNotEquals(routes?.foot?.distance?.value, 0)
