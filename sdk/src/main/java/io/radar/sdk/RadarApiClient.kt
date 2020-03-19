@@ -596,7 +596,9 @@ internal class RadarApiClient(
                     return
                 }
 
-                val address: RadarAddress? = RadarAddress.deserialize(res)
+                val address: RadarAddress? = res.optJSONObject("address")?.let { addressObj ->
+                    RadarAddress.deserialize(addressObj)
+                }
 
                 if (address != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, address)

@@ -1239,7 +1239,7 @@ object Radar {
 
         apiClient.ipGeocode(object: RadarApiClient.RadarIpGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?) {
-                callback.onComplete(status, RadarAddress)
+                callback.onComplete(status, address)
             }
         })
     }
