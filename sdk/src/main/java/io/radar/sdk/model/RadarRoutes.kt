@@ -11,7 +11,7 @@ class RadarRoutes(
     /**
      * The geodesic distance between the origin and destination.
      */
-    val geodesic: RadarRouteDistance?,
+    val geodesic: RadarRoute?,
 
     /**
      * The route by foot between the origin and destination. May be `null` if mode not specified or route unavailable.
@@ -46,7 +46,7 @@ class RadarRoutes(
                 return null
             }
 
-            val geodesic = obj.optJSONObject(FIELD_GEODESIC)?.let(RadarRouteDistance.Companion::deserialize)
+            val geodesic = obj.optJSONObject(FIELD_GEODESIC)?.let(RadarRoute.Companion::deserialize)
             val foot = obj.optJSONObject(FIELD_FOOT)?.let(RadarRoute.Companion::deserialize)
             val bike = obj.optJSONObject(FIELD_BIKE)?.let(RadarRoute.Companion::deserialize)
             val car = obj.optJSONObject(FIELD_CAR)?.let(RadarRoute.Companion::deserialize)

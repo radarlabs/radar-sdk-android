@@ -39,7 +39,7 @@ internal class RadarApiClient(
     }
 
     interface RadarIpGeocodeApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, country: RadarRegion? = null)
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null)
     }
 
     interface RadarRouteApiCallback {
@@ -596,11 +596,12 @@ internal class RadarApiClient(
                     return
                 }
 
-                val region = res.optJSONObject("country")?.let { countryObj ->
-                    RadarRegion.deserialize(countryObj)
+                val address: RadarAddress? = res.optJSONObject("address")?.let { addressObj ->
+                    RadarAddress.deserialize(addressObj)
                 }
-                if (region != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, region)
+
+                if (address != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, address)
 
                     return
                 }

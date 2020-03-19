@@ -4,8 +4,10 @@
   },
   "routes": {
     "geodesic": {
-      "value": 18453.39824345505,
-      "text": "3.5 mi"
+      "distance": {
+        "value": 18453.39824345505,
+        "text": "3.5 mi"
+      }
     },
     "foot": {
       "distance": {
