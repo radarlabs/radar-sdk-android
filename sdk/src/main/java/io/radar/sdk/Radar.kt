@@ -175,7 +175,7 @@ object Radar {
          * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a country).
          *
          * @param[status] RadarStatus The request status.
-         * @param[address] RadarAddress? If successful, the geocoding result (an address).
+         * @param[address] RadarAddress? If successful, the geocoding result (a partial address).
          */
         fun onComplete(
             status: RadarStatus,
@@ -1223,7 +1223,7 @@ object Radar {
     }
 
     /**
-     * Geocodes the device's current IP address, converting IP address to RadarAddress.
+     * Geocodes the device's current IP address, converting IP address to partial address.
      *
      * @param[callback] A callback.
      */
@@ -1245,7 +1245,7 @@ object Radar {
     }
 
     /**
-     * Geocodes the device's current IP address, converting IP address to RadarAddress.
+     * Geocodes the device's current IP address, converting IP address to partial address.
      *
      * @param[block] A block callback.
      */
