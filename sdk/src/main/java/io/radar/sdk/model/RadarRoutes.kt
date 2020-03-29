@@ -46,11 +46,11 @@ class RadarRoutes(
                 return null
             }
 
-            val geodesic = obj.optJSONObject(FIELD_GEODESIC)?.let(RadarRoute.Companion::fromJson)
-            val foot = obj.optJSONObject(FIELD_FOOT)?.let(RadarRoute.Companion::fromJson)
-            val bike = obj.optJSONObject(FIELD_BIKE)?.let(RadarRoute.Companion::fromJson)
-            val car = obj.optJSONObject(FIELD_CAR)?.let(RadarRoute.Companion::fromJson)
-            val transit = obj.optJSONObject(FIELD_TRANSIT)?.let(RadarRoute.Companion::fromJson)
+            val geodesic = RadarRoute.fromJson(obj.optJSONObject(FIELD_GEODESIC))
+            val foot = RadarRoute.fromJson(obj.optJSONObject(FIELD_FOOT))
+            val bike = RadarRoute.fromJson(obj.optJSONObject(FIELD_BIKE))
+            val car = RadarRoute.fromJson(obj.optJSONObject(FIELD_CAR))
+            val transit = RadarRoute.fromJson(obj.optJSONObject(FIELD_TRANSIT))
 
             return RadarRoutes(geodesic, foot, bike, car, transit)
         }

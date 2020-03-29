@@ -26,8 +26,8 @@ class RadarRoute(
                 return null
             }
 
-            val distance = obj.optJSONObject(FIELD_DISTANCE)?.let(RadarRouteDistance.Companion::fromJson)
-            val duration = obj.optJSONObject(FIELD_DURATION)?.let(RadarRouteDuration.Companion::fromJson)
+            val distance = RadarRouteDistance.fromJson(obj.optJSONObject(FIELD_DISTANCE))
+            val duration = RadarRouteDuration.fromJson(obj.optJSONObject(FIELD_DURATION))
 
             return RadarRoute(distance, duration)
         }

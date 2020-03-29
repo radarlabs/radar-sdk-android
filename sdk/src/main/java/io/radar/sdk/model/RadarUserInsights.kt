@@ -52,7 +52,7 @@ class RadarUserInsights private constructor(
                     }
                 }
             }
-            val state = obj.optJSONObject(FIELD_STATE)?.let(RadarUserInsightsState.Companion::fromJson)
+            val state = RadarUserInsightsState.fromJson(obj.optJSONObject(FIELD_STATE))
 
             return RadarUserInsights(homeLocation, officeLocation, state)
         }
