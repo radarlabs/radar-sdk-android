@@ -175,7 +175,6 @@ class RadarUser(
                 topChains
             )
         }
-
     }
 
     fun toJson(): JSONObject {
