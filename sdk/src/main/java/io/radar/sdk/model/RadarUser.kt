@@ -122,6 +122,7 @@ class RadarUser(
         private const val FIELD_SEGMENTS = "segments"
         private const val FIELD_TOP_CHAINS = "topChains"
 
+        @JvmStatic
         fun fromJson(obj: JSONObject?): RadarUser? {
             if (obj == null) {
                 return null

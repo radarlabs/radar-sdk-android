@@ -71,6 +71,7 @@ class RadarPoint (
             return RadarPoint(id, description, tag, externalId, metadata, location)
         }
 
+        @JvmStatic
         @Throws(JSONException::class)
         fun fromJson(arr: JSONArray?): Array<RadarPoint>? {
             if (arr == null) {
@@ -81,5 +82,29 @@ class RadarPoint (
                 fromJson(arr.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
+
+        @JvmStatic
+        fun toJson(points: Array<RadarPoint> ?): JSONArray? {
+            if (points == null) {
+                return null
+            }
+
+            val arr = JSONArray()
+            points.forEach { point ->
+                arr.put(point.toJson())
+            }
+            return arr
+        }
     }
+
+    fun toJson(): JSONObject {
+        val obj = JSONObject()
+        obj.putOpt(FIELD_ID, this._id)
+        obj.putOpt(FIELD_TAG, this.tag)
+        obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
+        obj.putOpt(FIELD_DESCRIPTION, this.description)
+        obj.putOpt(FIELD_METADATA, this.metadata)
+        return obj
+    }
+
 }

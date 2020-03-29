@@ -123,6 +123,7 @@ class RadarAddress(
         private const val FIELD_PLACE_LABEL = "placeLabel"
         private const val FIELD_CONFIDENCE = "confidence"
 
+        @JvmStatic
         fun fromJson(obj: JSONObject?): RadarAddress? {
             if (obj == null) {
                 return null
@@ -172,6 +173,7 @@ class RadarAddress(
             )
         }
 
+        @JvmStatic
         fun fromJson(arr: JSONArray?): Array<RadarAddress>? {
             if (arr == null) {
                 return null
@@ -182,6 +184,7 @@ class RadarAddress(
             }.filterNotNull().toTypedArray()
         }
 
+        @JvmStatic
         fun toJson(addresses: Array<RadarAddress>?): JSONArray? {
             if (addresses == null) {
                 return null
@@ -194,6 +197,7 @@ class RadarAddress(
             return arr
         }
 
+        @JvmStatic
         fun stringForConfidence(confidence: RadarAddressConfidence): String {
             return when(confidence) {
                 RadarAddressConfidence.EXACT -> "exact"

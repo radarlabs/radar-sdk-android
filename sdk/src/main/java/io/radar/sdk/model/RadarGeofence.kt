@@ -100,6 +100,7 @@ class RadarGeofence(
             return RadarGeofence(id, description, tag, externalId, metadata, geometry)
         }
 
+        @JvmStatic
         @Throws(JSONException::class)
         fun fromJson(arr: JSONArray?): Array<RadarGeofence>? {
             if (arr == null) {
@@ -111,6 +112,7 @@ class RadarGeofence(
             }.filterNotNull().toTypedArray()
         }
 
+        @JvmStatic
         fun toJson(geofences: Array<RadarGeofence> ?): JSONArray? {
             if (geofences == null) {
                 return null

@@ -21,6 +21,7 @@ class RadarRouteDuration(
         private const val FIELD_VALUE = "value"
         private const val FIELD_TEXT = "text"
 
+        @JvmStatic
         fun fromJson(obj: JSONObject?): RadarRouteDuration? {
             if (obj == null) {
                 return null

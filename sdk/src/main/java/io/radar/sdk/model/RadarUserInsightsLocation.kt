@@ -92,6 +92,7 @@ class RadarUserInsightsLocation(
         private const val FIELD_DMA = "dma"
         private const val FIELD_POSTAL_CODE = "postalCode"
 
+        @JvmStatic
         @SuppressLint("SimpleDateFormat")
         @Throws(JSONException::class, ParseException::class)
         fun fromJson(obj: JSONObject?): RadarUserInsightsLocation? {
@@ -138,6 +139,7 @@ class RadarUserInsightsLocation(
             )
         }
 
+        @JvmStatic
         fun stringForType(type: RadarUserInsightsLocationType): String? {
             return when (type) {
                 RadarUserInsightsLocationType.HOME -> "home"

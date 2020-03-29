@@ -194,6 +194,7 @@ class RadarEvent(
         private const val FIELD_COORDINATES = "coordinates"
         private const val FIELD_LOCATION_ACCURACY = "locationAccuracy"
 
+        @JvmStatic
         @SuppressLint("SimpleDateFormat")
         private fun fromJson(obj: JSONObject?): RadarEvent? {
             if (obj == null) {
@@ -266,6 +267,7 @@ class RadarEvent(
             )
         }
 
+        @JvmStatic
         fun fromJson(arr: JSONArray?): Array<RadarEvent>? {
             if (arr == null) {
                 return null
@@ -276,6 +278,7 @@ class RadarEvent(
             }.filterNotNull().toTypedArray()
         }
 
+        @JvmStatic
         fun toJson(events: Array<RadarEvent> ?): JSONArray? {
             if (events == null) {
                 return null
@@ -288,6 +291,7 @@ class RadarEvent(
             return arr
         }
 
+        @JvmStatic
         fun stringForType(type: RadarEventType): String? {
             return when (type) {
                 USER_ENTERED_GEOFENCE -> "user.entered_geofence"

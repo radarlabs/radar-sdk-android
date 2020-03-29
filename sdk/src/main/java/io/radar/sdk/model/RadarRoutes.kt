@@ -41,6 +41,7 @@ class RadarRoutes(
         private const val FIELD_CAR = "car"
         private const val FIELD_TRANSIT = "transit"
 
+        @JvmStatic
         fun fromJson(obj: JSONObject?): RadarRoutes? {
             if (obj == null) {
                 return null

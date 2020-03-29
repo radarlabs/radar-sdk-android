@@ -34,6 +34,7 @@ class RadarUserInsights private constructor(
         private const val FIELD_LOCATIONS = "locations"
         private const val FIELD_STATE = "state"
 
+        @JvmStatic
         @Throws(JSONException::class, ParseException::class)
         fun fromJson(obj: JSONObject?): RadarUserInsights? {
             if (obj == null) {
