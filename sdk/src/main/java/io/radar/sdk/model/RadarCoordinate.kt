@@ -11,7 +11,7 @@ class RadarCoordinate(
     val longitude: Double
 ) {
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt("type", "Point")
         val coordinatesObj = JSONArray()

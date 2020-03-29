@@ -21,7 +21,7 @@ class RadarRouteDuration(
         private const val FIELD_VALUE = "value"
         private const val FIELD_TEXT = "text"
 
-        fun deserialize(obj: JSONObject?): RadarRouteDuration? {
+        fun fromJson(obj: JSONObject?): RadarRouteDuration? {
             if (obj == null) {
                 return null
             }
@@ -33,7 +33,7 @@ class RadarRouteDuration(
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_VALUE, this.value)
         obj.putOpt(FIELD_TEXT, this.value)

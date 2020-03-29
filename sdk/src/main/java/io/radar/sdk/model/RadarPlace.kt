@@ -57,7 +57,7 @@ class RadarPlace(
         private const val FIELD_METADATA = "metadata"
 
         @Throws(JSONException::class)
-        fun deserialize(obj: JSONObject?): RadarPlace? {
+        fun fromJson(obj: JSONObject?): RadarPlace? {
             if (obj == null) {
                 return null
             }
@@ -69,7 +69,7 @@ class RadarPlace(
                     categoriesArr.optString(it)
                 }
             } ?: emptyArray()
-            val chain = RadarChain.deserialize(obj.optJSONObject(FIELD_CHAIN))
+            val chain = RadarChain.fromJson(obj.optJSONObject(FIELD_CHAIN))
             val locationObj = obj.optJSONObject(FIELD_LOCATION)
             val locationCoordinatesObj = locationObj?.optJSONArray(FIELD_COORDINATES)
             val location = RadarCoordinate(
@@ -91,36 +91,36 @@ class RadarPlace(
         }
 
         @Throws(JSONException::class)
-        fun deserializeArray(arr: JSONArray?): Array<RadarPlace>? {
+        fun fromJson(arr: JSONArray?): Array<RadarPlace>? {
             if (arr == null) {
                 return null
             }
 
             return Array(arr.length()) { index ->
-                deserialize(arr.optJSONObject(index))
+                fromJson(arr.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
 
-        fun serializeArray(places: Array<RadarPlace>?): JSONArray? {
+        fun toJson(places: Array<RadarPlace>?): JSONArray? {
             if (places == null) {
                 return null
             }
 
             val arr = JSONArray()
             places.forEach { place ->
-                arr.put(place.serialize())
+                arr.put(place.toJson())
             }
             return arr
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_ID, this._id)
         obj.putOpt(FIELD_NAME, this.name)
         obj.putOpt(FIELD_CATEGORIES, this.categories)
         obj.putOpt(FIELD_METADATA, this.metadata)
-        obj.putOpt(FIELD_CHAIN, this.chain?.serialize())
+        obj.putOpt(FIELD_CHAIN, this.chain?.toJson())
         return obj
     }
 

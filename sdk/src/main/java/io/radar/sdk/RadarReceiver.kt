@@ -78,8 +78,8 @@ abstract class RadarReceiver : BroadcastReceiver() {
             try {
                 val response = JSONObject(res)
                 val eventsArr = response.getJSONArray("events")
-                val events = RadarEvent.deserializeArray(eventsArr)
-                val user = RadarUser.deserialize(response.getJSONObject("user"))
+                val events = RadarEvent.fromJson(eventsArr)
+                val user = RadarUser.fromJson(response.getJSONObject("user"))
 
                 if (user != null) {
                     if (events != null && events.isNotEmpty()) {

@@ -47,13 +47,13 @@ class RadarContext(
         private const val FIELD_DMA = "dma"
         private const val FIELD_POSTAL_CODE = "postalCode"
 
-        fun deserialize(obj: JSONObject): RadarContext {
-            val geofences = RadarGeofence.deserializeArray(obj.getJSONArray(FIELD_GEOFENCES)) ?: emptyArray()
-            val place = RadarPlace.deserialize(obj.optJSONObject(FIELD_PLACE))
-            val country = RadarRegion.deserialize(obj.optJSONObject(FIELD_COUNTRY))
-            val state = RadarRegion.deserialize(obj.optJSONObject(FIELD_STATE))
-            val dma = RadarRegion.deserialize(obj.optJSONObject(FIELD_DMA))
-            val postalCode = RadarRegion.deserialize(obj.optJSONObject(FIELD_POSTAL_CODE))
+        fun fromJson(obj: JSONObject): RadarContext {
+            val geofences = RadarGeofence.fromJson(obj.getJSONArray(FIELD_GEOFENCES)) ?: emptyArray()
+            val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
+            val country = RadarRegion.fromJson(obj.optJSONObject(FIELD_COUNTRY))
+            val state = RadarRegion.fromJson(obj.optJSONObject(FIELD_STATE))
+            val dma = RadarRegion.fromJson(obj.optJSONObject(FIELD_DMA))
+            val postalCode = RadarRegion.fromJson(obj.optJSONObject(FIELD_POSTAL_CODE))
 
             return RadarContext(
                 geofences,
@@ -66,14 +66,14 @@ class RadarContext(
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
-        obj.putOpt(FIELD_GEOFENCES, RadarGeofence.serializeArray(this.geofences))
-        obj.putOpt(FIELD_PLACE, this.place?.serialize())
-        obj.putOpt(FIELD_COUNTRY, this.country?.serialize())
-        obj.putOpt(FIELD_STATE, this.state?.serialize())
-        obj.putOpt(FIELD_DMA, this.dma?.serialize())
-        obj.putOpt(FIELD_POSTAL_CODE, this.postalCode?.serialize())
+        obj.putOpt(FIELD_GEOFENCES, RadarGeofence.toJson(this.geofences))
+        obj.putOpt(FIELD_PLACE, this.place?.toJson())
+        obj.putOpt(FIELD_COUNTRY, this.country?.toJson())
+        obj.putOpt(FIELD_STATE, this.state?.toJson())
+        obj.putOpt(FIELD_DMA, this.dma?.toJson())
+        obj.putOpt(FIELD_POSTAL_CODE, this.postalCode?.toJson())
         return obj
     }
 
