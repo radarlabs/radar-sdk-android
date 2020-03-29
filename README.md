@@ -6,7 +6,9 @@
 
 ## Documentation
 
-See the full documentation [here](https://radar.io/documentation). You can also see a detailed SDK reference [here](https://radarlabs.github.io/radar-sdk-android/).
+See the full documentation [here](https://radar.io/documentation).
+
+You can also see a detailed SDK reference [here](https://radarlabs.github.io/radar-sdk-android/).
 
 ## Migrating
 
