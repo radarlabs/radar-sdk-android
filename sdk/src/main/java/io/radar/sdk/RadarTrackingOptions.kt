@@ -252,6 +252,7 @@ data class RadarTrackingOptions(
         internal const val KEY_USE_MOVING_GEOFENCE = "useMovingGeofence"
         internal const val KEY_MOVING_GEOFENCE_RADIUS = "movingGeofenceRadius"
 
+        @JvmStatic
         fun fromJson(obj: JSONObject): RadarTrackingOptions {
             return RadarTrackingOptions(
                 desiredStoppedUpdateInterval = obj.optInt(KEY_DESIRED_STOPPED_UPDATE_INTERVAL),
@@ -275,7 +276,7 @@ data class RadarTrackingOptions(
 
     }
 
-    internal fun toJson(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.put(KEY_DESIRED_STOPPED_UPDATE_INTERVAL, desiredStoppedUpdateInterval)
         obj.put(KEY_FASTEST_STOPPED_UPDATE_INTERVAL, fastestStoppedUpdateInterval)
