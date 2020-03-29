@@ -38,7 +38,7 @@ class RadarChain(
         private const val FIELD_METADATA = "metadata"
 
         @Throws(JSONException::class)
-        fun deserialize(obj: JSONObject?): RadarChain? {
+        fun fromJson(obj: JSONObject?): RadarChain? {
             if (obj == null) {
                 return null
             }
@@ -56,30 +56,30 @@ class RadarChain(
             )
         }
 
-        fun deserializeArray(array: JSONArray?): Array<RadarChain>? {
-            if (array == null) {
+        fun fromJson(arr: JSONArray?): Array<RadarChain>? {
+            if (arr == null) {
                 return null
             }
 
-            return Array(array.length()) { index ->
-                deserialize(array.optJSONObject(index))
+            return Array(arr.length()) { index ->
+                fromJson(arr.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
 
-        fun serializeArray(chains: Array<RadarChain>?): JSONArray? {
+        fun toJson(chains: Array<RadarChain>?): JSONArray? {
             if (chains == null) {
                 return null
             }
 
             val arr = JSONArray()
             chains.forEach { chain ->
-                arr.put(chain.serialize())
+                arr.put(chain.toJson())
             }
             return arr
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_SLUG, this.slug)
         obj.putOpt(FIELD_NAME, this.name)

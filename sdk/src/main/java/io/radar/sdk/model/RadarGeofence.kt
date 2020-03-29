@@ -57,7 +57,7 @@ class RadarGeofence(
         private const val TYPE_POLYGON = "polygon"
 
         @JvmStatic
-        fun deserialize(obj: JSONObject?): RadarGeofence? {
+        fun fromJson(obj: JSONObject?): RadarGeofence? {
             if (obj == null) {
                 return null
             }
@@ -101,30 +101,30 @@ class RadarGeofence(
         }
 
         @Throws(JSONException::class)
-        fun deserializeArray(array: JSONArray?): Array<RadarGeofence>? {
-            if (array == null) {
+        fun fromJson(arr: JSONArray?): Array<RadarGeofence>? {
+            if (arr == null) {
                 return null
             }
 
-            return Array(array.length()) { index ->
-                deserialize(array.optJSONObject(index))
+            return Array(arr.length()) { index ->
+                fromJson(arr.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
 
-        fun serializeArray(geofences: Array<RadarGeofence> ?): JSONArray? {
+        fun toJson(geofences: Array<RadarGeofence> ?): JSONArray? {
             if (geofences == null) {
                 return null
             }
 
             val arr = JSONArray()
             geofences.forEach { geofence ->
-                arr.put(geofence.serialize())
+                arr.put(geofence.toJson())
             }
             return arr
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_ID, this._id)
         obj.putOpt(FIELD_TAG, this.tag)

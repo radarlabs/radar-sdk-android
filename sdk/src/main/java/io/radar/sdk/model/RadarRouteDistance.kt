@@ -21,7 +21,7 @@ class RadarRouteDistance(
         private const val FIELD_VALUE = "value"
         private const val FIELD_TEXT = "text"
 
-        fun deserialize(obj: JSONObject?): RadarRouteDistance? {
+        fun fromJson(obj: JSONObject?): RadarRouteDistance? {
             if (obj == null) {
                 return null
             }
@@ -33,7 +33,7 @@ class RadarRouteDistance(
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_VALUE, this.value)
         obj.putOpt(FIELD_TEXT, this.value)

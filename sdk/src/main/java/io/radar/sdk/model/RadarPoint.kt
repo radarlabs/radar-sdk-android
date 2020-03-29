@@ -5,31 +5,38 @@ import org.json.JSONException
 import org.json.JSONObject
 
 /**
- * Represents a point. For more information about points, see [] (TODO)
- * */
+ * Represents a point. For more information about Points, see [](https://radar.io/documentation/points).
+ *
+ * @see [](https://radar.io/documentation/points)
+ */
 class RadarPoint (
     /**
      * The Radar ID of the point.
      */
     val _id: String,
+
     /**
      * The description of the point.
      */
     val description: String,
+
     /**
-     * The optional tag of the point.
+     * The tag of the point.
      */
     val tag: String?,
+
     /**
-     * The optional external ID of the point.
+     * The external ID of the point.
      */
     val externalId: String?,
+
     /**
-     * The optional dictionary for additional metadata.
+     * The optional set of custom key-value pairs for the point.
      */
     val metadata: JSONObject?,
+
     /**
-     * The coordinate of the point
+     * The location of the point.
      */
     val location: RadarCoordinate
 ) {
@@ -43,7 +50,7 @@ class RadarPoint (
         private const val FIELD_COORDINATES = "coordinates"
 
         @JvmStatic
-        fun deserialize(obj: JSONObject?): RadarPoint? {
+        fun fromJson(obj: JSONObject?): RadarPoint? {
             if (obj == null) {
                 return null
             }
@@ -53,29 +60,25 @@ class RadarPoint (
             val tag: String? = obj.optString(FIELD_TAG)
             val externalId: String? = obj.optString(FIELD_EXTERNAL_ID)
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
-
             val locationObj = obj.optJSONObject(FIELD_LOCATION)
             val location = locationObj?.optJSONArray(FIELD_COORDINATES)?.let { coordinate ->
                 RadarCoordinate(
                     coordinate.optDouble(1),
                     coordinate.optDouble(0)
                 )
-            };
+            } ?: RadarCoordinate(0.0, 0.0)
 
-            if (description.isNotEmpty() && id.isNotEmpty() && location != null) {
-                return RadarPoint(id, description, tag, externalId, metadata, location)
-            }
-            return null
+            return RadarPoint(id, description, tag, externalId, metadata, location)
         }
 
         @Throws(JSONException::class)
-        fun deserializeArray(array: JSONArray?): Array<RadarPoint>? {
-            if (array == null) {
+        fun fromJson(arr: JSONArray?): Array<RadarPoint>? {
+            if (arr == null) {
                 return null
             }
 
-            return Array(array.length()) { index ->
-                deserialize(array.optJSONObject(index))
+            return Array(arr.length()) { index ->
+                fromJson(arr.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
     }

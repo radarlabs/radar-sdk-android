@@ -195,7 +195,7 @@ class RadarEvent(
         private const val FIELD_LOCATION_ACCURACY = "locationAccuracy"
 
         @SuppressLint("SimpleDateFormat")
-        private fun deserialize(obj: JSONObject?): RadarEvent? {
+        private fun fromJson(obj: JSONObject?): RadarEvent? {
             if (obj == null) {
                 return null
             }
@@ -232,11 +232,11 @@ class RadarEvent(
                 "user.exited_region_dma" -> USER_EXITED_REGION_DMA
                 else -> RadarEventType.UNKNOWN
             }
-            val geofence = RadarGeofence.deserialize(obj.optJSONObject(FIELD_GEOFENCE))
-            val place = RadarPlace.deserialize(obj.optJSONObject(FIELD_PLACE))
-            val region = RadarRegion.deserialize(obj.optJSONObject(FIELD_REGION))
-            val alternatePlaces = RadarPlace.deserializeArray(obj.optJSONArray(FIELD_ALTERNATE_PLACES))
-            val verifiedPlace = RadarPlace.deserialize(obj.optJSONObject(FIELD_VERIFIED_PLACE))
+            val geofence = RadarGeofence.fromJson(obj.optJSONObject(FIELD_GEOFENCE))
+            val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
+            val region = RadarRegion.fromJson(obj.optJSONObject(FIELD_REGION))
+            val alternatePlaces = RadarPlace.fromJson(obj.optJSONArray(FIELD_ALTERNATE_PLACES))
+            val verifiedPlace = RadarPlace.fromJson(obj.optJSONObject(FIELD_VERIFIED_PLACE))
             val verification = when (obj.optInt(FIELD_VERIFICATION)) {
                 1 -> RadarEventVerification.ACCEPT
                 -1 -> RadarEventVerification.REJECT
@@ -266,24 +266,24 @@ class RadarEvent(
             )
         }
 
-        fun deserializeArray(array: JSONArray?): Array<RadarEvent>? {
-            if (array == null) {
+        fun fromJson(arr: JSONArray?): Array<RadarEvent>? {
+            if (arr == null) {
                 return null
             }
 
-            return Array(array.length()) { index ->
-                deserialize(array.optJSONObject(index))
+            return Array(arr.length()) { index ->
+                fromJson(arr.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
 
-        fun serializeArray(events: Array<RadarEvent> ?): JSONArray? {
+        fun toJson(events: Array<RadarEvent> ?): JSONArray? {
             if (events == null) {
                 return null
             }
 
             val arr = JSONArray()
             events.forEach { event ->
-                arr.put(event.serialize())
+                arr.put(event.toJson())
             }
             return arr
         }
@@ -314,17 +314,17 @@ class RadarEvent(
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_ID, this._id)
         obj.putOpt(FIELD_LIVE, this.live)
         obj.putOpt(FIELD_TYPE, stringForType(this.type))
-        obj.putOpt(FIELD_GEOFENCE, this.geofence?.serialize())
-        obj.putOpt(FIELD_PLACE, this.place?.serialize())
+        obj.putOpt(FIELD_GEOFENCE, this.geofence?.toJson())
+        obj.putOpt(FIELD_PLACE, this.place?.toJson())
         obj.putOpt(FIELD_CONFIDENCE, this.confidence)
         obj.putOpt(FIELD_DURATION, this.duration)
-        obj.putOpt(FIELD_ALTERNATE_PLACES, RadarPlace.serializeArray(this.alternatePlaces))
-        obj.putOpt(FIELD_REGION, this.region?.serialize())
+        obj.putOpt(FIELD_ALTERNATE_PLACES, RadarPlace.toJson(this.alternatePlaces))
+        obj.putOpt(FIELD_REGION, this.region?.toJson())
         return obj
     }
 

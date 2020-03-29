@@ -122,7 +122,7 @@ class RadarUser(
         private const val FIELD_SEGMENTS = "segments"
         private const val FIELD_TOP_CHAINS = "topChains"
 
-        fun deserialize(obj: JSONObject?): RadarUser? {
+        fun fromJson(obj: JSONObject?): RadarUser? {
             if (obj == null) {
                 return null
             }
@@ -143,16 +143,16 @@ class RadarUser(
                     accuracy = obj.optDouble(FIELD_LOCATION_ACCURACY).toFloat()
                 }
             }
-            val geofences = RadarGeofence.deserializeArray(obj.optJSONArray(FIELD_GEOFENCES))
-            val place = RadarPlace.deserialize(obj.optJSONObject(FIELD_PLACE))
-            val insights = RadarUserInsights.deserialize(obj.optJSONObject(FIELD_INSIGHTS))
-            val country = obj.optJSONObject(FIELD_COUNTRY)?.let(RadarRegion.Companion::deserialize)
-            val state = obj.optJSONObject(FIELD_STATE)?.let(RadarRegion.Companion::deserialize)
-            val dma = obj.optJSONObject(FIELD_DMA)?.let(RadarRegion.Companion::deserialize)
-            val postalCode = obj.optJSONObject(FIELD_POSTAL_CODE)?.let(RadarRegion.Companion::deserialize)
-            val nearbyPlaceChains = RadarChain.deserializeArray(obj.optJSONArray(FIELD_NEARBY_PLACE_CHAINS))
-            val segments = RadarSegment.deserializeArray(obj.optJSONArray(FIELD_SEGMENTS))
-            val topChains = RadarChain.deserializeArray(obj.optJSONArray(FIELD_TOP_CHAINS))
+            val geofences = RadarGeofence.fromJson(obj.optJSONArray(FIELD_GEOFENCES))
+            val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
+            val insights = RadarUserInsights.fromJson(obj.optJSONObject(FIELD_INSIGHTS))
+            val country = RadarRegion.fromJson(obj.optJSONObject(FIELD_COUNTRY))
+            val state = RadarRegion.fromJson(obj.optJSONObject(FIELD_STATE))
+            val dma = RadarRegion.fromJson(obj.optJSONObject(FIELD_DMA))
+            val postalCode = RadarRegion.fromJson(obj.optJSONObject(FIELD_POSTAL_CODE))
+            val nearbyPlaceChains = RadarChain.fromJson(obj.optJSONArray(FIELD_NEARBY_PLACE_CHAINS))
+            val segments = RadarSegment.fromJson(obj.optJSONArray(FIELD_SEGMENTS))
+            val topChains = RadarChain.fromJson(obj.optJSONArray(FIELD_TOP_CHAINS))
 
             return RadarUser(
                 id,
@@ -175,28 +175,27 @@ class RadarUser(
                 topChains
             )
         }
-
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_ID, this._id)
         obj.putOpt(FIELD_USER_ID, this.userId)
         obj.putOpt(FIELD_DEVICE_ID, this.deviceId)
         obj.putOpt(FIELD_DESCRIPTION, this.description)
         obj.putOpt(FIELD_METADATA, this.metadata)
-        obj.putOpt(FIELD_GEOFENCES, RadarGeofence.serializeArray(this.geofences))
-        obj.putOpt(FIELD_PLACE, this.place?.serialize())
-        obj.putOpt(FIELD_INSIGHTS, this.insights?.serialize())
+        obj.putOpt(FIELD_GEOFENCES, RadarGeofence.toJson(this.geofences))
+        obj.putOpt(FIELD_PLACE, this.place?.toJson())
+        obj.putOpt(FIELD_INSIGHTS, this.insights?.toJson())
         obj.putOpt(FIELD_STOPPED, this.stopped)
         obj.putOpt(FIELD_FOREGROUND, this.foreground)
-        obj.putOpt(FIELD_COUNTRY, this.country?.serialize())
-        obj.putOpt(FIELD_STATE, this.state?.serialize())
-        obj.putOpt(FIELD_DMA, this.dma?.serialize())
-        obj.putOpt(FIELD_POSTAL_CODE, this.postalCode?.serialize())
-        obj.putOpt(FIELD_NEARBY_PLACE_CHAINS, RadarChain.serializeArray(this.nearbyPlaceChains))
-        obj.putOpt(FIELD_SEGMENTS, RadarSegment.serializeArray(this.segments))
-        obj.putOpt(FIELD_TOP_CHAINS, RadarChain.serializeArray(this.topChains))
+        obj.putOpt(FIELD_COUNTRY, this.country?.toJson())
+        obj.putOpt(FIELD_STATE, this.state?.toJson())
+        obj.putOpt(FIELD_DMA, this.dma?.toJson())
+        obj.putOpt(FIELD_POSTAL_CODE, this.postalCode?.toJson())
+        obj.putOpt(FIELD_NEARBY_PLACE_CHAINS, RadarChain.toJson(this.nearbyPlaceChains))
+        obj.putOpt(FIELD_SEGMENTS, RadarSegment.toJson(this.segments))
+        obj.putOpt(FIELD_TOP_CHAINS, RadarChain.toJson(this.topChains))
         return obj
     }
 

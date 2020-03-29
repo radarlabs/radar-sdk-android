@@ -35,7 +35,7 @@ class RadarUserInsights private constructor(
         private const val FIELD_STATE = "state"
 
         @Throws(JSONException::class, ParseException::class)
-        fun deserialize(obj: JSONObject?): RadarUserInsights? {
+        fun fromJson(obj: JSONObject?): RadarUserInsights? {
             if (obj == null) {
                 return null
             }
@@ -44,7 +44,7 @@ class RadarUserInsights private constructor(
             var officeLocation: RadarUserInsightsLocation? = null
             obj.optJSONArray(FIELD_LOCATIONS)?.let { locations ->
                 for (i in 0 until locations.length()) {
-                    val location = RadarUserInsightsLocation.deserialize(locations.optJSONObject(i))
+                    val location = RadarUserInsightsLocation.fromJson(locations.optJSONObject(i))
                     when (location?.type) {
                         HOME -> homeLocation = location
                         OFFICE -> officeLocation = location
@@ -52,17 +52,17 @@ class RadarUserInsights private constructor(
                     }
                 }
             }
-            val state = obj.optJSONObject(FIELD_STATE)?.let(RadarUserInsightsState.Companion::deserialize)
+            val state = RadarUserInsightsState.fromJson(obj.optJSONObject(FIELD_STATE))
 
             return RadarUserInsights(homeLocation, officeLocation, state)
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
-        obj.putOpt(FIELD_HOME_LOCATION, this.homeLocation?.serialize())
-        obj.putOpt(FIELD_OFFICE_LOCATION, this.officeLocation?.serialize())
-        obj.putOpt(FIELD_STATE, this.state?.serialize())
+        obj.putOpt(FIELD_HOME_LOCATION, this.homeLocation?.toJson())
+        obj.putOpt(FIELD_OFFICE_LOCATION, this.officeLocation?.toJson())
+        obj.putOpt(FIELD_STATE, this.state?.toJson())
         return obj
     }
 

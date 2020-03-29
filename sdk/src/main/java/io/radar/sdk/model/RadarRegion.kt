@@ -42,7 +42,7 @@ class RadarRegion(
         private const val FIELD_CODE = "code"
         private const val FIELD_FLAG = "flag"
 
-        fun deserialize(obj: JSONObject?): RadarRegion? {
+        fun fromJson(obj: JSONObject?): RadarRegion? {
             if (obj == null) {
                 return null
             }
@@ -56,18 +56,18 @@ class RadarRegion(
             return RadarRegion(id, name, code, type, flag)
         }
 
-        fun deserializeArray(arr: JSONArray?): Array<RadarRegion>? {
+        fun fromJson(arr: JSONArray?): Array<RadarRegion>? {
             if (arr == null) {
                 return null
             }
 
             return Array(arr.length()) { index ->
-                deserialize(arr.optJSONObject(index))
+                fromJson(arr.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_ID, this._id)
         obj.putOpt(FIELD_NAME, this.name)

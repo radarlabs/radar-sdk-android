@@ -21,22 +21,22 @@ class RadarRoute(
         private const val FIELD_DISTANCE = "distance"
         private const val FIELD_DURATION = "duration"
 
-        fun deserialize(obj: JSONObject?): RadarRoute? {
+        fun fromJson(obj: JSONObject?): RadarRoute? {
             if (obj == null) {
                 return null
             }
 
-            val distance = obj.optJSONObject(FIELD_DISTANCE)?.let(RadarRouteDistance.Companion::deserialize)
-            val duration = obj.optJSONObject(FIELD_DURATION)?.let(RadarRouteDuration.Companion::deserialize)
+            val distance = RadarRouteDistance.fromJson(obj.optJSONObject(FIELD_DISTANCE))
+            val duration = RadarRouteDuration.fromJson(obj.optJSONObject(FIELD_DURATION))
 
             return RadarRoute(distance, duration)
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
-        obj.putOpt(FIELD_DISTANCE, this.distance?.serialize())
-        obj.putOpt(FIELD_DURATION, this.duration?.serialize())
+        obj.putOpt(FIELD_DISTANCE, this.distance?.toJson())
+        obj.putOpt(FIELD_DURATION, this.duration?.toJson())
         return obj
     }
 

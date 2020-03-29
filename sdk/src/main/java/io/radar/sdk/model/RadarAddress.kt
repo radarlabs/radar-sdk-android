@@ -123,7 +123,7 @@ class RadarAddress(
         private const val FIELD_PLACE_LABEL = "placeLabel"
         private const val FIELD_CONFIDENCE = "confidence"
 
-        fun deserialize(obj: JSONObject?): RadarAddress? {
+        fun fromJson(obj: JSONObject?): RadarAddress? {
             if (obj == null) {
                 return null
             }
@@ -172,24 +172,24 @@ class RadarAddress(
             )
         }
 
-        fun deserializeArray(arr: JSONArray?): Array<RadarAddress>? {
+        fun fromJson(arr: JSONArray?): Array<RadarAddress>? {
             if (arr == null) {
                 return null
             }
 
             return Array(arr.length()) { index ->
-                deserialize(arr.optJSONObject(index))
+                fromJson(arr.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
 
-        fun serializeArray(addresses: Array<RadarAddress>?): JSONArray? {
+        fun toJson(addresses: Array<RadarAddress>?): JSONArray? {
             if (addresses == null) {
                 return null
             }
 
             val arr = JSONArray()
             addresses.forEach { address ->
-                arr.put(address.serialize())
+                arr.put(address.toJson())
             }
             return arr
         }
@@ -204,7 +204,7 @@ class RadarAddress(
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_LATITUDE, this.coordinate.latitude)
         obj.putOpt(FIELD_LONGITUDE, this.coordinate.latitude)

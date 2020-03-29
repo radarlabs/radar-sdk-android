@@ -94,7 +94,7 @@ class RadarUserInsightsLocation(
 
         @SuppressLint("SimpleDateFormat")
         @Throws(JSONException::class, ParseException::class)
-        fun deserialize(obj: JSONObject?): RadarUserInsightsLocation? {
+        fun fromJson(obj: JSONObject?): RadarUserInsightsLocation? {
             if (obj == null) {
                 return null
             }
@@ -121,10 +121,10 @@ class RadarUserInsightsLocation(
             val updatedAt = obj.optString(FIELD_UPDATED_AT).let { updatedAtStr ->
                 dateFormat.parse(updatedAtStr)
             } ?: Date()
-            val country = RadarRegion.deserialize(obj.optJSONObject(FIELD_COUNTRY))
-            val state = RadarRegion.deserialize(obj.optJSONObject(FIELD_STATE))
-            val dma = RadarRegion.deserialize(obj.optJSONObject(FIELD_DMA))
-            val postalCode = RadarRegion.deserialize(obj.optJSONObject(FIELD_POSTAL_CODE))
+            val country = RadarRegion.fromJson(obj.optJSONObject(FIELD_COUNTRY))
+            val state = RadarRegion.fromJson(obj.optJSONObject(FIELD_STATE))
+            val dma = RadarRegion.fromJson(obj.optJSONObject(FIELD_DMA))
+            val postalCode = RadarRegion.fromJson(obj.optJSONObject(FIELD_POSTAL_CODE))
 
             return RadarUserInsightsLocation(
                 type,
@@ -147,11 +147,11 @@ class RadarUserInsightsLocation(
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_TYPE, stringForType(this.type))
-        obj.putOpt(FIELD_LOCATION, this.location?.serialize())
-        obj.putOpt(FIELD_STATE, this.state?.serialize())
+        obj.putOpt(FIELD_LOCATION, this.location?.toJson())
+        obj.putOpt(FIELD_STATE, this.state?.toJson())
         return obj
     }
 

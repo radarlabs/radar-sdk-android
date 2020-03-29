@@ -22,7 +22,7 @@ class RadarSegment(
         private const val FIELD_DESCRIPTION = "description"
         private const val FIELD_EXTERNAL_ID = "externalId"
 
-        fun deserialize(obj: JSONObject?): RadarSegment? {
+        fun fromJson(obj: JSONObject?): RadarSegment? {
             if (obj == null) {
                 return null
             }
@@ -33,30 +33,30 @@ class RadarSegment(
             return RadarSegment(description, externalId)
         }
 
-        fun deserializeArray(arr: JSONArray?): Array<RadarSegment>? {
+        fun fromJson(arr: JSONArray?): Array<RadarSegment>? {
             if (arr == null) {
                 return null
             }
 
             return Array(arr.length()) { index ->
-                deserialize(arr.optJSONObject(index))
+                fromJson(arr.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
 
-        fun serializeArray(segments: Array<RadarSegment>?): JSONArray? {
+        fun toJson(segments: Array<RadarSegment>?): JSONArray? {
             if (segments == null) {
                 return null
             }
 
             val arr = JSONArray()
             segments.forEach { segment ->
-                arr.put(segment.serialize())
+                arr.put(segment.toJson())
             }
             return arr
         }
     }
 
-    fun serialize(): JSONObject {
+    fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_DESCRIPTION, this.description)
         obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
