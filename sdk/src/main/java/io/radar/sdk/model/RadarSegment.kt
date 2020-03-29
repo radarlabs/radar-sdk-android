@@ -22,6 +22,7 @@ class RadarSegment(
         private const val FIELD_DESCRIPTION = "description"
         private const val FIELD_EXTERNAL_ID = "externalId"
 
+        @JvmStatic
         fun fromJson(obj: JSONObject?): RadarSegment? {
             if (obj == null) {
                 return null
@@ -33,6 +34,7 @@ class RadarSegment(
             return RadarSegment(description, externalId)
         }
 
+        @JvmStatic
         fun fromJson(arr: JSONArray?): Array<RadarSegment>? {
             if (arr == null) {
                 return null
@@ -43,6 +45,7 @@ class RadarSegment(
             }.filterNotNull().toTypedArray()
         }
 
+        @JvmStatic
         fun toJson(segments: Array<RadarSegment>?): JSONArray? {
             if (segments == null) {
                 return null

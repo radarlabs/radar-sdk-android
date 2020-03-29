@@ -1506,6 +1506,22 @@ object Radar {
         }
     }
 
+    /**
+     * Returns a JSON object for a location.
+     *
+     * @param[location] A location.
+     *
+     * @return A JSON object for the location.
+     */
+    @JvmStatic
+    fun jsonForLocation(location: Location): JSONObject {
+        val obj = JSONObject()
+        obj.put("latitude", location.latitude)
+        obj.put("longitude", location.longitude)
+        obj.put("accuracy", location.accuracy)
+        return obj
+    }
+
     internal fun handleLocation(context: Context, location: Location, source: RadarLocationSource) {
         if (!initialized) {
             initialize(context)

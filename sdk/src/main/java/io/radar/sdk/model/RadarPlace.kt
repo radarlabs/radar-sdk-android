@@ -56,6 +56,7 @@ class RadarPlace(
         private const val FIELD_GROUP = "group"
         private const val FIELD_METADATA = "metadata"
 
+        @JvmStatic
         @Throws(JSONException::class)
         fun fromJson(obj: JSONObject?): RadarPlace? {
             if (obj == null) {
@@ -90,6 +91,7 @@ class RadarPlace(
             )
         }
 
+        @JvmStatic
         @Throws(JSONException::class)
         fun fromJson(arr: JSONArray?): Array<RadarPlace>? {
             if (arr == null) {
@@ -101,6 +103,7 @@ class RadarPlace(
             }.filterNotNull().toTypedArray()
         }
 
+        @JvmStatic
         fun toJson(places: Array<RadarPlace>?): JSONArray? {
             if (places == null) {
                 return null

@@ -37,6 +37,7 @@ class RadarChain(
         private const val FIELD_EXTERNAL_ID = "externalId"
         private const val FIELD_METADATA = "metadata"
 
+        @JvmStatic
         @Throws(JSONException::class)
         fun fromJson(obj: JSONObject?): RadarChain? {
             if (obj == null) {
@@ -56,6 +57,7 @@ class RadarChain(
             )
         }
 
+        @JvmStatic
         fun fromJson(arr: JSONArray?): Array<RadarChain>? {
             if (arr == null) {
                 return null
@@ -66,6 +68,7 @@ class RadarChain(
             }.filterNotNull().toTypedArray()
         }
 
+        @JvmStatic
         fun toJson(chains: Array<RadarChain>?): JSONArray? {
             if (chains == null) {
                 return null

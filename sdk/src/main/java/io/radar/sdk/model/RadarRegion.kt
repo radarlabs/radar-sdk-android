@@ -42,6 +42,7 @@ class RadarRegion(
         private const val FIELD_CODE = "code"
         private const val FIELD_FLAG = "flag"
 
+        @JvmStatic
         fun fromJson(obj: JSONObject?): RadarRegion? {
             if (obj == null) {
                 return null
@@ -56,6 +57,7 @@ class RadarRegion(
             return RadarRegion(id, name, code, type, flag)
         }
 
+        @JvmStatic
         fun fromJson(arr: JSONArray?): Array<RadarRegion>? {
             if (arr == null) {
                 return null

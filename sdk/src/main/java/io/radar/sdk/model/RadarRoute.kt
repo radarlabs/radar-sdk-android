@@ -21,6 +21,7 @@ class RadarRoute(
         private const val FIELD_DISTANCE = "distance"
         private const val FIELD_DURATION = "duration"
 
+        @JvmStatic
         fun fromJson(obj: JSONObject?): RadarRoute? {
             if (obj == null) {
                 return null

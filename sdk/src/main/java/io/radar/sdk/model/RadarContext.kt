@@ -47,6 +47,7 @@ class RadarContext(
         private const val FIELD_DMA = "dma"
         private const val FIELD_POSTAL_CODE = "postalCode"
 
+        @JvmStatic
         fun fromJson(obj: JSONObject): RadarContext {
             val geofences = RadarGeofence.fromJson(obj.getJSONArray(FIELD_GEOFENCES)) ?: emptyArray()
             val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
