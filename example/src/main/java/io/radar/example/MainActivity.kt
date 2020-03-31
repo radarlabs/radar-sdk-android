@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        Radar.initialize(this, "org_test_pk_5857c63d9c1565175db8b00750808a66a002acb8")
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000")
         Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
 
         Radar.trackOnce { status, location, events, user ->
@@ -69,7 +69,6 @@ class MainActivity : AppCompatActivity() {
 
         Radar.ipGeocode { status, address ->
             Log.v("example", "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}")
-            Log.v("example", address?.toJson()!!.toString(2))
         }
 
         val origin = Location("example")
