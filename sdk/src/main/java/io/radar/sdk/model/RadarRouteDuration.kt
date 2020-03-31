@@ -28,7 +28,7 @@ class RadarRouteDuration(
             }
 
             val value = obj.optDouble(FIELD_VALUE)
-            val text = obj.optString(FIELD_TEXT)
+            val text = obj.optString(FIELD_TEXT, null)
 
             return RadarRouteDuration(value, text)
         }
