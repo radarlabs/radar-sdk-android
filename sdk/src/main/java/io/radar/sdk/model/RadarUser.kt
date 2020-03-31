@@ -128,13 +128,13 @@ class RadarUser(
                 return null
             }
 
-            val id = obj.optString(FIELD_ID)
-            val userId: String? = obj.optString(FIELD_USER_ID)
-            val deviceId: String? = obj.optString(FIELD_DEVICE_ID)
-            val description: String? = obj.optString(FIELD_DESCRIPTION)
-            val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
-            val stopped: Boolean = obj.optBoolean(FIELD_STOPPED)
-            val foreground: Boolean = obj.optBoolean(FIELD_FOREGROUND)
+            val id = obj.optString(FIELD_ID, null)
+            val userId = obj.optString(FIELD_USER_ID, null)
+            val deviceId = obj.optString(FIELD_DEVICE_ID, null)
+            val description = obj.optString(FIELD_DESCRIPTION, null)
+            val metadata = obj.optJSONObject(FIELD_METADATA)
+            val stopped = obj.optBoolean(FIELD_STOPPED)
+            val foreground = obj.optBoolean(FIELD_FOREGROUND)
             val locationObj = obj.optJSONObject(FIELD_LOCATION)
             val locationCoordinatesObj = locationObj?.optJSONArray(FIELD_COORDINATES)
             val location = Location("RadarSDK").apply {

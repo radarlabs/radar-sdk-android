@@ -44,9 +44,9 @@ class RadarChain(
                 return null
             }
 
-            val slug = obj.optString(FIELD_SLUG)
-            val name = obj.optString(FIELD_NAME)
-            val externalId: String? = obj.optString(FIELD_EXTERNAL_ID)
+            val slug = obj.optString(FIELD_SLUG, null)
+            val name = obj.optString(FIELD_NAME, null)
+            val externalId: String? = obj.optString(FIELD_EXTERNAL_ID, null)
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
 
             return RadarChain(

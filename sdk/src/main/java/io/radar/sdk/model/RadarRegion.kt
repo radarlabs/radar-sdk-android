@@ -48,11 +48,11 @@ class RadarRegion(
                 return null
             }
 
-            val id = obj.optString(FIELD_ID)
-            val name = obj.optString(FIELD_NAME)
-            val code = obj.optString(FIELD_CODE)
-            val type = obj.optString(FIELD_TYPE)
-            val flag = obj.optString(FIELD_FLAG)
+            val id = obj.optString(FIELD_ID, null)
+            val name = obj.optString(FIELD_NAME, null)
+            val code = obj.optString(FIELD_CODE, null)
+            val type = obj.optString(FIELD_TYPE, null)
+            val flag = obj.optString(FIELD_FLAG, null)
 
             return RadarRegion(id, name, code, type, flag)
         }

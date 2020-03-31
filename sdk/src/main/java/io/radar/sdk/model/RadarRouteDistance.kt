@@ -28,7 +28,7 @@ class RadarRouteDistance(
             }
 
             val value = obj.optDouble(FIELD_VALUE)
-            val text = obj.optString(FIELD_TEXT)
+            val text = obj.optString(FIELD_TEXT, null)
 
             return RadarRouteDistance(value, text)
         }
@@ -37,7 +37,7 @@ class RadarRouteDistance(
     fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_VALUE, this.value)
-        obj.putOpt(FIELD_TEXT, this.value)
+        obj.putOpt(FIELD_TEXT, this.text)
         return obj
     }
 

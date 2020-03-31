@@ -62,10 +62,10 @@ class RadarGeofence(
                 return null
             }
 
-            val id = obj.optString(FIELD_ID)
-            val description = obj.optString(FIELD_DESCRIPTION)
-            val tag: String? = obj.optString(FIELD_TAG)
-            val externalId: String? = obj.optString(FIELD_EXTERNAL_ID)
+            val id = obj.optString(FIELD_ID, null)
+            val description = obj.optString(FIELD_DESCRIPTION, null)
+            val tag: String? = obj.optString(FIELD_TAG, null)
+            val externalId: String? = obj.optString(FIELD_EXTERNAL_ID, null)
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
             val geometry = when (obj.optString(FIELD_TYPE)) {
                 TYPE_CIRCLE -> {
