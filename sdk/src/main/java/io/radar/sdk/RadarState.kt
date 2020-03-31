@@ -27,14 +27,6 @@ internal object RadarState {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
     }
 
-    internal fun getStarted(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_STARTED, false)
-    }
-
-    internal fun setStarted(context: Context, started: Boolean) {
-        getSharedPreferences(context).edit { putBoolean(KEY_STARTED, started) }
-    }
-
     internal fun getLastMovedLocation(context: Context): Location? {
         val lastMovedLocationLatitude = getSharedPreferences(context).getFloat(KEY_LAST_MOVED_LOCATION_LATITUDE, 0f)
         val lastMovedLocationLongitude = getSharedPreferences(context).getFloat(KEY_LAST_MOVED_LOCATION_LONGITUDE, 0f)

@@ -118,6 +118,9 @@ class RadarPlace(
     }
 
     fun toJson(): JSONObject {
+        val categoriesArr = JSONArray()
+        categories.forEach { category -> categoriesArr.put(category) }
+
         val obj = JSONObject()
         obj.putOpt(FIELD_ID, this._id)
         obj.putOpt(FIELD_NAME, this.name)
