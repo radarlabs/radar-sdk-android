@@ -913,7 +913,7 @@ object Radar {
      * Gets the device's current location, then searches for points near that location, sorted by distance.
      *
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
-     * @param[tags] An array of tags to filter. See [](TODO: doc link)
+     * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/points)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
