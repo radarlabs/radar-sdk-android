@@ -17,9 +17,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        if (Build.VERSION.SDK_INT >= 23) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val requestCode = 0
-            if (Build.VERSION.SDK_INT >= 29) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION), requestCode)
             } else {
                 ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), requestCode)
@@ -28,6 +28,10 @@ class MainActivity : AppCompatActivity() {
 
         Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000")
         Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
+
+        Radar.getLocation { status, location, stopped ->
+            Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
+        }
 
         Radar.trackOnce { status, location, events, user ->
             Log.v("example", "Track once: status = ${status}; location = $location; events = $events; user = $user")
