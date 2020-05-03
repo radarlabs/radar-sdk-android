@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.os.Build
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
@@ -1516,13 +1517,17 @@ object Radar {
     @JvmStatic
     fun jsonForLocation(location: Location): JSONObject {
         val obj = JSONObject()
-        obj.put("latitude", location.latitude)
-        obj.put("longitude", location.longitude)
-        obj.put("accuracy", location.accuracy)
-        obj.put("speed", location.speed)
-        obj.put("speedAccuracy", location.speedAccuracyMetersPerSecond)
-        obj.put("course", location.bearing)
-        obj.put("courseAccuracy", location.bearingAccuracyDegrees)
+        obj.putOpt("latitude", location.latitude)
+        obj.putOpt("longitude", location.longitude)
+        obj.putOpt("accuracy", location.accuracy)
+        obj.putOpt("altitude", location.altitude)
+        obj.putOpt("speed", location.speed)
+        obj.putOpt("course", location.bearing)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            obj.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
+            obj.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
+            obj.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
+        }
         return obj
     }
 
