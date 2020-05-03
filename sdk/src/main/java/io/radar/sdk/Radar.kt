@@ -1517,16 +1517,16 @@ object Radar {
     @JvmStatic
     fun jsonForLocation(location: Location): JSONObject {
         val obj = JSONObject()
-        obj.putOpt("latitude", location.latitude)
-        obj.putOpt("longitude", location.longitude)
-        obj.putOpt("accuracy", location.accuracy)
-        obj.putOpt("altitude", location.altitude)
-        obj.putOpt("speed", location.speed)
-        obj.putOpt("course", location.bearing)
+        obj.put("latitude", location.latitude)
+        obj.put("longitude", location.longitude)
+        obj.put("accuracy", location.accuracy)
+        obj.put("altitude", location.altitude)
+        obj.put("speed", location.speed)
+        obj.put("course", location.bearing)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            obj.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
-            obj.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
-            obj.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
+            obj.put("verticalAccuracy", location.verticalAccuracyMeters)
+            obj.put("speedAccuracy", location.speedAccuracyMetersPerSecond)
+            obj.put("courseAccuracy", location.bearingAccuracyDegrees)
         }
         return obj
     }
