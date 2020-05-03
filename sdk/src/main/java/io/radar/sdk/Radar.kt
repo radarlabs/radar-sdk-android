@@ -1519,6 +1519,10 @@ object Radar {
         obj.put("latitude", location.latitude)
         obj.put("longitude", location.longitude)
         obj.put("accuracy", location.accuracy)
+        obj.put("speed", location.speed)
+        obj.put("speedAccuracy", location.speedAccuracyMetersPerSecond)
+        obj.put("course", location.bearing)
+        obj.put("courseAccuracy", location.bearingAccuracyDegrees)
         return obj
     }
 
