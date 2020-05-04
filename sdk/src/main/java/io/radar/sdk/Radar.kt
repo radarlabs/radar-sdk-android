@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.os.Build
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
@@ -1519,6 +1520,14 @@ object Radar {
         obj.put("latitude", location.latitude)
         obj.put("longitude", location.longitude)
         obj.put("accuracy", location.accuracy)
+        obj.put("altitude", location.altitude)
+        obj.put("speed", location.speed)
+        obj.put("course", location.bearing)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            obj.put("verticalAccuracy", location.verticalAccuracyMeters)
+            obj.put("speedAccuracy", location.speedAccuracyMetersPerSecond)
+            obj.put("courseAccuracy", location.bearingAccuracyDegrees)
+        }
         return obj
     }
 

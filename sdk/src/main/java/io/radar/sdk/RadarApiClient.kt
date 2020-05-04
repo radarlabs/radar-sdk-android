@@ -123,6 +123,13 @@ internal class RadarApiClient(
             accuracy = 1F
         }
         params.putOpt("accuracy", accuracy)
+        params.putOpt("speed", location.speed)
+        params.putOpt("course", location.bearing)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            params.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
+            params.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
+            params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
+        }
         val foreground = RadarActivityLifecycleCallbacks.foreground
         if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
