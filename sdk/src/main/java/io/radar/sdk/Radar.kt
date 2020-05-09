@@ -584,8 +584,9 @@ object Radar {
      * @param[origin] The origin.
      * @param[destination] The destination.
      * @param[mode] The travel mode.
-     * @param[steps] The number of mock location updates.
-     * @param[interval] The interval in seconds between each mock location update.
+     * @param[points] The number of mock location updates.
+     * @param[interval] The interval in seconds between each mock location update. A number between 5 and 60.
+     * @param[callback] An optional callback.
      */
     @JvmStatic
     fun mockTracking(
@@ -593,7 +594,8 @@ object Radar {
         destination: Location,
         mode: RadarRouteMode,
         points: Int,
-        interval: Int
+        interval: Int,
+        callback: RadarTrackCallback?
     ) {
         if (!initialized) {
             return
@@ -606,7 +608,16 @@ object Radar {
                 coordinates: Array<RadarCoordinate>?
             ) {
                 if (status != RadarStatus.SUCCESS || coordinates == null) {
+                    callback?.onComplete(status)
+
                     return
+                }
+
+                var intervalLimit = interval
+                if (interval < 5) {
+                    intervalLimit = 5
+                } else if (interval > 60) {
+                    intervalLimit = 60
                 }
 
                 coordinates.forEachIndexed { i, coordinate ->
@@ -620,11 +631,37 @@ object Radar {
 
                         apiClient.track(location, stopped, RadarLocationSource.MOCK_LOCATION, false, object : RadarApiClient.RadarTrackApiCallback {
                             override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?) {
-
+                                callback?.onComplete(status, location, events, user)
                             }
                         })
-                    }, interval * i * 1000L)
+                    }, intervalLimit * i * 1000L)
                 }
+            }
+        })
+    }
+
+    /**
+     * Mocks tracking the user's location from an origin to a destination.
+     *
+     * @param[origin] The origin.
+     * @param[destination] The destination.
+     * @param[mode] The travel mode.
+     * @param[points] The number of mock location updates.
+     * @param[interval] The interval in seconds between each mock location update. A number between 5 and 60.
+     * @param[block] A block callback.
+     */
+    @JvmStatic
+    fun mockTracking(
+        origin: Location,
+        destination: Location,
+        mode: RadarRouteMode,
+        points: Int,
+        interval: Int,
+        block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit
+    ) {
+        mockTracking(origin, destination, mode, points, interval, object : RadarTrackCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+                block(status, location, events, user)
             }
         })
     }
