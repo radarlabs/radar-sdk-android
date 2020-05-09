@@ -712,7 +712,7 @@ internal class RadarApiClient(
         } else if (mode == Radar.RadarRouteMode.BIKE) {
             modeStr = "bike"
         }
-        queryParams.append("&mode=${mode}")
+        queryParams.append("&modes=${modeStr}")
         queryParams.append("&points=${points}")
 
         val host = RadarSettings.getHost(context)
@@ -731,7 +731,7 @@ internal class RadarApiClient(
                     return
                 }
 
-                val coordinates = res.optJSONArray("points")?.let { pointsObj ->
+                val coordinates = res.optJSONObject("mock")?.optJSONArray("points")?.let { pointsObj ->
                     RadarCoordinate.fromJson(pointsObj)
                 }
                 if (coordinates != null) {
