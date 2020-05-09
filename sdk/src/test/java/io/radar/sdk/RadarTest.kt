@@ -548,6 +548,23 @@ class RadarTest {
     }
 
     @Test
+    fun test_Radar_mockTracking() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/route_mock.json")
+
+        val origin = Location("RadarSDK")
+        origin.latitude = 40.783826
+        origin.longitude = -73.975363
+
+        val destination = Location("RadarSDK")
+        destination.latitude = 40.70390
+        destination.longitude = -73.98670
+
+        Radar.mockTracking(origin, destination, Radar.RadarRouteMode.CAR, 10, 2)
+    }
+
+    @Test
     fun test_Radar_acceptEventId() {
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/events_verification.json")
@@ -1218,8 +1235,8 @@ class RadarTest {
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/route_distance.json")
 
         val destination = Location("RadarSDK")
-        destination.latitude = 40.783826
-        destination.longitude = -73.975363
+        destination.latitude = 40.70390
+        destination.longitude = -73.98670
 
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
