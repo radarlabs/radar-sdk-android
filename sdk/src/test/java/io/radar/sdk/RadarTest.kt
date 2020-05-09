@@ -362,8 +362,8 @@ class RadarTest {
     fun test_Radar_getLocation_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         locationClientMock.mockLocation = mockLocation
@@ -425,8 +425,8 @@ class RadarTest {
     fun test_Radar_trackOnce_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         locationClientMock.mockLocation = mockLocation
@@ -459,8 +459,8 @@ class RadarTest {
     fun test_Radar_trackOnce_location_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
@@ -554,8 +554,8 @@ class RadarTest {
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/route_mock.json")
 
         val origin = Location("RadarSDK")
-        origin.latitude = 40.783826
-        origin.longitude = -73.975363
+        origin.latitude = 40.78382
+        origin.longitude = -73.97536
 
         val destination = Location("RadarSDK")
         destination.latitude = 40.70390
@@ -634,8 +634,8 @@ class RadarTest {
     fun test_Radar_getContext_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         locationClientMock.mockLocation = mockLocation
@@ -665,8 +665,8 @@ class RadarTest {
     fun test_Radar_getContext_location_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
@@ -732,8 +732,8 @@ class RadarTest {
     fun test_Radar_searchPlaces_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         locationClientMock.mockLocation = mockLocation
@@ -763,8 +763,8 @@ class RadarTest {
     fun test_Radar_searchPlaces_location_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
@@ -830,8 +830,8 @@ class RadarTest {
     fun test_Radar_searchGeofences_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         locationClientMock.mockLocation = mockLocation
@@ -861,8 +861,8 @@ class RadarTest {
     fun test_Radar_searchGeofences_location_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
@@ -992,8 +992,8 @@ class RadarTest {
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete.json")
 
         val near = Location("RadarSDK")
-        near.latitude = 40.783826
-        near.longitude = -73.975363
+        near.latitude = 40.78382
+        near.longitude = -73.97536
 
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
@@ -1107,8 +1107,8 @@ class RadarTest {
     fun test_Radar_reverseGeocode_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         locationClientMock.mockLocation = mockLocation
@@ -1137,8 +1137,8 @@ class RadarTest {
         apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_SERVER
 
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
 
         val latch = CountDownLatch(1)
 
@@ -1164,8 +1164,8 @@ class RadarTest {
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/geocode.json")
 
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
 
         val latch = CountDownLatch(1)
 
@@ -1233,8 +1233,8 @@ class RadarTest {
     fun test_Radar_getDistance_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
         val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.783826
-        mockLocation.longitude = -73.975363
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         locationClientMock.mockLocation = mockLocation

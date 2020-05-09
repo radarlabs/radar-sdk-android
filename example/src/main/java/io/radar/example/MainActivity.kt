@@ -76,12 +76,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         val origin = Location("example")
-        origin.latitude = 40.70390
-        origin.longitude = -73.98670
+        origin.latitude = 40.78382
+        origin.longitude = -73.97536
 
         val destination = Location("example")
-        destination.latitude = 40.78382
-        destination.longitude = -73.97536
+        destination.latitude = 40.70390
+        destination.longitude = -73.98670
 
         Radar.autocomplete(
             "brooklyn roasting",

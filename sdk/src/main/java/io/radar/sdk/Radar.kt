@@ -8,6 +8,7 @@ import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.Handler
+import android.os.Looper
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
@@ -620,12 +621,14 @@ object Radar {
                     intervalLimit = 60
                 }
 
+                val handler = Handler(Looper.getMainLooper())
+
                 coordinates.forEachIndexed { i, coordinate ->
-                    Handler().postDelayed({
+                    handler.postDelayed({
                         val location = Location("RadarSDK").apply {
                             latitude = coordinate.latitude
                             longitude = coordinate.longitude
-                            accuracy = 5F
+                            accuracy = 5f
                         }
                         val stopped = (i == 0) || (i == coordinates.size - 1)
 

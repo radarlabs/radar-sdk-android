@@ -730,8 +730,8 @@ internal class RadarApiClient(
                     return
                 }
 
-                val coordinates = res.optJSONObject("mock")?.optJSONArray("points")?.let { pointsObj ->
-                    RadarCoordinate.fromJson(pointsObj)
+                val coordinates = res.optJSONObject("mock")?.optJSONArray("points")?.let { pointsArr ->
+                    RadarCoordinate.fromJson(pointsArr)
                 }
                 if (coordinates != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, coordinates)
