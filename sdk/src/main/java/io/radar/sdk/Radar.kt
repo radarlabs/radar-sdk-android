@@ -585,7 +585,7 @@ object Radar {
      * @param[destination] The destination.
      * @param[mode] The travel mode.
      * @param[points] The number of mock location updates.
-     * @param[interval] The interval in seconds between each mock location update. A number between 5 and 60.
+     * @param[interval] The interval in seconds between each mock location update. A number between 2 and 60.
      * @param[callback] An optional callback.
      */
     @JvmStatic
@@ -614,8 +614,8 @@ object Radar {
                 }
 
                 var intervalLimit = interval
-                if (interval < 5) {
-                    intervalLimit = 5
+                if (interval < 2) {
+                    intervalLimit = 2
                 } else if (interval > 60) {
                     intervalLimit = 60
                 }
@@ -647,7 +647,7 @@ object Radar {
      * @param[destination] The destination.
      * @param[mode] The travel mode.
      * @param[points] The number of mock location updates.
-     * @param[interval] The interval in seconds between each mock location update. A number between 5 and 60.
+     * @param[interval] The interval in seconds between each mock location update. A number between 2 and 60.
      * @param[block] A block callback.
      */
     @JvmStatic
