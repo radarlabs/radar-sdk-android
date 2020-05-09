@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
+import android.os.Handler
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
@@ -232,6 +233,8 @@ object Radar {
         GEOFENCE_DWELL,
         /** Geofence exit */
         GEOFENCE_EXIT,
+        /** Mock */
+        MOCK_LOCATION,
         /** Unknown */
         UNKNOWN
     }
@@ -573,6 +576,57 @@ object Radar {
         }
 
         locationManager.startTracking(options)
+    }
+
+    /**
+     * Mocks tracking the user's location from an origin to a destination.
+     *
+     * @param[origin] The origin.
+     * @param[destination] The destination.
+     * @param[mode] The travel mode.
+     * @param[steps] The number of mock location updates.
+     * @param[interval] The interval in seconds between each mock location update.
+     */
+    @JvmStatic
+    fun mockTracking(
+        origin: Location,
+        destination: Location,
+        mode: RadarRouteMode,
+        points: Int,
+        interval: Int
+    ) {
+        if (!initialized) {
+            return
+        }
+
+        apiClient.getMock(origin, destination, mode, points, object : RadarApiClient.RadarMockApiCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                coordinates: Array<RadarCoordinate>?
+            ) {
+                if (status != RadarStatus.SUCCESS || coordinates == null) {
+                    return
+                }
+
+                coordinates.forEachIndexed { i, coordinate ->
+                    Handler().postDelayed({
+                        val location = Location("RadarSDK").apply {
+                            latitude = coordinate.latitude
+                            longitude = coordinate.longitude
+                            accuracy = 5F
+                        }
+                        val stopped = (i == 0) || (i == coordinates.size - 1)
+
+                        apiClient.track(location, stopped, RadarLocationSource.MOCK_LOCATION, false, object : RadarApiClient.RadarTrackApiCallback {
+                            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?) {
+
+                            }
+                        })
+                    }, interval * i * 1000L)
+                }
+            }
+        })
     }
 
     /**
@@ -1291,7 +1345,7 @@ object Radar {
                     return
                 }
 
-                apiClient.getDistance(location, destination, modes, units, object : RadarApiClient.RadarRouteApiCallback {
+                apiClient.getDistance(location, destination, modes, units, object : RadarApiClient.RadarDistanceApiCallback {
                     override fun onComplete(
                         status: RadarStatus,
                         res: JSONObject?,
@@ -1353,7 +1407,7 @@ object Radar {
             return
         }
 
-        apiClient.getDistance(origin, destination, modes, units, object : RadarApiClient.RadarRouteApiCallback {
+        apiClient.getDistance(origin, destination, modes, units, object : RadarApiClient.RadarDistanceApiCallback {
             override fun onComplete(
                 status: RadarStatus,
                 res: JSONObject?,

@@ -41,6 +41,8 @@ class MainActivity : AppCompatActivity() {
         options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.ALL
         Radar.startTracking(options)
 
+        Radar.mockTracking(origin, destination, Radar.RadarRouteMode.CAR, 10, 1)
+
         Radar.getContext { status, location, context ->
             Log.v("example", "Context: status = $status; location = $location; context?.geofences = ${context?.geofences}; context?.place = ${context?.place}; context?.country = ${context?.country}")
         }
@@ -99,6 +101,8 @@ class MainActivity : AppCompatActivity() {
         ) { status, routes ->
             Log.v("example", "Distance: status = $status; routes.car.distance.value = ${routes?.car?.distance?.value}; routes.car.distance.text = ${routes?.car?.distance?.text}; routes.car.duration.value = ${routes?.car?.duration?.value}; routes.car.duration.text = ${routes?.car?.duration?.text}")
         }
+
+        Radar.mockTracking(origin, destination, Radar.RadarRouteMode.CAR, 10, 1)
     }
 
 }
