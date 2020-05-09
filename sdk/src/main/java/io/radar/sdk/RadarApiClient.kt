@@ -102,7 +102,7 @@ internal class RadarApiClient(
         })
     }
 
-    internal fun track(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean, callback: RadarTrackApiCallback? = null) {
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -134,7 +134,6 @@ internal class RadarApiClient(
             params.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
             params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
         }
-        val foreground = RadarActivityLifecycleCallbacks.foreground
         if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
             params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
