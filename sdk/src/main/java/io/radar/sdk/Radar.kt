@@ -268,9 +268,7 @@ object Radar {
         /** Bike */
         BIKE,
         /** Car */
-        CAR,
-        /** Transit */
-        TRANSIT
+        CAR
     }
 
     /**
@@ -642,6 +640,48 @@ object Radar {
         }
 
         apiClient.verifyEvent(eventId, RadarEventVerification.REJECT)
+    }
+
+    /**
+     * Returns the current trip options.
+     *
+     * @return The current trip options.
+     */
+    @JvmStatic
+    fun getTripOptions(): RadarTripOptions? {
+        if (!initialized) {
+            return null
+        }
+
+        return RadarSettings.getTripOptions(context)
+    }
+
+    /**
+     * Starts a trip.
+     *
+     * @param[options] Configurable trip options.
+     */
+    @JvmStatic
+    fun startTrip(options: RadarTripOptions) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setTripOptions(context, options)
+        locationManager.getLocation(null)
+    }
+
+    /**
+     * Stops a trip.
+     */
+    @JvmStatic
+    fun stopTrip() {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setTripOptions(context, null)
+        locationManager.getLocation(null)
     }
 
     /**
@@ -1504,6 +1544,22 @@ object Radar {
             RadarLocationSource.GEOFENCE_DWELL -> "GEOFENCE_DWELL"
             RadarLocationSource.GEOFENCE_EXIT -> "GEOFENCE_EXIT"
             else -> "UNKNOWN"
+        }
+    }
+
+    /**
+     * Returns a display string for a travel mode value.
+     *
+     * @param[mode] A travel mode value.
+     *
+     * @return A display string for the travel mode value.
+     */
+    @JvmStatic
+    fun stringForMode(mode: RadarRouteMode): String? {
+        return when (mode) {
+            RadarRouteMode.FOOT -> "foot"
+            RadarRouteMode.BIKE -> "bike"
+            RadarRouteMode.CAR -> "car"
         }
     }
 

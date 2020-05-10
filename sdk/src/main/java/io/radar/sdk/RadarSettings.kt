@@ -17,6 +17,7 @@ internal object RadarSettings {
     private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
     private const val KEY_TRACKING = "background_tracking"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
+    private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
     private const val KEY_CONFIG = "config"
     private const val KEY_HOST = "host"
@@ -102,6 +103,18 @@ internal object RadarSettings {
         val optionsObj = options.toJson()
         val optionsJson = optionsObj.toString()
         getSharedPreferences(context).edit { putString(KEY_TRACKING_OPTIONS, optionsJson) }
+    }
+
+    internal fun getTripOptions(context: Context): RadarTripOptions? {
+        val optionsJson = getSharedPreferences(context).getString(KEY_TRIP_OPTIONS, null) ?: return null
+        val optionsObj = JSONObject(optionsJson)
+        return RadarTripOptions.fromJson(optionsObj)
+    }
+
+    internal fun setTripOptions(context: Context, options: RadarTripOptions?) {
+        val optionsObj = options?.toJson()
+        val optionsJson = optionsObj?.toString()
+        getSharedPreferences(context).edit { putString(KEY_TRIP_OPTIONS, optionsJson) }
     }
 
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {

@@ -261,11 +261,6 @@ class RadarTest {
         assertNotEquals(routes?.car?.distance?.value, 0)
         assertNotNull(routes?.car?.duration?.text)
         assertNotEquals(routes?.car?.duration?.value, 0)
-        assertNotNull(routes?.transit)
-        assertNotNull(routes?.transit?.distance?.text)
-        assertNotEquals(routes?.transit?.distance?.value, 0)
-        assertNotNull(routes?.transit?.duration?.text)
-        assertNotEquals(routes?.transit?.duration?.value, 0)
     }
 
     @Before
@@ -568,6 +563,23 @@ class RadarTest {
         Radar.rejectEvent("eventId")
     }
 
+    @Test
+    fun test_Radar_startTrip() {
+        val options = RadarTripOptions("tripExternalId")
+        options.metadata = JSONObject(mapOf("foo" to "bar", "baz" to true, "qux" to 1))
+        options.destinationGeofenceTag = "tripDestinationGeofenceTag"
+        options.destinationGeofenceExternalId = "tripDestinationGeofenceExternalId"
+        options.mode = Radar.RadarRouteMode.FOOT
+
+        Radar.startTrip(options)
+        assertEquals(options, Radar.getTripOptions())
+    }
+
+    @Test
+    fun test_Radar_stopTrip() {
+        Radar.stopTrip()
+        assertNull(Radar.getTripOptions())
+    }
 
     @Test
     fun test_Radar_getContext_errorPermissions() {
