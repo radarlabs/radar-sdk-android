@@ -114,6 +114,7 @@ internal object RadarSettings {
     internal fun setTripOptions(context: Context, options: RadarTripOptions?) {
         val optionsObj = options?.toJson()
         val optionsJson = optionsObj?.toString()
+        print(optionsJson)
         getSharedPreferences(context).edit { putString(KEY_TRIP_OPTIONS, optionsJson) }
     }
 

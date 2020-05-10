@@ -69,4 +69,22 @@ data class RadarTripOptions(
         return obj
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        if (this.javaClass != other?.javaClass) {
+            return false
+        }
+
+        other as RadarTripOptions
+
+        return this.externalId == other.externalId &&
+                this.metadata?.toString() == other.metadata?.toString() &&
+                this.destinationGeofenceTag == other.destinationGeofenceTag &&
+                this.destinationGeofenceExternalId == other.destinationGeofenceExternalId &&
+                this.mode == other.mode
+    }
+
 }
