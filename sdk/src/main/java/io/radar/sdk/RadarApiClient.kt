@@ -158,6 +158,16 @@ internal class RadarApiClient(
             val mocked = location.isFromMockProvider
             params.putOpt("mocked", mocked)
         }
+        val tripOptions = RadarSettings.getTripOptions(context)
+        if (tripOptions != null) {
+            params.putOpt("tripExternalId", tripOptions.externalId)
+            params.putOpt("tripMetadata", tripOptions.metadata)
+            if (tripOptions.destinationGeofenceTag != null) {
+                params.putOpt("tripDestinationGeofenceTag", tripOptions.destinationGeofenceTag)
+                params.putOpt("tripDestinationGeofenceExternalId", tripOptions.destinationGeofenceExternalId)
+                params.putOpt("tripMode", Radar.stringForMode(tripOptions.mode))
+            }
+        }
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -647,9 +657,6 @@ internal class RadarApiClient(
         }
         if (modes.contains(Radar.RadarRouteMode.CAR)) {
             modesList.add("car")
-        }
-        if (modes.contains(Radar.RadarRouteMode.TRANSIT)) {
-            modesList.add("transit")
         }
         queryParams.append("&modes=${modesList.joinToString(",")}")
         if (units == Radar.RadarRouteUnits.METRIC) {

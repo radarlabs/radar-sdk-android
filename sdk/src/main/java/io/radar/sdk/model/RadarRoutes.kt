@@ -26,12 +26,7 @@ class RadarRoutes(
     /**
      * The route by car between the origin and destination. May be `null` if mode not specified or route unavailable.
      */
-    val car: RadarRoute?,
-
-    /**
-     * The route by transit between the origin and destination. May be `null` if mode not specified or route unavailable.
-     */
-    val transit: RadarRoute?
+    val car: RadarRoute?
 ) {
 
     internal companion object {
@@ -39,7 +34,6 @@ class RadarRoutes(
         private const val FIELD_FOOT = "foot"
         private const val FIELD_BIKE = "bike"
         private const val FIELD_CAR = "car"
-        private const val FIELD_TRANSIT = "transit"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarRoutes? {
@@ -51,9 +45,8 @@ class RadarRoutes(
             val foot = RadarRoute.fromJson(obj.optJSONObject(FIELD_FOOT))
             val bike = RadarRoute.fromJson(obj.optJSONObject(FIELD_BIKE))
             val car = RadarRoute.fromJson(obj.optJSONObject(FIELD_CAR))
-            val transit = RadarRoute.fromJson(obj.optJSONObject(FIELD_TRANSIT))
 
-            return RadarRoutes(geodesic, foot, bike, car, transit)
+            return RadarRoutes(geodesic, foot, bike, car)
         }
     }
 
@@ -63,7 +56,6 @@ class RadarRoutes(
         obj.putOpt(FIELD_FOOT, this.foot?.toJson())
         obj.putOpt(FIELD_BIKE, this.bike?.toJson())
         obj.putOpt(FIELD_CAR, this.car?.toJson())
-        obj.putOpt(FIELD_TRANSIT, this.transit?.toJson())
         return obj
     }
 
