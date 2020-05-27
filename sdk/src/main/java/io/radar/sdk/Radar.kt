@@ -586,7 +586,7 @@ object Radar {
      * @param[destination] The destination.
      * @param[mode] The travel mode.
      * @param[steps] The number of mock location updates.
-     * @param[interval] The interval in seconds between each mock location update. A number between 2 and 60.
+     * @param[interval] The interval in seconds between each mock location update. A number between 1 and 60.
      * @param[callback] An optional callback.
      */
     @JvmStatic
