@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity() {
             destination,
             Radar.RadarRouteMode.CAR,
             10,
-            2
+            1
         ) { status, location, events, user ->
             Log.v("example", "Mock track: status = ${status}; location = $location; events = $events; user = $user")
         }

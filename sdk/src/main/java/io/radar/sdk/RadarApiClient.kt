@@ -50,10 +50,6 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null, routes: RadarRoutes? = null)
     }
 
-    interface RadarMockApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, coordinates: Array<RadarCoordinate>? = null)
-    }
-
     private fun headers(publishableKey: String): Map<String, String> {
         return mapOf(
             "Authorization" to publishableKey,
@@ -626,6 +622,7 @@ internal class RadarApiClient(
         destination: Location,
         modes: EnumSet<Radar.RadarRouteMode>,
         units: Radar.RadarRouteUnits,
+        geometryPoints: Int,
         callback: RadarDistanceApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -648,15 +645,16 @@ internal class RadarApiClient(
         if (modes.contains(Radar.RadarRouteMode.CAR)) {
             modesList.add("car")
         }
-        if (modes.contains(Radar.RadarRouteMode.TRANSIT)) {
-            modesList.add("transit")
-        }
         queryParams.append("&modes=${modesList.joinToString(",")}")
         if (units == Radar.RadarRouteUnits.METRIC) {
             queryParams.append("&units=metric")
         } else {
             queryParams.append("&units=imperial")
         }
+        if (geometryPoints > 1) {
+            queryParams.append("&geometryPoints=${geometryPoints}")
+        }
+        queryParams.append("&geometry=linestring")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -679,62 +677,6 @@ internal class RadarApiClient(
                 }
                 if (routes != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, routes)
-
-                    return
-                }
-
-                callback.onComplete(RadarStatus.ERROR_SERVER)
-            }
-        })
-    }
-
-    internal fun getMock(
-        origin: Location,
-        destination: Location,
-        mode: Radar.RadarRouteMode,
-        points: Int,
-        callback: RadarMockApiCallback
-    ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
-        if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
-            return
-        }
-
-        val queryParams = StringBuilder()
-        queryParams.append("origin=${origin.latitude},${origin.longitude}")
-        queryParams.append("&destination=${destination.latitude},${destination.longitude}")
-        var modeStr = "car"
-        if (mode == Radar.RadarRouteMode.FOOT) {
-            modeStr = "foot"
-        } else if (mode == Radar.RadarRouteMode.BIKE) {
-            modeStr = "bike"
-        }
-        queryParams.append("&modes=${modeStr}")
-        queryParams.append("&points=${points}")
-
-        val host = RadarSettings.getHost(context)
-        val uri = Uri.parse(host).buildUpon()
-            .appendEncodedPath("v1/route/mock?${queryParams}")
-            .build()
-        val url = URL(uri.toString())
-
-        val headers = headers(publishableKey)
-
-        apiHelper.request(context, "GET", url, headers, null, object : RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
-
-                    return
-                }
-
-                val coordinates = res.optJSONObject("mock")?.optJSONArray("points")?.let { pointsArr ->
-                    RadarCoordinate.fromJson(pointsArr)
-                }
-                if (coordinates != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, coordinates)
 
                     return
                 }

@@ -261,11 +261,6 @@ class RadarTest {
         assertNotEquals(routes?.car?.distance?.value, 0)
         assertNotNull(routes?.car?.duration?.text)
         assertNotEquals(routes?.car?.duration?.value, 0)
-        assertNotNull(routes?.transit)
-        assertNotNull(routes?.transit?.distance?.text)
-        assertNotEquals(routes?.transit?.distance?.value, 0)
-        assertNotNull(routes?.transit?.duration?.text)
-        assertNotEquals(routes?.transit?.duration?.value, 0)
     }
 
     @Before

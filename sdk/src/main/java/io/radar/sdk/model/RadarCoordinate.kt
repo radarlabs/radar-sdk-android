@@ -12,6 +12,7 @@ class RadarCoordinate(
 ) {
 
     internal companion object {
+        private const val FIELD_TYPE = "type"
         private const val FIELD_COORDINATES = "coordinates"
 
         @JvmStatic
@@ -41,11 +42,11 @@ class RadarCoordinate(
 
     fun toJson(): JSONObject {
         val obj = JSONObject()
-        obj.putOpt("type", "Point")
+        obj.putOpt(FIELD_TYPE, "Point")
         val coordinatesObj = JSONArray()
         coordinatesObj.put(this.longitude)
         coordinatesObj.put(this.latitude)
-        obj.putOpt("coordinates", coordinatesObj)
+        obj.putOpt(FIELD_COORDINATES, coordinatesObj)
         return obj
     }
 

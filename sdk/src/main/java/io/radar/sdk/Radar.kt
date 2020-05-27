@@ -594,7 +594,7 @@ object Radar {
         origin: Location,
         destination: Location,
         mode: RadarRouteMode,
-        points: Int,
+        steps: Int,
         interval: Int,
         callback: RadarTrackCallback?
     ) {
@@ -602,29 +602,37 @@ object Radar {
             return
         }
 
-        apiClient.getMock(origin, destination, mode, points, object : RadarApiClient.RadarMockApiCallback {
+        apiClient.getDistance(origin, destination, EnumSet.of(mode), RadarRouteUnits.METRIC, steps, object : RadarApiClient.RadarDistanceApiCallback {
             override fun onComplete(
                 status: RadarStatus,
                 res: JSONObject?,
-                coordinates: Array<RadarCoordinate>?
+                routes: RadarRoutes?
             ) {
-                if (status != RadarStatus.SUCCESS || coordinates == null) {
+                val coordinates = when (mode) {
+                    RadarRouteMode.FOOT -> routes?.foot?.geometry?.coordinates
+                    RadarRouteMode.BIKE -> routes?.bike?.geometry?.coordinates
+                    else -> routes?.car?.geometry?.coordinates
+                }
+
+                if (coordinates == null) {
                     callback?.onComplete(status)
 
                     return
                 }
 
                 var intervalLimit = interval
-                if (interval < 2) {
-                    intervalLimit = 2
+                if (interval < 1) {
+                    intervalLimit = 1
                 } else if (interval > 60) {
                     intervalLimit = 60
                 }
 
                 val handler = Handler(Looper.getMainLooper())
-
-                coordinates.forEachIndexed { i, coordinate ->
-                    handler.postDelayed({
+                var i = 0
+                val track = object : Runnable {
+                    override fun run() {
+                        val track = this
+                        val coordinate = coordinates[i]
                         val location = Location("RadarSDK").apply {
                             latitude = coordinate.latitude
                             longitude = coordinate.longitude
@@ -635,10 +643,16 @@ object Radar {
                         apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, object : RadarApiClient.RadarTrackApiCallback {
                             override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?) {
                                 callback?.onComplete(status, location, events, user)
+
+                                i++
+
+                                handler.postDelayed(track, intervalLimit * 1000L)
                             }
                         })
-                    }, intervalLimit * i * 1000L)
+                    }
                 }
+
+                handler.post(track)
             }
         })
     }
@@ -1385,7 +1399,7 @@ object Radar {
                     return
                 }
 
-                apiClient.getDistance(location, destination, modes, units, object : RadarApiClient.RadarDistanceApiCallback {
+                apiClient.getDistance(location, destination, modes, units, -1, object : RadarApiClient.RadarDistanceApiCallback {
                     override fun onComplete(
                         status: RadarStatus,
                         res: JSONObject?,
@@ -1447,7 +1461,7 @@ object Radar {
             return
         }
 
-        apiClient.getDistance(origin, destination, modes, units, object : RadarApiClient.RadarDistanceApiCallback {
+        apiClient.getDistance(origin, destination, modes, units, -1, object : RadarApiClient.RadarDistanceApiCallback {
             override fun onComplete(
                 status: RadarStatus,
                 res: JSONObject?,
