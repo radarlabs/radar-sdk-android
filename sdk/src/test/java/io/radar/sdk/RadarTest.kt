@@ -557,7 +557,7 @@ class RadarTest {
         destination.longitude = -73.98670
 
         val steps = 20
-        val latch = CountDownLatch(points)
+        val latch = CountDownLatch(steps)
 
         Radar.mockTracking(origin, destination, Radar.RadarRouteMode.CAR, steps, 1) { _, _, _, _ ->
             latch.countDown()
