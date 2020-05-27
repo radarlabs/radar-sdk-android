@@ -611,7 +611,8 @@ object Radar {
                 val coordinates = when (mode) {
                     RadarRouteMode.FOOT -> routes?.foot?.geometry?.coordinates
                     RadarRouteMode.BIKE -> routes?.bike?.geometry?.coordinates
-                    else -> routes?.car?.geometry?.coordinates
+                    RadarRouteMode.CAR -> routes?.car?.geometry?.coordinates
+                    else -> null
                 }
 
                 if (coordinates == null) {
