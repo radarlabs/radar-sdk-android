@@ -546,7 +546,7 @@ class RadarTest {
     fun test_Radar_mockTracking() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
-        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/route_mock.json")
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/route_distance.json")
 
         val origin = Location("RadarSDK")
         origin.latitude = 40.78382
