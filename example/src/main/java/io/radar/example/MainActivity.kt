@@ -76,12 +76,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         val origin = Location("example")
-        origin.latitude = 40.70390
-        origin.longitude = -73.98670
+        origin.latitude = 40.78382
+        origin.longitude = -73.97536
 
         val destination = Location("example")
-        destination.latitude = 40.78382
-        destination.longitude = -73.97536
+        destination.latitude = 40.70390
+        destination.longitude = -73.98670
 
         Radar.autocomplete(
             "brooklyn roasting",
@@ -98,6 +98,16 @@ class MainActivity : AppCompatActivity() {
             Radar.RadarRouteUnits.IMPERIAL
         ) { status, routes ->
             Log.v("example", "Distance: status = $status; routes.car.distance.value = ${routes?.car?.distance?.value}; routes.car.distance.text = ${routes?.car?.distance?.text}; routes.car.duration.value = ${routes?.car?.duration?.value}; routes.car.duration.text = ${routes?.car?.duration?.text}")
+        }
+
+        Radar.mockTracking(
+            origin,
+            destination,
+            Radar.RadarRouteMode.CAR,
+            10,
+            1
+        ) { status, location, events, user ->
+            Log.v("example", "Mock track: status = ${status}; location = $location; events = $events; user = $user")
         }
     }
 

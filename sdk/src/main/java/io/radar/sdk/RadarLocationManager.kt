@@ -419,7 +419,7 @@ internal class RadarLocationManager(
     private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {
         logger.d(this.context, "Sending location | source = $source; location = $location; stopped = $stopped; replayed = $replayed")
 
-        this.apiClient.track(location, stopped, source, replayed, object : RadarTrackApiCallback {
+        this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, object : RadarTrackApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?) {
                 if (user != null) {
                     RadarSettings.setId(context, user._id)

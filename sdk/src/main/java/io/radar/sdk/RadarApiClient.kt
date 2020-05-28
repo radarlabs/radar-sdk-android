@@ -22,6 +22,10 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null, events: Array<RadarEvent>? = null, user: RadarUser? = null)
     }
 
+    interface RadarContextApiCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, context: RadarContext? = null)
+    }
+
     interface RadarSearchPlacesApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null, places: Array<RadarPlace>? = null)
     }
@@ -42,12 +46,8 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null)
     }
 
-    interface RadarRouteApiCallback {
+    interface RadarDistanceApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null, routes: RadarRoutes? = null)
-    }
-
-    interface RadarContextApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, context: RadarContext? = null)
     }
 
     private fun headers(publishableKey: String): Map<String, String> {
@@ -98,7 +98,7 @@ internal class RadarApiClient(
         })
     }
 
-    internal fun track(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean, callback: RadarTrackApiCallback? = null) {
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -130,7 +130,6 @@ internal class RadarApiClient(
             params.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
             params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
         }
-        val foreground = RadarActivityLifecycleCallbacks.foreground
         if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
             params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
@@ -623,7 +622,8 @@ internal class RadarApiClient(
         destination: Location,
         modes: EnumSet<Radar.RadarRouteMode>,
         units: Radar.RadarRouteUnits,
-        callback: RadarRouteApiCallback
+        geometryPoints: Int,
+        callback: RadarDistanceApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -645,15 +645,16 @@ internal class RadarApiClient(
         if (modes.contains(Radar.RadarRouteMode.CAR)) {
             modesList.add("car")
         }
-        if (modes.contains(Radar.RadarRouteMode.TRANSIT)) {
-            modesList.add("transit")
-        }
         queryParams.append("&modes=${modesList.joinToString(",")}")
         if (units == Radar.RadarRouteUnits.METRIC) {
             queryParams.append("&units=metric")
         } else {
             queryParams.append("&units=imperial")
         }
+        if (geometryPoints > 1) {
+            queryParams.append("&geometryPoints=${geometryPoints}")
+        }
+        queryParams.append("&geometry=linestring")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
