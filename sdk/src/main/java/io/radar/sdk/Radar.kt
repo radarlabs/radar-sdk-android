@@ -664,7 +664,7 @@ object Radar {
      * @param[origin] The origin.
      * @param[destination] The destination.
      * @param[mode] The travel mode.
-     * @param[points] The number of mock location updates.
+     * @param[steps] The number of mock location updates.
      * @param[interval] The interval in seconds between each mock location update. A number between 2 and 60.
      * @param[block] A block callback.
      */
@@ -673,11 +673,11 @@ object Radar {
         origin: Location,
         destination: Location,
         mode: RadarRouteMode,
-        points: Int,
+        steps: Int,
         interval: Int,
         block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit
     ) {
-        mockTracking(origin, destination, mode, points, interval, object : RadarTrackCallback {
+        mockTracking(origin, destination, mode, steps, interval, object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
             }
