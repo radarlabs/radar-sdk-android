@@ -643,9 +643,11 @@ object Radar {
                             override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?) {
                                 callback?.onComplete(status, location, events, user)
 
-                                i++
+                                if (i < coordinates.size - 1) {
+                                    handler.postDelayed(track, intervalLimit * 1000L)
+                                }
 
-                                handler.postDelayed(track, intervalLimit * 1000L)
+                                i++
                             }
                         })
                     }

@@ -156,13 +156,13 @@ internal class RadarApiClient(
         }
         val tripOptions = RadarSettings.getTripOptions(context)
         if (tripOptions != null) {
-            params.putOpt("tripExternalId", tripOptions.externalId)
-            params.putOpt("tripMetadata", tripOptions.metadata)
-            if (tripOptions.destinationGeofenceTag != null) {
-                params.putOpt("tripDestinationGeofenceTag", tripOptions.destinationGeofenceTag)
-                params.putOpt("tripDestinationGeofenceExternalId", tripOptions.destinationGeofenceExternalId)
-                params.putOpt("tripMode", Radar.stringForMode(tripOptions.mode))
-            }
+            val tripOptionsObj = JSONObject()
+            tripOptionsObj.putOpt("externalId", tripOptions.externalId)
+            tripOptionsObj.putOpt("metadata", tripOptions.metadata)
+            tripOptionsObj.putOpt("destinationGeofenceTag", tripOptions.destinationGeofenceTag)
+            tripOptionsObj.putOpt("destinationGeofenceExternalId", tripOptions.destinationGeofenceExternalId)
+            tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
+            params.putOpt("tripOptions", tripOptionsObj)
         }
 
         val host = RadarSettings.getHost(context)
