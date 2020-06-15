@@ -1,6 +1,7 @@
 package io.radar.sdk.model
 
 import android.location.Location
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -185,6 +186,13 @@ class RadarUser(
         obj.putOpt(FIELD_DEVICE_ID, this.deviceId)
         obj.putOpt(FIELD_DESCRIPTION, this.description)
         obj.putOpt(FIELD_METADATA, this.metadata)
+        val locationObj = JSONObject()
+        locationObj.putOpt("type", "Point")
+        val coordinatesObj = JSONArray()
+        coordinatesObj.put(this.location.longitude)
+        coordinatesObj.put(this.location.latitude)
+        locationObj.putOpt("coordinates", coordinatesObj)
+        obj.putOpt(FIELD_LOCATION, locationObj)
         obj.putOpt(FIELD_GEOFENCES, RadarGeofence.toJson(this.geofences))
         obj.putOpt(FIELD_PLACE, this.place?.toJson())
         obj.putOpt(FIELD_INSIGHTS, this.insights?.toJson())

@@ -329,6 +329,13 @@ class RadarEvent(
         obj.putOpt(FIELD_DURATION, this.duration)
         obj.putOpt(FIELD_ALTERNATE_PLACES, RadarPlace.toJson(this.alternatePlaces))
         obj.putOpt(FIELD_REGION, this.region?.toJson())
+        val locationObj = JSONObject()
+        locationObj.putOpt("type", "Point")
+        val coordinatesObj = JSONArray()
+        coordinatesObj.put(this.location.longitude)
+        coordinatesObj.put(this.location.latitude)
+        locationObj.putOpt("coordinates", coordinatesObj)
+        obj.putOpt(FIELD_LOCATION, locationObj)
         return obj
     }
 
