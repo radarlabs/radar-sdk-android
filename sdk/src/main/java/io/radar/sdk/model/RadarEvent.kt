@@ -249,7 +249,7 @@ class RadarEvent(
                 1 -> RadarEventConfidence.LOW
                 else -> RadarEventConfidence.NONE
             }
-            val duration = obj.optDouble(FIELD_DURATION).toFloat()
+            val duration = obj.optDouble(FIELD_DURATION, 0.0).toFloat()
             val locationObj = obj.optJSONObject(FIELD_LOCATION)
             val locationCoordinatesObj = locationObj?.optJSONArray(FIELD_COORDINATES)
             val location = Location("RadarSDK").apply {
