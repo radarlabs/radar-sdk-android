@@ -908,7 +908,7 @@ object Radar {
     fun searchGeofences(
         radius: Int,
         tags: Array<String>?,
-        metadata: Map<String, String>,
+        metadata: Map<String, String>?,
         limit: Int?,
         callback: RadarSearchGeofencesCallback
     ) {
@@ -947,7 +947,7 @@ object Radar {
     fun searchGeofences(
         radius: Int,
         tags: Array<String>?,
-        metadata: Map<String, String>,
+        metadata: Map<String, String>?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
@@ -979,7 +979,7 @@ object Radar {
         near: Location,
         radius: Int,
         tags: Array<String>?,
-        metadata: Map<String, String>,
+        metadata: Map<String, String>?,
         limit: Int?,
         callback: RadarSearchGeofencesCallback
     ) {
