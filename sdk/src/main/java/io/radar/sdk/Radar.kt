@@ -908,6 +908,7 @@ object Radar {
     fun searchGeofences(
         radius: Int,
         tags: Array<String>?,
+        metadata: Map<String, String>?,
         limit: Int?,
         callback: RadarSearchGeofencesCallback
     ) {
@@ -925,7 +926,7 @@ object Radar {
                     return
                 }
 
-                apiClient.searchGeofences(location, radius, tags, limit, object : RadarApiClient.RadarSearchGeofencesApiCallback {
+                apiClient.searchGeofences(location, radius, tags, metadata, limit, object : RadarApiClient.RadarSearchGeofencesApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) {
                         callback.onComplete(status, location, geofences)
                     }
@@ -939,18 +940,21 @@ object Radar {
      *
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/geofences)
+     * @param[map] A map of metadata to filter. See [](https://radar.io/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
     fun searchGeofences(
         radius: Int,
         tags: Array<String>?,
+        metadata: Map<String, String>?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
         searchGeofences(
             radius,
             tags,
+            metadata,
             limit,
             object : RadarSearchGeofencesCallback {
                 override fun onComplete(status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) {
@@ -966,6 +970,7 @@ object Radar {
      * @param[near] The location to search.
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/geofences)
+     * @param[metadata] A map of metadata to filter. See [](https://radar.io/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -974,6 +979,7 @@ object Radar {
         near: Location,
         radius: Int,
         tags: Array<String>?,
+        metadata: Map<String, String>?,
         limit: Int?,
         callback: RadarSearchGeofencesCallback
     ) {
@@ -983,7 +989,7 @@ object Radar {
             return
         }
 
-        apiClient.searchGeofences(near, radius, tags, limit, object : RadarApiClient.RadarSearchGeofencesApiCallback {
+        apiClient.searchGeofences(near, radius, tags, metadata, limit, object : RadarApiClient.RadarSearchGeofencesApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) {
                 callback.onComplete(status, near, geofences)
             }
@@ -996,6 +1002,7 @@ object Radar {
      * @param[near] The location to search.
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/geofences)
+     * @param[metadata] A map of metadata to filter. See [](https://radar.io/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -1003,6 +1010,7 @@ object Radar {
         near: Location,
         radius: Int,
         tags: Array<String>?,
+        metadata: Map<String, String>,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
@@ -1010,6 +1018,7 @@ object Radar {
             near,
             radius,
             tags,
+            metadata,
             limit,
             object : RadarSearchGeofencesCallback {
                 override fun onComplete(status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) {
