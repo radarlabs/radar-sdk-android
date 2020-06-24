@@ -943,6 +943,7 @@ object Radar {
      *
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/geofences)
+     * @param[metadata] A dictionary of metadata to filter. See [](https://radar.io/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -950,7 +951,7 @@ object Radar {
     fun searchGeofences(
         radius: Int,
         tags: Array<String>?,
-        metadata: Map<String, String>?,
+        metadata: JSONObject?,
         limit: Int?,
         callback: RadarSearchGeofencesCallback
     ) {
@@ -982,14 +983,14 @@ object Radar {
      *
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/geofences)
-     * @param[map] A map of metadata to filter. See [](https://radar.io/documentation/geofences)
+     * @param[metadata] A dictionary of metadata to filter. See [](https://radar.io/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
     fun searchGeofences(
         radius: Int,
         tags: Array<String>?,
-        metadata: Map<String, String>?,
+        metadata: JSONObject?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
@@ -1012,7 +1013,7 @@ object Radar {
      * @param[near] The location to search.
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/geofences)
-     * @param[metadata] A map of metadata to filter. See [](https://radar.io/documentation/geofences)
+     * @param[metadata] A dictionary of metadata to filter. See [](https://radar.io/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -1021,7 +1022,7 @@ object Radar {
         near: Location,
         radius: Int,
         tags: Array<String>?,
-        metadata: Map<String, String>?,
+        metadata: JSONObject?,
         limit: Int?,
         callback: RadarSearchGeofencesCallback
     ) {
@@ -1044,7 +1045,7 @@ object Radar {
      * @param[near] The location to search.
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/geofences)
-     * @param[metadata] A map of metadata to filter. See [](https://radar.io/documentation/geofences)
+     * @param[metadata] A dictionary of metadata to filter. See [](https://radar.io/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -1052,7 +1053,7 @@ object Radar {
         near: Location,
         radius: Int,
         tags: Array<String>?,
-        metadata: Map<String, String>,
+        metadata: JSONObject?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {

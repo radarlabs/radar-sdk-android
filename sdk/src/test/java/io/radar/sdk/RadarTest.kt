@@ -809,7 +809,10 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.searchGeofences(1000, arrayOf("store"), mapOf(), 100) { status, _, _ ->
+        val metadata = JSONObject()
+        metadata.put("foo", "bar")
+
+        Radar.searchGeofences(1000, arrayOf("store"), metadata, 100) { status, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -827,7 +830,10 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.searchGeofences(1000, arrayOf("store"), mapOf(), 100) { status, _, _ ->
+        val metadata = JSONObject()
+        metadata.put("foo", "bar")
+
+        Radar.searchGeofences(1000, arrayOf("store"), metadata, 100) { status, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -855,7 +861,10 @@ class RadarTest {
         var callbackLocation: Location? = null
         var callbackGeofences: Array<RadarGeofence>? = null
 
-        Radar.searchGeofences(1000, arrayOf("store"), mapOf(), 100) { status, location, geofences ->
+        val metadata = JSONObject()
+        metadata.put("foo", "bar")
+
+        Radar.searchGeofences(1000, arrayOf("store"), metadata, 100) { status, location, geofences ->
             callbackStatus = status
             callbackLocation = location
             callbackGeofences = geofences
@@ -885,7 +894,7 @@ class RadarTest {
         var callbackLocation: Location? = null
         var callbackGeofences: Array<RadarGeofence>? = null
 
-        Radar.searchGeofences(mockLocation, 1000, arrayOf("store"), mapOf(), 100) { status, location, geofences ->
+        Radar.searchGeofences(mockLocation, 1000, arrayOf("store"), null, 100) { status, location, geofences ->
             callbackStatus = status
             callbackLocation = location
             callbackGeofences = geofences
