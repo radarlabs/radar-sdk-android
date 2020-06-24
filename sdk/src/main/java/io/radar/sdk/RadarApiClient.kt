@@ -350,6 +350,7 @@ internal class RadarApiClient(
         location: Location,
         radius: Int,
         tags: Array<String>?,
+        metadata: Map<String, String>?,
         limit: Int?,
         callback: RadarSearchGeofencesApiCallback
     ) {
@@ -366,6 +367,12 @@ internal class RadarApiClient(
         queryParams.append("&limit=${limit}")
         if (tags?.isNotEmpty() == true) {
             queryParams.append("&tags=${tags.joinToString(separator = ",")}")
+        }
+
+        if (metadata?.isNotEmpty() == true) {
+            for ((key, value) in metadata) {
+                queryParams.append("&metadata[${key}]=${value}")
+            }
         }
 
         val host = RadarSettings.getHost(context)
