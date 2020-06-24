@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         Radar.searchGeofences(
             1000,
             arrayOf("store"),
-            mapOf(),
+            null,
             10
         ) { status, location, geofences ->
             Log.v("example", "Search geofences: status = $status; location = $location; geofences = $geofences")
