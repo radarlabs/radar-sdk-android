@@ -587,6 +587,23 @@ class RadarTest {
         Radar.rejectEvent("eventId")
     }
 
+    @Test
+    fun test_Radar_startTrip() {
+        val options = RadarTripOptions("tripExternalId")
+        options.metadata = JSONObject(mapOf("foo" to "bar", "baz" to true, "qux" to 1))
+        options.destinationGeofenceTag = "tripDestinationGeofenceTag"
+        options.destinationGeofenceExternalId = "tripDestinationGeofenceExternalId"
+        options.mode = Radar.RadarRouteMode.FOOT
+
+        Radar.startTrip(options)
+        assertEquals(options, Radar.getTripOptions())
+    }
+
+    @Test
+    fun test_Radar_stopTrip() {
+        Radar.stopTrip()
+        assertNull(Radar.getTripOptions())
+    }
 
     @Test
     fun test_Radar_getContext_errorPermissions() {

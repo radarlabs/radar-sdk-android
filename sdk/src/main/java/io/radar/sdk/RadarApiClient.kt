@@ -154,6 +154,16 @@ internal class RadarApiClient(
             val mocked = location.isFromMockProvider
             params.putOpt("mocked", mocked)
         }
+        val tripOptions = RadarSettings.getTripOptions(context)
+        if (tripOptions != null) {
+            val tripOptionsObj = JSONObject()
+            tripOptionsObj.putOpt("externalId", tripOptions.externalId)
+            tripOptionsObj.putOpt("metadata", tripOptions.metadata)
+            tripOptionsObj.putOpt("destinationGeofenceTag", tripOptions.destinationGeofenceTag)
+            tripOptionsObj.putOpt("destinationGeofenceExternalId", tripOptions.destinationGeofenceExternalId)
+            tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
+            params.putOpt("tripOptions", tripOptionsObj)
+        }
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
