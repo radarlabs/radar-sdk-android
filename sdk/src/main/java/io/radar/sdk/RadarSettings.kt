@@ -107,9 +107,9 @@ internal object RadarSettings {
             val oldInterval = getSharedPreferences(context).getInt(KEY_OLD_UPDATE_INTERVAL, 0)
             if (oldInterval > 0) { // v2 tracking options upgrade
                 options = if (oldInterval == 60000) {
-                    RadarTrackingOptions.EFFICIENT
-                } else {
                     RadarTrackingOptions.RESPONSIVE
+                } else {
+                    RadarTrackingOptions.EFFICIENT
                 }
                 val oldSync = getSharedPreferences(context).getInt(KEY_OLD_UPDATE_INTERVAL, 0)
                 if (oldSync == -1) {
