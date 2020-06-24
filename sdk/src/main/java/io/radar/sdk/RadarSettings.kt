@@ -111,7 +111,7 @@ internal object RadarSettings {
                 } else {
                     RadarTrackingOptions.EFFICIENT
                 }
-                val oldSync = getSharedPreferences(context).getInt(KEY_OLD_UPDATE_INTERVAL, 0)
+                val oldSync = getSharedPreferences(context).getInt(KEY_OLD_SYNC_MODE, 0)
                 if (oldSync == -1) {
                     options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.ALL
                 }
