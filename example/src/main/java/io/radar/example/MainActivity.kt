@@ -101,14 +101,22 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Distance: status = $status; routes.car.distance.value = ${routes?.car?.distance?.value}; routes.car.distance.text = ${routes?.car?.distance?.text}; routes.car.duration.value = ${routes?.car?.duration?.value}; routes.car.duration.text = ${routes?.car?.duration?.text}")
         }
 
+        val steps = 3
+        var i = 0
         Radar.mockTracking(
             origin,
             destination,
             Radar.RadarRouteMode.CAR,
-            10,
-            1
+            steps,
+            3
         ) { status, location, events, user ->
             Log.v("example", "Mock track: status = ${status}; location = $location; events = $events; user = $user")
+
+            i++
+
+            if (i == steps - 1) {
+                Radar.stopTrip()
+            }
         }
     }
 
