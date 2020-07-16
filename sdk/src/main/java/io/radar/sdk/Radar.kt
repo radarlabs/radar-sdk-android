@@ -791,8 +791,8 @@ object Radar {
             return
         }
 
+        apiClient.stopTrip()
         RadarSettings.setTripOptions(context, null)
-        locationManager.getLocation(null)
     }
 
     /**

@@ -242,6 +242,26 @@ internal class RadarApiClient(
         apiHelper.request(context, "PUT", url, headers, params)
     }
 
+    internal fun stopTrip() {
+        val publishableKey = RadarSettings.getPublishableKey(context) ?: return
+
+        val externalId = RadarSettings.getTripOptions(context)?.externalId ?: return
+
+        val params = JSONObject()
+        params.putOpt("active", false)
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/trips/")
+            .appendEncodedPath(externalId)
+            .build()
+        val url = URL(uri.toString())
+
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "PATCH", url, headers, params)
+    }
+
     internal fun getContext(
         location: Location,
         callback: RadarContextApiCallback
