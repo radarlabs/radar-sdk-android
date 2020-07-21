@@ -157,7 +157,7 @@ class RadarTest {
         assertSegmentsOk(user?.segments)
         assertChainsOk(user?.topChains)
         assertNotEquals(user?.source, Radar.RadarLocationSource.UNKNOWN)
-        assertTrue(user?.proxy)
+        assertTrue(user?.proxy ?: false)
     }
 
     private fun assertEventsOk(events: Array<RadarEvent>?) {
