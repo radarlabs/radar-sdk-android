@@ -23,6 +23,7 @@ internal object RadarSettings {
     private const val KEY_HOST = "host"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
+    private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
     private const val KEY_OLD_SYNC_MODE = "sync_mode"
     private const val KEY_OLD_OFFLINE_MODE = "offline_mode"
 
@@ -106,7 +107,7 @@ internal object RadarSettings {
         } else {
             val oldInterval = getSharedPreferences(context).getInt(KEY_OLD_UPDATE_INTERVAL, 0)
             if (oldInterval > 0) { // v2 tracking options upgrade
-                options = if (oldInterval == 60000) {
+                options = if (oldInterval == KEY_OLD_UPDATE_INTERVAL_RESPONSIVE) {
                     RadarTrackingOptions.RESPONSIVE
                 } else {
                     RadarTrackingOptions.EFFICIENT
