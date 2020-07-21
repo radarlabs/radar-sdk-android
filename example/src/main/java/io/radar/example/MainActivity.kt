@@ -72,8 +72,8 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
         }
 
-        Radar.ipGeocode { status, address ->
-            Log.v("example", "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}")
+        Radar.ipGeocode { status, address, proxy ->
+            Log.v("example", "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}; proxy = $proxy")
         }
 
         val origin = Location("example")
