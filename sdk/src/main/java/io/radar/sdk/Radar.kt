@@ -175,14 +175,16 @@ object Radar {
      */
     interface RadarIpGeocodeCallback {
         /**
-         * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a country).
+         * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a partial address) and a boolean indicating whether the IP address is a known proxy.
          *
          * @param[status] RadarStatus The request status.
          * @param[address] RadarAddress? If successful, the geocoding result (a partial address).
+         * @param[proxy] Boolean A boolean indicating whether the IP address is a known proxy.
          */
         fun onComplete(
             status: RadarStatus,
-            address: RadarAddress? = null
+            address: RadarAddress? = null,
+            proxy: Boolean = false
         )
     }
 
@@ -1400,8 +1402,8 @@ object Radar {
         }
 
         apiClient.ipGeocode(object: RadarApiClient.RadarIpGeocodeApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?) {
-                callback.onComplete(status, address)
+            override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?, proxy: Boolean) {
+                callback.onComplete(status, address, proxy)
             }
         })
     }
@@ -1412,12 +1414,12 @@ object Radar {
      * @param[block] A block callback.
      */
     fun ipGeocode(
-        block: (status: RadarStatus, country: RadarAddress?) -> Unit
+        block: (status: RadarStatus, country: RadarAddress?, proxy: Boolean) -> Unit
     ) {
         ipGeocode(
             object: RadarIpGeocodeCallback {
-                override fun onComplete(status: RadarStatus, address: RadarAddress?) {
-                    block(status, address)
+                override fun onComplete(status: RadarStatus, address: RadarAddress?, proxy: Boolean) {
+                    block(status, address, proxy)
                 }
             }
         )

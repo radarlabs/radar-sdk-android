@@ -43,7 +43,7 @@ internal class RadarApiClient(
     }
 
     interface RadarIpGeocodeApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null)
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null, proxy: Boolean = false)
     }
 
     interface RadarDistanceApiCallback {
@@ -640,9 +640,10 @@ internal class RadarApiClient(
                 val address: RadarAddress? = res.optJSONObject("address")?.let { addressObj ->
                     RadarAddress.fromJson(addressObj)
                 }
+                val proxy = res.optBoolean("proxy") ?: false
 
                 if (address != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, address)
+                    callback.onComplete(RadarStatus.SUCCESS, res, address, proxy)
 
                     return
                 }
