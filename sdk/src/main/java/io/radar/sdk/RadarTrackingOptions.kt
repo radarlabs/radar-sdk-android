@@ -6,7 +6,7 @@ import java.util.Date
 /**
  * An options class used to configure background tracking.
  *
- * @see [](https://radar.io/documentation/sdk#android-background)
+ * @see [](https://radar.io/documentation/sdk#android)
  */
 data class RadarTrackingOptions(
     /**
