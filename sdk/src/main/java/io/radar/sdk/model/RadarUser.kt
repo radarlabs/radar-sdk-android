@@ -179,7 +179,7 @@ class RadarUser(
                 "MOCK_LOCATION" -> Radar.RadarLocationSource.MOCK_LOCATION
                 else -> Radar.RadarLocationSource.UNKNOWN
             }
-            val proxy = locationObj?.optJSONObject(FIELD_FRAUD)?.optBoolean(FIELD_PROXY) ?: false
+            val proxy = obj.optJSONObject(FIELD_FRAUD)?.optBoolean(FIELD_PROXY) ?: false
 
             return RadarUser(
                 id,
