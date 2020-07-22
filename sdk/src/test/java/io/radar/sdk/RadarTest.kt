@@ -1216,7 +1216,7 @@ class RadarTest {
 
         var callbackStatus: Radar.RadarStatus? = null
         var callbackAddress: RadarAddress? = null
-        var callbackProxy: Boolean = false
+        var callbackProxy = false
 
         Radar.ipGeocode { status, address, proxy ->
             callbackStatus = status
@@ -1242,7 +1242,7 @@ class RadarTest {
 
         var callbackStatus: Radar.RadarStatus? = null
         var callbackAddress: RadarAddress? = null
-        var callbackProxy: Boolean = false
+        var callbackProxy = false
 
         Radar.ipGeocode { status, address, proxy ->
             callbackStatus = status
