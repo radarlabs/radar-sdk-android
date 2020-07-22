@@ -1255,6 +1255,8 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertAddressOk(callbackAddress)
+        assertNotNull(callbackAddress?.dma)
+        assertNotNull(callbackAddress?.dmaCode)
         assertTrue(callbackProxy)
     }
 
