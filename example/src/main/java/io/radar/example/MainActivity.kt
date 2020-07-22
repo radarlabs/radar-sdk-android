@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
+import io.radar.sdk.RadarTripOptions
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -100,6 +101,15 @@ class MainActivity : AppCompatActivity() {
         ) { status, routes ->
             Log.v("example", "Distance: status = $status; routes.car.distance.value = ${routes?.car?.distance?.value}; routes.car.distance.text = ${routes?.car?.distance?.text}; routes.car.duration.value = ${routes?.car?.duration?.value}; routes.car.duration.text = ${routes?.car?.duration?.text}")
         }
+
+        val tripOptions = RadarTripOptions(
+            "299",
+            null,
+            "store",
+            "123",
+            Radar.RadarRouteMode.CAR
+        )
+        Radar.startTrip(tripOptions)
 
         var i = 0
         Radar.mockTracking(

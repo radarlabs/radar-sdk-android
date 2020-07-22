@@ -640,7 +640,7 @@ internal class RadarApiClient(
                 val address: RadarAddress? = res.optJSONObject("address")?.let { addressObj ->
                     RadarAddress.fromJson(addressObj)
                 }
-                val proxy = res.optBoolean("proxy") ?: false
+                val proxy = res.optBoolean("proxy")
 
                 if (address != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, address, proxy)
