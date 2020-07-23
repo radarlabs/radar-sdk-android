@@ -33,6 +33,16 @@ class RadarAddress(
     val countryFlag: String?,
 
     /**
+     * The name of the DMA of the address.
+     */
+    val dma: String?,
+
+    /**
+     * The unique code of the DMA of the address.
+     */
+    val dmaCode: String?,
+
+    /**
      * The name of the state of the address.
      */
     val state: String?,
@@ -110,6 +120,8 @@ class RadarAddress(
         private const val FIELD_COUNTRY = "country"
         private const val FIELD_COUNTRY_CODE = "countryCode"
         private const val FIELD_COUNTRY_FLAG = "countryFlag"
+        private const val FIELD_DMA = "dma"
+        private const val FIELD_DMA_CODE = "dmaCode"
         private const val FIELD_STATE = "state"
         private const val FIELD_STATE_CODE = "stateCode"
         private const val FIELD_POSTAL_CODE = "postalCode"
@@ -134,6 +146,8 @@ class RadarAddress(
             val country = obj.optString(FIELD_COUNTRY, null)
             val countryCode = obj.optString(FIELD_COUNTRY_CODE, null)
             val countryFlag = obj.optString(FIELD_COUNTRY_FLAG, null)
+            val dma = obj.optString(FIELD_DMA, null)
+            val dmaCode = obj.optString(FIELD_DMA_CODE, null)
             val state = obj.optString(FIELD_STATE, null)
             val stateCode = obj.optString(FIELD_STATE_CODE, null)
             val postalCode = obj.optString(FIELD_POSTAL_CODE)
@@ -158,6 +172,8 @@ class RadarAddress(
                 country,
                 countryCode,
                 countryFlag,
+                dma,
+                dmaCode,
                 state,
                 stateCode,
                 postalCode,
@@ -216,6 +232,8 @@ class RadarAddress(
         obj.putOpt(FIELD_COUNTRY, this.country)
         obj.putOpt(FIELD_COUNTRY_CODE, this.countryCode)
         obj.putOpt(FIELD_COUNTRY_FLAG, this.countryFlag)
+        obj.putOpt(FIELD_DMA, this.dma)
+        obj.putOpt(FIELD_DMA_CODE, this.dmaCode)
         obj.putOpt(FIELD_STATE, this.state)
         obj.putOpt(FIELD_STATE_CODE, this.stateCode)
         obj.putOpt(FIELD_POSTAL_CODE, this.postalCode)

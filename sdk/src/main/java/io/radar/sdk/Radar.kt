@@ -175,19 +175,21 @@ object Radar {
      */
     interface RadarIpGeocodeCallback {
         /**
-         * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a country).
+         * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a partial address) and a boolean indicating whether the IP address is a known proxy.
          *
          * @param[status] RadarStatus The request status.
          * @param[address] RadarAddress? If successful, the geocoding result (a partial address).
+         * @param[proxy] Boolean A boolean indicating whether the IP address is a known proxy.
          */
         fun onComplete(
             status: RadarStatus,
-            address: RadarAddress? = null
+            address: RadarAddress? = null,
+            proxy: Boolean = false
         )
     }
 
     /**
-     * The status types for a request. See [](https://radar.io/documentation/sdk#android-foreground).
+     * The status types for a request. See [](https://radar.io/documentation/sdk#android).
      */
     enum class RadarStatus {
         /** Success */
@@ -292,7 +294,7 @@ object Radar {
     internal lateinit var locationManager: RadarLocationManager
 
     /**
-     * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods. See [](https://radar.io/documentation/sdk#android-initialize).
+     * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods. See [](https://radar.io/documentation/sdk#android).
      *
      * @param[context] The context
      * @param[publishableKey] Your publishable API key
@@ -332,7 +334,7 @@ object Radar {
     }
 
     /**
-     * Identifies the user. Until you identify the user, Radar will automatically identify the user by `deviceId` (Android ID). See [](https://radar.io/documentation/sdk#android-identify).
+     * Identifies the user. Until you identify the user, Radar will automatically identify the user by `deviceId` (Android ID). See [](https://radar.io/documentation/sdk#android).
      *
      * @param[userId] A stable unique ID for the user. If null, the previous `userId` will be cleared.
      */
@@ -529,7 +531,7 @@ object Radar {
     }
 
     /**
-     * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk#android-manual).
+     * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk#android).
      *
      * @param[location] A location for the user.
      * @param[callback] An optional callback.
@@ -550,7 +552,7 @@ object Radar {
     }
 
     /**
-     * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk#android-manual).
+     * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk#android).
      *
      * @param[location] A location for the user.
      * @param[block] A block callback.
@@ -564,7 +566,7 @@ object Radar {
     }
 
     /**
-     * Starts tracking the user's location in the background. Before calling this method, the user should have granted backgroundlocation permissions for the app. See [](https://radar.io/documentation/sdk#android-background).
+     * Starts tracking the user's location in the background. Before calling this method, the user should have granted backgroundlocation permissions for the app. See [](https://radar.io/documentation/sdk#android).
      *
      * @param[options] Configurable tracking options.
      */
@@ -685,7 +687,7 @@ object Radar {
     }
 
     /**
-     * Stops tracking the user's location in the background. See [](https://radar.io/documentation/sdk#android-background).
+     * Stops tracking the user's location in the background. See [](https://radar.io/documentation/sdk#android).
      */
     @JvmStatic
     fun stopTracking() {
@@ -725,7 +727,7 @@ object Radar {
     }
 
     /**
-     * Accepts an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events. See [](https://radar.io/documentation/sdk#android-verify).
+     * Accepts an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events. See [](https://radar.io/documentation/sdk#android).
      *
      * @param[eventId] The ID of the event to accept.
      * @param[verifiedPlaceId] For place entry events, the ID of the verified place. May be `null`.
@@ -740,7 +742,7 @@ object Radar {
     }
 
     /**
-     * Rejects an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events. See [](https://radar.io/documentation/sdk#android-verify).
+     * Rejects an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events. See [](https://radar.io/documentation/sdk#android).
      *
      * @param[eventId] The ID of the event to reject.
      */
@@ -791,8 +793,8 @@ object Radar {
             return
         }
 
+        apiClient.stopTrip()
         RadarSettings.setTripOptions(context, null)
-        locationManager.getLocation(null)
     }
 
     /**
@@ -1400,8 +1402,8 @@ object Radar {
         }
 
         apiClient.ipGeocode(object: RadarApiClient.RadarIpGeocodeApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?) {
-                callback.onComplete(status, address)
+            override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?, proxy: Boolean) {
+                callback.onComplete(status, address, proxy)
             }
         })
     }
@@ -1412,12 +1414,12 @@ object Radar {
      * @param[block] A block callback.
      */
     fun ipGeocode(
-        block: (status: RadarStatus, country: RadarAddress?) -> Unit
+        block: (status: RadarStatus, country: RadarAddress?, proxy: Boolean) -> Unit
     ) {
         ipGeocode(
             object: RadarIpGeocodeCallback {
-                override fun onComplete(status: RadarStatus, address: RadarAddress?) {
-                    block(status, address)
+                override fun onComplete(status: RadarStatus, address: RadarAddress?, proxy: Boolean) {
+                    block(status, address, proxy)
                 }
             }
         )

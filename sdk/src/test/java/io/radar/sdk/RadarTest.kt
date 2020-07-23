@@ -156,6 +156,8 @@ class RadarTest {
         assertChainsOk(user?.nearbyPlaceChains)
         assertSegmentsOk(user?.segments)
         assertChainsOk(user?.topChains)
+        assertNotEquals(user?.source, Radar.RadarLocationSource.UNKNOWN)
+        assertTrue(user?.proxy ?: false)
     }
 
     private fun assertEventsOk(events: Array<RadarEvent>?) {
@@ -1214,10 +1216,12 @@ class RadarTest {
 
         var callbackStatus: Radar.RadarStatus? = null
         var callbackAddress: RadarAddress? = null
+        var callbackProxy = false
 
-        Radar.ipGeocode { status, address ->
+        Radar.ipGeocode { status, address, proxy ->
             callbackStatus = status
             callbackAddress = address
+            callbackProxy = proxy
             latch.countDown()
         }
 
@@ -1225,6 +1229,7 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.ERROR_SERVER, callbackStatus)
         assertNull(callbackAddress)
+        assertFalse(callbackProxy)
     }
 
     @Test
@@ -1237,10 +1242,12 @@ class RadarTest {
 
         var callbackStatus: Radar.RadarStatus? = null
         var callbackAddress: RadarAddress? = null
+        var callbackProxy = false
 
-        Radar.ipGeocode { status, address ->
+        Radar.ipGeocode { status, address, proxy ->
             callbackStatus = status
             callbackAddress = address
+            callbackProxy = proxy
             latch.countDown()
         }
 
@@ -1248,6 +1255,9 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertAddressOk(callbackAddress)
+        assertNotNull(callbackAddress?.dma)
+        assertNotNull(callbackAddress?.dmaCode)
+        assertTrue(callbackProxy)
     }
 
     @Test

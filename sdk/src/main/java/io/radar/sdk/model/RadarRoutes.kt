@@ -3,9 +3,9 @@ package io.radar.sdk.model
 import org.json.JSONObject
 
 /**
- * Represents routes from an origin to a destination. For more information, see [](https://radar.io/documentation/api#route).
+ * Represents routes from an origin to a destination. For more information, see [](https://radar.io/documentation/api#routing).
  *
- * @see [](https://radar.io/documentation/api#route
+ * @see [](https://radar.io/documentation/api#routing
  */
 class RadarRoutes(
     /**

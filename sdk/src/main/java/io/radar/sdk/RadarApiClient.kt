@@ -43,7 +43,7 @@ internal class RadarApiClient(
     }
 
     interface RadarIpGeocodeApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null)
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null, proxy: Boolean = false)
     }
 
     interface RadarDistanceApiCallback {
@@ -240,6 +240,26 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "PUT", url, headers, params)
+    }
+
+    internal fun stopTrip() {
+        val publishableKey = RadarSettings.getPublishableKey(context) ?: return
+
+        val externalId = RadarSettings.getTripOptions(context)?.externalId ?: return
+
+        val params = JSONObject()
+        params.putOpt("active", false)
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/trips/")
+            .appendEncodedPath(externalId)
+            .build()
+        val url = URL(uri.toString())
+
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "PATCH", url, headers, params)
     }
 
     internal fun getContext(
@@ -620,9 +640,10 @@ internal class RadarApiClient(
                 val address: RadarAddress? = res.optJSONObject("address")?.let { addressObj ->
                     RadarAddress.fromJson(addressObj)
                 }
+                val proxy = res.optBoolean("proxy")
 
                 if (address != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, address)
+                    callback.onComplete(RadarStatus.SUCCESS, res, address, proxy)
 
                     return
                 }

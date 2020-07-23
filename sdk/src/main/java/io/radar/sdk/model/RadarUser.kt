@@ -1,6 +1,7 @@
 package io.radar.sdk.model
 
 import android.location.Location
+import io.radar.sdk.Radar
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -98,7 +99,17 @@ class RadarUser(
     /**
      * The user's top chains. May be `null` if segments are not enabled.
      */
-    val topChains: Array<RadarChain>?
+    val topChains: Array<RadarChain>?,
+
+    /**
+     * The source of the user's last known location.
+     */
+    val source: Radar.RadarLocationSource,
+
+    /**
+     * A boolean indicating whether the user's IP address is a known proxy. May be `false` if Fraud is not enabled.
+     */
+    val proxy: Boolean
 ) {
 
     internal companion object {
@@ -122,6 +133,9 @@ class RadarUser(
         private const val FIELD_NEARBY_PLACE_CHAINS = "nearbyPlaceChains"
         private const val FIELD_SEGMENTS = "segments"
         private const val FIELD_TOP_CHAINS = "topChains"
+        private const val FIELD_SOURCE = "source"
+        private const val FIELD_FRAUD = "fraud"
+        private const val FIELD_PROXY = "proxy"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarUser? {
@@ -155,6 +169,17 @@ class RadarUser(
             val nearbyPlaceChains = RadarChain.fromJson(obj.optJSONArray(FIELD_NEARBY_PLACE_CHAINS))
             val segments = RadarSegment.fromJson(obj.optJSONArray(FIELD_SEGMENTS))
             val topChains = RadarChain.fromJson(obj.optJSONArray(FIELD_TOP_CHAINS))
+            val source = when (obj.optString(FIELD_SOURCE)) {
+                "FOREGROUND_LOCATION" -> Radar.RadarLocationSource.FOREGROUND_LOCATION
+                "BACKGROUND_LOCATION" -> Radar.RadarLocationSource.BACKGROUND_LOCATION
+                "MANUAL_LOCATION" -> Radar.RadarLocationSource.MANUAL_LOCATION
+                "GEOFENCE_ENTER" -> Radar.RadarLocationSource.GEOFENCE_ENTER
+                "GEOFENCE_DWELL" -> Radar.RadarLocationSource.GEOFENCE_DWELL
+                "GEOFENCE_EXIT" -> Radar.RadarLocationSource.GEOFENCE_EXIT
+                "MOCK_LOCATION" -> Radar.RadarLocationSource.MOCK_LOCATION
+                else -> Radar.RadarLocationSource.UNKNOWN
+            }
+            val proxy = obj.optJSONObject(FIELD_FRAUD)?.optBoolean(FIELD_PROXY) ?: false
 
             return RadarUser(
                 id,
@@ -174,7 +199,9 @@ class RadarUser(
                 postalCode,
                 nearbyPlaceChains,
                 segments,
-                topChains
+                topChains,
+                source,
+                proxy
             )
         }
     }
@@ -205,6 +232,10 @@ class RadarUser(
         obj.putOpt(FIELD_NEARBY_PLACE_CHAINS, RadarChain.toJson(this.nearbyPlaceChains))
         obj.putOpt(FIELD_SEGMENTS, RadarSegment.toJson(this.segments))
         obj.putOpt(FIELD_TOP_CHAINS, RadarChain.toJson(this.topChains))
+        obj.putOpt(FIELD_SOURCE, Radar.stringForSource(this.source))
+        val fraudObj = JSONObject()
+        fraudObj.putOpt(FIELD_PROXY, this.proxy)
+        obj.putOpt(FIELD_FRAUD, fraudObj)
         return obj
     }
 

@@ -16,6 +16,8 @@
      "country": "United States",
      "countryCode": "US",
      "countryFlag": "🇺🇸",
+     "dma": "New York",
+     "dmaCode": "501",
      "state": "New York",
      "stateCode": "NY",
      "postalCode": "11201",
@@ -27,5 +29,6 @@
      "number": "20",
      "addressLabel": "20 Jay Street",
      "confidence": "exact"
-   }
+   },
+  "proxy": true
 }

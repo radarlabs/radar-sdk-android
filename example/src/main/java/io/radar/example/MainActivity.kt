@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
+import io.radar.sdk.RadarTripOptions
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -72,8 +73,8 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
         }
 
-        Radar.ipGeocode { status, address ->
-            Log.v("example", "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}")
+        Radar.ipGeocode { status, address, proxy ->
+            Log.v("example", "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}; proxy = $proxy")
         }
 
         val origin = Location("example")
@@ -101,14 +102,30 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Distance: status = $status; routes.car.distance.value = ${routes?.car?.distance?.value}; routes.car.distance.text = ${routes?.car?.distance?.text}; routes.car.duration.value = ${routes?.car?.duration?.value}; routes.car.duration.text = ${routes?.car?.duration?.text}")
         }
 
+        val tripOptions = RadarTripOptions(
+            "299",
+            null,
+            "store",
+            "123",
+            Radar.RadarRouteMode.CAR
+        )
+        Radar.startTrip(tripOptions)
+
+        var i = 0
         Radar.mockTracking(
             origin,
             destination,
             Radar.RadarRouteMode.CAR,
-            10,
-            1
+            3,
+            3
         ) { status, location, events, user ->
             Log.v("example", "Mock track: status = ${status}; location = $location; events = $events; user = $user")
+
+            if (i == 2) {
+                Radar.stopTrip()
+            }
+
+            i++
         }
     }
 

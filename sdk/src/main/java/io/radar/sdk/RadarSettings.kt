@@ -22,6 +22,11 @@ internal object RadarSettings {
     private const val KEY_CONFIG = "config"
     private const val KEY_HOST = "host"
 
+    private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
+    private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
+    private const val KEY_OLD_SYNC_MODE = "sync_mode"
+    private const val KEY_OLD_OFFLINE_MODE = "offline_mode"
+
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
     }
@@ -94,9 +99,32 @@ internal object RadarSettings {
     }
 
     internal fun getTrackingOptions(context: Context): RadarTrackingOptions {
-        val optionsJson = getSharedPreferences(context).getString(KEY_TRACKING_OPTIONS, null) ?: return RadarTrackingOptions.EFFICIENT
-        val optionsObj = JSONObject(optionsJson)
-        return RadarTrackingOptions.fromJson(optionsObj)
+        val optionsJson = getSharedPreferences(context).getString(KEY_TRACKING_OPTIONS, null)
+        val options: RadarTrackingOptions?
+        if (optionsJson != null) { // v3 tracking options set
+            val optionsObj = JSONObject(optionsJson)
+            options = RadarTrackingOptions.fromJson(optionsObj)
+        } else {
+            val oldInterval = getSharedPreferences(context).getInt(KEY_OLD_UPDATE_INTERVAL, 0)
+            if (oldInterval > 0) { // v2 tracking options upgrade
+                options = if (oldInterval == KEY_OLD_UPDATE_INTERVAL_RESPONSIVE) {
+                    RadarTrackingOptions.RESPONSIVE
+                } else {
+                    RadarTrackingOptions.EFFICIENT
+                }
+                val oldSync = getSharedPreferences(context).getInt(KEY_OLD_SYNC_MODE, 0)
+                if (oldSync == -1) {
+                    options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.ALL
+                }
+                val oldOffline = getSharedPreferences(context).getInt(KEY_OLD_OFFLINE_MODE, 0)
+                if (oldOffline == -1) {
+                    options.replay = RadarTrackingOptions.RadarTrackingOptionsReplay.NONE
+                }
+            } else { // no tracking options set
+                options = RadarTrackingOptions.EFFICIENT
+            }
+        }
+        return options
     }
 
     internal fun setTrackingOptions(context: Context, options: RadarTrackingOptions) {
