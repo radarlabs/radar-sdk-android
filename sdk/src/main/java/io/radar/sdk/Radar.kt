@@ -1414,7 +1414,7 @@ object Radar {
      * @param[block] A block callback.
      */
     fun ipGeocode(
-        block: (status: RadarStatus, country: RadarAddress?, proxy: Boolean) -> Unit
+        block: (status: RadarStatus, address: RadarAddress?, proxy: Boolean) -> Unit
     ) {
         ipGeocode(
             object: RadarIpGeocodeCallback {
