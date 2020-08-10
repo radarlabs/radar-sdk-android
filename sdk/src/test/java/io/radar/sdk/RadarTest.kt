@@ -546,8 +546,8 @@ class RadarTest {
 
         val options = RadarTrackingOptions.CONTINUOUS
         options.desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW
-        options.replay = RadarTrackingOptions.RadarTrackingOptionsReplay.NONE
-        options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.ALL
+        options.replay = RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS
+        options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.NONE
         val json = options.toJson()
         json.put("desiredAccuracy", 1)
         json.put("replay", 1)
@@ -567,8 +567,8 @@ class RadarTest {
 
         val options = RadarTrackingOptions.CONTINUOUS
         options.desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW
-        options.replay = RadarTrackingOptions.RadarTrackingOptionsReplay.NONE
-        options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.STOPS_AND_EXITS
+        options.replay = RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS
+        options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.NONE
         val json = options.toJson()
         json.put("desiredAccuracy", "low")
         json.put("replay", "stops")
