@@ -546,8 +546,12 @@ class RadarTest {
 
         val options = RadarTrackingOptions.CONTINUOUS
         options.desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW
+        options.replay = RadarTrackingOptions.RadarTrackingOptionsReplay.NONE
+        options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.ALL
         val json = options.toJson()
         json.put("desiredAccuracy", 1)
+        json.put("replay", 1)
+        json.put("sync", 0)
         val newOptions = RadarTrackingOptions.fromJson(json)
         Radar.startTracking(newOptions)
         assertEquals(newOptions, Radar.getTrackingOptions())
@@ -563,8 +567,12 @@ class RadarTest {
 
         val options = RadarTrackingOptions.CONTINUOUS
         options.desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW
+        options.replay = RadarTrackingOptions.RadarTrackingOptionsReplay.NONE
+        options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.STOPS_AND_EXITS
         val json = options.toJson()
         json.put("desiredAccuracy", "low")
+        json.put("replay", "stops")
+        json.put("sync", "none")
         val newOptions = RadarTrackingOptions.fromJson(json)
         Radar.startTracking(newOptions)
         assertEquals(newOptions, Radar.getTrackingOptions())
