@@ -116,6 +116,25 @@ data class RadarTrackingOptions(
                 }
                 return MEDIUM
             }
+
+            fun fromRadarString(desiredAccuracy: String?): RadarTrackingOptionsDesiredAccuracy {
+                return when(desiredAccuracy) {
+                    "high" -> HIGH
+                    "medium" -> MEDIUM
+                    "low" -> LOW
+                    "none" -> NONE
+                    else -> MEDIUM
+                }
+            }
+        }
+
+        fun toRadarString(): String {
+            return when(this) {
+                HIGH -> "high"
+                MEDIUM -> "medium"
+                LOW -> "low"
+                NONE -> "none"
+            }
         }
     }
 
@@ -137,6 +156,21 @@ data class RadarTrackingOptions(
                 }
                 return NONE
             }
+
+            fun fromRadarString(replay: String?): RadarTrackingOptionsReplay {
+                return when(replay) {
+                    "stops" -> STOPS
+                    "none" -> NONE
+                    else -> NONE
+                }
+            }
+        }
+
+        fun toRadarString(): String {
+            return when(this) {
+                STOPS -> "stops"
+                NONE -> "none"
+            }
         }
     }
 
@@ -156,6 +190,23 @@ data class RadarTrackingOptions(
                     }
                 }
                 return STOPS_AND_EXITS
+            }
+
+            fun fromRadarString(sync: String?): RadarTrackingOptionsSync {
+                return when(sync) {
+                    "all" -> ALL
+                    "stopsAndExits" -> STOPS_AND_EXITS
+                    "none" -> NONE
+                    else -> STOPS_AND_EXITS
+                }
+            }
+        }
+
+        fun toRadarString(): String {
+            return when(this) {
+                ALL -> "all"
+                STOPS_AND_EXITS -> "stopsAndExits"
+                NONE -> "none"
             }
         }
     }
@@ -254,19 +305,37 @@ data class RadarTrackingOptions(
 
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTrackingOptions {
+            val desiredAccuracy = if (obj.has(KEY_DESIRED_ACCURACY) && obj.get(KEY_DESIRED_ACCURACY) is String) {
+                RadarTrackingOptionsDesiredAccuracy.fromRadarString(obj.optString(KEY_DESIRED_ACCURACY))
+            } else {
+                RadarTrackingOptionsDesiredAccuracy.fromInt(obj.optInt(KEY_DESIRED_ACCURACY))
+            }
+
+            val replay = if (obj.has(KEY_REPLAY) && obj.get(KEY_REPLAY) is String) {
+                RadarTrackingOptionsReplay.fromRadarString(obj.optString(KEY_REPLAY))
+            } else {
+                RadarTrackingOptionsReplay.fromInt(obj.optInt(KEY_REPLAY))
+            }
+
+            val sync = if (obj.has(KEY_SYNC) && obj.get(KEY_SYNC) is String) {
+                RadarTrackingOptionsSync.fromRadarString(obj.optString(KEY_SYNC))
+            } else {
+                RadarTrackingOptionsSync.fromInt(obj.optInt(KEY_SYNC))
+            }
+
             return RadarTrackingOptions(
                 desiredStoppedUpdateInterval = obj.optInt(KEY_DESIRED_STOPPED_UPDATE_INTERVAL),
                 fastestStoppedUpdateInterval = obj.optInt(KEY_FASTEST_STOPPED_UPDATE_INTERVAL),
                 desiredMovingUpdateInterval = obj.optInt(KEY_DESIRED_MOVING_UPDATE_INTERVAL),
                 fastestMovingUpdateInterval = obj.optInt(KEY_FASTEST_MOVING_UPDATE_INTERVAL),
                 desiredSyncInterval = obj.optInt(KEY_DESIRED_SYNC_INTERVAL),
-                desiredAccuracy = RadarTrackingOptionsDesiredAccuracy.fromInt(obj.optInt(KEY_DESIRED_ACCURACY)),
+                desiredAccuracy = desiredAccuracy,
                 stopDuration = obj.optInt(KEY_STOP_DURATION),
                 stopDistance = obj.optInt(KEY_STOP_DISTANCE),
                 startTrackingAfter = if (obj.has(KEY_START_TRACKING_AFTER)) Date(obj.optLong(KEY_START_TRACKING_AFTER)) else null,
                 stopTrackingAfter = if (obj.has(KEY_STOP_TRACKING_AFTER)) Date(obj.optLong(KEY_STOP_TRACKING_AFTER)) else null,
-                replay = RadarTrackingOptionsReplay.fromInt(obj.optInt(KEY_REPLAY)),
-                sync = RadarTrackingOptionsSync.fromInt(obj.optInt(KEY_SYNC)),
+                replay = replay,
+                sync = sync,
                 useStoppedGeofence = obj.optBoolean(KEY_USE_STOPPED_GEOFENCE),
                 stoppedGeofenceRadius = obj.optInt(KEY_STOPPED_GEOFENCE_RADIUS, 200),
                 useMovingGeofence = obj.optBoolean(KEY_USE_MOVING_GEOFENCE),
@@ -283,13 +352,13 @@ data class RadarTrackingOptions(
         obj.put(KEY_DESIRED_MOVING_UPDATE_INTERVAL, desiredMovingUpdateInterval)
         obj.put(KEY_FASTEST_MOVING_UPDATE_INTERVAL, fastestMovingUpdateInterval)
         obj.put(KEY_DESIRED_SYNC_INTERVAL, desiredSyncInterval)
-        obj.put(KEY_DESIRED_ACCURACY, desiredAccuracy.desiredAccuracy)
+        obj.put(KEY_DESIRED_ACCURACY, desiredAccuracy.toRadarString())
         obj.put(KEY_STOP_DURATION, stopDuration)
         obj.put(KEY_STOP_DISTANCE, stopDistance)
         obj.put(KEY_START_TRACKING_AFTER, startTrackingAfter?.time)
         obj.put(KEY_STOP_TRACKING_AFTER, stopTrackingAfter?.time)
-        obj.put(KEY_REPLAY, replay.replay)
-        obj.put(KEY_SYNC, sync.sync)
+        obj.put(KEY_REPLAY, replay.toRadarString())
+        obj.put(KEY_SYNC, sync.toRadarString())
         obj.put(KEY_USE_STOPPED_GEOFENCE, useStoppedGeofence)
         obj.put(KEY_STOPPED_GEOFENCE_RADIUS, stoppedGeofenceRadius)
         obj.put(KEY_USE_MOVING_GEOFENCE, useMovingGeofence)
