@@ -539,7 +539,7 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_startTracking_custom_json() {
+    fun test_Radar_startTracking_custom_enum_int() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
 
         Radar.stopTracking()
@@ -547,8 +547,26 @@ class RadarTest {
         val options = RadarTrackingOptions.CONTINUOUS
         options.desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW
         val json = options.toJson()
-        json.put("desiredAccuracy", RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW.desiredAccuracy)
+        json.put("desiredAccuracy", 1)
         val newOptions = RadarTrackingOptions.fromJson(json)
+        Radar.startTracking(newOptions)
+        assertEquals(newOptions, Radar.getTrackingOptions())
+        assertEquals(newOptions, options)
+        assertTrue(Radar.isTracking())
+    }
+
+    @Test
+    fun test_Radar_startTracking_custom_enum_string() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+
+        Radar.stopTracking()
+
+        val options = RadarTrackingOptions.CONTINUOUS
+        options.desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW
+        val json = options.toJson()
+        json.put("desiredAccuracy", "low")
+        val newOptions = RadarTrackingOptions.fromJson(json)
+        Radar.startTracking(newOptions)
         assertEquals(newOptions, Radar.getTrackingOptions())
         assertEquals(newOptions, options)
         assertTrue(Radar.isTracking())
