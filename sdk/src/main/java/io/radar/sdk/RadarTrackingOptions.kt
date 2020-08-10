@@ -108,6 +108,11 @@ data class RadarTrackingOptions(
         NONE(0);
 
         internal companion object {
+            internal const val HIGH_STR = "high"
+            internal const val MEDIUM_STR = "medium"
+            internal const val LOW_STR = "low"
+            internal const val NONE_STR = "none"
+
             fun fromInt(desiredAccuracy: Int?): RadarTrackingOptionsDesiredAccuracy {
                 for (value in values()) {
                     if (desiredAccuracy == value.desiredAccuracy) {
@@ -119,10 +124,10 @@ data class RadarTrackingOptions(
 
             fun fromRadarString(desiredAccuracy: String?): RadarTrackingOptionsDesiredAccuracy {
                 return when(desiredAccuracy) {
-                    "high" -> HIGH
-                    "medium" -> MEDIUM
-                    "low" -> LOW
-                    "none" -> NONE
+                    HIGH_STR -> HIGH
+                    MEDIUM_STR -> MEDIUM
+                    LOW_STR -> LOW
+                    NONE_STR -> NONE
                     else -> MEDIUM
                 }
             }
@@ -130,10 +135,10 @@ data class RadarTrackingOptions(
 
         fun toRadarString(): String {
             return when(this) {
-                HIGH -> "high"
-                MEDIUM -> "medium"
-                LOW -> "low"
-                NONE -> "none"
+                HIGH -> HIGH_STR
+                MEDIUM -> MEDIUM_STR
+                LOW -> LOW_STR
+                NONE -> NONE_STR
             }
         }
     }
@@ -148,6 +153,9 @@ data class RadarTrackingOptions(
         NONE(0);
 
         internal companion object {
+            internal const val STOPS_STR = "stops"
+            internal const val NONE_STR = "none"
+
             fun fromInt(replay: Int?): RadarTrackingOptionsReplay {
                 for (value in values()) {
                     if (replay == value.replay) {
@@ -159,8 +167,8 @@ data class RadarTrackingOptions(
 
             fun fromRadarString(replay: String?): RadarTrackingOptionsReplay {
                 return when(replay) {
-                    "stops" -> STOPS
-                    "none" -> NONE
+                    STOPS_STR -> STOPS
+                    NONE_STR -> NONE
                     else -> NONE
                 }
             }
@@ -168,8 +176,8 @@ data class RadarTrackingOptions(
 
         fun toRadarString(): String {
             return when(this) {
-                STOPS -> "stops"
-                NONE -> "none"
+                STOPS -> STOPS_STR
+                NONE -> NONE_STR
             }
         }
     }
@@ -183,6 +191,10 @@ data class RadarTrackingOptions(
         ALL(2);
 
         internal companion object {
+            internal const val NONE_STR = "none"
+            internal const val STOPS_AND_EXITS_STR = "stopsAndExits"
+            internal const val ALL_STR = "all"
+
             fun fromInt(sync: Int?): RadarTrackingOptionsSync {
                 for (value in values()) {
                     if (sync == value.sync) {
@@ -194,9 +206,9 @@ data class RadarTrackingOptions(
 
             fun fromRadarString(sync: String?): RadarTrackingOptionsSync {
                 return when(sync) {
-                    "all" -> ALL
-                    "stopsAndExits" -> STOPS_AND_EXITS
-                    "none" -> NONE
+                    ALL_STR -> ALL
+                    STOPS_AND_EXITS_STR -> STOPS_AND_EXITS
+                    NONE_STR -> NONE
                     else -> STOPS_AND_EXITS
                 }
             }
@@ -204,9 +216,9 @@ data class RadarTrackingOptions(
 
         fun toRadarString(): String {
             return when(this) {
-                ALL -> "all"
-                STOPS_AND_EXITS -> "stopsAndExits"
-                NONE -> "none"
+                ALL -> ALL_STR
+                STOPS_AND_EXITS -> STOPS_AND_EXITS_STR
+                NONE -> NONE_STR
             }
         }
     }
