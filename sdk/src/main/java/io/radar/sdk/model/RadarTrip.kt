@@ -33,7 +33,7 @@ class RadarTrip(
     /**
      * The location of the optional destination geofence.
      */
-    val destinationGeofenceLocation: RadarCoordinate?,
+    val destinationLocation: RadarCoordinate?,
 
     /**
      * The travel mode of the trip.
@@ -56,7 +56,7 @@ class RadarTrip(
         private const val FIELD_METADATA = "metadata"
         private const val FIELD_DESTINATION_GEOFENCE_TAG = "destinationGeofenceTag"
         private const val FIELD_DESTINATION_GEOFENCE_EXTERNAL_ID = "destinationGeofenceExternalId"
-        private const val FIELD_DESTINATION_GEOFENCE_LOCATION = "destinationGeofenceLocation"
+        private const val FIELD_DESTINATION_LOCATION = "destinationLocation"
         private const val FIELD_COORDINATES = "coordinates"
         private const val FIELD_MODE = "mode"
         private const val FIELD_ETA = "eta"
@@ -74,8 +74,8 @@ class RadarTrip(
                 FIELD_DESTINATION_GEOFENCE_TAG, null)
             val destinationGeofenceExternalId: String? = obj.optString(
                 FIELD_DESTINATION_GEOFENCE_EXTERNAL_ID, null)
-            val destinationGeofenceLocation: RadarCoordinate? = obj.optJSONObject(
-                FIELD_DESTINATION_GEOFENCE_LOCATION)?.let { location ->
+            val destinationLocation: RadarCoordinate? = obj.optJSONObject(
+                FIELD_DESTINATION_LOCATION)?.let { location ->
                 location.optJSONArray(FIELD_COORDINATES)?.let { coordinate ->
                     RadarCoordinate(
                         coordinate.optDouble(1),
@@ -92,7 +92,7 @@ class RadarTrip(
                 metadata,
                 destinationGeofenceTag,
                 destinationGeofenceExternalId,
-                destinationGeofenceLocation,
+                destinationLocation,
                 mode,
                 eta,
                 arrived
@@ -117,7 +117,7 @@ class RadarTrip(
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_DESTINATION_GEOFENCE_TAG, this.destinationGeofenceTag)
         obj.putOpt(FIELD_DESTINATION_GEOFENCE_EXTERNAL_ID, this.destinationGeofenceExternalId)
-        obj.putOpt(FIELD_DESTINATION_GEOFENCE_LOCATION, this.destinationGeofenceLocation?.toJson())
+        obj.putOpt(FIELD_DESTINATION_LOCATION, this.destinationLocation?.toJson())
         obj.putOpt(FIELD_MODE, this.mode?.let { Radar.stringForMode(it) })
         obj.putOpt(FIELD_ETA, this.eta?.toJson())
         obj.putOpt(FIELD_ARRIVED, this.arrived)
