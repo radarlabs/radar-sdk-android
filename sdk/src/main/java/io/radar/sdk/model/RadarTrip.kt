@@ -41,9 +41,14 @@ class RadarTrip(
     val mode: Radar.RadarRouteMode?,
 
     /**
-     * The ETA to the optional destination geofence.
+     * The distance to the optional destination geofence in meters.
      */
-    val eta: RadarRoute?,
+    val etaDistance: Double?,
+
+    /**
+     * The ETA to the optional destination geofence in minutes.
+     */
+    val etaDuration: Double?,
 
     /**
      * A boolean indicating whether the user has arrived (destination geofence entered).
@@ -60,6 +65,8 @@ class RadarTrip(
         private const val FIELD_COORDINATES = "coordinates"
         private const val FIELD_MODE = "mode"
         private const val FIELD_ETA = "eta"
+        private const val FIELD_DISTANCE = "distance"
+        private const val FIELD_DURATION = "duration"
         private const val FIELD_ARRIVED = "arrived"
 
         @JvmStatic
@@ -83,8 +90,14 @@ class RadarTrip(
                     )
                 }
             }
-            val mode: Radar.RadarRouteMode? = Radar.RadarRouteMode.valueOf(obj.optString(FIELD_MODE))
-            val eta: RadarRoute? = RadarRoute.fromJson(obj.optJSONObject(FIELD_ETA))
+            val mode: Radar.RadarRouteMode? = when(obj.optString(FIELD_MODE)) {
+                "foot" -> Radar.RadarRouteMode.FOOT
+                "bike" -> Radar.RadarRouteMode.BIKE
+                "car" -> Radar.RadarRouteMode.CAR
+                else -> null
+            }
+            val etaDistance = obj.optJSONObject(FIELD_ETA)?.optDouble(FIELD_DISTANCE)
+            val etaDuration = obj.optJSONObject(FIELD_ETA)?.optDouble(FIELD_DURATION)
             val arrived = obj.optBoolean(FIELD_ARRIVED, false)
 
             return RadarTrip(
@@ -94,7 +107,8 @@ class RadarTrip(
                 destinationGeofenceExternalId,
                 destinationLocation,
                 mode,
-                eta,
+                etaDistance,
+                etaDuration,
                 arrived
             )
         }
@@ -119,7 +133,10 @@ class RadarTrip(
         obj.putOpt(FIELD_DESTINATION_GEOFENCE_EXTERNAL_ID, this.destinationGeofenceExternalId)
         obj.putOpt(FIELD_DESTINATION_LOCATION, this.destinationLocation?.toJson())
         obj.putOpt(FIELD_MODE, this.mode?.let { Radar.stringForMode(it) })
-        obj.putOpt(FIELD_ETA, this.eta?.toJson())
+        val etaObj = JSONObject()
+        etaObj.putOpt(FIELD_DISTANCE, this.etaDistance)
+        etaObj.putOpt(FIELD_DURATION, this.etaDuration)
+        obj.putOpt(FIELD_ETA, etaObj)
         obj.putOpt(FIELD_ARRIVED, this.arrived)
         return obj
     }

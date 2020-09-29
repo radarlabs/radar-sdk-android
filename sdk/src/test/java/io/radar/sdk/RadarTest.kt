@@ -268,9 +268,12 @@ class RadarTest {
         assertNotNull(trip?.metadata)
         assertNotNull(trip?.destinationGeofenceTag)
         assertNotNull(trip?.destinationGeofenceExternalId)
-        assertNotNull(trip?.destinationGeofenceLocation)
+        assertNotNull(trip?.destinationLocation)
         assertNotNull(trip?.mode)
-        assertRouteOk(trip?.eta)
+        assertNotNull(trip?.etaDistance)
+        assertNotEquals(trip?.etaDistance, 0)
+        assertNotNull(trip?.etaDuration)
+        assertNotEquals(trip?.etaDuration, 0)
         assertTrue(trip?.arrived ?: false)
     }
 
