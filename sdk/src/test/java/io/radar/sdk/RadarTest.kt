@@ -158,6 +158,7 @@ class RadarTest {
         assertChainsOk(user?.topChains)
         assertNotEquals(user?.source, Radar.RadarLocationSource.UNKNOWN)
         assertTrue(user?.proxy ?: false)
+        assertTripOk(user?.trip)
     }
 
     private fun assertEventsOk(events: Array<RadarEvent>?) {
@@ -248,21 +249,29 @@ class RadarTest {
         assertNotNull(routes?.geodesic)
         assertNotNull(routes?.geodesic?.distance?.text)
         assertNotEquals(routes?.geodesic?.distance?.value, 0)
-        assertNotNull(routes?.foot)
-        assertNotNull(routes?.foot?.distance?.text)
-        assertNotEquals(routes?.foot?.distance?.value, 0)
-        assertNotNull(routes?.foot?.duration?.text)
-        assertNotEquals(routes?.foot?.duration?.value, 0)
-        assertNotNull(routes?.bike)
-        assertNotNull(routes?.bike?.distance?.text)
-        assertNotEquals(routes?.bike?.distance?.value, 0)
-        assertNotNull(routes?.bike?.duration?.text)
-        assertNotEquals(routes?.bike?.duration?.value, 0)
-        assertNotNull(routes?.car)
-        assertNotNull(routes?.car?.distance?.text)
-        assertNotEquals(routes?.car?.distance?.value, 0)
-        assertNotNull(routes?.car?.duration?.text)
-        assertNotEquals(routes?.car?.duration?.value, 0)
+        assertRouteOk(routes?.foot)
+        assertRouteOk(routes?.bike)
+        assertRouteOk(routes?.car)
+    }
+
+    private fun assertRouteOk(route: RadarRoute?) {
+        assertNotNull(route)
+        assertNotNull(route?.distance?.text)
+        assertNotEquals(route?.distance?.value, 0)
+        assertNotNull(route?.duration?.text)
+        assertNotEquals(route?.duration?.value, 0)
+    }
+
+    private fun assertTripOk(trip: RadarTrip?) {
+        assertNotNull(trip)
+        assertNotNull(trip?.externalId)
+        assertNotNull(trip?.metadata)
+        assertNotNull(trip?.destinationGeofenceTag)
+        assertNotNull(trip?.destinationGeofenceExternalId)
+        assertNotNull(trip?.destinationGeofenceLocation)
+        assertNotNull(trip?.mode)
+        assertRouteOk(trip?.eta)
+        assertTrue(trip?.arrived ?: false)
     }
 
     @Before

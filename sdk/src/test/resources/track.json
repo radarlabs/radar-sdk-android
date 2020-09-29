@@ -180,6 +180,30 @@
       "source": "BACKGROUND_LOCATION",
       "fraud": {
          "proxy": true
+      },
+      "trip": {
+         "_id": "5f3e50491c2b7d005c81f5d9",
+         "live": true,
+         "externalId": "299",
+         "metadata": {
+            "Customer Name": "Jacob Pena",
+            "Car Model": "Green Honda Civic"
+         },
+         "mode": "car",
+         "destinationGeofenceTag": "store",
+         "destinationGeofenceExternalId": "123",
+         "destinationLocation": {
+            "coordinates": [
+               -105.06119826017914,
+               39.7793665
+            ],
+            "type": "Point"
+         },
+         "eta": {
+            "duration": 5.5,
+            "distance": 1331
+         },
+         "arrived": true
       }
    },
    "events": [
