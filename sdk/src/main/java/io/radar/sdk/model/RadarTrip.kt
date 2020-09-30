@@ -11,7 +11,7 @@ import org.json.JSONObject
  */
 class RadarTrip(
     /**
-     * The external ID of the trip
+     * The external ID of the trip.
      */
     val externalId: String,
 
