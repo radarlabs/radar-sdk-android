@@ -194,8 +194,8 @@
          "destinationGeofenceExternalId": "123",
          "destinationLocation": {
             "coordinates": [
-               -105.06119826017914,
-               39.7793665
+               -105.061198,
+               39.779366
             ],
             "type": "Point"
          },
