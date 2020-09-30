@@ -21,37 +21,37 @@ class RadarTrip(
     val metadata: JSONObject?,
 
     /**
-     * The tag of the optional destination geofence.
+     * For trips with a destination, the tag of the destination geofence.
      */
     val destinationGeofenceTag: String?,
 
     /**
-     * The external ID of the optional destination geofence.
+     * For trips with a destination, the external ID of the destination geofence.
      */
     val destinationGeofenceExternalId: String?,
 
     /**
-     * The location of the optional destination geofence.
+     * For trips with a destination, the location of the destination geofence.
      */
     val destinationLocation: RadarCoordinate?,
 
     /**
-     * The travel mode of the trip.
+     * The travel mode for the trip.
      */
     val mode: Radar.RadarRouteMode?,
 
     /**
-     * The distance to the optional destination geofence in meters.
+     * For trips with a destination, the distance to the destination geofence in meters based on the travel mode for the trip.
      */
     val etaDistance: Double?,
 
     /**
-     * The ETA to the optional destination geofence in minutes.
+     * For trips with a destination, the ETA to the destination geofence in minutes based on the travel mode for the trip.
      */
     val etaDuration: Double?,
 
     /**
-     * A boolean indicating whether the user has arrived (destination geofence entered).
+     * For trips with a destination, a boolean indicating whether the user has arrived (destination geofence entered).
      */
     val arrived: Boolean
 ) {
