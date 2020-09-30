@@ -138,6 +138,21 @@ class RadarTest {
         assertNotNull(segment?.externalId)
     }
 
+    private fun assertTripOk(trip: RadarTrip?) {
+        assertNotNull(trip)
+        assertNotNull(trip?.externalId)
+        assertNotNull(trip?.metadata)
+        assertNotNull(trip?.destinationGeofenceTag)
+        assertNotNull(trip?.destinationGeofenceExternalId)
+        assertNotNull(trip?.destinationLocation)
+        assertNotNull(trip?.mode)
+        assertNotNull(trip?.etaDistance)
+        assertNotEquals(trip?.etaDistance, 0)
+        assertNotNull(trip?.etaDuration)
+        assertNotEquals(trip?.etaDuration, 0)
+        assertTrue(trip?.arrived ?: false)
+    }
+
     private fun assertUserOk(user: RadarUser?) {
         assertNotNull(user)
         assertNotNull(user?._id)
@@ -260,21 +275,6 @@ class RadarTest {
         assertNotEquals(route?.distance?.value, 0)
         assertNotNull(route?.duration?.text)
         assertNotEquals(route?.duration?.value, 0)
-    }
-
-    private fun assertTripOk(trip: RadarTrip?) {
-        assertNotNull(trip)
-        assertNotNull(trip?.externalId)
-        assertNotNull(trip?.metadata)
-        assertNotNull(trip?.destinationGeofenceTag)
-        assertNotNull(trip?.destinationGeofenceExternalId)
-        assertNotNull(trip?.destinationLocation)
-        assertNotNull(trip?.mode)
-        assertNotNull(trip?.etaDistance)
-        assertNotEquals(trip?.etaDistance, 0)
-        assertNotNull(trip?.etaDuration)
-        assertNotEquals(trip?.etaDuration, 0)
-        assertTrue(trip?.arrived ?: false)
     }
 
     @Before
