@@ -37,17 +37,17 @@ class RadarUser(
     val metadata: JSONObject?,
 
     /**
-     * The user's last known location.
+     * The user's current location.
      */
     val location: Location,
 
     /**
-     * The user's last known geofences. May be `null` or empty if the user is not in any geofences. See [](https://radar.io/documentation/geofences).
+     * The user's current geofences. May be `null` or empty if the user is not in any geofences. See [](https://radar.io/documentation/geofences).
      */
     val geofences: Array<RadarGeofence>?,
 
     /**
-     * The user's last known place. May be `null` if the user is not at a place or if Places is not enabled. See [](https://radar.io/documentation/places).
+     * The user's current place. May be `null` if the user is not at a place or if Places is not enabled. See [](https://radar.io/documentation/places).
      */
     val place: RadarPlace?,
 
@@ -67,22 +67,22 @@ class RadarUser(
     val foreground: Boolean,
 
     /**
-     * The user's last known country. May be `null` if country is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The user's current country. May be `null` if country is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
      */
     val country: RadarRegion?,
 
     /**
-     * The user's last known state. May be `null` if state is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The user's current state. May be `null` if state is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
      */
     val state: RadarRegion?,
 
     /**
-     * The user's last known designated market area (DMA). May be `null` if DMA is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The user's current designated market area (DMA). May be `null` if DMA is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
      */
     val dma: RadarRegion?,
 
     /**
-     * The user's last known postal code. May be `null` if postal code is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The user's current postal code. May be `null` if postal code is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
      */
     val postalCode: RadarRegion?,
 
@@ -102,14 +102,19 @@ class RadarUser(
     val topChains: Array<RadarChain>?,
 
     /**
-     * The source of the user's last known location.
+     * The source of the user's current location.
      */
     val source: Radar.RadarLocationSource,
 
     /**
      * A boolean indicating whether the user's IP address is a known proxy. May be `false` if Fraud is not enabled.
      */
-    val proxy: Boolean
+    val proxy: Boolean,
+
+    /**
+     * The user's current trip.
+     */
+    val trip: RadarTrip?
 ) {
 
     internal companion object {
@@ -136,6 +141,7 @@ class RadarUser(
         private const val FIELD_SOURCE = "source"
         private const val FIELD_FRAUD = "fraud"
         private const val FIELD_PROXY = "proxy"
+        private const val FIELD_TRIP = "trip"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarUser? {
@@ -180,6 +186,7 @@ class RadarUser(
                 else -> Radar.RadarLocationSource.UNKNOWN
             }
             val proxy = obj.optJSONObject(FIELD_FRAUD)?.optBoolean(FIELD_PROXY) ?: false
+            val trip = RadarTrip.fromJson(obj.optJSONObject(FIELD_TRIP))
 
             return RadarUser(
                 id,
@@ -201,7 +208,8 @@ class RadarUser(
                 segments,
                 topChains,
                 source,
-                proxy
+                proxy,
+                trip
             )
         }
     }
@@ -236,6 +244,7 @@ class RadarUser(
         val fraudObj = JSONObject()
         fraudObj.putOpt(FIELD_PROXY, this.proxy)
         obj.putOpt(FIELD_FRAUD, fraudObj)
+        obj.putOpt(FIELD_TRIP, this.trip?.toJson())
         return obj
     }
 

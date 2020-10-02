@@ -146,9 +146,6 @@ internal class RadarApiClient(
         params.putOpt("deviceMake", RadarUtils.deviceMake)
         params.putOpt("country", RadarUtils.country)
         params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
-        params.putOpt("uaChannelId", RadarUtils.getUaChannelId())
-        params.putOpt("uaNamedUserId", RadarUtils.getUaNamedUserId())
-        params.putOpt("uaSessionId", RadarUtils.getUaSessionId())
         params.putOpt("source", Radar.stringForSource(source))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             val mocked = location.isFromMockProvider

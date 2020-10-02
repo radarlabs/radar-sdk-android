@@ -2,25 +2,7 @@ package io.radar.sdk.model
 
 import android.annotation.SuppressLint
 import android.location.Location
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_GEOFENCE
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_HOME
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_OFFICE
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_PLACE
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_REGION_COUNTRY
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_REGION_DMA
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_REGION_STATE
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_GEOFENCE
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_HOME
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_OFFICE
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_PLACE
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_COUNTRY
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_DMA
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_STATE
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_NEARBY_PLACE_CHAIN
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STARTED_TRAVELING
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STOPPED_TRAVELING
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STARTED_COMMUTING
-import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STOPPED_COMMUTING
+import io.radar.sdk.model.RadarEvent.RadarEventType.*
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -147,7 +129,17 @@ class RadarEvent(
         /** `user.started_commuting` */
         USER_STARTED_COMMUTING,
         /** `user.stopped_commuting` */
-        USER_STOPPED_COMMUTING
+        USER_STOPPED_COMMUTING,
+        /** `user.started_trip` */
+        USER_STARTED_TRIP,
+        /** `user.updated_trip` */
+        USER_UPDATED_TRIP,
+        /** `user.approaching_trip_destination` */
+        USER_APPROACHING_TRIP_DESTINATION,
+        /** `user.arrived_at_trip` */
+        USER_ARRIVED_AT_TRIP_DESTINATION,
+        /** `user.stopped_trip` */
+        USER_STOPPED_TRIP
     }
 
     /**
@@ -220,8 +212,6 @@ class RadarEvent(
                 "user.exited_office" -> USER_EXITED_OFFICE
                 "user.started_traveling" -> USER_STARTED_TRAVELING
                 "user.stopped_traveling" -> USER_STOPPED_TRAVELING
-                "user.started_commuting" -> USER_STARTED_COMMUTING
-                "user.stopped_commuting" -> USER_STOPPED_COMMUTING
                 "user.entered_place" -> USER_ENTERED_PLACE
                 "user.exited_place" -> USER_EXITED_PLACE
                 "user.nearby_place_chain" -> USER_NEARBY_PLACE_CHAIN
@@ -231,7 +221,14 @@ class RadarEvent(
                 "user.exited_region_state" -> USER_EXITED_REGION_STATE
                 "user.entered_region_dma" -> USER_ENTERED_REGION_DMA
                 "user.exited_region_dma" -> USER_EXITED_REGION_DMA
-                else -> RadarEventType.UNKNOWN
+                "user.started_commuting" -> USER_STARTED_COMMUTING
+                "user.stopped_commuting" -> USER_STOPPED_COMMUTING
+                "user.started_trip" -> USER_STARTED_TRIP
+                "user.updated_trip" -> USER_UPDATED_TRIP
+                "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
+                "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
+                "user.stopped_trip" -> USER_STOPPED_TRIP
+                else -> UNKNOWN
             }
             val geofence = RadarGeofence.fromJson(obj.optJSONObject(FIELD_GEOFENCE))
             val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
@@ -302,8 +299,6 @@ class RadarEvent(
                 USER_EXITED_OFFICE -> "user.exited_office"
                 USER_STARTED_TRAVELING -> "user.started_traveling"
                 USER_STOPPED_TRAVELING -> "user.stopped_traveling"
-                USER_STARTED_COMMUTING -> "user.started_commuting"
-                USER_STOPPED_COMMUTING -> "user.stopped_commuting"
                 USER_ENTERED_PLACE -> "user.entered_place"
                 USER_EXITED_PLACE -> "user.exited_place"
                 USER_NEARBY_PLACE_CHAIN -> "user.nearby_place_chain"
@@ -313,6 +308,13 @@ class RadarEvent(
                 USER_EXITED_REGION_STATE -> "user.exited_region_state"
                 USER_ENTERED_REGION_DMA -> "user.entered_region_dma"
                 USER_EXITED_REGION_DMA -> "user.exited_region_dma"
+                USER_STARTED_COMMUTING -> "user.started_commuting"
+                USER_STOPPED_COMMUTING -> "user.stopped_commuting"
+                USER_STARTED_TRIP -> "user.started_trip"
+                USER_UPDATED_TRIP -> "user.updated_trip"
+                USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
+                USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
+                USER_STOPPED_TRIP -> "user.stopped_trip"
                 else -> null
             }
         }
