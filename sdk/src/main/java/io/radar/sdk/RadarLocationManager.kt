@@ -303,7 +303,7 @@ internal class RadarLocationManager(
 
         val request = GeofencingRequest.Builder()
             .addGeofences(geofences)
-            .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
+            .setInitialTrigger(0)
             .build()
 
         geofencingClient.addGeofences(request, RadarLocationReceiver.getSyncedGeofencesPendingIntent(context))
