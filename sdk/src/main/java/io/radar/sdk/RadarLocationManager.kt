@@ -206,9 +206,9 @@ internal class RadarLocationManager(
                 }
 
                 if (justStopped && options.useStoppedGeofence && location != null) {
-                    this.replaceMovingStoppedGeofence(location, true)
+                    this.replaceBubbleGeofence(location, true)
                 } else {
-                    this.removeMovingStoppedGeofence()
+                    this.removeAllGeofences()
                 }
             } else {
                 if (options.desiredMovingUpdateInterval == 0) {
@@ -218,23 +218,23 @@ internal class RadarLocationManager(
                 }
 
                 if (options.useMovingGeofence && location != null) {
-                    this.replaceMovingStoppedGeofence(location, false)
+                    this.replaceBubbleGeofence(location, false)
                 } else {
-                    this.removeMovingStoppedGeofence()
+                    this.removeAllGeofences()
                 }
             }
         } else {
             this.stopLocationUpdates()
-            this.removeMovingStoppedGeofence()
+            this.removeAllGeofences()
         }
     }
 
-    private fun replaceMovingStoppedGeofence(location: Location?, stopped: Boolean) {
+    private fun replaceBubbleGeofence(location: Location?, stopped: Boolean) {
         if (location == null) {
             return
         }
 
-        this.removeMovingStoppedGeofence()
+        this.removeAllGeofences()
 
         val options = RadarSettings.getTrackingOptions(context)
 
@@ -251,7 +251,7 @@ internal class RadarLocationManager(
                 .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_EXIT)
                 .build()
 
-            geofencingClient.addGeofences(request, RadarLocationReceiver.getGeofencePendingIntent(context))
+            geofencingClient.addGeofences(request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
         } else if (!stopped && options.useMovingGeofence) {
             val geofence = Geofence.Builder()
                 .setRequestId(GEOFENCE_MOVING_REQUEST_ID)
@@ -266,15 +266,13 @@ internal class RadarLocationManager(
                 .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_DWELL)
                 .build()
 
-            geofencingClient.addGeofences(request, RadarLocationReceiver.getGeofencePendingIntent(context))
+            geofencingClient.addGeofences(request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
         }
     }
 
-    private fun removeMovingStoppedGeofence() {
-        geofencingClient.removeGeofences(RadarLocationReceiver.getGeofencePendingIntent(context))
-    }
-
     private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>) {
+        this.removeSyncedGeofences()
+        
         val options = RadarSettings.getTrackingOptions(context)
 
         val geofences = mutableListOf<Geofence>()
@@ -308,7 +306,20 @@ internal class RadarLocationManager(
             .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
             .build()
 
-        geofencingClient.addGeofences(request, RadarLocationReceiver.getGeofencePendingIntent(context))
+        geofencingClient.addGeofences(request, RadarLocationReceiver.getSyncedGeofencesPendingIntent(context))
+    }
+
+    private fun removeBubbleGeofences() {
+        geofencingClient.removeGeofences(RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
+    }
+
+    private fun removeSyncedGeofences() {
+        geofencingClient.removeGeofences(RadarLocationReceiver.getSyncedGeofencesPendingIntent(context))
+    }
+
+    private fun removeAllGeofences() {
+        this.removeBubbleGeofences()
+        this.removeSyncedGeofences()
     }
 
     fun handleLocation(location: Location?, source: RadarLocationSource) {
