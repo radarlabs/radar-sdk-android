@@ -257,7 +257,7 @@ internal class RadarLocationManager(
                 .setRequestId(BUBBLE_MOVING_GEOFENCE_REQUEST_ID)
                 .setCircularRegion(location.latitude, location.longitude, options.movingGeofenceRadius.toFloat())
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                .setLoiteringDelay(options.desiredMovingUpdateInterval * 1000)
+                .setLoiteringDelay(options.stopDuration * 1000 + 10000)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
                 .build()
 
@@ -292,7 +292,7 @@ internal class RadarLocationManager(
                     .setRequestId(identifier)
                     .setCircularRegion(center.latitude, center.longitude, radius.toFloat())
                     .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                    .setLoiteringDelay(options.stopDuration + 10000)
+                    .setLoiteringDelay(options.stopDuration * 1000 + 10000)
                     .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL or Geofence.GEOFENCE_TRANSITION_EXIT)
                     .build()
                 geofences.add(geofence)
