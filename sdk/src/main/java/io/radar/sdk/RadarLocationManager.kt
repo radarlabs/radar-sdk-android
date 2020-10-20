@@ -280,22 +280,27 @@ internal class RadarLocationManager(
         val geofences = mutableListOf<Geofence>()
         radarGeofences.forEachIndexed { i, radarGeofence ->
             var center: RadarCoordinate? = null
+            var radius = 100.0
             if (radarGeofence.geometry is RadarCircleGeometry) {
                 center = radarGeofence.geometry.center
+                radius = radarGeofence.geometry.radius
             } else if (radarGeofence.geometry is RadarPolygonGeometry) {
                 center = radarGeofence.geometry.center
+                radius = radarGeofence.geometry.radius
             }
             if (center != null) {
+                val identifier = "${GEOFENCE_SYNC_REQUEST_ID_PREFIX}_${i}"
                 val geofence = Geofence.Builder()
-                    .setRequestId("${GEOFENCE_SYNC_REQUEST_ID_PREFIX}_${i}")
-                    .setCircularRegion(center.latitude, center.longitude, options.movingGeofenceRadius.toFloat())
+                    .setRequestId(identifier)
+                    .setCircularRegion(center.latitude, center.longitude, radius.toFloat())
                     .setExpirationDuration(Geofence.NEVER_EXPIRE)
                     .setLoiteringDelay(options.stopDuration + 10000)
                     .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL or Geofence.GEOFENCE_TRANSITION_EXIT)
                     .build()
                 geofences.add(geofence)
-            }
 
+                logger.d(this.context, "Synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius; identifier = $identifier")
+            }
         }
 
         val request = GeofencingRequest.Builder()
@@ -474,8 +479,6 @@ internal class RadarLocationManager(
             override fun onComplete(status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) {
                 if (geofences != null) {
                     locationManager.replaceSyncedGeofences(geofences)
-
-                    logger.d(locationManager.context, "Synced geofences | location = $location")
                 }
             }
         })
