@@ -67,8 +67,7 @@ class RadarGeofence(
             val tag: String? = obj.optString(FIELD_TAG, null)
             val externalId: String? = obj.optString(FIELD_EXTERNAL_ID, null)
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
-            val centerObj = obj.optJSONObject(FIELD_GEOMETRY_CENTER)
-            val center = centerObj?.optJSONArray(FIELD_COORDINATES)?.let { coordinate ->
+            val center = obj.optJSONObject(FIELD_GEOMETRY_CENTER)?.optJSONArray(FIELD_COORDINATES)?.let { coordinate ->
                 RadarCoordinate(
                     coordinate.optDouble(1),
                     coordinate.optDouble(0)
