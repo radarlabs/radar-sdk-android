@@ -50,7 +50,7 @@ class RadarGeofence(
         private const val FIELD_TYPE = "type"
         private const val FIELD_GEOMETRY_RADIUS = "geometryRadius"
         private const val FIELD_GEOMETRY_CENTER = "geometryCenter"
-        private const val FIELD_GEOMETRY_POLYGON = "geometry"
+        private const val FIELD_GEOMETRY = "geometry"
         private const val FIELD_COORDINATES = "coordinates"
 
         private const val TYPE_CIRCLE = "circle"
@@ -67,21 +67,24 @@ class RadarGeofence(
             val tag: String? = obj.optString(FIELD_TAG, null)
             val externalId: String? = obj.optString(FIELD_EXTERNAL_ID, null)
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
+            val centerObj = obj.optJSONObject(FIELD_GEOMETRY_CENTER)
+            val center = centerObj?.optJSONArray(FIELD_COORDINATES)?.let { coordinate ->
+                RadarCoordinate(
+                    coordinate.optDouble(1),
+                    coordinate.optDouble(0)
+                )
+            } ?: RadarCoordinate(0.0, 0.0)
+            val radius = obj.optDouble(FIELD_GEOMETRY_RADIUS)
             val geometry = when (obj.optString(FIELD_TYPE)) {
                 TYPE_CIRCLE -> {
-                    val centerObj = obj.optJSONObject(FIELD_GEOMETRY_CENTER)
-                    centerObj?.optJSONArray(FIELD_COORDINATES)?.let { coordinate ->
-                        RadarCircleGeometry(
-                            RadarCoordinate(
-                                coordinate.optDouble(1),
-                                coordinate.optDouble(0)),
-                            obj.optDouble(FIELD_GEOMETRY_RADIUS)
-                        )
-                    }
+                    RadarCircleGeometry(
+                        center,
+                        radius
+                    )
                 }
                 TYPE_POLYGON -> {
-                    val polygonObj = obj.optJSONObject(FIELD_GEOMETRY_POLYGON)
-                    val coordinatesArr = polygonObj?.optJSONArray(FIELD_COORDINATES)
+                    val geometryObj = obj.optJSONObject(FIELD_GEOMETRY)
+                    val coordinatesArr = geometryObj?.optJSONArray(FIELD_COORDINATES)
                     coordinatesArr?.optJSONArray(0)?.let { coordinates ->
                         val polygonCoordinatesArr = Array(coordinates.length()) { index ->
                             coordinates.optJSONArray(index)?.let { coordinate ->
@@ -91,7 +94,11 @@ class RadarGeofence(
                                 )
                             } ?: RadarCoordinate(0.0, 0.0)
                         }
-                        RadarPolygonGeometry(polygonCoordinatesArr)
+                        RadarPolygonGeometry(
+                            polygonCoordinatesArr,
+                            center,
+                            radius
+                        )
                     }
                 }
                 else -> null

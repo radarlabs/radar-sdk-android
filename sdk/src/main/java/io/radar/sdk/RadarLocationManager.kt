@@ -12,8 +12,7 @@ import io.radar.sdk.Radar.RadarLocationCallback
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
-import io.radar.sdk.model.RadarEvent
-import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.*
 import org.json.JSONObject
 import java.util.Date
 import kotlin.collections.ArrayList
@@ -37,6 +36,7 @@ internal class RadarLocationManager(
     internal companion object {
         internal const val GEOFENCE_MOVING_REQUEST_ID = "radar_moving"
         internal const val GEOFENCE_STOPPED_REQUEST_ID = "radar_stopped"
+        internal const val GEOFENCE_SYNC_REQUEST_ID_PREFIX = "radar_sync"
     }
 
     private fun addCallback(callback: RadarLocationCallback?) {
@@ -206,9 +206,9 @@ internal class RadarLocationManager(
                 }
 
                 if (justStopped && options.useStoppedGeofence && location != null) {
-                    this.updateGeofences(location, true)
+                    this.replaceMovingStoppedGeofence(location, true)
                 } else {
-                    this.removeGeofences()
+                    this.removeMovingStoppedGeofence()
                 }
             } else {
                 if (options.desiredMovingUpdateInterval == 0) {
@@ -218,23 +218,23 @@ internal class RadarLocationManager(
                 }
 
                 if (options.useMovingGeofence && location != null) {
-                    this.updateGeofences(location, false)
+                    this.replaceMovingStoppedGeofence(location, false)
                 } else {
-                    this.removeGeofences()
+                    this.removeMovingStoppedGeofence()
                 }
             }
         } else {
             this.stopLocationUpdates()
-            this.removeGeofences()
+            this.removeMovingStoppedGeofence()
         }
     }
 
-    private fun updateGeofences(location: Location?, stopped: Boolean) {
+    private fun replaceMovingStoppedGeofence(location: Location?, stopped: Boolean) {
         if (location == null) {
             return
         }
 
-        this.removeGeofences()
+        this.removeMovingStoppedGeofence()
 
         val options = RadarSettings.getTrackingOptions(context)
 
@@ -270,8 +270,40 @@ internal class RadarLocationManager(
         }
     }
 
-    private fun removeGeofences() {
+    private fun removeMovingStoppedGeofence() {
         geofencingClient.removeGeofences(RadarLocationReceiver.getGeofencePendingIntent(context))
+    }
+
+    private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>) {
+        val options = RadarSettings.getTrackingOptions(context)
+
+        val geofences = mutableListOf<Geofence>()
+        radarGeofences.forEachIndexed { i, radarGeofence ->
+            var center: RadarCoordinate? = null
+            if (radarGeofence.geometry is RadarCircleGeometry) {
+                center = radarGeofence.geometry.center
+            } else if (radarGeofence.geometry is RadarPolygonGeometry) {
+                center = radarGeofence.geometry.center
+            }
+            if (center != null) {
+                val geofence = Geofence.Builder()
+                    .setRequestId("${GEOFENCE_SYNC_REQUEST_ID_PREFIX}_${i}")
+                    .setCircularRegion(center.latitude, center.longitude, options.movingGeofenceRadius.toFloat())
+                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                    .setLoiteringDelay(options.stopDuration + 10000)
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL or Geofence.GEOFENCE_TRANSITION_EXIT)
+                    .build()
+                geofences.add(geofence)
+            }
+
+        }
+
+        val request = GeofencingRequest.Builder()
+            .addGeofences(geofences)
+            .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
+            .build()
+
+        geofencingClient.addGeofences(request, RadarLocationReceiver.getGeofencePendingIntent(context))
     }
 
     fun handleLocation(location: Location?, source: RadarLocationSource) {
@@ -430,6 +462,20 @@ internal class RadarLocationManager(
                     val atOffice = user.insights?.state?.office ?: false
                     val canExit = inGeofences || atPlace || atHome || atOffice
                     RadarState.setCanExit(context, canExit)
+                }
+            }
+        })
+
+        logger.d(this.context, "Syncing geofences | location = $location")
+
+        val locationManager = this
+
+        this.apiClient.searchGeofences(location, 10000, null, null, 10, object : RadarApiClient.RadarSearchGeofencesApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) {
+                if (geofences != null) {
+                    locationManager.replaceSyncedGeofences(geofences)
+
+                    logger.d(locationManager.context, "Synced geofences | location = $location")
                 }
             }
         })
