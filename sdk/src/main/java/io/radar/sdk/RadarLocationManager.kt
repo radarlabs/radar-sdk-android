@@ -34,9 +34,9 @@ internal class RadarLocationManager(
     private val callbacks = ArrayList<RadarLocationCallback>()
 
     internal companion object {
-        internal const val GEOFENCE_MOVING_REQUEST_ID = "radar_moving"
-        internal const val GEOFENCE_STOPPED_REQUEST_ID = "radar_stopped"
-        internal const val GEOFENCE_SYNC_REQUEST_ID_PREFIX = "radar_sync"
+        internal const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
+        internal const val BUBBLE_STOPPED_GEOFENCE_REQUEST_ID = "radar_stopped"
+        internal const val SYNCED_GEOFENCES_REQUEST_ID_PREFIX = "radar_sync"
     }
 
     private fun addCallback(callback: RadarLocationCallback?) {
@@ -240,7 +240,7 @@ internal class RadarLocationManager(
 
         if (stopped && options.useStoppedGeofence) {
             val geofence = Geofence.Builder()
-                .setRequestId(GEOFENCE_STOPPED_REQUEST_ID)
+                .setRequestId(BUBBLE_STOPPED_GEOFENCE_REQUEST_ID)
                 .setCircularRegion(location.latitude, location.longitude, options.stoppedGeofenceRadius.toFloat())
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_EXIT)
@@ -254,7 +254,7 @@ internal class RadarLocationManager(
             geofencingClient.addGeofences(request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
         } else if (!stopped && options.useMovingGeofence) {
             val geofence = Geofence.Builder()
-                .setRequestId(GEOFENCE_MOVING_REQUEST_ID)
+                .setRequestId(BUBBLE_MOVING_GEOFENCE_REQUEST_ID)
                 .setCircularRegion(location.latitude, location.longitude, options.movingGeofenceRadius.toFloat())
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setLoiteringDelay(options.desiredMovingUpdateInterval * 1000)
@@ -272,7 +272,7 @@ internal class RadarLocationManager(
 
     private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>) {
         this.removeSyncedGeofences()
-        
+
         val options = RadarSettings.getTrackingOptions(context)
 
         val geofences = mutableListOf<Geofence>()
@@ -287,7 +287,7 @@ internal class RadarLocationManager(
                 radius = radarGeofence.geometry.radius
             }
             if (center != null) {
-                val identifier = "${GEOFENCE_SYNC_REQUEST_ID_PREFIX}_${i}"
+                val identifier = "${SYNCED_GEOFENCES_REQUEST_ID_PREFIX}_${i}"
                 val geofence = Geofence.Builder()
                     .setRequestId(identifier)
                     .setCircularRegion(center.latitude, center.longitude, radius.toFloat())
