@@ -239,9 +239,12 @@ internal class RadarLocationManager(
         val options = RadarSettings.getTrackingOptions(context)
 
         if (stopped && options.useStoppedGeofence) {
+            val identifier = BUBBLE_STOPPED_GEOFENCE_REQUEST_ID
+            val radius = options.stoppedGeofenceRadius.toFloat()
+
             val geofence = Geofence.Builder()
-                .setRequestId(BUBBLE_STOPPED_GEOFENCE_REQUEST_ID)
-                .setCircularRegion(location.latitude, location.longitude, options.stoppedGeofenceRadius.toFloat())
+                .setRequestId(identifier)
+                .setCircularRegion(location.latitude, location.longitude, radius)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_EXIT)
                 .build()
@@ -252,10 +255,18 @@ internal class RadarLocationManager(
                 .build()
 
             geofencingClient.addGeofences(request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
+
+            logger.d(
+                this.context,
+                "Replaced stopped bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier"
+            )
         } else if (!stopped && options.useMovingGeofence) {
+            val identifier = BUBBLE_MOVING_GEOFENCE_REQUEST_ID
+            val radius = options.stoppedGeofenceRadius.toFloat()
+
             val geofence = Geofence.Builder()
-                .setRequestId(BUBBLE_MOVING_GEOFENCE_REQUEST_ID)
-                .setCircularRegion(location.latitude, location.longitude, options.movingGeofenceRadius.toFloat())
+                .setRequestId(identifier)
+                .setCircularRegion(location.latitude, location.longitude, radius)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setLoiteringDelay(options.stopDuration * 1000 + 10000)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
@@ -267,6 +278,11 @@ internal class RadarLocationManager(
                 .build()
 
             geofencingClient.addGeofences(request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
+
+            logger.d(
+                this.context,
+                "Replaced moving bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier"
+            )
         }
     }
 
