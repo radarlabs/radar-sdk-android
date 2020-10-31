@@ -208,7 +208,7 @@ internal class RadarLocationManager(
                 if (justStopped && options.useStoppedGeofence && location != null) {
                     this.replaceBubbleGeofence(location, true)
                 } else {
-                    this.removeAllGeofences()
+                    this.removeBubbleGeofences()
                 }
             } else {
                 if (options.desiredMovingUpdateInterval == 0) {
@@ -220,7 +220,7 @@ internal class RadarLocationManager(
                 if (options.useMovingGeofence && location != null) {
                     this.replaceBubbleGeofence(location, false)
                 } else {
-                    this.removeAllGeofences()
+                    this.removeBubbleGeofences()
                 }
             }
         } else {
@@ -234,7 +234,7 @@ internal class RadarLocationManager(
             return
         }
 
-        this.removeAllGeofences()
+        this.removeBubbleGeofences()
 
         val options = RadarSettings.getTrackingOptions(context)
 
