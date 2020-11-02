@@ -494,13 +494,33 @@ object Radar {
      */
     @JvmStatic
     fun trackOnce(callback: RadarTrackCallback? = null) {
+        this.trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback)
+    }
+
+    /**
+     * Tracks the user's location once in the foreground.
+     *
+     * @param[block] A block callback.
+     */
+    fun trackOnce(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+        trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, block)
+    }
+
+    /**
+     * Tracks the user's location once in the foreground with the desired accuracy.
+     *
+     * @param[desiredAccuracy] The desired accuracy.
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun trackOnce(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, callback: RadarTrackCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
 
-        locationManager.getLocation(object : RadarLocationCallback {
+        locationManager.getLocation(desiredAccuracy, object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
                 if (status != RadarStatus.SUCCESS || location == null) {
                     callback?.onComplete(status)
@@ -518,12 +538,13 @@ object Radar {
     }
 
     /**
-     * Tracks the user's location once in the foreground.
+     * Tracks the user's location once in the foreground with the desired accuracy.
      *
+     * @param[desiredAccuracy] The desired accuracy.
      * @param[block] A block callback.
      */
-    fun trackOnce(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        trackOnce(object : RadarTrackCallback {
+    fun trackOnce(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+        trackOnce(desiredAccuracy, object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
             }
