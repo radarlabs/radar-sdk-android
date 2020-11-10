@@ -197,7 +197,6 @@ internal class RadarLocationManager(
 
         if (tracking) {
             val stopped = RadarState.getStopped(context)
-            val justStopped = RadarState.getStopped(context)
             if (stopped) {
                 if (options.desiredStoppedUpdateInterval == 0) {
                     this.stopLocationUpdates()
@@ -205,7 +204,7 @@ internal class RadarLocationManager(
                     this.startLocationUpdates(options.desiredAccuracy, options.desiredStoppedUpdateInterval, options.fastestStoppedUpdateInterval)
                 }
 
-                if (justStopped && options.useStoppedGeofence && location != null) {
+                if (options.useStoppedGeofence && location != null) {
                     this.replaceBubbleGeofence(location, true)
                 } else {
                     this.removeBubbleGeofences()
