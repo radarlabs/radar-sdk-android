@@ -633,7 +633,6 @@ object Radar {
                     RadarRouteMode.FOOT -> routes?.foot?.geometry?.coordinates
                     RadarRouteMode.BIKE -> routes?.bike?.geometry?.coordinates
                     RadarRouteMode.CAR -> routes?.car?.geometry?.coordinates
-                    else -> null
                 }
 
                 if (coordinates == null) {

@@ -92,12 +92,12 @@ class RadarTrip(
                 return null
             }
 
-            val externalId = obj.optString(FIELD_EXTERNAL_ID, null)
+            val externalId: String = obj.optString(FIELD_EXTERNAL_ID, "")
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
             val destinationGeofenceTag: String? = obj.optString(
-                FIELD_DESTINATION_GEOFENCE_TAG, null)
+                FIELD_DESTINATION_GEOFENCE_TAG) ?: null
             val destinationGeofenceExternalId: String? = obj.optString(
-                FIELD_DESTINATION_GEOFENCE_EXTERNAL_ID, null)
+                FIELD_DESTINATION_GEOFENCE_EXTERNAL_ID) ?: null
             val destinationLocation: RadarCoordinate? = obj.optJSONObject(
                 FIELD_DESTINATION_LOCATION)?.let { location ->
                 location.optJSONArray(FIELD_COORDINATES)?.let { coordinate ->
