@@ -150,7 +150,7 @@ class RadarTest {
         assertNotEquals(trip?.etaDistance, 0)
         assertNotNull(trip?.etaDuration)
         assertNotEquals(trip?.etaDuration, 0)
-        assertTrue(trip?.arrived ?: false)
+        assertEquals(trip?.status, RadarTrip.RadarTripStatus.STARTED)
     }
 
     private fun assertUserOk(user: RadarUser?) {

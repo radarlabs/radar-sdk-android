@@ -285,10 +285,17 @@ internal class RadarLocationManager(
         }
     }
 
-    private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>) {
+    private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
+        val options = RadarSettings.getTrackingOptions(context)
+        if (!options.syncGeofences) {
+            return
+        }
+
         this.removeSyncedGeofences()
 
-        val options = RadarSettings.getTrackingOptions(context)
+        if (radarGeofences == null) {
+            return
+        }
 
         val geofences = mutableListOf<Geofence>()
         radarGeofences.forEachIndexed { i, radarGeofence ->
@@ -482,8 +489,10 @@ internal class RadarLocationManager(
     private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {
         logger.d(this.context, "Sending location | source = $source; location = $location; stopped = $stopped; replayed = $replayed")
 
+        val locationManager = this
+
         this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, object : RadarTrackApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
                 if (user != null) {
                     RadarSettings.setId(context, user._id)
 
@@ -494,18 +503,8 @@ internal class RadarLocationManager(
                     val canExit = inGeofences || atPlace || atHome || atOffice
                     RadarState.setCanExit(context, canExit)
                 }
-            }
-        })
 
-        logger.d(this.context, "Syncing geofences | location = $location")
-
-        val locationManager = this
-
-        this.apiClient.searchGeofences(location, 10000, null, null, 10, object : RadarApiClient.RadarSearchGeofencesApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) {
-                if (geofences != null) {
-                    locationManager.replaceSyncedGeofences(geofences)
-                }
+                locationManager.replaceSyncedGeofences(nearbyGeofences)
             }
         })
     }

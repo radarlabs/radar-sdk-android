@@ -203,7 +203,7 @@
             "duration": 5.5,
             "distance": 1331
          },
-         "arrived": true
+         "status": "started"
       }
    },
    "events": [

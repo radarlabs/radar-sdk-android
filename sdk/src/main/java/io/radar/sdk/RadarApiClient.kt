@@ -19,7 +19,7 @@ internal class RadarApiClient(
 ) {
 
     interface RadarTrackApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, events: Array<RadarEvent>? = null, user: RadarUser? = null)
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, events: Array<RadarEvent>? = null, user: RadarUser? = null, nearbyGeofences: Array<RadarGeofence>? = null)
     }
 
     interface RadarContextApiCallback {
@@ -161,6 +161,10 @@ internal class RadarApiClient(
             tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
             params.putOpt("tripOptions", tripOptionsObj)
         }
+        val options = RadarSettings.getTrackingOptions(context)
+        if (options.syncGeofences) {
+            params.putOpt("nearbyGeofences", true)
+        }
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -173,7 +177,6 @@ internal class RadarApiClient(
         apiHelper.request(context, "POST", url, headers, params, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    val options = RadarSettings.getTrackingOptions(context)
                     if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
                         RadarState.setLastFailedStoppedLocation(context, location)
                     }
@@ -202,11 +205,14 @@ internal class RadarApiClient(
                 val user = res.optJSONObject("user")?.let { userObj ->
                     RadarUser.fromJson(userObj)
                 }
+                val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
+                    RadarGeofence.fromJson(nearbyGeofencesArr)
+                }
                 if (events != null && user != null) {
                     val successIntent = RadarReceiver.createSuccessIntent(res, location)
                     Radar.broadcastIntent(successIntent)
 
-                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user)
+                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
 
                     return
                 }
@@ -239,13 +245,13 @@ internal class RadarApiClient(
         apiHelper.request(context, "PUT", url, headers, params)
     }
 
-    internal fun stopTrip() {
+    internal fun stopTrip(canceled: Boolean) {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
         val externalId = RadarSettings.getTripOptions(context)?.externalId ?: return
 
         val params = JSONObject()
-        params.putOpt("active", false)
+        params.putOpt("status", if (canceled) "canceled" else "completed")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
