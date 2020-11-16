@@ -286,14 +286,10 @@ internal class RadarLocationManager(
     }
 
     private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
-        val options = RadarSettings.getTrackingOptions(context)
-        if (!options.syncGeofences) {
-            return
-        }
-
         this.removeSyncedGeofences()
 
-        if (radarGeofences == null) {
+        val options = RadarSettings.getTrackingOptions(context)
+        if (!options.syncGeofences || radarGeofences == null) {
             return
         }
 
