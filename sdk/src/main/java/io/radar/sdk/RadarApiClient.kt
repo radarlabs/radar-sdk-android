@@ -209,6 +209,12 @@ internal class RadarApiClient(
                     RadarGeofence.fromJson(nearbyGeofencesArr)
                 }
                 if (events != null && user != null) {
+                    RadarSettings.setId(context, user._id)
+
+                    if (user.trip == null) {
+                        RadarSettings.setTripOptions(context, null)
+                    }
+
                     val successIntent = RadarReceiver.createSuccessIntent(res, location)
                     Radar.broadcastIntent(successIntent)
 
