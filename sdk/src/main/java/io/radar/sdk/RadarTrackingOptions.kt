@@ -358,9 +358,9 @@ data class RadarTrackingOptions(
                 replay = replay,
                 sync = sync,
                 useStoppedGeofence = obj.optBoolean(KEY_USE_STOPPED_GEOFENCE),
-                stoppedGeofenceRadius = obj.optInt(KEY_STOPPED_GEOFENCE_RADIUS, 200),
+                stoppedGeofenceRadius = obj.optInt(KEY_STOPPED_GEOFENCE_RADIUS, 100),
                 useMovingGeofence = obj.optBoolean(KEY_USE_MOVING_GEOFENCE),
-                movingGeofenceRadius = obj.optInt(KEY_MOVING_GEOFENCE_RADIUS, 200),
+                movingGeofenceRadius = obj.optInt(KEY_MOVING_GEOFENCE_RADIUS, 100),
                 syncGeofences = obj.optBoolean(KEY_SYNC_GEOFENCES)
             )
         }
