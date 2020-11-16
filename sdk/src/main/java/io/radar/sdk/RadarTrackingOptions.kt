@@ -274,7 +274,7 @@ data class RadarTrackingOptions(
             replay = RadarTrackingOptionsReplay.STOPS,
             sync = RadarTrackingOptionsSync.STOPS_AND_EXITS,
             useStoppedGeofence = true,
-            stoppedGeofenceRadius = 200,
+            stoppedGeofenceRadius = 100,
             useMovingGeofence = true,
             movingGeofenceRadius = 100,
             syncGeofences = false
