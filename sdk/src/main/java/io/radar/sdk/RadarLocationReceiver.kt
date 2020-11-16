@@ -15,20 +15,32 @@ class RadarLocationReceiver : BroadcastReceiver() {
     internal companion object {
 
         internal const val ACTION_LOCATION = "io.radar.sdk.LocationReceiver.LOCATION"
-        internal const val ACTION_GEOFENCE = "io.radar.sdk.LocationReceiver.GEOFENCE"
+        internal const val ACTION_BUBBLE_GEOFENCE = "io.radar.sdk.LocationReceiver.GEOFENCE"
+        internal const val ACTION_SYNCED_GEOFENCES = "io.radar.sdk.LocationReceiver.SYNCED_GEOFENCES"
 
-        internal fun getGeofencePendingIntent(context: Context): PendingIntent {
+        internal const val REQUEST_CODE_LOCATION = 201605250
+        internal const val REQUEST_CODE_BUBBLE_GEOFENCE = 201605251
+        internal const val REQUEST_CODE_SYNCED_GEOFENCES = 201605252
+
+        internal fun getBubbleGeofencePendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
-                action = ACTION_GEOFENCE
+                action = ACTION_BUBBLE_GEOFENCE
             }
-            return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            return PendingIntent.getBroadcast(context, REQUEST_CODE_BUBBLE_GEOFENCE, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+
+        internal fun getSyncedGeofencesPendingIntent(context: Context): PendingIntent {
+            val intent = baseIntent(context).apply {
+                action = ACTION_SYNCED_GEOFENCES
+            }
+            return PendingIntent.getBroadcast(context, REQUEST_CODE_SYNCED_GEOFENCES, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         }
 
         internal fun getLocationPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
                 action = ACTION_LOCATION
             }
-            return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            return PendingIntent.getBroadcast(context, REQUEST_CODE_LOCATION, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         }
 
         private fun baseIntent(context: Context): Intent = Intent(context, RadarLocationReceiver::class.java)
@@ -38,7 +50,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
     @SuppressLint("MissingPermission")
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
-            ACTION_GEOFENCE -> {
+            ACTION_BUBBLE_GEOFENCE, ACTION_SYNCED_GEOFENCES -> {
                 val event = GeofencingEvent.fromIntent(intent)
                 event?.triggeringLocation?.also {
                     val source = when (event.geofenceTransition) {

@@ -189,7 +189,7 @@ object Radar {
     }
 
     /**
-     * The status types for a request. See [](https://radar.io/documentation/sdk#android).
+     * The status types for a request. See [](https://radar.io/documentation/sdk/android).
      */
     enum class RadarStatus {
         /** Success */
@@ -294,7 +294,7 @@ object Radar {
     internal lateinit var locationManager: RadarLocationManager
 
     /**
-     * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods. See [](https://radar.io/documentation/sdk#android).
+     * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods. See [](https://radar.io/documentation/sdk/android).
      *
      * @param[context] The context
      * @param[publishableKey] Your publishable API key
@@ -334,7 +334,7 @@ object Radar {
     }
 
     /**
-     * Identifies the user. Until you identify the user, Radar will automatically identify the user by `deviceId` (Android ID). See [](https://radar.io/documentation/sdk#android).
+     * Identifies the user. Until you identify the user, Radar will automatically identify the user by `deviceId` (Android ID). See [](https://radar.io/documentation/sdk/android).
      *
      * @param[userId] A stable unique ID for the user. If null, the previous `userId` will be cleared.
      */
@@ -494,27 +494,7 @@ object Radar {
      */
     @JvmStatic
     fun trackOnce(callback: RadarTrackCallback? = null) {
-        if (!initialized) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
-            return
-        }
-
-        locationManager.getLocation(object : RadarLocationCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
-                if (status != RadarStatus.SUCCESS || location == null) {
-                    callback?.onComplete(status)
-
-                    return
-                }
-
-                apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, object : RadarApiClient.RadarTrackApiCallback {
-                    override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?) {
-                        callback?.onComplete(status, location, events, user)
-                    }
-                })
-            }
-        })
+        this.trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback)
     }
 
     /**
@@ -523,7 +503,48 @@ object Radar {
      * @param[block] A block callback.
      */
     fun trackOnce(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        trackOnce(object : RadarTrackCallback {
+        trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, block)
+    }
+
+    /**
+     * Tracks the user's location once in the foreground with the desired accuracy.
+     *
+     * @param[desiredAccuracy] The desired accuracy.
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun trackOnce(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, callback: RadarTrackCallback? = null) {
+        if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        locationManager.getLocation(desiredAccuracy, object : RadarLocationCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                if (status != RadarStatus.SUCCESS || location == null) {
+                    callback?.onComplete(status)
+
+                    return
+                }
+
+                apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, object : RadarApiClient.RadarTrackApiCallback {
+                    override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
+                        callback?.onComplete(status, location, events, user)
+                    }
+                })
+            }
+        })
+    }
+
+    /**
+     * Tracks the user's location once in the foreground with the desired accuracy.
+     *
+     * @param[desiredAccuracy] The desired accuracy.
+     * @param[block] A block callback.
+     */
+    fun trackOnce(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+        trackOnce(desiredAccuracy, object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
             }
@@ -531,7 +552,7 @@ object Radar {
     }
 
     /**
-     * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk#android).
+     * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk/android).
      *
      * @param[location] A location for the user.
      * @param[callback] An optional callback.
@@ -545,14 +566,14 @@ object Radar {
         }
 
         apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, object : RadarApiClient.RadarTrackApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
                 callback?.onComplete(status, location, events, user)
             }
         })
     }
 
     /**
-     * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk#android).
+     * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk/android).
      *
      * @param[location] A location for the user.
      * @param[block] A block callback.
@@ -566,7 +587,7 @@ object Radar {
     }
 
     /**
-     * Starts tracking the user's location in the background. Before calling this method, the user should have granted backgroundlocation permissions for the app. See [](https://radar.io/documentation/sdk#android).
+     * Starts tracking the user's location in the background. Before calling this method, the user should have granted backgroundlocation permissions for the app. See [](https://radar.io/documentation/sdk/android).
      *
      * @param[options] Configurable tracking options.
      */
@@ -612,7 +633,6 @@ object Radar {
                     RadarRouteMode.FOOT -> routes?.foot?.geometry?.coordinates
                     RadarRouteMode.BIKE -> routes?.bike?.geometry?.coordinates
                     RadarRouteMode.CAR -> routes?.car?.geometry?.coordinates
-                    else -> null
                 }
 
                 if (coordinates == null) {
@@ -642,7 +662,7 @@ object Radar {
                         val stopped = (i == 0) || (i == coordinates.size - 1)
 
                         apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, object : RadarApiClient.RadarTrackApiCallback {
-                            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?) {
+                            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
                                 callback?.onComplete(status, location, events, user)
 
                                 if (i < coordinates.size - 1) {
@@ -687,7 +707,7 @@ object Radar {
     }
 
     /**
-     * Stops tracking the user's location in the background. See [](https://radar.io/documentation/sdk#android).
+     * Stops tracking the user's location in the background. See [](https://radar.io/documentation/sdk/android).
      */
     @JvmStatic
     fun stopTracking() {
@@ -727,7 +747,7 @@ object Radar {
     }
 
     /**
-     * Accepts an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events. See [](https://radar.io/documentation/sdk#android).
+     * Accepts an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events. See [](https://radar.io/documentation/sdk/android).
      *
      * @param[eventId] The ID of the event to accept.
      * @param[verifiedPlaceId] For place entry events, the ID of the verified place. May be `null`.
@@ -742,7 +762,7 @@ object Radar {
     }
 
     /**
-     * Rejects an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events. See [](https://radar.io/documentation/sdk#android).
+     * Rejects an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events. See [](https://radar.io/documentation/sdk/android).
      *
      * @param[eventId] The ID of the event to reject.
      */
@@ -788,12 +808,34 @@ object Radar {
      * Stops a trip.
      */
     @JvmStatic
+    @Deprecated("Use completeTrip() or cancelTrip() instead.")
     fun stopTrip() {
+        this.completeTrip();
+    }
+
+    /**
+     * Completes a trip.
+     */
+    @JvmStatic
+    fun completeTrip() {
         if (!initialized) {
             return
         }
 
-        apiClient.stopTrip()
+        apiClient.stopTrip(false)
+        RadarSettings.setTripOptions(context, null)
+    }
+
+    /**
+     * Cancels a trip.
+     */
+    @JvmStatic
+    fun cancelTrip() {
+        if (!initialized) {
+            return
+        }
+
+        apiClient.stopTrip(true)
         RadarSettings.setTripOptions(context, null)
     }
 
@@ -1666,6 +1708,7 @@ object Radar {
             RadarLocationSource.GEOFENCE_ENTER -> "GEOFENCE_ENTER"
             RadarLocationSource.GEOFENCE_DWELL -> "GEOFENCE_DWELL"
             RadarLocationSource.GEOFENCE_EXIT -> "GEOFENCE_EXIT"
+            RadarLocationSource.MOCK_LOCATION -> "MOCK_LOCATION"
             else -> "UNKNOWN"
         }
     }
@@ -1683,6 +1726,26 @@ object Radar {
             RadarRouteMode.FOOT -> "foot"
             RadarRouteMode.BIKE -> "bike"
             RadarRouteMode.CAR -> "car"
+        }
+    }
+
+    /**
+     * Returns a display string for a trip status value.
+     *
+     * @param[status] A trip status value.
+     *
+     * @return A display string for the trip status value.
+     */
+    @JvmStatic
+    fun stringForTripStatus(status: RadarTrip.RadarTripStatus): String? {
+        return when (status) {
+            RadarTrip.RadarTripStatus.STARTED -> "started"
+            RadarTrip.RadarTripStatus.APPROACHING -> "approaching"
+            RadarTrip.RadarTripStatus.ARRIVED -> "arrived"
+            RadarTrip.RadarTripStatus.EXPIRED -> "expired"
+            RadarTrip.RadarTripStatus.COMPLETED -> "completed"
+            RadarTrip.RadarTripStatus.CANCELED -> "canceled"
+            else -> "unknown"
         }
     }
 

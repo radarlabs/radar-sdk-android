@@ -51,10 +51,27 @@ class RadarTrip(
     val etaDuration: Double?,
 
     /**
-     * For trips with a destination, a boolean indicating whether the user has arrived (destination geofence entered).
+     * The status of the trip.
      */
-    val arrived: Boolean
+    val status: RadarTripStatus
 ) {
+
+    enum class RadarTripStatus {
+        /** Unknown */
+        UNKNOWN,
+        /** `started` */
+        STARTED,
+        /** `approaching` */
+        APPROACHING,
+        /** `arrived` */
+        ARRIVED,
+        /** `expired` */
+        EXPIRED,
+        /** `completed` */
+        COMPLETED,
+        /** `canceled` */
+        CANCELED
+    }
 
     internal companion object {
         private const val FIELD_EXTERNAL_ID = "externalId"
@@ -67,7 +84,7 @@ class RadarTrip(
         private const val FIELD_ETA = "eta"
         private const val FIELD_DISTANCE = "distance"
         private const val FIELD_DURATION = "duration"
-        private const val FIELD_ARRIVED = "arrived"
+        private const val FIELD_STATUS = "status"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarTrip? {
@@ -75,12 +92,12 @@ class RadarTrip(
                 return null
             }
 
-            val externalId = obj.optString(FIELD_EXTERNAL_ID, null)
+            val externalId: String = obj.optString(FIELD_EXTERNAL_ID, "")
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
             val destinationGeofenceTag: String? = obj.optString(
-                FIELD_DESTINATION_GEOFENCE_TAG, null)
+                FIELD_DESTINATION_GEOFENCE_TAG) ?: null
             val destinationGeofenceExternalId: String? = obj.optString(
-                FIELD_DESTINATION_GEOFENCE_EXTERNAL_ID, null)
+                FIELD_DESTINATION_GEOFENCE_EXTERNAL_ID) ?: null
             val destinationLocation: RadarCoordinate? = obj.optJSONObject(
                 FIELD_DESTINATION_LOCATION)?.let { location ->
                 location.optJSONArray(FIELD_COORDINATES)?.let { coordinate ->
@@ -98,7 +115,15 @@ class RadarTrip(
             }
             val etaDistance = obj.optJSONObject(FIELD_ETA)?.optDouble(FIELD_DISTANCE)
             val etaDuration = obj.optJSONObject(FIELD_ETA)?.optDouble(FIELD_DURATION)
-            val arrived = obj.optBoolean(FIELD_ARRIVED, false)
+            val status: RadarTripStatus = when(obj.optString(FIELD_STATUS)) {
+                "started" -> RadarTripStatus.STARTED
+                "approaching" -> RadarTripStatus.APPROACHING
+                "arrived" -> RadarTripStatus.ARRIVED
+                "expired" -> RadarTripStatus.EXPIRED
+                "completed" -> RadarTripStatus.COMPLETED
+                "canceled" -> RadarTripStatus.CANCELED
+                else -> RadarTripStatus.UNKNOWN
+            }
 
             return RadarTrip(
                 externalId,
@@ -109,7 +134,7 @@ class RadarTrip(
                 mode,
                 etaDistance,
                 etaDuration,
-                arrived
+                status
             )
         }
 
@@ -137,7 +162,7 @@ class RadarTrip(
         etaObj.putOpt(FIELD_DISTANCE, this.etaDistance)
         etaObj.putOpt(FIELD_DURATION, this.etaDuration)
         obj.putOpt(FIELD_ETA, etaObj)
-        obj.putOpt(FIELD_ARRIVED, this.arrived)
+        obj.putOpt(FIELD_STATUS, Radar.stringForTripStatus(status))
         return obj
     }
 

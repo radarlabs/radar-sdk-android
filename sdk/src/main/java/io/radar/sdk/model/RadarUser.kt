@@ -149,10 +149,10 @@ class RadarUser(
                 return null
             }
 
-            val id = obj.optString(FIELD_ID, null)
-            val userId = obj.optString(FIELD_USER_ID, null)
-            val deviceId = obj.optString(FIELD_DEVICE_ID, null)
-            val description = obj.optString(FIELD_DESCRIPTION, null)
+            val id: String = obj.optString(FIELD_ID) ?: ""
+            val userId: String? = obj.optString(FIELD_USER_ID) ?: null
+            val deviceId: String? = obj.optString(FIELD_DEVICE_ID) ?: null
+            val description: String? = obj.optString(FIELD_DESCRIPTION) ?: null
             val metadata = obj.optJSONObject(FIELD_METADATA)
             val stopped = obj.optBoolean(FIELD_STOPPED)
             val foreground = obj.optBoolean(FIELD_FOREGROUND)
