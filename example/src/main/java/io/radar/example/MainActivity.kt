@@ -122,7 +122,7 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Mock track: status = ${status}; location = $location; events = $events; user = $user")
 
             if (i == 2) {
-                Radar.stopTrip()
+                Radar.completeTrip()
             }
 
             i++
