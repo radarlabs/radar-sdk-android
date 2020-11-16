@@ -1708,6 +1708,7 @@ object Radar {
             RadarLocationSource.GEOFENCE_ENTER -> "GEOFENCE_ENTER"
             RadarLocationSource.GEOFENCE_DWELL -> "GEOFENCE_DWELL"
             RadarLocationSource.GEOFENCE_EXIT -> "GEOFENCE_EXIT"
+            RadarLocationSource.MOCK_LOCATION -> "MOCK_LOCATION"
             else -> "UNKNOWN"
         }
     }
