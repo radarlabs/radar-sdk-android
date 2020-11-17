@@ -251,13 +251,13 @@ internal class RadarApiClient(
         apiHelper.request(context, "PUT", url, headers, params)
     }
 
-    internal fun stopTrip(canceled: Boolean) {
+    internal fun updateTrip(status: RadarTrip.RadarTripStatus) {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
         val externalId = RadarSettings.getTripOptions(context)?.externalId ?: return
 
         val params = JSONObject()
-        params.putOpt("status", if (canceled) "canceled" else "completed")
+        params.putOpt("status", Radar.stringForTripStatus(status))
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
