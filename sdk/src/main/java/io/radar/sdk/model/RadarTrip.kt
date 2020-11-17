@@ -11,6 +11,11 @@ import org.json.JSONObject
  */
 class RadarTrip(
     /**
+     * The Radar ID of the trip.
+     */
+    val _id: String,
+
+    /**
      * The external ID of the trip.
      */
     val externalId: String,
@@ -74,6 +79,7 @@ class RadarTrip(
     }
 
     internal companion object {
+        private const val FIELD_ID = "_id"
         private const val FIELD_EXTERNAL_ID = "externalId"
         private const val FIELD_METADATA = "metadata"
         private const val FIELD_DESTINATION_GEOFENCE_TAG = "destinationGeofenceTag"
@@ -92,6 +98,7 @@ class RadarTrip(
                 return null
             }
 
+            val id: String = obj.optString(FIELD_ID) ?: ""
             val externalId: String = obj.optString(FIELD_EXTERNAL_ID, "")
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
             val destinationGeofenceTag: String? = obj.optString(
@@ -126,6 +133,7 @@ class RadarTrip(
             }
 
             return RadarTrip(
+                id,
                 externalId,
                 metadata,
                 destinationGeofenceTag,
@@ -152,6 +160,7 @@ class RadarTrip(
 
     fun toJson(): JSONObject {
         val obj = JSONObject()
+        obj.putOpt(FIELD_ID, this._id)
         obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_DESTINATION_GEOFENCE_TAG, this.destinationGeofenceTag)

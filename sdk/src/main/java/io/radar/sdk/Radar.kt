@@ -801,6 +801,7 @@ object Radar {
         }
 
         RadarSettings.setTripOptions(context, options)
+        apiClient.updateTrip(RadarTrip.RadarTripStatus.STARTED)
         locationManager.getLocation(null)
     }
 
@@ -822,7 +823,7 @@ object Radar {
             return
         }
 
-        apiClient.stopTrip(false)
+        apiClient.updateTrip(RadarTrip.RadarTripStatus.COMPLETED)
         RadarSettings.setTripOptions(context, null)
     }
 
@@ -835,7 +836,7 @@ object Radar {
             return
         }
 
-        apiClient.stopTrip(true)
+        apiClient.updateTrip(RadarTrip.RadarTripStatus.CANCELED)
         RadarSettings.setTripOptions(context, null)
     }
 
