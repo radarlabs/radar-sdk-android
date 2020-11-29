@@ -573,7 +573,7 @@ object Radar {
                 }
 
                 val beaconsEnabled = RadarSettings.getBeaconsEnabled(context)
-                if (!beaconsEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (beaconsEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     apiClient.searchBeacons(location, 200, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                         override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
                             if (status != RadarStatus.SUCCESS || beacons == null) {
