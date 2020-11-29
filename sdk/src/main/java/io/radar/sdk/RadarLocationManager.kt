@@ -487,7 +487,7 @@ internal class RadarLocationManager(
 
         val locationManager = this
 
-        this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, object : RadarTrackApiCallback {
+        this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, null, object : RadarTrackApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
                 if (user != null) {
                     val inGeofences = user.geofences != null && user.geofences.isNotEmpty()

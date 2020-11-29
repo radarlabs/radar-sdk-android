@@ -44,6 +44,24 @@ object Radar {
     }
 
     /**
+     * Called when a beacon ranging request succeeds, fails, or times out.
+     */
+    interface RadarBeaconCallback {
+
+        /**
+         * Called when a beacon ranging request succeeds, fails, or times out. Receives the request status and, if successful, the nearby beacon identifiers.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[beacons] Array<String>? If successful, the nearby beacon identifiers.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            nearbyBeacons: Array<String>? = null
+        )
+
+    }
+
+    /**
      * Called when a track request succeeds, fails, or times out.
      */
     interface RadarTrackCallback {
@@ -198,8 +216,10 @@ object Radar {
         ERROR_PUBLISHABLE_KEY,
         /** Location permissions not granted */
         ERROR_PERMISSIONS,
-        /** Location services error or timeout (10 seconds) */
+        /** Location services error or timeout (20 seconds) */
         ERROR_LOCATION,
+        /** Beacon ranging error or timeout (5 seconds) */
+        ERROR_BLUETOOTH,
         /** Network error or timeout (10 seconds) */
         ERROR_NETWORK,
         /** Bad request (missing or invalid params) */
@@ -292,6 +312,7 @@ object Radar {
     private lateinit var logger: RadarLogger
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
+    internal lateinit var beaconManager: RadarBeaconManager
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods. See [](https://radar.io/documentation/sdk/android).
@@ -321,6 +342,11 @@ object Radar {
         if (!this::locationManager.isInitialized) {
             this.locationManager = RadarLocationManager(this.context, apiClient, logger)
             this.locationManager.updateTracking()
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (!this::beaconManager.isInitialized) {
+                this.beaconManager = RadarBeaconManager(this.context, logger)
+            }
         }
 
         this.logger.d(this.context, "Initializing")
@@ -428,6 +454,16 @@ object Radar {
     }
 
     /**
+     * Enables beacon ranging.
+     *
+     * @param[enabled] A boolean indicating whether beacon ranging should be enabled.
+     */
+    @JvmStatic
+    fun setBeaconsEnabled(enabled: Boolean) {
+        RadarSettings.setBeaconsEnabled(context, enabled)
+    }
+
+    /**
      * Gets the device's current location.
      *
      * @param[callback] An optional callback.
@@ -528,11 +564,42 @@ object Radar {
                     return
                 }
 
-                apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, object : RadarApiClient.RadarTrackApiCallback {
-                    override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
-                        callback?.onComplete(status, location, events, user)
-                    }
-                })
+                val callTrackApi = { nearbyBeacons: Array<String>? ->
+                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, nearbyBeacons, object : RadarApiClient.RadarTrackApiCallback {
+                        override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
+                            callback?.onComplete(status, location, events, user)
+                        }
+                    })
+                }
+
+                val beaconsEnabled = RadarSettings.getBeaconsEnabled(context)
+                if (!beaconsEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    apiClient.searchBeacons(location, 200, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                        override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
+                            if (status != RadarStatus.SUCCESS || beacons == null) {
+                                callTrackApi(null)
+
+                                return
+                            }
+
+                            beaconManager.rangeBeacons(beacons, object : RadarBeaconCallback {
+                                override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?) {
+                                    if (status != RadarStatus.SUCCESS || nearbyBeacons == null) {
+                                        callTrackApi(null)
+
+                                        return
+                                    }
+
+                                    callTrackApi(nearbyBeacons)
+                                }
+                            })
+                        }
+                    })
+                } else {
+                    callTrackApi(null)
+                }
+
+
             }
         })
     }
@@ -565,7 +632,7 @@ object Radar {
             return
         }
 
-        apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, object : RadarApiClient.RadarTrackApiCallback {
+        apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
                 callback?.onComplete(status, location, events, user)
             }
@@ -661,7 +728,7 @@ object Radar {
                         }
                         val stopped = (i == 0) || (i == coordinates.size - 1)
 
-                        apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, object : RadarApiClient.RadarTrackApiCallback {
+                        apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
                             override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
                                 callback?.onComplete(status, location, events, user)
 
