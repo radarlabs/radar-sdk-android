@@ -11,6 +11,8 @@ import android.os.Build
 import android.os.Handler
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
+import io.radar.sdk.Radar.RadarBeaconCallback
+import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarBeacon
 import kotlin.collections.ArrayList
 
@@ -24,13 +26,13 @@ internal class RadarBeaconManager(
 
     private val adapter = BluetoothAdapter.getDefaultAdapter()
     private var started = false
-    private val callbacks = ArrayList<Radar.RadarBeaconCallback>()
+    private val callbacks = ArrayList<RadarBeaconCallback>()
     private var nearbyBeaconIdentifiers = mutableSetOf<String>()
     private var beacons = arrayOf<RadarBeacon>()
     private var scanCallback: ScanCallback? = null
 
-    private fun addCallback(callback: Radar.RadarBeaconCallback?) {
-        if (callback == null) {
+    private fun addCallback(callback: RadarBeaconCallback?) {
+       if (callback == null) {
             return
         }
 
@@ -45,7 +47,7 @@ internal class RadarBeaconManager(
         }, "timeout", SystemClock.uptimeMillis() + 5000L)
     }
 
-    private fun callCallbacks(status: Radar.RadarStatus, nearbyBeacons: Array<String>? = null) {
+    private fun callCallbacks(nearbyBeacons: Array<String>? = null) {
         synchronized(callbacks) {
             if (callbacks.isEmpty()) {
                 return
@@ -54,7 +56,7 @@ internal class RadarBeaconManager(
             logger.d(this.context, "Calling callbacks | callbacks.size = ${callbacks.size}")
 
             for (callback in callbacks) {
-                callback.onComplete(status, nearbyBeacons)
+                callback.onComplete(RadarStatus.SUCCESS, nearbyBeacons)
             }
             callbacks.clear()
         }
@@ -62,7 +64,9 @@ internal class RadarBeaconManager(
 
     fun rangeBeacons(beacons: Array<RadarBeacon>, callback: Radar.RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
-            val errorIntent = RadarReceiver.createErrorIntent(Radar.RadarStatus.ERROR_PERMISSIONS)
+            logger.d(this.context, "Bluetooth permissions not granted")
+
+            val errorIntent = RadarReceiver.createErrorIntent(RadarStatus.ERROR_PERMISSIONS)
             Radar.broadcastIntent(errorIntent)
 
             callback?.onComplete(Radar.RadarStatus.ERROR_PERMISSIONS)
@@ -71,7 +75,9 @@ internal class RadarBeaconManager(
         }
 
         if (!adapter.isEnabled) {
-            val errorIntent = RadarReceiver.createErrorIntent(Radar.RadarStatus.ERROR_BLUETOOTH)
+            logger.d(this.context, "Bluetooth not enabled")
+
+            val errorIntent = RadarReceiver.createErrorIntent(RadarStatus.ERROR_BLUETOOTH)
             Radar.broadcastIntent(errorIntent)
 
             callback?.onComplete(Radar.RadarStatus.ERROR_BLUETOOTH)
@@ -99,13 +105,17 @@ internal class RadarBeaconManager(
         val scanFilters = mutableListOf<ScanFilter>()
 
         for (beacon in beacons) {
-            logger.d(this.context, "Starting ranging beacon | _id = ${beacon._id}; uuid = ${beacon.uuid}; major = ${beacon.major}; minor = ${beacon.minor}")
+            logger.d(this.context, "Building scan filter | _id = ${beacon._id}")
 
-            RadarBeaconUtils.getScanFilter(beacon)?.let { scanFilter -> scanFilters.add(scanFilter) }
+            RadarBeaconUtils.getScanFilter(beacon)?.let { scanFilter ->
+                logger.d(this.context, "Starting ranging beacon | _id = ${beacon._id}; uuid = ${beacon.uuid}; major = ${beacon.major}; minor = ${beacon.minor}")
+
+                scanFilters.add(scanFilter)
+            }
         }
 
         val scanSettings = ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+            .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
             .setReportDelay(0)
             .build()
 
@@ -144,7 +154,7 @@ internal class RadarBeaconManager(
         adapter.bluetoothLeScanner.stopScan(scanCallback)
         scanCallback = null
 
-        this.callCallbacks(Radar.RadarStatus.SUCCESS, this.nearbyBeaconIdentifiers.toTypedArray())
+        this.callCallbacks(this.nearbyBeaconIdentifiers.toTypedArray())
 
         this.beacons = arrayOf()
         this.started = false
