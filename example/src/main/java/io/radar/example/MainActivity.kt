@@ -29,8 +29,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        this.applicationContext.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit().putString("host", "https://api-staging.radar.io").apply()
-        Radar.initialize(this, "org_test_pk_e6d0bb91ac41b187b84f21ba18ca4e5794401997")
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000")
         Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
         Radar.setBeaconsEnabled(true)
 
@@ -42,7 +41,6 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Track once: status = ${status}; location = $location; events = $events; user = $user")
         }
 
-        /*
         val options = RadarTrackingOptions.RESPONSIVE
         options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.ALL
         Radar.startTracking(options)
@@ -132,7 +130,6 @@ class MainActivity : AppCompatActivity() {
 
             i++
         }
-        */
     }
 
 }
