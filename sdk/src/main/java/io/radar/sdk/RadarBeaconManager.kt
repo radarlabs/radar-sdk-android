@@ -9,12 +9,13 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.Build
 import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarBeaconCallback
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarBeacon
-import kotlin.collections.ArrayList
+import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 @SuppressLint("MissingPermission")
@@ -26,10 +27,15 @@ internal class RadarBeaconManager(
 
     private val adapter = BluetoothAdapter.getDefaultAdapter()
     private var started = false
-    private val callbacks = ArrayList<RadarBeaconCallback>()
+    private val callbacks = Collections.synchronizedList(mutableListOf<RadarBeaconCallback>())
     private var nearbyBeaconIdentifiers = mutableSetOf<String>()
     private var beacons = arrayOf<RadarBeacon>()
     private var scanCallback: ScanCallback? = null
+    private val handler = Handler(Looper.getMainLooper())
+
+    internal companion object {
+        private const val TIMEOUT_TOKEN = "timeout"
+    }
 
     private fun addCallback(callback: RadarBeaconCallback?) {
        if (callback == null) {
@@ -40,11 +46,11 @@ internal class RadarBeaconManager(
             callbacks.add(callback)
         }
 
-        Handler().postAtTime({
+        handler.postAtTime({
             synchronized(callbacks) {
                 this.stopRanging()
             }
-        }, "timeout", SystemClock.uptimeMillis() + 5000L)
+        }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
 
     private fun callCallbacks(nearbyBeacons: Array<String>? = null) {
@@ -69,7 +75,7 @@ internal class RadarBeaconManager(
             val errorIntent = RadarReceiver.createErrorIntent(RadarStatus.ERROR_PERMISSIONS)
             Radar.broadcastIntent(errorIntent)
 
-            callback?.onComplete(Radar.RadarStatus.ERROR_PERMISSIONS)
+            callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
 
             return
         }
@@ -80,7 +86,7 @@ internal class RadarBeaconManager(
             val errorIntent = RadarReceiver.createErrorIntent(RadarStatus.ERROR_BLUETOOTH)
             Radar.broadcastIntent(errorIntent)
 
-            callback?.onComplete(Radar.RadarStatus.ERROR_BLUETOOTH)
+            callback?.onComplete(RadarStatus.ERROR_BLUETOOTH)
 
             return
         }
@@ -149,7 +155,7 @@ internal class RadarBeaconManager(
     private fun stopRanging() {
         logger.d(this.context, "Stopping ranging")
 
-        Handler().removeCallbacksAndMessages("timeout")
+        handler.removeCallbacksAndMessages(TIMEOUT_TOKEN)
 
         adapter.bluetoothLeScanner.stopScan(scanCallback)
         scanCallback = null

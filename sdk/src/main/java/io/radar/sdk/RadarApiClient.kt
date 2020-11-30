@@ -9,6 +9,7 @@ import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.*
+import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
 import java.util.*
@@ -170,7 +171,11 @@ internal class RadarApiClient(
             params.putOpt("nearbyGeofences", true)
         }
         if (nearbyBeacons != null) {
-            params.putOpt("nearbyBeacons", nearbyBeacons)
+            val nearbyBeaconsArr = JSONArray()
+            for (nearbyBeacon in nearbyBeacons) {
+                nearbyBeaconsArr.put(nearbyBeacon)
+            }
+            params.putOpt("nearbyBeacons", nearbyBeaconsArr)
         }
 
         val host = RadarSettings.getHost(context)
