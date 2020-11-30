@@ -45,12 +45,6 @@ internal class RadarBeaconManager(
         synchronized(callbacks) {
             callbacks.add(callback)
         }
-
-        handler.postAtTime({
-            synchronized(callbacks) {
-                this.stopRanging()
-            }
-        }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
 
     private fun callCallbacks(nearbyBeacons: Array<String>? = null) {
@@ -150,6 +144,10 @@ internal class RadarBeaconManager(
         }
 
         adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
+
+        handler.postAtTime({
+            this.stopRanging()
+        }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
 
     private fun stopRanging() {
