@@ -68,14 +68,7 @@ internal class RadarApiClient(
 
         val queryParams = StringBuilder()
         queryParams.append("installId=${RadarSettings.getInstallId(context)}")
-        val userId = RadarSettings.getUserId(context)
-        if (userId != null) {
-            queryParams.append("&userId=$userId")
-        }
-        val deviceId = RadarUtils.getDeviceId(context)
-        if (deviceId != null) {
-            queryParams.append("&deviceId=$deviceId")
-        }
+        queryParams.append("&locationAuthorization=${RadarUtils.getLocationAuthorization(context)}")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
