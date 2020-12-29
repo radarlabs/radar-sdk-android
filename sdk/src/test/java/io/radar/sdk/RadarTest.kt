@@ -656,8 +656,14 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_stopTrip() {
-        Radar.stopTrip()
+    fun test_Radar_completeTrip() {
+        Radar.completeTrip()
+        assertNull(Radar.getTripOptions())
+    }
+
+    @Test
+    fun test_Radar_cancelTrip() {
+        Radar.cancelTrip()
         assertNull(Radar.getTripOptions())
     }
 

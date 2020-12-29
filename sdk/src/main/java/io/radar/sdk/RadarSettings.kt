@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import org.json.JSONObject
+import java.text.DecimalFormat
 import java.util.UUID
 
 internal object RadarSettings {
@@ -50,7 +51,7 @@ internal object RadarSettings {
     }
 
     internal fun getSessionId(context: Context): String {
-        return "%.0f".format(getSharedPreferences(context).getLong(KEY_SESSION_ID, 0))
+        return DecimalFormat("#").format(getSharedPreferences(context).getLong(KEY_SESSION_ID, 0))
     }
 
     internal fun updateSessionId(context: Context): Boolean {
