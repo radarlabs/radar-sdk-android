@@ -10,6 +10,7 @@ internal object RadarSettings {
 
     private const val KEY_PUBLISHABLE_KEY = "publishable_key"
     private const val KEY_INSTALL_ID = "install_id"
+    private const val KEY_SESSION_ID = "session_id"
     private const val KEY_ID = "radar_user_id"
     private const val KEY_USER_ID = "user_id"
     private const val KEY_DESCRIPTION = "user_description"
@@ -46,6 +47,23 @@ internal object RadarSettings {
             getSharedPreferences(context).edit { putString(KEY_INSTALL_ID, installId) }
         }
         return installId
+    }
+
+    internal fun getSessionId(context: Context): String {
+        return "%.0f".format(getSharedPreferences(context).getLong(KEY_SESSION_ID, 0))
+    }
+
+    internal fun updateSessionId(context: Context): Boolean {
+        val timestampSeconds = System.currentTimeMillis() / 1000
+        val sessionIdSeconds = getSharedPreferences(context).getLong(KEY_SESSION_ID, 0)
+        if (timestampSeconds - sessionIdSeconds > 300) {
+            getSharedPreferences(context).edit { putLong(KEY_SESSION_ID, sessionIdSeconds) }
+
+            Radar.logger.i(context, "New session | sessionId = ${this.getSessionId(context)}")
+
+            return true
+        }
+        return false
     }
 
     internal fun getId(context: Context): String? {

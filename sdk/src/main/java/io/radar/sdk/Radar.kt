@@ -289,7 +289,7 @@ object Radar {
 
     private var initialized = false
     private lateinit var context: Context
-    private lateinit var logger: RadarLogger
+    internal lateinit var logger: RadarLogger
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
 
@@ -308,13 +308,16 @@ object Radar {
         initialized = true
         this.context = context.applicationContext
 
+        if (!this::logger.isInitialized) {
+            this.logger = RadarLogger()
+        }
+
+        RadarSettings.updateSessionId(this.context)
+
         if (publishableKey != null) {
             RadarSettings.setPublishableKey(this.context, publishableKey)
         }
 
-        if (!this::logger.isInitialized) {
-            this.logger = RadarLogger()
-        }
         if (!this::apiClient.isInitialized) {
             this.apiClient = RadarApiClient(this.context)
         }

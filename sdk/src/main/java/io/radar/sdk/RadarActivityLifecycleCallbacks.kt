@@ -14,6 +14,12 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
     }
 
     override fun onActivityResumed(activity: Activity) {
+        if (count == 0) {
+            val updated = RadarSettings.updateSessionId(activity.applicationContext)
+            if (updated) {
+                Radar.apiClient.getConfig()
+            }
+        }
         count++
         foreground = count > 0
     }
