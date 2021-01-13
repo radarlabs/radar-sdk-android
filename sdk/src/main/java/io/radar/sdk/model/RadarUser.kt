@@ -57,6 +57,11 @@ class RadarUser(
     val insights: RadarUserInsights?,
 
     /**
+     * The user's nearby beacons. May be `null` or empty if the user is not near any beacons or if Beacons is not enabled. See [](https://radar.io/documentation/beacons).
+     */
+    val beacons: Array<RadarBeacon>?,
+
+    /**
      * A boolean indicating whether the user is stopped.
      */
     val stopped: Boolean,
@@ -129,6 +134,7 @@ class RadarUser(
         private const val FIELD_GEOFENCES = "geofences"
         private const val FIELD_PLACE = "place"
         private const val FIELD_INSIGHTS = "insights"
+        private const val FIELD_BEACONS = "beacons"
         private const val FIELD_STOPPED = "stopped"
         private const val FIELD_FOREGROUND = "foreground"
         private const val FIELD_COUNTRY = "country"
@@ -168,6 +174,7 @@ class RadarUser(
             val geofences = RadarGeofence.fromJson(obj.optJSONArray(FIELD_GEOFENCES))
             val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
             val insights = RadarUserInsights.fromJson(obj.optJSONObject(FIELD_INSIGHTS))
+            val beacons = RadarBeacon.fromJson(obj.optJSONArray(FIELD_BEACONS))
             val country = RadarRegion.fromJson(obj.optJSONObject(FIELD_COUNTRY))
             val state = RadarRegion.fromJson(obj.optJSONObject(FIELD_STATE))
             val dma = RadarRegion.fromJson(obj.optJSONObject(FIELD_DMA))
@@ -198,6 +205,7 @@ class RadarUser(
                 geofences,
                 place,
                 insights,
+                beacons,
                 stopped,
                 foreground,
                 country,
@@ -231,6 +239,7 @@ class RadarUser(
         obj.putOpt(FIELD_GEOFENCES, RadarGeofence.toJson(this.geofences))
         obj.putOpt(FIELD_PLACE, this.place?.toJson())
         obj.putOpt(FIELD_INSIGHTS, this.insights?.toJson())
+        obj.putOpt(FIELD_BEACONS, RadarBeacon.toJson(this.beacons))
         obj.putOpt(FIELD_STOPPED, this.stopped)
         obj.putOpt(FIELD_FOREGROUND, this.foreground)
         obj.putOpt(FIELD_COUNTRY, this.country?.toJson())

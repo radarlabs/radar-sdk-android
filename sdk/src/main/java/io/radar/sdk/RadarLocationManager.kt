@@ -32,11 +32,13 @@ internal class RadarLocationManager(
     private var startedInterval = 0
     private var startedFastestInterval = 0
     private val callbacks = ArrayList<RadarLocationCallback>()
+    private val handler = Handler(Looper.getMainLooper())
 
     internal companion object {
-        internal const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
-        internal const val BUBBLE_STOPPED_GEOFENCE_REQUEST_ID = "radar_stopped"
-        internal const val SYNCED_GEOFENCES_REQUEST_ID_PREFIX = "radar_sync"
+        private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
+        private const val BUBBLE_STOPPED_GEOFENCE_REQUEST_ID = "radar_stopped"
+        private const val SYNCED_GEOFENCES_REQUEST_ID_PREFIX = "radar_sync"
+        private const val TIMEOUT_TOKEN = "timeout"
     }
 
     private fun addCallback(callback: RadarLocationCallback?) {
@@ -48,13 +50,13 @@ internal class RadarLocationManager(
             callbacks.add(callback)
         }
 
-        Handler().postAtTime({
+        handler.postAtTime({
             synchronized(callbacks) {
                 if (callbacks.contains(callback)) {
                     callback.onComplete(RadarStatus.ERROR_LOCATION)
                 }
             }
-        }, "timeout", SystemClock.uptimeMillis() + 20000L)
+        }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 20000L)
     }
 
     private fun callCallbacks(status: RadarStatus, location: Location? = null) {
@@ -367,7 +369,7 @@ internal class RadarLocationManager(
             return
         }
 
-        Handler().removeCallbacksAndMessages("timeout")
+        handler.removeCallbacksAndMessages(TIMEOUT_TOKEN)
 
         var distance = Float.MAX_VALUE
         val duration: Long
@@ -487,7 +489,7 @@ internal class RadarLocationManager(
 
         val locationManager = this
 
-        this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, object : RadarTrackApiCallback {
+        this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, null, object : RadarTrackApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
                 if (user != null) {
                     val inGeofences = user.geofences != null && user.geofences.isNotEmpty()

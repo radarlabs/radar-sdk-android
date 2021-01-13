@@ -17,6 +17,7 @@ internal object RadarSettings {
     private const val KEY_DESCRIPTION = "user_description"
     private const val KEY_METADATA = "user_metadata"
     private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
+    private const val KEY_BEACONS_ENABLED = "beacons_enabled"
     private const val KEY_TRACKING = "background_tracking"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
     private const val KEY_TRIP_OPTIONS = "trip_options"
@@ -107,6 +108,14 @@ internal object RadarSettings {
 
     internal fun setAdIdEnabled(context: Context, enabled: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_AD_ID_ENABLED, enabled) }
+    }
+
+    internal fun getBeaconsEnabled(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_BEACONS_ENABLED, false)
+    }
+
+    internal fun setBeaconsEnabled(context: Context, enabled: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_BEACONS_ENABLED, enabled) }
     }
 
     internal fun getTracking(context: Context): Boolean {
