@@ -272,12 +272,12 @@ data class RadarTrackingOptions(
             startTrackingAfter = null,
             stopTrackingAfter = null,
             replay = RadarTrackingOptionsReplay.STOPS,
-            sync = RadarTrackingOptionsSync.STOPS_AND_EXITS,
+            sync = RadarTrackingOptionsSync.ALL,
             useStoppedGeofence = true,
             stoppedGeofenceRadius = 100,
             useMovingGeofence = true,
             movingGeofenceRadius = 100,
-            syncGeofences = false
+            syncGeofences = true
         )
 
         /**
@@ -298,12 +298,12 @@ data class RadarTrackingOptions(
             startTrackingAfter = null,
             stopTrackingAfter = null,
             replay = RadarTrackingOptionsReplay.STOPS,
-            sync = RadarTrackingOptionsSync.STOPS_AND_EXITS,
+            sync = RadarTrackingOptionsSync.ALL,
             useStoppedGeofence = false,
             stoppedGeofenceRadius = 0,
             useMovingGeofence = false,
             movingGeofenceRadius = 0,
-            syncGeofences = false
+            syncGeofences = true
         )
 
         internal const val KEY_DESIRED_STOPPED_UPDATE_INTERVAL = "desiredStoppedUpdateInterval"
