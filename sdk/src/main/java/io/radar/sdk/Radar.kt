@@ -858,15 +858,6 @@ object Radar {
     }
 
     /**
-     * Stops a trip.
-     */
-    @JvmStatic
-    @Deprecated("Use completeTrip() or cancelTrip() instead.")
-    fun stopTrip() {
-        this.completeTrip();
-    }
-
-    /**
      * Completes a trip.
      */
     @JvmStatic
