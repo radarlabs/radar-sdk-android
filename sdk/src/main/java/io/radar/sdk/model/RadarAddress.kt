@@ -142,23 +142,23 @@ class RadarAddress(
             }
 
             val coordinate = RadarCoordinate(obj.optDouble(FIELD_LATITUDE), obj.optDouble(FIELD_LONGITUDE))
-            val formattedAddress = obj.optString(FIELD_FORMATTED_ADDRESS, null)
-            val country = obj.optString(FIELD_COUNTRY, null)
-            val countryCode = obj.optString(FIELD_COUNTRY_CODE, null)
-            val countryFlag = obj.optString(FIELD_COUNTRY_FLAG, null)
-            val dma = obj.optString(FIELD_DMA, null)
-            val dmaCode = obj.optString(FIELD_DMA_CODE, null)
-            val state = obj.optString(FIELD_STATE, null)
-            val stateCode = obj.optString(FIELD_STATE_CODE, null)
-            val postalCode = obj.optString(FIELD_POSTAL_CODE)
-            val city = obj.optString(FIELD_CITY, null)
-            val borough = obj.optString(FIELD_BOROUGH, null)
-            val county = obj.optString(FIELD_COUNTY, null)
-            val neighborhood = obj.optString(FIELD_NEIGHBORHOOD, null)
-            val street = obj.optString(FIELD_STREET, null)
-            val number = obj.optString(FIELD_NUMBER, null)
-            val addressLabel = obj.optString(FIELD_ADDRESS_LABEL, null)
-            val placeLabel = obj.optString(FIELD_PLACE_LABEL, null)
+            val formattedAddress = obj.optString(FIELD_FORMATTED_ADDRESS) ?: null
+            val country = obj.optString(FIELD_COUNTRY) ?: null
+            val countryCode = obj.optString(FIELD_COUNTRY_CODE) ?: null
+            val countryFlag = obj.optString(FIELD_COUNTRY_FLAG) ?: null
+            val dma = obj.optString(FIELD_DMA) ?: null
+            val dmaCode = obj.optString(FIELD_DMA_CODE) ?: null
+            val state = obj.optString(FIELD_STATE) ?: null
+            val stateCode = obj.optString(FIELD_STATE_CODE) ?: null
+            val postalCode = obj.optString(FIELD_POSTAL_CODE) ?: null
+            val city = obj.optString(FIELD_CITY) ?: null
+            val borough = obj.optString(FIELD_BOROUGH) ?: null
+            val county = obj.optString(FIELD_COUNTY) ?: null
+            val neighborhood = obj.optString(FIELD_NEIGHBORHOOD) ?: null
+            val street = obj.optString(FIELD_STREET) ?: null
+            val number = obj.optString(FIELD_NUMBER) ?: null
+            val addressLabel = obj.optString(FIELD_ADDRESS_LABEL) ?: null
+            val placeLabel = obj.optString(FIELD_PLACE_LABEL) ?: null
             val confidence = when(obj.optString(FIELD_CONFIDENCE)) {
                 "exact" -> RadarAddressConfidence.EXACT
                 "interpolated" -> RadarAddressConfidence.INTERPOLATED

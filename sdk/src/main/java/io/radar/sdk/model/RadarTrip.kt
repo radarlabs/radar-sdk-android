@@ -99,8 +99,8 @@ class RadarTrip(
             }
 
             val id: String = obj.optString(FIELD_ID) ?: ""
-            val externalId: String = obj.optString(FIELD_EXTERNAL_ID, "")
-            val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
+            val externalId: String = obj.optString(FIELD_EXTERNAL_ID) ?: ""
+            val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
             val destinationGeofenceTag: String? = obj.optString(
                 FIELD_DESTINATION_GEOFENCE_TAG) ?: null
             val destinationGeofenceExternalId: String? = obj.optString(
