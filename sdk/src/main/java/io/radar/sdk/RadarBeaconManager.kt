@@ -22,6 +22,7 @@ import java.util.*
 internal class RadarBeaconManager(
     private val context: Context,
     private val logger: RadarLogger,
+    @SuppressLint("VisibleForTests")
     internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper()
 ) {
 

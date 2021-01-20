@@ -3,6 +3,7 @@ package io.radar.sdk
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -25,7 +26,9 @@ internal class RadarLocationManager(
     internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper()
 ) {
 
+    @SuppressLint("VisibleForTests")
     internal var locationClient = FusedLocationProviderClient(context)
+    @SuppressLint("VisibleForTests")
     internal var geofencingClient = GeofencingClient(context)
     private var started = false
     private var startedDesiredAccuracy = RadarTrackingOptionsDesiredAccuracy.NONE
@@ -489,20 +492,49 @@ internal class RadarLocationManager(
 
         val locationManager = this
 
-        this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, null, object : RadarTrackApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
-                if (user != null) {
-                    val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
-                    val atPlace = user.place != null
-                    val atHome = user.insights?.state?.home ?: false
-                    val atOffice = user.insights?.state?.office ?: false
-                    val canExit = inGeofences || atPlace || atHome || atOffice
-                    RadarState.setCanExit(context, canExit)
-                }
+        val callTrackApi = { nearbyBeacons: Array<String>? ->
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, nearbyBeacons, object : RadarTrackApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
+                    if (user != null) {
+                        val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
+                        val atPlace = user.place != null
+                        val atHome = user.insights?.state?.home ?: false
+                        val atOffice = user.insights?.state?.office ?: false
+                        val canExit = inGeofences || atPlace || atHome || atOffice
+                        RadarState.setCanExit(context, canExit)
+                    }
 
-                locationManager.replaceSyncedGeofences(nearbyGeofences)
-            }
-        })
+                    locationManager.replaceSyncedGeofences(nearbyGeofences)
+                }
+            })
+        }
+
+        val options = RadarSettings.getTrackingOptions(context)
+        if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
+                    if (status != RadarStatus.SUCCESS || beacons == null) {
+                        callTrackApi(null)
+
+                        return
+                    }
+
+                    Radar.beaconManager.rangeBeacons(beacons, object : Radar.RadarBeaconCallback {
+                        override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?) {
+                            if (status != RadarStatus.SUCCESS || nearbyBeacons == null) {
+                                callTrackApi(null)
+
+                                return
+                            }
+
+                            callTrackApi(nearbyBeacons)
+                        }
+                    })
+                }
+            })
+        } else {
+            callTrackApi(null)
+        }
     }
 
 }
