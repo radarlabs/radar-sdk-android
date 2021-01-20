@@ -55,6 +55,8 @@ internal class RadarLocationManager(
 
         handler.postAtTime({
             synchronized(callbacks) {
+                logger.d(this.context, "Location timeout")
+
                 if (callbacks.contains(callback)) {
                     callback.onComplete(RadarStatus.ERROR_LOCATION)
                 }

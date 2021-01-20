@@ -147,8 +147,10 @@ internal class RadarBeaconManager(
         adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
 
         handler.postAtTime({
+            logger.d(this.context, "Beacon ranging timeout")
+
             this.stopRanging()
-        }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
+        }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 2000L)
     }
 
     private fun stopRanging() {
