@@ -1,8 +1,6 @@
 package io.radar.example
 
 import android.Manifest
-import android.content.Context
-import android.content.SharedPreferences
 import android.location.Location
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -31,7 +29,6 @@ class MainActivity : AppCompatActivity() {
 
         Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000")
         Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
-        Radar.setBeaconsEnabled(true)
 
         Radar.getLocation { status, location, stopped ->
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
