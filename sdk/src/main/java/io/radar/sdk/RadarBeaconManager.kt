@@ -150,7 +150,7 @@ internal class RadarBeaconManager(
             logger.d(this.context, "Beacon ranging timeout")
 
             this.stopRanging()
-        }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 2000L)
+        }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
 
     private fun stopRanging() {
