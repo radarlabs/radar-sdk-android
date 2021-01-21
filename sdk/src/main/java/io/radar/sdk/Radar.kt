@@ -439,16 +439,6 @@ object Radar {
     }
 
     /**
-     * Enables beacon ranging.
-     *
-     * @param[enabled] A boolean indicating whether beacon ranging should be enabled.
-     */
-    @JvmStatic
-    fun setBeaconsEnabled(enabled: Boolean) {
-        RadarSettings.setBeaconsEnabled(context, enabled)
-    }
-
-    /**
      * Gets the device's current location.
      *
      * @param[callback] An optional callback.
@@ -515,7 +505,7 @@ object Radar {
      */
     @JvmStatic
     fun trackOnce(callback: RadarTrackCallback? = null) {
-        this.trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback)
+        this.trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, false, callback)
     }
 
     /**
@@ -524,17 +514,18 @@ object Radar {
      * @param[block] A block callback.
      */
     fun trackOnce(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, block)
+        trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, false, block)
     }
 
     /**
-     * Tracks the user's location once in the foreground with the desired accuracy.
+     * Tracks the user's location once with the desired accuracy and optionally ranges beacons in the foreground.
      *
      * @param[desiredAccuracy] The desired accuracy.
+     * @param[beacons] A boolean indicating whether to range beacons.
      * @param[callback] An optional callback.
      */
     @JvmStatic
-    fun trackOnce(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, callback: RadarTrackCallback? = null) {
+    fun trackOnce(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, beacons: Boolean, callback: RadarTrackCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -557,9 +548,8 @@ object Radar {
                     })
                 }
 
-                val beaconsEnabled = RadarSettings.getBeaconsEnabled(context)
-                if (beaconsEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    apiClient.searchBeacons(location, 200, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                         override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
                             if (status != RadarStatus.SUCCESS || beacons == null) {
                                 callTrackApi(null)
@@ -583,20 +573,19 @@ object Radar {
                 } else {
                     callTrackApi(null)
                 }
-
-
             }
         })
     }
 
     /**
-     * Tracks the user's location once in the foreground with the desired accuracy.
+     * Tracks the user's location once with the desired accuracy and optionally ranges beacons in the foreground.
      *
      * @param[desiredAccuracy] The desired accuracy.
+     * @param[beacons] A boolean indicating whether to range beacons.
      * @param[block] A block callback.
      */
-    fun trackOnce(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        trackOnce(desiredAccuracy, object : RadarTrackCallback {
+    fun trackOnce(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, beacons: Boolean, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+        trackOnce(desiredAccuracy, beacons, object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
             }

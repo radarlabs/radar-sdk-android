@@ -22,6 +22,7 @@ import java.util.*
 internal class RadarBeaconManager(
     private val context: Context,
     private val logger: RadarLogger,
+    @SuppressLint("VisibleForTests")
     internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper()
 ) {
 
@@ -146,6 +147,8 @@ internal class RadarBeaconManager(
         adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
 
         handler.postAtTime({
+            logger.d(this.context, "Beacon ranging timeout")
+
             this.stopRanging()
         }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
