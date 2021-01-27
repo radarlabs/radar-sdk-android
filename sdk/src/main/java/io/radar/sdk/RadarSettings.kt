@@ -23,6 +23,7 @@ internal object RadarSettings {
     private const val KEY_LOG_LEVEL = "log_level"
     private const val KEY_CONFIG = "config"
     private const val KEY_HOST = "host"
+    private const val KEY_PERMISSIONS_DENIED = "permissions_denied"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -161,7 +162,6 @@ internal object RadarSettings {
     internal fun setTripOptions(context: Context, options: RadarTripOptions?) {
         val optionsObj = options?.toJson()
         val optionsJson = optionsObj?.toString()
-        print(optionsJson)
         getSharedPreferences(context).edit { putString(KEY_TRIP_OPTIONS, optionsJson) }
     }
 
@@ -182,6 +182,14 @@ internal object RadarSettings {
 
     internal fun getHost(context: Context): String {
         return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
+    }
+
+    internal fun setPermissionsDenied(context: Context, denied: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_PERMISSIONS_DENIED, denied) }
+    }
+
+    internal fun getPermissionsDenied(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_PERMISSIONS_DENIED, false)
     }
 
 }

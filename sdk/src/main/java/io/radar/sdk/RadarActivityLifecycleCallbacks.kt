@@ -1,8 +1,12 @@
 package io.radar.sdk
 
+import android.Manifest
 import android.app.Activity
 import android.app.Application
+import android.content.pm.PackageManager
 import android.os.Bundle
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import kotlin.math.max
 
 internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCallbacks {
@@ -22,6 +26,11 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
         }
         count++
         foreground = count > 0
+
+        if (ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED &&
+            !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            RadarSettings.setPermissionsDenied(activity.applicationContext, true)
+        }
     }
 
     override fun onActivityPaused(activity: Activity) {
