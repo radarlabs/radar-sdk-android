@@ -17,6 +17,14 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
             private set
     }
 
+    private fun updatePermissionsDenied(activity: Activity) {
+        if (ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED &&
+            !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            // user denied permissions and checked "never ask again"
+            RadarSettings.setPermissionsDenied(activity.applicationContext, true)
+        }
+    }
+
     override fun onActivityResumed(activity: Activity) {
         if (count == 0) {
             val updated = RadarSettings.updateSessionId(activity.applicationContext)
@@ -27,25 +35,34 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
         count++
         foreground = count > 0
 
-        if (ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED &&
-            !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            RadarSettings.setPermissionsDenied(activity.applicationContext, true)
-        }
+        updatePermissionsDenied(activity)
     }
 
     override fun onActivityPaused(activity: Activity) {
         count = max(count - 1, 0)
         foreground = count > 0
+
+        updatePermissionsDenied(activity)
     }
 
-    override fun onActivityStarted(activity: Activity) {}
+    override fun onActivityStarted(activity: Activity) {
+        updatePermissionsDenied(activity)
+    }
 
-    override fun onActivityStopped(activity: Activity) {}
+    override fun onActivityStopped(activity: Activity) {
+        updatePermissionsDenied(activity)
+    }
 
-    override fun onActivityDestroyed(activity: Activity) {}
+    override fun onActivityDestroyed(activity: Activity) {
+        updatePermissionsDenied(activity)
+    }
 
-    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle?) {}
+    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle?) {
+        updatePermissionsDenied(activity)
+    }
 
-    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+    override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+        updatePermissionsDenied(activity)
+    }
 
 }
