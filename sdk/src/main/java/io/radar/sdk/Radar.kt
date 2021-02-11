@@ -1716,7 +1716,7 @@ object Radar {
             putExtra(RadarReceiver.EXTRA_LOCATION, location)
         }
 
-        logger.i(this.context, "📍 Location updated: coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/user/")
+        logger.i(this.context, "📍 Location updated: coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user._id}")
 
         if (events.isNotEmpty()) {
             for (event in events) {
