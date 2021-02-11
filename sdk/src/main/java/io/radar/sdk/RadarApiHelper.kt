@@ -44,7 +44,7 @@ internal open class RadarApiHelper {
                     outputStreamWriter.close()
                 }
 
-                if (urlConnection.responseCode in 200 until 300) {
+                if (urlConnection.responseCode in 200 until 400) {
                     val body = urlConnection.inputStream.readAll()
                     if (body == null) {
                         callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)

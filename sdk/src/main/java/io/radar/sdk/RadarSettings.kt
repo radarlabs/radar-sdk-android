@@ -60,7 +60,7 @@ internal object RadarSettings {
         if (timestampSeconds - sessionIdSeconds > 300) {
             getSharedPreferences(context).edit { putLong(KEY_SESSION_ID, sessionIdSeconds) }
 
-            Radar.logger.i(context, "New session | sessionId = ${this.getSessionId(context)}")
+            Radar.logger.d(context, "New session | sessionId = ${this.getSessionId(context)}")
 
             return true
         }
@@ -166,7 +166,7 @@ internal object RadarSettings {
     }
 
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {
-        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, 0)
+        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, 3)
         return Radar.RadarLogLevel.fromInt(logLevelInt)
     }
 

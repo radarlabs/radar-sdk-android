@@ -505,7 +505,11 @@ object Radar {
      */
     @JvmStatic
     fun trackOnce(callback: RadarTrackCallback? = null) {
-        this.trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, false, callback)
+        var desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM
+        if (RadarUtils.isEmulator()) {
+            desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH
+        }
+        this.trackOnce(desiredAccuracy, false, callback)
     }
 
     /**
@@ -514,7 +518,11 @@ object Radar {
      * @param[block] A block callback.
      */
     fun trackOnce(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, false, block)
+        var desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM
+        if (RadarUtils.isEmulator()) {
+            desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH
+        }
+        trackOnce(desiredAccuracy, false, block)
     }
 
     /**
