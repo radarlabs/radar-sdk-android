@@ -183,8 +183,7 @@ internal class RadarApiClient(
                         RadarState.setLastFailedStoppedLocation(context, location)
                     }
 
-                    val errorIntent = RadarReceiver.createErrorIntent(status)
-                    Radar.broadcastIntent(errorIntent)
+                    Radar.broadcastErrorIntent(status)
 
                     callback?.onComplete(status)
 
@@ -217,16 +216,14 @@ internal class RadarApiClient(
                         RadarSettings.setTripOptions(context, null)
                     }
 
-                    val successIntent = RadarReceiver.createSuccessIntent(res, location)
-                    Radar.broadcastIntent(successIntent)
+                    Radar.broadcastSuccessIntent(res, location, user, events)
 
                     callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
 
                     return
                 }
 
-                val errorIntent = RadarReceiver.createErrorIntent(status)
-                Radar.broadcastIntent(errorIntent)
+                Radar.broadcastErrorIntent(status)
 
                 callback?.onComplete(RadarStatus.ERROR_SERVER)
             }

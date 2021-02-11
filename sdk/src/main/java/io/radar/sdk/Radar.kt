@@ -592,6 +592,7 @@ object Radar {
      * @param[beacons] A boolean indicating whether to range beacons.
      * @param[block] A block callback.
      */
+    @JvmStatic
     fun trackOnce(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, beacons: Boolean, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
         trackOnce(desiredAccuracy, beacons, object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
@@ -627,6 +628,7 @@ object Radar {
      * @param[location] A location for the user.
      * @param[block] A block callback.
      */
+    @JvmStatic
     fun trackOnce(location: Location, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
         trackOnce(location, object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
@@ -636,7 +638,7 @@ object Radar {
     }
 
     /**
-     * Starts tracking the user's location in the background. Before calling this method, the user should have granted backgroundlocation permissions for the app. See [](https://radar.io/documentation/sdk/android).
+     * Starts tracking the user's location in the background.
      *
      * @param[options] Configurable tracking options.
      */
@@ -1706,6 +1708,51 @@ object Radar {
         }
 
         locationManager.handleBootCompleted()
+    }
+
+    internal fun broadcastSuccessIntent(res: JSONObject, location: Location, user: RadarUser, events: Array<RadarEvent>) {
+        val intent = Intent(RadarReceiver.ACTION_RECEIVED).apply {
+            putExtra(RadarReceiver.EXTRA_RESPONSE, res.toString())
+            putExtra(RadarReceiver.EXTRA_LOCATION, location)
+        }
+
+        logger.i(this.context, "📍 Location updated: coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/user/")
+
+        if (events.isNotEmpty()) {
+            for (event in events) {
+                logger.i(this.context, "🔔 Event received: type = ${event.type}; link = https://radar.io/dashboard/events/${event._id}")
+            }
+        }
+
+        this.broadcastIntent(intent)
+    }
+
+    internal fun broadcastLocationIntent(location: Location, stopped: Boolean, source: Radar.RadarLocationSource) {
+        val intent = Intent(RadarReceiver.ACTION_RECEIVED).apply {
+            putExtra(RadarReceiver.EXTRA_LOCATION, location)
+            putExtra(RadarReceiver.EXTRA_STOPPED, stopped)
+            putExtra(RadarReceiver.EXTRA_SOURCE, source.ordinal)
+        }
+
+        this.broadcastIntent(intent)
+    }
+
+    internal fun broadcastErrorIntent(status: RadarStatus) {
+        val intent = Intent(RadarReceiver.ACTION_RECEIVED).apply {
+            putExtra(RadarReceiver.EXTRA_STATUS, status.ordinal)
+        }
+
+        logger.i(this.context, "⚠️ Error received: $status")
+
+        this.broadcastIntent(intent)
+    }
+
+    internal fun broadcastLogIntent(message: String) {
+        val intent = Intent(RadarReceiver.ACTION_RECEIVED).apply {
+            putExtra(RadarReceiver.EXTRA_MESSAGE, message)
+        }
+
+        this.broadcastIntent(intent)
     }
 
     internal fun broadcastIntent(intent: Intent) {

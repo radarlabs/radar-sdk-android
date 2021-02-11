@@ -15,8 +15,7 @@ internal class RadarLogger {
         if (level >= RadarLogLevel.DEBUG) {
             Log.d(TAG, message, throwable)
 
-            val logIntent = RadarReceiver.createLogIntent(message)
-            Radar.broadcastIntent(logIntent)
+            Radar.broadcastLogIntent(message)
         }
     }
 
@@ -25,8 +24,7 @@ internal class RadarLogger {
         if (level >= RadarLogLevel.INFO) {
             Log.i(TAG, message, throwable)
 
-            val logIntent = RadarReceiver.createLogIntent(message)
-            Radar.broadcastIntent(logIntent)
+            Radar.broadcastLogIntent(message)
         }
     }
 
@@ -35,8 +33,7 @@ internal class RadarLogger {
         if (level >= RadarLogLevel.WARNING) {
             Log.w(TAG, message, throwable)
 
-            val logIntent = RadarReceiver.createLogIntent(message)
-            Radar.broadcastIntent(logIntent)
+            Radar.broadcastLogIntent(message)
         }
     }
 
@@ -45,8 +42,7 @@ internal class RadarLogger {
         if (level >= RadarLogLevel.ERROR) {
             Log.e(TAG, message, throwable)
 
-            val logIntent = RadarReceiver.createLogIntent(message)
-            Radar.broadcastIntent(logIntent)
+            Radar.broadcastLogIntent(message)
         }
     }
 
