@@ -261,6 +261,7 @@ object Radar {
 
 
         companion object {
+            @JvmStatic
             fun fromInt(value: Int) : RadarLogLevel {
                 return values().first { it.value == value }
             }
