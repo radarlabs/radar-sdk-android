@@ -1719,11 +1719,11 @@ object Radar {
             putExtra(RadarReceiver.EXTRA_LOCATION, location)
         }
 
-        logger.i(this.context, "📍 Radar location updated: coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user._id}")
+        logger.i(this.context, "📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user._id}")
 
         if (events.isNotEmpty()) {
             for (event in events) {
-                logger.i(this.context, "📍 Radar event received: type = ${RadarEvent.stringForType(event.type)}; link = https://radar.io/dashboard/events/${event._id}")
+                logger.i(this.context, "📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.io/dashboard/events/${event._id}")
             }
         }
 
@@ -1745,7 +1745,7 @@ object Radar {
             putExtra(RadarReceiver.EXTRA_STATUS, status.ordinal)
         }
 
-        logger.i(this.context, "📍️ Radar error received: $status")
+        logger.i(this.context, "📍️ Radar error received | status = $status")
 
         this.broadcastIntent(intent)
     }
