@@ -24,18 +24,17 @@ internal open class RadarApiHelper {
                          params: JSONObject?,
                          callback: RadarApiCallback? = null) {
         DoAsync {
-            val urlConnection = url.openConnection() as HttpURLConnection
-            if (headers != null) {
-                for ((key, value) in headers) {
-                    urlConnection.setRequestProperty(key, value)
-
-                }
-            }
-            urlConnection.requestMethod = method
-            urlConnection.connectTimeout = 10000
-            urlConnection.readTimeout = 10000
-
             try {
+                val urlConnection = url.openConnection() as HttpURLConnection
+                if (headers != null) {
+                    for ((key, value) in headers) {
+                        urlConnection.setRequestProperty(key, value)
+                    }
+                }
+                urlConnection.requestMethod = method
+                urlConnection.connectTimeout = 10000
+                urlConnection.readTimeout = 10000
+
                 if (params != null) {
                     urlConnection.doOutput = true
 
