@@ -1,5 +1,9 @@
 # Migration guides
 
+## 3.0.x to 3.1.x
+
+- The `Radar.stopTrip()` method has been removed. Call `Radar.completeTrip()` or `Radar.cancelTrip()` instead.
+
 ## 2.1.x to 3.0.x
 
 - This update introduces new tracking options and presets. See the [announcement](https://radar.io/blog/open-source-radar-sdk-v3-custom-tracking-options-public-beta), the [background tracking documentation](https://radar.io/documentation/sdk-v3#android-background), and the [tracking options reference](https://radar.io/documentation/sdk/tracking#android).
