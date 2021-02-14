@@ -20,7 +20,6 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
     private fun updatePermissionsDenied(activity: Activity) {
         if (ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED &&
             !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            // user denied permissions and checked "never ask again"
             RadarSettings.setPermissionsDenied(activity.applicationContext, true)
         }
     }
