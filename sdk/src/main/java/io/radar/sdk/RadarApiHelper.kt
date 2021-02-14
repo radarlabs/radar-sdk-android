@@ -7,6 +7,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStreamWriter
+import java.lang.RuntimeException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
@@ -28,7 +29,11 @@ internal open class RadarApiHelper {
                 val urlConnection = url.openConnection() as HttpURLConnection
                 if (headers != null) {
                     for ((key, value) in headers) {
-                        urlConnection.setRequestProperty(key, value)
+                        try {
+                            urlConnection.setRequestProperty(key, value)
+                        } catch (e: Exception) {
+
+                        }
                     }
                 }
                 urlConnection.requestMethod = method
