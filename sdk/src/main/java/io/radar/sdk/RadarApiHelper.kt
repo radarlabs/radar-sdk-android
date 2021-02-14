@@ -7,6 +7,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStreamWriter
+import java.lang.RuntimeException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
@@ -24,18 +25,21 @@ internal open class RadarApiHelper {
                          params: JSONObject?,
                          callback: RadarApiCallback? = null) {
         DoAsync {
-            val urlConnection = url.openConnection() as HttpURLConnection
-            if (headers != null) {
-                for ((key, value) in headers) {
-                    urlConnection.setRequestProperty(key, value)
-
-                }
-            }
-            urlConnection.requestMethod = method
-            urlConnection.connectTimeout = 10000
-            urlConnection.readTimeout = 10000
-
             try {
+                val urlConnection = url.openConnection() as HttpURLConnection
+                if (headers != null) {
+                    for ((key, value) in headers) {
+                        try {
+                            urlConnection.setRequestProperty(key, value)
+                        } catch (e: Exception) {
+
+                        }
+                    }
+                }
+                urlConnection.requestMethod = method
+                urlConnection.connectTimeout = 10000
+                urlConnection.readTimeout = 10000
+
                 if (params != null) {
                     urlConnection.doOutput = true
 
@@ -44,7 +48,7 @@ internal open class RadarApiHelper {
                     outputStreamWriter.close()
                 }
 
-                if (urlConnection.responseCode in 200 until 300) {
+                if (urlConnection.responseCode in 200 until 400) {
                     val body = urlConnection.inputStream.readAll()
                     if (body == null) {
                         callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)

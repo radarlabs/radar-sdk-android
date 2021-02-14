@@ -87,8 +87,7 @@ internal class RadarLocationManager(
         this.addCallback(callback)
 
         if (!permissionsHelper.fineLocationPermissionGranted(context)) {
-            val errorIntent = RadarReceiver.createErrorIntent(RadarStatus.ERROR_PERMISSIONS)
-            Radar.broadcastIntent(errorIntent)
+            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
 
             callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
 
@@ -125,8 +124,7 @@ internal class RadarLocationManager(
         this.stopLocationUpdates()
 
         if (!permissionsHelper.fineLocationPermissionGranted(context)) {
-            val errorIntent = RadarReceiver.createErrorIntent(RadarStatus.ERROR_PERMISSIONS)
-            Radar.broadcastIntent(errorIntent)
+            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
 
             return
         }
@@ -353,8 +351,7 @@ internal class RadarLocationManager(
         if (location == null || !RadarUtils.valid(location)) {
             logger.d(this.context, "Invalid location | source = $source; location = $location")
 
-            val errorIntent = RadarReceiver.createErrorIntent(RadarStatus.ERROR_LOCATION)
-            Radar.broadcastIntent(errorIntent)
+            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
 
             callCallbacks(RadarStatus.ERROR_LOCATION)
 
@@ -413,8 +410,7 @@ internal class RadarLocationManager(
         val justStopped = stopped && !wasStopped
         RadarState.setStopped(context, stopped)
 
-        val locationIntent = RadarReceiver.createLocationIntent(location, stopped, source)
-        Radar.broadcastIntent(locationIntent)
+        Radar.broadcastLocationIntent(location, stopped, source)
 
         if (source != RadarLocationSource.MANUAL_LOCATION) {
             this.updateTracking(location)

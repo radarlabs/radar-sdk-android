@@ -63,12 +63,11 @@ internal class RadarBeaconManager(
         }
     }
 
-    fun rangeBeacons(beacons: Array<RadarBeacon>, callback: Radar.RadarBeaconCallback?) {
+    fun rangeBeacons(beacons: Array<RadarBeacon>, callback: RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d(this.context, "Bluetooth permissions not granted")
 
-            val errorIntent = RadarReceiver.createErrorIntent(RadarStatus.ERROR_PERMISSIONS)
-            Radar.broadcastIntent(errorIntent)
+            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
 
             callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
 
@@ -78,8 +77,7 @@ internal class RadarBeaconManager(
         if (!adapter.isEnabled) {
             logger.d(this.context, "Bluetooth not enabled")
 
-            val errorIntent = RadarReceiver.createErrorIntent(RadarStatus.ERROR_BLUETOOTH)
-            Radar.broadcastIntent(errorIntent)
+            Radar.broadcastErrorIntent(RadarStatus.ERROR_BLUETOOTH)
 
             callback?.onComplete(RadarStatus.ERROR_BLUETOOTH)
 
