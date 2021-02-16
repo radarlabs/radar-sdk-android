@@ -2,6 +2,7 @@
 
 ## 3.0.x to 3.1.x
 
+- The `Radar.trackOnce(desiredAccuracy, callback)` method is now `Radar.trackOnce(desiredAccuracy, beacons, callback)`. Use `beacons = true` to range beacons.
 - The `Radar.stopTrip()` method has been removed. Call `Radar.completeTrip()` or `Radar.cancelTrip()` instead.
 
 ## 2.1.x to 3.0.x

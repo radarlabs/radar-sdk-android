@@ -2,7 +2,9 @@
 
 [![Bintray](https://img.shields.io/bintray/v/radarlabs/maven/sdk2.svg)](https://bintray.com/radarlabs/maven/sdk2)
 
-[Radar](https://radar.io) is the leading full-stack geofencing platform. The Radar SDK abstracts away cross-platform differences between location services, allowing you to add geofencing, trip tracking, geocoding, and search to your apps with just a few lines of code.
+[Radar](https://radar.io) is the leading geofencing and location tracking platform.
+
+The Radar SDK abstracts away cross-platform differences between location services, allowing you to add geofencing, location tracking, trip tracking, geocoding, and search to your apps with just a few lines of code.
 
 ## Documentation
 
