@@ -28,8 +28,8 @@ class RadarSegment(
                 return null
             }
 
-            val description = obj.optString(FIELD_DESCRIPTION, null)
-            val externalId = obj.optString(FIELD_EXTERNAL_ID, null)
+            val description = obj.optString(FIELD_DESCRIPTION) ?: ""
+            val externalId = obj.optString(FIELD_EXTERNAL_ID) ?: ""
 
             return RadarSegment(description, externalId)
         }

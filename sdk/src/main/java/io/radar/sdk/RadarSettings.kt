@@ -4,12 +4,14 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import org.json.JSONObject
+import java.text.DecimalFormat
 import java.util.UUID
 
 internal object RadarSettings {
 
     private const val KEY_PUBLISHABLE_KEY = "publishable_key"
     private const val KEY_INSTALL_ID = "install_id"
+    private const val KEY_SESSION_ID = "session_id"
     private const val KEY_ID = "radar_user_id"
     private const val KEY_USER_ID = "user_id"
     private const val KEY_DESCRIPTION = "user_description"
@@ -21,6 +23,7 @@ internal object RadarSettings {
     private const val KEY_LOG_LEVEL = "log_level"
     private const val KEY_CONFIG = "config"
     private const val KEY_HOST = "host"
+    private const val KEY_PERMISSIONS_DENIED = "permissions_denied"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -46,6 +49,23 @@ internal object RadarSettings {
             getSharedPreferences(context).edit { putString(KEY_INSTALL_ID, installId) }
         }
         return installId
+    }
+
+    internal fun getSessionId(context: Context): String {
+        return DecimalFormat("#").format(getSharedPreferences(context).getLong(KEY_SESSION_ID, 0))
+    }
+
+    internal fun updateSessionId(context: Context): Boolean {
+        val timestampSeconds = System.currentTimeMillis() / 1000
+        val sessionIdSeconds = getSharedPreferences(context).getLong(KEY_SESSION_ID, 0)
+        if (timestampSeconds - sessionIdSeconds > 300) {
+            getSharedPreferences(context).edit { putLong(KEY_SESSION_ID, sessionIdSeconds) }
+
+            Radar.logger.d(context, "New session | sessionId = ${this.getSessionId(context)}")
+
+            return true
+        }
+        return false
     }
 
     internal fun getId(context: Context): String? {
@@ -142,12 +162,11 @@ internal object RadarSettings {
     internal fun setTripOptions(context: Context, options: RadarTripOptions?) {
         val optionsObj = options?.toJson()
         val optionsJson = optionsObj?.toString()
-        print(optionsJson)
         getSharedPreferences(context).edit { putString(KEY_TRIP_OPTIONS, optionsJson) }
     }
 
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {
-        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, 0)
+        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, 3)
         return Radar.RadarLogLevel.fromInt(logLevelInt)
     }
 
@@ -163,6 +182,14 @@ internal object RadarSettings {
 
     internal fun getHost(context: Context): String {
         return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
+    }
+
+    internal fun setPermissionsDenied(context: Context, denied: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_PERMISSIONS_DENIED, denied) }
+    }
+
+    internal fun getPermissionsDenied(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_PERMISSIONS_DENIED, false)
     }
 
 }

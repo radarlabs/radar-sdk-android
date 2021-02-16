@@ -3,6 +3,7 @@ package io.radar.sdk
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -25,18 +26,22 @@ internal class RadarLocationManager(
     internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper()
 ) {
 
+    @SuppressLint("VisibleForTests")
     internal var locationClient = FusedLocationProviderClient(context)
+    @SuppressLint("VisibleForTests")
     internal var geofencingClient = GeofencingClient(context)
     private var started = false
     private var startedDesiredAccuracy = RadarTrackingOptionsDesiredAccuracy.NONE
     private var startedInterval = 0
     private var startedFastestInterval = 0
     private val callbacks = ArrayList<RadarLocationCallback>()
+    private val handler = Handler(Looper.getMainLooper())
 
     internal companion object {
-        internal const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
-        internal const val BUBBLE_STOPPED_GEOFENCE_REQUEST_ID = "radar_stopped"
-        internal const val SYNCED_GEOFENCES_REQUEST_ID_PREFIX = "radar_sync"
+        private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
+        private const val BUBBLE_STOPPED_GEOFENCE_REQUEST_ID = "radar_stopped"
+        private const val SYNCED_GEOFENCES_REQUEST_ID_PREFIX = "radar_sync"
+        private const val TIMEOUT_TOKEN = "timeout"
     }
 
     private fun addCallback(callback: RadarLocationCallback?) {
@@ -48,13 +53,15 @@ internal class RadarLocationManager(
             callbacks.add(callback)
         }
 
-        Handler().postAtTime({
+        handler.postAtTime({
             synchronized(callbacks) {
+                logger.d(this.context, "Location timeout")
+
                 if (callbacks.contains(callback)) {
                     callback.onComplete(RadarStatus.ERROR_LOCATION)
                 }
             }
-        }, "timeout", SystemClock.uptimeMillis() + 20000L)
+        }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 20000L)
     }
 
     private fun callCallbacks(status: RadarStatus, location: Location? = null) {
@@ -80,8 +87,7 @@ internal class RadarLocationManager(
         this.addCallback(callback)
 
         if (!permissionsHelper.fineLocationPermissionGranted(context)) {
-            val errorIntent = RadarReceiver.createErrorIntent(RadarStatus.ERROR_PERMISSIONS)
-            Radar.broadcastIntent(errorIntent)
+            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
 
             callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
 
@@ -118,8 +124,7 @@ internal class RadarLocationManager(
         this.stopLocationUpdates()
 
         if (!permissionsHelper.fineLocationPermissionGranted(context)) {
-            val errorIntent = RadarReceiver.createErrorIntent(RadarStatus.ERROR_PERMISSIONS)
-            Radar.broadcastIntent(errorIntent)
+            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
 
             return
         }
@@ -346,8 +351,7 @@ internal class RadarLocationManager(
         if (location == null || !RadarUtils.valid(location)) {
             logger.d(this.context, "Invalid location | source = $source; location = $location")
 
-            val errorIntent = RadarReceiver.createErrorIntent(RadarStatus.ERROR_LOCATION)
-            Radar.broadcastIntent(errorIntent)
+            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
 
             callCallbacks(RadarStatus.ERROR_LOCATION)
 
@@ -367,7 +371,7 @@ internal class RadarLocationManager(
             return
         }
 
-        Handler().removeCallbacksAndMessages("timeout")
+        handler.removeCallbacksAndMessages(TIMEOUT_TOKEN)
 
         var distance = Float.MAX_VALUE
         val duration: Long
@@ -406,8 +410,7 @@ internal class RadarLocationManager(
         val justStopped = stopped && !wasStopped
         RadarState.setStopped(context, stopped)
 
-        val locationIntent = RadarReceiver.createLocationIntent(location, stopped, source)
-        Radar.broadcastIntent(locationIntent)
+        Radar.broadcastLocationIntent(location, stopped, source)
 
         if (source != RadarLocationSource.MANUAL_LOCATION) {
             this.updateTracking(location)
@@ -487,20 +490,49 @@ internal class RadarLocationManager(
 
         val locationManager = this
 
-        this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, object : RadarTrackApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
-                if (user != null) {
-                    val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
-                    val atPlace = user.place != null
-                    val atHome = user.insights?.state?.home ?: false
-                    val atOffice = user.insights?.state?.office ?: false
-                    val canExit = inGeofences || atPlace || atHome || atOffice
-                    RadarState.setCanExit(context, canExit)
-                }
+        val callTrackApi = { nearbyBeacons: Array<String>? ->
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, nearbyBeacons, object : RadarTrackApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
+                    if (user != null) {
+                        val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
+                        val atPlace = user.place != null
+                        val atHome = user.insights?.state?.home ?: false
+                        val atOffice = user.insights?.state?.office ?: false
+                        val canExit = inGeofences || atPlace || atHome || atOffice
+                        RadarState.setCanExit(context, canExit)
+                    }
 
-                locationManager.replaceSyncedGeofences(nearbyGeofences)
-            }
-        })
+                    locationManager.replaceSyncedGeofences(nearbyGeofences)
+                }
+            })
+        }
+
+        val options = RadarSettings.getTrackingOptions(context)
+        if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
+                    if (status != RadarStatus.SUCCESS || beacons == null) {
+                        callTrackApi(null)
+
+                        return
+                    }
+
+                    Radar.beaconManager.rangeBeacons(beacons, object : Radar.RadarBeaconCallback {
+                        override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?) {
+                            if (status != RadarStatus.SUCCESS || nearbyBeacons == null) {
+                                callTrackApi(null)
+
+                                return
+                            }
+
+                            callTrackApi(nearbyBeacons)
+                        }
+                    })
+                }
+            })
+        } else {
+            callTrackApi(null)
+        }
     }
 
 }

@@ -63,8 +63,8 @@ class RadarPlace(
                 return null
             }
 
-            val id = obj.optString(FIELD_ID, null)
-            val name = obj.optString(FIELD_NAME, null)
+            val id = obj.optString(FIELD_ID) ?: ""
+            val name = obj.optString(FIELD_NAME) ?: ""
             val categories = obj.optJSONArray(FIELD_CATEGORIES)?.let { categoriesArr ->
                 Array<String>(categoriesArr.length()) {
                     categoriesArr.optString(it)
@@ -77,8 +77,8 @@ class RadarPlace(
                 locationCoordinatesObj?.optDouble(1) ?: 0.0,
                 locationCoordinatesObj?.optDouble(0) ?: 0.0
             )
-            val group: String? = obj.optString(FIELD_GROUP, null)
-            val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA)
+            val group: String? = obj.optString(FIELD_GROUP) ?: null
+            val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
 
             return RadarPlace(
                 id,

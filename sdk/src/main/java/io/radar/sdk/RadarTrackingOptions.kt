@@ -96,7 +96,12 @@ data class RadarTrackingOptions(
     /**
      * Determines whether to sync nearby geofences from the server to the client to improve responsiveness.
      */
-    var syncGeofences: Boolean
+    var syncGeofences: Boolean,
+
+    /**
+     * Determines whether to monitor beacons.
+     */
+    var beacons: Boolean
 ) {
 
     /**
@@ -251,7 +256,8 @@ data class RadarTrackingOptions(
             stoppedGeofenceRadius = 0,
             useMovingGeofence = false,
             movingGeofenceRadius = 0,
-            syncGeofences = false
+            syncGeofences = false,
+            beacons = false
         )
 
         /**
@@ -272,12 +278,13 @@ data class RadarTrackingOptions(
             startTrackingAfter = null,
             stopTrackingAfter = null,
             replay = RadarTrackingOptionsReplay.STOPS,
-            sync = RadarTrackingOptionsSync.STOPS_AND_EXITS,
+            sync = RadarTrackingOptionsSync.ALL,
             useStoppedGeofence = true,
             stoppedGeofenceRadius = 100,
             useMovingGeofence = true,
             movingGeofenceRadius = 100,
-            syncGeofences = false
+            syncGeofences = true,
+            beacons = false
         )
 
         /**
@@ -298,12 +305,13 @@ data class RadarTrackingOptions(
             startTrackingAfter = null,
             stopTrackingAfter = null,
             replay = RadarTrackingOptionsReplay.STOPS,
-            sync = RadarTrackingOptionsSync.STOPS_AND_EXITS,
+            sync = RadarTrackingOptionsSync.ALL,
             useStoppedGeofence = false,
             stoppedGeofenceRadius = 0,
             useMovingGeofence = false,
             movingGeofenceRadius = 0,
-            syncGeofences = false
+            syncGeofences = true,
+            beacons = false
         )
 
         internal const val KEY_DESIRED_STOPPED_UPDATE_INTERVAL = "desiredStoppedUpdateInterval"
@@ -323,6 +331,7 @@ data class RadarTrackingOptions(
         internal const val KEY_USE_MOVING_GEOFENCE = "useMovingGeofence"
         internal const val KEY_MOVING_GEOFENCE_RADIUS = "movingGeofenceRadius"
         internal const val KEY_SYNC_GEOFENCES = "syncGeofences"
+        internal const val KEY_BEACONS = "beacons"
 
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTrackingOptions {
@@ -361,7 +370,8 @@ data class RadarTrackingOptions(
                 stoppedGeofenceRadius = obj.optInt(KEY_STOPPED_GEOFENCE_RADIUS, 100),
                 useMovingGeofence = obj.optBoolean(KEY_USE_MOVING_GEOFENCE),
                 movingGeofenceRadius = obj.optInt(KEY_MOVING_GEOFENCE_RADIUS, 100),
-                syncGeofences = obj.optBoolean(KEY_SYNC_GEOFENCES)
+                syncGeofences = obj.optBoolean(KEY_SYNC_GEOFENCES),
+                beacons = obj.optBoolean(KEY_BEACONS)
             )
         }
 
@@ -386,6 +396,7 @@ data class RadarTrackingOptions(
         obj.put(KEY_USE_MOVING_GEOFENCE, useMovingGeofence)
         obj.put(KEY_MOVING_GEOFENCE_RADIUS, movingGeofenceRadius)
         obj.put(KEY_SYNC_GEOFENCES, syncGeofences)
+        obj.put(KEY_BEACONS, beacons)
         return obj
     }
 

@@ -1,12 +1,16 @@
 package io.radar.sdk
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import java.util.Calendar
@@ -69,6 +73,21 @@ internal object RadarUtils {
 
     internal val deviceMake =  Build.MANUFACTURER
 
+    internal fun getLocationAuthorization(context: Context): String {
+        var locationAuthorization = "NOT_DETERMINED"
+        if (RadarSettings.getPermissionsDenied(context)) {
+            locationAuthorization = "DENIED"
+        }
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationAuthorization = "GRANTED_FOREGROUND"
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            locationAuthorization = "GRANTED_BACKGROUND"
+        }
+        return locationAuthorization
+    }
+
     internal fun getLocationEnabled(context: Context): Boolean {
         val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return manager.isProviderEnabled(LocationManager.GPS_PROVIDER) || manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
@@ -79,6 +98,26 @@ internal object RadarUtils {
         val longitudeValid = location.longitude != 0.0 && location.longitude > -180.0 && location.longitude < 180.0
         val accuracyValid = location.accuracy > 0f
         return latitudeValid && longitudeValid && accuracyValid
+    }
+
+    // based on https://github.com/flutter/plugins/tree/master/packages/device_info/device_info
+    internal fun isEmulator(): Boolean {
+        return (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
+                || Build.FINGERPRINT.startsWith("generic")
+                || Build.FINGERPRINT.startsWith("unknown")
+                || Build.HARDWARE.contains("goldfish")
+                || Build.HARDWARE.contains("ranchu")
+                || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("Emulator")
+                || Build.MODEL.contains("Android SDK built for x86")
+                || Build.MANUFACTURER.contains("Genymotion")
+                || Build.PRODUCT.contains("sdk_google")
+                || Build.PRODUCT.contains("google_sdk")
+                || Build.PRODUCT.contains("sdk")
+                || Build.PRODUCT.contains("sdk_x86")
+                || Build.PRODUCT.contains("vbox86p")
+                || Build.PRODUCT.contains("emulator")
+                || Build.PRODUCT.contains("simulator");
     }
 
 }

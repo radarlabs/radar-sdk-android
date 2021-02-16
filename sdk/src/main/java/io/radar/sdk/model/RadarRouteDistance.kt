@@ -28,7 +28,7 @@ class RadarRouteDistance(
             }
 
             val value = obj.optDouble(FIELD_VALUE)
-            val text = obj.optString(FIELD_TEXT, null)
+            val text = obj.optString(FIELD_TEXT) ?: ""
 
             return RadarRouteDistance(value, text)
         }

@@ -47,24 +47,6 @@ class RadarTest {
         assertNotNull(geofence?.geometry)
     }
 
-    private fun assertPointsOk(points: Array<RadarPoint>?) {
-        assertNotNull(points)
-        points?.let {
-            for (point in points) {
-                assertPointOk(point)
-            }
-        }
-    }
-
-    private fun assertPointOk(point: RadarPoint?) {
-        assertNotNull(point)
-        assertNotNull(point?.description)
-        assertNotNull(point?.tag)
-        assertNotNull(point?.externalId)
-        assertNotNull(point?.metadata)
-        assertNotNull(point?.location)
-    }
-
     private fun assertChainsOk(chains: Array<RadarChain>?) {
         assertNotNull(chains)
         chains?.let {
@@ -656,8 +638,14 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_stopTrip() {
-        Radar.stopTrip()
+    fun test_Radar_completeTrip() {
+        Radar.completeTrip()
+        assertNull(Radar.getTripOptions())
+    }
+
+    @Test
+    fun test_Radar_cancelTrip() {
+        Radar.cancelTrip()
         assertNull(Radar.getTripOptions())
     }
 
@@ -962,104 +950,6 @@ class RadarTest {
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertEquals(mockLocation, callbackLocation)
         assertGeofencesOk(callbackGeofences)
-    }
-
-    @Test
-    fun test_Radar_searchPoints_errorPermissions() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = false
-        locationClientMock.mockLocation = null
-
-        val latch = CountDownLatch(1)
-        var callbackStatus: Radar.RadarStatus? = null
-
-        Radar.searchPoints(1000, arrayOf("store"), 100) { status, _, _ ->
-            callbackStatus = status
-            latch.countDown()
-        }
-
-        latch.await(30, TimeUnit.SECONDS)
-
-        assertEquals(Radar.RadarStatus.ERROR_PERMISSIONS, callbackStatus)
-    }
-
-    @Test
-    fun test_Radar_searchPoints_errorLocation() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = true
-        locationClientMock.mockLocation = null
-
-        val latch = CountDownLatch(1)
-        var callbackStatus: Radar.RadarStatus? = null
-
-        Radar.searchPoints(1000, arrayOf("store"), 100) { status, _, _ ->
-            callbackStatus = status
-            latch.countDown()
-        }
-
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
-        latch.await(30, TimeUnit.SECONDS)
-
-        assertEquals(Radar.RadarStatus.ERROR_LOCATION, callbackStatus)
-    }
-
-    @Test
-    fun test_Radar_searchPoints_success() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = true
-        val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.7039799
-        mockLocation.longitude = -73.9873499
-        mockLocation.accuracy = 65f
-        mockLocation.time = System.currentTimeMillis()
-        locationClientMock.mockLocation = mockLocation
-        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
-        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_points.json")
-
-        val latch = CountDownLatch(1)
-        var callbackStatus: Radar.RadarStatus? = null
-        var callbackLocation: Location? = null
-        var callbackPoints: Array<RadarPoint>? = null
-
-        Radar.searchPoints(1000, arrayOf("store"), 100) { status, location, points ->
-            callbackStatus = status
-            callbackLocation = location
-            callbackPoints = points
-            latch.countDown()
-        }
-
-        latch.await(30, TimeUnit.SECONDS)
-
-        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertEquals(mockLocation, callbackLocation)
-        assertPointsOk(callbackPoints)
-    }
-
-    @Test
-    fun test_Radar_searchPoints_location_success() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = false
-        val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.7039799
-        mockLocation.longitude = -73.9873499
-        mockLocation.accuracy = 65f
-        mockLocation.time = System.currentTimeMillis()
-        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
-        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_points.json")
-
-        val latch = CountDownLatch(1)
-        var callbackStatus: Radar.RadarStatus? = null
-        var callbackLocation: Location? = null
-        var callbackPoints: Array<RadarPoint>? = null
-
-        Radar.searchPoints(mockLocation, 1000, arrayOf("store"), 100) { status, location, points ->
-            callbackStatus = status
-            callbackLocation = location
-            callbackPoints = points
-            latch.countDown()
-        }
-
-        latch.await(30, TimeUnit.SECONDS)
-
-        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertEquals(mockLocation, callbackLocation)
-        assertPointsOk(callbackPoints)
     }
 
     @Test

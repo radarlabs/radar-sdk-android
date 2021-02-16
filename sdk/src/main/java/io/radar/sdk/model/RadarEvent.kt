@@ -56,6 +56,11 @@ class RadarEvent(
     val region: RadarRegion?,
 
     /**
+     * The beacon for which the event was generated. May be `null` for non-beacon events.
+     */
+    val beacon: RadarBeacon?,
+
+    /**
      * For place entry events, alternate place candidates. May be `null` for non-place events.
      */
     val alternatePlaces: Array<RadarPlace>?,
@@ -136,10 +141,14 @@ class RadarEvent(
         USER_UPDATED_TRIP,
         /** `user.approaching_trip_destination` */
         USER_APPROACHING_TRIP_DESTINATION,
-        /** `user.arrived_at_trip` */
+        /** `user.arrived_at_trip_destination` */
         USER_ARRIVED_AT_TRIP_DESTINATION,
         /** `user.stopped_trip` */
-        USER_STOPPED_TRIP
+        USER_STOPPED_TRIP,
+        /** `user.entered_beacon` */
+        USER_ENTERED_BEACON,
+        /** `user.exited_beacon` */
+        USER_EXITED_BEACON
     }
 
     /**
@@ -177,6 +186,7 @@ class RadarEvent(
         private const val FIELD_GEOFENCE = "geofence"
         private const val FIELD_PLACE = "place"
         private const val FIELD_REGION = "region"
+        private const val FIELD_BEACON = "beacon"
         private const val FIELD_ALTERNATE_PLACES = "alternatePlaces"
         private const val FIELD_VERIFIED_PLACE = "verifiedPlace"
         private const val FIELD_VERIFICATION = "verification"
@@ -193,7 +203,7 @@ class RadarEvent(
                 return null
             }
 
-            val id = obj.optString(FIELD_ID, null)
+            val id = obj.optString(FIELD_ID) ?: ""
             val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
             dateFormat.timeZone = TimeZone.getTimeZone("UTC")
             val createdAt = obj.optString(FIELD_CREATED).let { createdAtStr ->
@@ -228,11 +238,14 @@ class RadarEvent(
                 "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
                 "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
                 "user.stopped_trip" -> USER_STOPPED_TRIP
+                "user.entered_beacon" -> USER_ENTERED_BEACON
+                "user.exited_beacon" -> USER_EXITED_BEACON
                 else -> UNKNOWN
             }
             val geofence = RadarGeofence.fromJson(obj.optJSONObject(FIELD_GEOFENCE))
             val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
             val region = RadarRegion.fromJson(obj.optJSONObject(FIELD_REGION))
+            val beacon = RadarBeacon.fromJson(obj.optJSONObject(FIELD_BEACON))
             val alternatePlaces = RadarPlace.fromJson(obj.optJSONArray(FIELD_ALTERNATE_PLACES))
             val verifiedPlace = RadarPlace.fromJson(obj.optJSONObject(FIELD_VERIFIED_PLACE))
             val verification = when (obj.optInt(FIELD_VERIFICATION)) {
@@ -259,7 +272,7 @@ class RadarEvent(
             }
 
             return RadarEvent(
-                id, createdAt, actualCreatedAt, live, type, geofence, place, region,
+                id, createdAt, actualCreatedAt, live, type, geofence, place, region, beacon,
                 alternatePlaces, verifiedPlace, verification, confidence, duration, location
             )
         }
@@ -315,6 +328,8 @@ class RadarEvent(
                 USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
                 USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
                 USER_STOPPED_TRIP -> "user.stopped_trip"
+                USER_ENTERED_BEACON -> "user.entered_beacon"
+                USER_EXITED_BEACON -> "user.exited_beacon"
                 else -> null
             }
         }

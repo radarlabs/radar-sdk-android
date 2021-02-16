@@ -29,30 +29,6 @@ abstract class RadarReceiver : BroadcastReceiver() {
         internal const val EXTRA_STATUS = "status"
         internal const val EXTRA_MESSAGE = "message"
 
-        internal fun createSuccessIntent(res: JSONObject, location: Location) =
-            Intent(ACTION_RECEIVED).apply {
-                putExtra(EXTRA_RESPONSE, res.toString())
-                putExtra(EXTRA_LOCATION, location)
-            }
-
-        internal fun createLocationIntent(location: Location, stopped: Boolean, source: Radar.RadarLocationSource) =
-            Intent(ACTION_RECEIVED).apply {
-                putExtra(EXTRA_LOCATION, location)
-                putExtra(EXTRA_STOPPED, stopped)
-                putExtra(EXTRA_SOURCE, source.ordinal)
-            }
-
-        internal fun createErrorIntent(status: RadarStatus) =
-            Intent(ACTION_RECEIVED).apply {
-                putExtra(EXTRA_STATUS, status.ordinal)
-            }
-
-        internal fun createLogIntent(message: String) =
-            Intent(ACTION_RECEIVED).apply {
-                putExtra(EXTRA_MESSAGE, message)
-            }
-
-
     }
 
     override fun onReceive(context: Context, intent: Intent) {
