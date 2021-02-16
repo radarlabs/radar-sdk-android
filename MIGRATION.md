@@ -4,6 +4,7 @@
 
 - The `Radar.trackOnce(desiredAccuracy, callback)` method is now `Radar.trackOnce(desiredAccuracy, beacons, callback)`. Use `beacons = true` to range beacons.
 - The `Radar.stopTrip()` method has been removed. Call `Radar.completeTrip()` or `Radar.cancelTrip()` instead.
+- The `ACCESS_BACKGROUND_LOCATION` permission has been removed from the SDK manifest. If using background location, you must manually add the permission to your app manifest.
 
 ## 2.1.x to 3.0.x
 
