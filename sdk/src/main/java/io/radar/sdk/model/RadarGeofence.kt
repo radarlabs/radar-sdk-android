@@ -55,6 +55,7 @@ class RadarGeofence(
 
         private const val TYPE_CIRCLE = "circle"
         private const val TYPE_POLYGON = "polygon"
+        private const val TYPE_ISOCHRONE = "isochrone"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarGeofence? {
@@ -81,7 +82,7 @@ class RadarGeofence(
                         radius
                     )
                 }
-                TYPE_POLYGON -> {
+                TYPE_POLYGON, TYPE_ISOCHRONE -> {
                     val geometryObj = obj.optJSONObject(FIELD_GEOMETRY)
                     val coordinatesArr = geometryObj?.optJSONArray(FIELD_COORDINATES)
                     coordinatesArr?.optJSONArray(0)?.let { coordinates ->
