@@ -126,6 +126,35 @@ class MainActivity : AppCompatActivity() {
 
             i++
         }
+
+        val origin1 = Location("example")
+        origin1.latitude = 40.78382
+        origin1.longitude = -73.97536
+
+        val origin2 = Location("example")
+        origin2.latitude = 40.70390
+        origin2.longitude = -73.98670
+
+        val origins = arrayOf(origin1, origin2)
+
+        val destination1 = Location("example")
+        destination1.latitude = 40.64189
+        destination1.longitude = -73.78779
+
+        val destination2 = Location("example")
+        destination2.latitude = 35.99801
+        destination2.longitude = -78.94294
+
+        val destinations = arrayOf(destination1, destination2)
+
+        Radar.getMatrix(
+            origins,
+            destinations,
+            Radar.RadarRouteMode.CAR,
+            Radar.RadarRouteUnits.IMPERIAL
+        ) { status, matrix ->
+            Log.v("example", "Matrix: status = $status; matrix[0][0].duration.text = ${matrix?.routeBetween(0, 0)?.duration?.text}; matrix[0][1].duration.text = ${matrix?.routeBetween(0, 1)?.duration?.text}; matrix[1][0].duration.text = ${matrix?.routeBetween(1, 0)?.duration?.text}")
+        }
     }
 
 }

@@ -52,6 +52,8 @@ data class RadarTripOptions(
                 mode = when(obj.optString(KEY_MODE)) {
                     "foot" -> Radar.RadarRouteMode.FOOT
                     "bike" -> Radar.RadarRouteMode.BIKE
+                    "truck" -> Radar.RadarRouteMode.TRUCK
+                    "motorbike" -> Radar.RadarRouteMode.MOTORBIKE
                     else -> Radar.RadarRouteMode.CAR
                 }
             )

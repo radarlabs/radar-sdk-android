@@ -118,6 +118,8 @@ class RadarTrip(
                 "foot" -> Radar.RadarRouteMode.FOOT
                 "bike" -> Radar.RadarRouteMode.BIKE
                 "car" -> Radar.RadarRouteMode.CAR
+                "truck" -> Radar.RadarRouteMode.TRUCK
+                "motorbike" -> Radar.RadarRouteMode.MOTORBIKE
                 else -> null
             }
             val etaDistance = obj.optJSONObject(FIELD_ETA)?.optDouble(FIELD_DISTANCE)
