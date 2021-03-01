@@ -317,7 +317,7 @@ object Radar {
     internal lateinit var beaconManager: RadarBeaconManager
 
     /**
-     * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods. See [](https://radar.io/documentation/sdk/android).
+     * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods.
      *
      * @see [](https://radar.io/documentation/sdk/android#initialize-sdk)
      *
@@ -369,7 +369,7 @@ object Radar {
     }
 
     /**
-     * Identifies the user. Until you identify the user, Radar will automatically identify the user by `deviceId` (Android ID). See [](https://radar.io/documentation/sdk/android).
+     * Identifies the user. Until you identify the user, Radar will automatically identify the user by `deviceId` (Android ID).
      *
      * @see [](https://radar.io/documentation/sdk/android#identify-user)
      *
@@ -654,7 +654,7 @@ object Radar {
     }
 
     /**
-     * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk/android).
+     * Manually updates the user's location. Note that these calls are subject to rate limits.
      *
      * @see [](https://radar.io/documentation/sdk/android#foreground-tracking)
      *
@@ -677,7 +677,7 @@ object Radar {
     }
 
     /**
-     * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk/android).
+     * Manually updates the user's location. Note that these calls are subject to rate limits.
      *
      * @see [](https://radar.io/documentation/sdk/android#foreground-tracking)
      *
@@ -822,7 +822,7 @@ object Radar {
     }
 
     /**
-     * Stops tracking the user's location in the background. See [](https://radar.io/documentation/sdk/android).
+     * Stops tracking the user's location in the background.
      *
      * @see [](https://radar.io/documentation/sdk/android#background-tracking-for-geofencing)
      */
@@ -868,7 +868,7 @@ object Radar {
     }
 
     /**
-     * Accepts an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events. See [](https://radar.io/documentation/sdk/android).
+     * Accepts an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events.
      *
      * @see [](https://radar.io/documentation/places#verify-events)
      *
@@ -885,7 +885,7 @@ object Radar {
     }
 
     /**
-     * Rejects an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events. See [](https://radar.io/documentation/sdk/android).
+     * Rejects an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events.
      *
      * @see [](https://radar.io/documentation/places#verify-events)
      *
