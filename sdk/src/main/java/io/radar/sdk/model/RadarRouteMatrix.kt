@@ -4,9 +4,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Represents routes between multiple origins and destinations. For more information, see [](https://radar.io/documentation/api#distance).
+ * Represents routes between multiple origins and destinations.
  *
- * @see [](https://radar.io/documentation/api#matrix
+ * @see [](https://radar.io/documentation/api#matrix)
  */
 class RadarRouteMatrix(
     /**

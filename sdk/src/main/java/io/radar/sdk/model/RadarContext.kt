@@ -3,7 +3,7 @@ package io.radar.sdk.model
 import org.json.JSONObject
 
 /**
- * The context for a location.
+ * Represents the context for a location.
  *
  * @see [](https://radar.io/documentation/api#context)
  */

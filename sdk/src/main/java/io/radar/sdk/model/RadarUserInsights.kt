@@ -7,7 +7,7 @@ import org.json.JSONObject
 import java.text.ParseException
 
 /**
- * Represents the learned home, work, and traveling state and locations of the current user. For more information about Insights, see [](https://radar.io/documentation/insights).
+ * Represents the learned home, work, and traveling state and locations of the current user.
  *
  * @see [](https://radar.io/documentation/insights)
  */

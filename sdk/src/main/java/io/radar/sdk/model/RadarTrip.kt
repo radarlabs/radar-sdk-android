@@ -5,9 +5,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Represents a trip. For more information about trip tracking, see [](https://radar.io/documentation/trip-tracking).
+ * Represents a trip.
  *
- * @see [](https://radar.io/documentation/trip-tracking
+ * @see [](https://radar.io/documentation/trip-tracking)
  */
 class RadarTrip(
     /**

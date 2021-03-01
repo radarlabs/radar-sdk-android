@@ -4,7 +4,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Represents the full address output by the geocoding endpoints.
+ * Represents an address.
  */
 class RadarAddress(
     /**
