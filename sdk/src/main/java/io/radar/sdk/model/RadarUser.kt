@@ -6,7 +6,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Represents the current user state. For more information, see [](https://radar.io/documentation).
+ * Represents the current user state.
  *
  * @see [](https://radar.io/documentation)
  */

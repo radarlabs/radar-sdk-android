@@ -4,7 +4,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Represents a region. For more information about Regions, see [](https://radar.io/documentation/regions).
+ * Represents a region.
  *
  * @see [](https://radar.io/documentation/regions
  */

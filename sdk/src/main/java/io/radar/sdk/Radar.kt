@@ -155,22 +155,6 @@ object Radar {
     }
 
     /**
-     * Called when a routing request succeeds, fails, or times out.
-     */
-    interface RadarRouteCallback {
-        /**
-         * Called when a routing request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding results (an array of addresses).
-         *
-         * @param[status] RadarStatus The request status.
-         * @param[routes] RadarRoutes? If successful, the routing results.
-         */
-        fun onComplete(
-            status: RadarStatus,
-            routes: RadarRoutes? = null
-        )
-    }
-
-    /**
      * Called when an IP geocoding request succeeds, fails, or times out.
      */
     interface RadarIpGeocodeCallback {
@@ -189,7 +173,39 @@ object Radar {
     }
 
     /**
-     * The status types for a request. See [](https://radar.io/documentation/sdk/android).
+     * Called when a distance request succeeds, fails, or times out.
+     */
+    interface RadarRouteCallback {
+        /**
+         * Called when a distance request succeeds, fails, or times out. Receives the request status and, if successful, the routes.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[routes] RadarRoutes? If successful, the routes.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            routes: RadarRoutes? = null
+        )
+    }
+
+    /**
+     * Called when a matrix request succeeds, fails, or times out.
+     */
+    interface RadarMatrixCallback {
+        /**
+         * Called when a matrix request succeeds, fails, or times out. Receives the request status and, if successful, the matrix.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[matrix] RadarRoutesMatrix? If successful, the matrix.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            matrix: RadarRouteMatrix? = null
+        )
+    }
+
+    /**
+     * The status types for a request. See [](https://radar.io/documentation/sdk/android#foreground-tracking).
      */
     enum class RadarStatus {
         /** Success */
@@ -259,7 +275,6 @@ object Radar {
         /** Debug */
         DEBUG(4);
 
-
         companion object {
             @JvmStatic
             fun fromInt(value: Int) : RadarLogLevel {
@@ -269,7 +284,7 @@ object Radar {
     }
 
     /**
-     * The travel modes for routes.
+     * The travel modes for routes. See [](https://radar.io/documentation/api#routing).
      */
     enum class RadarRouteMode {
         /** Foot */
@@ -277,11 +292,15 @@ object Radar {
         /** Bike */
         BIKE,
         /** Car */
-        CAR
+        CAR,
+        /** Truck */
+        TRUCK,
+        /** Motorbike */
+        MOTORBIKE
     }
 
     /**
-     * The distance units for routes.
+     * The distance units for routes. See [](https://radar.io/documentation/api#routing).
      */
     enum class RadarRouteUnits {
         /** Imperial (feet) */
@@ -298,7 +317,9 @@ object Radar {
     internal lateinit var beaconManager: RadarBeaconManager
 
     /**
-     * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods. See [](https://radar.io/documentation/sdk/android).
+     * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#initialize-sdk)
      *
      * @param[context] The context
      * @param[publishableKey] Your publishable API key
@@ -348,7 +369,9 @@ object Radar {
     }
 
     /**
-     * Identifies the user. Until you identify the user, Radar will automatically identify the user by `deviceId` (Android ID). See [](https://radar.io/documentation/sdk/android).
+     * Identifies the user. Until you identify the user, Radar will automatically identify the user by `deviceId` (Android ID).
+     *
+     * @see [](https://radar.io/documentation/sdk/android#identify-user)
      *
      * @param[userId] A stable unique ID for the user. If null, the previous `userId` will be cleared.
      */
@@ -364,6 +387,8 @@ object Radar {
     /**
      * Returns the current `userId`.
      *
+     * @see [](https://radar.io/documentation/sdk/android#identify-user)
+     *
      * @return The current `userId`.
      */
     @JvmStatic
@@ -377,6 +402,8 @@ object Radar {
 
     /**
      * Sets an optional description for the user, displayed in the dashboard.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#identify-user)
      *
      * @param[description] A description for the user. If null, the previous `description` will be cleared.
      */
@@ -392,6 +419,8 @@ object Radar {
     /**
      * Returns the current `description`.
      *
+     * @see [](https://radar.io/documentation/sdk/android#identify-user)
+     *
      * @return The current `description`.
      */
     @JvmStatic
@@ -405,6 +434,8 @@ object Radar {
 
     /**
      * Sets an optional set of custom key-value pairs for the user.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#identify-user)
      *
      * @param[metadata] A set of custom key-value pairs for the user. Must have 16 or fewer keys and values of type string, boolean, or number. If `null`, the previous `metadata` will be cleared.
      */
@@ -420,6 +451,8 @@ object Radar {
     /**
      * Returns the current `metadata`.
      *
+     * @see [](https://radar.io/documentation/sdk/android#identify-user)
+     *
      * @return The current `metadata`.
      */
     @JvmStatic
@@ -432,7 +465,7 @@ object Radar {
     }
 
     /**
-     * Enables `adId` (Android advertising ID) collection.
+     * Enables `adId` (Android advertising ID) collection. Disabled by default.
      *
      * @param[enabled] A boolean indicating whether `adId` should be collected.
      */
@@ -443,6 +476,8 @@ object Radar {
 
     /**
      * Gets the device's current location.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#get-location)
      *
      * @param[callback] An optional callback.
      */
@@ -460,6 +495,8 @@ object Radar {
     /**
      * Gets the device's current location.
      *
+     * @see [](https://radar.io/documentation/sdk/android#get-location)
+     *
      * @param[block] A block callback.
      */
     fun getLocation(block: (status: RadarStatus, location: Location?, stopped: Boolean) -> Unit) {
@@ -472,6 +509,8 @@ object Radar {
 
     /**
      * Gets the device's current location with the desired accuracy.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#get-location)
      *
      * @param[desiredAccuracy] The desired accuracy.
      * @param[callback] An optional callback.
@@ -490,6 +529,8 @@ object Radar {
     /**
      * Gets the device's current location with the desired accuracy.
      *
+     * @see [](https://radar.io/documentation/sdk/android#get-location)
+     *
      * @param[desiredAccuracy] The desired accuracy.
      * @param[block] A block callback.
      */
@@ -503,6 +544,8 @@ object Radar {
 
     /**
      * Tracks the user's location once in the foreground.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#foreground-tracking)
      *
      * @param[callback] An optional callback.
      */
@@ -518,6 +561,8 @@ object Radar {
     /**
      * Tracks the user's location once in the foreground.
      *
+     * @see [](https://radar.io/documentation/sdk/android#foreground-tracking)
+     *
      * @param[block] A block callback.
      */
     fun trackOnce(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
@@ -530,6 +575,8 @@ object Radar {
 
     /**
      * Tracks the user's location once with the desired accuracy and optionally ranges beacons in the foreground.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#foreground-tracking)
      *
      * @param[desiredAccuracy] The desired accuracy.
      * @param[beacons] A boolean indicating whether to range beacons.
@@ -591,6 +638,8 @@ object Radar {
     /**
      * Tracks the user's location once with the desired accuracy and optionally ranges beacons in the foreground.
      *
+     * @see [](https://radar.io/documentation/sdk/android#foreground-tracking)
+     *
      * @param[desiredAccuracy] The desired accuracy.
      * @param[beacons] A boolean indicating whether to range beacons.
      * @param[block] A block callback.
@@ -605,7 +654,9 @@ object Radar {
     }
 
     /**
-     * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk/android).
+     * Manually updates the user's location. Note that these calls are subject to rate limits.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#foreground-tracking)
      *
      * @param[location] A location for the user.
      * @param[callback] An optional callback.
@@ -626,7 +677,9 @@ object Radar {
     }
 
     /**
-     * Manually updates the user's location. Note that these calls are subject to rate limits. See [](https://radar.io/documentation/sdk/android).
+     * Manually updates the user's location. Note that these calls are subject to rate limits.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#foreground-tracking)
      *
      * @param[location] A location for the user.
      * @param[block] A block callback.
@@ -643,6 +696,8 @@ object Radar {
     /**
      * Starts tracking the user's location in the background.
      *
+     * @see [](https://radar.io/documentation/sdk/android#background-tracking-for-geofencing)
+     *
      * @param[options] Configurable tracking options.
      */
     @JvmStatic
@@ -656,6 +711,8 @@ object Radar {
 
     /**
      * Mocks tracking the user's location from an origin to a destination.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#mock-tracking-for-testing)
      *
      * @param[origin] The origin.
      * @param[destination] The destination.
@@ -687,6 +744,8 @@ object Radar {
                     RadarRouteMode.FOOT -> routes?.foot?.geometry?.coordinates
                     RadarRouteMode.BIKE -> routes?.bike?.geometry?.coordinates
                     RadarRouteMode.CAR -> routes?.car?.geometry?.coordinates
+                    RadarRouteMode.TRUCK -> routes?.truck?.geometry?.coordinates
+                    RadarRouteMode.MOTORBIKE -> routes?.motorbike?.geometry?.coordinates
                 }
 
                 if (coordinates == null) {
@@ -737,6 +796,8 @@ object Radar {
     /**
      * Mocks tracking the user's location from an origin to a destination.
      *
+     * @see [](https://radar.io/documentation/sdk/android#mock-tracking-for-testing)
+     *
      * @param[origin] The origin.
      * @param[destination] The destination.
      * @param[mode] The travel mode.
@@ -761,7 +822,9 @@ object Radar {
     }
 
     /**
-     * Stops tracking the user's location in the background. See [](https://radar.io/documentation/sdk/android).
+     * Stops tracking the user's location in the background.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#background-tracking-for-geofencing)
      */
     @JvmStatic
     fun stopTracking() {
@@ -774,6 +837,8 @@ object Radar {
 
     /**
      * Returns a boolean indicating whether tracking has been started.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#background-tracking-for-geofencing)
      *
      * @return A boolean indicating whether tracking has been started.
      */
@@ -789,6 +854,8 @@ object Radar {
     /**
      * Returns the current tracking options.
      *
+     * @see [](https://radar.io/documentation/sdk/tracking)
+     *
      * @return The current tracking options.
      */
     @JvmStatic
@@ -801,7 +868,9 @@ object Radar {
     }
 
     /**
-     * Accepts an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events. See [](https://radar.io/documentation/sdk/android).
+     * Accepts an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events.
+     *
+     * @see [](https://radar.io/documentation/places#verify-events)
      *
      * @param[eventId] The ID of the event to accept.
      * @param[verifiedPlaceId] For place entry events, the ID of the verified place. May be `null`.
@@ -816,7 +885,9 @@ object Radar {
     }
 
     /**
-     * Rejects an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events. See [](https://radar.io/documentation/sdk/android).
+     * Rejects an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events.
+     *
+     * @see [](https://radar.io/documentation/places#verify-events)
      *
      * @param[eventId] The ID of the event to reject.
      */
@@ -832,6 +903,8 @@ object Radar {
     /**
      * Returns the current trip options.
      *
+     * @see [](https://radar.io/documentation/trip-tracking)
+     *
      * @return The current trip options.
      */
     @JvmStatic
@@ -845,6 +918,8 @@ object Radar {
 
     /**
      * Starts a trip.
+     *
+     * @see [](https://radar.io/documentation/trip-tracking)
      *
      * @param[options] Configurable trip options.
      */
@@ -861,6 +936,8 @@ object Radar {
 
     /**
      * Completes a trip.
+     *
+     * @see [](https://radar.io/documentation/trip-tracking)
      */
     @JvmStatic
     fun completeTrip() {
@@ -874,6 +951,8 @@ object Radar {
 
     /**
      * Cancels a trip.
+     *
+     * @see [](https://radar.io/documentation/trip-tracking)
      */
     @JvmStatic
     fun cancelTrip() {
@@ -887,6 +966,8 @@ object Radar {
 
     /**
      * Gets the device's current location, then searches for places near that location, sorted by distance.
+     *
+     * @see [](https://radar.io/documentation/api#search-places)
      *
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[chains] An array of chain slugs to filter. See [](https://radar.io/documentation/places/chains)
@@ -930,6 +1011,8 @@ object Radar {
     /**
      * Gets the device's current location, then searches for places near that location, sorted by distance.
      *
+     * @see [](https://radar.io/documentation/api#search-places)
+     *
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[chains] An array of chain slugs to filter. See [](https://radar.io/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
@@ -961,6 +1044,8 @@ object Radar {
 
     /**
      * Search for places near a location, sorted by distance.
+     *
+     * @see [](https://radar.io/documentation/api#search-places)
      *
      * @param[near] The location to search.
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
@@ -996,6 +1081,8 @@ object Radar {
     /**
      * Search for places near a location, sorted by distance.
      *
+     * @see [](https://radar.io/documentation/api#search-places)
+     *
      * @param[near] The location to search.
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[chains] An array of chain slugs to filter. See [](https://radar.io/documentation/places/chains)
@@ -1030,6 +1117,8 @@ object Radar {
 
     /**
      * Gets the device's current location, then searches for geofences near that location, sorted by distance.
+     *
+     * @see [](https://radar.io/documentation/api#search-geofences)
      *
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/geofences)
@@ -1071,6 +1160,8 @@ object Radar {
     /**
      * Gets the device's current location, then searches for geofences near that location, sorted by distance.
      *
+     * @see [](https://radar.io/documentation/api#search-geofences)
+     *
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.io/documentation/geofences)
@@ -1099,6 +1190,8 @@ object Radar {
 
     /**
      * Search for geofences near a location, sorted by distance.
+     *
+     * @see [](https://radar.io/documentation/api#search-geofences)
      *
      * @param[near] The location to search.
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
@@ -1132,6 +1225,8 @@ object Radar {
     /**
      * Search for geofences near a location, sorted by distance.
      *
+     * @see [](https://radar.io/documentation/api#search-geofences)
+     *
      * @param[near] The location to search.
      * @param[radius] The radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.io/documentation/geofences)
@@ -1164,6 +1259,8 @@ object Radar {
     /**
      * Autocompletes partial addresses and place names, sorted by relevance.
      *
+     * @see [](https://radar.io/documentation/api#autocomplete)
+     *
      * @param[query] The partial address or place name to autocomplete.
      * @param[near] A location for the search.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
@@ -1192,6 +1289,8 @@ object Radar {
     /**
      * Autocompletes partial addresses and place names, sorted by relevance.
      *
+     * @see [](https://radar.io/documentation/api#autocomplete)
+     *
      * @param[query] The partial address or place name to autocomplete.
      * @param[near] A location for the search.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
@@ -1218,6 +1317,8 @@ object Radar {
     /**
      * Geocodes an address, converting address to coordinates.
      *
+     * @see [](https://radar.io/documentation/api#forward-geocode)
+     *
      * @param[query] The address to geocode.
      * @param[callback] A callback.
      */
@@ -1240,7 +1341,9 @@ object Radar {
     }
 
     /**
-     * Geocodes an addresss, converting address to coordinates.
+     * Geocodes an address, converting address to coordinates.
+     *
+     * @see [](https://radar.io/documentation/api#forward-geocode)
      *
      * @param[query] The address to geocode.
      * @param[block] A block callback.
@@ -1261,6 +1364,8 @@ object Radar {
 
     /**
      * Gets the device's current location, then reverse geocodes that location, converting coordinates to address.
+     *
+     * @see [](https://radar.io/documentation/api#reverse-geocode)
      *
      * @param[callback] A callback.
      */
@@ -1294,6 +1399,8 @@ object Radar {
     /**
      * Gets the device's current location, then reverse geocodes that location, converting coordinates to address.
      *
+     * @see [](https://radar.io/documentation/api#reverse-geocode)
+     *
      * @param[block] A block callback.
      */
     fun reverseGeocode(
@@ -1310,6 +1417,8 @@ object Radar {
 
     /**
      * Reverse geocodes a location, converting coordinates to address.
+     *
+     * @see [](https://radar.io/documentation/api#reverse-geocode)
      *
      * @param[location] The location to reverse geocode.
      * @param[callback] A callback.
@@ -1335,6 +1444,8 @@ object Radar {
     /**
      * Reverse geocodes a location, converting coordinates to address.
      *
+     * @see [](https://radar.io/documentation/api#reverse-geocode)
+     *
      * @param[location] The location to geocode.
      * @param[block] A block callback.
      */
@@ -1354,6 +1465,8 @@ object Radar {
 
     /**
      * Geocodes the device's current IP address, converting IP address to partial address.
+     *
+     * @see [](https://radar.io/documentation/api#ip-geocode)
      *
      * @param[callback] A callback.
      */
@@ -1377,6 +1490,8 @@ object Radar {
     /**
      * Geocodes the device's current IP address, converting IP address to partial address.
      *
+     * @see [](https://radar.io/documentation/api#ip-geocode)
+     *
      * @param[block] A block callback.
      */
     fun ipGeocode(
@@ -1393,6 +1508,8 @@ object Radar {
 
     /**
      * Gets the device's current location, then calculates the travel distance and duration to a destination.
+     *
+     * @see [](https://radar.io/documentation/api#distance)
      *
      * @param[destination] The destination.
      * @param[modes] The travel modes.
@@ -1436,6 +1553,8 @@ object Radar {
     /**
      * Gets the device's current location, then calculates the travel distance and duration to a destination.
      *
+     * @see [](https://radar.io/documentation/api#distance)
+     *
      * @param[destination] The destination.
      * @param[modes] The travel modes.
      * @param[units] The distance units.
@@ -1461,6 +1580,8 @@ object Radar {
 
     /**
      * Calculates the travel distance and duration from an origin to a destination.
+     *
+     * @see [](https://radar.io/documentation/api#distance)
      *
      * @param[origin] The origin.
      * @param[destination] The destination.
@@ -1496,6 +1617,8 @@ object Radar {
     /**
      * Calculates the travel distance and duration from an origin to a destination.
      *
+     * @see [](https://radar.io/documentation/api#distance)
+     *
      * @param[origin] The origin.
      * @param[destination] The destination.
      * @param[modes] The travel modes.
@@ -1517,6 +1640,73 @@ object Radar {
             object: RadarRouteCallback {
                 override fun onComplete(status: RadarStatus, routes: RadarRoutes?) {
                     block(status, routes)
+                }
+            }
+        )
+    }
+
+    /**
+     * Calculates the travel distances and durations between multiple origins and destinations for up to 25 routes.
+     *
+     * @see [](https://radar.io/documentation/api#matrix)
+     *
+     * @param[origins] The origins.
+     * @param[destinations] The destinations.
+     * @param[mode] The travel mode.
+     * @param[units] The distance units.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun getMatrix(
+        origins: Array<Location>,
+        destinations: Array<Location>,
+        mode: RadarRouteMode,
+        units: RadarRouteUnits,
+        callback: RadarMatrixCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        apiClient.getMatrix(origins, destinations, mode, units, object : RadarApiClient.RadarMatrixApiCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                matrix: RadarRouteMatrix?
+            ) {
+                callback.onComplete(status, matrix)
+            }
+        })
+    }
+
+    /**
+     * Calculates the travel distances and durations between multiple origins and destinations for up to 25 routes.
+     *
+     * @see [](https://radar.io/documentation/api#matrix)
+     *
+     * @param[origins] The origins.
+     * @param[destinations] The destinations.
+     * @param[mode] The travel mode.
+     * @param[units] The distance units.
+     * @param[block] A block callback.
+     */
+    fun getMatrix(
+        origins: Array<Location>,
+        destinations: Array<Location>,
+        mode: RadarRouteMode,
+        units: RadarRouteUnits,
+        block: (status: RadarStatus, matrix: RadarRouteMatrix?) -> Unit
+    ) {
+        getMatrix(
+            origins,
+            destinations,
+            mode,
+            units,
+            object: RadarMatrixCallback {
+                override fun onComplete(status: RadarStatus, matrix: RadarRouteMatrix?) {
+                    block(status, matrix)
                 }
             }
         )
@@ -1650,6 +1840,8 @@ object Radar {
             RadarRouteMode.FOOT -> "foot"
             RadarRouteMode.BIKE -> "bike"
             RadarRouteMode.CAR -> "car"
+            RadarRouteMode.TRUCK -> "truck"
+            RadarRouteMode.MOTORBIKE -> "motorbike"
         }
     }
 

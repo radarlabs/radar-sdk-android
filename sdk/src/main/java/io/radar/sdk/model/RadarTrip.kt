@@ -5,9 +5,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Represents a trip. For more information about trip tracking, see [](https://radar.io/documentation/trip-tracking).
+ * Represents a trip.
  *
- * @see [](https://radar.io/documentation/trip-tracking
+ * @see [](https://radar.io/documentation/trip-tracking)
  */
 class RadarTrip(
     /**
@@ -118,6 +118,8 @@ class RadarTrip(
                 "foot" -> Radar.RadarRouteMode.FOOT
                 "bike" -> Radar.RadarRouteMode.BIKE
                 "car" -> Radar.RadarRouteMode.CAR
+                "truck" -> Radar.RadarRouteMode.TRUCK
+                "motorbike" -> Radar.RadarRouteMode.MOTORBIKE
                 else -> null
             }
             val etaDistance = obj.optJSONObject(FIELD_ETA)?.optDouble(FIELD_DISTANCE)

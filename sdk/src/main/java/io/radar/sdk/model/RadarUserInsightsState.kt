@@ -4,7 +4,7 @@ import org.json.JSONException
 import org.json.JSONObject
 
 /**
- * Represents the learned home, work, and traveling state of the current user. For more information about Insights, see [](https://radar.io/documentation/insights).
+ * Represents the learned home, work, and traveling state of the current user.
  *
  * @see [](https://radar.io/documentation/insights)
  */

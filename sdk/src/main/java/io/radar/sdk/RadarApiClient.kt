@@ -51,6 +51,10 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null, routes: RadarRoutes? = null)
     }
 
+    interface RadarMatrixApiCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, matrix: RadarRouteMatrix? = null)
+    }
+
     private fun headers(publishableKey: String): Map<String, String> {
         return mapOf(
             "Authorization" to publishableKey,
@@ -686,6 +690,12 @@ internal class RadarApiClient(
         if (modes.contains(Radar.RadarRouteMode.CAR)) {
             modesList.add("car")
         }
+        if (modes.contains(Radar.RadarRouteMode.TRUCK)) {
+            modesList.add("truck")
+        }
+        if (modes.contains(Radar.RadarRouteMode.MOTORBIKE)) {
+            modesList.add("motorbike")
+        }
         queryParams.append("&modes=${modesList.joinToString(",")}")
         if (units == Radar.RadarRouteUnits.METRIC) {
             queryParams.append("&units=metric")
@@ -718,6 +728,82 @@ internal class RadarApiClient(
                 }
                 if (routes != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, routes)
+
+                    return
+                }
+
+                callback.onComplete(RadarStatus.ERROR_SERVER)
+            }
+        })
+    }
+
+    internal fun getMatrix(
+        origins: Array<Location>,
+        destinations: Array<Location>,
+        mode: Radar.RadarRouteMode,
+        units: Radar.RadarRouteUnits,
+        callback: RadarMatrixApiCallback
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val queryParams = StringBuilder()
+        queryParams.append("origins=")
+        for (i in origins.indices) {
+            queryParams.append("${origins[i].latitude},${origins[i].longitude}")
+            if (i < origins.size - 1) {
+                queryParams.append("|")
+            }
+        }
+        queryParams.append("&destinations=")
+        for (i in destinations.indices) {
+            queryParams.append("${destinations[i].latitude},${destinations[i].longitude}")
+            if (i < destinations.size - 1) {
+                queryParams.append("|")
+            }
+        }
+        if (mode == Radar.RadarRouteMode.FOOT) {
+            queryParams.append("&mode=foot")
+        } else if (mode == Radar.RadarRouteMode.BIKE) {
+            queryParams.append("&mode=bike")
+        } else if (mode == Radar.RadarRouteMode.CAR) {
+            queryParams.append("&mode=car")
+        } else if (mode == Radar.RadarRouteMode.TRUCK) {
+            queryParams.append("&mode=truck")
+        } else if (mode == Radar.RadarRouteMode.MOTORBIKE) {
+            queryParams.append("&mode=motorbike")
+        }
+        if (units == Radar.RadarRouteUnits.METRIC) {
+            queryParams.append("&units=metric")
+        } else {
+            queryParams.append("&units=imperial")
+        }
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/route/matrix?${queryParams}")
+            .build()
+        val url = URL(uri.toString())
+
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "GET", url, headers, null, object : RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                val matrix = res.optJSONArray("matrix")?.let { matrixObj ->
+                    RadarRouteMatrix.fromJson(matrixObj)
+                }
+                if (matrix != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, matrix)
 
                     return
                 }

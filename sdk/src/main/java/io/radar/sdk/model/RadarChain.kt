@@ -5,7 +5,7 @@ import org.json.JSONException
 import org.json.JSONObject
 
 /**
- * Represents the chain of a place. For more information about Places, see [](https://radar.io/documentation/places).
+ * Represents the chain of a place.
  *
  * @see [](https://radar.io/documentation/places)
  */
