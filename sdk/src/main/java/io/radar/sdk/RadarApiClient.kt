@@ -265,10 +265,10 @@ internal class RadarApiClient(
             params.putOpt("metadata", options.metadata)
         }
         if (options.destinationGeofenceTag != null) {
-            params.putOpt("metadata", options.destinationGeofenceTag)
+            params.putOpt("destinationGeofenceTag", options.destinationGeofenceTag)
         }
         if (options.destinationGeofenceExternalId != null) {
-            params.putOpt("metadata", options.destinationGeofenceExternalId)
+            params.putOpt("destinationGeofenceExternalId", options.destinationGeofenceExternalId)
         }
         params.putOpt("mode", Radar.stringForMode(options.mode))
 
