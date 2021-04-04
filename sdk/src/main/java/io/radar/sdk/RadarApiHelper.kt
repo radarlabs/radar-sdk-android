@@ -100,6 +100,7 @@ internal open class RadarApiHelper {
                 }
             }
 
+            // sleep for 1 second between API requests
             Thread.sleep(1000)
         }
     }
