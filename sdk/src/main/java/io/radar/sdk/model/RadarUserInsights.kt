@@ -2,9 +2,7 @@ package io.radar.sdk.model
 
 import io.radar.sdk.model.RadarUserInsightsLocation.RadarUserInsightsLocationType.HOME
 import io.radar.sdk.model.RadarUserInsightsLocation.RadarUserInsightsLocationType.OFFICE
-import org.json.JSONException
 import org.json.JSONObject
-import java.text.ParseException
 
 /**
  * Represents the learned home, work, and traveling state and locations of the current user.
@@ -35,7 +33,6 @@ class RadarUserInsights private constructor(
         private const val FIELD_STATE = "state"
 
         @JvmStatic
-        @Throws(JSONException::class, ParseException::class)
         fun fromJson(obj: JSONObject?): RadarUserInsights? {
             if (obj == null) {
                 return null

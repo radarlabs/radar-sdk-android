@@ -474,15 +474,7 @@ internal class RadarLocationManager(
             return
         }
 
-        if (lastSyncInterval < 1000L) {
-            logger.d(this.context, "Scheduling location send")
-
-            Handler().postAtTime({
-                this.sendLocation(sendLocation, stopped, source, replayed)
-            }, "send", SystemClock.uptimeMillis() + 2000L)
-        } else {
-            this.sendLocation(sendLocation, stopped, source, replayed)
-        }
+        this.sendLocation(sendLocation, stopped, source, replayed)
     }
 
     private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {

@@ -37,7 +37,6 @@ class RadarUserInsightsState(
         private const val FIELD_COMMUTING = "commuting"
 
         @JvmStatic
-        @Throws(JSONException::class)
         fun fromJson(obj: JSONObject?): RadarUserInsightsState? {
             if (obj == null) {
                 return null

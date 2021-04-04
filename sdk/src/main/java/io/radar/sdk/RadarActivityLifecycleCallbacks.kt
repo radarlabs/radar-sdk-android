@@ -56,7 +56,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
         updatePermissionsDenied(activity)
     }
 
-    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle?) {
+    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
         updatePermissionsDenied(activity)
     }
 

@@ -1,7 +1,8 @@
 package io.radar.sdk
 
 import android.content.Context
-import android.os.AsyncTask
+import android.os.Handler
+import android.os.Looper
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
@@ -23,7 +24,7 @@ internal open class RadarApiHelper {
                          headers: Map<String, String>?,
                          params: JSONObject?,
                          callback: RadarApiCallback? = null) {
-        DoAsync {
+        Handler(Looper.getMainLooper()).post {
             try {
                 val urlConnection = url.openConnection() as HttpURLConnection
                 if (headers != null) {
@@ -52,7 +53,7 @@ internal open class RadarApiHelper {
                     if (body == null) {
                         callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
 
-                        return@DoAsync
+                        return@post
                     }
 
                     val res = JSONObject(body)
@@ -81,14 +82,6 @@ internal open class RadarApiHelper {
             } catch (e: Exception) {
                 callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
             }
-        }.execute()
-    }
-
-    private class DoAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
-        override fun doInBackground(vararg params: Void?): Void? {
-            handler()
-
-            return null
         }
     }
 
