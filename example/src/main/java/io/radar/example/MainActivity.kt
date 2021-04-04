@@ -27,8 +27,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000")
+        Radar.initialize(this, "org_test_pk_5857c63d9c1565175db8b00750808a66a002acb8")
+        Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
 
+        /*
         Radar.getLocation { status, location, stopped ->
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
         }
@@ -71,6 +73,7 @@ class MainActivity : AppCompatActivity() {
         Radar.reverseGeocode { status, addresses ->
             Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
         }
+        */
 
         Radar.ipGeocode { status, address, proxy ->
             Log.v("example", "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}; proxy = $proxy")
@@ -101,6 +104,7 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Distance: status = $status; routes.car.distance.value = ${routes?.car?.distance?.value}; routes.car.distance.text = ${routes?.car?.distance?.text}; routes.car.duration.value = ${routes?.car?.duration?.value}; routes.car.duration.text = ${routes?.car?.duration?.text}")
         }
 
+        /*
         val tripOptions = RadarTripOptions(
             "299",
             null,
@@ -155,6 +159,7 @@ class MainActivity : AppCompatActivity() {
         ) { status, matrix ->
             Log.v("example", "Matrix: status = $status; matrix[0][0].duration.text = ${matrix?.routeBetween(0, 0)?.duration?.text}; matrix[0][1].duration.text = ${matrix?.routeBetween(0, 1)?.duration?.text}; matrix[1][0].duration.text = ${matrix?.routeBetween(1, 0)?.duration?.text};  matrix[1][1].duration.text = ${matrix?.routeBetween(1, 1)?.duration?.text}")
         }
+         */
     }
 
 }
