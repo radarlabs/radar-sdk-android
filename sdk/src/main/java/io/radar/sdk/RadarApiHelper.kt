@@ -82,7 +82,6 @@ internal open class RadarApiHelper {
                     handler.post {
                         callback?.onComplete(status)
                     }
-
                 }
 
                 urlConnection.disconnect()
