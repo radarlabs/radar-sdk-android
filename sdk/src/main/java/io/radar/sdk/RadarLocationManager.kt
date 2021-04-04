@@ -84,8 +84,6 @@ internal class RadarLocationManager(
     }
 
     fun getLocation(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, callback: RadarLocationCallback?) {
-        this.addCallback(callback)
-
         if (!permissionsHelper.fineLocationPermissionGranted(context)) {
             Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
 
@@ -93,6 +91,8 @@ internal class RadarLocationManager(
 
             return
         }
+
+        this.addCallback(callback)
 
         val locationManager = this
 

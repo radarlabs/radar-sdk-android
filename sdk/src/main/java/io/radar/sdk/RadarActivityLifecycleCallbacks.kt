@@ -18,18 +18,22 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
     }
 
     private fun updatePermissionsDenied(activity: Activity) {
-        if (ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED &&
-            !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
-            RadarSettings.setPermissionsDenied(activity.applicationContext, true)
-        }
+        try {
+            if (ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED &&
+                !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                RadarSettings.setPermissionsDenied(activity.applicationContext, true)
+            }
+        } catch (e: Exception) {}
     }
 
     override fun onActivityResumed(activity: Activity) {
         if (count == 0) {
-            val updated = RadarSettings.updateSessionId(activity.applicationContext)
-            if (updated) {
-                Radar.apiClient.getConfig()
-            }
+            try {
+                val updated = RadarSettings.updateSessionId(activity.applicationContext)
+                if (updated) {
+                    Radar.apiClient.getConfig()
+                }
+            } catch (e: Exception) {}
         }
         count++
         foreground = count > 0
