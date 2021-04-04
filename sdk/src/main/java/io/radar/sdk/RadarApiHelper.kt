@@ -23,10 +23,20 @@ internal open class RadarApiHelper {
     }
 
     internal open fun request(context: Context,
+                              method: String,
+                              url: URL,
+                              headers: Map<String, String>?,
+                              params: JSONObject?,
+                              callback: RadarApiCallback? = null) {
+        request(context, method, url, headers, params, false, callback)
+    }
+
+    internal open fun request(context: Context,
                          method: String,
                          url: URL,
                          headers: Map<String, String>?,
                          params: JSONObject?,
+                         sleep: Boolean,
                          callback: RadarApiCallback? = null) {
         executor.execute {
             try {
@@ -99,8 +109,9 @@ internal open class RadarApiHelper {
                 }
             }
 
-            // sleep for 1 second between API requests
-            Thread.sleep(1000)
+            if (sleep) {
+                Thread.sleep(1000)
+            }
         }
     }
 
