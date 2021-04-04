@@ -36,7 +36,7 @@ internal open class RadarApiHelper {
                         try {
                             urlConnection.setRequestProperty(key, value)
                         } catch (e: Exception) {
-                            return@execute
+
                         }
                     }
                 }
