@@ -23,15 +23,6 @@ internal open class RadarApiHelper {
     }
 
     internal open fun request(context: Context,
-                              method: String,
-                              url: URL,
-                              headers: Map<String, String>?,
-                              params: JSONObject?,
-                              callback: RadarApiCallback? = null) {
-        request(context, method, url, headers, params, false, callback)
-    }
-
-    internal open fun request(context: Context,
                          method: String,
                          url: URL,
                          headers: Map<String, String>?,
