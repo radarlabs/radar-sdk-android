@@ -1,7 +1,6 @@
 package io.radar.sdk.model
 
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -38,7 +37,6 @@ class RadarChain(
         private const val FIELD_METADATA = "metadata"
 
         @JvmStatic
-        @Throws(JSONException::class)
         fun fromJson(obj: JSONObject?): RadarChain? {
             if (obj == null) {
                 return null

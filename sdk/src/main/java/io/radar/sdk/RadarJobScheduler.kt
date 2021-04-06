@@ -9,6 +9,7 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
+import android.os.Looper
 import android.os.PersistableBundle
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarLocationSource
@@ -69,7 +70,7 @@ class RadarJobScheduler : JobService() {
 
         Radar.handleLocation(this.applicationContext, location, source)
 
-        Handler().postDelayed({
+        Handler(Looper.getMainLooper()).postDelayed({
             this.jobFinished(params, false)
         }, 10000)
 

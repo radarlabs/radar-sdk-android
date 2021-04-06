@@ -1,7 +1,8 @@
 package io.radar.sdk
 
 import android.content.Context
-import android.os.AsyncTask
+import android.os.Handler
+import android.os.Looper
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
@@ -10,8 +11,12 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
+import java.util.concurrent.Executors
 
 internal open class RadarApiHelper {
+
+    private val executor = Executors.newSingleThreadExecutor()
+    private val handler = Handler(Looper.getMainLooper())
 
     interface RadarApiCallback {
         fun onComplete(status: Radar.RadarStatus, res: JSONObject? = null)
@@ -22,8 +27,9 @@ internal open class RadarApiHelper {
                          url: URL,
                          headers: Map<String, String>?,
                          params: JSONObject?,
+                         sleep: Boolean,
                          callback: RadarApiCallback? = null) {
-        DoAsync {
+        executor.execute {
             try {
                 val urlConnection = url.openConnection() as HttpURLConnection
                 if (headers != null) {
@@ -50,14 +56,18 @@ internal open class RadarApiHelper {
                 if (urlConnection.responseCode in 200 until 400) {
                     val body = urlConnection.inputStream.readAll()
                     if (body == null) {
-                        callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                        handler.post {
+                            callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                        }
 
-                        return@DoAsync
+                        return@execute
                     }
 
                     val res = JSONObject(body)
 
-                    callback?.onComplete(Radar.RadarStatus.SUCCESS, res)
+                    handler.post {
+                        callback?.onComplete(Radar.RadarStatus.SUCCESS, res)
+                    }
                 } else {
                     val status = when (urlConnection.responseCode) {
                         400 -> Radar.RadarStatus.ERROR_BAD_REQUEST
@@ -70,25 +80,29 @@ internal open class RadarApiHelper {
                         else -> Radar.RadarStatus.ERROR_UNKNOWN
                     }
 
-                    callback?.onComplete(status)
+                    handler.post {
+                        callback?.onComplete(status)
+                    }
                 }
 
                 urlConnection.disconnect()
             } catch (e: IOException) {
-                callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                handler.post {
+                    callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                }
             } catch (e: JSONException) {
-                callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                handler.post {
+                    callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                }
             } catch (e: Exception) {
-                callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
+                handler.post {
+                    callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
+                }
             }
-        }.execute()
-    }
 
-    private class DoAsync(val handler: () -> Unit) : AsyncTask<Void, Void, Void>() {
-        override fun doInBackground(vararg params: Void?): Void? {
-            handler()
-
-            return null
+            if (sleep) {
+                Thread.sleep(1000)
+            }
         }
     }
 

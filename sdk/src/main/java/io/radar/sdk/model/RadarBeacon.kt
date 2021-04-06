@@ -1,7 +1,6 @@
 package io.radar.sdk.model
 
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -85,7 +84,6 @@ class RadarBeacon (
         }
 
         @JvmStatic
-        @Throws(JSONException::class)
         fun fromJson(arr: JSONArray?): Array<RadarBeacon>? {
             if (arr == null) {
                 return null
