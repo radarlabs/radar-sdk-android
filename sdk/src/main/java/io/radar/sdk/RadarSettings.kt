@@ -59,7 +59,7 @@ internal object RadarSettings {
         val timestampSeconds = System.currentTimeMillis() / 1000
         val sessionIdSeconds = getSharedPreferences(context).getLong(KEY_SESSION_ID, 0)
         if (timestampSeconds - sessionIdSeconds > 300) {
-            getSharedPreferences(context).edit { putLong(KEY_SESSION_ID, sessionIdSeconds) }
+            getSharedPreferences(context).edit { putLong(KEY_SESSION_ID, timestampSeconds) }
 
             Radar.logger.d(context, "New session | sessionId = ${this.getSessionId(context)}")
 
