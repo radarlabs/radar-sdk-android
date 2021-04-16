@@ -26,7 +26,7 @@ internal class RadarBeaconManager(
     internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper()
 ) {
 
-    private val adapter = BluetoothAdapter.getDefaultAdapter()
+    private lateinit var adapter: BluetoothAdapter
     private var started = false
     private val callbacks = Collections.synchronizedList(mutableListOf<RadarBeaconCallback>())
     private var nearbyBeaconIdentifiers = mutableSetOf<String>()
@@ -72,6 +72,10 @@ internal class RadarBeaconManager(
             callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
 
             return
+        }
+
+        if (!this::adapter.isInitialized) {
+            adapter = BluetoothAdapter.getDefaultAdapter()
         }
 
         if (!adapter.isEnabled) {
