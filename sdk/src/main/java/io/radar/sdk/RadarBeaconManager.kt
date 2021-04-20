@@ -95,6 +95,8 @@ internal class RadarBeaconManager(
         if (beacons.isEmpty()) {
             logger.d(this.context, "No beacons to range")
 
+            callback?.onComplete(RadarStatus.ERROR_UNKNOWN)
+
             return
         }
 
