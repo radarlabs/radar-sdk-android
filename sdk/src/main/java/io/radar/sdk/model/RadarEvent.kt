@@ -151,7 +151,11 @@ class RadarEvent(
         /** `user.entered_beacon` */
         USER_ENTERED_BEACON,
         /** `user.exited_beacon` */
-        USER_EXITED_BEACON
+        USER_EXITED_BEACON,
+        /** `user.entered_region_postal_code` */
+        USER_ENTERED_REGION_POSTAL_CODE,
+        /** `user.exited_region_postal_code` */
+        USER_EXITED_REGION_POSTAL_CODE
     }
 
     /**
@@ -244,6 +248,8 @@ class RadarEvent(
                 "user.stopped_trip" -> USER_STOPPED_TRIP
                 "user.entered_beacon" -> USER_ENTERED_BEACON
                 "user.exited_beacon" -> USER_EXITED_BEACON
+                "user.entered_region_postal_code" -> USER_ENTERED_REGION_POSTAL_CODE
+                "user.exited_region_postal_code" -> USER_EXITED_REGION_POSTAL_CODE
                 else -> UNKNOWN
             }
             val geofence = RadarGeofence.fromJson(obj.optJSONObject(FIELD_GEOFENCE))
@@ -335,6 +341,8 @@ class RadarEvent(
                 USER_STOPPED_TRIP -> "user.stopped_trip"
                 USER_ENTERED_BEACON -> "user.entered_beacon"
                 USER_EXITED_BEACON -> "user.exited_beacon"
+                USER_ENTERED_REGION_POSTAL_CODE -> "user.entered_region_postal_code"
+                USER_EXITED_REGION_POSTAL_CODE -> "user.exited_region_postal_code"
                 else -> null
             }
         }
