@@ -254,13 +254,15 @@ internal class RadarApiClient(
         apiHelper.request(context, "PUT", url, headers, params)
     }
 
-    internal fun updateTrip(status: RadarTrip.RadarTripStatus, options: RadarTripOptions?) {
+    internal fun updateTrip(options: RadarTripOptions?, status: RadarTrip.RadarTripStatus?) {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
         val externalId = options?.externalId ?: return
 
         val params = JSONObject()
-        params.putOpt("status", Radar.stringForTripStatus(status))
+        if (status != null && status != RadarTrip.RadarTripStatus.UNKNOWN) {
+            params.putOpt("status", Radar.stringForTripStatus(status))
+        }
         if (options.metadata != null) {
             params.putOpt("metadata", options.metadata)
         }

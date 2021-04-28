@@ -930,7 +930,7 @@ object Radar {
         }
 
         RadarSettings.setTripOptions(context, options)
-        apiClient.updateTrip(RadarTrip.RadarTripStatus.STARTED, options)
+        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.STARTED)
         locationManager.getLocation(null)
     }
 
@@ -939,16 +939,16 @@ object Radar {
      *
      * @see [](https://radar.io/documentation/trip-tracking)
      *
-     * @param[status] The trip status.
      * @param[options] Configurable trip options.
+     * @param[status] The trip status.
      */
     @JvmStatic
-    fun updateTrip(status: RadarTrip.RadarTripStatus, options: RadarTripOptions) {
+    fun updateTrip(options: RadarTripOptions, status: RadarTrip.RadarTripStatus?) {
         if (!initialized) {
             return
         }
 
-        apiClient.updateTrip(status, options)
+        apiClient.updateTrip(options, status)
     }
 
     /**
@@ -963,7 +963,7 @@ object Radar {
         }
 
         val options = RadarSettings.getTripOptions(context)
-        apiClient.updateTrip(RadarTrip.RadarTripStatus.COMPLETED, options)
+        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.COMPLETED)
         RadarSettings.setTripOptions(context, null)
     }
 
@@ -979,7 +979,7 @@ object Radar {
         }
 
         val options = RadarSettings.getTripOptions(context)
-        apiClient.updateTrip(RadarTrip.RadarTripStatus.CANCELED, options)
+        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.CANCELED)
         RadarSettings.setTripOptions(context, null)
     }
 
