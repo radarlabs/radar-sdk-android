@@ -24,6 +24,10 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null, events: Array<RadarEvent>? = null, user: RadarUser? = null, nearbyGeofences: Array<RadarGeofence>? = null)
     }
 
+    interface RadarTripApiCallback {
+        fun onComplete(status: RadarStatus)
+    }
+
     interface RadarContextApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null, context: RadarContext? = null)
     }
@@ -108,10 +112,9 @@ internal class RadarApiClient(
 
         val params = JSONObject()
         val options = RadarSettings.getTrackingOptions(context)
-        val tripOptions = RadarSettings.getTripOptions(context)
         try {
-            params.putOpt("installId", RadarSettings.getInstallId(context))
             params.putOpt("id", RadarSettings.getId(context))
+            params.putOpt("installId", RadarSettings.getInstallId(context))
             params.putOpt("userId", RadarSettings.getUserId(context))
             params.putOpt("deviceId", RadarUtils.getDeviceId(context))
             params.putOpt("description", RadarSettings.getDescription(context))
@@ -153,15 +156,6 @@ internal class RadarApiClient(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 val mocked = location.isFromMockProvider
                 params.putOpt("mocked", mocked)
-            }
-            if (tripOptions != null) {
-                val tripOptionsObj = JSONObject()
-                tripOptionsObj.putOpt("externalId", tripOptions.externalId)
-                tripOptionsObj.putOpt("metadata", tripOptions.metadata)
-                tripOptionsObj.putOpt("destinationGeofenceTag", tripOptions.destinationGeofenceTag)
-                tripOptionsObj.putOpt("destinationGeofenceExternalId", tripOptions.destinationGeofenceExternalId)
-                tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
-                params.putOpt("tripOptions", tripOptionsObj)
             }
             if (options.syncGeofences) {
                 params.putOpt("nearbyGeofences", true)
@@ -261,12 +255,26 @@ internal class RadarApiClient(
         apiHelper.request(context, "PUT", url, headers, params)
     }
 
-    internal fun updateTrip(options: RadarTripOptions?, status: RadarTrip.RadarTripStatus?) {
-        val publishableKey = RadarSettings.getPublishableKey(context) ?: return
+    internal fun updateTrip(options: RadarTripOptions?, status: RadarTrip.RadarTripStatus?, callback: RadarTripApiCallback?) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
-        val externalId = options?.externalId ?: return
+            return
+        }
+
+        val externalId = options?.externalId
+        if (externalId == null) {
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
+        }
 
         val params = JSONObject()
+        params.putOpt("id", RadarSettings.getId(context))
+        params.putOpt("installId", RadarSettings.getInstallId(context))
+        params.putOpt("userId", RadarSettings.getUserId(context))
+        params.putOpt("deviceId", RadarUtils.getDeviceId(context))
         if (status != null && status != RadarTrip.RadarTripStatus.UNKNOWN) {
             params.putOpt("status", Radar.stringForTripStatus(status))
         }
@@ -290,7 +298,11 @@ internal class RadarApiClient(
 
         val headers = headers(publishableKey)
 
-        apiHelper.request(context, "PATCH", url, headers, params)
+        apiHelper.request(context, "PATCH", url, headers, params, object: RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                callback?.onComplete(status)
+            }
+        })
     }
 
     internal fun getContext(
