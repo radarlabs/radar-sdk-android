@@ -112,6 +112,7 @@ internal class RadarApiClient(
 
         val params = JSONObject()
         val options = RadarSettings.getTrackingOptions(context)
+        val tripOptions = RadarSettings.getTripOptions(context)
         try {
             params.putOpt("id", RadarSettings.getId(context))
             params.putOpt("installId", RadarSettings.getInstallId(context))
@@ -156,6 +157,15 @@ internal class RadarApiClient(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 val mocked = location.isFromMockProvider
                 params.putOpt("mocked", mocked)
+            }
+            if (tripOptions != null) {
+                val tripOptionsObj = JSONObject()
+                tripOptionsObj.putOpt("externalId", tripOptions.externalId)
+                tripOptionsObj.putOpt("metadata", tripOptions.metadata)
+                tripOptionsObj.putOpt("destinationGeofenceTag", tripOptions.destinationGeofenceTag)
+                tripOptionsObj.putOpt("destinationGeofenceExternalId", tripOptions.destinationGeofenceExternalId)
+                tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
+                params.putOpt("tripOptions", tripOptionsObj)
             }
             if (options.syncGeofences) {
                 params.putOpt("nearbyGeofences", true)
@@ -271,10 +281,6 @@ internal class RadarApiClient(
         }
 
         val params = JSONObject()
-        params.putOpt("id", RadarSettings.getId(context))
-        params.putOpt("installId", RadarSettings.getInstallId(context))
-        params.putOpt("userId", RadarSettings.getUserId(context))
-        params.putOpt("deviceId", RadarUtils.getDeviceId(context))
         if (status != null && status != RadarTrip.RadarTripStatus.UNKNOWN) {
             params.putOpt("status", Radar.stringForTripStatus(status))
         }
