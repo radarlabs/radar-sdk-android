@@ -951,6 +951,7 @@ object Radar {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, options)
 
+                    // flush location update to generate events
                     locationManager.getLocation(null)
                 }
 
@@ -995,6 +996,9 @@ object Radar {
             override fun onComplete(status: RadarStatus) {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, options)
+
+                    // flush location update to generate events
+                    locationManager.getLocation(null)
                 }
 
                 callback?.onComplete(status)
@@ -1038,6 +1042,9 @@ object Radar {
             override fun onComplete(status: RadarStatus) {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, null)
+
+                    // flush location update to generate events
+                    locationManager.getLocation(null)
                 }
 
                 callback?.onComplete(status)
@@ -1062,7 +1069,7 @@ object Radar {
     }
 
     /**
-     * Completes a trip.
+     * Cancels a trip.
      *
      * @param[callback] An optional callback.
      *
@@ -1079,6 +1086,9 @@ object Radar {
             override fun onComplete(status: RadarStatus) {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, null)
+
+                    // flush location update to generate events
+                    locationManager.getLocation(null)
                 }
 
                 callback?.onComplete(status)
@@ -1087,7 +1097,7 @@ object Radar {
     }
 
     /**
-     * Completes a trip.
+     * Cancels a trip.
      *
      * @see [](https://radar.io/documentation/trip-tracking)
      *
