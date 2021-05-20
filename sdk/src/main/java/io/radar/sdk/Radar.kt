@@ -1041,8 +1041,6 @@ object Radar {
         apiClient.updateTrip(options, RadarTrip.RadarTripStatus.COMPLETED, object : RadarApiClient.RadarTripApiCallback {
             override fun onComplete(status: RadarStatus) {
                 if (status == RadarStatus.SUCCESS) {
-                    RadarSettings.setTripOptions(context, null)
-
                     // flush location update to generate events
                     locationManager.getLocation(null)
                 }
@@ -1050,6 +1048,8 @@ object Radar {
                 callback?.onComplete(status)
             }
         })
+
+        RadarSettings.setTripOptions(context, null)
     }
 
     /**
@@ -1085,8 +1085,6 @@ object Radar {
         apiClient.updateTrip(options, RadarTrip.RadarTripStatus.CANCELED, object : RadarApiClient.RadarTripApiCallback {
             override fun onComplete(status: RadarStatus) {
                 if (status == RadarStatus.SUCCESS) {
-                    RadarSettings.setTripOptions(context, null)
-
                     // flush location update to generate events
                     locationManager.getLocation(null)
                 }
@@ -1094,6 +1092,8 @@ object Radar {
                 callback?.onComplete(status)
             }
         })
+
+        RadarSettings.setTripOptions(context, null)
     }
 
     /**
