@@ -71,7 +71,7 @@ artifacts {
 
 publishing {
     publications {
-        sdkPublication(MavenPublication) {
+        sdk(MavenPublication) {
             groupId 'io.radar'
             artifactId 'sdk'
             version radarVersion
@@ -120,5 +120,5 @@ publishing {
 }
 
 signing {
-    sign publishing.publications.sdkPublication
+    sign publishing.publications.sdk
 }
