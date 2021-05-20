@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-apply plugin: 'org.jetbrains.dokka-android'
+apply plugin: 'org.jetbrains.dokka'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
@@ -56,13 +56,11 @@ task androidSourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
 }
 
-task androidJavadocs(type: org.jetbrains.dokka.gradle.DokkaAndroidTask) {
-    outputFormat = 'javadoc'
-    outputDirectory = "$buildDir/javadoc"
-    reportUndocumented = false
+tasks.dokkaJavadoc.configure {
+    outputDirectory.set(file("$buildDir/javadoc"))
 }
 
-task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+task androidJavadocsJar(type: Jar, dependsOn: dokkaJavadoc) {
     archiveClassifier.set('javadoc')
     from "$buildDir/javadoc"
 }
