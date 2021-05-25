@@ -2,9 +2,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'org.jetbrains.dokka-android'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'maven'
 apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
 ext {
     radarVersion = '3.1.5'
@@ -53,7 +52,7 @@ dependencies {
 }
 
 task androidSourcesJar(type: Jar) {
-    classifier = 'sources'
+    archiveClassifier.set('sources')
     from android.sourceSets.main.java.srcDirs
 }
 
@@ -64,18 +63,17 @@ task androidJavadocs(type: org.jetbrains.dokka.gradle.DokkaAndroidTask) {
 }
 
 task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-    classifier = 'javadoc'
+    archiveClassifier.set('javadoc')
     from "$buildDir/javadoc"
 }
 
 artifacts {
-    archives androidSourcesJar
-    archives androidJavadocsJar
+    archives androidSourcesJar, androidJavadocsJar
 }
 
 publishing {
     publications {
-        RadarSDKPublication(MavenPublication) {
+        sdkPublication(MavenPublication) {
             groupId 'io.radar'
             artifactId 'sdk'
             version radarVersion
@@ -83,33 +81,46 @@ publishing {
             artifact androidSourcesJar
             artifact androidJavadocsJar
 
-            pom.withXml {
-                def dependenciesNode = asNode().appendNode('dependencies')
-                configurations.implementation.allDependencies.each { dependency ->
-                    if (dependency.group == null || dependency.name == null || dependency.version == null) {
-                        return
+            pom {
+                name = 'Radar Android SDK'
+                description = 'Android SDK for Radar, the leading geofencing and location tracking platform'
+                url = 'https://radar.io'
+
+                licenses {
+                    license {
+                        name = 'Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
                     }
-                    def dependencyNode = dependenciesNode.appendNode('dependency')
-                    dependencyNode.appendNode('groupId', dependency.group)
-                    dependencyNode.appendNode('artifactId', dependency.name)
-                    dependencyNode.appendNode('version', dependency.version)
+                }
+
+                organization {
+                    name = 'Radar Labs, Inc'
+                    url = 'https://radar.io'
+                }
+
+                developers {
+                    developer {
+                        id = 'radarlabs'
+                        name = 'Radar Labs, Inc.'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com:radarlabs/radar-sdk-android.git'
+                    developerConnection = 'scm:git:ssh://github.com:radarlabs/radar-sdk-android.git'
+                    url = 'https://github.com/radarlabs/radar-sdk-android'
                 }
             }
         }
     }
-}
 
-bintray {
-    user = "$System.env.BINTRAY_USER"
-    key = "$System.env.BINTRAY_KEY"
-    publications = ['RadarSDKPublication']
-    pkg {
-        repo = 'maven'
-        name = 'sdk2'
-        userOrg = 'radarlabs'
-        version {
-            name = radarVersion
-            vcsTag = radarVersion
+    repositories {
+        maven {
+            url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2'
         }
     }
+}
+
+signing {
+    sign publishing.publications.sdkPublication
 }
