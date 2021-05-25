@@ -84,6 +84,22 @@ object Radar {
     }
 
     /**
+     * Called when a trip update succeeds, fails, or times out.
+     */
+    interface RadarTripCallback {
+
+        /**
+         * Called when a trip update succeeds, fails, or times out. Receives the request status.
+         *
+         * @param[status] RadarStatus The request status.
+         */
+        fun onComplete(
+            status: RadarStatus
+        )
+
+    }
+
+    /**
      * Called when a context request succeeds, fails, or times out.
      */
     interface RadarContextCallback {
@@ -922,16 +938,43 @@ object Radar {
      * @see [](https://radar.io/documentation/trip-tracking)
      *
      * @param[options] Configurable trip options.
+     * @param[callback] An optional callback.
      */
     @JvmStatic
-    fun startTrip(options: RadarTripOptions) {
+    fun startTrip(options: RadarTripOptions, callback: RadarTripCallback? = null) {
         if (!initialized) {
             return
         }
 
-        RadarSettings.setTripOptions(context, options)
-        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.STARTED)
-        locationManager.getLocation(null)
+        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.STARTED, object : RadarApiClient.RadarTripApiCallback {
+            override fun onComplete(status: RadarStatus) {
+                if (status == RadarStatus.SUCCESS) {
+                    RadarSettings.setTripOptions(context, options)
+
+                    // flush location update to generate events
+                    locationManager.getLocation(null)
+                }
+
+                callback?.onComplete(status)
+            }
+        })
+    }
+
+    /**
+     * Starts a trip.
+     *
+     * @see [](https://radar.io/documentation/trip-tracking)
+     *
+     * @param[options] Configurable trip options.
+     * @param[block] An optional block callback.
+     */
+    @JvmStatic
+    fun startTrip(options: RadarTripOptions, block: (status: RadarStatus) -> Unit) {
+        startTrip(options, object : RadarTripCallback {
+            override fun onComplete(status: RadarStatus) {
+                block(status)
+            }
+        })
     }
 
     /**
@@ -940,47 +983,133 @@ object Radar {
      * @see [](https://radar.io/documentation/trip-tracking)
      *
      * @param[options] Configurable trip options.
-     * @param[status] The trip status.
+     * @param[status] The trip status. To avoid updating status, pass UNKNOWN.
+     * @param[callback] An optional callback.
      */
     @JvmStatic
-    fun updateTrip(options: RadarTripOptions, status: RadarTrip.RadarTripStatus?) {
+    fun updateTrip(options: RadarTripOptions, status: RadarTrip.RadarTripStatus?, callback: RadarTripCallback? = null) {
         if (!initialized) {
             return
         }
 
-        apiClient.updateTrip(options, status)
+        apiClient.updateTrip(options, status, object : RadarApiClient.RadarTripApiCallback {
+            override fun onComplete(status: RadarStatus) {
+                if (status == RadarStatus.SUCCESS) {
+                    RadarSettings.setTripOptions(context, options)
+
+                    // flush location update to generate events
+                    locationManager.getLocation(null)
+                }
+
+                callback?.onComplete(status)
+            }
+        })
+    }
+
+    /**
+     * Manually updates a trip.
+     *
+     * @see [](https://radar.io/documentation/trip-tracking)
+     *
+     * @param[options] Configurable trip options.
+     * @param[status] The trip status. To avoid updating status, pass UNKNOWN.
+     * @param[block] An optional block callback.
+     */
+    @JvmStatic
+    fun updateTrip(options: RadarTripOptions, status: RadarTrip.RadarTripStatus?, block: (status: RadarStatus) -> Unit) {
+        updateTrip(options, status, object : RadarTripCallback {
+            override fun onComplete(status: RadarStatus) {
+                block(status)
+            }
+        })
+    }
+
+    /**
+     * Completes a trip.
+     *
+     * @param[callback] An optional callback.
+     *
+     * @see [](https://radar.io/documentation/trip-tracking)
+     */
+    @JvmStatic
+    fun completeTrip(callback: RadarTripCallback? = null) {
+        if (!initialized) {
+            return
+        }
+
+        val options = RadarSettings.getTripOptions(context)
+        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.COMPLETED, object : RadarApiClient.RadarTripApiCallback {
+            override fun onComplete(status: RadarStatus) {
+                if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
+                    RadarSettings.setTripOptions(context, null)
+
+                    // flush location update to generate events
+                    locationManager.getLocation(null)
+                }
+
+                callback?.onComplete(status)
+            }
+        })
     }
 
     /**
      * Completes a trip.
      *
      * @see [](https://radar.io/documentation/trip-tracking)
+     *
+     * @param[block] An optional block callback.
      */
     @JvmStatic
-    fun completeTrip() {
+    fun completeTrip(block: (status: RadarStatus) -> Unit) {
+        completeTrip(object : RadarTripCallback {
+            override fun onComplete(status: RadarStatus) {
+                block(status)
+            }
+        })
+    }
+
+    /**
+     * Cancels a trip.
+     *
+     * @param[callback] An optional callback.
+     *
+     * @see [](https://radar.io/documentation/trip-tracking)
+     */
+    @JvmStatic
+    fun cancelTrip(callback: RadarTripCallback? = null) {
         if (!initialized) {
             return
         }
 
         val options = RadarSettings.getTripOptions(context)
-        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.COMPLETED)
-        RadarSettings.setTripOptions(context, null)
+        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.CANCELED, object : RadarApiClient.RadarTripApiCallback {
+            override fun onComplete(status: RadarStatus) {
+                if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
+                    RadarSettings.setTripOptions(context, null)
+
+                    // flush location update to generate events
+                    locationManager.getLocation(null)
+                }
+
+                callback?.onComplete(status)
+            }
+        })
     }
 
     /**
      * Cancels a trip.
      *
      * @see [](https://radar.io/documentation/trip-tracking)
+     *
+     * @param[block] An optional block callback.
      */
     @JvmStatic
-    fun cancelTrip() {
-        if (!initialized) {
-            return
-        }
-
-        val options = RadarSettings.getTripOptions(context)
-        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.CANCELED)
-        RadarSettings.setTripOptions(context, null)
+    fun cancelTrip(block: (status: RadarStatus) -> Unit) {
+        cancelTrip(object : RadarTripCallback {
+            override fun onComplete(status: RadarStatus) {
+                block(status)
+            }
+        })
     }
 
     /**
