@@ -1,35 +1,30 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-apply plugin: 'org.jetbrains.dokka-android'
-apply plugin: 'maven-publish'
-apply plugin: 'signing'
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+apply plugin: "kotlin-android-extensions"
+apply plugin: "org.jetbrains.dokka"
+apply plugin: "maven-publish"
+apply plugin: "signing"
 
 ext {
-    radarVersion = '3.1.5-alpha.1'
+    radarVersion = "3.1.5-alpha.1"
 }
 
 android {
     compileSdkVersion 29
-    buildToolsVersion '29.0.2'
+    buildToolsVersion "29.0.2"
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = "1.8"
     }
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 29
         versionCode 1
         versionName radarVersion
-        javaCompileOptions {
-            annotationProcessorOptions {
-                includeCompileClasspath true
-            }
-        }
     }
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
     testOptions {
@@ -40,31 +35,35 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-    implementation 'androidx.core:core-ktx:1.3.2'
-    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.0.0'
-    implementation 'com.google.android.gms:play-services-ads-identifier:17.0.0'
-    implementation 'com.google.android.gms:play-services-location:17.1.0'
-    testImplementation 'androidx.test.ext:junit:1.1.2'
+    implementation "androidx.appcompat:appcompat:1.2.0"
+    implementation "androidx.core:core-ktx:1.3.2"
+    implementation "androidx.localbroadcastmanager:localbroadcastmanager:1.0.0"
+    implementation "com.google.android.gms:play-services-ads-identifier:17.0.0"
+    implementation "com.google.android.gms:play-services-location:17.1.0"
+    testImplementation "androidx.test.ext:junit:1.1.2"
     testImplementation "org.robolectric:robolectric:4.3.1"
 }
 
 task androidSourcesJar(type: Jar) {
-    archiveClassifier.set('sources')
+    archiveClassifier.set("sources")
     from android.sourceSets.main.java.srcDirs
 }
 
-task androidJavadocs(type: org.jetbrains.dokka.gradle.DokkaAndroidTask) {
-    outputFormat = 'javadoc'
-    outputDirectory = "$rootDir/docs"
-    reportUndocumented = false
+dokkaHtml.configure {
+    outputDirectory.set(file("$rootDir/docs"))
+
+    dokkaSourceSets {
+        named("main") {
+            noAndroidSdkLink.set(false)
+        }
+    }
 }
 
-task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-    archiveClassifier.set('javadoc')
-    from "$rootDir/docs"
+task androidJavadocsJar(type: Jar, dependsOn: dokkaJavadoc) {
+    archiveClassifier.set("javadoc")
+    from dokkaHtml.outputDirectory
 }
 
 artifacts {
@@ -74,41 +73,41 @@ artifacts {
 publishing {
     publications {
         sdkPublication(MavenPublication) {
-            groupId 'io.radar'
-            artifactId 'sdk'
+            groupId "io.radar"
+            artifactId "sdk"
             version radarVersion
             artifact "$buildDir/outputs/aar/${project.getName()}-release.aar"
             artifact androidSourcesJar
             artifact androidJavadocsJar
 
             pom {
-                name = 'Radar Android SDK'
-                description = 'Android SDK for Radar, the leading geofencing and location tracking platform'
-                url = 'https://radar.io'
+                name = "Radar Android SDK"
+                description = "Android SDK for Radar, the leading geofencing and location tracking platform"
+                url = "https://radar.io"
 
                 licenses {
                     license {
-                        name = 'Apache License, Version 2.0'
-                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        name = "Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
                     }
                 }
 
                 organization {
-                    name = 'Radar Labs, Inc'
-                    url = 'https://radar.io'
+                    name = "Radar Labs, Inc."
+                    url = "https://radar.io"
                 }
 
                 developers {
                     developer {
-                        id = 'radarlabs'
-                        name = 'Radar Labs, Inc.'
+                        id = "radarlabs"
+                        name = "Radar Labs, Inc."
                     }
                 }
 
                 scm {
-                    connection = 'scm:git:git://github.com:radarlabs/radar-sdk-android.git'
-                    developerConnection = 'scm:git:ssh://github.com:radarlabs/radar-sdk-android.git'
-                    url = 'https://github.com/radarlabs/radar-sdk-android'
+                    connection = "scm:git:git://github.com:radarlabs/radar-sdk-android.git"
+                    developerConnection = "scm:git:ssh://github.com:radarlabs/radar-sdk-android.git"
+                    url = "https://github.com/radarlabs/radar-sdk-android"
                 }
             }
         }
@@ -116,7 +115,7 @@ publishing {
 
     repositories {
         maven {
-            url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2'
+            url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2"
         }
     }
 }
