@@ -20,6 +20,7 @@ android {
         targetSdkVersion 29
         versionCode 1
         versionName radarVersion
+        buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
     }
     buildTypes {
         release {
@@ -61,9 +62,13 @@ dokkaHtml.configure {
     }
 }
 
+dokkaJavadoc.configure {
+    outputDirectory.set(file("$rootDir/javadocs"))
+}
+
 task androidJavadocsJar(type: Jar, dependsOn: dokkaJavadoc) {
     archiveClassifier.set("javadoc")
-    from dokkaHtml.outputDirectory
+    from dokkaJavadoc.outputDirectory
 }
 
 artifacts {
