@@ -6,7 +6,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 ext {
-    radarVersion = '3.1.5'
+    radarVersion = '3.1.5-alpha.1'
 }
 
 android {
@@ -58,13 +58,13 @@ task androidSourcesJar(type: Jar) {
 
 task androidJavadocs(type: org.jetbrains.dokka.gradle.DokkaAndroidTask) {
     outputFormat = 'javadoc'
-    outputDirectory = "$buildDir/javadoc"
+    outputDirectory = "$rootDir/docs"
     reportUndocumented = false
 }
 
 task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
     archiveClassifier.set('javadoc')
-    from "$buildDir/javadoc"
+    from "$rootDir/docs"
 }
 
 artifacts {
