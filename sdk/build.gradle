@@ -135,8 +135,8 @@ publishing {
         maven {
             url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2"
             credentials {
-                username = nexusUsername
-                password = nexusPassword
+                username = nexusUsername != null ? nexusUsername : ""
+                password = nexusPassword != null ? nexusPassword : ""
             }
         }
     }
