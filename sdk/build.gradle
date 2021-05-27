@@ -6,7 +6,7 @@ apply plugin: "maven-publish"
 apply plugin: "signing"
 
 ext {
-    radarVersion = "3.1.5-alpha.1"
+    radarVersion = "3.1.5-alpha.2"
 }
 
 android {
@@ -114,6 +114,19 @@ publishing {
                     developerConnection = "scm:git:ssh://github.com:radarlabs/radar-sdk-android.git"
                     url = "https://github.com/radarlabs/radar-sdk-android"
                 }
+
+                withXml {
+                    def dependenciesNode = asNode().appendNode('dependencies')
+                    configurations.implementation.allDependencies.each { dependency ->
+                        if (dependency.group == null || dependency.name == null || dependency.version == null) {
+                            return
+                        }
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', dependency.group)
+                        dependencyNode.appendNode('artifactId', dependency.name)
+                        dependencyNode.appendNode('version', dependency.version)
+                    }
+                }
             }
         }
     }
@@ -121,6 +134,10 @@ publishing {
     repositories {
         maven {
             url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2"
+            credentials {
+                username = nexusUsername
+                password = nexusPassword
+            }
         }
     }
 }
