@@ -88,16 +88,18 @@ internal class RadarBeaconManager(
             return
         }
 
-        this.addCallback(callback)
+        if (beacons.isEmpty()) {
+            logger.d(this.context, "No beacons to range")
 
-        if (this.started) {
-            logger.d(this.context, "Already ranging beacons")
+            callback?.onComplete(RadarStatus.SUCCESS)
 
             return
         }
 
-        if (beacons.isEmpty()) {
-            logger.d(this.context, "No beacons to range")
+        this.addCallback(callback)
+
+        if (this.started) {
+            logger.d(this.context, "Already ranging beacons")
 
             return
         }
