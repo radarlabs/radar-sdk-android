@@ -15,7 +15,7 @@ internal object RadarBeaconUtils {
     private const val MANUFACTURER_ID = 76
 
     fun getScanFilter(beacon: RadarBeacon): ScanFilter? {
-        val uuid = UUID.fromString(beacon.uuid)
+        val uuid = UUID.fromString(beacon.uuid.toLowerCase())
         val major = beacon.major.toInt()
         val minor = beacon.minor.toInt()
 
