@@ -78,7 +78,8 @@ internal object RadarUtils {
         if (RadarSettings.getPermissionsDenied(context)) {
             locationAuthorization = "DENIED"
         }
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             locationAuthorization = "GRANTED_FOREGROUND"
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
@@ -86,6 +87,18 @@ internal object RadarUtils {
             locationAuthorization = "GRANTED_BACKGROUND"
         }
         return locationAuthorization
+    }
+
+    internal fun getLocationAccuracyAuthorization(context: Context): String {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                return "REDUCED"
+            } else {
+                return "FULL"
+            }
+        } else {
+            return "FULL";
+        }
     }
 
     internal fun getLocationEnabled(context: Context): Boolean {

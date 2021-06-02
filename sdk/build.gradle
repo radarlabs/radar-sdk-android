@@ -10,14 +10,14 @@ ext {
 }
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    compileSdkVersion "android-S" // TODO change this to 31 when Android 12 leaves beta
+    //buildToolsVersion "29.0.2"
     kotlinOptions {
         jvmTarget = "1.8"
     }
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 29
+        targetSdkVersion "S" // TODO change this to 31 when Android 12 leaves beta
         versionCode 1
         versionName radarVersion
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
