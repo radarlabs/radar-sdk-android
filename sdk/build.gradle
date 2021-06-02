@@ -17,7 +17,7 @@ android {
     }
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion "S" // TODO change this to 31 when Android 12 leaves beta
+        targetSdkVersion 31
         versionCode 1
         versionName radarVersion
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
