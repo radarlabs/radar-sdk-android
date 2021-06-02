@@ -116,7 +116,7 @@ internal class RadarLocationManager(
     fun startTracking(options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT) {
         this.stopLocationUpdates()
 
-        if (!permissionsHelper.fineLocationPermissionGranted(context)) {
+        if (!permissionsHelper.locationPermissionGranted(context)) {
             Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
 
             return

@@ -6,7 +6,7 @@ internal class RadarPermissionsHelperMock : RadarPermissionsHelper() {
 
     internal var mockFineLocationPermissionGranted: Boolean = false
 
-    override fun fineLocationPermissionGranted(context: Context): Boolean {
+    override fun locationPermissionGranted(context: Context): Boolean {
         return mockFineLocationPermissionGranted
     }
 
