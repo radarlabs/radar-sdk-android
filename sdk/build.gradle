@@ -17,7 +17,7 @@ android {
     }
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 31
+        targetSdkVersion 30
         versionCode 1
         versionName radarVersion
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
