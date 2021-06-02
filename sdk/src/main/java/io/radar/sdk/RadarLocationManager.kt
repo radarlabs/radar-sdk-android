@@ -351,7 +351,7 @@ internal class RadarLocationManager(
         if (location == null || !RadarUtils.valid(location)) {
             logger.d(this.context, "Invalid location | source = $source; location = $location")
 
-            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
+            Radar.broadcastErrorIntent(RadarStatus.ERROR_LOCATION)
 
             callCallbacks(RadarStatus.ERROR_LOCATION)
 
