@@ -26,21 +26,36 @@ class RadarLocationReceiver : BroadcastReceiver() {
             val intent = baseIntent(context).apply {
                 action = ACTION_BUBBLE_GEOFENCE
             }
-            return PendingIntent.getBroadcast(context, REQUEST_CODE_BUBBLE_GEOFENCE, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_BUBBLE_GEOFENCE,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
         }
 
         internal fun getSyncedGeofencesPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
                 action = ACTION_SYNCED_GEOFENCES
             }
-            return PendingIntent.getBroadcast(context, REQUEST_CODE_SYNCED_GEOFENCES, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_SYNCED_GEOFENCES,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
         }
 
         internal fun getLocationPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
                 action = ACTION_LOCATION
             }
-            return PendingIntent.getBroadcast(context, REQUEST_CODE_LOCATION, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_LOCATION,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
         }
 
         private fun baseIntent(context: Context): Intent = Intent(context, RadarLocationReceiver::class.java)
