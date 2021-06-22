@@ -94,14 +94,14 @@ internal object RadarUtils {
     }
 
     internal fun getLocationAccuracyAuthorization(context: Context): String {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                return "REDUCED"
-            } else {
-                return "FULL"
-            }
+        val coarseLocation =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+            && ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+        return if (coarseLocation) {
+            "REDUCED"
         } else {
-            return "FULL";
+            "FULL"
         }
     }
 
