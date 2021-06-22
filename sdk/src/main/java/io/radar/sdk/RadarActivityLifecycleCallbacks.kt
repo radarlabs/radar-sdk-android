@@ -26,6 +26,10 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
                     !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
                 RadarSettings.setPermissionsDenied(activity.applicationContext, true)
             }
+            if (ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_DENIED &&
+                !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                RadarSettings.setPermissionsDenied(activity.applicationContext, true)
+            }
         } catch (e: Exception) {
             Log.e(TAG, e.message, e)
         }
@@ -67,7 +71,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
         updatePermissionsDenied(activity)
     }
 
-    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle?) {
+    override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
         updatePermissionsDenied(activity)
     }
 
