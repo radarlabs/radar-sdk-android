@@ -6,17 +6,17 @@ apply plugin: "maven-publish"
 apply plugin: "signing"
 
 ext {
-    radarVersion = "3.1.15"
+    radarVersion = "3.2.0-beta-0.1"
 }
 
 android {
     compileSdkVersion "android-S"
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = 11
     }
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion "S"
+        targetSdkVersion 30
         versionCode 1
         versionName radarVersion
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
@@ -43,7 +43,7 @@ dependencies {
     implementation "com.google.android.gms:play-services-ads-identifier:17.0.0"
     implementation "com.google.android.gms:play-services-location:17.1.0"
     testImplementation "androidx.test.ext:junit:1.1.2"
-    testImplementation "org.robolectric:robolectric:4.3.1"
+    testImplementation "org.robolectric:robolectric:4.5.1"
 }
 
 task androidSourcesJar(type: Jar) {
