@@ -17,7 +17,7 @@ class Utils {
                 Radar.RadarStatus.ERROR_UNAUTHORIZED -> "Unauthorized error"
                 Radar.RadarStatus.ERROR_RATE_LIMIT -> "Rate limit error"
                 Radar.RadarStatus.ERROR_SERVER -> "Server error"
-                else -> "Unknown error"
+                else -> "Unknown error $status"
             }
         }
 
