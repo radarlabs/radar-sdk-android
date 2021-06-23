@@ -18,7 +18,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk=[Build.VERSION_CODES.P])
+@Config(sdk=[Build.VERSION_CODES.R])
 class RadarTest {
 
     companion object {
