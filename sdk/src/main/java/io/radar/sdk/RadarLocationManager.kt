@@ -202,9 +202,9 @@ internal class RadarLocationManager(
         }
 
         if (tracking) {
-            val useForegroundService = options.useForegroundService == RadarTrackingOptions.RadarTrackingOptionsUseForegroundService.ALWAYS
-            if (useForegroundService) {
-                this.startForegroundService()
+            val foregroundService = options.foregroundService
+            if (foregroundService != null && !foregroundService.updatesOnly) {
+                this.startForegroundService(foregroundService)
             }
 
             val stopped = RadarState.getStopped(context)
@@ -494,10 +494,10 @@ internal class RadarLocationManager(
 
     private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {
         val options = RadarSettings.getTrackingOptions(context)
-        val useForegroundService = options.useForegroundService == RadarTrackingOptions.RadarTrackingOptionsUseForegroundService.DURING_UPDATES
+        val foregroundService = options.foregroundService
 
-        if (useForegroundService) {
-            this.startForegroundService()
+        if (foregroundService != null && foregroundService.updatesOnly) {
+            this.startForegroundService(foregroundService)
         }
 
         logger.d(this.context, "Sending location | source = $source; location = $location; stopped = $stopped; replayed = $replayed")
@@ -518,7 +518,7 @@ internal class RadarLocationManager(
 
                     locationManager.replaceSyncedGeofences(nearbyGeofences)
 
-                    if (useForegroundService) {
+                    if (foregroundService != null && foregroundService.updatesOnly) {
                         locationManager.stopForegroundService()
                     }
                 }
@@ -552,10 +552,17 @@ internal class RadarLocationManager(
         }
     }
 
-    private fun startForegroundService() {
+    private fun startForegroundService(foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService) {
         if (Build.VERSION.SDK_INT >= 26) {
             val intent = Intent(context, RadarForegroundService::class.java)
             intent.action = "start"
+            intent.putExtra("id", foregroundService.id)
+                .putExtra("importance", foregroundService.importance)
+                .putExtra("title", foregroundService.title)
+                .putExtra("text", foregroundService.text)
+                .putExtra("icon", foregroundService.icon)
+                .putExtra("importance", foregroundService.importance)
+                .putExtra("activity", foregroundService.activity)
             context.applicationContext.startForegroundService(intent)
         }
     }

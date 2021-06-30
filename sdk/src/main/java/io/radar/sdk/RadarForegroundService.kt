@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.os.IBinder
 import androidx.annotation.RequiresApi
 
+
 @RequiresApi(Build.VERSION_CODES.O)
 class RadarForegroundService : Service() {
 
@@ -39,33 +40,36 @@ class RadarForegroundService : Service() {
     }
 
     private fun startForegroundService(extras: Bundle?) {
-        // TODO make notification customizable
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.deleteNotificationChannel("RadarSDK")
-        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val id = extras?.getInt("id") ?: 20160525
+        val importance = extras?.getInt("importance") ?: NotificationManager.IMPORTANCE_DEFAULT
+        val title = extras?.getString("title") ?: "Title"
+        val text = extras?.getString("text") ?: "Text"
+        val icon = extras?.getString("icon") ?: "17301546" // r_drawable_ic_dialog_map
+        val smallIcon = resources.getIdentifier(icon, "drawable", applicationContext.packageName)
+        var pendingIntent = PendingIntent.getActivity(this, 0, null, 0)
+        try {
+            extras?.getString("activity")?.let {
+                val activityClass = Class.forName(it)
+                val intent = Intent(this, activityClass)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                pendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+            }
+        } catch (e: ClassNotFoundException) {
+            logger.e(applicationContext, "Error setting foreground service PendingIntent", e)
+        }
         val channel = NotificationChannel("RadarSDK", "RadarSDK", importance)
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
-        val icon = resources.getIdentifier("17301546", "drawable", applicationContext.packageName) // r_drawable_ic_dialog_map
-        var pendingIntent: PendingIntent?
-        try {
-            val activityClass = Class.forName("MainActivity")
-            val intent = Intent(this, activityClass)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            pendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
-        } catch (e: ClassNotFoundException) {
-            pendingIntent = null
-        }
-        val title = "Title"
-        val text = "Text"
         val notification = Notification.Builder(applicationContext, "RadarSDK")
             .setContentTitle(title as CharSequence?)
             .setContentText(text as CharSequence?)
             .setOngoing(true)
-            .setSmallIcon(icon)
+            .setSmallIcon(smallIcon)
             .setContentIntent(pendingIntent)
             .build()
-        startForeground(20160525, notification)
+        startForeground(id, notification)
     }
 
     override fun onBind(intent: Intent): IBinder? {

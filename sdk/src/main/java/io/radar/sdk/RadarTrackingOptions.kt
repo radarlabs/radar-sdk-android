@@ -1,5 +1,6 @@
 package io.radar.sdk
 
+import io.radar.sdk.model.RadarGeofence
 import org.json.JSONObject
 import java.util.Date
 
@@ -104,9 +105,9 @@ data class RadarTrackingOptions(
     var syncGeofencesLimit: Int,
 
     /**
-     * Determines whether to use a foreground service during tracking.
+     * If set, starts a foreground service and shows a notification during tracking.
      */
-    var useForegroundService: RadarTrackingOptionsUseForegroundService,
+    var foregroundService: RadarTrackingOptionsForegroundService?,
 
     /**
      * Determines whether to monitor beacons.
@@ -243,45 +244,55 @@ data class RadarTrackingOptions(
         }
     }
 
-    enum class RadarTrackingOptionsUseForegroundService(internal val useForegroundService: Int) {
-        /** Never uses a foreground service */
-        NEVER(0),
-        /** Uses a foreground service during location updates when tracking */
-        DURING_UPDATES(1),
-        /** Uses a foreground service during tracking */
-        ALWAYS(2);
+    data class RadarTrackingOptionsForegroundService(
+        val id: Number? = null,
+        val importance: Number? = null,
+        val title: String? = null,
+        val text: String? = null,
+        val icon: String? = null,
+        val activity: String? = null,
+        val updatesOnly: Boolean = false
+    ) {
 
-        internal companion object {
-            internal const val NEVER_STR = "never"
-            internal const val DURING_UPDATES_STR = "duringUpdates"
-            internal const val ALWAYS_STR = "always"
+        companion object {
+            internal const val KEY_FOREGROUND_SERVICE_ID = "id"
+            internal const val KEY_FOREGROUND_SERVICE_IMPORTANCE = "importance"
+            internal const val KEY_FOREGROUND_SERVICE_TITLE = "title"
+            internal const val KEY_FOREGROUND_SERVICE_TEXT = "text"
+            internal const val KEY_FOREGROUND_SERVICE_ICON = "icon"
+            internal const val KEY_FOREGROUND_SERVICE_ACTIVITY = "icon"
+            internal const val KEY_FOREGROUND_SERVICE_UPDATES_ONLY = "updatesOnly"
 
-            fun fromInt(useForegroundService: Int?): RadarTrackingOptionsUseForegroundService {
-                for (value in values()) {
-                    if (useForegroundService == value.useForegroundService) {
-                        return value
-                    }
+            @JvmStatic
+            fun fromJson(obj: JSONObject?): RadarTrackingOptionsForegroundService? {
+                if (obj == null) {
+                    return null
                 }
-                return NEVER
-            }
 
-            fun fromRadarString(sync: String?): RadarTrackingOptionsUseForegroundService {
-                return when(sync) {
-                    NEVER_STR -> NEVER
-                    DURING_UPDATES_STR -> DURING_UPDATES
-                    ALWAYS_STR -> ALWAYS
-                    else -> NEVER
-                }
+                val id = obj.optInt(KEY_FOREGROUND_SERVICE_ID)
+                val importance = obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
+                val title = obj.optString(KEY_FOREGROUND_SERVICE_TITLE) ?: null
+                val text = obj.optString(KEY_FOREGROUND_SERVICE_TEXT) ?: null
+                val icon: String? = obj.optString(KEY_FOREGROUND_SERVICE_ICON) ?: null
+                val activity: String? = obj.optString(KEY_FOREGROUND_SERVICE_ACTIVITY) ?: null
+                val updatesOnly: Boolean = obj.optBoolean(KEY_FOREGROUND_SERVICE_UPDATES_ONLY)
+
+                return RadarTrackingOptionsForegroundService(id, importance, title, text, icon, activity, updatesOnly)
             }
         }
 
-        fun toRadarString(): String {
-            return when(this) {
-                NEVER -> NEVER_STR
-                DURING_UPDATES -> DURING_UPDATES_STR
-                ALWAYS -> ALWAYS_STR
-            }
+        fun toJson(): JSONObject {
+            val obj = JSONObject()
+            obj.put(KEY_FOREGROUND_SERVICE_ID, id)
+            obj.put(KEY_FOREGROUND_SERVICE_IMPORTANCE, importance)
+            obj.put(KEY_FOREGROUND_SERVICE_TITLE, title)
+            obj.put(KEY_FOREGROUND_SERVICE_TEXT, text)
+            obj.put(KEY_FOREGROUND_SERVICE_ICON, icon)
+            obj.put(KEY_FOREGROUND_SERVICE_ACTIVITY, activity)
+            obj.put(KEY_FOREGROUND_SERVICE_UPDATES_ONLY, updatesOnly)
+            return obj
         }
+
     }
 
     companion object {
@@ -309,7 +320,7 @@ data class RadarTrackingOptions(
             movingGeofenceRadius = 0,
             syncGeofences = false,
             syncGeofencesLimit = 0,
-            useForegroundService = RadarTrackingOptionsUseForegroundService.ALWAYS,
+            foregroundService = RadarTrackingOptionsForegroundService(),
             beacons = false
         )
 
@@ -338,7 +349,7 @@ data class RadarTrackingOptions(
             movingGeofenceRadius = 100,
             syncGeofences = true,
             syncGeofencesLimit = 10,
-            useForegroundService = RadarTrackingOptionsUseForegroundService.NEVER,
+            foregroundService = null,
             beacons = false
         )
 
@@ -367,7 +378,7 @@ data class RadarTrackingOptions(
             movingGeofenceRadius = 0,
             syncGeofences = true,
             syncGeofencesLimit = 10,
-            useForegroundService = RadarTrackingOptionsUseForegroundService.NEVER,
+            foregroundService = null,
             beacons = false
         )
 
@@ -389,7 +400,7 @@ data class RadarTrackingOptions(
         internal const val KEY_MOVING_GEOFENCE_RADIUS = "movingGeofenceRadius"
         internal const val KEY_SYNC_GEOFENCES = "syncGeofences"
         internal const val KEY_SYNC_GEOFENCES_LIMIT = "syncGeofencesLimit"
-        internal const val KEY_USE_FOREGROUND_SERVICE = "useForegroundService"
+        internal const val KEY_FOREGROUND_SERVICE = "foregroundService"
         internal const val KEY_BEACONS = "beacons"
 
         @JvmStatic
@@ -412,14 +423,6 @@ data class RadarTrackingOptions(
                 RadarTrackingOptionsSync.fromInt(obj.optInt(KEY_SYNC))
             }
 
-            val useForegroundService = if (obj.has(KEY_USE_FOREGROUND_SERVICE) && obj.get(
-                    KEY_USE_FOREGROUND_SERVICE) is String) {
-                RadarTrackingOptionsUseForegroundService.fromRadarString(obj.optString(KEY_USE_FOREGROUND_SERVICE))
-            } else {
-                RadarTrackingOptionsUseForegroundService.fromInt(obj.optInt(
-                    KEY_USE_FOREGROUND_SERVICE))
-            }
-
             return RadarTrackingOptions(
                 desiredStoppedUpdateInterval = obj.optInt(KEY_DESIRED_STOPPED_UPDATE_INTERVAL),
                 fastestStoppedUpdateInterval = obj.optInt(KEY_FASTEST_STOPPED_UPDATE_INTERVAL),
@@ -439,7 +442,7 @@ data class RadarTrackingOptions(
                 movingGeofenceRadius = obj.optInt(KEY_MOVING_GEOFENCE_RADIUS, 100),
                 syncGeofences = obj.optBoolean(KEY_SYNC_GEOFENCES),
                 syncGeofencesLimit = obj.optInt(KEY_SYNC_GEOFENCES_LIMIT, 10),
-                useForegroundService = useForegroundService,
+                foregroundService = RadarTrackingOptionsForegroundService.fromJson(obj.optJSONObject(KEY_FOREGROUND_SERVICE)),
                 beacons = obj.optBoolean(KEY_BEACONS)
             )
         }
@@ -466,7 +469,7 @@ data class RadarTrackingOptions(
         obj.put(KEY_MOVING_GEOFENCE_RADIUS, movingGeofenceRadius)
         obj.put(KEY_SYNC_GEOFENCES, syncGeofences)
         obj.put(KEY_SYNC_GEOFENCES_LIMIT, syncGeofencesLimit)
-        obj.put(KEY_USE_FOREGROUND_SERVICE, useForegroundService.toRadarString())
+        obj.put(KEY_FOREGROUND_SERVICE, foregroundService?.toJson())
         obj.put(KEY_BEACONS, beacons)
         return obj
     }
