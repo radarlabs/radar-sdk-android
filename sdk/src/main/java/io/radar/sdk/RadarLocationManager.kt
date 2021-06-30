@@ -157,11 +157,7 @@ internal class RadarLocationManager(
                 this.fastestInterval = fastestInterval * 1000L
             }
 
-            locationClient.requestLocationUpdates(
-                locationRequest, RadarLocationReceiver.getLocationPendingIntent(
-                    context
-                )
-            )
+            locationClient.requestLocationUpdates(locationRequest, RadarLocationReceiver.getLocationPendingIntent(context))
 
             this.started = true
             this.startedDesiredAccuracy = desiredAccuracy
@@ -272,7 +268,10 @@ internal class RadarLocationManager(
 
             geofencingClient.addGeofences(request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
 
-            logger.d(this.context, "Replaced stopped bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier")
+            logger.d(
+                this.context,
+                "Replaced stopped bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier"
+            )
         } else if (!stopped && options.useMovingGeofence) {
             val identifier = BUBBLE_MOVING_GEOFENCE_REQUEST_ID
             val radius = options.stoppedGeofenceRadius.toFloat()
@@ -292,7 +291,10 @@ internal class RadarLocationManager(
 
             geofencingClient.addGeofences(request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
 
-            logger.d(this.context, "Replaced moving bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier")
+            logger.d(
+                this.context,
+                "Replaced moving bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier"
+            )
         }
     }
 
@@ -438,7 +440,8 @@ internal class RadarLocationManager(
         }
 
         val lastSentAt = RadarState.getLastSentAt(context)
-        val ignoreSync = lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed
+        val ignoreSync =
+            lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed
         val now = System.currentTimeMillis()
         val lastSyncInterval = now - lastSentAt
         if (!ignoreSync) {
@@ -490,12 +493,7 @@ internal class RadarLocationManager(
         }
     }
 
-    private fun sendLocation(
-        location: Location,
-        stopped: Boolean,
-        source: RadarLocationSource,
-        replayed: Boolean
-    ) {
+    private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {
         val options = RadarSettings.getTrackingOptions(context)
         val useForegroundService = options.useForegroundService == RadarTrackingOptions.RadarTrackingOptionsUseForegroundService.DURING_UPDATES
 
@@ -538,18 +536,18 @@ internal class RadarLocationManager(
                     }
 
                     Radar.beaconManager.rangeBeacons(beacons, object : Radar.RadarBeaconCallback {
-                            override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?) {
-                                if (status != RadarStatus.SUCCESS || nearbyBeacons == null) {
-                                    callTrackApi(null)
+                        override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?) {
+                            if (status != RadarStatus.SUCCESS || nearbyBeacons == null) {
+                                callTrackApi(null)
 
-                                    return
-                                }
-
-                                callTrackApi(nearbyBeacons)
+                                return
                             }
-                        })
-                    }
-                })
+
+                            callTrackApi(nearbyBeacons)
+                        }
+                    })
+                }
+            })
         } else {
             callTrackApi(null)
         }
