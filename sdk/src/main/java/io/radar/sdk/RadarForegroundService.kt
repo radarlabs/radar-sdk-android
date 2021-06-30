@@ -45,11 +45,8 @@ class RadarForegroundService : Service() {
         val importance = NotificationManager.IMPORTANCE_DEFAULT
         val channel = NotificationChannel("RadarSDK", "RadarSDK", importance)
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(
-            channel
-        )
-        val icon =
-            resources.getIdentifier("17301546", "drawable", applicationContext.packageName) // r_drawable_ic_dialog_map
+        notificationManager.createNotificationChannel(channel)
+        val icon = resources.getIdentifier("17301546", "drawable", applicationContext.packageName) // r_drawable_ic_dialog_map
         var pendingIntent: PendingIntent?
         try {
             val activityClass = Class.forName("MainActivity")
