@@ -169,6 +169,7 @@ internal class RadarApiClient(
             }
             if (options.syncGeofences) {
                 params.putOpt("nearbyGeofences", true)
+                params.putOpt("nearbyGeofencesLimit", options.syncGeofencesLimit)
             }
             if (nearbyBeacons != null) {
                 val nearbyBeaconsArr = JSONArray()
