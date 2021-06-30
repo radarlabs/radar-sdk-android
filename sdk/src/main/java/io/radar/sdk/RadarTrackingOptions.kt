@@ -287,7 +287,7 @@ data class RadarTrackingOptions(
     companion object {
 
         /**
-         * A preset that updates every 30 seconds and syncs all location updates to the server. High battery usage. Should be used with a foreground service. See [](https://developer.android.com/about/versions/oreo/background-location-limits).
+         * Updates about every 30 seconds while moving or stopped. Uses a foreground service. Moderate battery usage.
          */
         @JvmField
         val CONTINUOUS = RadarTrackingOptions(
@@ -314,7 +314,7 @@ data class RadarTrackingOptions(
         )
 
         /**
-         * A preset that updates as fast as every 2.5 minutes while moving, shuts down when stopped, and only syncs stops and exits to the server. Must move at least 200 meters to start moving again after a stop. Low battery usage, but may exceed Android vitals bad behavior thresholds for excessive wakeups and excessive wi-fi scans. See [](https://developer.android.com/topic/performance/vitals/wakeup.html) and [](https://developer.android.com/topic/performance/vitals/bg-wifi.html).
+         * Updates about every 2.5 minutes while moving and shuts down when stopped to save battery. Once stopped, the device will need to move more than 100 meters to wake up and start moving again. Low battery usage.
          *
          * Note that location updates may be delayed significantly by Doze Mode, App Standby, and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.
          */
@@ -323,7 +323,7 @@ data class RadarTrackingOptions(
             desiredStoppedUpdateInterval = 0,
             fastestStoppedUpdateInterval = 0,
             desiredMovingUpdateInterval = 150,
-            fastestMovingUpdateInterval = 150,
+            fastestMovingUpdateInterval = 30,
             desiredSyncInterval = 20,
             desiredAccuracy = RadarTrackingOptionsDesiredAccuracy.MEDIUM,
             stopDuration = 140,
@@ -343,7 +343,7 @@ data class RadarTrackingOptions(
         )
 
         /**
-         * A preset that updates as fast as every 6 minutes while moving, periodically when stopped, and only syncs stops and exits to the server. Must move a significant distance to start moving again after a stop. Lowest battery usage and will not exceed Android vitals bad behavior thresholds. Recommended.
+         * Updates as fast as every 6 minutes while moving and periodically when stopped. Once stopped, the device will need to move more than 100 meters and wait for at least 15 minutes to wake up and start moving again. Lowest battery usage.
          *
          * Note that location updates may be delayed significantly by Doze Mode, App Standby, and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.
          */
