@@ -99,6 +99,16 @@ data class RadarTrackingOptions(
     var syncGeofences: Boolean,
 
     /**
+     * Determines how many nearby geofences to sync from the server to the client when `syncGeofences` is enabled.
+     */
+    var syncGeofencesLimit: Int,
+
+    /**
+     * Determines whether to use a foreground service during tracking.
+     */
+    var useForegroundService: RadarTrackingOptionsUseForegroundService,
+
+    /**
      * Determines whether to monitor beacons.
      */
     var beacons: Boolean
@@ -233,6 +243,47 @@ data class RadarTrackingOptions(
         }
     }
 
+    enum class RadarTrackingOptionsUseForegroundService(internal val useForegroundService: Int) {
+        /** Never uses a foreground service */
+        NEVER(0),
+        /** Uses a foreground service during location updates when tracking */
+        DURING_UPDATES(1),
+        /** Uses a foreground service during tracking */
+        ALWAYS(2);
+
+        internal companion object {
+            internal const val NEVER_STR = "never"
+            internal const val DURING_UPDATES_STR = "duringUpdates"
+            internal const val ALWAYS_STR = "always"
+
+            fun fromInt(useForegroundService: Int?): RadarTrackingOptionsUseForegroundService {
+                for (value in values()) {
+                    if (useForegroundService == value.useForegroundService) {
+                        return value
+                    }
+                }
+                return NEVER
+            }
+
+            fun fromRadarString(sync: String?): RadarTrackingOptionsUseForegroundService {
+                return when(sync) {
+                    NEVER_STR -> NEVER
+                    DURING_UPDATES_STR -> DURING_UPDATES
+                    ALWAYS_STR -> ALWAYS
+                    else -> NEVER
+                }
+            }
+        }
+
+        fun toRadarString(): String {
+            return when(this) {
+                NEVER -> NEVER_STR
+                DURING_UPDATES -> DURING_UPDATES_STR
+                ALWAYS -> ALWAYS_STR
+            }
+        }
+    }
+
     companion object {
 
         /**
@@ -257,6 +308,8 @@ data class RadarTrackingOptions(
             useMovingGeofence = false,
             movingGeofenceRadius = 0,
             syncGeofences = false,
+            syncGeofencesLimit = 0,
+            useForegroundService = RadarTrackingOptionsUseForegroundService.ALWAYS,
             beacons = false
         )
 
@@ -284,6 +337,8 @@ data class RadarTrackingOptions(
             useMovingGeofence = true,
             movingGeofenceRadius = 100,
             syncGeofences = true,
+            syncGeofencesLimit = 10,
+            useForegroundService = RadarTrackingOptionsUseForegroundService.NEVER,
             beacons = false
         )
 
@@ -311,6 +366,8 @@ data class RadarTrackingOptions(
             useMovingGeofence = false,
             movingGeofenceRadius = 0,
             syncGeofences = true,
+            syncGeofencesLimit = 10,
+            useForegroundService = RadarTrackingOptionsUseForegroundService.NEVER,
             beacons = false
         )
 
@@ -331,6 +388,8 @@ data class RadarTrackingOptions(
         internal const val KEY_USE_MOVING_GEOFENCE = "useMovingGeofence"
         internal const val KEY_MOVING_GEOFENCE_RADIUS = "movingGeofenceRadius"
         internal const val KEY_SYNC_GEOFENCES = "syncGeofences"
+        internal const val KEY_SYNC_GEOFENCES_LIMIT = "syncGeofencesLimit"
+        internal const val KEY_USE_FOREGROUND_SERVICE = "useForegroundService"
         internal const val KEY_BEACONS = "beacons"
 
         @JvmStatic
@@ -353,6 +412,14 @@ data class RadarTrackingOptions(
                 RadarTrackingOptionsSync.fromInt(obj.optInt(KEY_SYNC))
             }
 
+            val useForegroundService = if (obj.has(KEY_USE_FOREGROUND_SERVICE) && obj.get(
+                    KEY_USE_FOREGROUND_SERVICE) is String) {
+                RadarTrackingOptionsUseForegroundService.fromRadarString(obj.optString(KEY_USE_FOREGROUND_SERVICE))
+            } else {
+                RadarTrackingOptionsUseForegroundService.fromInt(obj.optInt(
+                    KEY_USE_FOREGROUND_SERVICE))
+            }
+
             return RadarTrackingOptions(
                 desiredStoppedUpdateInterval = obj.optInt(KEY_DESIRED_STOPPED_UPDATE_INTERVAL),
                 fastestStoppedUpdateInterval = obj.optInt(KEY_FASTEST_STOPPED_UPDATE_INTERVAL),
@@ -371,6 +438,8 @@ data class RadarTrackingOptions(
                 useMovingGeofence = obj.optBoolean(KEY_USE_MOVING_GEOFENCE),
                 movingGeofenceRadius = obj.optInt(KEY_MOVING_GEOFENCE_RADIUS, 100),
                 syncGeofences = obj.optBoolean(KEY_SYNC_GEOFENCES),
+                syncGeofencesLimit = obj.optInt(KEY_SYNC_GEOFENCES_LIMIT, 10),
+                useForegroundService = useForegroundService,
                 beacons = obj.optBoolean(KEY_BEACONS)
             )
         }
@@ -396,6 +465,8 @@ data class RadarTrackingOptions(
         obj.put(KEY_USE_MOVING_GEOFENCE, useMovingGeofence)
         obj.put(KEY_MOVING_GEOFENCE_RADIUS, movingGeofenceRadius)
         obj.put(KEY_SYNC_GEOFENCES, syncGeofences)
+        obj.put(KEY_SYNC_GEOFENCES_LIMIT, syncGeofencesLimit)
+        obj.put(KEY_USE_FOREGROUND_SERVICE, useForegroundService.toRadarString())
         obj.put(KEY_BEACONS, beacons)
         return obj
     }
