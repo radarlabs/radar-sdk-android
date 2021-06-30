@@ -19,7 +19,6 @@ import org.json.JSONObject
 import java.util.*
 import kotlin.collections.ArrayList
 
-
 @SuppressLint("MissingPermission")
 internal class RadarLocationManager(
     private val context: Context,
