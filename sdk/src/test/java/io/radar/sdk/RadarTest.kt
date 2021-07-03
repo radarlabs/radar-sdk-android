@@ -527,6 +527,17 @@ class RadarTest {
         options.startTrackingAfter = now
         options.stopTrackingAfter = Date(now.time + 1000)
         options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.NONE
+        options.syncGeofences = true
+        options.syncGeofencesLimit = 100
+        options.foregroundService = RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+            1337,
+            3,
+            "Title",
+            "Text",
+            null,
+            null,
+            true
+        )
         Radar.startTracking(options)
         assertEquals(options, Radar.getTrackingOptions())
         assertTrue(Radar.isTracking())

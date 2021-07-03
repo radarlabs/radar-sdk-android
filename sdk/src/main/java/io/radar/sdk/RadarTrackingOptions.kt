@@ -245,8 +245,8 @@ data class RadarTrackingOptions(
     }
 
     data class RadarTrackingOptionsForegroundService(
-        val id: Number? = null,
-        val importance: Number? = null,
+        val id: Int = 0,
+        val importance: Int = 0,
         val title: String? = null,
         val text: String? = null,
         val icon: String? = null,
