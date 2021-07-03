@@ -19,21 +19,25 @@ class RadarForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (!this::logger.isInitialized) {
-            logger = RadarLogger()
+            logger = RadarLogger(applicationContext)
         }
 
         if (intent != null) {
-            try {
-                if (intent.action == "start" && !started) {
+            if (intent.action == "start" && !started) {
+                try {
                     startForegroundService(intent.extras)
                     started = true
-                } else if (intent.action == "stop") {
+                } catch (e: Exception) {
+                    logger.e("Error starting foreground service", e)
+                }
+            } else if (intent.action == "stop") {
+                try {
                     stopForeground(true)
                     stopSelf()
                     started = false
+                } catch (e: Exception) {
+                    logger.e("Error stopping foreground service", e)
                 }
-            } catch (e: Exception) {
-                logger.e(applicationContext, "Error starting or stopping foreground service", e)
             }
         }
         return START_STICKY
@@ -57,7 +61,7 @@ class RadarForegroundService : Service() {
                 pendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
             }
         } catch (e: ClassNotFoundException) {
-            logger.e(applicationContext, "Error setting foreground service PendingIntent", e)
+            logger.e("Error setting foreground service PendingIntent", e)
         }
         val channel = NotificationChannel("RadarSDK", "RadarSDK", importance)
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
