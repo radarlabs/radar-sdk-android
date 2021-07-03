@@ -17,7 +17,8 @@ import java.util.*
 
 internal class RadarApiClient(
     private val context: Context,
-    internal var apiHelper: RadarApiHelper = RadarApiHelper()
+    private var logger: RadarLogger,
+    internal var apiHelper: RadarApiHelper = RadarApiHelper(context, logger)
 ) {
 
     interface RadarTrackApiCallback {

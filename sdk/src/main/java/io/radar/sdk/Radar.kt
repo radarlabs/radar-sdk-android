@@ -350,7 +350,7 @@ object Radar {
         this.context = context.applicationContext
 
         if (!this::logger.isInitialized) {
-            this.logger = RadarLogger()
+            this.logger = RadarLogger(this.context)
         }
 
         RadarSettings.updateSessionId(this.context)
@@ -360,7 +360,7 @@ object Radar {
         }
 
         if (!this::apiClient.isInitialized) {
-            this.apiClient = RadarApiClient(this.context)
+            this.apiClient = RadarApiClient(this.context, logger)
         }
         if (!this::locationManager.isInitialized) {
             this.locationManager = RadarLocationManager(this.context, apiClient, logger)
@@ -372,7 +372,7 @@ object Radar {
             }
         }
 
-        this.logger.d(this.context, "Initializing")
+        this.logger.d("Initializing")
 
         RadarUtils.loadAdId(this.context)
 
@@ -381,7 +381,7 @@ object Radar {
 
         this.apiClient.getConfig()
 
-        logger.i(this.context, "📍️ Radar initialized")
+        logger.i("📍️ Radar initialized")
     }
 
     /**
@@ -2059,11 +2059,11 @@ object Radar {
             putExtra(RadarReceiver.EXTRA_LOCATION, location)
         }
 
-        logger.i(this.context, "📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user._id}")
+        logger.i("📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user._id}")
 
         if (events.isNotEmpty()) {
             for (event in events) {
-                logger.i(this.context, "📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.io/dashboard/events/${event._id}")
+                logger.i("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.io/dashboard/events/${event._id}")
             }
         }
 
@@ -2085,7 +2085,7 @@ object Radar {
             putExtra(RadarReceiver.EXTRA_STATUS, status.ordinal)
         }
 
-        logger.i(this.context, "📍️ Radar error received | status = $status")
+        logger.i("📍️ Radar error received | status = $status")
 
         this.broadcastIntent(intent)
     }
