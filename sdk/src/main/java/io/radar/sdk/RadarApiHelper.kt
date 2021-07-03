@@ -12,7 +12,7 @@ import java.net.URL
 import java.util.*
 
 internal open class RadarApiHelper(
-    private var logger: RadarLogger
+    private var logger: RadarLogger? = null
 ) {
 
     interface RadarApiCallback {
@@ -25,7 +25,7 @@ internal open class RadarApiHelper(
                          headers: Map<String, String>?,
                          params: JSONObject?,
                          callback: RadarApiCallback? = null) {
-        logger.d("📍 Radar API request | method = ${method}; url = ${url}; headers = ${headers}; $params = ${params}")
+        logger?.d("📍 Radar API request | method = ${method}; url = ${url}; headers = ${headers}; $params = ${params}")
 
         DoAsync {
             try {
@@ -60,7 +60,7 @@ internal open class RadarApiHelper(
 
                 val res = JSONObject(body)
 
-                logger.d("📍 Radar API response | responseCode = ${urlConnection.responseCode}; body = ${body}")
+                logger?.d("📍 Radar API response | responseCode = ${urlConnection.responseCode}; body = ${body}")
 
                 if (urlConnection.responseCode in 200 until 400) {
                     callback?.onComplete(Radar.RadarStatus.SUCCESS, res)
