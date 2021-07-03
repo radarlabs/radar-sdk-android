@@ -260,7 +260,7 @@ data class RadarTrackingOptions(
             internal const val KEY_FOREGROUND_SERVICE_TITLE = "title"
             internal const val KEY_FOREGROUND_SERVICE_TEXT = "text"
             internal const val KEY_FOREGROUND_SERVICE_ICON = "icon"
-            internal const val KEY_FOREGROUND_SERVICE_ACTIVITY = "icon"
+            internal const val KEY_FOREGROUND_SERVICE_ACTIVITY = "activity"
             internal const val KEY_FOREGROUND_SERVICE_UPDATES_ONLY = "updatesOnly"
 
             @JvmStatic
@@ -271,10 +271,10 @@ data class RadarTrackingOptions(
 
                 val id = obj.optInt(KEY_FOREGROUND_SERVICE_ID)
                 val importance = obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
-                val title = obj.optString(KEY_FOREGROUND_SERVICE_TITLE) ?: null
-                val text = obj.optString(KEY_FOREGROUND_SERVICE_TEXT) ?: null
-                val icon: String? = obj.optString(KEY_FOREGROUND_SERVICE_ICON) ?: null
-                val activity: String? = obj.optString(KEY_FOREGROUND_SERVICE_ACTIVITY) ?: null
+                val title = obj.optString(KEY_FOREGROUND_SERVICE_TITLE, null)
+                val text = obj.optString(KEY_FOREGROUND_SERVICE_TEXT, null)
+                val icon: String? = obj.optString(KEY_FOREGROUND_SERVICE_ICON, null)
+                val activity: String? = obj.optString(KEY_FOREGROUND_SERVICE_ACTIVITY, null)
                 val updatesOnly: Boolean = obj.optBoolean(KEY_FOREGROUND_SERVICE_UPDATES_ONLY)
 
                 return RadarTrackingOptionsForegroundService(id, importance, title, text, icon, activity, updatesOnly)
