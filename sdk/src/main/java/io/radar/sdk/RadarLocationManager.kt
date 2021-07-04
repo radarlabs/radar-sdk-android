@@ -61,6 +61,7 @@ internal class RadarLocationManager(
 
                 if (callbacks.contains(callback)) {
                     callback.onComplete(RadarStatus.ERROR_LOCATION)
+                    callbacks.remove(callback)
                 }
             }
         }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 20000L)
