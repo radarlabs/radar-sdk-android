@@ -245,11 +245,11 @@ data class RadarTrackingOptions(
     }
 
     data class RadarTrackingOptionsForegroundService(
-        val id: Int = 0,
-        val importance: Int = 0,
+        val id: Int? = 0,
+        val importance: Int? = 0,
         val title: String? = null,
         val text: String? = null,
-        val icon: String? = null,
+        val icon: Int? = 0,
         val activity: String? = null,
         val updatesOnly: Boolean = false
     ) {
@@ -273,7 +273,7 @@ data class RadarTrackingOptions(
                 val importance = obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
                 val title = obj.optString(KEY_FOREGROUND_SERVICE_TITLE, null)
                 val text = obj.optString(KEY_FOREGROUND_SERVICE_TEXT, null)
-                val icon: String? = obj.optString(KEY_FOREGROUND_SERVICE_ICON, null)
+                val icon = obj.optInt(KEY_FOREGROUND_SERVICE_ICON)
                 val activity: String? = obj.optString(KEY_FOREGROUND_SERVICE_ACTIVITY, null)
                 val updatesOnly: Boolean = obj.optBoolean(KEY_FOREGROUND_SERVICE_UPDATES_ONLY)
 

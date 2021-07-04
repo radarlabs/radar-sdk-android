@@ -547,6 +547,8 @@ internal class RadarLocationManager(
     }
 
     private fun startForegroundService(foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService) {
+        logger.d("Starting foreground service")
+
         if (Build.VERSION.SDK_INT >= 26) {
             val intent = Intent(context, RadarForegroundService::class.java)
             intent.action = "start"
@@ -557,11 +559,14 @@ internal class RadarLocationManager(
                 .putExtra("icon", foregroundService.icon)
                 .putExtra("importance", foregroundService.importance)
                 .putExtra("activity", foregroundService.activity)
+            logger.d("Starting foreground service with intent | $intent")
             context.applicationContext.startForegroundService(intent)
         }
     }
 
     private fun stopForegroundService() {
+        logger.d("Stopping foreground service")
+
         if (Build.VERSION.SDK_INT >= 26) {
             val intent = Intent(context, RadarForegroundService::class.java)
             intent.action = "stop"

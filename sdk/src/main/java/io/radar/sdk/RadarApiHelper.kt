@@ -25,7 +25,7 @@ internal open class RadarApiHelper(
                          headers: Map<String, String>?,
                          params: JSONObject?,
                          callback: RadarApiCallback? = null) {
-        logger?.d("📍 Radar API request | method = ${method}; url = ${url}; headers = ${headers}; $params = ${params}")
+        logger?.d("📍 Radar API request | method = ${method}; url = ${url}; headers = ${headers}; $params = $params")
 
         DoAsync {
             try {
@@ -51,18 +51,18 @@ internal open class RadarApiHelper(
                     outputStreamWriter.close()
                 }
 
-                val body = urlConnection.inputStream.readAll()
-                if (body == null) {
-                    callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
-
-                    return@DoAsync
-                }
-
-                val res = JSONObject(body)
-
-                logger?.d("📍 Radar API response | responseCode = ${urlConnection.responseCode}; body = ${body}")
-
                 if (urlConnection.responseCode in 200 until 400) {
+                    val body = urlConnection.inputStream.readAll()
+                    if (body == null) {
+                        callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+
+                        return@DoAsync
+                    }
+
+                    val res = JSONObject(body)
+
+                    logger?.d("📍 Radar API response | responseCode = ${urlConnection.responseCode}; res = $res")
+
                     callback?.onComplete(Radar.RadarStatus.SUCCESS, res)
                 } else {
                     val status = when (urlConnection.responseCode) {
@@ -75,6 +75,17 @@ internal open class RadarApiHelper(
                         in (500 until 600) -> Radar.RadarStatus.ERROR_SERVER
                         else -> Radar.RadarStatus.ERROR_UNKNOWN
                     }
+
+                    val body = urlConnection.errorStream.readAll()
+                    if (body == null) {
+                        callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+
+                        return@DoAsync
+                    }
+
+                    val res = JSONObject(body)
+
+                    logger?.d("📍 Radar API response | responseCode = ${urlConnection.responseCode}; res = $res")
 
                     callback?.onComplete(status)
                 }
