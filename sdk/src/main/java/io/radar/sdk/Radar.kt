@@ -2048,6 +2048,14 @@ object Radar {
         locationManager.handleLocation(location, source)
     }
 
+    internal fun handleBeacon(context: Context) {
+        if (!initialized) {
+            initialize(context)
+        }
+
+        locationManager.handleBeacon()
+    }
+
     internal fun handleBootCompleted(context: Context) {
         if (!initialized) {
             initialize(context)

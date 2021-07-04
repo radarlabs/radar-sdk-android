@@ -204,7 +204,7 @@ public class <span class="typeNameLabel"><a href=RadarTrackingOptions.Companion.
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=RadarTrackingOptions.Companion.html#getCONTINUOUS()>getCONTINUOUS</a>() </code>
                                             </th>
-                                            <td class="colLast">A preset that updates every 30 seconds and syncs all location updates to the server.</td>
+                                            <td class="colLast">Updates about every 30 seconds while moving or stopped.</td>
                                         </tr>
                                         
                                         <tr id="i2" class="altColor">
@@ -212,7 +212,7 @@ public class <span class="typeNameLabel"><a href=RadarTrackingOptions.Companion.
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=RadarTrackingOptions.Companion.html#getRESPONSIVE()>getRESPONSIVE</a>() </code>
                                             </th>
-                                            <td class="colLast">A preset that updates as fast as every 2.5 minutes while moving, shuts down when stopped, and only syncs stops and exits to the server.</td>
+                                            <td class="colLast">Updates about every 2.5 minutes while moving and shuts down when stopped to save battery.</td>
                                         </tr>
                                         
                                         <tr id="i3" class="rowColor">
@@ -220,7 +220,7 @@ public class <span class="typeNameLabel"><a href=RadarTrackingOptions.Companion.
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=RadarTrackingOptions.Companion.html#getEFFICIENT()>getEFFICIENT</a>() </code>
                                             </th>
-                                            <td class="colLast">A preset that updates as fast as every 6 minutes while moving, periodically when stopped, and only syncs stops and exits to the server.</td>
+                                            <td class="colLast">Updates as fast as every 6 minutes while moving and periodically when stopped.</td>
                                         </tr>
                                         
                                         </tbody>
@@ -280,7 +280,7 @@ public class <span class="typeNameLabel"><a href=RadarTrackingOptions.Companion.
                                     <li class="blockList">
                                         <h4>getCONTINUOUS</h4>
                                         <pre class="methodSignature"> final <a href=RadarTrackingOptions.html>RadarTrackingOptions</a> <a href=RadarTrackingOptions.Companion.html#getCONTINUOUS()>getCONTINUOUS</a>()</pre>
-                                        <div class="block"><p>A preset that updates every 30 seconds and syncs all location updates to the server. High battery usage. Should be used with a foreground service. See <a href=https://developer.android.com/about/versions/oreo/background-location-limits.html></a>.</p></div>
+                                        <div class="block"><p>Updates about every 30 seconds while moving or stopped. Uses a foreground service. Moderate battery usage.</p></div>
                                         
                                         <!-- TODO missing return annotation -->
                                     </li>
@@ -295,7 +295,7 @@ public class <span class="typeNameLabel"><a href=RadarTrackingOptions.Companion.
                                     <li class="blockList">
                                         <h4>getRESPONSIVE</h4>
                                         <pre class="methodSignature"> final <a href=RadarTrackingOptions.html>RadarTrackingOptions</a> <a href=RadarTrackingOptions.Companion.html#getRESPONSIVE()>getRESPONSIVE</a>()</pre>
-                                        <div class="block"><p>A preset that updates as fast as every 2.5 minutes while moving, shuts down when stopped, and only syncs stops and exits to the server. Must move at least 200 meters to start moving again after a stop. Low battery usage, but may exceed Android vitals bad behavior thresholds for excessive wakeups and excessive wi-fi scans. See <a href=https://developer.android.com/topic/performance/vitals/wakeup.html></a> and <a href=https://developer.android.com/topic/performance/vitals/bg-wifi.html></a>.</p><p>Note that location updates may be delayed significantly by Doze Mode, App Standby, and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.</p></div>
+                                        <div class="block"><p>Updates about every 2.5 minutes while moving and shuts down when stopped to save battery. Once stopped, the device will need to move more than 100 meters to wake up and start moving again. Low battery usage.</p><p>Note that location updates may be delayed significantly by Doze Mode, App Standby, and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.</p></div>
                                         
                                         <!-- TODO missing return annotation -->
                                     </li>
@@ -310,7 +310,7 @@ public class <span class="typeNameLabel"><a href=RadarTrackingOptions.Companion.
                                     <li class="blockList">
                                         <h4>getEFFICIENT</h4>
                                         <pre class="methodSignature"> final <a href=RadarTrackingOptions.html>RadarTrackingOptions</a> <a href=RadarTrackingOptions.Companion.html#getEFFICIENT()>getEFFICIENT</a>()</pre>
-                                        <div class="block"><p>A preset that updates as fast as every 6 minutes while moving, periodically when stopped, and only syncs stops and exits to the server. Must move a significant distance to start moving again after a stop. Lowest battery usage and will not exceed Android vitals bad behavior thresholds. Recommended.</p><p>Note that location updates may be delayed significantly by Doze Mode, App Standby, and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.</p></div>
+                                        <div class="block"><p>Updates as fast as every 6 minutes while moving and periodically when stopped. Once stopped, the device will need to move more than 100 meters and wait for at least 15 minutes to wake up and start moving again. Lowest battery usage.</p><p>Note that location updates may be delayed significantly by Doze Mode, App Standby, and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.</p></div>
                                         
                                         <!-- TODO missing return annotation -->
                                     </li>

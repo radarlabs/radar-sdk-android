@@ -173,11 +173,16 @@ internal class RadarLocationManager(
         this.started = false
     }
 
-    internal fun handleBluetooth() {
+    internal fun handleBeacon() {
+        logger.i("Handling beacon")
+
+        // get location and range beacons
         this.getLocation(null)
     }
 
     internal fun handleBootCompleted() {
+        logger.i("Handling boot completed")
+
         this.started = false
         RadarState.setStopped(context, false)
 

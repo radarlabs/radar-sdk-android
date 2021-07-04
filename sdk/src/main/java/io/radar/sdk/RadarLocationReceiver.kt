@@ -17,12 +17,12 @@ class RadarLocationReceiver : BroadcastReceiver() {
         internal const val ACTION_LOCATION = "io.radar.sdk.LocationReceiver.LOCATION"
         internal const val ACTION_BUBBLE_GEOFENCE = "io.radar.sdk.LocationReceiver.GEOFENCE"
         internal const val ACTION_SYNCED_GEOFENCES = "io.radar.sdk.LocationReceiver.SYNCED_GEOFENCES"
-        internal const val ACTION_BLUETOOTH = "io.radar.sdk.LocationReceiver.BLUETOOTH"
+        internal const val ACTION_BEACON = "io.radar.sdk.LocationReceiver.BEACON"
 
         internal const val REQUEST_CODE_LOCATION = 201605250
         internal const val REQUEST_CODE_BUBBLE_GEOFENCE = 201605251
         internal const val REQUEST_CODE_SYNCED_GEOFENCES = 201605252
-        internal const val REQUEST_CODE_BLUETOOTH = 201605253
+        internal const val REQUEST_CODE_BEACON = 201605253
 
         internal fun getLocationPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
@@ -45,11 +45,11 @@ class RadarLocationReceiver : BroadcastReceiver() {
             return PendingIntent.getBroadcast(context, REQUEST_CODE_SYNCED_GEOFENCES, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         }
 
-        internal fun getBluetoothPendingIntent(context: Context): PendingIntent {
+        internal fun getBeaconPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
-                action = ACTION_BLUETOOTH
+                action = ACTION_BEACON
             }
-            return PendingIntent.getBroadcast(context, REQUEST_CODE_BLUETOOTH, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            return PendingIntent.getBroadcast(context, REQUEST_CODE_BEACON, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         }
 
         private fun baseIntent(context: Context): Intent = Intent(context, RadarLocationReceiver::class.java)
@@ -87,8 +87,8 @@ class RadarLocationReceiver : BroadcastReceiver() {
                     }
                 }
             }
-            ACTION_BLUETOOTH -> {
-                Radar.locationManager.handleBluetooth()
+            ACTION_BEACON -> {
+                Radar.handleBeacon(context)
             }
             Intent.ACTION_BOOT_COMPLETED -> {
                 Radar.handleBootCompleted(context)

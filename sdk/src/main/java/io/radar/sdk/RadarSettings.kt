@@ -24,6 +24,7 @@ internal object RadarSettings {
     private const val KEY_CONFIG = "config"
     private const val KEY_HOST = "host"
     private const val KEY_PERMISSIONS_DENIED = "permissions_denied"
+    private const val KEY_NEARBY_BEACON_IDENTIFIERS = "nearby_beacon_identifiers"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -190,6 +191,14 @@ internal object RadarSettings {
 
     internal fun getPermissionsDenied(context: Context): Boolean {
         return getSharedPreferences(context).getBoolean(KEY_PERMISSIONS_DENIED, false)
+    }
+
+    internal fun setNearbyBeaconIdentifiers(context: Context, beacons: Set<String>) {
+        getSharedPreferences(context).edit { putStringSet(KEY_NEARBY_BEACON_IDENTIFIERS, beacons) }
+    }
+
+    internal fun getNearbyBeaconIdentifiers(context: Context): MutableSet<String>? {
+        return getSharedPreferences(context).getStringSet(KEY_NEARBY_BEACON_IDENTIFIERS, null)
     }
 
 }

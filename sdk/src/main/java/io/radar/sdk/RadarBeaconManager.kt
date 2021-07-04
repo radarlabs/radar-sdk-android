@@ -75,13 +75,23 @@ internal class RadarBeaconManager(
             return
         }
 
+        this.stopMonitoringBeacons()
+
         if (beacons.isEmpty()) {
             logger.d("No beacons to monitor")
 
             return
         }
 
-        this.stopMonitoringBeacons()
+        val oldBeaconIdentifiers = RadarSettings.getNearbyBeaconIdentifiers(context)
+        val newBeaconIdentifiers = beacons.map { it._id }.toSet()
+        if (oldBeaconIdentifiers != null && oldBeaconIdentifiers.containsAll(newBeaconIdentifiers)) {
+            logger.i("Already monitoring beacons")
+
+            return
+        }
+
+        RadarSettings.setNearbyBeaconIdentifiers(context, newBeaconIdentifiers)
 
         val scanFilters = mutableListOf<ScanFilter>()
 
@@ -97,12 +107,13 @@ internal class RadarBeaconManager(
 
         val scanSettings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+            .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH or ScanSettings.CALLBACK_TYPE_MATCH_LOST)
             .setReportDelay(0)
             .build()
 
         logger.d("Starting monitoring beacons")
 
-        adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, RadarLocationReceiver.getBluetoothPendingIntent(context))
+        adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, RadarLocationReceiver.getBeaconPendingIntent(context))
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -119,7 +130,7 @@ internal class RadarBeaconManager(
 
         logger.d("Stopping monitoring beacons")
 
-        adapter.bluetoothLeScanner.stopScan(RadarLocationReceiver.getBluetoothPendingIntent(context))
+        adapter.bluetoothLeScanner.stopScan(RadarLocationReceiver.getBeaconPendingIntent(context))
     }
 
     fun rangeBeacons(beacons: Array<RadarBeacon>, callback: RadarBeaconCallback?) {
