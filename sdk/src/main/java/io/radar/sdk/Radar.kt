@@ -362,14 +362,14 @@ object Radar {
         if (!this::apiClient.isInitialized) {
             this.apiClient = RadarApiClient(this.context, logger)
         }
-        if (!this::locationManager.isInitialized) {
-            this.locationManager = RadarLocationManager(this.context, apiClient, logger)
-            this.locationManager.updateTracking()
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (!this::beaconManager.isInitialized) {
                 this.beaconManager = RadarBeaconManager(this.context, logger)
             }
+        }
+        if (!this::locationManager.isInitialized) {
+            this.locationManager = RadarLocationManager(this.context, apiClient, logger)
+            this.locationManager.updateTracking()
         }
 
         this.logger.d("Initializing")
