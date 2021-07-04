@@ -1976,7 +1976,7 @@ object Radar {
             RadarLocationSource.GEOFENCE_EXIT -> "GEOFENCE_EXIT"
             RadarLocationSource.MOCK_LOCATION -> "MOCK_LOCATION"
             RadarLocationSource.BEACON_ENTER -> "BEACON_ENTER"
-            RadarLocationSource.BEACON_ENTER -> "BEACON_EXIT"
+            RadarLocationSource.BEACON_EXIT -> "BEACON_EXIT"
             else -> "UNKNOWN"
         }
     }

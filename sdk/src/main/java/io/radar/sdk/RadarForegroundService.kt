@@ -54,8 +54,8 @@ class RadarForegroundService : Service() {
         id = if (id == 0) 20160525 else id
         var importance = extras?.getInt("importance") ?: 0
         importance = if (importance == 0) NotificationManager.IMPORTANCE_DEFAULT else importance
-        val title = extras?.getString("title") ?: ""
-        val text = extras?.getString("text") ?: ""
+        val title = extras?.getString("title") ?: this.applicationInfo.nonLocalizedLabel.toString()
+        val text = extras?.getString("text") ?: "Location tracking started"
         var icon = extras?.getInt("icon") ?: 0
         icon = if (icon == 0) this.applicationInfo.icon else icon
         val smallIcon = resources.getIdentifier(icon.toString(), "drawable", applicationContext.packageName)
