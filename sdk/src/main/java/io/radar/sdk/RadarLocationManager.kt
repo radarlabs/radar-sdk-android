@@ -82,11 +82,11 @@ internal class RadarLocationManager(
         }
     }
 
-    fun getLocation(callback: RadarLocationCallback?) {
-        getLocation(RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback)
+    fun getLocation(callback: RadarLocationCallback? = null) {
+        getLocation(RadarTrackingOptionsDesiredAccuracy.MEDIUM, RadarLocationSource.FOREGROUND_LOCATION, callback)
     }
 
-    fun getLocation(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, callback: RadarLocationCallback?) {
+    fun getLocation(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, source: RadarLocationSource, callback: RadarLocationCallback? = null) {
         if (!permissionsHelper.fineLocationPermissionGranted(context)) {
             Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
 
@@ -118,7 +118,7 @@ internal class RadarLocationManager(
         locationClient.requestLocationUpdates(locationRequest, object : LocationCallback() {
             override fun onLocationResult(result: LocationResult?) {
                 locationClient.removeLocationUpdates(this)
-                locationManager.handleLocation(result?.lastLocation, RadarLocationSource.FOREGROUND_LOCATION)
+                locationManager.handleLocation(result?.lastLocation, source)
             }
         }, Looper.getMainLooper())
     }
@@ -173,15 +173,14 @@ internal class RadarLocationManager(
         this.started = false
     }
 
-    internal fun handleBeacon() {
-        logger.i("Handling beacon")
+    internal fun handleBeacon(source: RadarLocationSource) {
+        logger.d("Handling beacon | source = $source")
 
-        // get location and range beacons
-        this.getLocation(null)
+        this.getLocation(RadarTrackingOptionsDesiredAccuracy.MEDIUM, source)
     }
 
     internal fun handleBootCompleted() {
-        logger.i("Handling boot completed")
+        logger.d("Handling boot completed")
 
         this.started = false
         RadarState.setStopped(context, false)
@@ -377,7 +376,7 @@ internal class RadarLocationManager(
         val wasStopped = RadarState.getStopped(context)
         var stopped: Boolean
 
-        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION)
+        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT)
         if (!force && location.accuracy > 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
             logger.d("Skipping location: inaccurate | accuracy = ${location.accuracy}")
 

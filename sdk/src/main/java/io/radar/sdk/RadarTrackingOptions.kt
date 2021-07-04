@@ -245,23 +245,23 @@ data class RadarTrackingOptions(
     }
 
     data class RadarTrackingOptionsForegroundService(
-        val id: Int? = null,
-        val importance: Int? = null,
         val title: String? = null,
         val text: String? = null,
         val icon: Int? = null,
+        val updatesOnly: Boolean = false,
         val activity: String? = null,
-        val updatesOnly: Boolean = false
+        val importance: Int? = null,
+        val id: Int? = null
     ) {
 
         companion object {
-            internal const val KEY_FOREGROUND_SERVICE_ID = "id"
-            internal const val KEY_FOREGROUND_SERVICE_IMPORTANCE = "importance"
             internal const val KEY_FOREGROUND_SERVICE_TITLE = "title"
             internal const val KEY_FOREGROUND_SERVICE_TEXT = "text"
             internal const val KEY_FOREGROUND_SERVICE_ICON = "icon"
-            internal const val KEY_FOREGROUND_SERVICE_ACTIVITY = "activity"
             internal const val KEY_FOREGROUND_SERVICE_UPDATES_ONLY = "updatesOnly"
+            internal const val KEY_FOREGROUND_SERVICE_ACTIVITY = "activity"
+            internal const val KEY_FOREGROUND_SERVICE_IMPORTANCE = "importance"
+            internal const val KEY_FOREGROUND_SERVICE_ID = "id"
 
             @JvmStatic
             fun fromJson(obj: JSONObject?): RadarTrackingOptionsForegroundService? {
@@ -269,27 +269,28 @@ data class RadarTrackingOptions(
                     return null
                 }
 
-                val id = if (obj.isNull(KEY_FOREGROUND_SERVICE_ID)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ID)
-                val importance = if (obj.isNull(KEY_FOREGROUND_SERVICE_IMPORTANCE)) null else obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
                 val title = if (obj.isNull(KEY_FOREGROUND_SERVICE_TITLE)) null else obj.optString(KEY_FOREGROUND_SERVICE_TITLE)
                 val text = if (obj.isNull(KEY_FOREGROUND_SERVICE_TEXT)) null else obj.optString(KEY_FOREGROUND_SERVICE_TEXT)
                 val icon = if (obj.isNull(KEY_FOREGROUND_SERVICE_ICON)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ICON)
-                val activity = if (obj.isNull(KEY_FOREGROUND_SERVICE_ACTIVITY)) null else obj.optString(KEY_FOREGROUND_SERVICE_ACTIVITY)
                 val updatesOnly: Boolean = obj.optBoolean(KEY_FOREGROUND_SERVICE_UPDATES_ONLY)
+                val activity = if (obj.isNull(KEY_FOREGROUND_SERVICE_ACTIVITY)) null else obj.optString(KEY_FOREGROUND_SERVICE_ACTIVITY)
+                val importance = if (obj.isNull(KEY_FOREGROUND_SERVICE_IMPORTANCE)) null else obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
+                val id = if (obj.isNull(KEY_FOREGROUND_SERVICE_ID)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ID)
 
-                return RadarTrackingOptionsForegroundService(id, importance, title, text, icon, activity, updatesOnly)
+                return RadarTrackingOptionsForegroundService(title, text, icon, updatesOnly, activity, importance, id)
             }
         }
 
         fun toJson(): JSONObject {
             val obj = JSONObject()
-            obj.put(KEY_FOREGROUND_SERVICE_ID, id)
-            obj.put(KEY_FOREGROUND_SERVICE_IMPORTANCE, importance)
+
             obj.put(KEY_FOREGROUND_SERVICE_TITLE, title)
             obj.put(KEY_FOREGROUND_SERVICE_TEXT, text)
             obj.put(KEY_FOREGROUND_SERVICE_ICON, icon)
             obj.put(KEY_FOREGROUND_SERVICE_ACTIVITY, activity)
             obj.put(KEY_FOREGROUND_SERVICE_UPDATES_ONLY, updatesOnly)
+            obj.put(KEY_FOREGROUND_SERVICE_IMPORTANCE, importance)
+            obj.put(KEY_FOREGROUND_SERVICE_ID, id)
             return obj
         }
 

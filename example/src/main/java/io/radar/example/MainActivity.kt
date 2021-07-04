@@ -5,7 +5,6 @@ import android.location.Location
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import io.radar.sdk.Radar

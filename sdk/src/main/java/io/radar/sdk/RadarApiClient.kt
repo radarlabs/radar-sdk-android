@@ -1,5 +1,6 @@
 package io.radar.sdk
 
+import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.location.Location
 import android.net.Uri
@@ -179,6 +180,8 @@ internal class RadarApiClient(
                 }
                 params.putOpt("nearbyBeacons", nearbyBeaconsArr)
             }
+            params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
+            params.putOpt("sessionId", RadarSettings.getSessionId(context))
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 

@@ -272,6 +272,10 @@ object Radar {
         GEOFENCE_EXIT,
         /** Mock */
         MOCK_LOCATION,
+        /** Beacon enter */
+        BEACON_ENTER,
+        /** Beacon exit */
+        BEACON_EXIT,
         /** Unknown */
         UNKNOWN
     }
@@ -539,7 +543,7 @@ object Radar {
             return
         }
 
-        locationManager.getLocation(desiredAccuracy, callback)
+        locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, callback)
     }
 
     /**
@@ -606,7 +610,7 @@ object Radar {
             return
         }
 
-        locationManager.getLocation(desiredAccuracy, object : RadarLocationCallback {
+        locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
                 if (status != RadarStatus.SUCCESS || location == null) {
                     callback?.onComplete(status)
@@ -1971,6 +1975,8 @@ object Radar {
             RadarLocationSource.GEOFENCE_DWELL -> "GEOFENCE_DWELL"
             RadarLocationSource.GEOFENCE_EXIT -> "GEOFENCE_EXIT"
             RadarLocationSource.MOCK_LOCATION -> "MOCK_LOCATION"
+            RadarLocationSource.BEACON_ENTER -> "BEACON_ENTER"
+            RadarLocationSource.BEACON_ENTER -> "BEACON_EXIT"
             else -> "UNKNOWN"
         }
     }
@@ -2048,12 +2054,12 @@ object Radar {
         locationManager.handleLocation(location, source)
     }
 
-    internal fun handleBeacon(context: Context) {
+    internal fun handleBeacon(context: Context, source: RadarLocationSource) {
         if (!initialized) {
             initialize(context)
         }
 
-        locationManager.handleBeacon()
+        locationManager.handleBeacon(source)
     }
 
     internal fun handleBootCompleted(context: Context) {
@@ -2081,7 +2087,7 @@ object Radar {
         this.broadcastIntent(intent)
     }
 
-    internal fun broadcastLocationIntent(location: Location, stopped: Boolean, source: Radar.RadarLocationSource) {
+    internal fun broadcastLocationIntent(location: Location, stopped: Boolean, source: RadarLocationSource) {
         val intent = Intent(RadarReceiver.ACTION_RECEIVED).apply {
             putExtra(RadarReceiver.EXTRA_LOCATION, location)
             putExtra(RadarReceiver.EXTRA_STOPPED, stopped)

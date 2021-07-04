@@ -530,12 +530,9 @@ class RadarTest {
         options.syncGeofences = true
         options.syncGeofencesLimit = 100
         options.foregroundService = RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-            1337,
-            3,
             "Title",
             "Text",
-            null,
-            null,
+            1337,
             true
         )
         Radar.startTracking(options)
