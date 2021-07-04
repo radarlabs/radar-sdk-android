@@ -17,10 +17,19 @@ class RadarLocationReceiver : BroadcastReceiver() {
         internal const val ACTION_LOCATION = "io.radar.sdk.LocationReceiver.LOCATION"
         internal const val ACTION_BUBBLE_GEOFENCE = "io.radar.sdk.LocationReceiver.GEOFENCE"
         internal const val ACTION_SYNCED_GEOFENCES = "io.radar.sdk.LocationReceiver.SYNCED_GEOFENCES"
+        internal const val ACTION_BLUETOOTH = "io.radar.sdk.LocationReceiver.BLUETOOTH"
 
         internal const val REQUEST_CODE_LOCATION = 201605250
         internal const val REQUEST_CODE_BUBBLE_GEOFENCE = 201605251
         internal const val REQUEST_CODE_SYNCED_GEOFENCES = 201605252
+        internal const val REQUEST_CODE_BLUETOOTH = 201605253
+
+        internal fun getLocationPendingIntent(context: Context): PendingIntent {
+            val intent = baseIntent(context).apply {
+                action = ACTION_LOCATION
+            }
+            return PendingIntent.getBroadcast(context, REQUEST_CODE_LOCATION, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
 
         internal fun getBubbleGeofencePendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
@@ -36,11 +45,11 @@ class RadarLocationReceiver : BroadcastReceiver() {
             return PendingIntent.getBroadcast(context, REQUEST_CODE_SYNCED_GEOFENCES, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         }
 
-        internal fun getLocationPendingIntent(context: Context): PendingIntent {
+        internal fun getBluetoothPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
-                action = ACTION_LOCATION
+                action = ACTION_BLUETOOTH
             }
-            return PendingIntent.getBroadcast(context, REQUEST_CODE_LOCATION, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            return PendingIntent.getBroadcast(context, REQUEST_CODE_BLUETOOTH, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         }
 
         private fun baseIntent(context: Context): Intent = Intent(context, RadarLocationReceiver::class.java)
@@ -77,6 +86,9 @@ class RadarLocationReceiver : BroadcastReceiver() {
                         Radar.handleLocation(context, it, source)
                     }
                 }
+            }
+            ACTION_BLUETOOTH -> {
+                Radar.locationManager.handleBluetooth()
             }
             Intent.ACTION_BOOT_COMPLETED -> {
                 Radar.handleBootCompleted(context)

@@ -172,6 +172,10 @@ internal class RadarLocationManager(
         this.started = false
     }
 
+    internal fun handleBluetooth() {
+        this.getLocation(null)
+    }
+
     internal fun handleBootCompleted() {
         this.started = false
         RadarState.setStopped(context, false)
@@ -238,6 +242,9 @@ internal class RadarLocationManager(
             this.stopForegroundService()
             this.stopLocationUpdates()
             this.removeAllGeofences()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Radar.beaconManager.stopMonitoringBeacons()
+            }
         }
     }
 
@@ -527,6 +534,10 @@ internal class RadarLocationManager(
                         callTrackApi(null)
 
                         return
+                    }
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        Radar.beaconManager.startMonitoringBeacons(beacons)
                     }
 
                     Radar.beaconManager.rangeBeacons(beacons, object : Radar.RadarBeaconCallback {

@@ -63,6 +63,65 @@ internal class RadarBeaconManager(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun startMonitoringBeacons(beacons: Array<RadarBeacon>) {
+        if (!this::adapter.isInitialized) {
+            adapter = BluetoothAdapter.getDefaultAdapter()
+        }
+
+        if (!adapter.isEnabled) {
+            logger.d("Bluetooth not enabled")
+
+            return
+        }
+
+        if (beacons.isEmpty()) {
+            logger.d("No beacons to monitor")
+
+            return
+        }
+
+        this.stopMonitoringBeacons()
+
+        val scanFilters = mutableListOf<ScanFilter>()
+
+        for (beacon in beacons) {
+            logger.d("Building scan filter for monitoring | _id = ${beacon._id}")
+
+            RadarBeaconUtils.getScanFilter(beacon)?.let { scanFilter ->
+                logger.d("Starting monitoring beacon | _id = ${beacon._id}; uuid = ${beacon.uuid}; major = ${beacon.major}; minor = ${beacon.minor}")
+
+                scanFilters.add(scanFilter)
+            }
+        }
+
+        val scanSettings = ScanSettings.Builder()
+            .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+            .setReportDelay(0)
+            .build()
+
+        logger.d("Starting monitoring beacons")
+
+        adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, RadarLocationReceiver.getBluetoothPendingIntent(context))
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun stopMonitoringBeacons() {
+        if (!this::adapter.isInitialized) {
+            adapter = BluetoothAdapter.getDefaultAdapter()
+        }
+
+        if (!adapter.isEnabled) {
+            logger.d("Bluetooth not enabled")
+
+            return
+        }
+
+        logger.d("Stopping monitoring beacons")
+
+        adapter.bluetoothLeScanner.stopScan(RadarLocationReceiver.getBluetoothPendingIntent(context))
+    }
+
     fun rangeBeacons(beacons: Array<RadarBeacon>, callback: RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
@@ -110,7 +169,7 @@ internal class RadarBeaconManager(
         val scanFilters = mutableListOf<ScanFilter>()
 
         for (beacon in beacons) {
-            logger.d("Building scan filter | _id = ${beacon._id}")
+            logger.d("Building scan filter for ranging | _id = ${beacon._id}")
 
             RadarBeaconUtils.getScanFilter(beacon)?.let { scanFilter ->
                 logger.d("Starting ranging beacon | _id = ${beacon._id}; uuid = ${beacon.uuid}; major = ${beacon.major}; minor = ${beacon.minor}")
