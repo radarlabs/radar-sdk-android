@@ -50,14 +50,14 @@ class RadarForegroundService : Service() {
     private fun startForegroundService(extras: Bundle?) {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.deleteNotificationChannel("RadarSDK")
-        val id = extras?.getInt("id") ?: 20160525
-        val importance = extras?.getInt("importance") ?: NotificationManager.IMPORTANCE_DEFAULT
-        val title = extras?.getString("title") ?: "Title"
-        val text = extras?.getString("text") ?: "Text"
-        var icon = extras?.getInt("icon")
-        if (icon == null || icon == 0) {
-            icon = 17301546 // r_drawable_ic_dialog_map
-        }
+        var id = extras?.getInt("id") ?: 0
+        id = if (id == 0) 20160525 else id
+        var importance = extras?.getInt("importance") ?: 0
+        importance = if (importance == 0) NotificationManager.IMPORTANCE_DEFAULT else importance
+        val title = extras?.getString("title") ?: ""
+        val text = extras?.getString("text") ?: ""
+        var icon = extras?.getInt("icon") ?: 0
+        icon = if (icon == 0) this.applicationInfo.icon else icon
         val smallIcon = resources.getIdentifier(icon.toString(), "drawable", applicationContext.packageName)
         val channel = NotificationChannel("RadarSDK", "RadarSDK", importance)
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -76,7 +76,7 @@ class RadarForegroundService : Service() {
                 builder = builder.setContentIntent(pendingIntent)
             }
         } catch (e: ClassNotFoundException) {
-            logger.e("Error setting foreground service PendingIntent", e)
+            logger.e("Error setting foreground service content intent", e)
         }
         val notification = builder.build()
         startForeground(id, notification)

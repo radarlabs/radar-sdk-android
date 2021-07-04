@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.annotation.SuppressLint
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.location.Location
@@ -553,11 +554,10 @@ internal class RadarLocationManager(
             val intent = Intent(context, RadarForegroundService::class.java)
             intent.action = "start"
             intent.putExtra("id", foregroundService.id)
-                .putExtra("importance", foregroundService.importance)
+                .putExtra("importance", foregroundService.importance ?: NotificationManager.IMPORTANCE_DEFAULT)
                 .putExtra("title", foregroundService.title)
                 .putExtra("text", foregroundService.text)
-                .putExtra("icon", foregroundService.icon)
-                .putExtra("importance", foregroundService.importance)
+                .putExtra("icon", foregroundService.icon )
                 .putExtra("activity", foregroundService.activity)
             logger.d("Starting foreground service with intent | $intent")
             context.applicationContext.startForegroundService(intent)
