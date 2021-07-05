@@ -590,7 +590,7 @@ internal class RadarLocationManager(
             try {
                 val intent = Intent(context, RadarForegroundService::class.java)
                 intent.action = "stop"
-                context.applicationContext.startForegroundService(intent)
+                context.applicationContext.startService(intent)
             } catch (e: Exception) {
                 logger.e("Error stopping foreground service with intent", e)
             }

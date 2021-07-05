@@ -30,6 +30,7 @@ internal class RadarBeaconManager(
     private var started = false
     private val callbacks = Collections.synchronizedList(mutableListOf<RadarBeaconCallback>())
     private var nearbyBeaconIdentifiers = mutableSetOf<String>()
+    private var monitoredBeaconIdentifiers = setOf<String>()
     private var beacons = arrayOf<RadarBeacon>()
     private var scanCallback: ScanCallback? = null
     private val handler = Handler(Looper.getMainLooper())
@@ -75,9 +76,9 @@ internal class RadarBeaconManager(
             return
         }
 
-        val oldBeaconIdentifiers = RadarSettings.getMonitoredBeaconIdentifiers(context)
+        // val monitoredBeaconIdentifiers = RadarSettings.getMonitoredBeaconIdentifiers(context)
         val newBeaconIdentifiers = beacons.map { it._id }.toSet()
-        if (oldBeaconIdentifiers != null && oldBeaconIdentifiers == newBeaconIdentifiers) {
+        if (monitoredBeaconIdentifiers == newBeaconIdentifiers) {
             logger.i("Already monitoring beacons")
 
             return
@@ -91,7 +92,7 @@ internal class RadarBeaconManager(
             return
         }
 
-        RadarSettings.setMonitoredBeaconIdentifiers(context, newBeaconIdentifiers)
+        monitoredBeaconIdentifiers = newBeaconIdentifiers
 
         val scanFilters = mutableListOf<ScanFilter>()
 
