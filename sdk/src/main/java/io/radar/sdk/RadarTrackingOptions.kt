@@ -245,8 +245,8 @@ data class RadarTrackingOptions(
     }
 
     data class RadarTrackingOptionsForegroundService(
-        val title: String? = null,
         val text: String? = null,
+        val title: String? = null,
         val icon: Int? = null,
         val updatesOnly: Boolean = false,
         val activity: String? = null,
@@ -255,8 +255,8 @@ data class RadarTrackingOptions(
     ) {
 
         companion object {
-            internal const val KEY_FOREGROUND_SERVICE_TITLE = "title"
             internal const val KEY_FOREGROUND_SERVICE_TEXT = "text"
+            internal const val KEY_FOREGROUND_SERVICE_TITLE = "title"
             internal const val KEY_FOREGROUND_SERVICE_ICON = "icon"
             internal const val KEY_FOREGROUND_SERVICE_UPDATES_ONLY = "updatesOnly"
             internal const val KEY_FOREGROUND_SERVICE_ACTIVITY = "activity"
@@ -269,23 +269,23 @@ data class RadarTrackingOptions(
                     return null
                 }
 
-                val title = if (obj.isNull(KEY_FOREGROUND_SERVICE_TITLE)) null else obj.optString(KEY_FOREGROUND_SERVICE_TITLE)
                 val text = if (obj.isNull(KEY_FOREGROUND_SERVICE_TEXT)) null else obj.optString(KEY_FOREGROUND_SERVICE_TEXT)
+                val title = if (obj.isNull(KEY_FOREGROUND_SERVICE_TITLE)) null else obj.optString(KEY_FOREGROUND_SERVICE_TITLE)
                 val icon = if (obj.isNull(KEY_FOREGROUND_SERVICE_ICON)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ICON)
                 val updatesOnly: Boolean = obj.optBoolean(KEY_FOREGROUND_SERVICE_UPDATES_ONLY)
                 val activity = if (obj.isNull(KEY_FOREGROUND_SERVICE_ACTIVITY)) null else obj.optString(KEY_FOREGROUND_SERVICE_ACTIVITY)
                 val importance = if (obj.isNull(KEY_FOREGROUND_SERVICE_IMPORTANCE)) null else obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
                 val id = if (obj.isNull(KEY_FOREGROUND_SERVICE_ID)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ID)
 
-                return RadarTrackingOptionsForegroundService(title, text, icon, updatesOnly, activity, importance, id)
+                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id)
             }
         }
 
         fun toJson(): JSONObject {
             val obj = JSONObject()
 
-            obj.put(KEY_FOREGROUND_SERVICE_TITLE, title)
             obj.put(KEY_FOREGROUND_SERVICE_TEXT, text)
+            obj.put(KEY_FOREGROUND_SERVICE_TITLE, title)
             obj.put(KEY_FOREGROUND_SERVICE_ICON, icon)
             obj.put(KEY_FOREGROUND_SERVICE_ACTIVITY, activity)
             obj.put(KEY_FOREGROUND_SERVICE_UPDATES_ONLY, updatesOnly)
@@ -321,7 +321,7 @@ data class RadarTrackingOptions(
             movingGeofenceRadius = 0,
             syncGeofences = false,
             syncGeofencesLimit = 0,
-            foregroundService = RadarTrackingOptionsForegroundService(),
+            foregroundService = null,
             beacons = false
         )
 

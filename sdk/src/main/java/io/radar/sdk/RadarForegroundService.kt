@@ -54,7 +54,7 @@ class RadarForegroundService : Service() {
         id = if (id == 0) 20160525 else id
         var importance = extras?.getInt("importance") ?: 0
         importance = if (importance == 0) NotificationManager.IMPORTANCE_DEFAULT else importance
-        val title = extras?.getString("title") ?: this.applicationInfo.nonLocalizedLabel.toString()
+        val title = extras?.getString("title")
         val text = extras?.getString("text") ?: "Location tracking started"
         var icon = extras?.getInt("icon") ?: 0
         icon = if (icon == 0) this.applicationInfo.icon else icon
@@ -63,10 +63,12 @@ class RadarForegroundService : Service() {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
         var builder = Notification.Builder(applicationContext, "RadarSDK")
-            .setContentTitle(title as CharSequence?)
             .setContentText(text as CharSequence?)
             .setOngoing(true)
             .setSmallIcon(smallIcon)
+        if (title != null && title.isNotEmpty()) {
+            builder = builder.setContentTitle(title as CharSequence?)
+        }
         try {
             extras?.getString("activity")?.let {
                 val activityClass = Class.forName(it)
