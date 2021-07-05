@@ -245,12 +245,39 @@ data class RadarTrackingOptions(
     }
 
     data class RadarTrackingOptionsForegroundService(
+        /**
+         * Determines the notification text. Defaults to `"Location tracking started"`.
+         */
         val text: String? = null,
+
+        /**
+         * Determines the notification title. Optional.
+         */
         val title: String? = null,
+
+        /**
+         * Determines the notification icon, like `R.drawable.ic_your_icon`. Optional, defaults to `applicationContext.applicationInfo.icon`.
+         */
         val icon: Int? = null,
+
+        /**
+         * Determines when to show the notification. Use `false` to show the notification always, use `true` to show the notification only during location updates. Optional, defaults to `false`.
+         */
         val updatesOnly: Boolean = false,
+
+        /**
+         * Determines the activity to start when the notification is tapped, like `"com.yourapp.MainActivity"`. Optional.
+         */
         val activity: String? = null,
+
+        /**
+         * Determines the importance of the notification, one of `android.app.NotificationManager.IMPORTANCE_*`. Optional, defaults to `android.app.NotificationManager.IMPORTANCE_DEFAULT`.
+         */
         val importance: Int? = null,
+
+        /**
+         * Determines the id of the notification. Optional, defaults to `20160525`.
+         */
         val id: Int? = null
     ) {
 
