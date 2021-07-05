@@ -567,26 +567,33 @@ internal class RadarLocationManager(
         logger.d("Starting foreground service")
 
         if (Build.VERSION.SDK_INT >= 26) {
-            val intent = Intent(context, RadarForegroundService::class.java)
-            intent.action = "start"
-            intent.putExtra("id", foregroundService.id)
-                .putExtra("importance", foregroundService.importance ?: NotificationManager.IMPORTANCE_DEFAULT)
-                .putExtra("title", foregroundService.title)
-                .putExtra("text", foregroundService.text)
-                .putExtra("icon", foregroundService.icon )
-                .putExtra("activity", foregroundService.activity)
-            logger.d("Starting foreground service with intent | $intent")
-            context.applicationContext.startForegroundService(intent)
+            try {
+                val intent = Intent(context, RadarForegroundService::class.java)
+                intent.action = "start"
+                intent.putExtra("id", foregroundService.id)
+                        .putExtra("importance", foregroundService.importance ?: NotificationManager.IMPORTANCE_DEFAULT)
+                        .putExtra("title", foregroundService.title)
+                        .putExtra("text", foregroundService.text)
+                        .putExtra("icon", foregroundService.icon )
+                        .putExtra("activity", foregroundService.activity)
+                logger.d("Starting foreground service with intent | $intent")
+                context.applicationContext.startForegroundService(intent)
+            } catch (e: Exception) {
+                logger.e("Error starting foreground service with intent", e)
+            }
         }
     }
 
     private fun stopForegroundService() {
-        logger.d("Stopping foreground service")
-
         if (Build.VERSION.SDK_INT >= 26) {
-            val intent = Intent(context, RadarForegroundService::class.java)
-            intent.action = "stop"
-            context.applicationContext.startService(intent)
+            logger.d("Stopping foreground service with intent")
+            try {
+                val intent = Intent(context, RadarForegroundService::class.java)
+                intent.action = "stop"
+                context.applicationContext.startForegroundService(intent)
+            } catch (e: Exception) {
+                logger.e("Error stopping foreground service with intent", e)
+            }
         }
     }
 

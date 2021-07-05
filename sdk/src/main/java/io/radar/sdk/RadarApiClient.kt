@@ -1,6 +1,5 @@
 package io.radar.sdk
 
-import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.location.Location
 import android.net.Uri

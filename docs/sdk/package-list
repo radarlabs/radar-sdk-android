@@ -397,6 +397,12 @@ $dokka.location:io.radar.sdk/Radar.RadarLocationCallback/onComplete/#io.radar.sd
 $dokka.location:io.radar.sdk/Radar.RadarLocationSource.BACKGROUND_LOCATION///PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-location-source/-b-a-c-k-g-r-o-u-n-d_-l-o-c-a-t-i-o-n/index.html
 $dokka.location:io.radar.sdk/Radar.RadarLocationSource.BACKGROUND_LOCATION/name/#/PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-location-source/-b-a-c-k-g-r-o-u-n-d_-l-o-c-a-t-i-o-n/name.html
 $dokka.location:io.radar.sdk/Radar.RadarLocationSource.BACKGROUND_LOCATION/ordinal/#/PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-location-source/-b-a-c-k-g-r-o-u-n-d_-l-o-c-a-t-i-o-n/ordinal.html
+$dokka.location:io.radar.sdk/Radar.RadarLocationSource.BEACON_ENTER///PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-location-source/-b-e-a-c-o-n_-e-n-t-e-r/index.html
+$dokka.location:io.radar.sdk/Radar.RadarLocationSource.BEACON_ENTER/name/#/PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-location-source/-b-e-a-c-o-n_-e-n-t-e-r/name.html
+$dokka.location:io.radar.sdk/Radar.RadarLocationSource.BEACON_ENTER/ordinal/#/PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-location-source/-b-e-a-c-o-n_-e-n-t-e-r/ordinal.html
+$dokka.location:io.radar.sdk/Radar.RadarLocationSource.BEACON_EXIT///PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-location-source/-b-e-a-c-o-n_-e-x-i-t/index.html
+$dokka.location:io.radar.sdk/Radar.RadarLocationSource.BEACON_EXIT/name/#/PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-location-source/-b-e-a-c-o-n_-e-x-i-t/name.html
+$dokka.location:io.radar.sdk/Radar.RadarLocationSource.BEACON_EXIT/ordinal/#/PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-location-source/-b-e-a-c-o-n_-e-x-i-t/ordinal.html
 $dokka.location:io.radar.sdk/Radar.RadarLocationSource.FOREGROUND_LOCATION///PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-location-source/-f-o-r-e-g-r-o-u-n-d_-l-o-c-a-t-i-o-n/index.html
 $dokka.location:io.radar.sdk/Radar.RadarLocationSource.FOREGROUND_LOCATION/name/#/PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-location-source/-f-o-r-e-g-r-o-u-n-d_-l-o-c-a-t-i-o-n/name.html
 $dokka.location:io.radar.sdk/Radar.RadarLocationSource.FOREGROUND_LOCATION/ordinal/#/PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-location-source/-f-o-r-e-g-r-o-u-n-d_-l-o-c-a-t-i-o-n/ordinal.html
@@ -590,6 +596,10 @@ $dokka.location:io.radar.sdk/Radar/trackOnce/#io.radar.sdk.RadarTrackingOptions.
 $dokka.location:io.radar.sdk/Radar/trackOnce/#kotlin.Function4[io.radar.sdk.Radar.RadarStatus,android.location.Location?,kotlin.Array[io.radar.sdk.model.RadarEvent]?,io.radar.sdk.model.RadarUser?,kotlin.Unit]/PointingToDeclaration/sdk/io.radar.sdk/-radar/track-once.html
 $dokka.location:io.radar.sdk/Radar/updateTrip/#io.radar.sdk.RadarTripOptions#io.radar.sdk.model.RadarTrip.RadarTripStatus?#io.radar.sdk.Radar.RadarTripCallback?/PointingToDeclaration/sdk/io.radar.sdk/-radar/update-trip.html
 $dokka.location:io.radar.sdk/Radar/updateTrip/#io.radar.sdk.RadarTripOptions#io.radar.sdk.model.RadarTrip.RadarTripStatus?#kotlin.Function1[io.radar.sdk.Radar.RadarStatus,kotlin.Unit]/PointingToDeclaration/sdk/io.radar.sdk/-radar/update-trip.html
+$dokka.location:io.radar.sdk/RadarForegroundService///PointingToDeclaration/sdk/io.radar.sdk/-radar-foreground-service/index.html
+$dokka.location:io.radar.sdk/RadarForegroundService/RadarForegroundService/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-foreground-service/-radar-foreground-service.html
+$dokka.location:io.radar.sdk/RadarForegroundService/onBind/#android.content.Intent/PointingToDeclaration/sdk/io.radar.sdk/-radar-foreground-service/on-bind.html
+$dokka.location:io.radar.sdk/RadarForegroundService/onStartCommand/#android.content.Intent?#kotlin.Int#kotlin.Int/PointingToDeclaration/sdk/io.radar.sdk/-radar-foreground-service/on-start-command.html
 $dokka.location:io.radar.sdk/RadarJobScheduler///PointingToDeclaration/sdk/io.radar.sdk/-radar-job-scheduler/index.html
 $dokka.location:io.radar.sdk/RadarJobScheduler/RadarJobScheduler/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-job-scheduler/-radar-job-scheduler.html
 $dokka.location:io.radar.sdk/RadarJobScheduler/onStartJob/#android.app.job.JobParameters/PointingToDeclaration/sdk/io.radar.sdk/-radar-job-scheduler/on-start-job.html
@@ -626,6 +636,18 @@ $dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsDesiredAcc
 $dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.NONE/ordinal/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-desired-accuracy/-n-o-n-e/ordinal.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy///PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-desired-accuracy/index.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy/toRadarString/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-desired-accuracy/to-radar-string.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion///PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-foreground-service/-companion/index.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion/fromJson/#org.json.JSONObject?/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-foreground-service/-companion/from-json.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService///PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-foreground-service/index.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService/RadarTrackingOptionsForegroundService/#kotlin.String?#kotlin.String?#kotlin.Int?#kotlin.Boolean#kotlin.String?#kotlin.Int?#kotlin.Int?/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-foreground-service/-radar-tracking-options-foreground-service.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService/activity/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-foreground-service/activity.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService/icon/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-foreground-service/icon.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService/id/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-foreground-service/id.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService/importance/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-foreground-service/importance.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService/text/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-foreground-service/text.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService/title/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-foreground-service/title.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService/toJson/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-foreground-service/to-json.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService/updatesOnly/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-foreground-service/updates-only.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsReplay.NONE///PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-replay/-n-o-n-e/index.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsReplay.NONE/name/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-replay/-n-o-n-e/name.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsReplay.NONE/ordinal/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-replay/-n-o-n-e/ordinal.html
@@ -646,7 +668,7 @@ $dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsSync.STOPS
 $dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsSync///PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-sync/index.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsSync/toRadarString/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options-sync/to-radar-string.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions///PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/index.html
-$dokka.location:io.radar.sdk/RadarTrackingOptions/RadarTrackingOptions/#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy#kotlin.Int#kotlin.Int#java.util.Date?#java.util.Date?#io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsReplay#io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSync#kotlin.Boolean#kotlin.Int#kotlin.Boolean#kotlin.Int#kotlin.Boolean#kotlin.Boolean/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions/RadarTrackingOptions/#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#kotlin.Int#io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy#kotlin.Int#kotlin.Int#java.util.Date?#java.util.Date?#io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsReplay#io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSync#kotlin.Boolean#kotlin.Int#kotlin.Boolean#kotlin.Int#kotlin.Boolean#kotlin.Int#io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService?#kotlin.Boolean/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/-radar-tracking-options.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/beacons/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/beacons.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/desiredAccuracy/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/desired-accuracy.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/desiredMovingUpdateInterval/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/desired-moving-update-interval.html
@@ -654,6 +676,7 @@ $dokka.location:io.radar.sdk/RadarTrackingOptions/desiredStoppedUpdateInterval/#
 $dokka.location:io.radar.sdk/RadarTrackingOptions/desiredSyncInterval/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/desired-sync-interval.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/fastestMovingUpdateInterval/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/fastest-moving-update-interval.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/fastestStoppedUpdateInterval/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/fastest-stopped-update-interval.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions/foregroundService/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/foreground-service.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/movingGeofenceRadius/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/moving-geofence-radius.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/replay/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/replay.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/startTrackingAfter/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/start-tracking-after.html
@@ -663,6 +686,7 @@ $dokka.location:io.radar.sdk/RadarTrackingOptions/stopTrackingAfter/#/PointingTo
 $dokka.location:io.radar.sdk/RadarTrackingOptions/stoppedGeofenceRadius/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/stopped-geofence-radius.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/sync/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/sync.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/syncGeofences/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/sync-geofences.html
+$dokka.location:io.radar.sdk/RadarTrackingOptions/syncGeofencesLimit/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/sync-geofences-limit.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/toJson/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/to-json.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/useMovingGeofence/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/use-moving-geofence.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions/useStoppedGeofence/#/PointingToDeclaration/sdk/io.radar.sdk/-radar-tracking-options/use-stopped-geofence.html
