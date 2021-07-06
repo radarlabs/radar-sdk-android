@@ -11,7 +11,9 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
 
-internal open class RadarApiHelper {
+internal open class RadarApiHelper(
+    private var logger: RadarLogger? = null
+) {
 
     interface RadarApiCallback {
         fun onComplete(status: Radar.RadarStatus, res: JSONObject? = null)
@@ -23,6 +25,8 @@ internal open class RadarApiHelper {
                          headers: Map<String, String>?,
                          params: JSONObject?,
                          callback: RadarApiCallback? = null) {
+        logger?.d("📍 Radar API request | method = ${method}; url = ${url}; headers = ${headers}; $params = $params")
+
         DoAsync {
             try {
                 val urlConnection = url.openConnection() as HttpURLConnection
@@ -57,6 +61,8 @@ internal open class RadarApiHelper {
 
                     val res = JSONObject(body)
 
+                    logger?.d("📍 Radar API response | method = ${method}; url = ${url}; responseCode = ${urlConnection.responseCode}; res = $res")
+
                     callback?.onComplete(Radar.RadarStatus.SUCCESS, res)
                 } else {
                     val status = when (urlConnection.responseCode) {
@@ -69,6 +75,17 @@ internal open class RadarApiHelper {
                         in (500 until 600) -> Radar.RadarStatus.ERROR_SERVER
                         else -> Radar.RadarStatus.ERROR_UNKNOWN
                     }
+
+                    val body = urlConnection.errorStream.readAll()
+                    if (body == null) {
+                        callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+
+                        return@DoAsync
+                    }
+
+                    val res = JSONObject(body)
+
+                    logger?.d("📍 Radar API response | responseCode = ${urlConnection.responseCode}; res = $res")
 
                     callback?.onComplete(status)
                 }

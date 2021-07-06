@@ -272,6 +272,10 @@ object Radar {
         GEOFENCE_EXIT,
         /** Mock */
         MOCK_LOCATION,
+        /** Beacon enter */
+        BEACON_ENTER,
+        /** Beacon exit */
+        BEACON_EXIT,
         /** Unknown */
         UNKNOWN
     }
@@ -350,7 +354,7 @@ object Radar {
         this.context = context.applicationContext
 
         if (!this::logger.isInitialized) {
-            this.logger = RadarLogger()
+            this.logger = RadarLogger(this.context)
         }
 
         RadarSettings.updateSessionId(this.context)
@@ -360,19 +364,19 @@ object Radar {
         }
 
         if (!this::apiClient.isInitialized) {
-            this.apiClient = RadarApiClient(this.context)
-        }
-        if (!this::locationManager.isInitialized) {
-            this.locationManager = RadarLocationManager(this.context, apiClient, logger)
-            this.locationManager.updateTracking()
+            this.apiClient = RadarApiClient(this.context, logger)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (!this::beaconManager.isInitialized) {
                 this.beaconManager = RadarBeaconManager(this.context, logger)
             }
         }
+        if (!this::locationManager.isInitialized) {
+            this.locationManager = RadarLocationManager(this.context, apiClient, logger)
+            this.locationManager.updateTracking()
+        }
 
-        this.logger.d(this.context, "Initializing")
+        this.logger.d("Initializing")
 
         RadarUtils.loadAdId(this.context)
 
@@ -381,7 +385,7 @@ object Radar {
 
         this.apiClient.getConfig()
 
-        logger.i(this.context, "📍️ Radar initialized")
+        logger.i("📍️ Radar initialized")
     }
 
     /**
@@ -539,7 +543,7 @@ object Radar {
             return
         }
 
-        locationManager.getLocation(desiredAccuracy, callback)
+        locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, callback)
     }
 
     /**
@@ -606,7 +610,7 @@ object Radar {
             return
         }
 
-        locationManager.getLocation(desiredAccuracy, object : RadarLocationCallback {
+        locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
                 if (status != RadarStatus.SUCCESS || location == null) {
                     callback?.onComplete(status)
@@ -1971,6 +1975,8 @@ object Radar {
             RadarLocationSource.GEOFENCE_DWELL -> "GEOFENCE_DWELL"
             RadarLocationSource.GEOFENCE_EXIT -> "GEOFENCE_EXIT"
             RadarLocationSource.MOCK_LOCATION -> "MOCK_LOCATION"
+            RadarLocationSource.BEACON_ENTER -> "BEACON_ENTER"
+            RadarLocationSource.BEACON_EXIT -> "BEACON_EXIT"
             else -> "UNKNOWN"
         }
     }
@@ -2034,6 +2040,9 @@ object Radar {
             obj.put("speedAccuracy", location.speedAccuracyMetersPerSecond)
             obj.put("courseAccuracy", location.bearingAccuracyDegrees)
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            obj.put("mocked", location.isFromMockProvider)
+        }
         return obj
     }
 
@@ -2043,6 +2052,14 @@ object Radar {
         }
 
         locationManager.handleLocation(location, source)
+    }
+
+    internal fun handleBeacon(context: Context, source: RadarLocationSource) {
+        if (!initialized) {
+            initialize(context)
+        }
+
+        locationManager.handleBeacon(source)
     }
 
     internal fun handleBootCompleted(context: Context) {
@@ -2059,18 +2076,18 @@ object Radar {
             putExtra(RadarReceiver.EXTRA_LOCATION, location)
         }
 
-        logger.i(this.context, "📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user._id}")
+        logger.i("📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user._id}")
 
         if (events.isNotEmpty()) {
             for (event in events) {
-                logger.i(this.context, "📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.io/dashboard/events/${event._id}")
+                logger.i("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.io/dashboard/events/${event._id}")
             }
         }
 
         this.broadcastIntent(intent)
     }
 
-    internal fun broadcastLocationIntent(location: Location, stopped: Boolean, source: Radar.RadarLocationSource) {
+    internal fun broadcastLocationIntent(location: Location, stopped: Boolean, source: RadarLocationSource) {
         val intent = Intent(RadarReceiver.ACTION_RECEIVED).apply {
             putExtra(RadarReceiver.EXTRA_LOCATION, location)
             putExtra(RadarReceiver.EXTRA_STOPPED, stopped)
@@ -2085,7 +2102,7 @@ object Radar {
             putExtra(RadarReceiver.EXTRA_STATUS, status.ordinal)
         }
 
-        logger.i(this.context, "📍️ Radar error received | status = $status")
+        logger.i("📍️ Radar error received | status = $status")
 
         this.broadcastIntent(intent)
     }

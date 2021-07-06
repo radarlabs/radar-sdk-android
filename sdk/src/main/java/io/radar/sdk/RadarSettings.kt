@@ -61,7 +61,7 @@ internal object RadarSettings {
         if (timestampSeconds - sessionIdSeconds > 300) {
             getSharedPreferences(context).edit { putLong(KEY_SESSION_ID, timestampSeconds) }
 
-            Radar.logger.d(context, "New session | sessionId = ${this.getSessionId(context)}")
+            Radar.logger.d("New session | sessionId = ${this.getSessionId(context)}")
 
             return true
         }

@@ -17,7 +17,8 @@ import java.util.*
 
 internal class RadarApiClient(
     private val context: Context,
-    internal var apiHelper: RadarApiHelper = RadarApiHelper()
+    private var logger: RadarLogger,
+    internal var apiHelper: RadarApiHelper = RadarApiHelper(logger)
 ) {
 
     interface RadarTrackApiCallback {
@@ -169,6 +170,7 @@ internal class RadarApiClient(
             }
             if (options.syncGeofences) {
                 params.putOpt("nearbyGeofences", true)
+                params.putOpt("nearbyGeofencesLimit", options.syncGeofencesLimit)
             }
             if (nearbyBeacons != null) {
                 val nearbyBeaconsArr = JSONArray()
@@ -177,6 +179,8 @@ internal class RadarApiClient(
                 }
                 params.putOpt("nearbyBeacons", nearbyBeaconsArr)
             }
+            params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
+            params.putOpt("sessionId", RadarSettings.getSessionId(context))
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
