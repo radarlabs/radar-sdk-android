@@ -2,8 +2,6 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.app.PendingIntent
-import android.bluetooth.le.BluetoothLeScanner
-import android.bluetooth.le.ScanSettings
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -90,11 +88,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 }
             }
             ACTION_BEACON -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val callbackType = intent.getIntExtra(BluetoothLeScanner.EXTRA_CALLBACK_TYPE, -1)
-                    val source = if (callbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) Radar.RadarLocationSource.BEACON_EXIT else Radar.RadarLocationSource.BEACON_ENTER
-                     Radar.handleBeacon(context, source)
-                }
+                Radar.handleBeacon(context, Radar.RadarLocationSource.BEACON_ENTER)
             }
             Intent.ACTION_BOOT_COMPLETED -> {
                 Radar.handleBootCompleted(context)
