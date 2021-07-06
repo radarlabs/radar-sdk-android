@@ -76,7 +76,6 @@ internal class RadarBeaconManager(
             return
         }
 
-        // val monitoredBeaconIdentifiers = RadarSettings.getMonitoredBeaconIdentifiers(context)
         val newBeaconIdentifiers = beacons.map { it._id }.toSet()
         if (monitoredBeaconIdentifiers == newBeaconIdentifiers) {
             logger.i("Already monitoring beacons")
