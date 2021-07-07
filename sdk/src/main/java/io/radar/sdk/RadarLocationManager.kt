@@ -54,17 +54,6 @@ internal class RadarLocationManager(
         synchronized(callbacks) {
             callbacks.add(callback)
         }
-
-        handler.postAtTime({
-            synchronized(callbacks) {
-                logger.d("Location timeout")
-
-                if (callbacks.contains(callback)) {
-                    callback.onComplete(RadarStatus.ERROR_LOCATION)
-                    callbacks.remove(callback)
-                }
-            }
-        }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 20000L)
     }
 
     private fun callCallbacks(status: RadarStatus, location: Location? = null) {
@@ -106,21 +95,25 @@ internal class RadarLocationManager(
             RadarTrackingOptionsDesiredAccuracy.NONE -> LocationRequest.PRIORITY_NO_POWER
         }
 
-        val locationRequest = LocationRequest().apply {
-            priority = desiredPriority
-            interval = 1000L
-            fastestInterval = 1000L
-            numUpdates = 1
-        }.setExpirationDuration(20000L)
-
         logger.d("Requesting location")
 
-        locationClient.requestLocationUpdates(locationRequest, object : LocationCallback() {
-            override fun onLocationResult(result: LocationResult?) {
-                locationClient.removeLocationUpdates(this)
-                locationManager.handleLocation(result?.lastLocation, source)
+        locationClient.getCurrentLocation(desiredPriority, null).addOnSuccessListener { location ->
+            if (location == null) {
+                logger.d("Location timeout")
+
+                callback?.onComplete(RadarStatus.ERROR_LOCATION)
+            } else {
+                logger.d("Location request success")
+
+                locationManager.handleLocation(location, source)
             }
-        }, Looper.getMainLooper())
+
+
+        }.addOnCanceledListener {
+            logger.d("Location request canceled")
+
+            callback?.onComplete(RadarStatus.ERROR_LOCATION)
+        }
     }
 
     fun startTracking(options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT) {
