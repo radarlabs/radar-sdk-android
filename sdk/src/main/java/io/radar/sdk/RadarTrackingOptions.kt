@@ -30,7 +30,7 @@ data class RadarTrackingOptions(
     var desiredMovingUpdateInterval: Int,
 
     /**
-     * Determines the fastest location update interval in seconds when stopped.
+     * Determines the fastest location update interval in seconds when moving.
      */
     var fastestMovingUpdateInterval: Int,
 
