@@ -71,6 +71,10 @@ internal class RadarBeaconManager(
             return
         }
 
+        if (!RadarUtils.getBluetoothSupported(context)) {
+            return
+        }
+
         if (!this::adapter.isInitialized) {
             adapter = BluetoothAdapter.getDefaultAdapter()
         }
@@ -130,6 +134,12 @@ internal class RadarBeaconManager(
             return
         }
 
+        if (!RadarUtils.getBluetoothSupported(context)) {
+            logger.d("Bluetooth not supported")
+
+            return
+        }
+
         if (!this::adapter.isInitialized) {
             adapter = BluetoothAdapter.getDefaultAdapter()
         }
@@ -152,6 +162,16 @@ internal class RadarBeaconManager(
             Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
 
             callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
+
+            return
+        }
+
+        if (!RadarUtils.getBluetoothSupported(context)) {
+            logger.d("Bluetooth not supported")
+
+            Radar.broadcastErrorIntent(RadarStatus.ERROR_BLUETOOTH)
+
+            callback?.onComplete(RadarStatus.ERROR_BLUETOOTH)
 
             return
         }
@@ -241,7 +261,10 @@ internal class RadarBeaconManager(
 
     private fun stopRanging() {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
+            return
+        }
 
+        if (!RadarUtils.getBluetoothSupported(context)) {
             return
         }
 
