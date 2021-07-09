@@ -67,11 +67,14 @@ internal class RadarBeaconManager(
     @RequiresApi(Build.VERSION_CODES.O)
     fun startMonitoringBeacons(beacons: Array<RadarBeacon>) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
+            logger.d("Bluetooth permissions not granted")
 
             return
         }
 
         if (!RadarUtils.getBluetoothSupported(context)) {
+            logger.d("Bluetooth not supported")
+
             return
         }
 
@@ -135,8 +138,6 @@ internal class RadarBeaconManager(
         }
 
         if (!RadarUtils.getBluetoothSupported(context)) {
-            logger.d("Bluetooth not supported")
-
             return
         }
 
