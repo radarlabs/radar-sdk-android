@@ -9,13 +9,10 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 internal object RadarUtils {
 
@@ -82,10 +79,17 @@ internal object RadarUtils {
             locationAuthorization = "GRANTED_FOREGROUND"
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED) {
             locationAuthorization = "GRANTED_BACKGROUND"
         }
         return locationAuthorization
+    }
+
+    internal fun getBluetoothSupported(context: Context): Boolean {
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
     }
 
     internal fun getLocationEnabled(context: Context): Boolean {
