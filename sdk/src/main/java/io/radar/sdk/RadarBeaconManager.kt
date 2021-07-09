@@ -133,7 +133,6 @@ internal class RadarBeaconManager(
     @RequiresApi(Build.VERSION_CODES.O)
     fun stopMonitoringBeacons() {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
-
             return
         }
 
