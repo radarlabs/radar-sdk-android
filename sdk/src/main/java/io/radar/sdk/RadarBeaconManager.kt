@@ -66,6 +66,11 @@ internal class RadarBeaconManager(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun startMonitoringBeacons(beacons: Array<RadarBeacon>) {
+        if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
+
+            return
+        }
+
         if (!this::adapter.isInitialized) {
             adapter = BluetoothAdapter.getDefaultAdapter()
         }
@@ -120,6 +125,11 @@ internal class RadarBeaconManager(
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun stopMonitoringBeacons() {
+        if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
+
+            return
+        }
+
         if (!this::adapter.isInitialized) {
             adapter = BluetoothAdapter.getDefaultAdapter()
         }
@@ -230,6 +240,11 @@ internal class RadarBeaconManager(
     }
 
     private fun stopRanging() {
+        if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
+
+            return
+        }
+
         logger.d("Stopping ranging")
 
         handler.removeCallbacksAndMessages(TIMEOUT_TOKEN)
