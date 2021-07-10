@@ -103,7 +103,7 @@ internal class RadarLocationManager(
 
                 callback?.onComplete(RadarStatus.ERROR_LOCATION)
             } else {
-                logger.d("Location request success")
+                logger.d("Successfully requested location")
 
                 locationManager.handleLocation(location, source)
             }
@@ -271,12 +271,19 @@ internal class RadarLocationManager(
                 .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_EXIT)
                 .build()
 
-            geofencingClient.addGeofences(request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
+            logger.d("Adding stopped bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier")
 
-            logger.d("Replaced stopped bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier")
+            geofencingClient.addGeofences(request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context)).run {
+                addOnSuccessListener {
+                    logger.d("Successfully added stopped bubble geofence")
+                }
+                addOnFailureListener {
+                    logger.d("Error adding stopped bubble geofence | message = ${it.message}")
+                }
+            }
         } else if (!stopped && options.useMovingGeofence) {
             val identifier = BUBBLE_MOVING_GEOFENCE_REQUEST_ID
-            val radius = options.stoppedGeofenceRadius.toFloat()
+            val radius = options.movingGeofenceRadius.toFloat()
 
             val geofence = Geofence.Builder()
                 .setRequestId(identifier)
@@ -291,9 +298,16 @@ internal class RadarLocationManager(
                 .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_DWELL or Geofence.GEOFENCE_TRANSITION_EXIT)
                 .build()
 
-            geofencingClient.addGeofences(request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
+            logger.d("Adding moving bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier")
 
-            logger.d("Replaced moving bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier")
+            geofencingClient.addGeofences(request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context)).run {
+                addOnSuccessListener {
+                    logger.d("Successfully added moving bubble geofence")
+                }
+                addOnFailureListener {
+                    logger.d("Error adding moving bubble geofence | message = ${it.message}")
+                }
+            }
         }
     }
 
@@ -327,7 +341,7 @@ internal class RadarLocationManager(
                     .build()
                 geofences.add(geofence)
 
-                logger.d("Synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius; identifier = $identifier")
+                logger.d("Adding synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius; identifier = $identifier")
             }
         }
 
@@ -336,7 +350,14 @@ internal class RadarLocationManager(
             .setInitialTrigger(0)
             .build()
 
-        geofencingClient.addGeofences(request, RadarLocationReceiver.getSyncedGeofencesPendingIntent(context))
+        geofencingClient.addGeofences(request, RadarLocationReceiver.getSyncedGeofencesPendingIntent(context)).run {
+            addOnSuccessListener {
+                logger.d("Successfully added synced geofences")
+            }
+            addOnFailureListener {
+                logger.d("Error adding synced geofences | message = ${it.message}")
+            }
+        }
     }
 
     private fun removeBubbleGeofences() {
