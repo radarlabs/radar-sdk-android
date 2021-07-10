@@ -283,12 +283,12 @@ internal class RadarLocationManager(
                 .setCircularRegion(location.latitude, location.longitude, radius)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setLoiteringDelay(options.stopDuration * 1000 + 10000)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL or Geofence.GEOFENCE_TRANSITION_EXIT)
                 .build()
 
             val request = GeofencingRequest.Builder()
                 .addGeofence(geofence)
-                .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_DWELL)
+                .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_DWELL or Geofence.GEOFENCE_TRANSITION_EXIT)
                 .build()
 
             geofencingClient.addGeofences(request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
