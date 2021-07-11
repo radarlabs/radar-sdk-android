@@ -101,7 +101,7 @@ internal class RadarLocationManager(
             if (location == null) {
                 logger.d("Location timeout")
 
-                callback?.onComplete(RadarStatus.ERROR_LOCATION)
+                callCallbacks(RadarStatus.ERROR_LOCATION)
             } else {
                 logger.d("Successfully requested location")
 
@@ -112,7 +112,7 @@ internal class RadarLocationManager(
         }.addOnCanceledListener {
             logger.d("Location request canceled")
 
-            callback?.onComplete(RadarStatus.ERROR_LOCATION)
+            callCallbacks(RadarStatus.ERROR_LOCATION)
         }
     }
 
