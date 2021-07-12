@@ -7,7 +7,6 @@ import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.Handler
-import android.os.Looper
 import android.os.SystemClock
 import com.google.android.gms.location.*
 import io.radar.sdk.Radar.RadarLocationCallback
