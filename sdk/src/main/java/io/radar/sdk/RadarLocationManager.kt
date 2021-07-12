@@ -37,7 +37,6 @@ internal class RadarLocationManager(
     private var startedInterval = 0
     private var startedFastestInterval = 0
     private val callbacks = ArrayList<RadarLocationCallback>()
-    private val handler = Handler(Looper.getMainLooper())
 
     internal companion object {
         private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
@@ -398,8 +397,6 @@ internal class RadarLocationManager(
 
             return
         }
-
-        handler.removeCallbacksAndMessages(TIMEOUT_TOKEN)
 
         var distance = Float.MAX_VALUE
         val duration: Long
