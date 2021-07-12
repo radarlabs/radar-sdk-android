@@ -25,7 +25,7 @@ internal open class RadarApiHelper(
                          headers: Map<String, String>?,
                          params: JSONObject?,
                          callback: RadarApiCallback? = null) {
-        logger?.d("📍 Radar API request | method = ${method}; url = ${url}; headers = ${headers}; $params = $params")
+        logger?.d("📍 Radar API request | method = ${method}; url = ${url}; headers = ${headers}; params = $params")
 
         DoAsync {
             try {
