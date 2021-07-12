@@ -14,8 +14,10 @@
             android:enabled="true"
             android:exported="false">
             <intent-filter android:priority="999">
-                <action android:name="io.radar.sdk.LocationReceiver.GEOFENCE_TRANSITIONED" />
-                <action android:name="io.radar.sdk.LocationReceiver.LOCATIONS_RECEIVED" />
+                <action android:name="io.radar.sdk.LocationReceiver.SYNCED_GEOFENCES" />
+                <action android:name="io.radar.sdk.LocationReceiver.GEOFENCE" />
+                <action android:name="io.radar.sdk.LocationReceiver.LOCATION" />
+                <action android:name="io.radar.sdk.LocationReceiver.BEACONS" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
