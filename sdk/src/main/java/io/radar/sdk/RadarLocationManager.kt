@@ -111,17 +111,21 @@ internal class RadarLocationManager(
         }
     }
 
-    fun startTracking(options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT) {
+    fun startTracking(
+        options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT,
+        listenToServer: Boolean = false
+    ) {
         this.stopLocationUpdates()
 
         if (!permissionsHelper.fineLocationPermissionGranted(context) && !permissionsHelper.coarseLocationPermissionGranted(context)) {
             Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
-
             return
         }
 
         RadarSettings.setTracking(context, true)
+        RadarSettings.setServerTrackingOptions(context, listenToServer)
         RadarSettings.setTrackingOptions(context, options)
+
         this.updateTracking()
     }
 
@@ -526,7 +530,14 @@ internal class RadarLocationManager(
 
         val callTrackApi = { nearbyBeacons: Array<String>? ->
             this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, nearbyBeacons, object : RadarTrackApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
+                override fun onComplete(
+                    status: RadarStatus,
+                    res: JSONObject?,
+                    events: Array<RadarEvent>?,
+                    user: RadarUser?,
+                    nearbyGeofences: Array<RadarGeofence>?,
+                    trackingOptions: RadarTrackingOptions?
+                ) {
                     if (user != null) {
                         val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
                         val atPlace = user.place != null
@@ -540,6 +551,11 @@ internal class RadarLocationManager(
 
                     if (foregroundService != null && foregroundService.updatesOnly) {
                         locationManager.stopForegroundService()
+                    }
+
+                    if (trackingOptions != null && RadarSettings.getServerTrackingOptions(context)) {
+                        RadarSettings.setTrackingOptions(context, trackingOptions)
+                        updateTracking()
                     }
                 }
             })

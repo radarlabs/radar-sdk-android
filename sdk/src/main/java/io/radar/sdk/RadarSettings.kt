@@ -18,6 +18,7 @@ internal object RadarSettings {
     private const val KEY_METADATA = "user_metadata"
     private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
     private const val KEY_TRACKING = "background_tracking"
+    private const val KEY_SERVER_TRACKING = "server_tracking_options"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
     private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
@@ -116,6 +117,14 @@ internal object RadarSettings {
 
     internal fun setTracking(context: Context, tracking: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_TRACKING, tracking) }
+    }
+
+    internal fun getServerTrackingOptions(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_SERVER_TRACKING, false)
+    }
+
+    internal fun setServerTrackingOptions(context: Context, tracking: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_SERVER_TRACKING, tracking) }
     }
 
     internal fun getTrackingOptions(context: Context): RadarTrackingOptions {

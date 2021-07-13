@@ -754,6 +754,38 @@ object Radar {
     }
 
     /**
+     * Starts tracking the user's location in the background using Radar dashboard settings.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#background-tracking-for-geofencing)
+     */
+    @JvmStatic
+    fun startTracking() {
+        if (!initialized) {
+            return
+        }
+
+        apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                trackingOptions: RadarTrackingOptions?
+            ) {
+                if (status != RadarStatus.SUCCESS) {
+                    broadcastErrorIntent(status)
+                    return
+                }
+
+                if (trackingOptions != null) {
+                    locationManager.startTracking(
+                        trackingOptions,
+                        listenToServer = true
+                    )
+                }
+            }
+        })
+    }
+
+    /**
      * Mocks tracking the user's location from an origin to a destination.
      *
      * @see [](https://radar.io/documentation/sdk/android#mock-tracking-for-testing)

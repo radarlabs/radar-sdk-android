@@ -22,7 +22,18 @@ internal class RadarApiClient(
 ) {
 
     interface RadarTrackApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, events: Array<RadarEvent>? = null, user: RadarUser? = null, nearbyGeofences: Array<RadarGeofence>? = null)
+        fun onComplete(
+            status: RadarStatus,
+            res: JSONObject? = null,
+            events: Array<RadarEvent>? = null,
+            user: RadarUser? = null,
+            nearbyGeofences: Array<RadarGeofence>? = null,
+            trackingOptions: RadarTrackingOptions? = null,
+        )
+    }
+
+    interface RadarGetConfigApiCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject?, trackingOptions: RadarTrackingOptions?)
     }
 
     interface RadarTripApiCallback {
@@ -74,7 +85,27 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun getConfig() {
+    private fun parseMeta(res: JSONObject?): RadarTrackingOptions? {
+        var meta: JSONObject? = null
+        if (res?.has("meta") == true) {
+            meta = res.getJSONObject("meta")
+        }
+
+        if (meta?.has("config") == true) {
+            val config = meta.getJSONObject("config")
+            RadarSettings.setConfig(context, config)
+        }
+
+        var trackingOptions: RadarTrackingOptions? = null
+        if (meta?.has("trackingOptions") == true) {
+            val rawOptions = meta.getJSONObject("trackingOptions")
+            trackingOptions = RadarTrackingOptions.fromJson(rawOptions)
+        }
+
+        return trackingOptions
+    }
+
+    internal fun getConfig(callback: RadarGetConfigApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
         val queryParams = StringBuilder()
@@ -93,13 +124,8 @@ internal class RadarApiClient(
 
         apiHelper.request(context, "GET", url, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                if (res != null && res.has("meta")) {
-                    val meta = res.getJSONObject("meta")
-                    if (meta.has("config")) {
-                        val config = meta.getJSONObject("config")
-                        RadarSettings.setConfig(context, config)
-                    }
-                }
+                val trackingOptions = parseMeta(res)
+                callback?.onComplete(status, res, trackingOptions)
             }
         })
     }
@@ -108,7 +134,6 @@ internal class RadarApiClient(
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
             return
         }
 
@@ -213,13 +238,7 @@ internal class RadarApiClient(
 
                 RadarState.setLastFailedStoppedLocation(context, null)
 
-                if (res.has("meta")) {
-                    val meta = res.getJSONObject("meta")
-                    if (meta.has("config")) {
-                        val config = meta.getJSONObject("config")
-                        RadarSettings.setConfig(context, config)
-                    }
-                }
+                val trackingOptions = parseMeta(res)
 
                 val events = res.optJSONArray("events")?.let { eventsArr ->
                     RadarEvent.fromJson(eventsArr)
@@ -243,7 +262,14 @@ internal class RadarApiClient(
                         Radar.sendEvents(events, user)
                     }
 
-                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
+                    callback?.onComplete(
+                        RadarStatus.SUCCESS,
+                        res,
+                        events,
+                        user,
+                        nearbyGeofences,
+                        trackingOptions
+                    )
 
                     return
                 }
