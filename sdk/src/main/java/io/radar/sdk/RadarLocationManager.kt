@@ -126,7 +126,7 @@ internal class RadarLocationManager(
         }
 
         RadarSettings.setTracking(context, true)
-        RadarSettings.setServerTrackingOptions(context, listenToServer)
+        RadarSettings.setListenToServerTrackingOptions(context, listenToServer)
         RadarSettings.setTrackingOptions(context, options)
 
         this.updateTracking()
@@ -550,7 +550,7 @@ internal class RadarLocationManager(
                         locationManager.stopForegroundService()
                     }
 
-                    if (trackingOptions != null && RadarSettings.getServerTrackingOptions(context)) {
+                    if (trackingOptions != null && RadarSettings.getListenToServerTrackingOptions(context)) {
                         RadarSettings.setTrackingOptions(context, trackingOptions)
                         updateTracking()
                     }
