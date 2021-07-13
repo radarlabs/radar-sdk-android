@@ -620,7 +620,14 @@ object Radar {
 
                 val callTrackApi = { nearbyBeacons: Array<String>? ->
                     apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, nearbyBeacons, object : RadarApiClient.RadarTrackApiCallback {
-                        override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
+                        override fun onComplete(
+                            status: RadarStatus,
+                            res: JSONObject?,
+                            events: Array<RadarEvent>?,
+                            user: RadarUser?,
+                            nearbyGeofences: Array<RadarGeofence>?,
+                            trackingOptions: RadarTrackingOptions?,
+                        ) {
                             callback?.onComplete(status, location, events, user)
                         }
                     })
@@ -690,7 +697,14 @@ object Radar {
         }
 
         apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                events: Array<RadarEvent>?,
+                user: RadarUser?,
+                nearbyGeofences: Array<RadarGeofence>?,
+                trackingOptions: RadarTrackingOptions?,
+            ) {
                 callback?.onComplete(status, location, events, user)
             }
         })
@@ -827,7 +841,14 @@ object Radar {
                         val stopped = (i == 0) || (i == coordinates.size - 1)
 
                         apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
-                            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
+                            override fun onComplete(
+                                status: RadarStatus,
+                                res: JSONObject?,
+                                events: Array<RadarEvent>?,
+                                user: RadarUser?,
+                                nearbyGeofences: Array<RadarGeofence>?,
+                                trackingOptions: RadarTrackingOptions?,
+                            ) {
                                 callback?.onComplete(status, location, events, user)
 
                                 if (i < coordinates.size - 1) {
