@@ -24,26 +24,21 @@ class RadarForegroundService : Service() {
 
         if (intent != null) {
             if (intent.action == "start") {
-                if (started) {
-                    logger.d("Foreground service already started")
-                } else {
-                    try {
-                        startForegroundService(intent.extras)
-                        started = true
-                    } catch (e: Exception) {
-                        logger.e("Error starting foreground service", e)
-                    }
+                try {
+                    startForegroundService(intent.extras)
+                } catch (e: Exception) {
+                    logger.e("Error starting foreground service", e)
                 }
             } else if (intent.action == "stop") {
                 try {
                     stopForeground(true)
                     stopSelf()
-                    started = false
                 } catch (e: Exception) {
                     logger.e("Error stopping foreground service", e)
                 }
             }
         }
+
         return START_STICKY
     }
 

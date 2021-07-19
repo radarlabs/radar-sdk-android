@@ -108,13 +108,26 @@ internal class RadarBeaconManager(
         val scanFilters = mutableListOf<ScanFilter>()
 
         for (beacon in beacons) {
-            logger.d("Building scan filter for monitoring | _id = ${beacon._id}")
+            var scanFilter: ScanFilter? = null
+            try {
+                logger.d("Building scan filter for monitoring | _id = ${beacon._id}")
 
-            RadarBeaconUtils.getScanFilter(beacon)?.let { scanFilter ->
+                scanFilter = RadarBeaconUtils.getScanFilter(beacon)
+            } catch (e: Exception) {
+                logger.d("Error building scan filter for monitoring | _id = ${beacon._id}", e)
+            }
+
+            if (scanFilter != null) {
                 logger.d("Starting monitoring beacon | _id = ${beacon._id}; uuid = ${beacon.uuid}; major = ${beacon.major}; minor = ${beacon.minor}")
 
                 scanFilters.add(scanFilter)
             }
+        }
+
+        if (scanFilters.size == 0) {
+            logger.d("No scan filters for monitoring")
+
+            return
         }
 
         val scanSettings = ScanSettings.Builder()
@@ -212,13 +225,28 @@ internal class RadarBeaconManager(
         val scanFilters = mutableListOf<ScanFilter>()
 
         for (beacon in beacons) {
-            logger.d("Building scan filter for ranging | _id = ${beacon._id}")
+            var scanFilter: ScanFilter? = null
+            try {
+                logger.d("Building scan filter for ranging | _id = ${beacon._id}")
 
-            RadarBeaconUtils.getScanFilter(beacon)?.let { scanFilter ->
+                scanFilter = RadarBeaconUtils.getScanFilter(beacon)
+            } catch (e: Exception) {
+                logger.d("Error building scan filter for ranging | _id = ${beacon._id}", e)
+            }
+
+            if (scanFilter != null) {
                 logger.d("Starting ranging beacon | _id = ${beacon._id}; uuid = ${beacon.uuid}; major = ${beacon.major}; minor = ${beacon.minor}")
 
                 scanFilters.add(scanFilter)
             }
+        }
+
+        if (scanFilters.size == 0) {
+            logger.d("No scan filters for ranging")
+
+            this.callCallbacks()
+
+            return
         }
 
         val scanSettings = ScanSettings.Builder()

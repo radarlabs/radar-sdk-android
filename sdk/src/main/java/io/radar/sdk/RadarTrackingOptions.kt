@@ -326,7 +326,7 @@ data class RadarTrackingOptions(
     companion object {
 
         /**
-         * Updates about every 30 seconds while moving or stopped. Uses a foreground service. Moderate battery usage.
+         * Updates about every 30 seconds while moving or stopped. Should be used with a foreground service. Moderate battery usage.
          */
         @JvmField
         val CONTINUOUS = RadarTrackingOptions(
