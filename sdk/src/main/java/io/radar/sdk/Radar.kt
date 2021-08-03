@@ -1415,6 +1415,7 @@ object Radar {
      *
      * @param[query] The partial address or place name to autocomplete.
      * @param[near] A location for the search.
+     * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -1422,6 +1423,7 @@ object Radar {
     fun autocomplete(
         query: String,
         near: Location,
+        layers: Array<String>?,
         limit: Int,
         callback: RadarGeocodeCallback
     ) {
@@ -1431,7 +1433,7 @@ object Radar {
             return
         }
 
-        apiClient.autocomplete(query, near, limit, object : RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.autocomplete(query, near, layers, limit, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 callback.onComplete(status, addresses)
             }

@@ -970,11 +970,13 @@ class RadarTest {
         near.latitude = 40.78382
         near.longitude = -73.97536
 
+        val layers: Array<String>? = null
+
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
         var callbackAddresses: Array<RadarAddress>? = null
 
-        Radar.autocomplete("brooklyn roasting", near, 10) { status, addresses ->
+        Radar.autocomplete("brooklyn roasting", near, layers, 10) { status, addresses ->
             callbackStatus = status
             callbackAddresses = addresses
             latch.countDown()

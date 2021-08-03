@@ -527,6 +527,7 @@ internal class RadarApiClient(
     internal fun autocomplete(
         query: String,
         near: Location,
+        layers: Array<String>?,
         limit: Int,
         callback: RadarGeocodeApiCallback
     ) {
@@ -541,6 +542,9 @@ internal class RadarApiClient(
         queryParams.append("query=${query}")
         queryParams.append("&near=${near.latitude},${near.longitude}")
         queryParams.append("&limit=${limit}")
+        if (layers?.isNotEmpty() == true) {
+            queryParams.append("&layers=${layers.joinToString(separator = ",")}")
+        }
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
