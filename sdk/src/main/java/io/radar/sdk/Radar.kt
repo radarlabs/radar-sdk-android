@@ -1417,6 +1417,7 @@ object Radar {
      * @param[near] A location for the search.
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
+     * @param[country] An optional country filter. A string, the unique 2-letter country code.
      * @param[callback] A callback.
      */
     @JvmStatic
@@ -1449,11 +1450,12 @@ object Radar {
      * @param[query] The partial address or place name to autocomplete.
      * @param[near] A location for the search.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
+     * @param[country] An optional country filter. A string, the unique 2-letter country code.
      * @param[block] A block callback.
      */
     fun autocomplete(
         query: String,
-        near: Location,
+        near: Location?,
         layers: Array<String>?,
         limit: Int?,
         country: String?,
