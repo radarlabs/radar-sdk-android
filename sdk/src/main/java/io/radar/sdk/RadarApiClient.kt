@@ -526,9 +526,10 @@ internal class RadarApiClient(
 
     internal fun autocomplete(
         query: String,
-        near: Location,
+        near: Location?,
         layers: Array<String>?,
-        limit: Int,
+        limit: Int?,
+        country: String?,
         callback: RadarGeocodeApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -542,6 +543,7 @@ internal class RadarApiClient(
         queryParams.append("query=${query}")
         queryParams.append("&near=${near.latitude},${near.longitude}")
         queryParams.append("&limit=${limit}")
+        queryParams.append("&country=${country}")
         if (layers?.isNotEmpty() == true) {
             queryParams.append("&layers=${layers.joinToString(separator = ",")}")
         }

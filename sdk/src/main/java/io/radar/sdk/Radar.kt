@@ -1422,9 +1422,10 @@ object Radar {
     @JvmStatic
     fun autocomplete(
         query: String,
-        near: Location,
+        near: Location?,
         layers: Array<String>?,
-        limit: Int,
+        limit: Int?,
+        country: String?,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -1433,7 +1434,7 @@ object Radar {
             return
         }
 
-        apiClient.autocomplete(query, near, layers, limit, object : RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.autocomplete(query, near, layers, limit, country, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 callback.onComplete(status, addresses)
             }
@@ -1453,12 +1454,15 @@ object Radar {
     fun autocomplete(
         query: String,
         near: Location,
-        limit: Int,
+        layers: Array<String>?,
+        limit: Int?,
+        country: String?,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         autocomplete(
             query,
             near,
+            layers,
             limit,
             object : RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
