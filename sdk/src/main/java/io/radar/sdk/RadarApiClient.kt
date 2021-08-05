@@ -527,8 +527,8 @@ internal class RadarApiClient(
     internal fun autocomplete(
         query: String,
         near: Location? = null,
-        layers: Array<String>? = null,
         limit: Int? = null,
+        layers: Array<String>? = null,
         country: String? = null,
         callback: RadarGeocodeApiCallback
     ) {
