@@ -1466,6 +1466,7 @@ object Radar {
             near,
             layers,
             limit,
+            country,
             object : RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
