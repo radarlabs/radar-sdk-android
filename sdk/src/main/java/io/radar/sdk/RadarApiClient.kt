@@ -541,8 +541,8 @@ internal class RadarApiClient(
 
         val queryParams = StringBuilder()
         queryParams.append("query=${query}")
-        if (near) {
-            queryParams.append("&near=${near.latitude},${near.longitude}")
+        if (near != null) {
+            queryParams.append("&near=${near?.latitude},${near?.longitude}")
         }
         queryParams.append("&limit=${limit}")
         queryParams.append("&country=${country}")
