@@ -526,10 +526,10 @@ internal class RadarApiClient(
 
     internal fun autocomplete(
         query: String,
-        near: Location?,
-        layers: Array<String>?,
-        limit: Int?,
-        country: String?,
+        near: Location? = null,
+        layers: Array<String>? = null,
+        limit: Int? = null,
+        country: String? = null,
         callback: RadarGeocodeApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
