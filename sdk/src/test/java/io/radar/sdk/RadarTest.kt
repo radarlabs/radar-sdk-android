@@ -974,7 +974,7 @@ class RadarTest {
         var callbackStatus: Radar.RadarStatus? = null
         var callbackAddresses: Array<RadarAddress>? = null
 
-        Radar.autocomplete("brooklyn roasting", near, 10) { status, addresses ->
+        Radar.autocomplete("brooklyn roasting", near, null, 10, null) { status, addresses ->
             callbackStatus = status
             callbackAddresses = addresses
             latch.countDown()

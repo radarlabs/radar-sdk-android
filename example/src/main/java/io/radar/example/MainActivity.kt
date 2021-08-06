@@ -85,9 +85,11 @@ class MainActivity : AppCompatActivity() {
         destination.longitude = -73.98670
 
         Radar.autocomplete(
-            "brooklyn roasting",
+            "brooklyn",
             origin,
-            10
+            arrayOf("locality"),
+            10,
+            "US"
         ) { status, addresses ->
             Log.v("example", "Autocomplete: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
         }
