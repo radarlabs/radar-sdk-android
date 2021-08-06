@@ -653,7 +653,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                         <tr id="i43" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
-                                            <th class="colSecond" scope="row"><code><a href=Radar.html#autocomplete(String,Location,Integer,Radar.RadarGeocodeCallback)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=Radar.RadarGeocodeCallback.html>Radar.RadarGeocodeCallback</a> callback) </code>
+                                            <th class="colSecond" scope="row"><code><a href=Radar.html#autocomplete(String,Location,Array,Integer,String,Radar.RadarGeocodeCallback)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a>&gt; layers, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> country, <a href=Radar.RadarGeocodeCallback.html>Radar.RadarGeocodeCallback</a> callback) </code>
                                             </th>
                                             <td class="colLast">Autocompletes partial addresses and place names, sorted by relevance.</td>
                                         </tr>
@@ -661,7 +661,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                         <tr id="i44" class="altColor">
                                             <td class="colFirst"><code>final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
-                                            <th class="colSecond" scope="row"><code><a href=Radar.html#autocomplete(String,Location,Integer,Function2)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
+                                            <th class="colSecond" scope="row"><code><a href=Radar.html#autocomplete(String,Location,Integer,Array,String,Function2)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a>&gt; layers, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> country, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
                                             </th>
                                             <td class="colLast">Autocompletes partial addresses and place names, sorted by relevance.</td>
                                         </tr>
@@ -2116,7 +2116,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                     </li>
                                 </ul>
                                 
-                                <a id="autocomplete(String,Location,Integer,Radar.RadarGeocodeCallback)">
+                                <a id="autocomplete(String,Location,Array,Integer,String,Radar.RadarGeocodeCallback)">
                                     <!--   -->
                                 </a>
                                 <ul class=
@@ -2124,7 +2124,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                           >
                                     <li class="blockList">
                                         <h4>autocomplete</h4>
-                                        <pre class="methodSignature"> final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=Radar.html#autocomplete(String,Location,Integer,Radar.RadarGeocodeCallback)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=Radar.RadarGeocodeCallback.html>Radar.RadarGeocodeCallback</a> callback)</pre>
+                                        <pre class="methodSignature"> final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=Radar.html#autocomplete(String,Location,Array,Integer,String,Radar.RadarGeocodeCallback)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a>&gt; layers, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> country, <a href=Radar.RadarGeocodeCallback.html>Radar.RadarGeocodeCallback</a> callback)</pre>
                                         <div class="block"><p>Autocompletes partial addresses and place names, sorted by relevance.</p></div>
                                         
                                         <dl>
@@ -2139,7 +2139,15 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             
                                             
                                             
+                                            <dd><code>layers</code> - Optional layer filters.</dd>
+                                            
+                                            
+                                            
                                             <dd><code>limit</code> - The max number of addresses to return.</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>country</code> - An optional country filter.</dd>
                                             
                                             
                                             
@@ -2152,7 +2160,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                     </li>
                                 </ul>
                                 
-                                <a id="autocomplete(String,Location,Integer,Function2)">
+                                <a id="autocomplete(String,Location,Integer,Array,String,Function2)">
                                     <!--   -->
                                 </a>
                                 <ul class=
@@ -2160,7 +2168,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                           >
                                     <li class="blockList">
                                         <h4>autocomplete</h4>
-                                        <pre class="methodSignature"> final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=Radar.html#autocomplete(String,Location,Integer,Function2)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block)</pre>
+                                        <pre class="methodSignature"> final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=Radar.html#autocomplete(String,Location,Integer,Array,String,Function2)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a>&gt; layers, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> country, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block)</pre>
                                         <div class="block"><p>Autocompletes partial addresses and place names, sorted by relevance.</p></div>
                                         
                                         <dl>
@@ -2176,6 +2184,14 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             
                                             
                                             <dd><code>limit</code> - The max number of addresses to return.</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>layers</code> - Optional layer filters.</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>country</code> - An optional country filter.</dd>
                                             
                                             
                                             
