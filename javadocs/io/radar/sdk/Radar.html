@@ -653,7 +653,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                         <tr id="i43" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
-                                            <th class="colSecond" scope="row"><code><a href=Radar.html#autocomplete(String,Location,Array,Integer,String,Radar.RadarGeocodeCallback)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a>&gt; layers, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> country, <a href=Radar.RadarGeocodeCallback.html>Radar.RadarGeocodeCallback</a> callback) </code>
+                                            <th class="colSecond" scope="row"><code><a href=Radar.html#autocomplete(String,Location,Integer,Radar.RadarGeocodeCallback)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=Radar.RadarGeocodeCallback.html>Radar.RadarGeocodeCallback</a> callback) </code>
                                             </th>
                                             <td class="colLast">Autocompletes partial addresses and place names, sorted by relevance.</td>
                                         </tr>
@@ -661,7 +661,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                         <tr id="i44" class="altColor">
                                             <td class="colFirst"><code>final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
-                                            <th class="colSecond" scope="row"><code><a href=Radar.html#autocomplete(String,Location,Integer,Array,String,Function2)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a>&gt; layers, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> country, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
+                                            <th class="colSecond" scope="row"><code><a href=Radar.html#autocomplete(String,Location,Integer,Function2)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
                                             </th>
                                             <td class="colLast">Autocompletes partial addresses and place names, sorted by relevance.</td>
                                         </tr>
@@ -669,12 +669,28 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                         <tr id="i45" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
+                                            <th class="colSecond" scope="row"><code><a href=Radar.html#autocomplete(String,Location,Array,Integer,String,Radar.RadarGeocodeCallback)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a>&gt; layers, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> country, <a href=Radar.RadarGeocodeCallback.html>Radar.RadarGeocodeCallback</a> callback) </code>
+                                            </th>
+                                            <td class="colLast">Autocompletes partial addresses and place names, sorted by relevance.</td>
+                                        </tr>
+                                        
+                                        <tr id="i46" class="altColor">
+                                            <td class="colFirst"><code>final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
+                                            </td>
+                                            <th class="colSecond" scope="row"><code><a href=Radar.html#autocomplete(String,Location,Array,Integer,String,Function2)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a>&gt; layers, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> country, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
+                                            </th>
+                                            <td class="colLast">Autocompletes partial addresses and place names, sorted by relevance.</td>
+                                        </tr>
+                                        
+                                        <tr id="i47" class="rowColor">
+                                            <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
+                                            </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#geocode(String,Radar.RadarGeocodeCallback)>geocode</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=Radar.RadarGeocodeCallback.html>Radar.RadarGeocodeCallback</a> callback) </code>
                                             </th>
                                             <td class="colLast">Geocodes an address, converting address to coordinates.</td>
                                         </tr>
                                         
-                                        <tr id="i46" class="altColor">
+                                        <tr id="i48" class="altColor">
                                             <td class="colFirst"><code>final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#geocode(String,Function2)>geocode</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
@@ -682,7 +698,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Geocodes an address, converting address to coordinates.</td>
                                         </tr>
                                         
-                                        <tr id="i47" class="rowColor">
+                                        <tr id="i49" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#reverseGeocode(Radar.RadarGeocodeCallback)>reverseGeocode</a>(<a href=Radar.RadarGeocodeCallback.html>Radar.RadarGeocodeCallback</a> callback) </code>
@@ -690,7 +706,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Gets the device's current location, then reverse geocodes that location, converting coordinates to address.</td>
                                         </tr>
                                         
-                                        <tr id="i48" class="altColor">
+                                        <tr id="i50" class="altColor">
                                             <td class="colFirst"><code>final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#reverseGeocode(Function2)>reverseGeocode</a>(Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
@@ -698,7 +714,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Gets the device's current location, then reverse geocodes that location, converting coordinates to address.</td>
                                         </tr>
                                         
-                                        <tr id="i49" class="rowColor">
+                                        <tr id="i51" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#reverseGeocode(Location,Radar.RadarGeocodeCallback)>reverseGeocode</a>(<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> location, <a href=Radar.RadarGeocodeCallback.html>Radar.RadarGeocodeCallback</a> callback) </code>
@@ -706,7 +722,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Reverse geocodes a location, converting coordinates to address.</td>
                                         </tr>
                                         
-                                        <tr id="i50" class="altColor">
+                                        <tr id="i52" class="altColor">
                                             <td class="colFirst"><code>final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#reverseGeocode(Location,Function2)>reverseGeocode</a>(<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> location, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
@@ -714,7 +730,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Reverse geocodes a location, converting coordinates to address.</td>
                                         </tr>
                                         
-                                        <tr id="i51" class="rowColor">
+                                        <tr id="i53" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#ipGeocode(Radar.RadarIpGeocodeCallback)>ipGeocode</a>(<a href=Radar.RadarIpGeocodeCallback.html>Radar.RadarIpGeocodeCallback</a> callback) </code>
@@ -722,7 +738,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Geocodes the device's current IP address, converting IP address to partial address.</td>
                                         </tr>
                                         
-                                        <tr id="i52" class="altColor">
+                                        <tr id="i54" class="altColor">
                                             <td class="colFirst"><code>final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#ipGeocode(Function3)>ipGeocode</a>(Function3&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=model/RadarAddress.html>RadarAddress</a>, <a href=https://developer.android.com/reference/kotlin/java/lang/Boolean.html>Boolean</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
@@ -730,7 +746,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Geocodes the device's current IP address, converting IP address to partial address.</td>
                                         </tr>
                                         
-                                        <tr id="i53" class="rowColor">
+                                        <tr id="i55" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#getDistance(Location,EnumSet,Radar.RadarRouteUnits,Radar.RadarRouteCallback)>getDistance</a>(<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> destination, <a href=https://developer.android.com/reference/kotlin/java/util/EnumSet.html>EnumSet</a>&lt;<a href=Radar.RadarRouteMode.html>Radar.RadarRouteMode</a>&gt; modes, <a href=Radar.RadarRouteUnits.html>Radar.RadarRouteUnits</a> units, <a href=Radar.RadarRouteCallback.html>Radar.RadarRouteCallback</a> callback) </code>
@@ -738,7 +754,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Gets the device's current location, then calculates the travel distance and duration to a destination.</td>
                                         </tr>
                                         
-                                        <tr id="i54" class="altColor">
+                                        <tr id="i56" class="altColor">
                                             <td class="colFirst"><code>final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#getDistance(Location,EnumSet,Radar.RadarRouteUnits,Function2)>getDistance</a>(<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> destination, <a href=https://developer.android.com/reference/kotlin/java/util/EnumSet.html>EnumSet</a>&lt;<a href=Radar.RadarRouteMode.html>Radar.RadarRouteMode</a>&gt; modes, <a href=Radar.RadarRouteUnits.html>Radar.RadarRouteUnits</a> units, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=model/RadarRoutes.html>RadarRoutes</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
@@ -746,7 +762,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Gets the device's current location, then calculates the travel distance and duration to a destination.</td>
                                         </tr>
                                         
-                                        <tr id="i55" class="rowColor">
+                                        <tr id="i57" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#getDistance(Location,Location,EnumSet,Radar.RadarRouteUnits,Radar.RadarRouteCallback)>getDistance</a>(<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> origin, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> destination, <a href=https://developer.android.com/reference/kotlin/java/util/EnumSet.html>EnumSet</a>&lt;<a href=Radar.RadarRouteMode.html>Radar.RadarRouteMode</a>&gt; modes, <a href=Radar.RadarRouteUnits.html>Radar.RadarRouteUnits</a> units, <a href=Radar.RadarRouteCallback.html>Radar.RadarRouteCallback</a> callback) </code>
@@ -754,7 +770,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Calculates the travel distance and duration from an origin to a destination.</td>
                                         </tr>
                                         
-                                        <tr id="i56" class="altColor">
+                                        <tr id="i58" class="altColor">
                                             <td class="colFirst"><code>final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#getDistance(Location,Location,EnumSet,Radar.RadarRouteUnits,Function2)>getDistance</a>(<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> origin, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> destination, <a href=https://developer.android.com/reference/kotlin/java/util/EnumSet.html>EnumSet</a>&lt;<a href=Radar.RadarRouteMode.html>Radar.RadarRouteMode</a>&gt; modes, <a href=Radar.RadarRouteUnits.html>Radar.RadarRouteUnits</a> units, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=model/RadarRoutes.html>RadarRoutes</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
@@ -762,7 +778,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Calculates the travel distance and duration from an origin to a destination.</td>
                                         </tr>
                                         
-                                        <tr id="i57" class="rowColor">
+                                        <tr id="i59" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#getMatrix(Array,Array,Radar.RadarRouteMode,Radar.RadarRouteUnits,Radar.RadarMatrixCallback)>getMatrix</a>(<a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a>&gt; origins, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a>&gt; destinations, <a href=Radar.RadarRouteMode.html>Radar.RadarRouteMode</a> mode, <a href=Radar.RadarRouteUnits.html>Radar.RadarRouteUnits</a> units, <a href=Radar.RadarMatrixCallback.html>Radar.RadarMatrixCallback</a> callback) </code>
@@ -770,7 +786,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Calculates the travel distances and durations between multiple origins and destinations for up to 25 routes.</td>
                                         </tr>
                                         
-                                        <tr id="i58" class="altColor">
+                                        <tr id="i60" class="altColor">
                                             <td class="colFirst"><code>final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#getMatrix(Array,Array,Radar.RadarRouteMode,Radar.RadarRouteUnits,Function2)>getMatrix</a>(<a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a>&gt; origins, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a>&gt; destinations, <a href=Radar.RadarRouteMode.html>Radar.RadarRouteMode</a> mode, <a href=Radar.RadarRouteUnits.html>Radar.RadarRouteUnits</a> units, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=model/RadarRouteMatrix.html>RadarRouteMatrix</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
@@ -778,7 +794,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Calculates the travel distances and durations between multiple origins and destinations for up to 25 routes.</td>
                                         </tr>
                                         
-                                        <tr id="i59" class="rowColor">
+                                        <tr id="i61" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#getContext(Radar.RadarContextCallback)>getContext</a>(<a href=Radar.RadarContextCallback.html>Radar.RadarContextCallback</a> callback) </code>
@@ -786,7 +802,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Gets the device's current location, then gets context for that location without sending device or user identifiers to the server.</td>
                                         </tr>
                                         
-                                        <tr id="i60" class="altColor">
+                                        <tr id="i62" class="altColor">
                                             <td class="colFirst"><code>final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#getContext(Function3)>getContext</a>(Function3&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a>, <a href=model/RadarContext.html>RadarContext</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
@@ -794,7 +810,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Gets the device's current location, then gets context for that location without sending device or user identifiers to the server.</td>
                                         </tr>
                                         
-                                        <tr id="i61" class="rowColor">
+                                        <tr id="i63" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#getContext(Location,Radar.RadarContextCallback)>getContext</a>(<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> location, <a href=Radar.RadarContextCallback.html>Radar.RadarContextCallback</a> callback) </code>
@@ -802,7 +818,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Gets context for a location without sending device or user identifiers to the server.</td>
                                         </tr>
                                         
-                                        <tr id="i62" class="altColor">
+                                        <tr id="i64" class="altColor">
                                             <td class="colFirst"><code>final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#getContext(Location,Function3)>getContext</a>(<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> location, Function3&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a>, <a href=model/RadarContext.html>RadarContext</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block) </code>
@@ -810,7 +826,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Gets context for a location without sending device or user identifiers to the server.</td>
                                         </tr>
                                         
-                                        <tr id="i63" class="rowColor">
+                                        <tr id="i65" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#setLogLevel(Radar.RadarLogLevel)>setLogLevel</a>(<a href=Radar.RadarLogLevel.html>Radar.RadarLogLevel</a> level) </code>
@@ -818,7 +834,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Sets the log level for debug logs.</td>
                                         </tr>
                                         
-                                        <tr id="i64" class="altColor">
+                                        <tr id="i66" class="altColor">
                                             <td class="colFirst"><code>final static <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#stringForSource(Radar.RadarLocationSource)>stringForSource</a>(<a href=Radar.RadarLocationSource.html>Radar.RadarLocationSource</a> source) </code>
@@ -826,7 +842,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Returns a display string for a location source value.</td>
                                         </tr>
                                         
-                                        <tr id="i65" class="rowColor">
+                                        <tr id="i67" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#stringForMode(Radar.RadarRouteMode)>stringForMode</a>(<a href=Radar.RadarRouteMode.html>Radar.RadarRouteMode</a> mode) </code>
@@ -834,7 +850,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Returns a display string for a travel mode value.</td>
                                         </tr>
                                         
-                                        <tr id="i66" class="altColor">
+                                        <tr id="i68" class="altColor">
                                             <td class="colFirst"><code>final static <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#stringForTripStatus(RadarTrip.RadarTripStatus)>stringForTripStatus</a>(<a href=model/RadarTrip.RadarTripStatus.html>RadarTrip.RadarTripStatus</a> status) </code>
@@ -842,7 +858,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             <td class="colLast">Returns a display string for a trip status value.</td>
                                         </tr>
                                         
-                                        <tr id="i67" class="rowColor">
+                                        <tr id="i69" class="rowColor">
                                             <td class="colFirst"><code>final static <a href=https://developer.android.com/reference/kotlin/org/json/JSONObject.html>JSONObject</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=Radar.html#jsonForLocation(Location)>jsonForLocation</a>(<a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> location) </code>
@@ -2116,6 +2132,78 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                     </li>
                                 </ul>
                                 
+                                <a id="autocomplete(String,Location,Integer,Radar.RadarGeocodeCallback)">
+                                    <!--   -->
+                                </a>
+                                <ul class=
+                                              "blockList"
+                                          >
+                                    <li class="blockList">
+                                        <h4>autocomplete</h4>
+                                        <pre class="methodSignature"> final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=Radar.html#autocomplete(String,Location,Integer,Radar.RadarGeocodeCallback)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=Radar.RadarGeocodeCallback.html>Radar.RadarGeocodeCallback</a> callback)</pre>
+                                        <div class="block"><p>Autocompletes partial addresses and place names, sorted by relevance.</p></div>
+                                        
+                                        <dl>
+                                            <dt><span class="paramLabel">Parameters:</span></dt>
+                                            
+                                            
+                                            <dd><code>query</code> - The partial address or place name to autocomplete.</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>near</code> - A location for the search.</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>limit</code> - The max number of addresses to return.</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>callback</code> - A callback.</dd>
+                                            
+                                            
+                                        </dl>
+                                        
+                                        <!-- TODO missing return annotation -->
+                                    </li>
+                                </ul>
+                                
+                                <a id="autocomplete(String,Location,Integer,Function2)">
+                                    <!--   -->
+                                </a>
+                                <ul class=
+                                              "blockList"
+                                          >
+                                    <li class="blockList">
+                                        <h4>autocomplete</h4>
+                                        <pre class="methodSignature"> final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=Radar.html#autocomplete(String,Location,Integer,Function2)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block)</pre>
+                                        <div class="block"><p>Autocompletes partial addresses and place names, sorted by relevance.</p></div>
+                                        
+                                        <dl>
+                                            <dt><span class="paramLabel">Parameters:</span></dt>
+                                            
+                                            
+                                            <dd><code>query</code> - The partial address or place name to autocomplete.</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>near</code> - A location for the search.</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>limit</code> - The max number of addresses to return.</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>block</code> - A block callback.</dd>
+                                            
+                                            
+                                        </dl>
+                                        
+                                        <!-- TODO missing return annotation -->
+                                    </li>
+                                </ul>
+                                
                                 <a id="autocomplete(String,Location,Array,Integer,String,Radar.RadarGeocodeCallback)">
                                     <!--   -->
                                 </a>
@@ -2160,7 +2248,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                     </li>
                                 </ul>
                                 
-                                <a id="autocomplete(String,Location,Integer,Array,String,Function2)">
+                                <a id="autocomplete(String,Location,Array,Integer,String,Function2)">
                                     <!--   -->
                                 </a>
                                 <ul class=
@@ -2168,7 +2256,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                           >
                                     <li class="blockList">
                                         <h4>autocomplete</h4>
-                                        <pre class="methodSignature"> final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=Radar.html#autocomplete(String,Location,Integer,Array,String,Function2)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a>&gt; layers, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> country, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block)</pre>
+                                        <pre class="methodSignature"> final <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=Radar.html#autocomplete(String,Location,Array,Integer,String,Function2)>autocomplete</a>(<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> query, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> near, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a>&gt; layers, <a href=https://developer.android.com/reference/kotlin/java/lang/Integer.html>Integer</a> limit, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> country, Function2&lt;<a href=Radar.RadarStatus.html>Radar.RadarStatus</a>, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarAddress.html>RadarAddress</a>&gt;, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a>&gt; block)</pre>
                                         <div class="block"><p>Autocompletes partial addresses and place names, sorted by relevance.</p></div>
                                         
                                         <dl>
@@ -2183,11 +2271,11 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             
                                             
                                             
-                                            <dd><code>limit</code> - The max number of addresses to return.</dd>
-                                            
-                                            
-                                            
                                             <dd><code>layers</code> - Optional layer filters.</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>limit</code> - The max number of addresses to return.</dd>
                                             
                                             
                                             
