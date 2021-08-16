@@ -28,7 +28,12 @@ class RadarLocationReceiver : BroadcastReceiver() {
             val intent = baseIntent(context).apply {
                 action = ACTION_LOCATION
             }
-            return PendingIntent.getBroadcast(context, REQUEST_CODE_LOCATION, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_LOCATION,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
         }
 
         internal fun getBubbleGeofencePendingIntent(context: Context): PendingIntent {
