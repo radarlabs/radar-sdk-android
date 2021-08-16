@@ -10,13 +10,13 @@ ext {
 }
 
 android {
-    compileSdkVersion "android-S"
+    compileSdkVersion 31
     kotlinOptions {
         jvmTarget = 11
     }
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 30
+        targetSdkVersion 31
         versionCode 1
         versionName radarVersion
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
