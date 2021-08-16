@@ -1,23 +1,43 @@
 package io.radar.example
 
 import android.Manifest
-import android.location.Location
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import android.widget.*
 import androidx.core.app.ActivityCompat
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
-import io.radar.sdk.RadarTripOptions
-import java.util.*
+
+enum class ActionState {
+    TRACK_ONCE,
+    TRACK_BG,
+    REVERSE_GEOCODE
+}
 
 class MainActivity : AppCompatActivity() {
 
+    private val DEFAULT_PUB_KEY = "prj_test_pk_0000000000000000000000000000000000000000"
+
+    private val debugLogsArray = arrayListOf<String>()
+    private var debugLogsAdapter: ArrayAdapter<String>? = null
+
+    private var actionState: ActionState = ActionState.TRACK_ONCE
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // UI
         setContentView(R.layout.activity_main)
 
+        this.debugLogsAdapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_list_item_1,
+            this.debugLogsArray
+        )
+        this.findViewById<ListView>(R.id.debugLogs).adapter = this.debugLogsAdapter
+
+        // request location permissions
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val requestCode = 0
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -27,135 +47,143 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000")
-
-        Radar.getLocation { status, location, stopped ->
-            Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
+        //
+        // initialize Radar - replace this with your own publishableKey!
+        //
+        val myRadarPublishableKey = "prj_test_pk_0000000000000000000000000000000000000000"
+        if (myRadarPublishableKey == DEFAULT_PUB_KEY)  {
+            findViewById<TextView>(R.id.debugLogsTitle).text = "Add your publishable key before using this app!"
+        } else {
+            Radar.initialize(this, myRadarPublishableKey)
         }
+        Radar.setUserId("test-android-user")
+    }
 
-        Radar.trackOnce { status, location, events, user ->
-            Log.v("example", "Track once: status = ${status}; location = $location; events = $events; user = $user")
+    override fun onResume() {
+        super.onResume()
+
+        this.findViewById<Button>(R.id.switchAction)
+            .setOnClickListener { handleSwitchAction() }
+
+        // initialize to trackOnce, unless app is already tracking
+        if (Radar.isTracking()) {
+            toggleTrackBackgroundMode()
+        } else {
+            toggleTrackOnceMode()
         }
+    }
 
-        val options = RadarTrackingOptions.RESPONSIVE
-        options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.ALL
-        Radar.startTracking(options)
+    private fun handleSwitchAction() {
+        debugLogsAdapter?.clear()
 
-        Radar.getContext { status, location, context ->
-            Log.v("example", "Context: status = $status; location = $location; context?.geofences = ${context?.geofences}; context?.place = ${context?.place}; context?.country = ${context?.country}")
+        when (this.actionState) {
+            ActionState.TRACK_ONCE -> toggleTrackBackgroundMode()
+            ActionState.TRACK_BG -> toggleReverseGeocodeMode()
+            ActionState.REVERSE_GEOCODE -> toggleTrackOnceMode()
         }
+    }
 
-        Radar.searchPlaces(
-            1000,
-            arrayOf("walmart"),
-            null,
-            null,
-            10
-        ) { status, location, places ->
-            Log.v("example", "Search places: status = $status; location = $location; places = $places")
-        }
+    private fun toggleTrackOnceMode() {
+        // set state
+        this.actionState = ActionState.TRACK_ONCE
 
-        Radar.searchGeofences(
-            1000,
-            arrayOf("store"),
-            null,
-            10
-        ) { status, location, geofences ->
-            Log.v("example", "Search geofences: status = $status; location = $location; geofences = $geofences")
-        }
+        // initialize button state
+        val actionButton = this.findViewById<Button>(R.id.onAction)
+        actionButton.text = "Track once"
 
-        Radar.geocode("20 jay street brooklyn") { status, addresses ->
-            Log.v("example", "Geocode: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
-        }
-
-        Radar.reverseGeocode { status, addresses ->
-            Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
-        }
-
-        Radar.ipGeocode { status, address, proxy ->
-            Log.v("example", "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}; proxy = $proxy")
-        }
-
-        val origin = Location("example")
-        origin.latitude = 40.78382
-        origin.longitude = -73.97536
-
-        val destination = Location("example")
-        destination.latitude = 40.70390
-        destination.longitude = -73.98670
-
-        Radar.autocomplete(
-            "brooklyn",
-            origin,
-            arrayOf("locality"),
-            10,
-            "US"
-        ) { status, addresses ->
-            Log.v("example", "Autocomplete: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
-        }
-
-        Radar.getDistance(
-            origin,
-            destination,
-            EnumSet.of(Radar.RadarRouteMode.FOOT, Radar.RadarRouteMode.CAR),
-            Radar.RadarRouteUnits.IMPERIAL
-        ) { status, routes ->
-            Log.v("example", "Distance: status = $status; routes.car.distance.value = ${routes?.car?.distance?.value}; routes.car.distance.text = ${routes?.car?.distance?.text}; routes.car.duration.value = ${routes?.car?.duration?.value}; routes.car.duration.text = ${routes?.car?.duration?.text}")
-        }
-
-        val tripOptions = RadarTripOptions(
-            "299",
-            null,
-            "store",
-            "123",
-            Radar.RadarRouteMode.CAR
-        )
-        Radar.startTrip(tripOptions)
-
-        var i = 0
-        Radar.mockTracking(
-            origin,
-            destination,
-            Radar.RadarRouteMode.CAR,
-            3,
-            3
-        ) { status, location, events, user ->
-            Log.v("example", "Mock track: status = ${status}; location = $location; events = $events; user = $user")
-
-            if (i == 2) {
-                Radar.completeTrip()
+        // button handler
+        actionButton.setOnClickListener { view ->
+            if (view is Button) {
+                view.text = "Loading..."
             }
 
-            i++
+            Radar.trackOnce { status, location, events, user ->
+                this@MainActivity.runOnUiThread {
+                    this.debugLogsAdapter?.add("Status: $status")
+                    this.debugLogsAdapter?.add("Latitude: ${location?.latitude}")
+                    this.debugLogsAdapter?.add("Longitude: ${location?.longitude}")
+                    this.debugLogsAdapter?.add("Accuracy: ${location?.accuracy}")
+
+                    this.debugLogsAdapter?.add("User: ${user?.toJson()?.toString(2)}")
+
+                    if (events != null && events.isNotEmpty()) {
+                        this.debugLogsAdapter?.add("Events:")
+                        for (event in events) {
+                            this.debugLogsAdapter?.add(event.toJson().toString(2))
+                        }
+                    }
+
+                    // done loading
+                    if (view is Button) {
+                        view.text = "Track once"
+                    }
+                }
+            }
         }
+    }
 
-        val origin1 = Location("example")
-        origin1.latitude = 40.78382
-        origin1.longitude = -73.97536
+    private fun toggleTrackBackgroundMode() {
+        // set state
+        this.actionState = ActionState.TRACK_BG
 
-        val origin2 = Location("example")
-        origin2.latitude = 40.70390
-        origin2.longitude = -73.98670
+        // initialize button state
+        val actionButton = this.findViewById<Button>(R.id.onAction)
+        fun initButtonText() {
+            if (Radar.isTracking()) {
+                actionButton.text = "Stop tracking"
+            } else {
+                actionButton.text = "Track background"
+            }
+        }
+        initButtonText()
 
-        val origins = arrayOf(origin1, origin2)
+        //
+        this.debugLogsAdapter?.add("Tracking options:")
+        this.debugLogsAdapter?.add(Radar.getTrackingOptions()?.toJson()?.toString(2))
 
-        val destination1 = Location("example")
-        destination1.latitude = 40.64189
-        destination1.longitude = -73.78779
+        // button handler
+        actionButton.setOnClickListener { view ->
+            if (Radar.isTracking()) {
+                Radar.stopTracking()
+                initButtonText()
+            } else {
+                Radar.startTracking(RadarTrackingOptions.RESPONSIVE)
+                initButtonText()
+            }
+        }
+    }
 
-        val destination2 = Location("example")
-        destination2.latitude = 35.99801
-        destination2.longitude = -78.94294
+    private fun toggleReverseGeocodeMode() {
+        // set state
+        this.actionState = ActionState.REVERSE_GEOCODE
 
-        val destinations = arrayOf(destination1, destination2)
+        // initialize button state
+        val actionButton = this.findViewById<Button>(R.id.onAction)
+        actionButton.text = "Reverse geocode"
 
-        Radar.getMatrix(
-            origins,
-            destinations,
-            Radar.RadarRouteMode.CAR,
-            Radar.RadarRouteUnits.IMPERIAL
-        ) { status, matrix ->
-            Log.v("example", "Matrix: status = $status; matrix[0][0].duration.text = ${matrix?.routeBetween(0, 0)?.duration?.text}; matrix[0][1].duration.text = ${matrix?.routeBetween(0, 1)?.duration?.text}; matrix[1][0].duration.text = ${matrix?.routeBetween(1, 0)?.duration?.text};  matrix[1][1].duration.text = ${matrix?.routeBetween(1, 1)?.duration?.text}")
+        // button handler
+        actionButton.setOnClickListener { view ->
+            if (view is Button) {
+                view.text = "Loading..."
+            }
+
+            Radar.reverseGeocode { status, addresses ->
+                this@MainActivity.runOnUiThread {
+                    this.debugLogsAdapter?.add("Status: $status")
+
+                    if (addresses != null && addresses.isNotEmpty()) {
+                        this.debugLogsAdapter?.add("Addresses:")
+                        for (address in addresses) {
+                            this.debugLogsAdapter?.add(address.toJson().toString(2))
+                        }
+                    }
+
+                    // done loading
+                    if (view is Button) {
+                        view.text = "Reverse geocode"
+                    }
+                }
+            }
         }
     }
 

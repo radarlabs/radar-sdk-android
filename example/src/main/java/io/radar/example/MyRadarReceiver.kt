@@ -11,12 +11,10 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarReceiver
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
-import kotlin.random.Random
 
 class MyRadarReceiver : RadarReceiver() {
 
     companion object {
-
         var identifier = 0
 
         internal fun notify(context: Context, body: String) {
@@ -25,9 +23,8 @@ class MyRadarReceiver : RadarReceiver() {
             val channelId = "example"
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val name = channelId
                 val importance = NotificationManager.IMPORTANCE_HIGH
-                val channel = NotificationChannel("example", name, importance).apply {
+                val channel = NotificationChannel("example", channelId, importance).apply {
                     description = channelId
                 }
                 val notificationManager: NotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -44,29 +41,34 @@ class MyRadarReceiver : RadarReceiver() {
                 notify(identifier % 20, builder.build())
             }
         }
-
     }
 
-    override fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser) {
-        events.forEach { event -> notify(context, Utils.stringForRadarEvent(event)) }
+    override fun onEventsReceived(
+        context: Context,
+        events: Array<RadarEvent>,
+        user: RadarUser
+    ) {}
+
+    override fun onLocationUpdated(
+        context: Context,
+        location: Location,
+        user: RadarUser
+    ) {
+        if (Radar.isTracking()) {
+            val body = "${if (user.stopped) "Stopped at" else "Moved to"} location (${location.latitude}, ${location.longitude}) with accuracy ${location.accuracy}"
+            notify(context, body)
+        }
     }
 
-    override fun onLocationUpdated(context: Context, location: Location, user: RadarUser) {
-        val body = "${if (user.stopped) "Stopped at" else "Moved to"} location (${location.latitude}, ${location.longitude}) with accuracy ${location.accuracy}"
-        notify(context, body)
-    }
+    override fun onClientLocationUpdated(
+        context: Context,
+        location: Location,
+        stopped: Boolean,
+        source: Radar.RadarLocationSource
+    ) {}
 
-    override fun onClientLocationUpdated(context: Context, location: Location, stopped: Boolean, source: Radar.RadarLocationSource) {
-        val body = "${if (stopped) "Client stopped at" else "Client moved to"} location (${location.latitude}, ${location.longitude}) with accuracy ${location.accuracy} and source ${source}"
-        notify(context, body)
-    }
+    override fun onError(context: Context, status: Radar.RadarStatus) {}
 
-    override fun onError(context: Context, status: Radar.RadarStatus) {
-        notify(context, Utils.stringForRadarStatus(status))
-    }
-
-    override fun onLog(context: Context, message: String) {
-        notify(context, message)
-    }
+    override fun onLog(context: Context, message: String) {}
 
 }
