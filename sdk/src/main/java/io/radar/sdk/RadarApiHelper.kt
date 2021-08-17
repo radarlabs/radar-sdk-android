@@ -86,6 +86,15 @@ internal open class RadarApiHelper(
                         else -> Radar.RadarStatus.ERROR_UNKNOWN
                     }
 
+                    val body = urlConnection.errorStream.readAll()
+                    if (body == null) {
+                        callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+
+                        return@execute
+                    }
+
+                    val res = JSONObject(body)
+
                     logger?.d("📍 Radar API response | responseCode = ${urlConnection.responseCode}; res = $res")
                     
                     handler.post {
