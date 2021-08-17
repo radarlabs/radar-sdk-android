@@ -18,7 +18,7 @@
                 <action android:name="io.radar.sdk.LocationReceiver.SYNCED_GEOFENCES" />
                 <action android:name="io.radar.sdk.LocationReceiver.GEOFENCE" />
                 <action android:name="io.radar.sdk.LocationReceiver.LOCATION" />
-                <action android:name="io.radar.sdk.LocationReceiver.BEACONS" />
+                <action android:name="io.radar.sdk.LocationReceiver.BEACON" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
