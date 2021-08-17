@@ -1,7 +1,6 @@
 package io.radar.sdk.model
 
 import org.json.JSONArray
-import org.json.JSONObject
 
 /**
  * Represents routes between multiple origins and destinations.

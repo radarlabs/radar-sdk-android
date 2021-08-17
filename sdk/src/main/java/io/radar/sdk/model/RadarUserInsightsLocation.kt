@@ -94,7 +94,6 @@ class RadarUserInsightsLocation(
 
         @JvmStatic
         @SuppressLint("SimpleDateFormat")
-        @Throws(JSONException::class, ParseException::class)
         fun fromJson(obj: JSONObject?): RadarUserInsightsLocation? {
             if (obj == null) {
                 return null
