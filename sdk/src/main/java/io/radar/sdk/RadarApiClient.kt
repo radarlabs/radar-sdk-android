@@ -10,17 +10,23 @@ import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.*
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.net.URL
 import java.util.*
 
 internal class RadarApiClient(
     private val context: Context,
-    internal var apiHelper: RadarApiHelper = RadarApiHelper()
+    private var logger: RadarLogger,
+    internal var apiHelper: RadarApiHelper = RadarApiHelper(logger)
 ) {
 
     interface RadarTrackApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null, events: Array<RadarEvent>? = null, user: RadarUser? = null, nearbyGeofences: Array<RadarGeofence>? = null)
+    }
+
+    interface RadarTripApiCallback {
+        fun onComplete(status: RadarStatus)
     }
 
     interface RadarContextApiCallback {
@@ -75,6 +81,7 @@ internal class RadarApiClient(
         queryParams.append("installId=${RadarSettings.getInstallId(context)}")
         queryParams.append("&sessionId=${RadarSettings.getSessionId(context)}")
         queryParams.append("&locationAuthorization=${RadarUtils.getLocationAuthorization(context)}")
+        queryParams.append("&locationAccuracyAuthorization=${RadarUtils.getLocationAccuracyAuthorization(context)}")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -106,70 +113,79 @@ internal class RadarApiClient(
         }
 
         val params = JSONObject()
-        params.putOpt("installId", RadarSettings.getInstallId(context))
-        params.putOpt("id", RadarSettings.getId(context))
-        params.putOpt("userId", RadarSettings.getUserId(context))
-        params.putOpt("deviceId", RadarUtils.getDeviceId(context))
-        params.putOpt("description", RadarSettings.getDescription(context))
-        params.putOpt("metadata", RadarSettings.getMetadata(context))
-        if (RadarSettings.getAdIdEnabled(context)) {
-            params.putOpt("adId", RadarUtils.getAdId(context))
-        }
-        params.putOpt("latitude", location.latitude)
-        params.putOpt("longitude", location.longitude)
-        var accuracy = location.accuracy
-        if (accuracy <= 0) {
-            accuracy = 1F
-        }
-        params.putOpt("accuracy", accuracy)
-        params.putOpt("speed", location.speed)
-        params.putOpt("course", location.bearing)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            params.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
-            params.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
-            params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
-        }
-        if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
-            params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
-        }
-        params.putOpt("foreground", foreground)
-        params.putOpt("stopped", stopped)
-        params.putOpt("replayed", replayed)
-        params.putOpt("deviceType", "Android")
-        params.putOpt("deviceMake", RadarUtils.deviceMake)
-        params.putOpt("sdkVersion", RadarUtils.sdkVersion)
-        params.putOpt("deviceModel", RadarUtils.deviceModel)
-        params.putOpt("deviceOS", RadarUtils.deviceOS)
-        params.putOpt("deviceType", RadarUtils.deviceType)
-        params.putOpt("deviceMake", RadarUtils.deviceMake)
-        params.putOpt("country", RadarUtils.country)
-        params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
-        params.putOpt("source", Radar.stringForSource(source))
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            val mocked = location.isFromMockProvider
-            params.putOpt("mocked", mocked)
-        }
-        val tripOptions = RadarSettings.getTripOptions(context)
-        if (tripOptions != null) {
-            val tripOptionsObj = JSONObject()
-            tripOptionsObj.putOpt("externalId", tripOptions.externalId)
-            tripOptionsObj.putOpt("metadata", tripOptions.metadata)
-            tripOptionsObj.putOpt("destinationGeofenceTag", tripOptions.destinationGeofenceTag)
-            tripOptionsObj.putOpt("destinationGeofenceExternalId", tripOptions.destinationGeofenceExternalId)
-            tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
-            params.putOpt("tripOptions", tripOptionsObj)
-        }
         val options = RadarSettings.getTrackingOptions(context)
-        if (options.syncGeofences) {
-            params.putOpt("nearbyGeofences", true)
-        }
-        if (nearbyBeacons != null) {
-            val nearbyBeaconsArr = JSONArray()
-            for (nearbyBeacon in nearbyBeacons) {
-                nearbyBeaconsArr.put(nearbyBeacon)
+        val tripOptions = RadarSettings.getTripOptions(context)
+        try {
+            params.putOpt("id", RadarSettings.getId(context))
+            params.putOpt("installId", RadarSettings.getInstallId(context))
+            params.putOpt("userId", RadarSettings.getUserId(context))
+            params.putOpt("deviceId", RadarUtils.getDeviceId(context))
+            params.putOpt("description", RadarSettings.getDescription(context))
+            params.putOpt("metadata", RadarSettings.getMetadata(context))
+            if (RadarSettings.getAdIdEnabled(context)) {
+                params.putOpt("adId", RadarUtils.getAdId(context))
             }
-            params.putOpt("nearbyBeacons", nearbyBeaconsArr)
+            params.putOpt("latitude", location.latitude)
+            params.putOpt("longitude", location.longitude)
+            var accuracy = location.accuracy
+            if (accuracy <= 0) {
+                accuracy = 1F
+            }
+            params.putOpt("accuracy", accuracy)
+            params.putOpt("speed", location.speed)
+            params.putOpt("course", location.bearing)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                params.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
+                params.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
+                params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
+            }
+            if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
+                params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
+            }
+            params.putOpt("foreground", foreground)
+            params.putOpt("stopped", stopped)
+            params.putOpt("replayed", replayed)
+            params.putOpt("deviceType", "Android")
+            params.putOpt("deviceMake", RadarUtils.deviceMake)
+            params.putOpt("sdkVersion", RadarUtils.sdkVersion)
+            params.putOpt("deviceModel", RadarUtils.deviceModel)
+            params.putOpt("deviceOS", RadarUtils.deviceOS)
+            params.putOpt("deviceType", RadarUtils.deviceType)
+            params.putOpt("deviceMake", RadarUtils.deviceMake)
+            params.putOpt("country", RadarUtils.country)
+            params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
+            params.putOpt("source", Radar.stringForSource(source))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                val mocked = location.isFromMockProvider
+                params.putOpt("mocked", mocked)
+            }
+            if (tripOptions != null) {
+                val tripOptionsObj = JSONObject()
+                tripOptionsObj.putOpt("externalId", tripOptions.externalId)
+                tripOptionsObj.putOpt("metadata", tripOptions.metadata)
+                tripOptionsObj.putOpt("destinationGeofenceTag", tripOptions.destinationGeofenceTag)
+                tripOptionsObj.putOpt("destinationGeofenceExternalId", tripOptions.destinationGeofenceExternalId)
+                tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
+                params.putOpt("tripOptions", tripOptionsObj)
+            }
+            if (options.syncGeofences) {
+                params.putOpt("nearbyGeofences", true)
+                params.putOpt("nearbyGeofencesLimit", options.syncGeofencesLimit)
+            }
+            if (nearbyBeacons != null) {
+                val nearbyBeaconsArr = JSONArray()
+                for (nearbyBeacon in nearbyBeacons) {
+                    nearbyBeaconsArr.put(nearbyBeacon)
+                }
+                params.putOpt("nearbyBeacons", nearbyBeaconsArr)
+            }
+            params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
+            params.putOpt("sessionId", RadarSettings.getSessionId(context))
+        } catch (e: JSONException) {
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
         }
 
         val host = RadarSettings.getHost(context)
@@ -254,13 +270,35 @@ internal class RadarApiClient(
         apiHelper.request(context, "PUT", url, headers, params, false)
     }
 
-    internal fun updateTrip(status: RadarTrip.RadarTripStatus) {
-        val publishableKey = RadarSettings.getPublishableKey(context) ?: return
+    internal fun updateTrip(options: RadarTripOptions?, status: RadarTrip.RadarTripStatus?, callback: RadarTripApiCallback?) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
-        val externalId = RadarSettings.getTripOptions(context)?.externalId ?: return
+            return
+        }
+
+        val externalId = options?.externalId
+        if (externalId == null) {
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
+        }
 
         val params = JSONObject()
-        params.putOpt("status", Radar.stringForTripStatus(status))
+        if (status != null && status != RadarTrip.RadarTripStatus.UNKNOWN) {
+            params.putOpt("status", Radar.stringForTripStatus(status))
+        }
+        if (options.metadata != null) {
+            params.putOpt("metadata", options.metadata)
+        }
+        if (options.destinationGeofenceTag != null) {
+            params.putOpt("destinationGeofenceTag", options.destinationGeofenceTag)
+        }
+        if (options.destinationGeofenceExternalId != null) {
+            params.putOpt("destinationGeofenceExternalId", options.destinationGeofenceExternalId)
+        }
+        params.putOpt("mode", Radar.stringForMode(options.mode))
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -270,8 +308,12 @@ internal class RadarApiClient(
         val url = URL(uri.toString())
 
         val headers = headers(publishableKey)
-
-        apiHelper.request(context, "PATCH", url, headers, params, false)
+        
+        apiHelper.request(context, "PATCH", url, headers, params, false, object: RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                callback?.onComplete(status)
+            }
+        })
     }
 
     internal fun getContext(
@@ -485,8 +527,10 @@ internal class RadarApiClient(
 
     internal fun autocomplete(
         query: String,
-        near: Location,
-        limit: Int,
+        near: Location? = null,
+        layers: Array<String>? = null,
+        limit: Int? = null,
+        country: String? = null,
         callback: RadarGeocodeApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -498,8 +542,16 @@ internal class RadarApiClient(
 
         val queryParams = StringBuilder()
         queryParams.append("query=${query}")
-        queryParams.append("&near=${near.latitude},${near.longitude}")
+        if (near != null) {
+            queryParams.append("&near=${near.latitude},${near.longitude}")
+        }
+        if (layers?.isNotEmpty() == true) {
+            queryParams.append("&layers=${layers.joinToString(separator = ",")}")
+        }
         queryParams.append("&limit=${limit}")
+        if (country != null) {
+            queryParams.append("&country=${country}")
+        }
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()

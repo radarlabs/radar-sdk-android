@@ -84,6 +84,22 @@ object Radar {
     }
 
     /**
+     * Called when a trip update succeeds, fails, or times out.
+     */
+    interface RadarTripCallback {
+
+        /**
+         * Called when a trip update succeeds, fails, or times out. Receives the request status.
+         *
+         * @param[status] RadarStatus The request status.
+         */
+        fun onComplete(
+            status: RadarStatus
+        )
+
+    }
+
+    /**
      * Called when a context request succeeds, fails, or times out.
      */
     interface RadarContextCallback {
@@ -256,6 +272,10 @@ object Radar {
         GEOFENCE_EXIT,
         /** Mock */
         MOCK_LOCATION,
+        /** Beacon enter */
+        BEACON_ENTER,
+        /** Beacon exit */
+        BEACON_EXIT,
         /** Unknown */
         UNKNOWN
     }
@@ -334,7 +354,7 @@ object Radar {
         this.context = context.applicationContext
 
         if (!this::logger.isInitialized) {
-            this.logger = RadarLogger()
+            this.logger = RadarLogger(this.context)
         }
 
         RadarSettings.updateSessionId(this.context)
@@ -344,19 +364,19 @@ object Radar {
         }
 
         if (!this::apiClient.isInitialized) {
-            this.apiClient = RadarApiClient(this.context)
-        }
-        if (!this::locationManager.isInitialized) {
-            this.locationManager = RadarLocationManager(this.context, apiClient, logger)
-            this.locationManager.updateTracking()
+            this.apiClient = RadarApiClient(this.context, logger)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (!this::beaconManager.isInitialized) {
                 this.beaconManager = RadarBeaconManager(this.context, logger)
             }
         }
+        if (!this::locationManager.isInitialized) {
+            this.locationManager = RadarLocationManager(this.context, apiClient, logger)
+            this.locationManager.updateTracking()
+        }
 
-        this.logger.d(this.context, "Initializing")
+        this.logger.d("Initializing")
 
         RadarUtils.loadAdId(this.context)
 
@@ -365,7 +385,7 @@ object Radar {
 
         this.apiClient.getConfig()
 
-        logger.i(this.context, "📍️ Radar initialized")
+        logger.i("📍️ Radar initialized")
     }
 
     /**
@@ -523,7 +543,7 @@ object Radar {
             return
         }
 
-        locationManager.getLocation(desiredAccuracy, callback)
+        locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, callback)
     }
 
     /**
@@ -590,7 +610,7 @@ object Radar {
             return
         }
 
-        locationManager.getLocation(desiredAccuracy, object : RadarLocationCallback {
+        locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
                 if (status != RadarStatus.SUCCESS || location == null) {
                     callback?.onComplete(status)
@@ -922,46 +942,178 @@ object Radar {
      * @see [](https://radar.io/documentation/trip-tracking)
      *
      * @param[options] Configurable trip options.
+     * @param[callback] An optional callback.
      */
     @JvmStatic
-    fun startTrip(options: RadarTripOptions) {
+    fun startTrip(options: RadarTripOptions, callback: RadarTripCallback? = null) {
         if (!initialized) {
             return
         }
 
-        RadarSettings.setTripOptions(context, options)
-        apiClient.updateTrip(RadarTrip.RadarTripStatus.STARTED)
-        locationManager.getLocation(null)
+        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.STARTED, object : RadarApiClient.RadarTripApiCallback {
+            override fun onComplete(status: RadarStatus) {
+                if (status == RadarStatus.SUCCESS) {
+                    RadarSettings.setTripOptions(context, options)
+
+                    // flush location update to generate events
+                    locationManager.getLocation(null)
+                }
+
+                callback?.onComplete(status)
+            }
+        })
+    }
+
+    /**
+     * Starts a trip.
+     *
+     * @see [](https://radar.io/documentation/trip-tracking)
+     *
+     * @param[options] Configurable trip options.
+     * @param[block] An optional block callback.
+     */
+    @JvmStatic
+    fun startTrip(options: RadarTripOptions, block: (status: RadarStatus) -> Unit) {
+        startTrip(options, object : RadarTripCallback {
+            override fun onComplete(status: RadarStatus) {
+                block(status)
+            }
+        })
+    }
+
+    /**
+     * Manually updates a trip.
+     *
+     * @see [](https://radar.io/documentation/trip-tracking)
+     *
+     * @param[options] Configurable trip options.
+     * @param[status] The trip status. To avoid updating status, pass UNKNOWN.
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun updateTrip(options: RadarTripOptions, status: RadarTrip.RadarTripStatus?, callback: RadarTripCallback? = null) {
+        if (!initialized) {
+            return
+        }
+
+        apiClient.updateTrip(options, status, object : RadarApiClient.RadarTripApiCallback {
+            override fun onComplete(status: RadarStatus) {
+                if (status == RadarStatus.SUCCESS) {
+                    RadarSettings.setTripOptions(context, options)
+
+                    // flush location update to generate events
+                    locationManager.getLocation(null)
+                }
+
+                callback?.onComplete(status)
+            }
+        })
+    }
+
+    /**
+     * Manually updates a trip.
+     *
+     * @see [](https://radar.io/documentation/trip-tracking)
+     *
+     * @param[options] Configurable trip options.
+     * @param[status] The trip status. To avoid updating status, pass UNKNOWN.
+     * @param[block] An optional block callback.
+     */
+    @JvmStatic
+    fun updateTrip(options: RadarTripOptions, status: RadarTrip.RadarTripStatus?, block: (status: RadarStatus) -> Unit) {
+        updateTrip(options, status, object : RadarTripCallback {
+            override fun onComplete(status: RadarStatus) {
+                block(status)
+            }
+        })
+    }
+
+    /**
+     * Completes a trip.
+     *
+     * @param[callback] An optional callback.
+     *
+     * @see [](https://radar.io/documentation/trip-tracking)
+     */
+    @JvmStatic
+    fun completeTrip(callback: RadarTripCallback? = null) {
+        if (!initialized) {
+            return
+        }
+
+        val options = RadarSettings.getTripOptions(context)
+        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.COMPLETED, object : RadarApiClient.RadarTripApiCallback {
+            override fun onComplete(status: RadarStatus) {
+                if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
+                    RadarSettings.setTripOptions(context, null)
+
+                    // flush location update to generate events
+                    locationManager.getLocation(null)
+                }
+
+                callback?.onComplete(status)
+            }
+        })
     }
 
     /**
      * Completes a trip.
      *
      * @see [](https://radar.io/documentation/trip-tracking)
+     *
+     * @param[block] An optional block callback.
      */
     @JvmStatic
-    fun completeTrip() {
+    fun completeTrip(block: (status: RadarStatus) -> Unit) {
+        completeTrip(object : RadarTripCallback {
+            override fun onComplete(status: RadarStatus) {
+                block(status)
+            }
+        })
+    }
+
+    /**
+     * Cancels a trip.
+     *
+     * @param[callback] An optional callback.
+     *
+     * @see [](https://radar.io/documentation/trip-tracking)
+     */
+    @JvmStatic
+    fun cancelTrip(callback: RadarTripCallback? = null) {
         if (!initialized) {
             return
         }
 
-        apiClient.updateTrip(RadarTrip.RadarTripStatus.COMPLETED)
-        RadarSettings.setTripOptions(context, null)
+        val options = RadarSettings.getTripOptions(context)
+        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.CANCELED, object : RadarApiClient.RadarTripApiCallback {
+            override fun onComplete(status: RadarStatus) {
+                if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
+                    RadarSettings.setTripOptions(context, null)
+
+                    // flush location update to generate events
+                    locationManager.getLocation(null)
+                }
+
+                callback?.onComplete(status)
+            }
+        })
     }
 
     /**
      * Cancels a trip.
      *
      * @see [](https://radar.io/documentation/trip-tracking)
+     *
+     * @param[block] An optional block callback.
      */
     @JvmStatic
-    fun cancelTrip() {
-        if (!initialized) {
-            return
-        }
-
-        apiClient.updateTrip(RadarTrip.RadarTripStatus.CANCELED)
-        RadarSettings.setTripOptions(context, null)
+    fun cancelTrip(block: (status: RadarStatus) -> Unit) {
+        cancelTrip(object : RadarTripCallback {
+            override fun onComplete(status: RadarStatus) {
+                block(status)
+            }
+        })
     }
 
     /**
@@ -1256,6 +1408,7 @@ object Radar {
         )
     }
 
+
     /**
      * Autocompletes partial addresses and place names, sorted by relevance.
      *
@@ -1268,10 +1421,10 @@ object Radar {
      */
     @JvmStatic
     fun autocomplete(
-        query: String,
-        near: Location,
-        limit: Int,
-        callback: RadarGeocodeCallback
+            query: String,
+            near: Location? = null,
+            limit: Int? = null,
+            callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -1279,7 +1432,7 @@ object Radar {
             return
         }
 
-        apiClient.autocomplete(query, near, limit, object : RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.autocomplete(query, near, null, limit, null, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 callback.onComplete(status, addresses)
             }
@@ -1297,15 +1450,85 @@ object Radar {
      * @param[block] A block callback.
      */
     fun autocomplete(
+            query: String,
+            near: Location? = null,
+            limit: Int? = null,
+            block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
+    ) {
+        autocomplete(
+                query,
+                near,
+                null,
+                limit,
+                null,
+                object : RadarGeocodeCallback {
+                    override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
+                        block(status, addresses)
+                    }
+                }
+        )
+    }
+
+    /**
+     * Autocompletes partial addresses and place names, sorted by relevance.
+     *
+     * @see [](https://radar.io/documentation/api#autocomplete)
+     *
+     * @param[query] The partial address or place name to autocomplete.
+     * @param[near] A location for the search.
+     * @param[layers] Optional layer filters.
+     * @param[limit] The max number of addresses to return. A number between 1 and 100.
+     * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun autocomplete(
         query: String,
-        near: Location,
-        limit: Int,
+        near: Location? = null,
+        layers: Array<String>? = null,
+        limit: Int? = null,
+        country: String? = null,
+        callback: RadarGeocodeCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        apiClient.autocomplete(query, near, layers, limit, country, object : RadarApiClient.RadarGeocodeApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
+                callback.onComplete(status, addresses)
+            }
+        })
+    }
+
+    /**
+     * Autocompletes partial addresses and place names, sorted by relevance.
+     *
+     * @see [](https://radar.io/documentation/api#autocomplete)
+     *
+     * @param[query] The partial address or place name to autocomplete.
+     * @param[near] A location for the search.
+     * @param[layers] Optional layer filters.
+     * @param[limit] The max number of addresses to return. A number between 1 and 100.
+     * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[block] A block callback.
+     */
+    fun autocomplete(
+        query: String,
+        near: Location? = null,
+        layers: Array<String>? = null,
+        limit: Int? = null,
+        country: String? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         autocomplete(
             query,
             near,
+            layers,
             limit,
+            country,
             object : RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
@@ -1823,6 +2046,8 @@ object Radar {
             RadarLocationSource.GEOFENCE_DWELL -> "GEOFENCE_DWELL"
             RadarLocationSource.GEOFENCE_EXIT -> "GEOFENCE_EXIT"
             RadarLocationSource.MOCK_LOCATION -> "MOCK_LOCATION"
+            RadarLocationSource.BEACON_ENTER -> "BEACON_ENTER"
+            RadarLocationSource.BEACON_EXIT -> "BEACON_EXIT"
             else -> "UNKNOWN"
         }
     }
@@ -1886,6 +2111,9 @@ object Radar {
             obj.put("speedAccuracy", location.speedAccuracyMetersPerSecond)
             obj.put("courseAccuracy", location.bearingAccuracyDegrees)
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            obj.put("mocked", location.isFromMockProvider)
+        }
         return obj
     }
 
@@ -1895,6 +2123,14 @@ object Radar {
         }
 
         locationManager.handleLocation(location, source)
+    }
+
+    internal fun handleBeacon(context: Context, source: RadarLocationSource) {
+        if (!initialized) {
+            initialize(context)
+        }
+
+        locationManager.handleBeacon(source)
     }
 
     internal fun handleBootCompleted(context: Context) {
@@ -1911,18 +2147,18 @@ object Radar {
             putExtra(RadarReceiver.EXTRA_LOCATION, location)
         }
 
-        logger.i(this.context, "📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user._id}")
+        logger.i("📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user._id}")
 
         if (events.isNotEmpty()) {
             for (event in events) {
-                logger.i(this.context, "📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.io/dashboard/events/${event._id}")
+                logger.i("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.io/dashboard/events/${event._id}")
             }
         }
 
         this.broadcastIntent(intent)
     }
 
-    internal fun broadcastLocationIntent(location: Location, stopped: Boolean, source: Radar.RadarLocationSource) {
+    internal fun broadcastLocationIntent(location: Location, stopped: Boolean, source: RadarLocationSource) {
         val intent = Intent(RadarReceiver.ACTION_RECEIVED).apply {
             putExtra(RadarReceiver.EXTRA_LOCATION, location)
             putExtra(RadarReceiver.EXTRA_STOPPED, stopped)
@@ -1937,7 +2173,7 @@ object Radar {
             putExtra(RadarReceiver.EXTRA_STATUS, status.ordinal)
         }
 
-        logger.i(this.context, "📍️ Radar error received | status = $status")
+        logger.i("📍️ Radar error received | status = $status")
 
         this.broadcastIntent(intent)
     }

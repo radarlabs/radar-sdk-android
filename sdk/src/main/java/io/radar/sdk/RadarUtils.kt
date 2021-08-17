@@ -12,9 +12,7 @@ import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 internal object RadarUtils {
 
@@ -77,14 +75,34 @@ internal object RadarUtils {
         if (RadarSettings.getPermissionsDenied(context)) {
             locationAuthorization = "DENIED"
         }
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             locationAuthorization = "GRANTED_FOREGROUND"
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED) {
             locationAuthorization = "GRANTED_BACKGROUND"
         }
         return locationAuthorization
+    }
+
+    internal fun getBluetoothSupported(context: Context): Boolean {
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
+    }
+
+    internal fun getLocationAccuracyAuthorization(context: Context): String {
+        val coarseLocation =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+            && ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+        return if (coarseLocation) {
+            "REDUCED"
+        } else {
+            "FULL"
+        }
     }
 
     internal fun getLocationEnabled(context: Context): Boolean {

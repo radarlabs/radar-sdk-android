@@ -17,7 +17,7 @@ class Utils {
                 Radar.RadarStatus.ERROR_UNAUTHORIZED -> "Unauthorized error"
                 Radar.RadarStatus.ERROR_RATE_LIMIT -> "Rate limit error"
                 Radar.RadarStatus.ERROR_SERVER -> "Server error"
-                else -> "Unknown error"
+                else -> "Unknown error $status"
             }
         }
 
@@ -44,6 +44,15 @@ class Utils {
                 RadarEvent.RadarEventType.USER_EXITED_REGION_STATE -> "Exited state ${event.region?.name} with $confidenceStr"
                 RadarEvent.RadarEventType.USER_ENTERED_REGION_DMA -> "Entered DMA ${event.region?.name} with $confidenceStr"
                 RadarEvent.RadarEventType.USER_EXITED_REGION_DMA -> "Exited DMA ${event.region?.name} with $confidenceStr"
+                RadarEvent.RadarEventType.USER_STARTED_TRIP -> "Started trip"
+                RadarEvent.RadarEventType.USER_UPDATED_TRIP -> "Updated trip"
+                RadarEvent.RadarEventType.USER_APPROACHING_TRIP_DESTINATION -> "Approaching trip destination"
+                RadarEvent.RadarEventType.USER_ARRIVED_AT_TRIP_DESTINATION -> "Arrived at trip destination"
+                RadarEvent.RadarEventType.USER_STOPPED_TRIP -> "Stopped trip"
+                RadarEvent.RadarEventType.USER_ENTERED_BEACON -> "Entered beacon ${event.beacon?.description}"
+                RadarEvent.RadarEventType.USER_EXITED_BEACON -> "Exited beacon ${event.beacon?.description}"
+                RadarEvent.RadarEventType.USER_ENTERED_REGION_POSTAL_CODE -> "Entered postal code ${event.region?.name} with $confidenceStr"
+                RadarEvent.RadarEventType.USER_EXITED_REGION_POSTAL_CODE -> "Exited postal code ${event.region?.name} with $confidenceStr"
                 else -> "Unknown"
             }
         }

@@ -60,11 +60,11 @@ internal object RadarBeaconUtils {
         }
 
         val buf = ByteBuffer.wrap(bytes, startByte + 4, 20)
-        val uuid = UUID(buf.long, buf.long).toString()
+        val uuid = UUID(buf.long, buf.long)
         val major = ((buf.get().toInt() and 0xFF) * 0x100 + (buf.get().toInt() and 0xFF)).toString()
         val minor = ((buf.get().toInt() and 0xFF) * 0x100 + (buf.get().toInt() and 0xFF)).toString()
 
-        return beacons.find { it.uuid == uuid && it.major == major && it.minor == minor }
+        return beacons.find { UUID.fromString(it.uuid).equals(uuid) && it.major == major && it.minor == minor }
     }
 
 }

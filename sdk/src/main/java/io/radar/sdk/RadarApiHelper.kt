@@ -13,7 +13,9 @@ import java.net.URL
 import java.util.*
 import java.util.concurrent.Executors
 
-internal open class RadarApiHelper {
+internal open class RadarApiHelper(
+    private var logger: RadarLogger? = null
+) {
 
     private val executor = Executors.newSingleThreadExecutor()
     private val handler = Handler(Looper.getMainLooper())
@@ -29,6 +31,8 @@ internal open class RadarApiHelper {
                          params: JSONObject?,
                          sleep: Boolean,
                          callback: RadarApiCallback? = null) {
+        logger?.d("📍 Radar API request | method = ${method}; url = ${url}; headers = ${headers}; params = $params")
+        
         executor.execute {
             try {
                 val urlConnection = url.openConnection() as HttpURLConnection
@@ -65,6 +69,8 @@ internal open class RadarApiHelper {
 
                     val res = JSONObject(body)
 
+                    logger?.d("📍 Radar API response | method = ${method}; url = ${url}; responseCode = ${urlConnection.responseCode}; res = $res")
+                    
                     handler.post {
                         callback?.onComplete(Radar.RadarStatus.SUCCESS, res)
                     }
@@ -80,6 +86,17 @@ internal open class RadarApiHelper {
                         else -> Radar.RadarStatus.ERROR_UNKNOWN
                     }
 
+                    val body = urlConnection.errorStream.readAll()
+                    if (body == null) {
+                        callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+
+                        return@execute
+                    }
+
+                    val res = JSONObject(body)
+
+                    logger?.d("📍 Radar API response | responseCode = ${urlConnection.responseCode}; res = $res")
+                    
                     handler.post {
                         callback?.onComplete(status)
                     }

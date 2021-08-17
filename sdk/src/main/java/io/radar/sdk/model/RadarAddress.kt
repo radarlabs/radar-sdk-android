@@ -227,7 +227,7 @@ class RadarAddress(
     fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_LATITUDE, this.coordinate.latitude)
-        obj.putOpt(FIELD_LONGITUDE, this.coordinate.latitude)
+        obj.putOpt(FIELD_LONGITUDE, this.coordinate.longitude)
         obj.putOpt(FIELD_FORMATTED_ADDRESS, this.formattedAddress)
         obj.putOpt(FIELD_COUNTRY, this.country)
         obj.putOpt(FIELD_COUNTRY_CODE, this.countryCode)

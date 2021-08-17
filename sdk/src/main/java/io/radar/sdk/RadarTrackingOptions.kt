@@ -1,5 +1,6 @@
 package io.radar.sdk
 
+import io.radar.sdk.model.RadarGeofence
 import org.json.JSONObject
 import java.util.Date
 
@@ -29,7 +30,7 @@ data class RadarTrackingOptions(
     var desiredMovingUpdateInterval: Int,
 
     /**
-     * Determines the fastest location update interval in seconds when stopped.
+     * Determines the fastest location update interval in seconds when moving.
      */
     var fastestMovingUpdateInterval: Int,
 
@@ -97,6 +98,16 @@ data class RadarTrackingOptions(
      * Determines whether to sync nearby geofences from the server to the client to improve responsiveness.
      */
     var syncGeofences: Boolean,
+
+    /**
+     * Determines how many nearby geofences to sync from the server to the client when `syncGeofences` is enabled.
+     */
+    var syncGeofencesLimit: Int,
+
+    /**
+     * If set, starts a foreground service and shows a notification during tracking.
+     */
+    var foregroundService: RadarTrackingOptionsForegroundService?,
 
     /**
      * Determines whether to monitor beacons.
@@ -233,10 +244,89 @@ data class RadarTrackingOptions(
         }
     }
 
+    data class RadarTrackingOptionsForegroundService(
+        /**
+         * Determines the notification text. Defaults to `"Location tracking started"`.
+         */
+        val text: String? = null,
+
+        /**
+         * Determines the notification title. Optional.
+         */
+        val title: String? = null,
+
+        /**
+         * Determines the notification icon, like `R.drawable.ic_your_icon`. Optional, defaults to `applicationContext.applicationInfo.icon`.
+         */
+        val icon: Int? = null,
+
+        /**
+         * Determines when to show the notification. Use `false` to show the notification always, use `true` to show the notification only during location updates. Optional, defaults to `false`.
+         */
+        val updatesOnly: Boolean = false,
+
+        /**
+         * Determines the activity to start when the notification is tapped, like `"com.yourapp.MainActivity"`. Optional.
+         */
+        val activity: String? = null,
+
+        /**
+         * Determines the importance of the notification, one of `android.app.NotificationManager.IMPORTANCE_*`. Optional, defaults to `android.app.NotificationManager.IMPORTANCE_DEFAULT`.
+         */
+        val importance: Int? = null,
+
+        /**
+         * Determines the id of the notification. Optional, defaults to `20160525`.
+         */
+        val id: Int? = null
+    ) {
+
+        companion object {
+            internal const val KEY_FOREGROUND_SERVICE_TEXT = "text"
+            internal const val KEY_FOREGROUND_SERVICE_TITLE = "title"
+            internal const val KEY_FOREGROUND_SERVICE_ICON = "icon"
+            internal const val KEY_FOREGROUND_SERVICE_UPDATES_ONLY = "updatesOnly"
+            internal const val KEY_FOREGROUND_SERVICE_ACTIVITY = "activity"
+            internal const val KEY_FOREGROUND_SERVICE_IMPORTANCE = "importance"
+            internal const val KEY_FOREGROUND_SERVICE_ID = "id"
+
+            @JvmStatic
+            fun fromJson(obj: JSONObject?): RadarTrackingOptionsForegroundService? {
+                if (obj == null) {
+                    return null
+                }
+
+                val text = if (obj.isNull(KEY_FOREGROUND_SERVICE_TEXT)) null else obj.optString(KEY_FOREGROUND_SERVICE_TEXT)
+                val title = if (obj.isNull(KEY_FOREGROUND_SERVICE_TITLE)) null else obj.optString(KEY_FOREGROUND_SERVICE_TITLE)
+                val icon = if (obj.isNull(KEY_FOREGROUND_SERVICE_ICON)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ICON)
+                val updatesOnly: Boolean = obj.optBoolean(KEY_FOREGROUND_SERVICE_UPDATES_ONLY)
+                val activity = if (obj.isNull(KEY_FOREGROUND_SERVICE_ACTIVITY)) null else obj.optString(KEY_FOREGROUND_SERVICE_ACTIVITY)
+                val importance = if (obj.isNull(KEY_FOREGROUND_SERVICE_IMPORTANCE)) null else obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
+                val id = if (obj.isNull(KEY_FOREGROUND_SERVICE_ID)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ID)
+
+                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id)
+            }
+        }
+
+        fun toJson(): JSONObject {
+            val obj = JSONObject()
+
+            obj.put(KEY_FOREGROUND_SERVICE_TEXT, text)
+            obj.put(KEY_FOREGROUND_SERVICE_TITLE, title)
+            obj.put(KEY_FOREGROUND_SERVICE_ICON, icon)
+            obj.put(KEY_FOREGROUND_SERVICE_ACTIVITY, activity)
+            obj.put(KEY_FOREGROUND_SERVICE_UPDATES_ONLY, updatesOnly)
+            obj.put(KEY_FOREGROUND_SERVICE_IMPORTANCE, importance)
+            obj.put(KEY_FOREGROUND_SERVICE_ID, id)
+            return obj
+        }
+
+    }
+
     companion object {
 
         /**
-         * A preset that updates every 30 seconds and syncs all location updates to the server. High battery usage. Should be used with a foreground service. See [](https://developer.android.com/about/versions/oreo/background-location-limits).
+         * Updates about every 30 seconds while moving or stopped. Should be used with a foreground service. Moderate battery usage.
          */
         @JvmField
         val CONTINUOUS = RadarTrackingOptions(
@@ -257,11 +347,13 @@ data class RadarTrackingOptions(
             useMovingGeofence = false,
             movingGeofenceRadius = 0,
             syncGeofences = false,
+            syncGeofencesLimit = 0,
+            foregroundService = null,
             beacons = false
         )
 
         /**
-         * A preset that updates as fast as every 2.5 minutes while moving, shuts down when stopped, and only syncs stops and exits to the server. Must move at least 200 meters to start moving again after a stop. Low battery usage, but may exceed Android vitals bad behavior thresholds for excessive wakeups and excessive wi-fi scans. See [](https://developer.android.com/topic/performance/vitals/wakeup.html) and [](https://developer.android.com/topic/performance/vitals/bg-wifi.html).
+         * Updates about every 2.5 minutes while moving and shuts down when stopped to save battery. Once stopped, the device will need to move more than 100 meters to wake up and start moving again. Low battery usage.
          *
          * Note that location updates may be delayed significantly by Doze Mode, App Standby, and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.
          */
@@ -270,8 +362,8 @@ data class RadarTrackingOptions(
             desiredStoppedUpdateInterval = 0,
             fastestStoppedUpdateInterval = 0,
             desiredMovingUpdateInterval = 150,
-            fastestMovingUpdateInterval = 150,
-            desiredSyncInterval = 140,
+            fastestMovingUpdateInterval = 30,
+            desiredSyncInterval = 20,
             desiredAccuracy = RadarTrackingOptionsDesiredAccuracy.MEDIUM,
             stopDuration = 140,
             stopDistance = 70,
@@ -284,11 +376,13 @@ data class RadarTrackingOptions(
             useMovingGeofence = true,
             movingGeofenceRadius = 100,
             syncGeofences = true,
+            syncGeofencesLimit = 10,
+            foregroundService = null,
             beacons = false
         )
 
         /**
-         * A preset that updates as fast as every 6 minutes while moving, periodically when stopped, and only syncs stops and exits to the server. Must move a significant distance to start moving again after a stop. Lowest battery usage and will not exceed Android vitals bad behavior thresholds. Recommended.
+         * Updates as fast as every 6 minutes while moving and periodically when stopped. Once stopped, the device will need to move more than 100 meters and wait for at least 15 minutes to wake up and start moving again. Lowest battery usage.
          *
          * Note that location updates may be delayed significantly by Doze Mode, App Standby, and Background Location Limits, or if the device has connectivity issues, low battery, or wi-fi disabled.
          */
@@ -311,6 +405,8 @@ data class RadarTrackingOptions(
             useMovingGeofence = false,
             movingGeofenceRadius = 0,
             syncGeofences = true,
+            syncGeofencesLimit = 10,
+            foregroundService = null,
             beacons = false
         )
 
@@ -331,6 +427,8 @@ data class RadarTrackingOptions(
         internal const val KEY_USE_MOVING_GEOFENCE = "useMovingGeofence"
         internal const val KEY_MOVING_GEOFENCE_RADIUS = "movingGeofenceRadius"
         internal const val KEY_SYNC_GEOFENCES = "syncGeofences"
+        internal const val KEY_SYNC_GEOFENCES_LIMIT = "syncGeofencesLimit"
+        internal const val KEY_FOREGROUND_SERVICE = "foregroundService"
         internal const val KEY_BEACONS = "beacons"
 
         @JvmStatic
@@ -371,6 +469,8 @@ data class RadarTrackingOptions(
                 useMovingGeofence = obj.optBoolean(KEY_USE_MOVING_GEOFENCE),
                 movingGeofenceRadius = obj.optInt(KEY_MOVING_GEOFENCE_RADIUS, 100),
                 syncGeofences = obj.optBoolean(KEY_SYNC_GEOFENCES),
+                syncGeofencesLimit = obj.optInt(KEY_SYNC_GEOFENCES_LIMIT, 10),
+                foregroundService = RadarTrackingOptionsForegroundService.fromJson(obj.optJSONObject(KEY_FOREGROUND_SERVICE)),
                 beacons = obj.optBoolean(KEY_BEACONS)
             )
         }
@@ -396,6 +496,8 @@ data class RadarTrackingOptions(
         obj.put(KEY_USE_MOVING_GEOFENCE, useMovingGeofence)
         obj.put(KEY_MOVING_GEOFENCE_RADIUS, movingGeofenceRadius)
         obj.put(KEY_SYNC_GEOFENCES, syncGeofences)
+        obj.put(KEY_SYNC_GEOFENCES_LIMIT, syncGeofencesLimit)
+        obj.put(KEY_FOREGROUND_SERVICE, foregroundService?.toJson())
         obj.put(KEY_BEACONS, beacons)
         return obj
     }
