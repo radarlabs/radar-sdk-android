@@ -27,7 +27,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
                 RadarSettings.setPermissionsDenied(activity.applicationContext, true)
             }
             if (ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_DENIED &&
-                !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                    !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_COARSE_LOCATION)) {
                 RadarSettings.setPermissionsDenied(activity.applicationContext, true)
             }
         } catch (e: Exception) {

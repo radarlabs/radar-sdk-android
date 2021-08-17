@@ -16,7 +16,7 @@ import java.util.concurrent.Executors
 internal open class RadarApiHelper(
     private var logger: RadarLogger? = null
 ) {
-
+  
     private val executor = Executors.newSingleThreadExecutor()
     private val handler = Handler(Looper.getMainLooper())
 
