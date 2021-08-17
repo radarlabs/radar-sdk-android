@@ -309,7 +309,7 @@ internal class RadarApiClient(
 
         val headers = headers(publishableKey)
         
-        apiHelper.request(context, "PATCH", url, headers, params, object: RadarApiHelper.RadarApiCallback {
+        apiHelper.request(context, "PATCH", url, headers, params, false, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 callback?.onComplete(status)
             }
