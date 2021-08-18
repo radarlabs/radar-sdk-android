@@ -19,10 +19,10 @@ class RadarLocationReceiver : BroadcastReceiver() {
         internal const val ACTION_SYNCED_GEOFENCES = "io.radar.sdk.LocationReceiver.SYNCED_GEOFENCES"
         internal const val ACTION_BEACON = "io.radar.sdk.LocationReceiver.BEACON"
 
-        internal const val REQUEST_CODE_LOCATION = 201605250
-        internal const val REQUEST_CODE_BUBBLE_GEOFENCE = 201605251
-        internal const val REQUEST_CODE_SYNCED_GEOFENCES = 201605252
-        internal const val REQUEST_CODE_BEACON = 201605253
+        private const val REQUEST_CODE_LOCATION = 201605250
+        private const val REQUEST_CODE_BUBBLE_GEOFENCE = 201605251
+        private const val REQUEST_CODE_SYNCED_GEOFENCES = 201605252
+        private const val REQUEST_CODE_BEACON = 201605253
 
         internal fun getLocationPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
