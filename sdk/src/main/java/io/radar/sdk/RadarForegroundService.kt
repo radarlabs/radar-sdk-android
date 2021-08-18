@@ -15,6 +15,8 @@ class RadarForegroundService : Service() {
 
     internal companion object {
         internal var started: Boolean = false
+
+        private const val NOTIFICATION_ID = 20160525 // random notification ID (Radar's birthday!)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -46,7 +48,7 @@ class RadarForegroundService : Service() {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.deleteNotificationChannel("RadarSDK")
         var id = extras?.getInt("id") ?: 0
-        id = if (id == 0) 20160525 else id
+        id = if (id == 0) NOTIFICATION_ID else id
         var importance = extras?.getInt("importance") ?: 0
         importance = if (importance == 0) NotificationManager.IMPORTANCE_DEFAULT else importance
         val title = extras?.getString("title")

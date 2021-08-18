@@ -25,7 +25,7 @@ class RadarJobScheduler : JobService() {
         private const val EXTRA_TIME = "time"
         private const val EXTRA_SOURCE = "source"
 
-        private const val JOB_ID = 20160525
+        private const val JOB_ID = 20160525 // random job ID (Radar's birthday!)
 
         internal fun scheduleJob(context: Context, location: Location, source: RadarLocationSource) {
             val componentName = ComponentName(context, RadarJobScheduler::class.java)
