@@ -137,7 +137,6 @@ class MainActivity : AppCompatActivity() {
         }
         initButtonText()
 
-        //
         this.debugLogsAdapter?.add("Tracking options:")
         this.debugLogsAdapter?.add(Radar.getTrackingOptions()?.toJson()?.toString(2))
 
