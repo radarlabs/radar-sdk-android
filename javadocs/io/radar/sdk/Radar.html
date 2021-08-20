@@ -309,7 +309,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                         <tr id="i0" class="altColor">
                                             <td class="colFirst"><code>final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
-                                            <th class="colSecond" scope="row"><code><a href=Radar.html#initialize(Context,String)>initialize</a>(<a href=https://developer.android.com/reference/kotlin/android/content/Context.html>Context</a> context, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> publishableKey) </code>
+                                            <th class="colSecond" scope="row"><code><a href=Radar.html#initialize(Context,String,RadarReceiver)>initialize</a>(<a href=https://developer.android.com/reference/kotlin/android/content/Context.html>Context</a> context, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> publishableKey, <a href=RadarReceiver.html>RadarReceiver</a> receiver) </code>
                                             </th>
                                             <td class="colLast">Initializes the Radar SDK.</td>
                                         </tr>
@@ -899,7 +899,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                             </a>
                                 <h3>Method Detail</h3>
                                 
-                                <a id="initialize(Context,String)">
+                                <a id="initialize(Context,String,RadarReceiver)">
                                     <!--   -->
                                 </a>
                                 <ul class=
@@ -907,7 +907,7 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                           >
                                     <li class="blockList">
                                         <h4>initialize</h4>
-                                        <pre class="methodSignature"> final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=Radar.html#initialize(Context,String)>initialize</a>(<a href=https://developer.android.com/reference/kotlin/android/content/Context.html>Context</a> context, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> publishableKey)</pre>
+                                        <pre class="methodSignature"> final static <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=Radar.html#initialize(Context,String,RadarReceiver)>initialize</a>(<a href=https://developer.android.com/reference/kotlin/android/content/Context.html>Context</a> context, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> publishableKey, <a href=RadarReceiver.html>RadarReceiver</a> receiver)</pre>
                                         <div class="block"><p>Initializes the Radar SDK. Call this method from the main thread in your <code>Application</code> class before calling any other Radar methods.</p></div>
                                         
                                         <dl>
@@ -919,6 +919,10 @@ public class <span class="typeNameLabel"><a href=Radar.html>Radar</a></span>
                                             
                                             
                                             <dd><code>publishableKey</code> - Your publishable API key</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>receiver</code> - An optional receiver for the client-side delivery of events</dd>
                                             
                                             
                                         </dl>

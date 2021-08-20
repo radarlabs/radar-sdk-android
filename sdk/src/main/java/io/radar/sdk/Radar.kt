@@ -2,14 +2,11 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import org.json.JSONObject
@@ -331,6 +328,7 @@ object Radar {
 
     private var initialized = false
     private lateinit var context: Context
+    private var receiver: RadarReceiver? = null
     internal lateinit var logger: RadarLogger
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
@@ -343,15 +341,17 @@ object Radar {
      *
      * @param[context] The context
      * @param[publishableKey] Your publishable API key
+     * @param[receiver] An optional receiver for the client-side delivery of events
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null) {
+    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null) {
         if (context == null) {
             return
         }
 
         initialized = true
         this.context = context.applicationContext
+        this.receiver = receiver
 
         if (!this::logger.isInitialized) {
             this.logger = RadarLogger(this.context)
@@ -2141,67 +2141,32 @@ object Radar {
         locationManager.handleBootCompleted()
     }
 
-    internal fun broadcastSuccessIntent(res: JSONObject, location: Location, user: RadarUser, events: Array<RadarEvent>) {
-        val intent = Intent(RadarReceiver.ACTION_RECEIVED).apply {
-            putExtra(RadarReceiver.EXTRA_RESPONSE, res.toString())
-            putExtra(RadarReceiver.EXTRA_LOCATION, location)
-        }
-
+    internal fun sendSuccess(location: Location, user: RadarUser, events: Array<RadarEvent>) {
         logger.i("📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user._id}")
+
+        receiver?.onLocationUpdated(context, location, user)
 
         if (events.isNotEmpty()) {
             for (event in events) {
                 logger.i("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.io/dashboard/events/${event._id}")
             }
-        }
 
-        this.broadcastIntent(intent)
+            receiver?.onEventsReceived(context, events, user)
+        }
     }
 
-    internal fun broadcastLocationIntent(location: Location, stopped: Boolean, source: RadarLocationSource) {
-        val intent = Intent(RadarReceiver.ACTION_RECEIVED).apply {
-            putExtra(RadarReceiver.EXTRA_LOCATION, location)
-            putExtra(RadarReceiver.EXTRA_STOPPED, stopped)
-            putExtra(RadarReceiver.EXTRA_SOURCE, source.ordinal)
-        }
-
-        this.broadcastIntent(intent)
+    internal fun sendClientLocation(location: Location, stopped: Boolean, source: RadarLocationSource) {
+        receiver?.onClientLocationUpdated(context, location, stopped, source)
     }
 
-    internal fun broadcastErrorIntent(status: RadarStatus) {
-        val intent = Intent(RadarReceiver.ACTION_RECEIVED).apply {
-            putExtra(RadarReceiver.EXTRA_STATUS, status.ordinal)
-        }
-
+    internal fun sendError(status: RadarStatus) {
         logger.i("📍️ Radar error received | status = $status")
 
-        this.broadcastIntent(intent)
+        receiver?.onError(context, status)
     }
 
-    internal fun broadcastLogIntent(message: String) {
-        val intent = Intent(RadarReceiver.ACTION_RECEIVED).apply {
-            putExtra(RadarReceiver.EXTRA_MESSAGE, message)
-        }
-
-        this.broadcastIntent(intent)
-    }
-
-    internal fun broadcastIntent(intent: Intent) {
-        LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
-
-        val matches = context.packageManager.queryBroadcastReceivers(intent, 0)
-        matches.forEach { resolveInfo ->
-            val explicitIntent = Intent(intent)
-            if (context.packageName == resolveInfo.activityInfo.packageName) {
-                val componentName = ComponentName(
-                    resolveInfo.activityInfo.applicationInfo.packageName,
-                    resolveInfo.activityInfo.name
-                )
-                explicitIntent.component = componentName
-
-                context.sendBroadcast(explicitIntent)
-            }
-        }
+    internal fun sendLog(message: String) {
+        receiver?.onLog(context, message)
     }
 
 }

@@ -6,8 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
-import android.os.Handler
-import android.os.SystemClock
 import com.google.android.gms.location.*
 import io.radar.sdk.Radar.RadarLocationCallback
 import io.radar.sdk.Radar.RadarLocationSource
@@ -74,7 +72,7 @@ internal class RadarLocationManager(
 
     fun getLocation(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, source: RadarLocationSource, callback: RadarLocationCallback? = null) {
         if (!permissionsHelper.fineLocationPermissionGranted(context)) {
-            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
+            Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
 
             callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
 
@@ -117,7 +115,7 @@ internal class RadarLocationManager(
         this.stopLocationUpdates()
 
         if (!permissionsHelper.fineLocationPermissionGranted(context)) {
-            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
+            Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
 
             return
         }
@@ -376,7 +374,7 @@ internal class RadarLocationManager(
         if (location == null || !RadarUtils.valid(location)) {
             logger.d("Invalid location | source = $source; location = $location")
 
-            Radar.broadcastErrorIntent(RadarStatus.ERROR_LOCATION)
+            Radar.sendError(RadarStatus.ERROR_LOCATION)
 
             callCallbacks(RadarStatus.ERROR_LOCATION)
 
@@ -433,7 +431,7 @@ internal class RadarLocationManager(
         val justStopped = stopped && !wasStopped
         RadarState.setStopped(context, stopped)
 
-        Radar.broadcastLocationIntent(location, stopped, source)
+        Radar.sendClientLocation(location, stopped, source)
 
         if (source != RadarLocationSource.MANUAL_LOCATION) {
             this.updateTracking(location)

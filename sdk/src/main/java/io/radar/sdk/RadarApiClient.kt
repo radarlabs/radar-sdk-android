@@ -203,7 +203,7 @@ internal class RadarApiClient(
                         RadarState.setLastFailedStoppedLocation(context, location)
                     }
 
-                    Radar.broadcastErrorIntent(status)
+                    Radar.sendError(status)
 
                     callback?.onComplete(status)
 
@@ -236,14 +236,14 @@ internal class RadarApiClient(
                         RadarSettings.setTripOptions(context, null)
                     }
 
-                    Radar.broadcastSuccessIntent(res, location, user, events)
+                    Radar.sendSuccess(location, user, events)
 
                     callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
 
                     return
                 }
 
-                Radar.broadcastErrorIntent(status)
+                Radar.sendError(status)
 
                 callback?.onComplete(RadarStatus.ERROR_SERVER)
             }

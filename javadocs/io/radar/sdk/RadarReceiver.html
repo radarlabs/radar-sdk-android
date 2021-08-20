@@ -108,7 +108,7 @@ var pathtoroot = "../../../";
                     <pre class="wrap-overflow">
 
 public abstract class <span class="typeNameLabel"><a href=RadarReceiver.html>RadarReceiver</a></span>
-extends <a href=https://developer.android.com/reference/kotlin/android/content/BroadcastReceiver.html>BroadcastReceiver</a>
+
                     </pre>
                     <div class="block"><p>A receiver for client-side delivery of events, location updates, and debug logs. For more information, see <a href=https://radar.io/documentation/sdk.html></a>.</p></div>
                 </li>
@@ -118,34 +118,6 @@ extends <a href=https://developer.android.com/reference/kotlin/android/content/B
             <ul class="blockList">
                 <li class="blockList">
                 <!-- ======== NESTED CLASS SUMMARY ======== -->
-                    
-                    <section role="region">
-                        <ul class="blockList">
-                            <li class="blockList"><a id="nested.class.summary">
-                                <!--   -->
-                            </a>
-                                <h3>Nested Class Summary</h3>
-                                <div class="memberSummary">
-                                    <table>
-                                        <caption><span>Nested Classes</span><span class="tabEnd">&nbsp;</span></caption>
-                                        <tr>
-                                            <th class="colFirst" scope="col">Modifier and Type</th>
-                                            <th class="colSecond" scope="col">Class</th>
-                                            <th class="colLast" scope="col">Description</th>
-                                        </tr>
-                                        
-                                        <tr class="altColor">
-                                            <td class="colFirst"><code>public class</code></td>
-                                            <th class="colSecond" scope="row"><code><a href="RadarReceiver.Companion.html">RadarReceiver.Companion</a></span></code>
-                                            </th>
-                                            <td class="colLast"></td>
-                                        </tr>
-                                        
-                                    </table>
-                                </div>
-                            </li>
-                        </ul>
-                    </section>
                     
                     <!-- =========== FIELD SUMMARY =========== -->
                     
@@ -205,14 +177,6 @@ extends <a href=https://developer.android.com/reference/kotlin/android/content/B
                                         </tr>
                                         
                                         <tr id="i0" class="altColor">
-                                            <td class="colFirst"><code><a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
-                                            </td>
-                                            <th class="colSecond" scope="row"><code><a href=RadarReceiver.html#onReceive(Context,Intent)>onReceive</a>(<a href=https://developer.android.com/reference/kotlin/android/content/Context.html>Context</a> context, <a href=https://developer.android.com/reference/kotlin/android/content/Intent.html>Intent</a> intent) </code>
-                                            </th>
-                                            <td class="colLast"></td>
-                                        </tr>
-                                        
-                                        <tr id="i1" class="rowColor">
                                             <td class="colFirst"><code>abstract <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=RadarReceiver.html#onEventsReceived(Context,Array,RadarUser)>onEventsReceived</a>(<a href=https://developer.android.com/reference/kotlin/android/content/Context.html>Context</a> context, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarEvent.html>RadarEvent</a>&gt; events, <a href=model/RadarUser.html>RadarUser</a> user) </code>
@@ -220,7 +184,7 @@ extends <a href=https://developer.android.com/reference/kotlin/android/content/B
                                             <td class="colLast">Tells the receiver that events were received for the current user.</td>
                                         </tr>
                                         
-                                        <tr id="i2" class="altColor">
+                                        <tr id="i1" class="rowColor">
                                             <td class="colFirst"><code>abstract <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=RadarReceiver.html#onLocationUpdated(Context,Location,RadarUser)>onLocationUpdated</a>(<a href=https://developer.android.com/reference/kotlin/android/content/Context.html>Context</a> context, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> location, <a href=model/RadarUser.html>RadarUser</a> user) </code>
@@ -228,7 +192,7 @@ extends <a href=https://developer.android.com/reference/kotlin/android/content/B
                                             <td class="colLast">Tells the receiver that the current user's location was updated and synced to the server.</td>
                                         </tr>
                                         
-                                        <tr id="i3" class="rowColor">
+                                        <tr id="i2" class="altColor">
                                             <td class="colFirst"><code>abstract <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=RadarReceiver.html#onClientLocationUpdated(Context,Location,Boolean,Radar.RadarLocationSource)>onClientLocationUpdated</a>(<a href=https://developer.android.com/reference/kotlin/android/content/Context.html>Context</a> context, <a href=https://developer.android.com/reference/kotlin/android/location/Location.html>Location</a> location, <a href=https://developer.android.com/reference/kotlin/java/lang/Boolean.html>Boolean</a> stopped, <a href=Radar.RadarLocationSource.html>Radar.RadarLocationSource</a> source) </code>
@@ -236,7 +200,7 @@ extends <a href=https://developer.android.com/reference/kotlin/android/content/B
                                             <td class="colLast">Tells the receiver that client's location was updated but not necessarily synced to the server.</td>
                                         </tr>
                                         
-                                        <tr id="i4" class="altColor">
+                                        <tr id="i3" class="rowColor">
                                             <td class="colFirst"><code>abstract <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=RadarReceiver.html#onError(Context,Radar.RadarStatus)>onError</a>(<a href=https://developer.android.com/reference/kotlin/android/content/Context.html>Context</a> context, <a href=Radar.RadarStatus.html>Radar.RadarStatus</a> status) </code>
@@ -244,7 +208,7 @@ extends <a href=https://developer.android.com/reference/kotlin/android/content/B
                                             <td class="colLast">Tells the receiver that a request failed.</td>
                                         </tr>
                                         
-                                        <tr id="i5" class="rowColor">
+                                        <tr id="i4" class="altColor">
                                             <td class="colFirst"><code>abstract <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
                                             <th class="colSecond" scope="row"><code><a href=RadarReceiver.html#onLog(Context,String)>onLog</a>(<a href=https://developer.android.com/reference/kotlin/android/content/Context.html>Context</a> context, <a href=https://developer.android.com/reference/kotlin/java/lang/String.html>String</a> message) </code>
@@ -257,12 +221,6 @@ extends <a href=https://developer.android.com/reference/kotlin/android/content/B
                                 </div>
                                 <ul class="blockList">
                                 
-                                    <li class="blockList"><a id="methods.inherited.from.class.io.radar.sdk.RadarReceiver">
-                                            <!--   -->
-                                        </a>
-                                            <h3>Methods inherited from class&nbsp;io.radar.sdk.RadarReceiver</h3>
-                                            <code>abortBroadcast, clearAbortBroadcast, getAbortBroadcast, getDebugUnregister, getResultCode, getResultData, getResultExtras, goAsync, isInitialStickyBroadcast, isOrderedBroadcast, peekService, setDebugUnregister, setOrderedHint, setResult, setResultCode, setResultData, setResultExtras</code></li>
-                                 
                                     <li class="blockList"><a id="methods.inherited.from.class.java.lang.Object">
                                         <!--   -->
                                     </a>
@@ -311,21 +269,6 @@ extends <a href=https://developer.android.com/reference/kotlin/android/content/B
                                 <!--   -->
                             </a>
                                 <h3>Method Detail</h3>
-                                
-                                <a id="onReceive(Context,Intent)">
-                                    <!--   -->
-                                </a>
-                                <ul class=
-                                              "blockList"
-                                          >
-                                    <li class="blockList">
-                                        <h4>onReceive</h4>
-                                        <pre class="methodSignature"> <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=RadarReceiver.html#onReceive(Context,Intent)>onReceive</a>(<a href=https://developer.android.com/reference/kotlin/android/content/Context.html>Context</a> context, <a href=https://developer.android.com/reference/kotlin/android/content/Intent.html>Intent</a> intent)</pre>
-                                        <div class="block"></div>
-                                        
-                                        <!-- TODO missing return annotation -->
-                                    </li>
-                                </ul>
                                 
                                 <a id="onEventsReceived(Context,Array,RadarUser)">
                                     <!--   -->
