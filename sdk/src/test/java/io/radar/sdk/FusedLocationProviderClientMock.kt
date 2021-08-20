@@ -31,7 +31,7 @@ internal class FusedLocationProviderClientMock(
         if (mockLocation != null) {
             callback?.onLocationResult(LocationResult.create(listOf(mockLocation)))
         }
-        return super.requestLocationUpdates(request, callback, looper)
+        return super.requestLocationUpdates(request!!, callback!!, looper!!)
     }
 
 }

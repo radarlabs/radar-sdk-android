@@ -28,11 +28,16 @@ class RadarLocationReceiver : BroadcastReceiver() {
             val intent = baseIntent(context).apply {
                 action = ACTION_LOCATION
             }
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
             return PendingIntent.getBroadcast(
                 context,
                 REQUEST_CODE_LOCATION,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                flags
             )
         }
 
@@ -40,11 +45,16 @@ class RadarLocationReceiver : BroadcastReceiver() {
             val intent = baseIntent(context).apply {
                 action = ACTION_BUBBLE_GEOFENCE
             }
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
             return PendingIntent.getBroadcast(
                 context,
                 REQUEST_CODE_BUBBLE_GEOFENCE,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                flags
             )
         }
 
@@ -52,11 +62,16 @@ class RadarLocationReceiver : BroadcastReceiver() {
             val intent = baseIntent(context).apply {
                 action = ACTION_SYNCED_GEOFENCES
             }
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
             return PendingIntent.getBroadcast(
                 context,
                 REQUEST_CODE_SYNCED_GEOFENCES,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                flags
             )
         }
 
@@ -64,11 +79,16 @@ class RadarLocationReceiver : BroadcastReceiver() {
             val intent = baseIntent(context).apply {
                 action = ACTION_BEACON
             }
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
             return PendingIntent.getBroadcast(
                 context,
                 REQUEST_CODE_BEACON,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                flags
             )
         }
 

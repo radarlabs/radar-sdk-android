@@ -71,7 +71,12 @@ class RadarForegroundService : Service() {
                 val activityClass = Class.forName(it)
                 val intent = Intent(this, activityClass)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                val pendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+                val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    PendingIntent.FLAG_IMMUTABLE
+                } else {
+                    0
+                }
+                val pendingIntent = PendingIntent.getActivity(this, 0, intent, flags)
                 builder = builder.setContentIntent(pendingIntent)
             }
         } catch (e: ClassNotFoundException) {
