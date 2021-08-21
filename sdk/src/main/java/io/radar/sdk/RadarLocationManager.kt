@@ -326,18 +326,28 @@ internal class RadarLocationManager(
                 radius = radarGeofence.geometry.radius
             }
             if (center != null) {
-                val identifier = "${SYNCED_GEOFENCES_REQUEST_ID_PREFIX}_${i}"
-                val geofence = Geofence.Builder()
-                    .setRequestId(identifier)
-                    .setCircularRegion(center.latitude, center.longitude, radius.toFloat())
-                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                    .setLoiteringDelay(options.stopDuration * 1000 + 10000)
-                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL or Geofence.GEOFENCE_TRANSITION_EXIT)
-                    .build()
-                geofences.add(geofence)
+                try {
+                    val identifier = "${SYNCED_GEOFENCES_REQUEST_ID_PREFIX}_${i}"
+                    val geofence = Geofence.Builder()
+                        .setRequestId(identifier)
+                        .setCircularRegion(center.latitude, center.longitude, radius.toFloat())
+                        .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                        .setLoiteringDelay(options.stopDuration * 1000 + 10000)
+                        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL or Geofence.GEOFENCE_TRANSITION_EXIT)
+                        .build()
+                    geofences.add(geofence)
 
-                logger.d("Adding synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius; identifier = $identifier")
+                    logger.d("Adding synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius; identifier = $identifier")
+                } catch (e: Exception) {
+                    logger.d("Error building synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius")
+                }
             }
+        }
+
+        if (geofences.size == 0) {
+            logger.d("No synced geofences")
+
+            return
         }
 
         val request = GeofencingRequest.Builder()
