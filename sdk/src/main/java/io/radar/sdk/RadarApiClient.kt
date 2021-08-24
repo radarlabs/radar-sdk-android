@@ -181,6 +181,7 @@ internal class RadarApiClient(
                 params.putOpt("nearbyBeacons", nearbyBeaconsArr)
             }
             params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
+            params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
             params.putOpt("sessionId", RadarSettings.getSessionId(context))
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
