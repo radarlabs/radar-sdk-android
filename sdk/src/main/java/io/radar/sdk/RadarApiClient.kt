@@ -313,8 +313,6 @@ internal class RadarApiClient(
         apiHelper.request(context, "PATCH", url, headers, params, false, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    Radar.sendError(status)
-
                     callback?.onComplete(status)
 
                     return
