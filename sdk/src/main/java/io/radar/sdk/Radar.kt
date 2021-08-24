@@ -49,7 +49,7 @@ object Radar {
          * Called when a beacon ranging request succeeds, fails, or times out. Receives the request status and, if successful, the nearby beacon identifiers.
          *
          * @param[status] RadarStatus The request status.
-         * @param[beacons] Array<String>? If successful, the nearby beacon identifiers.
+         * @param[nearbyBeacons] Array<String>? If successful, the nearby beacon identifiers.
          */
         fun onComplete(
             status: RadarStatus,
@@ -86,12 +86,16 @@ object Radar {
     interface RadarTripCallback {
 
         /**
-         * Called when a trip update succeeds, fails, or times out. Receives the request status.
+         * Called when a trip update succeeds, fails, or times out. Receives the request status and, if successful, the trip and an array of the events generated.
          *
          * @param[status] RadarStatus The request status.
+         * @param[trip] RadarTrip? If successful, the trip.
+         * @param[events] Array<RadarEvent>? If successful, an array of the events generated.
          */
         fun onComplete(
-            status: RadarStatus
+            status: RadarStatus,
+            trip: RadarTrip? = null,
+            events: Array<RadarEvent>? = null
         )
 
     }
@@ -951,7 +955,12 @@ object Radar {
         }
 
         apiClient.updateTrip(options, RadarTrip.RadarTripStatus.STARTED, object : RadarApiClient.RadarTripApiCallback {
-            override fun onComplete(status: RadarStatus) {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, options)
 
@@ -959,7 +968,7 @@ object Radar {
                     locationManager.getLocation(null)
                 }
 
-                callback?.onComplete(status)
+                callback?.onComplete(status, trip, events)
             }
         })
     }
@@ -973,10 +982,14 @@ object Radar {
      * @param[block] An optional block callback.
      */
     @JvmStatic
-    fun startTrip(options: RadarTripOptions, block: (status: RadarStatus) -> Unit) {
+    fun startTrip(options: RadarTripOptions, block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
         startTrip(options, object : RadarTripCallback {
-            override fun onComplete(status: RadarStatus) {
-                block(status)
+            override fun onComplete(
+                status: RadarStatus,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
+                block(status, trip, events)
             }
         })
     }
@@ -997,7 +1010,12 @@ object Radar {
         }
 
         apiClient.updateTrip(options, status, object : RadarApiClient.RadarTripApiCallback {
-            override fun onComplete(status: RadarStatus) {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, options)
 
@@ -1005,7 +1023,7 @@ object Radar {
                     locationManager.getLocation(null)
                 }
 
-                callback?.onComplete(status)
+                callback?.onComplete(status, trip, events)
             }
         })
     }
@@ -1020,10 +1038,14 @@ object Radar {
      * @param[block] An optional block callback.
      */
     @JvmStatic
-    fun updateTrip(options: RadarTripOptions, status: RadarTrip.RadarTripStatus?, block: (status: RadarStatus) -> Unit) {
+    fun updateTrip(options: RadarTripOptions, status: RadarTrip.RadarTripStatus?, block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
         updateTrip(options, status, object : RadarTripCallback {
-            override fun onComplete(status: RadarStatus) {
-                block(status)
+            override fun onComplete(
+                status: RadarStatus,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
+                block(status, trip, events)
             }
         })
     }
@@ -1043,7 +1065,12 @@ object Radar {
 
         val options = RadarSettings.getTripOptions(context)
         apiClient.updateTrip(options, RadarTrip.RadarTripStatus.COMPLETED, object : RadarApiClient.RadarTripApiCallback {
-            override fun onComplete(status: RadarStatus) {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
                 if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
                     RadarSettings.setTripOptions(context, null)
 
@@ -1051,7 +1078,7 @@ object Radar {
                     locationManager.getLocation(null)
                 }
 
-                callback?.onComplete(status)
+                callback?.onComplete(status, trip, events)
             }
         })
     }
@@ -1064,10 +1091,14 @@ object Radar {
      * @param[block] An optional block callback.
      */
     @JvmStatic
-    fun completeTrip(block: (status: RadarStatus) -> Unit) {
+    fun completeTrip(block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
         completeTrip(object : RadarTripCallback {
-            override fun onComplete(status: RadarStatus) {
-                block(status)
+            override fun onComplete(
+                status: RadarStatus,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
+                block(status, trip, events)
             }
         })
     }
@@ -1087,7 +1118,12 @@ object Radar {
 
         val options = RadarSettings.getTripOptions(context)
         apiClient.updateTrip(options, RadarTrip.RadarTripStatus.CANCELED, object : RadarApiClient.RadarTripApiCallback {
-            override fun onComplete(status: RadarStatus) {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
                 if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
                     RadarSettings.setTripOptions(context, null)
 
@@ -1095,7 +1131,7 @@ object Radar {
                     locationManager.getLocation(null)
                 }
 
-                callback?.onComplete(status)
+                callback?.onComplete(status, trip, events)
             }
         })
     }
@@ -1108,10 +1144,14 @@ object Radar {
      * @param[block] An optional block callback.
      */
     @JvmStatic
-    fun cancelTrip(block: (status: RadarStatus) -> Unit) {
+    fun cancelTrip(block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
         cancelTrip(object : RadarTripCallback {
-            override fun onComplete(status: RadarStatus) {
-                block(status)
+            override fun onComplete(
+                status: RadarStatus,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
+                block(status, trip, events)
             }
         })
     }

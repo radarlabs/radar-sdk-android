@@ -26,7 +26,7 @@ internal class RadarApiClient(
     }
 
     interface RadarTripApiCallback {
-        fun onComplete(status: RadarStatus)
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, trip: RadarTrip? = null, events: Array<RadarEvent>? = null)
     }
 
     interface RadarContextApiCallback {
@@ -311,7 +311,22 @@ internal class RadarApiClient(
         
         apiHelper.request(context, "PATCH", url, headers, params, false, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                callback?.onComplete(status)
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    Radar.sendError(status)
+
+                    callback?.onComplete(status)
+
+                    return
+                }
+
+                val trip = res.optJSONObject("trip")?.let { tripObj ->
+                    RadarTrip.fromJson(tripObj)
+                }
+                val events = res.optJSONArray("events")?.let { eventsArr ->
+                    RadarEvent.fromJson(eventsArr)
+                }
+
+                callback?.onComplete(RadarStatus.SUCCESS, res, trip, events)
             }
         })
     }
