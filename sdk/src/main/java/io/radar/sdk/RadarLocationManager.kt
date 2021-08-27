@@ -71,7 +71,7 @@ internal class RadarLocationManager(
     }
 
     fun getLocation(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, source: RadarLocationSource, callback: RadarLocationCallback? = null) {
-        if (!permissionsHelper.fineLocationPermissionGranted(context)) {
+        if (!permissionsHelper.fineLocationPermissionGranted(context) && !permissionsHelper.coarseLocationPermissionGranted(context)) {
             Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
 
             callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
@@ -114,7 +114,7 @@ internal class RadarLocationManager(
     fun startTracking(options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT) {
         this.stopLocationUpdates()
 
-        if (!permissionsHelper.fineLocationPermissionGranted(context)) {
+        if (!permissionsHelper.fineLocationPermissionGranted(context) && !permissionsHelper.coarseLocationPermissionGranted(context)) {
             Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
 
             return
