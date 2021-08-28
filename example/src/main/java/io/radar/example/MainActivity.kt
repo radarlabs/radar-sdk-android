@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity() {
 
         val receiver = MyRadarReceiver()
         Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver)
-        Radar.setLogLevel(Radar.RadarLogLevel.INFO)
 
         Radar.getLocation { status, location, stopped ->
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
