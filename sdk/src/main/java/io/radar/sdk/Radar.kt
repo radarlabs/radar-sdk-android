@@ -2181,18 +2181,22 @@ object Radar {
         locationManager.handleBootCompleted()
     }
 
-    internal fun sendSuccess(location: Location, user: RadarUser, events: Array<RadarEvent>) {
-        logger.i("📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user._id}")
+    internal fun sendEvents(events: Array<RadarEvent>, user: RadarUser? = null) {
+        if (events.isEmpty()) {
+            return
+        }
 
+        receiver?.onEventsReceived(context, events, user)
+
+        for (event in events) {
+            logger.i("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.io/dashboard/events/${event._id}")
+        }
+    }
+
+    internal fun sendLocation(location: Location, user: RadarUser) {
         receiver?.onLocationUpdated(context, location, user)
 
-        if (events.isNotEmpty()) {
-            for (event in events) {
-                logger.i("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.io/dashboard/events/${event._id}")
-            }
-
-            receiver?.onEventsReceived(context, events, user)
-        }
+        logger.i("📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user._id}")
     }
 
     internal fun sendClientLocation(location: Location, stopped: Boolean, source: RadarLocationSource) {
@@ -2200,9 +2204,9 @@ object Radar {
     }
 
     internal fun sendError(status: RadarStatus) {
-        logger.i("📍️ Radar error received | status = $status")
-
         receiver?.onError(context, status)
+
+        logger.i("📍️ Radar error received | status = $status")
     }
 
     internal fun sendLog(message: String) {

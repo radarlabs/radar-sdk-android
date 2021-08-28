@@ -14,13 +14,13 @@ import io.radar.sdk.model.RadarUser
 abstract class RadarReceiver {
 
     /**
-     * Tells the receiver that events were received for the current user.
+     * Tells the receiver that events were received.
      *
      * @param[context] The context.
      * @param[events] The events received.
-     * @param[user] The current user.
+     * @param[user] The user, if any.
      */
-    abstract fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser)
+    abstract fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser?)
 
     /**
      * Tells the receiver that the current user's location was updated and synced to the server.

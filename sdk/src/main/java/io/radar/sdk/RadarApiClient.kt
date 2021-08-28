@@ -237,7 +237,11 @@ internal class RadarApiClient(
                         RadarSettings.setTripOptions(context, null)
                     }
 
-                    Radar.sendSuccess(location, user, events)
+                    Radar.sendLocation(location, user)
+
+                    if (events.isNotEmpty()) {
+                        Radar.sendEvents(events, user)
+                    }
 
                     callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
 
@@ -323,6 +327,10 @@ internal class RadarApiClient(
                 }
                 val events = res.optJSONArray("events")?.let { eventsArr ->
                     RadarEvent.fromJson(eventsArr)
+                }
+
+                if (events != null && events.isNotEmpty()) {
+                    Radar.sendEvents(events)
                 }
 
                 callback?.onComplete(RadarStatus.SUCCESS, res, trip, events)
