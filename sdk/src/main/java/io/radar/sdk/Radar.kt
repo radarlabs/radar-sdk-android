@@ -807,7 +807,6 @@ object Radar {
                     intervalLimit = 60
                 }
 
-                val handler = Handler(Looper.getMainLooper())
                 var i = 0
                 val track = object : Runnable {
                     override fun run() {
@@ -822,7 +821,7 @@ object Radar {
 
                         apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
                             override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
-                                Radar.handler.post {
+                                handler.post {
                                     callback?.onComplete(status, location, events, user)
                                 }
 
