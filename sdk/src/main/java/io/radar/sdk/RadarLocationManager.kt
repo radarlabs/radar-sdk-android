@@ -201,8 +201,12 @@ internal class RadarLocationManager(
 
         if (tracking) {
             val foregroundService = options.foregroundService
-            if (foregroundService != null && !foregroundService.updatesOnly) {
-                this.startForegroundService(foregroundService)
+            if (foregroundService != null) {
+                if (!foregroundService.updatesOnly) {
+                    this.startForegroundService(foregroundService)
+                }
+            } else if (RadarForegroundService.started) {
+                this.stopForegroundService()
             }
 
             val stopped = RadarState.getStopped(context)
