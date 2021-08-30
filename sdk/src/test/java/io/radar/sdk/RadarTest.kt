@@ -3,7 +3,6 @@ package io.radar.sdk
 import android.content.Context
 import android.location.Location
 import android.os.Build
-import android.os.Looper.getMainLooper
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.model.*
@@ -12,7 +11,6 @@ import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.runner.RunWith
-import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
 import java.util.*
@@ -20,7 +18,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk=[Build.VERSION_CODES.R])
+@Config(sdk=[Build.VERSION_CODES.P])
 class RadarTest {
 
     companion object {
@@ -330,6 +328,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.ERROR_PERMISSIONS, callbackStatus)
@@ -375,7 +374,7 @@ class RadarTest {
             latch.countDown()
         }
 
-        shadowOf(getMainLooper()).idle()
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -395,6 +394,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.ERROR_PERMISSIONS, callbackStatus)
@@ -445,7 +445,7 @@ class RadarTest {
             latch.countDown()
         }
 
-        shadowOf(getMainLooper()).idle()
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -479,6 +479,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -617,6 +618,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
     }
 
@@ -678,6 +680,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.ERROR_PERMISSIONS, callbackStatus)
@@ -726,7 +729,7 @@ class RadarTest {
             latch.countDown()
         }
 
-        shadowOf(getMainLooper()).idle()
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -757,6 +760,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -777,6 +781,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.ERROR_PERMISSIONS, callbackStatus)
@@ -825,7 +830,7 @@ class RadarTest {
             latch.countDown()
         }
 
-        shadowOf(getMainLooper()).idle()
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -856,6 +861,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -879,6 +885,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.ERROR_PERMISSIONS, callbackStatus)
@@ -933,7 +940,7 @@ class RadarTest {
             latch.countDown()
         }
 
-        shadowOf(getMainLooper()).idle()
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -964,6 +971,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -991,6 +999,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -1014,6 +1023,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.ERROR_SERVER, callbackStatus)
@@ -1038,6 +1048,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -1060,6 +1071,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.ERROR_PERMISSIONS, callbackStatus)
@@ -1111,7 +1123,7 @@ class RadarTest {
             latch.countDown()
         }
 
-        shadowOf(getMainLooper()).idle()
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -1138,6 +1150,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.ERROR_SERVER, callbackStatus)
@@ -1165,6 +1178,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -1189,6 +1203,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.ERROR_SERVER, callbackStatus)
@@ -1215,6 +1230,7 @@ class RadarTest {
             latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
@@ -1250,7 +1266,7 @@ class RadarTest {
             latch.countDown()
         }
 
-        shadowOf(getMainLooper()).idle()
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
