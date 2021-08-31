@@ -111,10 +111,7 @@ internal class RadarLocationManager(
         }
     }
 
-    fun startTracking(
-        options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT,
-        listenToServer: Boolean = false
-    ) {
+    fun startTracking(options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT) {
         this.stopLocationUpdates()
 
         if (!permissionsHelper.fineLocationPermissionGranted(context) && !permissionsHelper.coarseLocationPermissionGranted(context)) {
@@ -123,7 +120,6 @@ internal class RadarLocationManager(
         }
 
         RadarSettings.setTracking(context, true)
-        RadarSettings.setListenToServerTrackingOptions(context, listenToServer)
         RadarSettings.setTrackingOptions(context, options)
 
         this.updateTracking()

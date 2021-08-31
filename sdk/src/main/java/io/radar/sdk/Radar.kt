@@ -760,6 +760,7 @@ object Radar {
             return
         }
 
+        RadarSettings.setListenToServerTrackingOptions(context, false)
         locationManager.startTracking(options)
     }
 
@@ -774,23 +775,16 @@ object Radar {
             return
         }
 
+        RadarSettings.setListenToServerTrackingOptions(context, true)
         apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(
-                status: RadarStatus,
-                res: JSONObject?,
-                trackingOptions: RadarTrackingOptions?
-            ) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS) {
                     broadcastErrorIntent(status)
                     return
                 }
 
-                if (trackingOptions != null) {
-                    locationManager.startTracking(
-                        trackingOptions,
-                        listenToServer = true
-                    )
-                }
+                val trackingOptions = RadarSettings.getTrackingOptions(context)
+                locationManager.startTracking(trackingOptions)
             }
         })
     }

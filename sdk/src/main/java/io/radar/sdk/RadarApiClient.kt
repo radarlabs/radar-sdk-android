@@ -33,7 +33,7 @@ internal class RadarApiClient(
     }
 
     interface RadarGetConfigApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject?, trackingOptions: RadarTrackingOptions?)
+        fun onComplete(status: RadarStatus, res: JSONObject?)
     }
 
     interface RadarTripApiCallback {
@@ -85,7 +85,7 @@ internal class RadarApiClient(
         )
     }
 
-    private fun parseMeta(res: JSONObject?): RadarTrackingOptions? {
+    private fun parseMetaAndConfigure(res: JSONObject?) {
         var meta: JSONObject? = null
         if (res?.has("meta") == true) {
             meta = res.getJSONObject("meta")
@@ -100,9 +100,8 @@ internal class RadarApiClient(
         if (meta?.has("trackingOptions") == true) {
             val rawOptions = meta.getJSONObject("trackingOptions")
             trackingOptions = RadarTrackingOptions.fromJson(rawOptions)
+            RadarSettings.setTrackingOptions(context, trackingOptions)
         }
-
-        return trackingOptions
     }
 
     internal fun getConfig(callback: RadarGetConfigApiCallback? = null) {
@@ -124,8 +123,8 @@ internal class RadarApiClient(
 
         apiHelper.request(context, "GET", url, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                val trackingOptions = parseMeta(res)
-                callback?.onComplete(status, res, trackingOptions)
+                parseMetaAndConfigure(res)
+                callback?.onComplete(status, res)
             }
         })
     }
@@ -244,7 +243,7 @@ internal class RadarApiClient(
 
                 RadarState.setLastFailedStoppedLocation(context, null)
 
-                val trackingOptions = parseMeta(res)
+                parseMetaAndConfigure(res)
 
                 val events = res.optJSONArray("events")?.let { eventsArr ->
                     RadarEvent.fromJson(eventsArr)
@@ -273,8 +272,7 @@ internal class RadarApiClient(
                         res,
                         events,
                         user,
-                        nearbyGeofences,
-                        trackingOptions
+                        nearbyGeofences
                     )
 
                     return
