@@ -5,6 +5,7 @@
 - `RadarReceiver` no longer subclasses `BroadcastReceiver`. Instead of registering `RadarReceiver` in your manifest, pass an instance to `Radar.initialize()` in application `onCreate()`.
 - `RadarTripCallback` now returns `trip` and `events` on calls to `Radar.startTrip()`, `Radar.updateTrip()`, `Radar.completeTrip()`, and `Radar.cancelTrip()`.
 - On `RadarReceiver`, `user` is now optional on `onEventsReceived()`. `user` will be `null` when events are delivered from calls to `Radar.startTrip()`, `Radar.updateTrip()`, `Radar.completeTrip()`, and `Radar.cancelTrip()`.
+- `trackingOptions.foregroundService` now starts a foreground service by default when using `RadarTrackingOptions.CONTINUOUS`. If you are already starting a foreground service when using `RadarTrackingOptions.CONTINUOUS`, consider using `trackingOptions.foregroundService` instead.
 
 ```kotlin
 // 3.2.x
