@@ -96,10 +96,9 @@ internal class RadarApiClient(
             RadarSettings.setConfig(context, config)
         }
 
-        var trackingOptions: RadarTrackingOptions? = null
         if (meta?.has("trackingOptions") == true) {
             val rawOptions = meta.getJSONObject("trackingOptions")
-            trackingOptions = RadarTrackingOptions.fromJson(rawOptions)
+            val trackingOptions = RadarTrackingOptions.fromJson(rawOptions)
             RadarSettings.setTrackingOptions(context, trackingOptions)
         }
     }
