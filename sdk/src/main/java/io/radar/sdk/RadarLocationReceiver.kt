@@ -19,37 +19,77 @@ class RadarLocationReceiver : BroadcastReceiver() {
         internal const val ACTION_SYNCED_GEOFENCES = "io.radar.sdk.LocationReceiver.SYNCED_GEOFENCES"
         internal const val ACTION_BEACON = "io.radar.sdk.LocationReceiver.BEACON"
 
-        internal const val REQUEST_CODE_LOCATION = 201605250
-        internal const val REQUEST_CODE_BUBBLE_GEOFENCE = 201605251
-        internal const val REQUEST_CODE_SYNCED_GEOFENCES = 201605252
-        internal const val REQUEST_CODE_BEACON = 201605253
+        private const val REQUEST_CODE_LOCATION = 201605250
+        private const val REQUEST_CODE_BUBBLE_GEOFENCE = 201605251
+        private const val REQUEST_CODE_SYNCED_GEOFENCES = 201605252
+        private const val REQUEST_CODE_BEACON = 201605253
 
         internal fun getLocationPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
                 action = ACTION_LOCATION
             }
-            return PendingIntent.getBroadcast(context, REQUEST_CODE_LOCATION, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_LOCATION,
+                intent,
+                flags
+            )
         }
 
         internal fun getBubbleGeofencePendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
                 action = ACTION_BUBBLE_GEOFENCE
             }
-            return PendingIntent.getBroadcast(context, REQUEST_CODE_BUBBLE_GEOFENCE, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_BUBBLE_GEOFENCE,
+                intent,
+                flags
+            )
         }
 
         internal fun getSyncedGeofencesPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
                 action = ACTION_SYNCED_GEOFENCES
             }
-            return PendingIntent.getBroadcast(context, REQUEST_CODE_SYNCED_GEOFENCES, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_SYNCED_GEOFENCES,
+                intent,
+                flags
+            )
         }
 
         internal fun getBeaconPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
                 action = ACTION_BEACON
             }
-            return PendingIntent.getBroadcast(context, REQUEST_CODE_BEACON, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_BEACON,
+                intent,
+                flags
+            )
         }
 
         private fun baseIntent(context: Context): Intent = Intent(context, RadarLocationReceiver::class.java)

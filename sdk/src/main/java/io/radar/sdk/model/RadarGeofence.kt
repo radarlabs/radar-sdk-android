@@ -108,7 +108,6 @@ class RadarGeofence(
         }
 
         @JvmStatic
-        @Throws(JSONException::class)
         fun fromJson(arr: JSONArray?): Array<RadarGeofence>? {
             if (arr == null) {
                 return null

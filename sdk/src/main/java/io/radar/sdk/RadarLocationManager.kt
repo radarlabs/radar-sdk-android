@@ -6,8 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
-import android.os.Handler
-import android.os.SystemClock
 import com.google.android.gms.location.*
 import io.radar.sdk.Radar.RadarLocationCallback
 import io.radar.sdk.Radar.RadarLocationSource
@@ -73,8 +71,8 @@ internal class RadarLocationManager(
     }
 
     fun getLocation(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, source: RadarLocationSource, callback: RadarLocationCallback? = null) {
-        if (!permissionsHelper.fineLocationPermissionGranted(context)) {
-            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
+        if (!permissionsHelper.fineLocationPermissionGranted(context) && !permissionsHelper.coarseLocationPermissionGranted(context)) {
+            Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
 
             callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
 
@@ -116,8 +114,8 @@ internal class RadarLocationManager(
     fun startTracking(options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT) {
         this.stopLocationUpdates()
 
-        if (!permissionsHelper.fineLocationPermissionGranted(context)) {
-            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
+        if (!permissionsHelper.fineLocationPermissionGranted(context) && !permissionsHelper.coarseLocationPermissionGranted(context)) {
+            Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
 
             return
         }
@@ -203,8 +201,12 @@ internal class RadarLocationManager(
 
         if (tracking) {
             val foregroundService = options.foregroundService
-            if (foregroundService != null && !foregroundService.updatesOnly) {
-                this.startForegroundService(foregroundService)
+            if (foregroundService != null) {
+                if (!foregroundService.updatesOnly) {
+                    this.startForegroundService(foregroundService)
+                }
+            } else if (RadarForegroundService.started) {
+                this.stopForegroundService()
             }
 
             val stopped = RadarState.getStopped(context)
@@ -328,18 +330,28 @@ internal class RadarLocationManager(
                 radius = radarGeofence.geometry.radius
             }
             if (center != null) {
-                val identifier = "${SYNCED_GEOFENCES_REQUEST_ID_PREFIX}_${i}"
-                val geofence = Geofence.Builder()
-                    .setRequestId(identifier)
-                    .setCircularRegion(center.latitude, center.longitude, radius.toFloat())
-                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                    .setLoiteringDelay(options.stopDuration * 1000 + 10000)
-                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL or Geofence.GEOFENCE_TRANSITION_EXIT)
-                    .build()
-                geofences.add(geofence)
+                try {
+                    val identifier = "${SYNCED_GEOFENCES_REQUEST_ID_PREFIX}_${i}"
+                    val geofence = Geofence.Builder()
+                        .setRequestId(identifier)
+                        .setCircularRegion(center.latitude, center.longitude, radius.toFloat())
+                        .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                        .setLoiteringDelay(options.stopDuration * 1000 + 10000)
+                        .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL or Geofence.GEOFENCE_TRANSITION_EXIT)
+                        .build()
+                    geofences.add(geofence)
 
-                logger.d("Adding synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius; identifier = $identifier")
+                    logger.d("Adding synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius; identifier = $identifier")
+                } catch (e: Exception) {
+                    logger.d("Error building synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius")
+                }
             }
+        }
+
+        if (geofences.size == 0) {
+            logger.d("No synced geofences")
+
+            return
         }
 
         val request = GeofencingRequest.Builder()
@@ -376,7 +388,7 @@ internal class RadarLocationManager(
         if (location == null || !RadarUtils.valid(location)) {
             logger.d("Invalid location | source = $source; location = $location")
 
-            Radar.broadcastErrorIntent(RadarStatus.ERROR_LOCATION)
+            Radar.sendError(RadarStatus.ERROR_LOCATION)
 
             callCallbacks(RadarStatus.ERROR_LOCATION)
 
@@ -433,7 +445,7 @@ internal class RadarLocationManager(
         val justStopped = stopped && !wasStopped
         RadarState.setStopped(context, stopped)
 
-        Radar.broadcastLocationIntent(location, stopped, source)
+        Radar.sendClientLocation(location, stopped, source)
 
         if (source != RadarLocationSource.MANUAL_LOCATION) {
             this.updateTracking(location)
@@ -497,15 +509,7 @@ internal class RadarLocationManager(
             return
         }
 
-        if (lastSyncInterval < 1000L) {
-            logger.d("Scheduling location send")
-
-            Handler().postAtTime({
-                this.sendLocation(sendLocation, stopped, source, replayed)
-            }, "send", SystemClock.uptimeMillis() + 2000L)
-        } else {
-            this.sendLocation(sendLocation, stopped, source, replayed)
-        }
+        this.sendLocation(sendLocation, stopped, source, replayed)
     }
 
     private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {

@@ -15,6 +15,8 @@ class RadarForegroundService : Service() {
 
     internal companion object {
         internal var started: Boolean = false
+
+        private const val NOTIFICATION_ID = 20160525 // random notification ID (Radar's birthday!)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -46,7 +48,7 @@ class RadarForegroundService : Service() {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.deleteNotificationChannel("RadarSDK")
         var id = extras?.getInt("id") ?: 0
-        id = if (id == 0) 20160525 else id
+        id = if (id == 0) NOTIFICATION_ID else id
         var importance = extras?.getInt("importance") ?: 0
         importance = if (importance == 0) NotificationManager.IMPORTANCE_DEFAULT else importance
         val title = extras?.getString("title")
@@ -69,7 +71,12 @@ class RadarForegroundService : Service() {
                 val activityClass = Class.forName(it)
                 val intent = Intent(this, activityClass)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                val pendingIntent = PendingIntent.getActivity(this, 0, intent, 0)
+                val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    PendingIntent.FLAG_IMMUTABLE
+                } else {
+                    0
+                }
+                val pendingIntent = PendingIntent.getActivity(this, 0, intent, flags)
                 builder = builder.setContentIntent(pendingIntent)
             }
         } catch (e: ClassNotFoundException) {

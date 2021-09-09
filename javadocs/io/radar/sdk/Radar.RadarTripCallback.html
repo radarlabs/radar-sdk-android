@@ -149,7 +149,7 @@ public interface <span class="typeNameLabel"><a href=Radar.RadarTripCallback.htm
                                         <tr id="i0" class="altColor">
                                             <td class="colFirst"><code>abstract <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a></code>
                                             </td>
-                                            <th class="colSecond" scope="row"><code><a href=Radar.RadarTripCallback.html#onComplete(Radar.RadarStatus)>onComplete</a>(<a href=Radar.RadarStatus.html>Radar.RadarStatus</a> status) </code>
+                                            <th class="colSecond" scope="row"><code><a href=Radar.RadarTripCallback.html#onComplete(Radar.RadarStatus,RadarTrip,Array)>onComplete</a>(<a href=Radar.RadarStatus.html>Radar.RadarStatus</a> status, <a href=model/RadarTrip.html>RadarTrip</a> trip, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarEvent.html>RadarEvent</a>&gt; events) </code>
                                             </th>
                                             <td class="colLast">Called when a trip update succeeds, fails, or times out.</td>
                                         </tr>
@@ -187,7 +187,7 @@ public interface <span class="typeNameLabel"><a href=Radar.RadarTripCallback.htm
                             </a>
                                 <h3>Method Detail</h3>
                                 
-                                <a id="onComplete(Radar.RadarStatus)">
+                                <a id="onComplete(Radar.RadarStatus,RadarTrip,Array)">
                                     <!--   -->
                                 </a>
                                 <ul class=
@@ -195,14 +195,22 @@ public interface <span class="typeNameLabel"><a href=Radar.RadarTripCallback.htm
                                           >
                                     <li class="blockList">
                                         <h4>onComplete</h4>
-                                        <pre class="methodSignature"> abstract <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=Radar.RadarTripCallback.html#onComplete(Radar.RadarStatus)>onComplete</a>(<a href=Radar.RadarStatus.html>Radar.RadarStatus</a> status)</pre>
-                                        <div class="block"><p>Called when a trip update succeeds, fails, or times out. Receives the request status.</p></div>
+                                        <pre class="methodSignature"> abstract <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html>Unit</a> <a href=Radar.RadarTripCallback.html#onComplete(Radar.RadarStatus,RadarTrip,Array)>onComplete</a>(<a href=Radar.RadarStatus.html>Radar.RadarStatus</a> status, <a href=model/RadarTrip.html>RadarTrip</a> trip, <a href=https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html>Array</a>&lt;<a href=model/RadarEvent.html>RadarEvent</a>&gt; events)</pre>
+                                        <div class="block"><p>Called when a trip update succeeds, fails, or times out. Receives the request status and, if successful, the trip and an array of the events generated.</p></div>
                                         
                                         <dl>
                                             <dt><span class="paramLabel">Parameters:</span></dt>
                                             
                                             
                                             <dd><code>status</code> - RadarStatus The request status.</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>trip</code> - RadarTrip?</dd>
+                                            
+                                            
+                                            
+                                            <dd><code>events</code> - Array&lt;RadarEvent&gt;?</dd>
                                             
                                             
                                         </dl>

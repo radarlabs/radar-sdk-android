@@ -172,7 +172,7 @@ internal class RadarBeaconManager(
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
 
-            Radar.broadcastErrorIntent(RadarStatus.ERROR_PERMISSIONS)
+            Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
 
             callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
 
@@ -182,7 +182,7 @@ internal class RadarBeaconManager(
         if (!RadarUtils.getBluetoothSupported(context)) {
             logger.d("Bluetooth not supported")
 
-            Radar.broadcastErrorIntent(RadarStatus.ERROR_BLUETOOTH)
+            Radar.sendError(RadarStatus.ERROR_BLUETOOTH)
 
             callback?.onComplete(RadarStatus.ERROR_BLUETOOTH)
 
@@ -196,7 +196,7 @@ internal class RadarBeaconManager(
         if (!adapter.isEnabled) {
             logger.d("Bluetooth not enabled")
 
-            Radar.broadcastErrorIntent(RadarStatus.ERROR_BLUETOOTH)
+            Radar.sendError(RadarStatus.ERROR_BLUETOOTH)
 
             callback?.onComplete(RadarStatus.ERROR_BLUETOOTH)
 

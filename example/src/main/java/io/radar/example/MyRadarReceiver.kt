@@ -47,7 +47,7 @@ class MyRadarReceiver : RadarReceiver() {
 
     }
 
-    override fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser) {
+    override fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser?) {
         events.forEach { event -> notify(context, Utils.stringForRadarEvent(event)) }
     }
 
