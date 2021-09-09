@@ -779,7 +779,7 @@ object Radar {
         apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS) {
-                    broadcastErrorIntent(status)
+                    Radar.sendError(status)
                     return
                 }
 
