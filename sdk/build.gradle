@@ -6,21 +6,24 @@ apply plugin: "maven-publish"
 apply plugin: "signing"
 
 ext {
-    radarVersion = "3.1.15"
+    radarVersion = "3.2.0"
 }
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.2"
+    compileSdkVersion 31
+     compileOptions {
+         coreLibraryDesugaringEnabled = true
+         sourceCompatibility = JavaVersion.VERSION_1_8
+         targetCompatibility = JavaVersion.VERSION_1_8
+    }
     kotlinOptions {
         jvmTarget = "1.8"
     }
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 29
-        versionCode 1
-        versionName radarVersion
+        targetSdkVersion 31
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
+        multiDexEnabled = true
     }
     buildTypes {
         release {
@@ -33,18 +36,21 @@ android {
             includeAndroidResources = true
         }
     }
+    lintOptions {
+        warningsAsErrors true
+    }
 }
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "androidx.appcompat:appcompat:1.2.0"
-    implementation "androidx.core:core-ktx:1.3.2"
-    implementation "androidx.localbroadcastmanager:localbroadcastmanager:1.0.0"
-    implementation "com.google.android.gms:play-services-ads-identifier:17.0.0"
-    implementation "com.google.android.gms:play-services-location:17.1.0"
-    testImplementation "androidx.test.ext:junit:1.1.2"
-    testImplementation "org.robolectric:robolectric:4.3.1"
+    implementation "androidx.appcompat:appcompat:1.3.1"
+    implementation "androidx.core:core-ktx:1.6.0"
+    implementation "com.google.android.gms:play-services-ads-identifier:17.0.1"
+    implementation "com.google.android.gms:play-services-location:18.0.0"
+    testImplementation "androidx.test.ext:junit:1.1.3"
+    testImplementation "org.robolectric:robolectric:4.5.1"
 }
 
 task androidSourcesJar(type: Jar) {

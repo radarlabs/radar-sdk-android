@@ -18,16 +18,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val requestCode = 0
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION), requestCode)
-            } else {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), requestCode)
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION), 0)
+        } else {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 0)
         }
 
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000")
+        val receiver = MyRadarReceiver()
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver)
 
         Radar.getLocation { status, location, stopped ->
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
@@ -37,8 +35,7 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Track once: status = ${status}; location = $location; events = $events; user = $user")
         }
 
-        val options = RadarTrackingOptions.RESPONSIVE
-        options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.ALL
+        val options = RadarTrackingOptions.CONTINUOUS
         Radar.startTracking(options)
 
         Radar.getContext { status, location, context ->

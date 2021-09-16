@@ -3,6 +3,7 @@
     package="io.radar.sdk">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -17,7 +18,7 @@
                 <action android:name="io.radar.sdk.LocationReceiver.SYNCED_GEOFENCES" />
                 <action android:name="io.radar.sdk.LocationReceiver.GEOFENCE" />
                 <action android:name="io.radar.sdk.LocationReceiver.LOCATION" />
-                <action android:name="io.radar.sdk.LocationReceiver.BEACONS" />
+                <action android:name="io.radar.sdk.LocationReceiver.BEACON" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>

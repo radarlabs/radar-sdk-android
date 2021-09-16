@@ -75,7 +75,8 @@ internal object RadarUtils {
         if (RadarSettings.getPermissionsDenied(context)) {
             locationAuthorization = "DENIED"
         }
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             locationAuthorization = "GRANTED_FOREGROUND"
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
@@ -90,6 +91,21 @@ internal object RadarUtils {
 
     internal fun getBluetoothSupported(context: Context): Boolean {
         return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
+    }
+
+    internal fun getLocationAccuracyAuthorization(context: Context): String {
+        val olderThanAndroidS = Build.VERSION.SDK_INT < Build.VERSION_CODES.S
+        val fineLocationGranted =
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+        return if (olderThanAndroidS || fineLocationGranted) {
+            "FULL"
+        } else {
+            "REDUCED"
+        }
     }
 
     internal fun getLocationEnabled(context: Context): Boolean {

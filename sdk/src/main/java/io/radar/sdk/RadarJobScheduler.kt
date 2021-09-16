@@ -9,6 +9,7 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
+import android.os.Looper
 import android.os.PersistableBundle
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarLocationSource
@@ -24,7 +25,7 @@ class RadarJobScheduler : JobService() {
         private const val EXTRA_TIME = "time"
         private const val EXTRA_SOURCE = "source"
 
-        private const val JOB_ID = 20160525
+        private const val JOB_ID = 20160525 // random job ID (Radar's birthday!)
 
         internal fun scheduleJob(context: Context, location: Location, source: RadarLocationSource) {
             val componentName = ComponentName(context, RadarJobScheduler::class.java)
@@ -69,7 +70,7 @@ class RadarJobScheduler : JobService() {
 
         Radar.handleLocation(this.applicationContext, location, source)
 
-        Handler().postDelayed({
+        Handler(Looper.getMainLooper()).postDelayed({
             this.jobFinished(params, false)
         }, 10000)
 

@@ -529,8 +529,10 @@ $dokka.location:io.radar.sdk/Radar.RadarTripCallback///PointingToDeclaration/sd
 $dokka.location:io.radar.sdk/Radar.RadarTripCallback/onComplete/#io.radar.sdk.Radar.RadarStatus/PointingToDeclaration/sdk/io.radar.sdk/-radar/-radar-trip-callback/on-complete.html
 $dokka.location:io.radar.sdk/Radar///PointingToDeclaration/sdk/io.radar.sdk/-radar/index.html
 $dokka.location:io.radar.sdk/Radar/acceptEvent/#kotlin.String#kotlin.String?/PointingToDeclaration/sdk/io.radar.sdk/-radar/accept-event.html
-$dokka.location:io.radar.sdk/Radar/autocomplete/#kotlin.String#android.location.Location#kotlin.Int#io.radar.sdk.Radar.RadarGeocodeCallback/PointingToDeclaration/sdk/io.radar.sdk/-radar/autocomplete.html
-$dokka.location:io.radar.sdk/Radar/autocomplete/#kotlin.String#android.location.Location#kotlin.Int#kotlin.Function2[io.radar.sdk.Radar.RadarStatus,kotlin.Array[io.radar.sdk.model.RadarAddress]?,kotlin.Unit]/PointingToDeclaration/sdk/io.radar.sdk/-radar/autocomplete.html
+$dokka.location:io.radar.sdk/Radar/autocomplete/#kotlin.String#android.location.Location?#kotlin.Array[kotlin.String]?#kotlin.Int?#kotlin.String?#io.radar.sdk.Radar.RadarGeocodeCallback/PointingToDeclaration/sdk/io.radar.sdk/-radar/autocomplete.html
+$dokka.location:io.radar.sdk/Radar/autocomplete/#kotlin.String#android.location.Location?#kotlin.Array[kotlin.String]?#kotlin.Int?#kotlin.String?#kotlin.Function2[io.radar.sdk.Radar.RadarStatus,kotlin.Array[io.radar.sdk.model.RadarAddress]?,kotlin.Unit]/PointingToDeclaration/sdk/io.radar.sdk/-radar/autocomplete.html
+$dokka.location:io.radar.sdk/Radar/autocomplete/#kotlin.String#android.location.Location?#kotlin.Int?#io.radar.sdk.Radar.RadarGeocodeCallback/PointingToDeclaration/sdk/io.radar.sdk/-radar/autocomplete.html
+$dokka.location:io.radar.sdk/Radar/autocomplete/#kotlin.String#android.location.Location?#kotlin.Int?#kotlin.Function2[io.radar.sdk.Radar.RadarStatus,kotlin.Array[io.radar.sdk.model.RadarAddress]?,kotlin.Unit]/PointingToDeclaration/sdk/io.radar.sdk/-radar/autocomplete.html
 $dokka.location:io.radar.sdk/Radar/cancelTrip/#io.radar.sdk.Radar.RadarTripCallback?/PointingToDeclaration/sdk/io.radar.sdk/-radar/cancel-trip.html
 $dokka.location:io.radar.sdk/Radar/cancelTrip/#kotlin.Function1[io.radar.sdk.Radar.RadarStatus,kotlin.Unit]/PointingToDeclaration/sdk/io.radar.sdk/-radar/cancel-trip.html
 $dokka.location:io.radar.sdk/Radar/completeTrip/#io.radar.sdk.Radar.RadarTripCallback?/PointingToDeclaration/sdk/io.radar.sdk/-radar/complete-trip.html

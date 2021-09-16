@@ -24,7 +24,6 @@ $dokka.location:io.radar.sdk/Radar.RadarSearchPlacesCallback///PointingToDeclara
 $dokka.location:io.radar.sdk/Radar.RadarStatus///PointingToDeclaration/io/radar/sdk/Radar.RadarStatus.html
 $dokka.location:io.radar.sdk/Radar.RadarTrackCallback///PointingToDeclaration/io/radar/sdk/Radar.RadarTrackCallback.html
 $dokka.location:io.radar.sdk/Radar.RadarTripCallback///PointingToDeclaration/io/radar/sdk/Radar.RadarTripCallback.html
-$dokka.location:io.radar.sdk/RadarReceiver.Companion///PointingToDeclaration/io/radar/sdk/RadarReceiver.Companion.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions.Companion///PointingToDeclaration/io/radar/sdk/RadarTrackingOptions.Companion.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy///PointingToDeclaration/io/radar/sdk/RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.html
 $dokka.location:io.radar.sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion///PointingToDeclaration/io/radar/sdk/RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.html
