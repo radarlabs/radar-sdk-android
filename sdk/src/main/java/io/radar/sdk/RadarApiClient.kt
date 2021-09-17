@@ -128,16 +128,26 @@ internal class RadarApiClient(
             params.putOpt("latitude", location.latitude)
             params.putOpt("longitude", location.longitude)
             var accuracy = location.accuracy
-            if (accuracy <= 0) {
+            if (!location.hasAccuracy() || location.accuracy.isNaN() || accuracy <= 0) {
                 accuracy = 1F
             }
             params.putOpt("accuracy", accuracy)
-            params.putOpt("speed", location.speed)
-            params.putOpt("course", location.bearing)
+            if (location.hasSpeed() && !location.bearing.isNaN()) {
+                params.putOpt("speed", location.speed)
+            }
+            if (location.hasBearing() && !location.bearing.isNaN()) {
+                params.putOpt("course", location.bearing)
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                params.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
-                params.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
-                params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
+                if (location.hasVerticalAccuracy() && !location.verticalAccuracyMeters.isNaN()) {
+                    params.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
+                }
+                if (location.hasSpeedAccuracy() && !location.speedAccuracyMetersPerSecond.isNaN()) {
+                    params.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
+                }
+                if (location.hasBearingAccuracy() && !location.bearingAccuracyDegrees.isNaN()) {
+                    params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
+                }
             }
             if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
