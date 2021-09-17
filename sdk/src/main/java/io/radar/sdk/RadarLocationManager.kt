@@ -470,7 +470,7 @@ internal class RadarLocationManager(
         val ignoreSync =
             lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed
         val now = System.currentTimeMillis()
-        val lastSyncInterval = now - lastSentAt
+        val lastSyncInterval = (now - lastSentAt) / 1000L
         if (!ignoreSync) {
             if (!force && stopped && wasStopped && distance < options.stopDistance && (options.desiredStoppedUpdateInterval == 0 || options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.ALL)) {
                 logger.d("Skipping sync: already stopped | stopped = $stopped; wasStopped = $wasStopped")
@@ -484,7 +484,7 @@ internal class RadarLocationManager(
                 return
             }
 
-            if (!force && !justStopped && lastSyncInterval < 1000L) {
+            if (!force && !justStopped && lastSyncInterval < 1) {
                 logger.d("Skipping sync: rate limit | justStopped = $justStopped; lastSyncInterval = $lastSyncInterval")
 
                 return
