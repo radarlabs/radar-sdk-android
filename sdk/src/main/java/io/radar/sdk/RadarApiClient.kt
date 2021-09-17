@@ -132,7 +132,7 @@ internal class RadarApiClient(
                 accuracy = 1F
             }
             params.putOpt("accuracy", accuracy)
-            if (location.hasSpeed() && !location.bearing.isNaN()) {
+            if (location.hasSpeed() && !location.speed.isNaN()) {
                 params.putOpt("speed", location.speed)
             }
             if (location.hasBearing() && !location.bearing.isNaN()) {
