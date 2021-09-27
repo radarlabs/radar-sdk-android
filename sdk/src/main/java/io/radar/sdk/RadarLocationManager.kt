@@ -524,8 +524,8 @@ internal class RadarLocationManager(
 
         val locationManager = this
 
-        val callTrackApi = { nearbyBeacons: Array<String>? ->
-            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, nearbyBeacons, object : RadarTrackApiCallback {
+        val callTrackApi = { nearbyBeacons: Array<String>?, nearbyBeaconRSSI: Map<String, Int>? ->
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, nearbyBeacons, nearbyBeaconRSSI, object : RadarTrackApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
                     if (user != null) {
                         val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
@@ -549,7 +549,7 @@ internal class RadarLocationManager(
             Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
                     if (status != RadarStatus.SUCCESS || beacons == null) {
-                        callTrackApi(null)
+                        callTrackApi(null, null)
 
                         return
                     }
@@ -559,20 +559,20 @@ internal class RadarLocationManager(
                     }
 
                     Radar.beaconManager.rangeBeacons(beacons, object : Radar.RadarBeaconCallback {
-                        override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?) {
+                        override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?, nearbyBeaconRSSI: Map<String, Int>?) {
                             if (status != RadarStatus.SUCCESS || nearbyBeacons == null) {
-                                callTrackApi(null)
+                                callTrackApi(null, null)
 
                                 return
                             }
 
-                            callTrackApi(nearbyBeacons)
+                            callTrackApi(nearbyBeacons, nearbyBeaconRSSI)
                         }
                     })
                 }
             })
         } else {
-            callTrackApi(null)
+            callTrackApi(null, null)
         }
     }
 
