@@ -119,13 +119,13 @@ data class RadarTrackingOptions(
      * The location accuracy options.
      */
     enum class RadarTrackingOptionsDesiredAccuracy(internal val desiredAccuracy: Int) {
-        /** Uses PRIORITY_HIGH_ACCURACY */
+        /** Uses PRIORITY_HIGH_ACCURACY. */
         HIGH(3),
-        /** Uses PRIORITY_BALANCED_POWER_ACCURACY */
+        /** Uses PRIORITY_BALANCED_POWER_ACCURACY. */
         MEDIUM(2),
-        /** Uses PRIORITY_LOW_POWER */
+        /** Uses PRIORITY_LOW_POWER. */
         LOW(1),
-        /** Uses PRIORITY_NO_POWER */
+        /** Uses PRIORITY_NO_POWER. */
         NONE(0);
 
         internal companion object {
@@ -168,9 +168,9 @@ data class RadarTrackingOptions(
      * The replay options for failed location updates.
      */
     enum class RadarTrackingOptionsReplay(internal val replay: Int) {
-        /** Replays failed stops */
+        /** Replays failed stops. */
         STOPS(1),
-        /** Replays no location updates */
+        /** Replays no location updates. */
         NONE(0);
 
         internal companion object {
@@ -204,11 +204,11 @@ data class RadarTrackingOptions(
     }
 
     enum class RadarTrackingOptionsSync(internal val sync: Int) {
-        /** Syncs no location updates to the server */
+        /** Does not sync location updates to the server. */
         NONE(0),
-        /** Syncs only stops and exits to the server */
+        /** Syncs only stops and exits to the server. */
         STOPS_AND_EXITS(1),
-        /** Syncs all location updates to the server */
+        /** Syncs all location updates to the server. */
         ALL(2);
 
         internal companion object {
