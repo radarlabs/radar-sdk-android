@@ -30,6 +30,7 @@ internal class RadarBeaconManager(
     private var started = false
     private val callbacks = Collections.synchronizedList(mutableListOf<RadarBeaconCallback>())
     private var nearbyBeaconIdentifiers = mutableSetOf<String>()
+    private var nearbyBeaconRSSI = mutableMapOf<String, Int>()
     private var monitoredBeaconIdentifiers = setOf<String>()
     private var beacons = arrayOf<RadarBeacon>()
     private var scanCallback: ScanCallback? = null
@@ -49,7 +50,7 @@ internal class RadarBeaconManager(
         }
     }
 
-    private fun callCallbacks(nearbyBeacons: Array<String>? = null) {
+    private fun callCallbacks(nearbyBeacons: Array<String>? = null, nearbyBeaconRSSI: Map<String, Int>? = null) {
         synchronized(callbacks) {
             if (callbacks.isEmpty()) {
                 return
@@ -58,7 +59,7 @@ internal class RadarBeaconManager(
             logger.d("Calling callbacks | callbacks.size = ${callbacks.size}")
 
             for (callback in callbacks) {
-                callback.onComplete(RadarStatus.SUCCESS, nearbyBeacons)
+                callback.onComplete(RadarStatus.SUCCESS, nearbyBeacons, nearbyBeaconRSSI)
             }
             callbacks.clear()
         }
@@ -303,12 +304,13 @@ internal class RadarBeaconManager(
         adapter.bluetoothLeScanner.stopScan(scanCallback)
         scanCallback = null
 
-        this.callCallbacks(this.nearbyBeaconIdentifiers.toTypedArray())
+        this.callCallbacks(this.nearbyBeaconIdentifiers.toTypedArray(), this.nearbyBeaconRSSI)
 
         this.beacons = arrayOf()
         this.started = false
 
         this.nearbyBeaconIdentifiers.clear()
+        this.nearbyBeaconRSSI.clear()
     }
 
     private fun handleScanResult(result: ScanResult?) {
@@ -318,6 +320,7 @@ internal class RadarBeaconManager(
             logger.d("Ranged beacon | beacon._id = ${beacon._id}")
 
             nearbyBeaconIdentifiers.add(beacon._id)
+            nearbyBeaconRSSI.put(beacon._id, result.rssi)
         }
 
         if (this.nearbyBeaconIdentifiers.size == this.beacons.size) {

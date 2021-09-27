@@ -104,7 +104,7 @@ internal class RadarApiClient(
         })
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, nearbyBeacons: Array<String>?, callback: RadarTrackApiCallback? = null) {
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, nearbyBeacons: Array<String>?, nearbyBeaconRSSI: Map<String, Int>?, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -189,6 +189,13 @@ internal class RadarApiClient(
                     nearbyBeaconsArr.put(nearbyBeacon)
                 }
                 params.putOpt("nearbyBeacons", nearbyBeaconsArr)
+                if (nearbyBeaconRSSI != null) {
+                    val rssiObj = JSONObject()
+                    for ((nearbyBeacon, rssi) in nearbyBeaconRSSI) {
+                        rssiObj.putOpt(nearbyBeacon, rssi)
+                    }
+                    params.putOpt("nearbyBeaconRSSI", rssiObj)
+                }
             }
             params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
             params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))

@@ -46,14 +46,16 @@ object Radar {
     interface RadarBeaconCallback {
 
         /**
-         * Called when a beacon ranging request succeeds, fails, or times out. Receives the request status and, if successful, the nearby beacon identifiers.
+         * Called when a beacon ranging request succeeds, fails, or times out. Receives the request status and, if successful, the nearby beacons and RSSI.
          *
          * @param[status] RadarStatus The request status.
-         * @param[nearbyBeacons] Array<String>? If successful, the nearby beacon identifiers.
+         * @param[nearbyBeacons] Array<String>? If successful, the nearby beacons.
+         * @param[nearbyBeaconRSSI] Map<String, Int>? If successful, the RSSI of the nearby beacons.
          */
         fun onComplete(
             status: RadarStatus,
-            nearbyBeacons: Array<String>? = null
+            nearbyBeacons: Array<String>? = null,
+            nearbyBeaconRSSI: Map<String, Int>? = null
         )
 
     }
@@ -638,8 +640,8 @@ object Radar {
                     return
                 }
 
-                val callTrackApi = { nearbyBeacons: Array<String>? ->
-                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, nearbyBeacons, object : RadarApiClient.RadarTrackApiCallback {
+                val callTrackApi = { nearbyBeacons: Array<String>?, nearbyBeaconRSSI: Map<String, Int>? ->
+                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, nearbyBeacons, nearbyBeaconRSSI, object : RadarApiClient.RadarTrackApiCallback {
                         override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
@@ -652,26 +654,26 @@ object Radar {
                     apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                         override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
                             if (status != RadarStatus.SUCCESS || beacons == null) {
-                                callTrackApi(null)
+                                callTrackApi(null, null)
 
                                 return
                             }
 
                             beaconManager.rangeBeacons(beacons, object : RadarBeaconCallback {
-                                override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?) {
+                                override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?, nearbyBeaconRSSI: Map<String, Int>?) {
                                     if (status != RadarStatus.SUCCESS || nearbyBeacons == null) {
-                                        callTrackApi(null)
+                                        callTrackApi(null, null)
 
                                         return
                                     }
 
-                                    callTrackApi(nearbyBeacons)
+                                    callTrackApi(nearbyBeacons, nearbyBeaconRSSI)
                                 }
                             })
                         }
                     })
                 } else {
-                    callTrackApi(null)
+                    callTrackApi(null, null)
                 }
             }
         })
@@ -711,7 +713,7 @@ object Radar {
             return
         }
 
-        apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
+        apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, null, object : RadarApiClient.RadarTrackApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
                 handler.post {
                     callback?.onComplete(status, location, events, user)
@@ -819,7 +821,7 @@ object Radar {
                         }
                         val stopped = (i == 0) || (i == coordinates.size - 1)
 
-                        apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
+                        apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, null, object : RadarApiClient.RadarTrackApiCallback {
                             override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
                                 handler.post {
                                     callback?.onComplete(status, location, events, user)
@@ -2148,7 +2150,7 @@ object Radar {
      * @return A display string for the location source value.
      */
     @JvmStatic
-    fun stringForSource(source: RadarLocationSource): String? {
+    fun stringForSource(source: RadarLocationSource): String {
         return when (source) {
             RadarLocationSource.FOREGROUND_LOCATION -> "FOREGROUND_LOCATION"
             RadarLocationSource.BACKGROUND_LOCATION -> "BACKGROUND_LOCATION"
@@ -2171,13 +2173,14 @@ object Radar {
      * @return A display string for the travel mode value.
      */
     @JvmStatic
-    fun stringForMode(mode: RadarRouteMode): String? {
+    fun stringForMode(mode: RadarRouteMode): String {
         return when (mode) {
             RadarRouteMode.FOOT -> "foot"
             RadarRouteMode.BIKE -> "bike"
             RadarRouteMode.CAR -> "car"
             RadarRouteMode.TRUCK -> "truck"
             RadarRouteMode.MOTORBIKE -> "motorbike"
+            else -> "car"
         }
     }
 
@@ -2189,7 +2192,7 @@ object Radar {
      * @return A display string for the trip status value.
      */
     @JvmStatic
-    fun stringForTripStatus(status: RadarTrip.RadarTripStatus): String? {
+    fun stringForTripStatus(status: RadarTrip.RadarTripStatus): String {
         return when (status) {
             RadarTrip.RadarTripStatus.STARTED -> "started"
             RadarTrip.RadarTripStatus.APPROACHING -> "approaching"
