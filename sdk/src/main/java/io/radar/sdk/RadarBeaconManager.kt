@@ -317,7 +317,7 @@ internal class RadarBeaconManager(
         logger.d("Handling scan result")
 
         result?.scanRecord?.let { scanRecord -> RadarBeaconUtils.getBeacon(beacons, scanRecord) }?.let { beacon ->
-            logger.d("Ranged beacon | beacon._id = ${beacon._id}")
+            logger.d("Ranged beacon | beacon._id = ${beacon._id}; result.rssi = ${result.rssi}")
 
             nearbyBeaconIdentifiers.add(beacon._id)
             nearbyBeaconRSSI.put(beacon._id, result.rssi)
