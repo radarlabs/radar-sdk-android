@@ -129,6 +129,7 @@ internal class RadarLocationManager(
     fun stopTracking() {
         this.started = false
         RadarSettings.setTracking(context, false)
+        RadarSettings.setListenToServerTrackingOptions(context, false)
         this.updateTracking()
     }
 
@@ -254,6 +255,7 @@ internal class RadarLocationManager(
         } else {
             // fallback
             RadarSettings.revertToFallbackTrackingOptions(context)
+            RadarSettings.setListenToServerTrackingOptions(context, false)
         }
         updateTracking()
     }
