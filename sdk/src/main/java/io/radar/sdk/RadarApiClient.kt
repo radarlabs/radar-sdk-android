@@ -12,6 +12,7 @@ import io.radar.sdk.model.*
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.lang.Exception
 import java.net.URL
 import java.util.*
 
@@ -103,8 +104,12 @@ internal class RadarApiClient(
 
         var remoteTrackingOptions: RadarTrackingOptions? = null
         if (meta?.has("trackingOptions") == true) {
-            val rawOptions = meta.getJSONObject("trackingOptions")
-            remoteTrackingOptions = RadarTrackingOptions.fromJson(rawOptions)
+            try {
+                val rawOptions = meta.getJSONObject("trackingOptions")
+                remoteTrackingOptions = RadarTrackingOptions.fromJson(rawOptions)
+            } catch (e: Exception) {
+                logger.e("Error parsing tracking options from meta", e)
+            }
         }
 
         return RadarMeta(config = config, remoteTrackingOptions = remoteTrackingOptions)
