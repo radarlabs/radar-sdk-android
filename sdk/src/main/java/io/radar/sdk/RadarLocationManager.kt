@@ -203,7 +203,7 @@ internal class RadarLocationManager(
 
         if (tracking) {
             val foregroundService = RadarSettings.getForegroundService(context)
-            if (foregroundService != null) {
+            if (foregroundService != null && options.foregroundServiceEnabled) {
                 if (!foregroundService.updatesOnly) {
                     this.startForegroundService(foregroundService)
                 }
