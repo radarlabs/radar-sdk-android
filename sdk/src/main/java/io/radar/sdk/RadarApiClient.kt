@@ -134,8 +134,7 @@ internal class RadarApiClient(
 
         apiHelper.request(context, "GET", url, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                val meta = parseMeta(res)
-                callback?.onComplete(status, res, meta)
+                callback?.onComplete(status, res, parseMeta(res))
             }
         })
     }
