@@ -1,5 +1,35 @@
 # Migration guides
 
+## 3.2.x to 3.3.x
+
+- `foregroundService` is no longer available in `RadarTrackingOptions`. This has been replaced by `Radar.setForegroundServiceOptions` instead.
+
+```kotlin
+// 3.3.x - enabling foreground service
+
+// enable or disable the foreground service
+val trackingOptions: RadarTrackingOptions = RadarTrackingOptions(...)
+trackingOptions.foregroundServiceEnabled = true
+
+// set the foreground service options
+val foregroundOptions: RadarTrackingOptionsForegroundService =
+RadarTrackingOptionsForegroundService(...)
+Radar.setForegroundServiceOptions(foregroundOptions)
+
+// start tracking
+Radar.startTracking(trackingOptions)
+```
+
+```kotlin
+// 3.2.x - enabling foreground service
+
+val trackingOptions: RadarTrackingOptions = RadarTrackingOptions(...)
+trackingOptions.foregroundService =
+RadarTrackingOptionsForegroundService(...)
+
+Radar.startTracking(trackingOptions)
+```
+
 ## 3.1.x to 3.2.x
 
 - `RadarReceiver` no longer subclasses `BroadcastReceiver`. Instead of registering `RadarReceiver` in your manifest, pass an instance to `Radar.initialize()` in application `onCreate()`.
