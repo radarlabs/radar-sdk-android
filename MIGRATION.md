@@ -12,8 +12,7 @@ val trackingOptions: RadarTrackingOptions = RadarTrackingOptions(...)
 trackingOptions.foregroundServiceEnabled = true
 
 // set the foreground service options
-val foregroundOptions: RadarTrackingOptionsForegroundService =
-RadarTrackingOptionsForegroundService(...)
+val foregroundOptions: RadarTrackingOptionsForegroundService = RadarTrackingOptionsForegroundService(...)
 Radar.setForegroundServiceOptions(foregroundOptions)
 
 // start tracking
@@ -24,8 +23,7 @@ Radar.startTracking(trackingOptions)
 // 3.2.x - enabling foreground service
 
 val trackingOptions: RadarTrackingOptions = RadarTrackingOptions(...)
-trackingOptions.foregroundService =
-RadarTrackingOptionsForegroundService(...)
+trackingOptions.foregroundService = RadarTrackingOptionsForegroundService(...)
 
 Radar.startTracking(trackingOptions)
 ```
@@ -46,12 +44,12 @@ Radar.initialize(context, publishableKey, receiver)
 
 // `RadarTripCallback` now returns `trip` and `events`
 Radar.startTrip(tripOptions) { status, trip, events ->
-  
+
 }
 
 // `user` is now optional
 override fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser?) {
-  
+
 }
 ```
 
@@ -61,11 +59,11 @@ override fun onEventsReceived(context: Context, events: Array<RadarEvent>, user:
 Radar.initialize(context, publishableKey)
 
 Radar.startTrip(options: options) { status in
-  
+
 }
 
 override fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser) {
-  
+
 }
 ```
 
