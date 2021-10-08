@@ -10,19 +10,20 @@ jobs:
           command: yes | sdkmanager --licenses || true
       - run:
           name: Build
-          command: ./gradlew sdk:check
+          command: ./gradlew check
+      # JUnit Test Results
       - store_test_results:
-          path: ~/sdk/build/test-results/testDebugUnitTest/TEST-io.radar.sdk.RadarTest.xml
+          path: sdk/build/test-results/testDebugUnitTest/TEST-io.radar.sdk.RadarTest.xml
       # Jacoco Coverage Report
       - store_artifacts:
-          path: ~/sdk/build/reports/jacoco/jacocoTestReport/html
+          path: sdk/build/reports/jacoco/jacocoTestReport/html
           destination: jacoco
       # Lint Static Analysis Report
       - store_artifacts:
-          path: ~/sdk/build/reports/lint-results.html
+          path: sdk/build/reports/lint-results.html
       # Detekt Static Analysis Report
       - store_artifacts:
-          path: ~/sdk/build/reports/detekt/debug.html
+          path: sdk/build/reports/detekt/debug.html
           destination: detekt-results.html
 workflows:
   version: 2

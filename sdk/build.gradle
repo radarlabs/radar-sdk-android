@@ -47,6 +47,10 @@ android {
 tasks.withType(Test) {
     jacoco.includeNoLocationClasses = true
     jacoco.excludes = ['jdk.internal.*']
+    testLogging {
+        showStandardStreams = true
+        events = ['passed', 'failed', 'skipped']
+    }
 }
 
 tasks.whenTaskAdded {
