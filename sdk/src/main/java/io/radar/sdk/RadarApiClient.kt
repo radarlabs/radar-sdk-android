@@ -12,6 +12,7 @@ import io.radar.sdk.model.*
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.lang.Exception
 import java.net.URL
 import java.util.*
 
@@ -28,12 +29,12 @@ internal class RadarApiClient(
             events: Array<RadarEvent>? = null,
             user: RadarUser? = null,
             nearbyGeofences: Array<RadarGeofence>? = null,
-            trackingOptions: RadarTrackingOptions? = null,
+            meta: RadarMeta? = null
         )
     }
 
     interface RadarGetConfigApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject?)
+        fun onComplete(status: RadarStatus, res: JSONObject?, meta: RadarMeta?)
     }
 
     interface RadarTripApiCallback {
@@ -85,22 +86,33 @@ internal class RadarApiClient(
         )
     }
 
-    private fun parseMetaAndConfigure(res: JSONObject?) {
+    data class RadarMeta(
+        val config: JSONObject?,
+        val remoteTrackingOptions: RadarTrackingOptions?
+    )
+
+    private fun parseMeta(res: JSONObject?): RadarMeta {
         var meta: JSONObject? = null
         if (res?.has("meta") == true) {
             meta = res.getJSONObject("meta")
         }
 
+        var config: JSONObject? = null
         if (meta?.has("config") == true) {
-            val config = meta.getJSONObject("config")
-            RadarSettings.setConfig(context, config)
+            config = meta.getJSONObject("config")
         }
 
+        var remoteTrackingOptions: RadarTrackingOptions? = null
         if (meta?.has("trackingOptions") == true) {
-            val rawOptions = meta.getJSONObject("trackingOptions")
-            val trackingOptions = RadarTrackingOptions.fromJson(rawOptions)
-            RadarSettings.setTrackingOptions(context, trackingOptions)
+            try {
+                val rawOptions = meta.getJSONObject("trackingOptions")
+                remoteTrackingOptions = RadarTrackingOptions.fromJson(rawOptions)
+            } catch (e: Exception) {
+                logger.e("Error parsing tracking options from meta", e)
+            }
         }
+
+        return RadarMeta(config = config, remoteTrackingOptions = remoteTrackingOptions)
     }
 
     internal fun getConfig(callback: RadarGetConfigApiCallback? = null) {
@@ -122,8 +134,7 @@ internal class RadarApiClient(
 
         apiHelper.request(context, "GET", url, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                parseMetaAndConfigure(res)
-                callback?.onComplete(status, res)
+                callback?.onComplete(status, res, parseMeta(res))
             }
         })
     }
@@ -252,7 +263,7 @@ internal class RadarApiClient(
 
                 RadarState.setLastFailedStoppedLocation(context, null)
 
-                parseMetaAndConfigure(res)
+                val meta = parseMeta(res)
 
                 val events = res.optJSONArray("events")?.let { eventsArr ->
                     RadarEvent.fromJson(eventsArr)
@@ -281,7 +292,8 @@ internal class RadarApiClient(
                         res,
                         events,
                         user,
-                        nearbyGeofences
+                        nearbyGeofences,
+                        meta
                     )
 
                     return

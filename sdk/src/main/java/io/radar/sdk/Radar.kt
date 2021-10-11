@@ -6,7 +6,6 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
-import android.os.Looper
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import org.json.JSONObject
@@ -389,7 +388,15 @@ object Radar {
         val application = this.context as? Application
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks())
 
-        this.apiClient.getConfig()
+        this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                meta: RadarApiClient.RadarMeta?
+            ) {
+                locationManager?.updateTrackingFromMeta(context, meta)
+            }
+        })
 
         logger.i("📍️ Radar initialized")
     }
@@ -646,7 +653,7 @@ object Radar {
                             events: Array<RadarEvent>?,
                             user: RadarUser?,
                             nearbyGeofences: Array<RadarGeofence>?,
-                            trackingOptions: RadarTrackingOptions?,
+                            meta: RadarApiClient.RadarMeta?,
                         ) {
                             callback?.onComplete(status, location, events, user)
                         }
@@ -723,7 +730,7 @@ object Radar {
                 events: Array<RadarEvent>?,
                 user: RadarUser?,
                 nearbyGeofences: Array<RadarGeofence>?,
-                trackingOptions: RadarTrackingOptions?,
+                meta: RadarApiClient.RadarMeta?,
             ) {
                 callback?.onComplete(status, location, events, user)
             }
@@ -760,33 +767,7 @@ object Radar {
             return
         }
 
-        RadarSettings.setListenToServerTrackingOptions(context, false)
         locationManager.startTracking(options)
-    }
-
-    /**
-     * Starts tracking the user's location in the background using Radar dashboard settings.
-     *
-     * @see [](https://radar.io/documentation/sdk/android#background-tracking-for-geofencing)
-     */
-    @JvmStatic
-    fun startTracking() {
-        if (!initialized) {
-            return
-        }
-
-        RadarSettings.setListenToServerTrackingOptions(context, true)
-        apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                if (status != RadarStatus.SUCCESS) {
-                    Radar.sendError(status)
-                    return
-                }
-
-                val trackingOptions = RadarSettings.getTrackingOptions(context)
-                locationManager.startTracking(trackingOptions)
-            }
-        })
     }
 
     /**
@@ -862,7 +843,7 @@ object Radar {
                                 events: Array<RadarEvent>?,
                                 user: RadarUser?,
                                 nearbyGeofences: Array<RadarGeofence>?,
-                                trackingOptions: RadarTrackingOptions?,
+                                meta: RadarApiClient.RadarMeta?,
                             ) {
                                 callback?.onComplete(status, location, events, user)
 
@@ -953,6 +934,23 @@ object Radar {
         }
 
         return RadarSettings.getTrackingOptions(context)
+    }
+
+    /**
+     * Settings for the foreground notification when the foregroundServiceEnabled parameter
+     * is true on Radar tracking options.
+     *
+     * @see [](https://radar.io/documentation/sdk/tracking)
+     *
+     * @param[options] Foreground service options
+     */
+    @JvmStatic
+    fun setForegroundServiceOptions(options: RadarTrackingOptions.RadarTrackingOptionsForegroundService) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setForegroundService(context, options)
     }
 
     /**
