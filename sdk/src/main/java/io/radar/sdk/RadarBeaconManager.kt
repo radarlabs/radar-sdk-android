@@ -20,7 +20,7 @@ import java.util.*
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 @SuppressLint("MissingPermission")
 internal class RadarBeaconManager(
-    private val context: Context,
+    private val context: RadarApplication,
     private val logger: RadarLogger,
     @SuppressLint("VisibleForTests")
     internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper()

@@ -1,6 +1,5 @@
 package io.radar.sdk
 
-import android.content.Context
 import android.location.Location
 import android.net.Uri
 import android.os.Build
@@ -27,9 +26,8 @@ import java.util.*
 
 @Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 internal class RadarApiClient(
-    private val context: Context,
-    private var logger: RadarLogger,
-    internal var apiHelper: RadarApiHelper = RadarApiHelper(logger)
+    private val app: RadarApplication,
+    internal var apiHelper: RadarApiHelper = RadarApiHelper(app.logger)
 ) {
 
     interface RadarTrackApiCallback {
@@ -122,21 +120,15 @@ internal class RadarApiClient(
     }
 
     internal fun getConfig() {
-        val publishableKey = RadarSettings.getPublishableKey(context) ?: return
+        val publishableKey = app.settings.getPublishableKey() ?: return
 
         val queryParams = StringBuilder()
-        queryParams.append("installId=${RadarSettings.getInstallId(context)}")
-        queryParams.append("&sessionId=${RadarSettings.getSessionId(context)}")
-        queryParams.append("&locationAuthorization=${RadarUtils.getLocationAuthorization(context)}")
-        queryParams.append(
-            "&locationAccuracyAuthorization=${
-                RadarUtils.getLocationAccuracyAuthorization(
-                    context
-                )
-            }"
-        )
+        queryParams.append("installId=${app.settings.getInstallId()}")
+        queryParams.append("&sessionId=${app.settings.getSessionId()}")
+        queryParams.append("&locationAuthorization=${RadarUtils.getLocationAuthorization(app)}")
+        queryParams.append("&locationAccuracyAuthorization=${RadarUtils.getLocationAccuracyAuthorization(app)}")
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/config?${queryParams}")
             .build()
@@ -153,7 +145,7 @@ internal class RadarApiClient(
                             val meta = res.getJSONObject("meta")
                             if (meta.has("config")) {
                                 val config = meta.getJSONObject("config")
-                                RadarSettings.setConfig(context, config)
+                                app.settings.setConfig(config)
                             }
                         }
                     }
@@ -164,14 +156,14 @@ internal class RadarApiClient(
 
     @Throws(JSONException::class)
     private fun addSettings(params: JSONObject) {
-        params.putOpt("id", RadarSettings.getId(context))
-        params.putOpt("installId", RadarSettings.getInstallId(context))
-        params.putOpt("userId", RadarSettings.getUserId(context))
-        params.putOpt("deviceId", RadarUtils.getDeviceId(context))
-        params.putOpt("description", RadarSettings.getDescription(context))
-        params.putOpt("metadata", RadarSettings.getMetadata(context))
-        if (RadarSettings.getAdIdEnabled(context)) {
-            params.putOpt("adId", RadarUtils.getAdId(context))
+        params.putOpt("id", app.settings.getId())
+        params.putOpt("installId", app.settings.getInstallId())
+        params.putOpt("userId", app.settings.getUserId())
+        params.putOpt("deviceId", RadarUtils.getDeviceId(app))
+        params.putOpt("description", app.settings.getDescription())
+        params.putOpt("metadata", app.settings.getMetadata())
+        if (app.settings.getAdIdEnabled()) {
+            params.putOpt("adId", RadarUtils.getAdId(app))
         }
     }
 
@@ -243,7 +235,7 @@ internal class RadarApiClient(
 
     @Throws(JSONException::class)
     private fun addTripOptions(params: JSONObject) {
-        val tripOptions = RadarSettings.getTripOptions(context)
+        val tripOptions = app.settings.getTripOptions()
         if (tripOptions != null) {
             val tripOptionsObj = JSONObject()
             tripOptionsObj.putOpt("externalId", tripOptions.externalId)
@@ -267,13 +259,13 @@ internal class RadarApiClient(
         nearbyBeacons: Array<String>?,
         callback: RadarTrackApiCallback? = null
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
             return
         }
         val params = JSONObject()
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = app.settings.getTrackingOptions()
         try {
             addSettings(params)
             addLocation(location, params)
@@ -302,18 +294,18 @@ internal class RadarApiClient(
                 }
                 params.putOpt("nearbyBeacons", nearbyBeaconsArr)
             }
-            params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
+            params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(app))
             params.putOpt(
                 "locationAccuracyAuthorization",
-                RadarUtils.getLocationAccuracyAuthorization(context)
+                RadarUtils.getLocationAccuracyAuthorization(app)
             )
-            params.putOpt("sessionId", RadarSettings.getSessionId(context))
+            params.putOpt("sessionId", app.settings.getSessionId())
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
             return
         }
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/track")
             .build()
@@ -340,20 +332,20 @@ internal class RadarApiClient(
                         && stopped
                         && source.requiresReplay
                     ) {
-                        RadarState.setLastFailedStoppedLocation(context, location)
+                        app.state.setLastFailedStoppedLocation(location)
                     }
                     Radar.sendError(status)
                     callback?.onComplete(status)
                     return
                 }
 
-                RadarState.setLastFailedStoppedLocation(context, null)
+                app.state.setLastFailedStoppedLocation(null)
 
                 if (res.has("meta")) {
                     val meta = res.getJSONObject("meta")
                     if (meta.has("config")) {
                         val config = meta.getJSONObject("config")
-                        RadarSettings.setConfig(context, config)
+                        app.settings.setConfig(config)
                     }
                 }
 
@@ -368,10 +360,10 @@ internal class RadarApiClient(
                         RadarGeofence.fromJson(nearbyGeofencesArr)
                     }
                 if (events != null && user != null) {
-                    RadarSettings.setId(context, user.id)
+                    app.settings.setId(user.id)
 
                     if (user.trip == null) {
-                        RadarSettings.setTripOptions(context, null)
+                        app.settings.setTripOptions(null)
                     }
 
                     Radar.sendLocation(location, user)
@@ -394,13 +386,13 @@ internal class RadarApiClient(
         verification: RadarEventVerification,
         verifiedPlaceId: String? = null
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context) ?: return
+        val publishableKey = app.settings.getPublishableKey() ?: return
 
         val params = JSONObject()
         params.putOpt("verification", verification)
         params.putOpt("verifiedPlaceId", verifiedPlaceId)
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/events/")
             .appendEncodedPath(eventId)
@@ -418,7 +410,7 @@ internal class RadarApiClient(
         status: RadarTrip.RadarTripStatus?,
         callback: RadarTripApiCallback?
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -447,7 +439,7 @@ internal class RadarApiClient(
         }
         params.putOpt("mode", Radar.stringForMode(options.mode))
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/trips/")
             .appendEncodedPath(externalId)
@@ -489,7 +481,7 @@ internal class RadarApiClient(
         location: Location,
         callback: RadarContextApiCallback
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -499,7 +491,7 @@ internal class RadarApiClient(
         val queryParams = StringBuilder()
         queryParams.append("coordinates=${location.latitude},${location.longitude}")
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/context?${queryParams}")
         val url = URL(uri.toString())
@@ -543,7 +535,7 @@ internal class RadarApiClient(
         limit: Int?,
         callback: RadarSearchPlacesApiCallback
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
             return
@@ -563,7 +555,7 @@ internal class RadarApiClient(
             queryParams.append("&groups=${groups.joinToString(separator = ",")}")
         }
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/search/places?${queryParams}")
             .build()
@@ -604,7 +596,7 @@ internal class RadarApiClient(
         limit: Int?,
         callback: RadarSearchGeofencesApiCallback
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -623,7 +615,7 @@ internal class RadarApiClient(
             queryParams.append("&metadata[${key}]=${value}")
         }
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/search/geofences?${queryParams}")
             .build()
@@ -664,7 +656,7 @@ internal class RadarApiClient(
         limit: Int?,
         callback: RadarSearchBeaconsApiCallback
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -676,7 +668,7 @@ internal class RadarApiClient(
         queryParams.append("&radius=${radius}")
         queryParams.append("&limit=${limit}")
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/search/beacons?${queryParams}")
             .build()
@@ -716,7 +708,7 @@ internal class RadarApiClient(
         country: String? = null,
         callback: RadarGeocodeApiCallback
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -736,7 +728,7 @@ internal class RadarApiClient(
             queryParams.append("&country=${country}")
         }
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/search/autocomplete?${queryParams}")
             .build()
@@ -772,7 +764,7 @@ internal class RadarApiClient(
         query: String,
         callback: RadarGeocodeApiCallback
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -782,7 +774,7 @@ internal class RadarApiClient(
         val queryParams = StringBuilder()
         queryParams.append("query=${query}")
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/geocode/forward?${queryParams}")
             .build()
@@ -819,7 +811,7 @@ internal class RadarApiClient(
         location: Location,
         callback: RadarGeocodeApiCallback
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -829,7 +821,7 @@ internal class RadarApiClient(
         val queryParams = StringBuilder()
         queryParams.append("coordinates=${location.latitude},${location.longitude}")
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/geocode/reverse?${queryParams}")
             .build()
@@ -867,14 +859,14 @@ internal class RadarApiClient(
     internal fun ipGeocode(
         callback: RadarIpGeocodeApiCallback
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/geocode/ip")
             .build()
@@ -918,7 +910,7 @@ internal class RadarApiClient(
         geometryPoints: Int,
         callback: RadarDistanceApiCallback
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -955,7 +947,7 @@ internal class RadarApiClient(
         }
         queryParams.append("&geometry=linestring")
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/route/distance?${queryParams}")
             .build()
@@ -995,7 +987,7 @@ internal class RadarApiClient(
         units: Radar.RadarRouteUnits,
         callback: RadarMatrixApiCallback
     ) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1034,7 +1026,7 @@ internal class RadarApiClient(
             queryParams.append("&units=imperial")
         }
 
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/route/matrix?${queryParams}")
             .build()

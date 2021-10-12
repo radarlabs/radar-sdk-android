@@ -24,7 +24,7 @@ class RadarForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (!this::logger.isInitialized) {
-            logger = RadarLogger(applicationContext)
+            logger = RadarLogger(Radar.app.settings)
         }
 
         if (intent != null) {

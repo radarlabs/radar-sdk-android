@@ -296,9 +296,9 @@ class RadarTest {
 
         })
 
-        Radar.apiClient.apiHelper = apiHelperMock
-        Radar.locationManager.locationClient = locationClientMock
-        Radar.locationManager.permissionsHelper = permissionsHelperMock
+        Radar.app.apiClient.apiHelper = apiHelperMock
+        Radar.app.locationManager.locationClient = locationClientMock
+        Radar.app.locationManager.permissionsHelper = permissionsHelperMock
     }
 
     @After
@@ -309,7 +309,7 @@ class RadarTest {
 
     @Test
     fun test_Radar_initialize() {
-        assertEquals(publishableKey, RadarSettings.getPublishableKey(context))
+        assertEquals(publishableKey, Radar.app.settings.getPublishableKey())
     }
 
     @Test
@@ -1334,10 +1334,11 @@ class RadarTest {
                 list += message
             }
         }
-        val logger = RadarLogger(context)
+        val settings = RadarSettings(RadarApplication(context))
+        val logger = RadarLogger(settings)
         assertTrue(list.isEmpty())
         val message = UUID.randomUUID().toString()
-        RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
+        settings.setLogLevel(Radar.RadarLogLevel.DEBUG)
         logger.d(message)
         assertFalse(list.isEmpty())
         assertEquals(message, list[0])
