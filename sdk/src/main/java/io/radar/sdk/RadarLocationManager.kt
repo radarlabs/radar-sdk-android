@@ -236,7 +236,7 @@ internal class RadarLocationManager(
                 }
             }
         } else {
-            if (foregroundService != null) {
+            if (RadarForegroundService.started) {
                 this.stopForegroundService()
             }
             this.stopLocationUpdates()
