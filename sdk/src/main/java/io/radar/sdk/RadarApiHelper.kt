@@ -72,7 +72,9 @@ internal open class RadarApiHelper(
                         return@execute
                     }
                     val res = JSONObject(body)
-                    logger?.d("📍 Radar API response | responseCode = ${urlConnection.responseCode}; res = $res")
+                    logger?.d("📍 Radar API response", mapOf(
+                        "responseCode" to urlConnection.responseCode,
+                        "res" to res))
                     handler.post {
                         request.callback?.onComplete(status)
                     }

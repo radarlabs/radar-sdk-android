@@ -6,6 +6,7 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
+import android.util.Log
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarContext
@@ -327,21 +328,21 @@ object Radar {
     /**
      * The levels for debug logs.
      */
-    enum class RadarLogLevel(val value: Int) {
+    enum class RadarLogLevel(val value: Int, val priority: Int) {
         /** None */
-        NONE(0),
+        NONE(0, Log.ASSERT),
 
         /** Error */
-        ERROR(1),
+        ERROR(1, Log.ERROR),
 
         /** Warning */
-        WARNING(2),
+        WARNING(2, Log.WARN),
 
         /** Info */
-        INFO(3),
+        INFO(3, Log.INFO),
 
         /** Debug */
-        DEBUG(4);
+        DEBUG(4, Log.DEBUG);
 
         companion object {
             @JvmStatic
@@ -2476,16 +2477,24 @@ object Radar {
         receiver?.onEventsReceived(context, events, user)
 
         for (event in events) {
-            logger.i("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; " +
-                    "link = https://radar.io/dashboard/events/${event.id}")
+            logger.i(
+                "📍 Radar event received", mapOf(
+                    "type" to RadarEvent.stringForType(event.type),
+                    "link" to "https://radar.io/dashboard/events/${event._id}"
+                )
+            )
         }
     }
 
     internal fun sendLocation(location: Location, user: RadarUser) {
         receiver?.onLocationUpdated(context, location, user)
-
-        logger.i("📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); " +
-                "accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user.id}")
+        logger.i(
+            "📍 Radar location updated", mapOf(
+                "coordinates" to "(${location.latitude}, ${location.longitude})",
+                "accuracy" to "${location.accuracy} meters",
+                "link" to "link = https://radar.io/dashboard/users/${user._id}"
+            )
+        )
     }
 
     internal fun sendClientLocation(location: Location, stopped: Boolean, source: RadarLocationSource) {
@@ -2495,7 +2504,7 @@ object Radar {
     internal fun sendError(status: RadarStatus) {
         receiver?.onError(context, status)
 
-        logger.i("📍️ Radar error received | status = $status")
+        logger.i("📍️ Radar error received", mapOf("status" to status))
     }
 
     internal fun sendLog(message: String) {

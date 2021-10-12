@@ -13,7 +13,8 @@ class RadarPlace(
     /**
      * The Radar ID of the place.
      */
-    val id: String,
+    @Suppress("ConstructorParameterNaming")
+    val _id: String,
 
     /**
      * The name of the place.
@@ -120,7 +121,7 @@ class RadarPlace(
 
     fun toJson(): JSONObject {
         val obj = JSONObject()
-        obj.putOpt(FIELD_ID, this.id)
+        obj.putOpt(FIELD_ID, this._id)
         obj.putOpt(FIELD_NAME, this.name)
         val categoriesArr = JSONArray()
         this.categories.forEach { category -> categoriesArr.put(category) }
