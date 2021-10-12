@@ -9,11 +9,12 @@ import org.json.JSONObject
  *
  * @see [](https://radar.io/documentation/trip-tracking)
  */
+@Suppress("LongParameterList")
 class RadarTrip(
     /**
      * The Radar ID of the trip.
      */
-    val _id: String,
+    val id: String,
 
     /**
      * The external ID of the trip.
@@ -46,12 +47,14 @@ class RadarTrip(
     val mode: Radar.RadarRouteMode?,
 
     /**
-     * For trips with a destination, the distance to the destination geofence in meters based on the travel mode for the trip.
+     * For trips with a destination, the distance to the destination geofence in meters based on the travel mode for the
+     * trip.
      */
     val etaDistance: Double?,
 
     /**
-     * For trips with a destination, the ETA to the destination geofence in minutes based on the travel mode for the trip.
+     * For trips with a destination, the ETA to the destination geofence in minutes based on the travel mode for the
+     * trip.
      */
     val etaDuration: Double?,
 
@@ -61,21 +64,25 @@ class RadarTrip(
     val status: RadarTripStatus
 ) {
 
-    enum class RadarTripStatus {
+    enum class RadarTripStatus(val statusString: String) {
         /** Unknown */
-        UNKNOWN,
+        UNKNOWN(""),
         /** `started` */
-        STARTED,
+        STARTED("started"),
         /** `approaching` */
-        APPROACHING,
+        APPROACHING("approaching"),
         /** `arrived` */
-        ARRIVED,
+        ARRIVED("arrived"),
         /** `expired` */
-        EXPIRED,
+        EXPIRED("expired"),
         /** `completed` */
-        COMPLETED,
+        COMPLETED("completed"),
         /** `canceled` */
-        CANCELED
+        CANCELED("canceled");
+
+        companion object {
+            fun fromString(status: String) = values().find { it.statusString == status } ?: UNKNOWN
+        }
     }
 
     internal companion object {
@@ -114,25 +121,10 @@ class RadarTrip(
                     )
                 }
             }
-            val mode: Radar.RadarRouteMode? = when(obj.optString(FIELD_MODE)) {
-                "foot" -> Radar.RadarRouteMode.FOOT
-                "bike" -> Radar.RadarRouteMode.BIKE
-                "car" -> Radar.RadarRouteMode.CAR
-                "truck" -> Radar.RadarRouteMode.TRUCK
-                "motorbike" -> Radar.RadarRouteMode.MOTORBIKE
-                else -> null
-            }
+            val mode = Radar.RadarRouteMode.fromString(obj.optString(FIELD_MODE))
             val etaDistance = obj.optJSONObject(FIELD_ETA)?.optDouble(FIELD_DISTANCE)
             val etaDuration = obj.optJSONObject(FIELD_ETA)?.optDouble(FIELD_DURATION)
-            val status: RadarTripStatus = when(obj.optString(FIELD_STATUS)) {
-                "started" -> RadarTripStatus.STARTED
-                "approaching" -> RadarTripStatus.APPROACHING
-                "arrived" -> RadarTripStatus.ARRIVED
-                "expired" -> RadarTripStatus.EXPIRED
-                "completed" -> RadarTripStatus.COMPLETED
-                "canceled" -> RadarTripStatus.CANCELED
-                else -> RadarTripStatus.UNKNOWN
-            }
+            val status = RadarTripStatus.fromString(obj.optString(FIELD_STATUS))
 
             return RadarTrip(
                 id,
@@ -162,7 +154,7 @@ class RadarTrip(
 
     fun toJson(): JSONObject {
         val obj = JSONObject()
-        obj.putOpt(FIELD_ID, this._id)
+        obj.putOpt(FIELD_ID, this.id)
         obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_DESTINATION_GEOFENCE_TAG, this.destinationGeofenceTag)

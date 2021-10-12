@@ -13,6 +13,7 @@ import java.util.TimeZone
  *
  * @see [](https://radar.io/documentation/insights)
  */
+@Suppress("LongParameterList")
 class RadarUserInsightsLocation(
     /**
      * The type of the learned location.

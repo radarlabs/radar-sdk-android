@@ -12,7 +12,7 @@ class RadarRegion(
     /**
      * The Radar ID of the region.
      */
-    val _id: String,
+    val id: String,
 
     /**
      * The name of the region.
@@ -71,7 +71,7 @@ class RadarRegion(
 
     fun toJson(): JSONObject {
         val obj = JSONObject()
-        obj.putOpt(FIELD_ID, this._id)
+        obj.putOpt(FIELD_ID, this.id)
         obj.putOpt(FIELD_NAME, this.name)
         obj.putOpt(FIELD_CODE, this.code)
         obj.putOpt(FIELD_TYPE, this.type)

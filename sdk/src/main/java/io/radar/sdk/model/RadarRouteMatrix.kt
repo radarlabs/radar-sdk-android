@@ -36,18 +36,15 @@ class RadarRouteMatrix(
         }
     }
 
+    @Suppress("ReturnCount")
     fun routeBetween(originIndex: Int, destinationIndex: Int): RadarRoute? {
-        if (matrix == null) {
+        if (matrix == null || originIndex >= matrix.size) {
             return null
         }
 
-        if (originIndex >= matrix.size) {
-            return null
-        }
+        val routes = matrix[originIndex]
 
-        val routes = matrix[originIndex] ?: return null
-
-        if (destinationIndex >= routes.size) {
+        if (routes == null || destinationIndex >= routes.size) {
             return null
         }
 

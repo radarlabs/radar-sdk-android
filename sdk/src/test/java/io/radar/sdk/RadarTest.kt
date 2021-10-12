@@ -7,6 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.model.*
 import org.json.JSONObject
+import org.junit.After
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Before
@@ -17,6 +18,7 @@ import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
+@Suppress("LargeClass")
 @RunWith(AndroidJUnit4::class)
 @Config(sdk=[Build.VERSION_CODES.P])
 class RadarTest {
@@ -31,6 +33,8 @@ class RadarTest {
         private val locationClientMock = FusedLocationProviderClientMock(context)
         private val permissionsHelperMock = RadarPermissionsHelperMock()
     }
+
+    private var receiver: RadarReceiver? = null
 
     private fun assertGeofencesOk(geofences: Array<RadarGeofence>?) {
         assertNotNull(geofences)
@@ -78,31 +82,31 @@ class RadarTest {
 
     private fun assertPlaceOk(place: RadarPlace?) {
         assertNotNull(place)
-        assertNotNull(place?._id)
-        assertNotNull(place?.categories)
-        place?.categories?.let {
-            assertTrue(place.categories.count() > 0)
-        }
-        place?.chain?.let {
+        assertNotNull(place!!.id)
+        assertNotNull(place.categories)
+        assertTrue(place.categories.count() > 0)
+        place.chain?.let {
             assertChainOk(place.chain)
         }
-        assertNotNull(place?.location)
+        assertNotNull(place.location)
     }
 
     private fun assertInsightsOk(insights: RadarUserInsights?) {
         assertNotNull(insights)
-        assertNotNull(insights?.homeLocation)
-        assertNotNull(insights?.homeLocation?.updatedAt)
-        assertNotEquals(insights?.homeLocation?.confidence, RadarUserInsightsLocation.RadarUserInsightsLocationConfidence.NONE)
-        assertNotNull(insights?.officeLocation)
-        assertNotNull(insights?.officeLocation?.updatedAt)
-        assertNotEquals(insights?.officeLocation?.confidence, RadarUserInsightsLocation.RadarUserInsightsLocationConfidence.NONE)
-        assertNotNull(insights?.state)
+        assertNotNull(insights!!.homeLocation)
+        assertNotNull(insights.homeLocation!!.updatedAt)
+        assertNotEquals(insights.homeLocation!!.confidence,
+            RadarUserInsightsLocation.RadarUserInsightsLocationConfidence.NONE)
+        assertNotNull(insights.officeLocation)
+        assertNotNull(insights.officeLocation!!.updatedAt)
+        assertNotEquals(insights.officeLocation!!.confidence,
+            RadarUserInsightsLocation.RadarUserInsightsLocationConfidence.NONE)
+        assertNotNull(insights.state)
     }
 
     private fun assertRegionOk(region: RadarRegion?) {
         assertNotNull(region)
-        assertNotNull(region?._id)
+        assertNotNull(region?.id)
         assertNotNull(region?.name)
         assertNotNull(region?.code)
         assertNotNull(region?.type)
@@ -140,7 +144,7 @@ class RadarTest {
 
     private fun assertUserOk(user: RadarUser?) {
         assertNotNull(user)
-        assertNotNull(user?._id)
+        assertNotNull(user?.id)
         assertNotNull(user?.userId)
         assertNotNull(user?.deviceId)
         assertNotNull(user?.description)
@@ -172,7 +176,7 @@ class RadarTest {
 
     private fun assertEventOk(event: RadarEvent?) {
         assertNotNull(event)
-        assertNotNull(event?._id)
+        assertNotNull(event?.id)
         assertNotNull(event?.createdAt)
         assertNotNull(event?.actualCreatedAt)
         assertNotEquals(event?.type, RadarEvent.RadarEventType.UNKNOWN)
@@ -264,11 +268,43 @@ class RadarTest {
 
     @Before
     fun setUp() {
-        Radar.initialize(context, publishableKey)
+        Radar.initialize(context, publishableKey, object: RadarReceiver() {
+            override fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser?) {
+                receiver?.onEventsReceived(context, events, user)
+            }
+
+            override fun onLocationUpdated(context: Context, location: Location, user: RadarUser) {
+                receiver?.onLocationUpdated(context, location, user)
+            }
+
+            override fun onClientLocationUpdated(
+                context: Context,
+                location: Location,
+                stopped: Boolean,
+                source: Radar.RadarLocationSource
+            ) {
+                receiver?.onClientLocationUpdated(context, location, stopped, source)
+            }
+
+            override fun onError(context: Context, status: Radar.RadarStatus) {
+                receiver?.onError(context, status)
+            }
+
+            override fun onLog(context: Context, message: String) {
+                receiver?.onLog(context, message)
+            }
+
+        })
 
         Radar.apiClient.apiHelper = apiHelperMock
         Radar.locationManager.locationClient = locationClientMock
         Radar.locationManager.permissionsHelper = permissionsHelperMock
+    }
+
+    @After
+    fun tearDown() {
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        receiver = null
     }
 
     @Test
@@ -1260,7 +1296,11 @@ class RadarTest {
         var callbackStatus: Radar.RadarStatus? = null
         var callbackRoutes: RadarRoutes? = null
 
-        Radar.getDistance(destination, EnumSet.of(Radar.RadarRouteMode.FOOT, Radar.RadarRouteMode.CAR), Radar.RadarRouteUnits.IMPERIAL) { status, routes ->
+        Radar.getDistance(
+            destination = destination,
+            modes = EnumSet.of(Radar.RadarRouteMode.FOOT, Radar.RadarRouteMode.CAR),
+            units = Radar.RadarRouteUnits.IMPERIAL
+        ) { status, routes ->
             callbackStatus = status
             callbackRoutes = routes
             latch.countDown()
@@ -1271,6 +1311,41 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertRoutesOk(callbackRoutes)
+    }
+
+    @Test
+    fun testDebugLogging() {
+        val list: MutableList<String> = mutableListOf()
+        receiver = object : RadarReceiver() {
+            override fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser?) = Unit
+
+            override fun onLocationUpdated(context: Context, location: Location, user: RadarUser) = Unit
+
+            override fun onClientLocationUpdated(
+                context: Context,
+                location: Location,
+                stopped: Boolean,
+                source: Radar.RadarLocationSource
+            ) = Unit
+
+            override fun onError(context: Context, status: Radar.RadarStatus) = Unit
+
+            override fun onLog(context: Context, message: String) {
+                list += message
+            }
+        }
+        val logger = RadarLogger(context)
+        assertTrue(list.isEmpty())
+        val message = UUID.randomUUID().toString()
+        RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
+        logger.d(message)
+        assertFalse(list.isEmpty())
+        assertEquals(message, list[0])
+        logger.d(message, mapOf(Pair("a", "a"), Pair("b", logger.hashCode())))
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        Thread.sleep(LATCH_TIMEOUT)
+        assertEquals(2, list.size)
+        assertEquals("$message | a = a; b = ${logger.hashCode()}", list[1])
     }
 
 }

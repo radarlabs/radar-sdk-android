@@ -18,7 +18,7 @@ internal object RadarUtils {
 
     private const val KEY_AD_ID = "adId"
 
-    private fun getSharedPreferences(context: Context): SharedPreferences {
+    internal fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
     }
 
@@ -51,8 +51,7 @@ internal object RadarUtils {
                     advertisingIdInfo.id
                 }
                 getSharedPreferences(context).edit { putString(KEY_AD_ID, adId) }
-            } catch (e: Exception) {
-
+            } catch (ignored: Exception) {
             }
         }.start()
     }
@@ -75,8 +74,9 @@ internal object RadarUtils {
         if (RadarSettings.getPermissionsDenied(context)) {
             locationAuthorization = "DENIED"
         }
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        RadarPermissionsHelper.isPermissionGranted(context, Manifest.permission.ACCESS_FINE_LOCATION)
+        if (RadarPermissionsHelper.isPermissionGranted(context, Manifest.permission.ACCESS_FINE_LOCATION) ||
+            RadarPermissionsHelper.isPermissionGranted(context, Manifest.permission.ACCESS_COARSE_LOCATION)) {
             locationAuthorization = "GRANTED_FOREGROUND"
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
@@ -110,7 +110,8 @@ internal object RadarUtils {
 
     internal fun getLocationEnabled(context: Context): Boolean {
         val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return manager.isProviderEnabled(LocationManager.GPS_PROVIDER) || manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        return manager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                || manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
     internal fun valid(location: Location): Boolean {
@@ -121,6 +122,7 @@ internal object RadarUtils {
     }
 
     // based on https://github.com/flutter/plugins/tree/master/packages/device_info/device_info
+    @Suppress("ComplexMethod")
     internal fun isEmulator(): Boolean {
         return (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
                 || Build.FINGERPRINT.startsWith("generic")

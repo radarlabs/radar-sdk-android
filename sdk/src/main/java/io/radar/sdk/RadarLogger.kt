@@ -3,13 +3,39 @@ package io.radar.sdk
 import android.content.Context
 import android.util.Log
 import io.radar.sdk.Radar.RadarLogLevel
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 internal class RadarLogger(
     private val context: Context
 ) {
 
+    /**
+     * Using an executor for logging allows the log operations to run in a separate thread
+     */
+    private val executor = Executors.newSingleThreadExecutor()
+
     internal companion object {
         private const val TAG = "RadarLogger"
+    }
+
+    fun d(message: String, props: Map<String, Any?>, throwable: Throwable? = null) {
+        val level = RadarSettings.getLogLevel(this.context)
+        if (level >= RadarLogLevel.DEBUG) {
+            executor.submit {
+                var logMessage = "$message |"
+                props.forEach { (key, value) ->
+                    if (value != null) {
+                        logMessage += " $key = $value;"
+                    }
+                }
+                //remove the last semicolon
+                logMessage = logMessage.substring(0, logMessage.length - 1)
+
+                Log.d(TAG, logMessage, throwable)
+                Radar.sendLog(logMessage)
+            }
+        }
     }
 
     fun d(message: String, throwable: Throwable? = null) {

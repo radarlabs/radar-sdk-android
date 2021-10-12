@@ -1,7 +1,6 @@
 package io.radar.sdk.model
 
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -13,7 +12,7 @@ class RadarGeofence(
     /**
      * The Radar ID of the geofence.
      */
-    val _id: String,
+    val id: String,
 
     /**
      * The description of the geofence.
@@ -58,6 +57,7 @@ class RadarGeofence(
         private const val TYPE_ISOCHRONE = "isochrone"
 
         @JvmStatic
+        @Suppress("ComplexMethod")
         fun fromJson(obj: JSONObject?): RadarGeofence? {
             if (obj == null) {
                 return null
@@ -134,7 +134,7 @@ class RadarGeofence(
 
     fun toJson(): JSONObject {
         val obj = JSONObject()
-        obj.putOpt(FIELD_ID, this._id)
+        obj.putOpt(FIELD_ID, this.id)
         obj.putOpt(FIELD_TAG, this.tag)
         obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
         obj.putOpt(FIELD_DESCRIPTION, this.description)

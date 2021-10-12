@@ -5,9 +5,9 @@ import android.content.SharedPreferences
 import android.location.Location
 import androidx.core.content.edit
 
+@Suppress("TooManyFunctions")
 internal object RadarState {
 
-    private const val KEY_STARTED = "has_started"
     private const val KEY_LAST_MOVED_LOCATION_LATITUDE = "last_moved_location_latitude"
     private const val KEY_LAST_MOVED_LOCATION_LONGITUDE = "last_moved_location_longitude"
     private const val KEY_LAST_MOVED_LOCATION_ACCURACY = "last_moved_location_accuracy"
@@ -22,16 +22,17 @@ internal object RadarState {
     private const val KEY_LAST_FAILED_STOPPED_LOCATION_ACCURACY = "last_failed_stopped_location_accuracy"
     private const val KEY_LAST_FAILED_STOPPED_LOCATION_PROVIDER = "last_failed_stopped_location_provider"
     private const val KEY_LAST_FAILED_STOPPED_LOCATION_TIME = "last_failed_stopped_location_time"
+    private const val RADAR = "RadarSDK"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
-        return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
+        return RadarUtils.getSharedPreferences(context)
     }
 
     internal fun getLastMovedLocation(context: Context): Location? {
         val lastMovedLocationLatitude = getSharedPreferences(context).getFloat(KEY_LAST_MOVED_LOCATION_LATITUDE, 0f)
         val lastMovedLocationLongitude = getSharedPreferences(context).getFloat(KEY_LAST_MOVED_LOCATION_LONGITUDE, 0f)
         val lastMovedLocationAccuracy = getSharedPreferences(context).getFloat(KEY_LAST_MOVED_LOCATION_ACCURACY, 0f)
-        val lastMovedLocationProvider = getSharedPreferences(context).getString(KEY_LAST_MOVED_LOCATION_PROVIDER, "RadarSDK")
+        val lastMovedLocationProvider = getSharedPreferences(context).getString(KEY_LAST_MOVED_LOCATION_PROVIDER, RADAR)
         val lastMovedLocationTime = getSharedPreferences(context).getLong(KEY_LAST_MOVED_LOCATION_TIME, 0L)
         val location = Location(lastMovedLocationProvider)
         location.latitude = lastMovedLocationLatitude.toDouble()
@@ -93,11 +94,12 @@ internal object RadarState {
     }
 
     internal fun getLastFailedStoppedLocation(context: Context): Location? {
-        val lastFailedStoppedLocationLatitude = getSharedPreferences(context).getFloat(KEY_LAST_FAILED_STOPPED_LOCATION_LATITUDE, 0f)
-        val lastFailedStoppedLocationLongitude = getSharedPreferences(context).getFloat(KEY_LAST_FAILED_STOPPED_LOCATION_LONGITUDE, 0f)
-        val lastFailedStoppedLocationAccuracy = getSharedPreferences(context).getFloat(KEY_LAST_FAILED_STOPPED_LOCATION_ACCURACY, 0f)
-        val lastFailedStoppedLocationProvider = getSharedPreferences(context).getString(KEY_LAST_FAILED_STOPPED_LOCATION_PROVIDER, "RadarSDK")
-        val lastFailedStoppedLocationTime = getSharedPreferences(context).getLong(KEY_LAST_FAILED_STOPPED_LOCATION_TIME, 0L)
+        val prefs = getSharedPreferences(context)
+        val lastFailedStoppedLocationLatitude = prefs.getFloat(KEY_LAST_FAILED_STOPPED_LOCATION_LATITUDE, 0f)
+        val lastFailedStoppedLocationLongitude = prefs.getFloat(KEY_LAST_FAILED_STOPPED_LOCATION_LONGITUDE, 0f)
+        val lastFailedStoppedLocationAccuracy = prefs.getFloat(KEY_LAST_FAILED_STOPPED_LOCATION_ACCURACY, 0f)
+        val lastFailedStoppedLocationProvider = prefs.getString(KEY_LAST_FAILED_STOPPED_LOCATION_PROVIDER, RADAR)
+        val lastFailedStoppedLocationTime = prefs.getLong(KEY_LAST_FAILED_STOPPED_LOCATION_TIME, 0L)
         val location = Location(lastFailedStoppedLocationProvider)
         location.latitude = lastFailedStoppedLocationLatitude.toDouble()
         location.longitude = lastFailedStoppedLocationLongitude.toDouble()

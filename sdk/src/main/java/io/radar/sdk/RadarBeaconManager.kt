@@ -64,6 +64,7 @@ internal class RadarBeaconManager(
         }
     }
 
+    @Suppress("ReturnCount")
     @RequiresApi(Build.VERSION_CODES.O)
     fun startMonitoringBeacons(beacons: Array<RadarBeacon>) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
@@ -88,7 +89,7 @@ internal class RadarBeaconManager(
             return
         }
 
-        val newBeaconIdentifiers = beacons.map { it._id }.toSet()
+        val newBeaconIdentifiers = beacons.map { it.id }.toSet()
         if (monitoredBeaconIdentifiers == newBeaconIdentifiers) {
             logger.i("Already monitoring beacons")
 
@@ -110,15 +111,16 @@ internal class RadarBeaconManager(
         for (beacon in beacons) {
             var scanFilter: ScanFilter? = null
             try {
-                logger.d("Building scan filter for monitoring | _id = ${beacon._id}")
+                logger.d("Building scan filter for monitoring | _id = ${beacon.id}")
 
                 scanFilter = RadarBeaconUtils.getScanFilter(beacon)
             } catch (e: Exception) {
-                logger.d("Error building scan filter for monitoring | _id = ${beacon._id}", e)
+                logger.d("Error building scan filter for monitoring | _id = ${beacon.id}", e)
             }
 
             if (scanFilter != null) {
-                logger.d("Starting monitoring beacon | _id = ${beacon._id}; uuid = ${beacon.uuid}; major = ${beacon.major}; minor = ${beacon.minor}")
+                logger.d("Starting monitoring beacon | _id = ${beacon.id}; uuid = ${beacon.uuid}; " +
+                        "major = ${beacon.major}; minor = ${beacon.minor}")
 
                 scanFilters.add(scanFilter)
             }
@@ -140,16 +142,13 @@ internal class RadarBeaconManager(
 
         logger.d("Starting monitoring beacons")
 
-        adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, RadarLocationReceiver.getBeaconPendingIntent(context))
+        adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings,
+            RadarLocationReceiver.getBeaconPendingIntent(context))
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun stopMonitoringBeacons() {
-        if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
-            return
-        }
-
-        if (!RadarUtils.getBluetoothSupported(context)) {
+        if (!permissionsHelper.bluetoothPermissionsGranted(context) || !RadarUtils.getBluetoothSupported(context)) {
             return
         }
 
@@ -157,124 +156,77 @@ internal class RadarBeaconManager(
             adapter = BluetoothAdapter.getDefaultAdapter()
         }
 
-        if (!adapter.isEnabled) {
+        if (adapter.isEnabled) {
+            logger.d("Stopping monitoring beacons")
+            adapter.bluetoothLeScanner.stopScan(RadarLocationReceiver.getBeaconPendingIntent(context))
+        } else {
             logger.d("Bluetooth not enabled")
-
-            return
         }
-
-        logger.d("Stopping monitoring beacons")
-
-        adapter.bluetoothLeScanner.stopScan(RadarLocationReceiver.getBeaconPendingIntent(context))
     }
 
+    @Suppress("ReturnCount")
     fun rangeBeacons(beacons: Array<RadarBeacon>, callback: RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
-
             Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
-
             callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
-
             return
         }
-
         if (!RadarUtils.getBluetoothSupported(context)) {
             logger.d("Bluetooth not supported")
-
             Radar.sendError(RadarStatus.ERROR_BLUETOOTH)
-
             callback?.onComplete(RadarStatus.ERROR_BLUETOOTH)
-
             return
         }
-
         if (!this::adapter.isInitialized) {
             adapter = BluetoothAdapter.getDefaultAdapter()
         }
-
         if (!adapter.isEnabled) {
             logger.d("Bluetooth not enabled")
-
             Radar.sendError(RadarStatus.ERROR_BLUETOOTH)
-
             callback?.onComplete(RadarStatus.ERROR_BLUETOOTH)
-
             return
         }
-
         if (beacons.isEmpty()) {
             logger.d("No beacons to range")
-
             callback?.onComplete(RadarStatus.SUCCESS)
-
             return
         }
 
         this.addCallback(callback)
-
         if (this.started) {
             logger.d("Already ranging beacons")
-
             return
         }
-
         this.beacons = beacons
         this.started = true
 
-        val scanFilters = mutableListOf<ScanFilter>()
-
-        for (beacon in beacons) {
-            var scanFilter: ScanFilter? = null
-            try {
-                logger.d("Building scan filter for ranging | _id = ${beacon._id}")
-
-                scanFilter = RadarBeaconUtils.getScanFilter(beacon)
-            } catch (e: Exception) {
-                logger.d("Error building scan filter for ranging | _id = ${beacon._id}", e)
-            }
-
-            if (scanFilter != null) {
-                logger.d("Starting ranging beacon | _id = ${beacon._id}; uuid = ${beacon.uuid}; major = ${beacon.major}; minor = ${beacon.minor}")
-
-                scanFilters.add(scanFilter)
-            }
-        }
-
-        if (scanFilters.size == 0) {
+        val scanFilters = getScanFilters(beacons)
+        if (scanFilters.isEmpty()) {
             logger.d("No scan filters for ranging")
-
             this.callCallbacks()
-
             return
         }
-
         val scanSettings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
             .setReportDelay(0)
             .build()
 
-        val beaconManager = this
-
         this.scanCallback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
                 super.onScanResult(callbackType, result)
-
-                beaconManager.handleScanResult(result)
+                this@RadarBeaconManager.handleScanResult(result)
             }
 
             override fun onBatchScanResults(results: MutableList<ScanResult>?) {
                 super.onBatchScanResults(results)
-
-                results?.forEach { result -> beaconManager.handleScanResult(result) }
+                results?.forEach { result -> this@RadarBeaconManager.handleScanResult(result) }
             }
 
             override fun onScanFailed(errorCode: Int) {
                 super.onScanFailed(errorCode)
-
                 logger.d("Scan failed")
-
-                beaconManager.stopRanging()
+                this@RadarBeaconManager.stopRanging()
             }
         }
 
@@ -282,9 +234,28 @@ internal class RadarBeaconManager(
 
         handler.postAtTime({
             logger.d("Beacon ranging timeout")
-
             this.stopRanging()
         }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
+    }
+
+    private fun getScanFilters(beacons: Array<RadarBeacon>): List<ScanFilter> {
+        val scanFilters = mutableListOf<ScanFilter>()
+        for (beacon in beacons) {
+            var scanFilter: ScanFilter? = null
+            try {
+                logger.d("Building scan filter for ranging | _id = ${beacon.id}")
+                scanFilter = RadarBeaconUtils.getScanFilter(beacon)
+            } catch (e: Exception) {
+                logger.d("Error building scan filter for ranging | _id = ${beacon.id}", e)
+            }
+
+            if (scanFilter != null) {
+                logger.d("Starting ranging beacon | _id = ${beacon.id}; uuid = ${beacon.uuid}; " +
+                        "major = ${beacon.major}; minor = ${beacon.minor}")
+                scanFilters.add(scanFilter)
+            }
+        }
+        return scanFilters
     }
 
     private fun stopRanging() {
@@ -315,9 +286,9 @@ internal class RadarBeaconManager(
         logger.d("Handling scan result")
 
         result?.scanRecord?.let { scanRecord -> RadarBeaconUtils.getBeacon(beacons, scanRecord) }?.let { beacon ->
-            logger.d("Ranged beacon | beacon._id = ${beacon._id}")
+            logger.d("Ranged beacon | beacon._id = ${beacon.id}")
 
-            nearbyBeaconIdentifiers.add(beacon._id)
+            nearbyBeaconIdentifiers.add(beacon.id)
         }
 
         if (this.nearbyBeaconIdentifiers.size == this.beacons.size) {

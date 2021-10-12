@@ -34,7 +34,8 @@ class RadarRoutes(
     val truck: RadarRoute?,
 
     /**
-     * The route by motorbike between the origin and destination. May be `null` if mode not specified or route unavailable.
+     * The route by motorbike between the origin and destination. May be `null` if mode not specified or route
+     * unavailable.
      */
     val motorbike: RadarRoute?
 ) {

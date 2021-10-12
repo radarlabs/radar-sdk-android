@@ -8,11 +8,12 @@ import org.json.JSONObject
  *
  * @see [](https://radar.io/documentation/beacons)
  */
+@Suppress("LongParameterList")
 class RadarBeacon (
     /**
      * The Radar ID of the point.
      */
-    val _id: String,
+    val id: String,
 
     /**
      * The description of the beacon.
@@ -117,7 +118,7 @@ class RadarBeacon (
 
     fun toJson(): JSONObject {
         val obj = JSONObject()
-        obj.putOpt(FIELD_ID, this._id)
+        obj.putOpt(FIELD_ID, this.id)
         obj.putOpt(FIELD_UUID, this.uuid)
         obj.putOpt(FIELD_MAJOR, this.major)
         obj.putOpt(FIELD_MINOR, this.minor)

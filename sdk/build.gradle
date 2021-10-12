@@ -61,7 +61,9 @@ tasks.whenTaskAdded {
 
 detekt {
     toolVersion = "$detekt_version"
-    ignoreFailures = true//TODO do not allow failures
+    ignoreFailures = false
+    config = rootProject.files('tools/detekt/radar-detekt-config.yml')
+    buildUponDefaultConfig = true
     reports {
         html.enabled = true
         xml.enabled = false

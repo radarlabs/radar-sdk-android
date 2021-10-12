@@ -6,6 +6,7 @@ import org.json.JSONObject
 /**
  * Represents an address.
  */
+@Suppress("LongParameterList")
 class RadarAddress(
     /**
      * The location coordinate of the address.
@@ -136,6 +137,7 @@ class RadarAddress(
         private const val FIELD_CONFIDENCE = "confidence"
 
         @JvmStatic
+        @Suppress("ComplexMethod")
         fun fromJson(obj: JSONObject?): RadarAddress? {
             if (obj == null) {
                 return null
