@@ -11,7 +11,7 @@ import java.net.HttpURLConnection
 import java.util.*
 import java.util.concurrent.Executors
 
-internal open class RadarApiHelper(
+internal class RadarApiHelper(
     private var logger: RadarLogger? = null
 ) {
   
@@ -37,7 +37,7 @@ internal open class RadarApiHelper(
     }
 
     @Suppress("LongMethod")
-    internal open fun request(request: RadarApiRequest) {
+    internal fun request(request: RadarApiRequest) {
         logger?.d("📍 Radar API request", mapOf("method" to request.method, "url" to request.url,
             "headers" to request.headers, "params" to request.params))
         executor.execute {

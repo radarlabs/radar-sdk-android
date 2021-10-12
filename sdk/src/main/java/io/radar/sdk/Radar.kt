@@ -6,6 +6,7 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
+import androidx.annotation.VisibleForTesting
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarContext
@@ -389,7 +390,6 @@ object Radar {
     private var initialized = false
     internal lateinit var app: RadarApplication
         private set
-    private var receiver: RadarReceiver? = null
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any
@@ -409,12 +409,24 @@ object Radar {
 
         this.initialized = true
         if (!this::app.isInitialized) {
-            this.app = RadarApplication(context.applicationContext)
+            this.app = RadarApplication(context.applicationContext, receiver)
             app.locationManager.updateTracking()
         }
 
-        this.receiver = receiver
+        initialize(publishableKey)
+    }
 
+    @JvmStatic
+    @VisibleForTesting
+    internal fun initialize(application: RadarApplication, publishableKey: String? = null) {
+        this.initialized = true
+        this.app = application
+        app.locationManager.updateTracking()
+        initialize(publishableKey)
+    }
+
+    @JvmStatic
+    private fun initialize(publishableKey: String?) {
         app.settings.updateSessionId()
         app.logger.d("New session | sessionId = ${app.settings.getSessionId()}")
 
@@ -2405,7 +2417,7 @@ object Radar {
             return
         }
 
-        receiver?.onEventsReceived(app, events, user)
+        app.receiver?.onEventsReceived(app, events, user)
 
         for (event in events) {
             app.logger.i(
@@ -2416,7 +2428,7 @@ object Radar {
     }
 
     internal fun sendLocation(location: Location, user: RadarUser) {
-        receiver?.onLocationUpdated(app, location, user)
+        app.receiver?.onLocationUpdated(app, location, user)
 
         app.logger.i(
             "📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); " +
@@ -2425,17 +2437,13 @@ object Radar {
     }
 
     internal fun sendClientLocation(location: Location, stopped: Boolean, source: RadarLocationSource) {
-        receiver?.onClientLocationUpdated(app, location, stopped, source)
+        app.receiver?.onClientLocationUpdated(app, location, stopped, source)
     }
 
     internal fun sendError(status: RadarStatus) {
-        receiver?.onError(app, status)
+        app.receiver?.onError(app, status)
 
         app.logger.i("📍️ Radar error received | status = $status")
-    }
-
-    internal fun sendLog(message: String) {
-        receiver?.onLog(app, message)
     }
 
 }

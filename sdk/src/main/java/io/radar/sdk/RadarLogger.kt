@@ -5,7 +5,7 @@ import io.radar.sdk.Radar.RadarLogLevel
 import java.util.concurrent.Executors
 
 internal class RadarLogger(
-    private val settings: RadarSettings
+    private val app: RadarApplication
 ) {
 
     /**
@@ -18,7 +18,7 @@ internal class RadarLogger(
     }
 
     fun d(message: String, props: Map<String, Any?>, throwable: Throwable? = null) {
-        val level = settings.getLogLevel()
+        val level = app.settings.getLogLevel()
         if (level >= RadarLogLevel.DEBUG) {
             executor.submit {
                 var logMessage = "$message |"
@@ -31,44 +31,40 @@ internal class RadarLogger(
                 logMessage = logMessage.substring(0, logMessage.length - 1)
 
                 Log.d(TAG, logMessage, throwable)
-                Radar.sendLog(logMessage)
+                app.receiver?.onLog(app, logMessage)
             }
         }
     }
 
     fun d(message: String, throwable: Throwable? = null) {
-        val level = settings.getLogLevel()
+        val level = app.settings.getLogLevel()
         if (level >= RadarLogLevel.DEBUG) {
             Log.d(TAG, message, throwable)
-
-            Radar.sendLog(message)
+            app.receiver?.onLog(app, message)
         }
     }
 
     fun i(message: String, throwable: Throwable? = null) {
-        val level = settings.getLogLevel()
+        val level = app.settings.getLogLevel()
         if (level >= RadarLogLevel.INFO) {
             Log.i(TAG, message, throwable)
-
-            Radar.sendLog(message)
+            app.receiver?.onLog(app, message)
         }
     }
 
     fun w(message: String, throwable: Throwable? = null) {
-        val level = settings.getLogLevel()
+        val level = app.settings.getLogLevel()
         if (level >= RadarLogLevel.WARNING) {
             Log.w(TAG, message, throwable)
-
-            Radar.sendLog(message)
+            app.receiver?.onLog(app, message)
         }
     }
 
     fun e(message: String, throwable: Throwable? = null) {
-        val level = settings.getLogLevel()
+        val level = app.settings.getLogLevel()
         if (level >= RadarLogLevel.ERROR) {
             Log.e(TAG, message, throwable)
-
-            Radar.sendLog(message)
+            app.receiver?.onLog(app, message)
         }
     }
 

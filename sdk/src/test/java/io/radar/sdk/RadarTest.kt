@@ -5,12 +5,30 @@ import android.location.Location
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.radar.sdk.model.*
+import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarChain
+import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarRegion
+import io.radar.sdk.model.RadarRoute
+import io.radar.sdk.model.RadarRoutes
+import io.radar.sdk.model.RadarSegment
+import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarUserInsights
+import io.radar.sdk.model.RadarUserInsightsLocation
 import org.json.JSONObject
 import org.junit.After
-import org.junit.Test
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
@@ -18,6 +36,9 @@ import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
+/**
+ * Integration-level tests for the Radar SDK
+ */
 @Suppress("LargeClass")
 @RunWith(AndroidJUnit4::class)
 @Config(sdk=[Build.VERSION_CODES.P])
@@ -35,6 +56,7 @@ class RadarTest {
     }
 
     private var receiver: RadarReceiver? = null
+    private lateinit var application: RadarApplication
 
     private fun assertGeofencesOk(geofences: Array<RadarGeofence>?) {
         assertNotNull(geofences)
@@ -268,7 +290,7 @@ class RadarTest {
 
     @Before
     fun setUp() {
-        Radar.initialize(context, publishableKey, object: RadarReceiver() {
+        application = RadarApplication(context, object: RadarReceiver() {
             override fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser?) {
                 receiver?.onEventsReceived(context, events, user)
             }
@@ -294,11 +316,9 @@ class RadarTest {
                 receiver?.onLog(context, message)
             }
 
-        })
+        }, apiHelperMock.helper, locationClientMock, permissionsHelperMock.helper)
 
-        Radar.app.apiClient.apiHelper = apiHelperMock
-        Radar.app.locationManager.locationClient = locationClientMock
-        Radar.app.locationManager.permissionsHelper = permissionsHelperMock
+        Radar.initialize(application, publishableKey)
     }
 
     @After
@@ -1334,19 +1354,17 @@ class RadarTest {
                 list += message
             }
         }
-        val settings = RadarSettings(RadarApplication(context))
-        val logger = RadarLogger(settings)
         assertTrue(list.isEmpty())
         val message = UUID.randomUUID().toString()
-        settings.setLogLevel(Radar.RadarLogLevel.DEBUG)
-        logger.d(message)
+        application.settings.setLogLevel(Radar.RadarLogLevel.DEBUG)
+        application.logger.d(message)
         assertFalse(list.isEmpty())
         assertEquals(message, list[0])
-        logger.d(message, mapOf(Pair("a", "a"), Pair("b", logger.hashCode())))
+        application.logger.d(message, mapOf(Pair("a", "a"), Pair("b", application.logger.hashCode())))
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         Thread.sleep(LATCH_TIMEOUT)
         assertEquals(2, list.size)
-        assertEquals("$message | a = a; b = ${logger.hashCode()}", list[1])
+        assertEquals("$message | a = a; b = ${application.logger.hashCode()}", list[1])
     }
 
 }

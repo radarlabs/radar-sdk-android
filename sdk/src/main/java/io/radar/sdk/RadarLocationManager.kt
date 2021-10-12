@@ -10,6 +10,7 @@ import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
 import io.radar.sdk.Radar.RadarLocationCallback
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
@@ -30,14 +31,11 @@ import kotlin.collections.ArrayList
 @SuppressLint("MissingPermission")
 internal class RadarLocationManager(
     private val context: RadarApplication,
-    internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper()
+    private val locationClient: FusedLocationProviderClient,
+    private val permissionsHelper: RadarPermissionsHelper
 ) {
 
-    @SuppressLint("VisibleForTests")
-    internal var locationClient = FusedLocationProviderClient(context)
-
-    @SuppressLint("VisibleForTests")
-    internal var geofencingClient = GeofencingClient(context)
+    private val geofencingClient = GeofencingClient(context)
     private var started = false
     private var startedDesiredAccuracy = RadarTrackingOptionsDesiredAccuracy.NONE
     private var startedInterval = 0
@@ -562,18 +560,22 @@ internal class RadarLocationManager(
             }
 
             if (lastSyncInterval < options.desiredSyncInterval) {
-                context.logger.d("Skipping sync: desired sync interval", mapOf(
-                    "desiredSyncInterval" to options.desiredSyncInterval,
-                    "lastSyncInterval" to lastSyncInterval
-                ))
+                context.logger.d(
+                    "Skipping sync: desired sync interval", mapOf(
+                        "desiredSyncInterval" to options.desiredSyncInterval,
+                        "lastSyncInterval" to lastSyncInterval
+                    )
+                )
                 return
             }
 
             if (!force && !justStopped && lastSyncInterval < 1) {
-                context.logger.d("Skipping sync: rate limit", mapOf(
-                    "justStopped" to justStopped,
-                    "lastSyncInterval" to lastSyncInterval
-                ))
+                context.logger.d(
+                    "Skipping sync: rate limit", mapOf(
+                        "justStopped" to justStopped,
+                        "lastSyncInterval" to lastSyncInterval
+                    )
+                )
                 return
             }
 
@@ -613,7 +615,14 @@ internal class RadarLocationManager(
             this.startForegroundService(foregroundService)
         }
 
-        context.logger.d("Sending location | source = $source; location = $location; stopped = $stopped; replayed = $replayed")
+        context.logger.d(
+            "Sending location", mapOf(
+                "source" to source,
+                "location" to location,
+                "stopped" to stopped,
+                "replayed" to replayed
+            )
+        )
 
         val locationManager = this
 

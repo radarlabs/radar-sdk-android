@@ -27,7 +27,7 @@ import java.util.*
 @Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 internal class RadarApiClient(
     private val app: RadarApplication,
-    internal var apiHelper: RadarApiHelper = RadarApiHelper(app.logger)
+    private val apiHelper: RadarApiHelper
 ) {
 
     interface RadarTrackApiCallback {

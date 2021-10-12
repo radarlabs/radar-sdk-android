@@ -4,22 +4,30 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.os.Build
 import android.os.Handler
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 
 /**
  * Contains core radar classes.
  */
-internal class RadarApplication(val context: Context) : ContextWrapper(context) {
+internal class RadarApplication(
+    val context: Context,
+    val receiver: RadarReceiver?,
+    apiHelper: RadarApiHelper? = null,
+    locationManagerClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context),
+    permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper()
+) : ContextWrapper(context) {
     val handler = Handler(mainLooper)
     val settings = RadarSettings(this)
     val state = RadarState(this)
-    val logger = RadarLogger(settings)
-    val apiClient = RadarApiClient(this)
-    val locationManager = RadarLocationManager(this)
+    val logger = RadarLogger(this)
+    val apiClient = RadarApiClient(this, apiHelper ?: RadarApiHelper(logger))
+    val locationManager = RadarLocationManager(this, locationManagerClient, permissionsHelper)
     val beaconManager: RadarBeaconManager?
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            this.beaconManager = RadarBeaconManager(this, logger)
+            this.beaconManager = RadarBeaconManager(this)
         } else {
             this.beaconManager = null
         }
