@@ -12,7 +12,8 @@ class RadarGeofence(
     /**
      * The Radar ID of the geofence.
      */
-    val id: String,
+    @Suppress("ConstructorParameterNaming")
+    val _id: String,
 
     /**
      * The description of the geofence.
@@ -134,7 +135,7 @@ class RadarGeofence(
 
     fun toJson(): JSONObject {
         val obj = JSONObject()
-        obj.putOpt(FIELD_ID, this.id)
+        obj.putOpt(FIELD_ID, this._id)
         obj.putOpt(FIELD_TAG, this.tag)
         obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
         obj.putOpt(FIELD_DESCRIPTION, this.description)

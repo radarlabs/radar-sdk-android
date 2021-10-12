@@ -18,7 +18,8 @@ class RadarEvent(
     /**
      * The Radar ID of the event.
      */
-    val id: String,
+    @Suppress("ConstructorParameterNaming")
+    val _id: String,
 
     /**
      * The datetime when the event occurred on the device.
@@ -295,7 +296,7 @@ class RadarEvent(
 
     fun toJson(): JSONObject {
         val obj = JSONObject()
-        obj.putOpt(FIELD_ID, this.id)
+        obj.putOpt(FIELD_ID, this._id)
         obj.putOpt(FIELD_LIVE, this.live)
         obj.putOpt(FIELD_TYPE, stringForType(this.type))
         obj.putOpt(FIELD_GEOFENCE, this.geofence?.toJson())

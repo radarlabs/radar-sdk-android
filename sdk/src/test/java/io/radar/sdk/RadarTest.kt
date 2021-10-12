@@ -104,7 +104,7 @@ class RadarTest {
 
     private fun assertPlaceOk(place: RadarPlace?) {
         assertNotNull(place)
-        assertNotNull(place!!.id)
+        assertNotNull(place!!._id)
         assertNotNull(place.categories)
         assertTrue(place.categories.count() > 0)
         place.chain?.let {
@@ -128,7 +128,7 @@ class RadarTest {
 
     private fun assertRegionOk(region: RadarRegion?) {
         assertNotNull(region)
-        assertNotNull(region?.id)
+        assertNotNull(region?._id)
         assertNotNull(region?.name)
         assertNotNull(region?.code)
         assertNotNull(region?.type)
@@ -166,7 +166,7 @@ class RadarTest {
 
     private fun assertUserOk(user: RadarUser?) {
         assertNotNull(user)
-        assertNotNull(user?.id)
+        assertNotNull(user?._id)
         assertNotNull(user?.userId)
         assertNotNull(user?.deviceId)
         assertNotNull(user?.description)
@@ -198,7 +198,7 @@ class RadarTest {
 
     private fun assertEventOk(event: RadarEvent?) {
         assertNotNull(event)
-        assertNotNull(event?.id)
+        assertNotNull(event?._id)
         assertNotNull(event?.createdAt)
         assertNotNull(event?.actualCreatedAt)
         assertNotEquals(event?.type, RadarEvent.RadarEventType.UNKNOWN)
@@ -1358,6 +1358,8 @@ class RadarTest {
         val message = UUID.randomUUID().toString()
         application.settings.setLogLevel(Radar.RadarLogLevel.DEBUG)
         application.logger.d(message)
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        Thread.sleep(LATCH_TIMEOUT)
         assertFalse(list.isEmpty())
         assertEquals(message, list[0])
         application.logger.d(message, mapOf(Pair("a", "a"), Pair("b", application.logger.hashCode())))

@@ -15,7 +15,8 @@ class RadarUser(
     /**
      * The Radar ID of the user.
      */
-    val id: String,
+    @Suppress("ConstructorParameterNaming")
+    val _id: String,
 
     /**
      * The unique ID of the user, provided when you identified the user. May be `null` if the user has not been
@@ -214,7 +215,7 @@ class RadarUser(
 
     fun toJson(): JSONObject {
         val obj = JSONObject()
-        obj.putOpt(FIELD_ID, this.id)
+        obj.putOpt(FIELD_ID, this._id)
         obj.putOpt(FIELD_USER_ID, this.userId)
         obj.putOpt(FIELD_DEVICE_ID, this.deviceId)
         obj.putOpt(FIELD_DESCRIPTION, this.description)

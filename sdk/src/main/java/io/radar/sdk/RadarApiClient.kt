@@ -360,7 +360,7 @@ internal class RadarApiClient(
                         RadarGeofence.fromJson(nearbyGeofencesArr)
                     }
                 if (events != null && user != null) {
-                    app.settings.setId(user.id)
+                    app.settings.setId(user._id)
 
                     if (user.trip == null) {
                         app.settings.setTripOptions(null)

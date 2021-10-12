@@ -10,7 +10,6 @@ import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
 import io.radar.sdk.Radar.RadarLocationCallback
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
@@ -64,7 +63,7 @@ internal class RadarLocationManager(
                 return
             }
 
-            context.logger.d("Calling callbacks | callbacks.size = ${callbacks.size}")
+            context.logger.d("Calling callbacks", "callbacks.size" to callbacks.size)
 
             for (callback in callbacks) {
                 callback.onComplete(status, location, context.state.getStopped())
@@ -191,7 +190,7 @@ internal class RadarLocationManager(
     }
 
     internal fun handleBeacon(source: RadarLocationSource) {
-        context.logger.d("Handling beacon | source = $source")
+        context.logger.d("Handling beacon", "source" to source)
 
         this.getLocation(RadarTrackingOptionsDesiredAccuracy.MEDIUM, source)
     }
@@ -214,17 +213,15 @@ internal class RadarLocationManager(
         var tracking = context.settings.getTracking()
         val options = context.settings.getTrackingOptions()
 
-        context.logger.d("Updating tracking | options = $options; location = $location")
+        context.logger.d("Updating tracking", mapOf("options" to options, "location" to location))
 
         val now = Date()
         if (!tracking && options.startTrackingAfter != null && options.startTrackingAfter!!.before(now)) {
-            context.logger.d("Starting time-based tracking | startTrackingAfter = ${options.startTrackingAfter}")
-
+            context.logger.d("Starting time-based tracking", "startTrackingAfter" to options.startTrackingAfter)
             tracking = true
             context.settings.setTracking(true)
         } else if (tracking && options.stopTrackingAfter != null && options.stopTrackingAfter!!.before(now)) {
-            context.logger.d("Stopping time-based tracking | startTrackingAfter = ${options.startTrackingAfter}")
-
+            context.logger.d("Stopping time-based tracking ", "startTrackingAfter" to options.startTrackingAfter)
             tracking = false
             context.settings.setTracking(false)
         }
@@ -323,7 +320,7 @@ internal class RadarLocationManager(
                     context.logger.d("Successfully added stopped bubble geofence")
                 }
                 addOnFailureListener {
-                    context.logger.d("Error adding stopped bubble geofence | message = ${it.message}")
+                    context.logger.d("Error adding stopped bubble geofence", "message" to it.message)
                 }
             }
         } else if (!stopped && options.useMovingGeofence) {
@@ -357,7 +354,7 @@ internal class RadarLocationManager(
                     context.logger.d("Successfully added moving bubble geofence")
                 }
                 addOnFailureListener {
-                    context.logger.d("Error adding moving bubble geofence | message = ${it.message}")
+                    context.logger.d("Error adding moving bubble geofence", "message" to it.message)
                 }
             }
         }
@@ -435,7 +432,7 @@ internal class RadarLocationManager(
                 context.logger.d("Successfully added synced geofences")
             }
             addOnFailureListener {
-                context.logger.d("Error adding synced geofences | message = ${it.message}")
+                context.logger.d("Error adding synced geofences", "message" to it.message)
             }
         }
     }
@@ -455,10 +452,10 @@ internal class RadarLocationManager(
 
     @Suppress("ComplexMethod", "ComplexCondition", "ReturnCount", "LongMethod")
     fun handleLocation(location: Location?, source: RadarLocationSource) {
-        context.logger.d("Handling location | location = $location")
+        context.logger.d("Handling location", "location" to location)
 
         if (location == null || !RadarUtils.valid(location)) {
-            context.logger.d("Invalid location | source = $source; location = $location")
+            context.logger.d("Invalid location", mapOf("source" to source, "location" to location))
 
             Radar.sendError(RadarStatus.ERROR_LOCATION)
 
@@ -473,8 +470,7 @@ internal class RadarLocationManager(
 
         val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION)
         if (!force && location.accuracy > 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
-            context.logger.d("Skipping location: inaccurate | accuracy = ${location.accuracy}")
-
+            context.logger.d("Skipping location: inaccurate", "accuracy" to location.accuracy)
             this.updateTracking(location)
 
             return
@@ -494,8 +490,12 @@ internal class RadarLocationManager(
                 context.state.setLastMovedAt(lastMovedAt)
             }
             if (!force && lastMovedAt > location.time) {
-                context.logger.d("Skipping location: old | lastMovedAt = $lastMovedAt; location.time = $location.time")
-
+                context.logger.d(
+                    "Skipping location: old", mapOf(
+                        "lastMovedAt" to lastMovedAt,
+                        "location.time" to location.time
+                    )
+                )
                 return
             }
             distance = location.distanceTo(lastMovedLocation)
@@ -543,8 +543,7 @@ internal class RadarLocationManager(
             stopped = true
             replayed = true
             context.state.setLastFailedStoppedLocation(null)
-
-            context.logger.d("Replaying location | location = $location; stopped = $stopped")
+            context.logger.d("Replaying location", mapOf("location" to location, "stopped" to stopped))
         }
 
         val lastSentAt = context.state.getLastSentAt()
@@ -554,8 +553,12 @@ internal class RadarLocationManager(
         val lastSyncInterval = (now - lastSentAt) / 1000L
         if (!ignoreSync) {
             if (!force && stopped && wasStopped && didTravelFarEnoughToTrack(distance, options)) {
-                context.logger.d("Skipping sync: already stopped | stopped = $stopped; wasStopped = $wasStopped")
-
+                context.logger.d(
+                    "Skipping sync: already stopped", mapOf(
+                        "stopped" to stopped,
+                        "wasStopped" to wasStopped
+                    )
+                )
                 return
             }
 
@@ -580,15 +583,13 @@ internal class RadarLocationManager(
             }
 
             if (options.sync == RadarTrackingOptions.RadarTrackingOptionsSync.NONE) {
-                context.logger.d("Skipping sync: sync mode | sync = ${options.sync}")
-
+                context.logger.d("Skipping sync: sync mode", "sync" to options.sync)
                 return
             }
 
             val canExit = context.state.getCanExit()
             if (!canExit && options.sync == RadarTrackingOptions.RadarTrackingOptionsSync.STOPS_AND_EXITS) {
-                context.logger.d("Skipping sync: can't exit | sync = ${options.sync}; canExit = $canExit")
-
+                context.logger.d("Skipping sync: can't exit", mapOf("sync" to options.sync, "canExit" to canExit))
                 return
             }
         }
@@ -614,7 +615,6 @@ internal class RadarLocationManager(
         if (foregroundService != null && foregroundService.updatesOnly) {
             this.startForegroundService(foregroundService)
         }
-
         context.logger.d(
             "Sending location", mapOf(
                 "source" to source,
@@ -623,7 +623,6 @@ internal class RadarLocationManager(
                 "replayed" to replayed
             )
         )
-
         val locationManager = this
 
         val callTrackApi = { nearbyBeacons: Array<String>? ->

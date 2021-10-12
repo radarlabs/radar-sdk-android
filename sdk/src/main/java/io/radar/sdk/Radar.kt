@@ -5,7 +5,7 @@ import android.app.Application
 import android.content.Context
 import android.location.Location
 import android.os.Build
-import android.os.Handler
+import android.util.Log
 import androidx.annotation.VisibleForTesting
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
@@ -328,21 +328,21 @@ object Radar {
     /**
      * The levels for debug logs.
      */
-    enum class RadarLogLevel(val value: Int) {
+    enum class RadarLogLevel(val value: Int, val priority: Int) {
         /** None */
-        NONE(0),
+        NONE(0, Log.ASSERT),
 
         /** Error */
-        ERROR(1),
+        ERROR(1, Log.ERROR),
 
         /** Warning */
-        WARNING(2),
+        WARNING(2, Log.WARN),
 
         /** Info */
-        INFO(3),
+        INFO(3, Log.INFO),
 
         /** Debug */
-        DEBUG(4);
+        DEBUG(4, Log.DEBUG);
 
         companion object {
             @JvmStatic
@@ -428,7 +428,7 @@ object Radar {
     @JvmStatic
     private fun initialize(publishableKey: String?) {
         app.settings.updateSessionId()
-        app.logger.d("New session | sessionId = ${app.settings.getSessionId()}")
+        app.logger.d("New session", "sessionId" to app.settings.getSessionId())
 
         if (publishableKey != null) {
             app.settings.setPublishableKey(publishableKey)
@@ -439,11 +439,13 @@ object Radar {
         RadarUtils.loadAdId(this.app)
 
         val application = this.app.context as? Application
-        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(
-            settings = app.settings,
-            logger = app.logger,
-            apiClient = app.apiClient
-        ))
+        application?.registerActivityLifecycleCallbacks(
+            RadarActivityLifecycleCallbacks(
+                settings = app.settings,
+                logger = app.logger,
+                apiClient = app.apiClient
+            )
+        )
 
         app.apiClient.getConfig()
 
@@ -2420,9 +2422,12 @@ object Radar {
         app.receiver?.onEventsReceived(app, events, user)
 
         for (event in events) {
+
             app.logger.i(
-                "📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; " +
-                        "link = https://radar.io/dashboard/events/${event.id}"
+                "📍 Radar event received", mapOf(
+                    "type" to RadarEvent.stringForType(event.type),
+                    "link" to "https://radar.io/dashboard/events/${event._id}"
+                )
             )
         }
     }
@@ -2431,8 +2436,11 @@ object Radar {
         app.receiver?.onLocationUpdated(app, location, user)
 
         app.logger.i(
-            "📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); " +
-                    "accuracy = ${location.accuracy} meters; link = https://radar.io/dashboard/users/${user.id}"
+            "📍 Radar location updated", mapOf(
+                "coordinates" to "(${location.latitude}, ${location.longitude})",
+                "accuracy" to "${location.accuracy} meters",
+                "link" to "link = https://radar.io/dashboard/users/${user._id}"
+            )
         )
     }
 
@@ -2442,8 +2450,7 @@ object Radar {
 
     internal fun sendError(status: RadarStatus) {
         app.receiver?.onError(app, status)
-
-        app.logger.i("📍️ Radar error received | status = $status")
+        app.logger.i("📍️ Radar error received", mapOf("status" to status))
     }
 
 }
