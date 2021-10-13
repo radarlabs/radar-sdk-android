@@ -2,17 +2,17 @@ package io.radar.sdk
 
 import android.util.Log
 import io.radar.sdk.Radar.RadarLogLevel
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 @Suppress("TooManyFunctions")
 internal class RadarLogger(
-    private val app: RadarApplication
-) {
-
+    private val app: RadarApplication,
     /**
      * Using an executor for logging allows the log operations to run in a separate thread
      */
-    private val executor = Executors.newSingleThreadExecutor()
+    private val executor: ExecutorService = Executors.newSingleThreadExecutor()
+) {
 
     internal companion object {
         private const val TAG = "RadarLogger"

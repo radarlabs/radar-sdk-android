@@ -14,6 +14,7 @@ import org.junit.Before
 
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.android.util.concurrent.InlineExecutorService
 import org.robolectric.annotation.Config
 import java.util.*
 
@@ -21,12 +22,12 @@ import java.util.*
  * Unit tests [RadarLogger]
  */
 @RunWith(AndroidJUnit4::class)
-@Config(sdk=[Build.VERSION_CODES.P])
+@Config(sdk = [Build.VERSION_CODES.P])
 class RadarLoggerTest {
 
     private val app = mockk<RadarApplication>()
     private val settings = mockk<RadarSettings>()
-    private val logger = RadarLogger(app)
+    private val logger = RadarLogger(app, InlineExecutorService())
     private var logLevel = Radar.RadarLogLevel.NONE
     private var message: String? = null
     private val receiver = object : RadarReceiver() {
@@ -62,67 +63,95 @@ class RadarLoggerTest {
 
     @Test
     fun testDebug() {
-        assertNull(message)
-        val text = UUID.randomUUID().toString()
-        listOf(Radar.RadarLogLevel.NONE, Radar.RadarLogLevel.ERROR, Radar.RadarLogLevel.WARNING,
-            Radar.RadarLogLevel.INFO).forEach {
-            logLevel = it
-            logger.d(text)
-            assertNull(message)
+        verifyLogging(listOf(Radar.RadarLogLevel.DEBUG)) { text, props ->
+            if (props == null) {
+                logger.d(text)
+            } else {
+                logger.d(text, props)
+            }
         }
-        logLevel = Radar.RadarLogLevel.DEBUG
-        logger.d(text)
-        assertEquals(text, message)
     }
 
     @Test
     fun testInfo() {
-        assertNull(message)
-        var text = UUID.randomUUID().toString()
-        listOf(Radar.RadarLogLevel.NONE, Radar.RadarLogLevel.ERROR, Radar.RadarLogLevel.WARNING).forEach {
-            logLevel = it
-            logger.i(text)
-            assertNull(message)
-        }
-        listOf(Radar.RadarLogLevel.INFO, Radar.RadarLogLevel.DEBUG).forEach {
-            logLevel = it
-            text = UUID.randomUUID().toString()
-            logger.i(text)
-            assertEquals(text, message)
+        verifyLogging(listOf(Radar.RadarLogLevel.INFO, Radar.RadarLogLevel.DEBUG)) { text, props ->
+            if (props == null) {
+                logger.i(text)
+            } else {
+                logger.i(text, props)
+            }
         }
     }
 
     @Test
     fun testWarn() {
-        assertNull(message)
-        var text = UUID.randomUUID().toString()
-        listOf(Radar.RadarLogLevel.NONE, Radar.RadarLogLevel.ERROR).forEach {
-            logLevel = it
-            logger.w(text)
-            assertNull(message)
-        }
-        listOf(Radar.RadarLogLevel.WARNING, Radar.RadarLogLevel.INFO, Radar.RadarLogLevel.DEBUG).forEach {
-            logLevel = it
-            text = UUID.randomUUID().toString()
-            logger.w(text)
-            assertEquals(text, message)
+        verifyLogging(
+            listOf(Radar.RadarLogLevel.WARNING, Radar.RadarLogLevel.INFO, Radar.RadarLogLevel.DEBUG)
+        ) { text, props ->
+            if (props == null) {
+                logger.w(text)
+            } else {
+                logger.w(text, props)
+            }
         }
     }
 
     @Test
     fun testError() {
+        verifyLogging(
+            listOf(
+                Radar.RadarLogLevel.ERROR,
+                Radar.RadarLogLevel.WARNING,
+                Radar.RadarLogLevel.INFO,
+                Radar.RadarLogLevel.DEBUG
+            )
+        ) { text, props ->
+            if (props == null) {
+                logger.e(text)
+            } else {
+                logger.e(text, props)
+            }
+        }
+    }
+
+    /**
+     * Checks that the given log levels produce a log message in [RadarReceiver]. This also checks that the log levels
+     * NOT contained in the given list do not produce a log message.
+     *
+     * @param [expectedLogLevels] log levels that are expected to produce a log result in [RadarReceiver]
+     * @param [logBlock] the logger method to invoke. If the given pair is null, this should invoke the text-only
+     * logger function.
+     */
+    private fun verifyLogging(
+        expectedLogLevels: List<Radar.RadarLogLevel>,
+        logBlock: (String, Pair<String, Any?>?) -> Unit
+    ) {
+        val skippedLogLevels = Radar.RadarLogLevel.values().toMutableList()
+        skippedLogLevels.removeAll { expectedLogLevels.contains(it) }
         assertNull(message)
         var text = UUID.randomUUID().toString()
-        logLevel = Radar.RadarLogLevel.NONE
-        logger.e(text)
-        assertNull(message)
-
-        listOf(Radar.RadarLogLevel.ERROR, Radar.RadarLogLevel.WARNING, Radar.RadarLogLevel.INFO,
-                Radar.RadarLogLevel.DEBUG).forEach {
-            logLevel = it
+        var key = UUID.randomUUID().toString()
+        var value = UUID.randomUUID()
+        skippedLogLevels.forEach { level ->
+            logLevel = level
+            //just text
+            logBlock.invoke(text, null)
+            assertNull(message)
+            //text with params
+            logBlock.invoke(text, key to value)
+            assertNull(message)
+        }
+        expectedLogLevels.forEach { level ->
+            logLevel = level
             text = UUID.randomUUID().toString()
-            logger.e(text)
+            //just text
+            logBlock.invoke(text, null)
             assertEquals(text, message)
+            //text with params
+            key = UUID.randomUUID().toString()
+            value = UUID.randomUUID()
+            logBlock.invoke(text, key to value)
+            assertEquals("$text | $key = $value", message)
         }
     }
 }

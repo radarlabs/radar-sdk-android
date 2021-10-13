@@ -1,7 +1,6 @@
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
-    id 'kotlin-android-extensions'
     id 'org.jetbrains.dokka'
     id 'maven-publish'
     id 'signing'
@@ -73,7 +72,18 @@ detekt {
 }
 
 jacoco {
-    toolVersion = '0.8.7'
+    toolVersion = "$jacoco_version"
+}
+
+//See https://youtrack.jetbrains.com/issue/KT-44757
+configurations.all {
+    resolutionStrategy {
+        eachDependency { details ->
+            if ('org.jacoco' == details.requested.group) {
+                details.useVersion "$jacoco_version"
+            }
+        }
+    }
 }
 
 task jacocoTestReport(
