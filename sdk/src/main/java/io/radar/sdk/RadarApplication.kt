@@ -2,10 +2,13 @@ package io.radar.sdk
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.location.Location
 import android.os.Build
 import android.os.Handler
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarUser
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -41,6 +44,44 @@ internal class RadarApplication(
             handler.post {
                 block.invoke(t)
             }
+        }
+    }
+
+    fun sendError(status: Radar.RadarStatus) {
+        receiver?.onError(Radar.app, status)
+        logger.i("📍️ Radar error received", "status" to status)
+    }
+
+
+    fun sendLocation(location: Location, user: RadarUser) {
+        receiver?.onLocationUpdated(Radar.app, location, user)
+        logger.i(
+            "📍 Radar location updated", mapOf(
+                "coordinates" to "(${location.latitude}, ${location.longitude})",
+                "accuracy" to "${location.accuracy} meters",
+                "link" to "link = https://radar.io/dashboard/users/${user._id}"
+            )
+        )
+    }
+
+    fun sendClientLocation(location: Location, stopped: Boolean, source: Radar.RadarLocationSource) {
+        receiver?.onClientLocationUpdated(Radar.app, location, stopped, source)
+    }
+
+
+    internal fun sendEvents(events: Array<RadarEvent>, user: RadarUser? = null) {
+        if (events.isEmpty()) {
+            return
+        }
+        receiver?.onEventsReceived(Radar.app, events, user)
+
+        for (event in events) {
+            logger.i(
+                "📍 Radar event received", mapOf(
+                    "type" to RadarEvent.stringForType(event.type),
+                    "link" to "https://radar.io/dashboard/events/${event._id}"
+                )
+            )
         }
     }
 }

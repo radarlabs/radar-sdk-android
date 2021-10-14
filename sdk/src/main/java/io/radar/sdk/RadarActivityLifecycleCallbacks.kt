@@ -43,7 +43,7 @@ internal class RadarActivityLifecycleCallbacks(
         if (count == 0) {
             try {
                 val updated = settings.updateSessionId()
-                Radar.app.logger.d("New session", "sessionId" to Radar.app.settings.getSessionId())
+                logger.d("New session", "sessionId" to settings.getSessionId())
                 if (updated) {
                     apiClient.getConfig()
                 }

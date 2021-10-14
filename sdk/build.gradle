@@ -23,6 +23,7 @@ android {
         targetSdkVersion 31
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
         multiDexEnabled = true
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     buildTypes {
         release {
@@ -31,6 +32,15 @@ android {
         }
         debug {
             testCoverageEnabled true
+            //Allows integration testing against with real keys
+            String testKey = project.properties['radarTestKey']
+            String testHost = project.properties['radarTestHost']
+            if (testKey) {
+                buildConfigField "String", 'radar_test_key', $/"$testKey"/$
+            }
+            if (testHost) {
+                buildConfigField "String", 'radar_test_host', $/"$testHost"/$
+            }
         }
     }
     testOptions {
@@ -41,6 +51,7 @@ android {
     lintOptions {
         warningsAsErrors true
     }
+
 }
 
 tasks.withType(Test) {
@@ -50,6 +61,9 @@ tasks.withType(Test) {
         showStandardStreams = true
         events = ['passed', 'failed', 'skipped']
     }
+    //Allows local integration testing against with real keys
+    systemProperty 'radar_test_key', project.properties['radarTestKey']
+    systemProperty 'radar_test_host', project.properties['radarTestHost']
 }
 
 tasks.whenTaskAdded {
@@ -119,10 +133,23 @@ dependencies {
     implementation "androidx.core:core-ktx:1.6.0"
     implementation "com.google.android.gms:play-services-ads-identifier:17.1.0"
     implementation "com.google.android.gms:play-services-location:18.0.0"
-    testImplementation "androidx.test.ext:junit:1.1.3"
-    testImplementation "org.robolectric:robolectric:4.5.1"
+
+    //test
+    testImplementation 'androidx.test.ext:junit:1.1.3'
+    testImplementation 'org.robolectric:robolectric:4.5.1'
     testImplementation "io.mockk:mockk:$mockk_version"
     testImplementation "io.mockk:mockk-agent-jvm:$mockk_version"
+    testImplementation 'org.awaitility:awaitility-kotlin:4.1.0'
+
+    //instrumentation test
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test:rules:1.4.0'
+    androidTestImplementation "androidx.test.ext:junit:1.1.3"
+    androidTestImplementation "io.mockk:mockk-android:$mockk_version"
+    androidTestImplementation ('org.awaitility:awaitility-kotlin:4.1.0') {
+        exclude group: 'org.hamcrest'
+    }
+
 }
 
 task androidSourcesJar(type: Jar) {

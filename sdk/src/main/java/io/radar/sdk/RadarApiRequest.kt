@@ -1,6 +1,5 @@
 package io.radar.sdk
 
-import android.content.Context
 import org.json.JSONObject
 import java.net.URL
 

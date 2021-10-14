@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.content.SharedPreferences
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.edit
 import org.json.JSONObject
 import java.text.DecimalFormat
@@ -176,12 +177,27 @@ internal class RadarSettings(val context: RadarApplication) {
     }
 
     internal fun setConfig(config: JSONObject?) {
-        val configJson = config.toString()
-        getSharedPreferences().edit { putString(KEY_CONFIG, configJson) }
+        if (config == null) {
+            getSharedPreferences().edit { remove(KEY_CONFIG) }
+        } else {
+            val configJson = config.toString()
+            getSharedPreferences().edit { putString(KEY_CONFIG, configJson) }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun getConfig(): JSONObject? {
+        val configJson = getSharedPreferences().getString(KEY_CONFIG, null) ?: return null
+        return JSONObject(configJson)
     }
 
     internal fun getHost(): String {
         return getSharedPreferences().getString(KEY_HOST, null) ?: "https://api.radar.io"
+    }
+
+    @VisibleForTesting
+    internal fun setHost(host: String?) {
+        getSharedPreferences().edit { putString(KEY_HOST, host) }
     }
 
     internal fun setPermissionsDenied(denied: Boolean) {

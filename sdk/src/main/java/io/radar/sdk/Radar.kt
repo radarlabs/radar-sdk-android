@@ -1070,7 +1070,7 @@ object Radar {
     }
 
     /**
-     * Rejects an event. Events can be accepted after user check-ins or other forms of verification. Event verifications
+     * Rejects an event. Events can be rejected after user check-ins or other forms of verification. Event verifications
      * will be used to improve the accuracy and confidence level of future events.
      *
      * @see [](https://radar.io/documentation/places#verify-events)
@@ -2412,45 +2412,6 @@ object Radar {
         }
 
         app.locationManager.handleBootCompleted()
-    }
-
-    internal fun sendEvents(events: Array<RadarEvent>, user: RadarUser? = null) {
-        if (events.isEmpty()) {
-            return
-        }
-
-        app.receiver?.onEventsReceived(app, events, user)
-
-        for (event in events) {
-
-            app.logger.i(
-                "📍 Radar event received", mapOf(
-                    "type" to RadarEvent.stringForType(event.type),
-                    "link" to "https://radar.io/dashboard/events/${event._id}"
-                )
-            )
-        }
-    }
-
-    internal fun sendLocation(location: Location, user: RadarUser) {
-        app.receiver?.onLocationUpdated(app, location, user)
-
-        app.logger.i(
-            "📍 Radar location updated", mapOf(
-                "coordinates" to "(${location.latitude}, ${location.longitude})",
-                "accuracy" to "${location.accuracy} meters",
-                "link" to "link = https://radar.io/dashboard/users/${user._id}"
-            )
-        )
-    }
-
-    internal fun sendClientLocation(location: Location, stopped: Boolean, source: RadarLocationSource) {
-        app.receiver?.onClientLocationUpdated(app, location, stopped, source)
-    }
-
-    internal fun sendError(status: RadarStatus) {
-        app.receiver?.onError(app, status)
-        app.logger.i("📍️ Radar error received", mapOf("status" to status))
     }
 
 }

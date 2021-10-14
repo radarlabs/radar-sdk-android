@@ -84,7 +84,7 @@ internal class RadarLocationManager(
         if (!permissionsHelper.fineLocationPermissionGranted(context)
             && !permissionsHelper.coarseLocationPermissionGranted(context)
         ) {
-            Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
+            context.sendError(RadarStatus.ERROR_PERMISSIONS)
             callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
             return
         }
@@ -127,7 +127,7 @@ internal class RadarLocationManager(
         if (!permissionsHelper.fineLocationPermissionGranted(context)
             && !permissionsHelper.coarseLocationPermissionGranted(context)
         ) {
-            Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
+            context.sendError(RadarStatus.ERROR_PERMISSIONS)
             return
         }
 
@@ -457,7 +457,7 @@ internal class RadarLocationManager(
         if (location == null || !RadarUtils.valid(location)) {
             context.logger.d("Invalid location", mapOf("source" to source, "location" to location))
 
-            Radar.sendError(RadarStatus.ERROR_LOCATION)
+            context.sendError(RadarStatus.ERROR_LOCATION)
 
             callCallbacks(RadarStatus.ERROR_LOCATION)
 
@@ -523,8 +523,7 @@ internal class RadarLocationManager(
         }
         val justStopped = stopped && !wasStopped
         context.state.setStopped(stopped)
-
-        Radar.sendClientLocation(location, stopped, source)
+        context.sendClientLocation(location, stopped, source)
 
         if (source != RadarLocationSource.MANUAL_LOCATION) {
             this.updateTracking(location)

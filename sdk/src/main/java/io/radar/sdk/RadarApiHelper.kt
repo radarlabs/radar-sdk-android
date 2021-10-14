@@ -2,6 +2,8 @@ package io.radar.sdk
 
 import android.os.Handler
 import android.os.Looper
+import io.radar.sdk.util.RadarHandler
+import io.radar.sdk.util.RadarPostable
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
@@ -9,14 +11,14 @@ import java.io.InputStream
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.util.*
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 internal class RadarApiHelper(
-    private var logger: RadarLogger? = null
+    private var logger: RadarLogger? = null,
+    private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
+    private val handler: RadarPostable = RadarHandler(Handler(Looper.getMainLooper()))
 ) {
-  
-    private val executor = Executors.newSingleThreadExecutor()
-    private val handler = Handler(Looper.getMainLooper())
 
     interface RadarApiCallback {
         fun onComplete(status: Radar.RadarStatus, res: JSONObject? = null)
@@ -71,12 +73,17 @@ internal class RadarApiHelper(
                         request.callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
                         return@execute
                     }
-                    val res = JSONObject(body)
                     logger?.d("📍 Radar API response", mapOf(
                         "responseCode" to urlConnection.responseCode,
-                        "res" to res))
-                    handler.post {
-                        request.callback?.onComplete(status)
+                        "res" to body))
+                    if (body == "Access denied") {
+                        handler.post {
+                            request.callback?.onComplete(Radar.RadarStatus.ERROR_UNAUTHORIZED)
+                        }
+                    } else {
+                        handler.post {
+                            request.callback?.onComplete(status)
+                        }
                     }
                 }
             } catch (e: IOException) {

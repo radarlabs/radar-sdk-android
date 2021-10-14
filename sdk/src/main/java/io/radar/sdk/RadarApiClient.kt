@@ -334,7 +334,7 @@ internal class RadarApiClient(
                     ) {
                         app.state.setLastFailedStoppedLocation(location)
                     }
-                    Radar.sendError(status)
+                    app.sendError(status)
                     callback?.onComplete(status)
                     return
                 }
@@ -366,16 +366,16 @@ internal class RadarApiClient(
                         app.settings.setTripOptions(null)
                     }
 
-                    Radar.sendLocation(location, user)
+                    app.sendLocation(location, user)
                     if (events.isNotEmpty()) {
-                        Radar.sendEvents(events, user)
+                        app.sendEvents(events, user)
                     }
 
                     callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
                     return
                 }
 
-                Radar.sendError(status)
+                app.sendError(status)
                 callback?.onComplete(RadarStatus.ERROR_SERVER)
             }
         }
@@ -395,7 +395,7 @@ internal class RadarApiClient(
         val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/events/")
-            .appendEncodedPath(eventId)
+            .appendPath(eventId)
             .appendEncodedPath("/verification")
             .build()
         val url = URL(uri.toString())
@@ -467,7 +467,7 @@ internal class RadarApiClient(
                         }
 
                         if (events != null && events.isNotEmpty()) {
-                            Radar.sendEvents(events)
+                            app.sendEvents(events)
                         }
 
                         callback?.onComplete(RadarStatus.SUCCESS, res, trip, events)
@@ -505,7 +505,6 @@ internal class RadarApiClient(
                     override fun onComplete(status: RadarStatus, res: JSONObject?) {
                         if (status != RadarStatus.SUCCESS || res == null) {
                             callback.onComplete(status)
-
                             return
                         }
 
@@ -514,7 +513,6 @@ internal class RadarApiClient(
                         }
                         if (context != null) {
                             callback.onComplete(RadarStatus.SUCCESS, res, context)
-
                             return
                         }
 
@@ -716,7 +714,7 @@ internal class RadarApiClient(
         }
 
         val queryParams = StringBuilder()
-        queryParams.append("query=${query}")
+        queryParams.append("query=${Uri.encode(query)}")
         if (near != null) {
             queryParams.append("&near=${near.latitude},${near.longitude}")
         }
@@ -772,7 +770,7 @@ internal class RadarApiClient(
         }
 
         val queryParams = StringBuilder()
-        queryParams.append("query=${query}")
+        queryParams.append("query=${Uri.encode(query)}")
 
         val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
@@ -1009,16 +1007,22 @@ internal class RadarApiClient(
                 queryParams.append("|")
             }
         }
-        if (mode == Radar.RadarRouteMode.FOOT) {
-            queryParams.append("&mode=foot")
-        } else if (mode == Radar.RadarRouteMode.BIKE) {
-            queryParams.append("&mode=bike")
-        } else if (mode == Radar.RadarRouteMode.CAR) {
-            queryParams.append("&mode=car")
-        } else if (mode == Radar.RadarRouteMode.TRUCK) {
-            queryParams.append("&mode=truck")
-        } else if (mode == Radar.RadarRouteMode.MOTORBIKE) {
-            queryParams.append("&mode=motorbike")
+        when (mode) {
+            Radar.RadarRouteMode.FOOT -> {
+                queryParams.append("&mode=foot")
+            }
+            Radar.RadarRouteMode.BIKE -> {
+                queryParams.append("&mode=bike")
+            }
+            Radar.RadarRouteMode.CAR -> {
+                queryParams.append("&mode=car")
+            }
+            Radar.RadarRouteMode.TRUCK -> {
+                queryParams.append("&mode=truck")
+            }
+            Radar.RadarRouteMode.MOTORBIKE -> {
+                queryParams.append("&mode=motorbike")
+            }
         }
         if (units == Radar.RadarRouteUnits.METRIC) {
             queryParams.append("&units=metric")
