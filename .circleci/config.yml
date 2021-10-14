@@ -1,6 +1,4 @@
-version: 2.1
-orbs:
-  android: circleci/android@1.0.3
+version: 2
 jobs:
   build_and_test:
     docker:
@@ -10,13 +8,6 @@ jobs:
       - run:
           name: Accept licenses
           command: yes | sdkmanager --licenses || true
-      - android/create-avd:
-          avd-name: radar_avd
-          system-image: system-images;android-30;default;x86
-          install: true
-      - android/start-emulator:
-          avd-name: radar_avd
-          no-window: true
       - run:
           name: Build
           command: ./gradlew check

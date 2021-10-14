@@ -7,6 +7,8 @@ plugins {
     id 'jacoco'
     id 'io.gitlab.arturbosch.detekt' version "$detekt_version"
 }
+String testKey = project.properties['radarTestKey']
+String testHost = project.properties['radarTestHost']
 
 android {
     compileSdkVersion 31
@@ -33,8 +35,6 @@ android {
         debug {
             testCoverageEnabled true
             //Allows integration testing against with real keys
-            String testKey = project.properties['radarTestKey']
-            String testHost = project.properties['radarTestHost']
             if (testKey) {
                 buildConfigField "String", 'radar_test_key', $/"$testKey"/$
             }
@@ -62,8 +62,8 @@ tasks.withType(Test) {
         events = ['passed', 'failed', 'skipped']
     }
     //Allows local integration testing against with real keys
-    systemProperty 'radar_test_key', project.properties['radarTestKey']
-    systemProperty 'radar_test_host', project.properties['radarTestHost']
+    systemProperty 'radar_test_key', testKey
+    systemProperty 'radar_test_host', testHost
 }
 
 tasks.whenTaskAdded {
@@ -100,10 +100,12 @@ configurations.all {
     }
 }
 
-task jacocoTestReport(
-        type: JacocoReport,
-        dependsOn: ['testDebugUnitTest', 'createDebugAndroidTestCoverageReport']) {
-
+task jacocoTestReport(type: JacocoReport) {
+    dependsOn 'testDebugUnitTest'
+    //Android tests are only used for real integration testing
+    if (testKey != null && !testKey.empty && testHost != null && !testHost.empty) {
+        dependsOn 'createDebugAndroidTestCoverageReport'
+    }
     reports {
         xml.enabled = false
         html.enabled = true
