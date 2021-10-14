@@ -2,7 +2,7 @@ buildscript {
     ext {
         kotlin_version = '1.5.21'
         detekt_version = '1.18.1'
-        radarVersion = '3.2.1'
+        radarVersion = '3.2.2'
     }
     repositories {
         google()

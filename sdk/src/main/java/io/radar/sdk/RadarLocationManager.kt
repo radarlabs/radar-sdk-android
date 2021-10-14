@@ -234,8 +234,8 @@ internal class RadarLocationManager(
             RadarSettings.setTracking(context, false)
         }
 
+        val foregroundService = options.foregroundService
         if (tracking) {
-            val foregroundService = options.foregroundService
             if (foregroundService != null) {
                 if (!foregroundService.updatesOnly) {
                     this.startForegroundService(foregroundService)
@@ -279,7 +279,9 @@ internal class RadarLocationManager(
                 }
             }
         } else {
-            this.stopForegroundService()
+            if (RadarForegroundService.started) {
+                this.stopForegroundService()
+            }
             this.stopLocationUpdates()
             this.removeAllGeofences()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -704,7 +706,7 @@ internal class RadarLocationManager(
     }
 
     private fun startForegroundService(foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService) {
-        if (Build.VERSION.SDK_INT >= 26) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
                 if (RadarForegroundService.started) {
                     logger.d("Already started foreground service")
@@ -728,7 +730,7 @@ internal class RadarLocationManager(
     }
 
     private fun stopForegroundService() {
-        if (Build.VERSION.SDK_INT >= 26) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
                 val intent = Intent(context, RadarForegroundService::class.java)
                 intent.action = "stop"
