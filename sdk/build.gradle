@@ -115,10 +115,9 @@ task jacocoTestReport(
     sourceDirectories.setFrom mainSrc
     classDirectories.setFrom debugTree
     executionData.setFrom fileTree(
-            dir: "$projectDir",
-            includes: ["jacoco.exec",
-                       "$buildDir/jacoco/testDebugUnitTest.exec",
-                       "$buildDir/outputs/code_coverage/debugAndroidTest/connected/*coverage.ec"]
+            dir: "$buildDir",
+            includes: ['outputs/code_coverage/debugAndroidTest/connected/*coverage.ec',
+                       'outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec']
     )
 }
 
