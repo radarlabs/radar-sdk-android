@@ -5,7 +5,7 @@ buildscript {
         mockk_version = '1.12.0'
         jacoco_version = '0.8.7'
 
-        radarVersion = '3.2.1'
+        radarVersion = '3.2.2'
     }
     repositories {
         google()
