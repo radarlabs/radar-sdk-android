@@ -34,7 +34,7 @@ android {
         }
         debug {
             testCoverageEnabled true
-            //Allows integration testing against with real keys
+            //Allows integration testing against real endpoints
             if (testKey) {
                 buildConfigField "String", 'radar_test_key', $/"$testKey"/$
             }
@@ -61,7 +61,7 @@ tasks.withType(Test) {
         showStandardStreams = true
         events = ['passed', 'failed', 'skipped']
     }
-    //Allows local integration testing against with real keys
+    //Allows local integration testing against real endpoints
     systemProperty 'radar_test_key', testKey
     systemProperty 'radar_test_host', testHost
 }

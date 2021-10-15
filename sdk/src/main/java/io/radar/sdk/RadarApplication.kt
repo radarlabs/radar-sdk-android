@@ -69,7 +69,7 @@ internal class RadarApplication(
     }
 
 
-    internal fun sendEvents(events: Array<RadarEvent>, user: RadarUser? = null) {
+    fun sendEvents(events: Array<RadarEvent>, user: RadarUser? = null) {
         if (events.isEmpty()) {
             return
         }
