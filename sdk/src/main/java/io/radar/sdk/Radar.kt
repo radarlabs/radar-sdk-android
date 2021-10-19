@@ -9,6 +9,8 @@ import android.os.Handler
 import android.os.Looper
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.util.Flushable
+import io.radar.sdk.util.RadarLogBuffer
 import org.json.JSONObject
 import java.util.*
 
@@ -338,6 +340,7 @@ object Radar {
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var beaconManager: RadarBeaconManager
+    internal lateinit var logBuffer: RadarLogBuffer
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods.
@@ -358,6 +361,10 @@ object Radar {
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
         this.receiver = receiver
+
+        if (!this::logBuffer.isInitialized) {
+            this.logBuffer = RadarLogBuffer(this.context)
+        }
 
         if (!this::logger.isInitialized) {
             this.logger = RadarLogger(this.context)
@@ -2141,6 +2148,22 @@ object Radar {
     }
 
     /**
+     * Sends Radar log events to the server
+     */
+    @JvmStatic
+    internal fun flushLogs() {
+        if (!initialized) {
+            return
+        }
+        val logs = logBuffer.getLogs()
+        apiClient.log(logs.get(), object : RadarApiClient.RadarLogCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                logs.onFlush(status == RadarStatus.SUCCESS)
+            }
+        })
+    }
+
+    /**
      * Returns a display string for a location source value.
      *
      * @param[source] A location source value.
@@ -2280,8 +2303,9 @@ object Radar {
         logger.i("📍️ Radar error received | status = $status")
     }
 
-    internal fun sendLog(message: String) {
+    internal fun sendLog(level: RadarLogLevel, message: String) {
         receiver?.onLog(context, message)
+        logBuffer.write(level, message)
     }
 
 }
