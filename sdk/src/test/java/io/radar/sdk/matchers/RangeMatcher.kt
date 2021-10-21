@@ -20,6 +20,9 @@ sealed class RangeMatcher<T>(val from: T, val to: T, val inclusive: Boolean) : B
         fun isGreaterThan(from: Number): RangeMatcher<Number> {
             return NumberMatcher(from)
         }
+        fun isAtLeast(from: Number): RangeMatcher<Number> {
+            return NumberMatcher(from = from, inclusive = true)
+        }
         fun isLessThan(to: Number): RangeMatcher<Number> {
             return NumberMatcher(to = to)
         }

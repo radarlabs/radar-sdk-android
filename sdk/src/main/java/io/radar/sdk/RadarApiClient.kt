@@ -146,15 +146,19 @@ internal class RadarApiClient(
                 .headers(headers)
                 .callback(object : RadarApiHelper.RadarApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                        if (status == RadarStatus.SUCCESS) {
-                            app.flushLogs()
-                        }
-                        if (res != null && res.has("meta")) {
-                            val meta = res.getJSONObject("meta")
-                            if (meta.has("config")) {
-                                val config = meta.getJSONObject("config")
-                                app.settings.setConfig(config)
+                        val onComplete = {
+                            if (res != null && res.has("meta")) {
+                                val meta = res.getJSONObject("meta")
+                                if (meta.has("config")) {
+                                    val config = meta.getJSONObject("config")
+                                    app.settings.setConfig(config)
+                                }
                             }
+                        }
+                        if (status == RadarStatus.SUCCESS) {
+                            app.flushLogs(onComplete)
+                        } else {
+                            onComplete.invoke()
                         }
                     }
                 })
@@ -382,7 +386,6 @@ internal class RadarApiClient(
                     callback?.onComplete(status)
                     return
                 }
-                app.flushLogs()
 
                 app.state.setLastFailedStoppedLocation(null)
 
@@ -415,8 +418,9 @@ internal class RadarApiClient(
                     if (events.isNotEmpty()) {
                         app.sendEvents(events, user)
                     }
-
-                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
+                    app.flushLogs {
+                        callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
+                    }
                     return
                 }
 

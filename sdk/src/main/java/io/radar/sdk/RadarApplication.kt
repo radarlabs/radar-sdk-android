@@ -17,13 +17,15 @@ import java.util.concurrent.Executors
 /**
  * Contains core radar classes.
  */
+@Suppress("LongParameterList")
 internal class RadarApplication(
     val context: Context,
     val receiver: RadarReceiver?,
     apiHelper: RadarApiHelper? = null,
     locationManagerClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context),
     permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper(),
-    loggerExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+    loggerExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
+    val logBuffer: RadarLogBuffer = RadarLogBuffer(context, Executors.newSingleThreadExecutor())
 ) : ContextWrapper(context) {
     val handler = Handler(mainLooper)
     val settings = RadarSettings(this)
@@ -31,7 +33,6 @@ internal class RadarApplication(
     val logger = RadarLogger(this, loggerExecutor)
     val apiClient = RadarApiClient(this, apiHelper ?: RadarApiHelper(logger))
     val locationManager = RadarLocationManager(this, locationManagerClient, permissionsHelper)
-    val logBuffer = RadarLogBuffer(context, loggerExecutor)//TODO maybe different executor?
     val beaconManager: RadarBeaconManager?
 
     init {
@@ -91,12 +92,15 @@ internal class RadarApplication(
     /**
      * Sends Radar log events to the server
      */
-    fun flushLogs() {
-        val logs = logBuffer.getLogs()
-        apiClient.log(logs.get(), object : RadarApiClient.RadarLogCallback {
-            override fun onComplete(status: Radar.RadarStatus, res: JSONObject?) {
-                logs.onFlush(status == Radar.RadarStatus.SUCCESS)
-            }
-        })
+    fun flushLogs(onComplete: () -> Unit) {
+        if (settings.getId() != null) {
+            val logs = logBuffer.getLogs()
+            apiClient.log(logs.get(), object : RadarApiClient.RadarLogCallback {
+                override fun onComplete(status: Radar.RadarStatus, res: JSONObject?) {
+                    logs.onFlush(status == Radar.RadarStatus.SUCCESS)
+                    onComplete.invoke()
+                }
+            })
+        }
     }
 }

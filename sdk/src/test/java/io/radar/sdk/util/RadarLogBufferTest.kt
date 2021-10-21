@@ -42,7 +42,7 @@ class RadarLogBufferTest {
         assertTrue(logFile.exists())
         var flushable = logBuffer.getLogs()
         assertTrue(flushable.get().isEmpty())
-        assertEquals(0, logBuffer.size)
+        assertEquals(0, logBuffer.size.get())
         //a file is added when the logs are retrieved
         assertEquals(2, directory.listFiles()!!.size)
 
@@ -67,7 +67,7 @@ class RadarLogBufferTest {
             logBuffer.write(level, message)
             logs += level to message
         }
-        assertEquals(500, logBuffer.size)
+        assertEquals(500, logBuffer.size.get())
         assertEquals(500, logs.size)
         val afterLog = Date()
 
@@ -92,7 +92,7 @@ class RadarLogBufferTest {
         //new log file was created.
         assertEquals(3, directory.listFiles()!!.size)
         //New buffer contains the message written plus a log message to specify that a purge occurred
-        assertEquals(2, logBuffer.size)
+        assertEquals(2, logBuffer.size.get())
         flushable = logBuffer.getLogs()
         //getLogs creates a new file for logging new messages
         assertEquals(4, directory.listFiles()!!.size)
@@ -102,7 +102,7 @@ class RadarLogBufferTest {
 
         //Successful flush will delete the extra files and update the logBuffer size
         flushable.onFlush(true)
-        assertEquals(0, logBuffer.size)
+        assertEquals(0, logBuffer.size.get())
         assertEquals(1, directory.listFiles()!!.size)
     }
 
@@ -118,14 +118,14 @@ class RadarLogBufferTest {
 
         //Keeps latest file as log file
         assertEquals(1, directory.listFiles()!!.size)
-        assertEquals(size, logBuffer.size)
+        assertEquals(size, logBuffer.size.get())
 
         //Keeps latest file as log file
         size = writeNewFile()
         assertEquals(2, directory.listFiles()!!.size)
         logBuffer = RadarLogBuffer(context, InlineExecutorService())
         assertEquals(2, directory.listFiles()!!.size)
-        assertEquals(size, logBuffer.size)
+        assertEquals(size, logBuffer.size.get())
 
         //Any additional files causes a purge at start
         writeNewFile()
@@ -135,7 +135,7 @@ class RadarLogBufferTest {
         //two will be left, since the latest file will be kept and a new one will be created.
         assertEquals(2, directory.listFiles()!!.size)
         //size will be 1, because the purge methods writes a log to the buffer
-        assertEquals(1, logBuffer.size)
+        assertEquals(1, logBuffer.size.get())
         assertEquals(size + 1, logBuffer.getLogs().get().size)
     }
 

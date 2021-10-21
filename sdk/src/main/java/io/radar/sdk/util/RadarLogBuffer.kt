@@ -11,6 +11,7 @@ import java.io.FileOutputStream
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 
 /**
@@ -48,8 +49,7 @@ internal class RadarLogBuffer(
     /**
      * Number of log entries in the current log file.
      */
-    var size: Int
-        private set
+    val size: AtomicInteger
 
     init {
         //First find current file
@@ -58,7 +58,7 @@ internal class RadarLogBuffer(
             //This gets the latest file that was in use if it can, otherwise it returns the first one.
             currentFile = files.maxByOrNull { getLastModified(it) }!!.name
             //This is initialized to the number of lines in the current file
-            size = FileInputStream(File(getDirectory(), currentFile)).bufferedReader().readLines().size
+            size = AtomicInteger(FileInputStream(File(getDirectory(), currentFile)).bufferedReader().readLines().size)
             if (files.size > 2) {
                 //This case likely means the app started and ended several times without completing a purge. To prevent
                 //excessive log files, purge them now.
@@ -67,7 +67,7 @@ internal class RadarLogBuffer(
         } else {
             //If no such file exists yet, create one.
             currentFile = getNewFilePath()
-            size = 0
+            size = AtomicInteger()
         }
     }
 
@@ -85,9 +85,8 @@ internal class RadarLogBuffer(
                     val radarLog = RadarLog(level, message).toJson().toString()
                     fileOutputStream.write("$radarLog\n".toByteArray())
                 }
+                size.getAndIncrement()
             }
-
-            size++
         }
     }
 
@@ -118,7 +117,7 @@ internal class RadarLogBuffer(
             override fun onFlush(success: Boolean) {
                 if (success) {
                     directoryOp { files?.forEach { it.delete() } }
-                    size -= list.size % LOG_BUFFER_SIZE_LIMIT
+                    fileOp { size.getAndAdd(-list.size % LOG_BUFFER_SIZE_LIMIT) }
                 }
                 //else do nothing. These logs will be stored until a later time.
             }
@@ -131,7 +130,7 @@ internal class RadarLogBuffer(
      * Checks if the current log file (not previous log files) is at the max buffer size
      */
     private fun isFull(): Boolean {
-        return size >= LOG_BUFFER_SIZE_LIMIT
+        return size.get() >= LOG_BUFFER_SIZE_LIMIT
     }
 
     /**
@@ -152,7 +151,7 @@ internal class RadarLogBuffer(
                     //Store current file for sending later, and set currentFile to a new file
                     currentFile = getNewFilePath()
                 }
-                size = 0
+                size.set(0)
             }
         }
         write(Radar.RadarLogLevel.DEBUG, "------ purged oldest logs -----")

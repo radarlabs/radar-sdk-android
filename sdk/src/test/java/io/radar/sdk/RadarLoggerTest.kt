@@ -8,6 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
+import io.radar.sdk.util.RadarLogBuffer
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -27,6 +28,7 @@ class RadarLoggerTest {
 
     private val app = mockk<RadarApplication>()
     private val settings = mockk<RadarSettings>()
+    private val logBuffer = mockk<RadarLogBuffer>()
     private val logger = RadarLogger(app, InlineExecutorService())
     private var logLevel = Radar.RadarLogLevel.NONE
     private var message: String? = null
@@ -53,7 +55,9 @@ class RadarLoggerTest {
     fun setUp() {
         every { app.settings } answers { settings }
         every { app.receiver } answers { receiver }
+        every { app.logBuffer } answers { logBuffer }
         every { settings.getLogLevel() } answers { logLevel }
+        every { logBuffer.write(any(), any()) } answers {  }
     }
 
     @After
