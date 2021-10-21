@@ -71,6 +71,7 @@ internal class RadarLogger(
 
                 Log.println(logLevel.priority, TAG, "$logMessage\n${Log.getStackTraceString(throwable)}")
                 app.receiver?.onLog(app, logMessage)
+                app.logBuffer.write(level, message)
             }
         }
     }

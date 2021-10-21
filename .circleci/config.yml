@@ -10,7 +10,7 @@ jobs:
           command: yes | sdkmanager --licenses || true
       - run:
           name: Build
-          command: ./gradlew check
+          command: ./gradlew check --stacktrace
       # JUnit Test Results
       - store_test_results:
           path: sdk/build/test-results/testDebugUnitTest/TEST-io.radar.sdk.RadarTest.xml

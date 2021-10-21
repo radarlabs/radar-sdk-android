@@ -9,6 +9,8 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
+import io.radar.sdk.util.RadarLogBuffer
+import org.json.JSONObject
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -29,6 +31,7 @@ internal class RadarApplication(
     val logger = RadarLogger(this, loggerExecutor)
     val apiClient = RadarApiClient(this, apiHelper ?: RadarApiHelper(logger))
     val locationManager = RadarLocationManager(this, locationManagerClient, permissionsHelper)
+    val logBuffer = RadarLogBuffer(context, loggerExecutor)//TODO maybe different executor?
     val beaconManager: RadarBeaconManager?
 
     init {
@@ -83,5 +86,17 @@ internal class RadarApplication(
                 )
             )
         }
+    }
+
+    /**
+     * Sends Radar log events to the server
+     */
+    fun flushLogs() {
+        val logs = logBuffer.getLogs()
+        apiClient.log(logs.get(), object : RadarApiClient.RadarLogCallback {
+            override fun onComplete(status: Radar.RadarStatus, res: JSONObject?) {
+                logs.onFlush(status == Radar.RadarStatus.SUCCESS)
+            }
+        })
     }
 }
