@@ -143,7 +143,7 @@ internal class RadarLogBuffer(
                 if (files != null && files.isNotEmpty()) {
                     if (files.size > 2) {
                         //Delete all previous files. By allowing 2 files, it allows a max number of logs to be at most
-                            //2 x LOG_BUFFER_SIZE_LIMIT
+                        //2 x LOG_BUFFER_SIZE_LIMIT
                         val otherFiles = files.toMutableList()
                         otherFiles.removeIf { it.name == currentFile }
                         otherFiles.forEach { it.delete() }
