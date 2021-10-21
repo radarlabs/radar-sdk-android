@@ -6,15 +6,17 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.Radar
 import io.radar.sdk.matchers.RangeMatcher.Companion.isBetween
+import io.radar.sdk.matchers.RangeMatcher.Companion.isGreaterThan
 import io.radar.sdk.model.RadarLog
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThat
 import org.junit.Assert.assertTrue
-import org.junit.runner.RunWith
-import org.robolectric.annotation.Config
+import org.junit.Assume
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.robolectric.android.util.concurrent.InlineExecutorService
+import org.robolectric.annotation.Config
 import java.io.File
 import java.util.*
 import kotlin.random.Random
@@ -110,8 +112,11 @@ class RadarLogBufferTest {
         var size = writeNewFile()
         assertEquals(1, directory.listFiles()!!.size)
 
-        //Keeps latest file as log file
         var logBuffer = RadarLogBuffer(context, InlineExecutorService())
+        //precondition for the rest of this test
+        Assume.assumeThat(logBuffer.getLastModified(directory.listFiles()!![0]), isGreaterThan(0L))
+
+        //Keeps latest file as log file
         assertEquals(1, directory.listFiles()!!.size)
         assertEquals(size, logBuffer.size)
 
@@ -135,6 +140,8 @@ class RadarLogBufferTest {
     }
 
     private fun writeNewFile(): Int {
+        //Add a little wait between log file creation, since the tests rely on lastModified timestamps
+        Thread.sleep(1000)
         val name = "${UUID.randomUUID()}.log"
         val size = Random.nextInt(10)
         val file = File(directory, name)

@@ -1,6 +1,7 @@
 package io.radar.sdk.util
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import io.radar.sdk.Radar
 import io.radar.sdk.model.RadarLog
 import org.json.JSONObject
@@ -187,7 +188,8 @@ internal class RadarLogBuffer(
     /**
      * Get the last modified date, or zero if the value cannot be retrieved because of security restrictions
      */
-    private fun getLastModified(file: File): Long {
+    @VisibleForTesting
+    fun getLastModified(file: File): Long {
         return try {
             file.lastModified()
         } catch (ignored: SecurityException) {
