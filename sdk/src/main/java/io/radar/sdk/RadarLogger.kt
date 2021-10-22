@@ -66,7 +66,7 @@ internal class RadarLogger(
                         logMessage += " $key = $value;"
                     }
                 }
-                //remove the last semicolon
+                // Remove the last semicolon.
                 logMessage = logMessage.substring(0, logMessage.length - 1)
 
                 Log.println(logLevel.priority, TAG, "$logMessage\n${Log.getStackTraceString(throwable)}")

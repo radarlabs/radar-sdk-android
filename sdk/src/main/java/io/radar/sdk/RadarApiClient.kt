@@ -155,7 +155,7 @@ internal class RadarApiClient(
     }
 
     @Throws(JSONException::class)
-    private fun addSettings(params: JSONObject) {
+    private fun addUserMetadata(params: JSONObject) {
         params.putOpt("id", app.settings.getId())
         params.putOpt("installId", app.settings.getInstallId())
         params.putOpt("userId", app.settings.getUserId())
@@ -168,7 +168,7 @@ internal class RadarApiClient(
     }
 
     @Throws(JSONException::class)
-    private fun addDeviceInfo(params: JSONObject) {
+    private fun addDeviceMetadata(params: JSONObject) {
         params.putOpt("deviceType", "Android")
         params.putOpt("deviceMake", RadarUtils.deviceMake)
         params.putOpt("sdkVersion", RadarUtils.sdkVersion)
@@ -267,7 +267,7 @@ internal class RadarApiClient(
         val params = JSONObject()
         val options = app.settings.getTrackingOptions()
         try {
-            addSettings(params)
+            addUserMetadata(params)
             addLocation(location, params)
             if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
@@ -276,7 +276,7 @@ internal class RadarApiClient(
             params.putOpt("foreground", foreground)
             params.putOpt("stopped", stopped)
             params.putOpt("replayed", replayed)
-            addDeviceInfo(params)
+            addDeviceMetadata(params)
             params.putOpt("source", Radar.stringForSource(source))
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 val mocked = location.isFromMockProvider
@@ -330,7 +330,9 @@ internal class RadarApiClient(
                 if (status != RadarStatus.SUCCESS || res == null) {
                     if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS
                         && stopped
-                        && source.requiresReplay
+                        && source !in listOf(
+                            RadarLocationSource.BACKGROUND_LOCATION, RadarLocationSource.FOREGROUND_LOCATION
+                        )
                     ) {
                         app.state.setLastFailedStoppedLocation(location)
                     }

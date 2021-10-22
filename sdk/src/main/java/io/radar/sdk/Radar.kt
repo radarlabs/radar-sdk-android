@@ -291,17 +291,14 @@ object Radar {
     }
 
     /**
-     * The sources for location updates.
-     *
-     * @param[requiresReplay] whether or not failed location updates should replay to the server. See
-     * [RadarTrackingOptions.replay].
+     * The sources for location updates
      */
-    enum class RadarLocationSource(val requiresReplay: Boolean = true) {
+    enum class RadarLocationSource {
         /** Foreground */
-        FOREGROUND_LOCATION(false),
+        FOREGROUND_LOCATION,
 
         /** Background */
-        BACKGROUND_LOCATION(false),
+        BACKGROUND_LOCATION,
 
         /** Manual */
         MANUAL_LOCATION,

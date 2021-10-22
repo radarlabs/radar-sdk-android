@@ -142,7 +142,7 @@ internal class RadarLocationManager(
         this.updateTracking()
     }
 
-    private fun requiresUpdate(
+    private fun requiresStartingLocationUpdates(
         desiredAccuracy: RadarTrackingOptionsDesiredAccuracy,
         interval: Int,
         fastestInterval: Int
@@ -157,7 +157,7 @@ internal class RadarLocationManager(
         interval: Int,
         fastestInterval: Int
     ) {
-        if (!started || requiresUpdate(desiredAccuracy, interval, fastestInterval)) {
+        if (!started || requiresStartingLocationUpdates(desiredAccuracy, interval, fastestInterval)) {
             val priority = when (desiredAccuracy) {
                 RadarTrackingOptionsDesiredAccuracy.HIGH -> LocationRequest.PRIORITY_HIGH_ACCURACY
                 RadarTrackingOptionsDesiredAccuracy.MEDIUM -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
@@ -553,7 +553,7 @@ internal class RadarLocationManager(
         val now = System.currentTimeMillis()
         val lastSyncInterval = (now - lastSentAt) / 1000L
         if (!ignoreSync) {
-            if (!force && stopped && wasStopped && didTravelFarEnoughToTrack(distance, options)) {
+            if (!force && stopped && wasStopped && didMoveFarEnoughToTrack(distance, options)) {
                 context.logger.d(
                     "Skipping sync: already stopped", mapOf(
                         "stopped" to stopped,
@@ -603,7 +603,7 @@ internal class RadarLocationManager(
         this.sendLocation(sendLocation, stopped, source, replayed)
     }
 
-    private fun didTravelFarEnoughToTrack(distance: Float, options: RadarTrackingOptions): Boolean {
+    private fun didMoveFarEnoughToTrack(distance: Float, options: RadarTrackingOptions): Boolean {
         return distance < options.stopDistance &&
                 (options.desiredStoppedUpdateInterval == 0
                         || options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.ALL)
