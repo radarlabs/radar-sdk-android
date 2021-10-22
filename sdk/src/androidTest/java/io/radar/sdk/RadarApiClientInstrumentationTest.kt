@@ -24,7 +24,7 @@ import java.util.*
 
 /**
  * These instrumented tests for [RadarApiClient] require Android's HttpUrlConnection implementation to work. Set the
- * endpoint and api key in local or global gradle.properties.
+ * endpoint and API key in local or global gradle.properties.
  *
  * @see <a href="https://github.com/robolectric/robolectric/issues/6769">
  *     HttpUrlConnection not shadowed & fails on PATCH requests</a>
