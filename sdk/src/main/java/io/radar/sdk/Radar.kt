@@ -293,12 +293,12 @@ object Radar {
     /**
      * The sources for location updates.
      */
-    enum class RadarLocationSource(val requiresReplay: Boolean = true) {
+    enum class RadarLocationSource {
         /** Foreground */
-        FOREGROUND_LOCATION(false),
+        FOREGROUND_LOCATION,
 
         /** Background */
-        BACKGROUND_LOCATION(false),
+        BACKGROUND_LOCATION,
 
         /** Manual */
         MANUAL_LOCATION,

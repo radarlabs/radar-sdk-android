@@ -72,8 +72,9 @@ internal object RadarSettings {
         return getSharedPreferences(context).getString(KEY_ID, null)
     }
 
-    internal fun setId(context: Context, id: String?) {
-        getSharedPreferences(context).edit { putString(KEY_ID, id) }
+    @Suppress("FunctionParameterNaming")
+    internal fun setId(context: Context, _id: String?) {
+        getSharedPreferences(context).edit { putString(KEY_ID, _id) }
     }
 
     internal fun getUserId(context: Context): String? {
