@@ -1,3 +1,7 @@
+import org.json.JSONObject
+
+import javax.net.ssl.HttpsURLConnection
+
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 apply plugin: "kotlin-android-extensions"
@@ -8,6 +12,8 @@ apply plugin: "signing"
 ext {
     radarVersion = "3.2.2"
 }
+boolean publishAsDraft = true
+String buildNumber = publishAsDraft ? '' : ".${System.getenv('CIRCLE_BUILD_NUM') ?: System.currentTimeMillis()}"
 
 android {
     compileSdkVersion 31
@@ -54,6 +60,7 @@ dependencies {
 }
 
 task androidSourcesJar(type: Jar) {
+    group 'publishing'
     archiveClassifier.set("sources")
     from android.sourceSets.main.java.srcDirs
 }
@@ -73,6 +80,7 @@ dokkaJavadoc.configure {
 }
 
 task androidJavadocsJar(type: Jar, dependsOn: dokkaJavadoc) {
+    group 'publishing'
     archiveClassifier.set("javadoc")
     from dokkaJavadoc.outputDirectory
 }
@@ -81,12 +89,53 @@ artifacts {
     archives androidSourcesJar, androidJavadocsJar
 }
 
+task outputSdkVersion {
+    group 'ci'
+    description 'Writes the sdk version from this build to build/version.txt'
+    File file = file("$buildDir/version.txt")
+    doLast {
+        file.createNewFile()
+        file.text = radarVersion
+    }
+}
+
+//https://docs.github.com/en/rest/reference/repos#create-a-release
+tasks.register('createGitHubRelease') {
+    group 'ci'
+    description 'Publishes a draft prerelease on GitHub'
+    doLast {
+        URL address = new URL("https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases")
+        HttpsURLConnection connection = address.openConnection()
+        connection.setRequestProperty 'accept', 'application/vnd.github.v3+json'
+        connection.setRequestProperty 'Authentication', "token $GITHUB_TOKEN"
+        JSONObject json = new JSONObject()
+        json.with {
+            put 'tag_name', "$radarVersion$buildNumber"
+            put 'draft', publishAsDraft
+            put 'prerelease', publishAsDraft
+            put 'generate_release_notes', true
+        }
+        connection.requestMethod = 'POST'
+        connection.connectTimeout = 10000
+        connection.readTimeout = 10000
+        connection.doOutput = true
+
+        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.outputStream)
+        outputStreamWriter.write(json.toString())
+        outputStreamWriter.close()
+
+        if (connection.responseCode != 201) {
+            throw new IOException("Release not created. Error $connection.responseCode: $connection.responseMessage")
+        }
+    }
+}
+
 publishing {
     publications {
         sdkPublication(MavenPublication) {
             groupId "io.radar"
             artifactId "sdk"
-            version radarVersion
+            version "$radarVersion$buildNumber"
             artifact "$buildDir/outputs/aar/${project.getName()}-release.aar"
             artifact androidSourcesJar
             artifact androidJavadocsJar
@@ -139,7 +188,7 @@ publishing {
 
     repositories {
         maven {
-            url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2"
+            url = "https://s01.oss.sonatype.org/service/local/${publishAsDraft ? 'staging' : 'release'}/deploy/maven2"
             credentials {
                 username = project.properties["nexusUsername"] != null ? project.properties["nexusUsername"] : ""
                 password = project.properties["nexusPassword"] != null ? project.properties["nexusPassword"] : ""
