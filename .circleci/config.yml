@@ -7,7 +7,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Accept licenses and Build
+          name: Accept licenses
           command: yes | sdkmanager --licenses || true
       - run:
           name: Build
@@ -17,7 +17,7 @@ jobs:
       - image: circleci/android:api-30
     steps:
       - run:
-          name: Publish
+          name: Publish to Maven
           command: ./gradlew publish
   publish_github_release:
     docker:
