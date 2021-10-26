@@ -54,7 +54,7 @@ internal class RadarLogBuffer(
     init {
         //First find current file
         val files = getDirectory().listFiles()
-        if (files != null && files.isNotEmpty()) {
+        if (files?.isNotEmpty() == true) {
             //This gets the latest file that was in use if it can, otherwise it returns the first one.
             currentFile = files.maxByOrNull { getLastModified(it) }!!.name
             //This is initialized to the number of lines in the current file

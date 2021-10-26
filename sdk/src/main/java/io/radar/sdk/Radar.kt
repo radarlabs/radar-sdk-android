@@ -2155,12 +2155,15 @@ object Radar {
         if (!initialized) {
             return
         }
-        val logs = logBuffer.getLogs()
-        apiClient.log(logs.get(), object : RadarApiClient.RadarLogCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                logs.onFlush(status == RadarStatus.SUCCESS)
-            }
-        })
+        val flushable = logBuffer.getLogs()
+        val logs = flushable.get()
+        if (logs.isNotEmpty()) {
+            apiClient.log(logs, object : RadarApiClient.RadarLogCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                    flushable.onFlush(status == RadarStatus.SUCCESS)
+                }
+            })
+        }
     }
 
     /**
