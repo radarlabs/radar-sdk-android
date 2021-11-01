@@ -13,7 +13,7 @@ ext {
     radarVersion = "3.2.2"
 }
 boolean publishAsDraft = true
-String buildNumber = publishAsDraft ? '' : ".${System.getenv('CIRCLE_BUILD_NUM') ?: System.currentTimeMillis()}"
+String buildNumber = publishAsDraft ? ".${System.getenv('CIRCLE_BUILD_NUM') ?: System.currentTimeMillis()}" : ''
 
 android {
     compileSdkVersion 31
@@ -87,16 +87,6 @@ task androidJavadocsJar(type: Jar, dependsOn: dokkaJavadoc) {
 
 artifacts {
     archives androidSourcesJar, androidJavadocsJar
-}
-
-task outputSdkVersion {
-    group 'ci'
-    description 'Writes the sdk version from this build to build/version.txt'
-    File file = file("$buildDir/version.txt")
-    doLast {
-        file.createNewFile()
-        file.text = radarVersion
-    }
 }
 
 //https://docs.github.com/en/rest/reference/repos#create-a-release
