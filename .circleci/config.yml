@@ -17,23 +17,15 @@ jobs:
       - image: circleci/android:api-30
     steps:
       - run:
-          name: Hello Maven
-          command: echo "Hello Maven!"
-          #TODO replace Hello Maven with Publish task
-#      - run:
-#          name: Publish to Maven
-#          command: ./gradlew publish
+          name: Publish to Maven
+          command: ./gradlew publish
   publish_github_release:
     docker:
       - image: cibuilds/github:0.10
     steps:
       - run:
-          name: Hello GitHub
-          command: echo "Hello GitHub!"
-          #TODO replace Hello GitHub with Publish task
-#      - run:
-#          name: Publish Release on GitHub
-#          command: ./gradlew createGitHubRelease
+          name: Publish Release on GitHub
+          command: ./gradlew createGitHubRelease
 workflows:
   build_test_and_deploy:
     jobs:
