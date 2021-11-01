@@ -42,13 +42,13 @@ workflows:
           filters:
             branches:
               only:
-                - "story/7460_automate-releases"
+                - "master"
           requires:
             - build_and_test
       - publish_github_release:
           filters:
             branches:
               only:
-                - "story/7460_automate-releases"
+                - "master"
           requires:
             - publish_to_maven
