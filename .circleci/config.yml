@@ -35,17 +35,20 @@ jobs:
 #          name: Publish Release on GitHub
 #          command: ./gradlew createGitHubRelease
 workflows:
-  build_and_test:
+  build_test_and_deploy:
     jobs:
       - build_and_test
-  deploy:
-    when:
-      and:
-        - equal: [ "story/7460_automate-releases", << pipeline.git.branch >> ]
-    jobs:
       - publish_to_maven:
+          filters:
+            branches:
+              only:
+                - "story/7460_automate-releases"
           requires:
-            -  build_and_test
+            - build_and_test
       - publish_github_release:
+          filters:
+            branches:
+              only:
+                - "story/7460_automate-releases"
           requires:
             - publish_to_maven
