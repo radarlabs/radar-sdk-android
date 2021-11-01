@@ -41,7 +41,7 @@ workflows:
   deploy:
     when:
       and:
-        - equal: [ master, << pipeline.git.branch >> ]
+        - equal: [ "story/7460_automate-releases", << pipeline.git.branch >> ]
     jobs:
       - publish_to_maven:
           requires:
