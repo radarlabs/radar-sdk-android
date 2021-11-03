@@ -6,7 +6,11 @@ import org.json.JSONObject
 
 import javax.net.ssl.HttpsURLConnection
 
-//https://docs.github.com/en/rest/reference/repos#create-a-release
+/**
+ * Creates a configurable task to publish a GitHub release
+ *
+ * @see : <a href="https://docs.github.com/en/rest/reference/repos#create-a-release">Create a Release</a>
+ */
 class GitHubPublishPlugin implements Plugin<Project> {
 
     private static final String EXTENSION = 'ghpublish'
