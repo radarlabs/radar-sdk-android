@@ -1,26 +1,25 @@
-import org.json.JSONObject
-
-import javax.net.ssl.HttpsURLConnection
+import io.radar.mvnpublish.MavenServer
 
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 apply plugin: "kotlin-android-extensions"
 apply plugin: "org.jetbrains.dokka"
-apply plugin: "maven-publish"
-apply plugin: "signing"
+apply plugin: 'io.radar.mvnpublish'
+apply plugin: 'io.radar.ghpublish'
 
 ext {
     radarVersion = "3.2.2"
 }
-boolean publishAsDraft = true
+String branch = System.getenv('CIRCLE_BRANCH') ?: ''
+boolean publishAsDraft = (branch != 'master')
 String buildNumber = publishAsDraft ? ".${System.getenv('CIRCLE_BUILD_NUM') ?: System.currentTimeMillis()}" : ''
 
 android {
     compileSdkVersion 31
-     compileOptions {
-         coreLibraryDesugaringEnabled = true
-         sourceCompatibility = JavaVersion.VERSION_1_8
-         targetCompatibility = JavaVersion.VERSION_1_8
+    compileOptions {
+        coreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
         jvmTarget = "1.8"
@@ -89,104 +88,22 @@ artifacts {
     archives androidSourcesJar, androidJavadocsJar
 }
 
-//https://docs.github.com/en/rest/reference/repos#create-a-release
-tasks.register('createGitHubRelease') {
-    group 'ci'
-    description 'Publishes a draft prerelease on GitHub'
-    doLast {
-        URL address = new URL("https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases")
-        HttpsURLConnection connection = address.openConnection()
-        connection.setRequestProperty 'accept', 'application/vnd.github.v3+json'
-        connection.setRequestProperty 'Authentication', "token $GITHUB_TOKEN"
-        JSONObject json = new JSONObject()
-        json.with {
-            put 'tag_name', "$radarVersion$buildNumber"
-            put 'draft', publishAsDraft
-            put 'prerelease', publishAsDraft
-            put 'generate_release_notes', true
-        }
-        connection.requestMethod = 'POST'
-        connection.connectTimeout = 10000
-        connection.readTimeout = 10000
-        connection.doOutput = true
-
-        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.outputStream)
-        outputStreamWriter.write(json.toString())
-        outputStreamWriter.close()
-
-        if (connection.responseCode != 201) {
-            throw new IOException("Release not created. Error $connection.responseCode: $connection.responseMessage")
-        }
-    }
+ghpublish {
+    tagName = "$radarVersion$buildNumber"
+    draft = publishAsDraft
+    prerelease = publishAsDraft
+    generateReleaseNotes = true
 }
 
-publishing {
-    publications {
-        sdkPublication(MavenPublication) {
-            groupId "io.radar"
-            artifactId "sdk"
-            version "$radarVersion$buildNumber"
-            artifact "$buildDir/outputs/aar/${project.getName()}-release.aar"
-            artifact androidSourcesJar
-            artifact androidJavadocsJar
-
-            pom {
-                name = "Radar Android SDK"
-                description = "Android SDK for Radar, the leading geofencing and location tracking platform"
-                url = "https://radar.io"
-
-                licenses {
-                    license {
-                        name = "Apache License, Version 2.0"
-                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-                    }
-                }
-
-                organization {
-                    name = "Radar Labs, Inc."
-                    url = "https://radar.io"
-                }
-
-                developers {
-                    developer {
-                        id = "radarlabs"
-                        name = "Radar Labs, Inc."
-                    }
-                }
-
-                scm {
-                    connection = "scm:git:git://github.com:radarlabs/radar-sdk-android.git"
-                    developerConnection = "scm:git:ssh://github.com:radarlabs/radar-sdk-android.git"
-                    url = "https://github.com/radarlabs/radar-sdk-android"
-                }
-
-                withXml {
-                    def dependenciesNode = asNode().appendNode('dependencies')
-                    configurations.implementation.allDependencies.each { dependency ->
-                        if (dependency.group == null || dependency.name == null || dependency.version == null) {
-                            return
-                        }
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-                        dependencyNode.appendNode('groupId', dependency.group)
-                        dependencyNode.appendNode('artifactId', dependency.name)
-                        dependencyNode.appendNode('version', dependency.version)
-                    }
-                }
-            }
-        }
+mvnpublish {
+    publication {
+        name = 'Radar Android SDK'
+        description = 'Android SDK for Radar, the leading geofencing and location tracking platform'
+        repositoryName = 'radar-sdk-android'
+        group = 'io.radar'
+        artifactId = 'sdk'
+        version = "$radarVersion$buildNumber"
+        artifacts = ["$buildDir/outputs/aar/$project.name-release.aar", androidSourcesJar, androidJavadocsJar]
+        server = publishAsDraft ? MavenServer.STAGING : MavenServer.RELEASE
     }
-
-    repositories {
-        maven {
-            url = "https://s01.oss.sonatype.org/service/local/${publishAsDraft ? 'staging' : 'release'}/deploy/maven2"
-            credentials {
-                username = project.properties["nexusUsername"] != null ? project.properties["nexusUsername"] : ""
-                password = project.properties["nexusPassword"] != null ? project.properties["nexusPassword"] : ""
-            }
-        }
-    }
-}
-
-signing {
-    sign publishing.publications.sdkPublication
 }
