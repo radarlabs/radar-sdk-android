@@ -41,6 +41,10 @@ android {
     }
 }
 
+check {
+    System.out.println "####FOOBAR = ${System.getenv("FOOBAR") ?: 'NOT FOUND'}"
+}
+
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
