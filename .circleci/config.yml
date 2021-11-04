@@ -31,7 +31,7 @@ workflows:
     jobs:
       - build_and_test
       - publish_to_maven:
-          context: radar-publisher
+          context: Global
           filters:
             branches:
               only:
@@ -40,6 +40,7 @@ workflows:
           requires:
             - build_and_test
       - publish_github_release:
+          context: Global
           filters:
             branches:
               only:
