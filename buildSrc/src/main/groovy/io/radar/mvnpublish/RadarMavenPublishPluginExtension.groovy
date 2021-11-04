@@ -26,9 +26,9 @@ class RadarMavenPublishPluginExtension {
         RadarPublication publication = new DefaultRadarPublication(project.objects)
         closure.setDelegate(publication)
         closure.run()
-        DefaultPasswordCredentials credentials =
-                new DefaultPasswordCredentials(project.properties[USERNAME] ?: EMPTY_STRING,
-                        project.properties[PASSWORD] ?: EMPTY_STRING)
+        String username = project.properties[USERNAME] ?: System.getenv('NEXUS_USERNAME') ?: EMPTY_STRING
+        String password = project.properties[PASSWORD] ?: System.getenv('NEXUS_PASSWORD') ?: EMPTY_STRING
+        DefaultPasswordCredentials credentials = new DefaultPasswordCredentials(username, password)
         project.publishing {
             publications {
                 sdk(MavenPublication) {

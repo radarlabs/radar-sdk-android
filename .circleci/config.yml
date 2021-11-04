@@ -31,6 +31,7 @@ workflows:
     jobs:
       - build_and_test
       - publish_to_maven:
+          context: radar-publisher
           filters:
             branches:
               only:
