@@ -36,7 +36,7 @@ workflows:
             branches:
               only:
                 - "master"
-                - "develop"
+                - "production"
           requires:
             - build_and_test
       - publish_github_release:
@@ -45,6 +45,6 @@ workflows:
             branches:
               only:
                 - "master"
-                - "develop"
+                - "production"
           requires:
             - publish_to_maven
