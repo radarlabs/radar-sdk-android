@@ -129,7 +129,10 @@ internal object RadarSettings {
     }
 
     internal fun revertToFallbackTrackingOptions(context: Context) {
-        setTrackingOptions(context, getFallbackTrackingOptions(context))
+        val fallbackTrackingOptions = getFallbackTrackingOptions(context)
+        if (fallbackTrackingOptions != null) {
+            setTrackingOptions(context, fallbackTrackingOptions)
+        }
     }
 
     internal fun getTrackingOptions(context: Context): RadarTrackingOptions {
@@ -171,8 +174,9 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putString(KEY_TRACKING_OPTIONS, optionsJson) }
     }
 
-    private fun getFallbackTrackingOptions(context: Context): RadarTrackingOptions {
-        return getTrackingOptionsByKey(context, KEY_FALLBACK_TRACKING_OPTIONS)
+    private fun getFallbackTrackingOptions(context: Context): RadarTrackingOptions? {
+        val keyExists = getSharedPreferences(context).contains(KEY_FALLBACK_TRACKING_OPTIONS)
+        return if (keyExists) getTrackingOptionsByKey(context, KEY_FALLBACK_TRACKING_OPTIONS) else null
     }
 
     internal fun setFallbackTrackingOptions(context: Context, options: RadarTrackingOptions) {
