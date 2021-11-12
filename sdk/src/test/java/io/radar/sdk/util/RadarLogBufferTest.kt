@@ -40,7 +40,7 @@ class RadarLogBufferTest {
         assertEquals(1, directory.listFiles()!!.size)
         var logFile = directory.listFiles()!!.first()
         assertTrue(logFile.exists())
-        var flushable = logBuffer.getLogs()
+        var flushable = logBuffer.getFlushableLogsStash()
         assertTrue(flushable.get().isEmpty())
         assertEquals(0, logBuffer.size)
         // a file is added when the logs are retrieved
@@ -76,7 +76,7 @@ class RadarLogBufferTest {
         assertEquals(logFile.absolutePath, directory.listFiles()!!.first().absolutePath)
 
         // Verify the log contents
-        var contents = logBuffer.getLogs().get()
+        var contents = logBuffer.getFlushableLogsStash().get()
         assertEquals(500, contents.size)
         contents.forEachIndexed { index, radarLog ->
             assertEquals(logs[index].first, radarLog.level)
@@ -93,7 +93,7 @@ class RadarLogBufferTest {
         assertEquals(3, directory.listFiles()!!.size)
         // New buffer contains the message written plus a log message to specify that a purge occurred
         assertEquals(2, logBuffer.size)
-        flushable = logBuffer.getLogs()
+        flushable = logBuffer.getFlushableLogsStash()
         // getLogs creates a new file for logging new messages
         assertEquals(4, directory.listFiles()!!.size)
         contents = flushable.get()
@@ -136,7 +136,7 @@ class RadarLogBufferTest {
         assertEquals(2, directory.listFiles()!!.size)
         // size will be 1, because the purge methods writes a log to the buffer
         assertEquals(1, logBuffer.size)
-        assertEquals(size + 1, logBuffer.getLogs().get().size)
+        assertEquals(size + 1, logBuffer.getFlushableLogsStash().get().size)
     }
 
     private fun writeNewFile(): Int {

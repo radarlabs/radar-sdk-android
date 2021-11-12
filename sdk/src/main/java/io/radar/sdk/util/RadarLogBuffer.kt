@@ -109,12 +109,12 @@ internal class RadarLogBuffer(
     }
 
     /**
-     * Get the logs from the buffer. These are returned as a [Flushable] so that a successful callback can cleanup this
-     * log buffer by deleting old log files.
+     * Creates a stash of the logs currently in the buffer and returns them as a [Flushable] so that a successful
+     * callback can cleanup this log buffer by deleting old log files.
      *
      * @return a [Flushable] containing all stored logs
      */
-    fun getLogs(): Flushable<RadarLog> {
+    fun getFlushableLogsStash(): Flushable<RadarLog> {
         val (files, list) = fileOp {
             val files = directory.listFiles()
             val list = mutableListOf<RadarLog>()

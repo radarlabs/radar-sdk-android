@@ -6,10 +6,8 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
-import android.os.Looper
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
-import io.radar.sdk.util.Flushable
 import io.radar.sdk.util.RadarLogBuffer
 import org.json.JSONObject
 import java.util.*
@@ -2155,7 +2153,7 @@ object Radar {
         if (!initialized) {
             return
         }
-        val flushable = logBuffer.getLogs()
+        val flushable = logBuffer.getFlushableLogsStash()
         val logs = flushable.get()
         if (logs.isNotEmpty()) {
             apiClient.log(logs, object : RadarApiClient.RadarLogCallback {
