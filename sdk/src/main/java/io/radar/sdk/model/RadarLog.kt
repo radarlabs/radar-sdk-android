@@ -35,5 +35,4 @@ internal data class RadarLog(
             putOpt(MESSAGE, message)
         }
     }
-
 }

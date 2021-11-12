@@ -47,11 +47,6 @@ internal class RadarLogBuffer(
     private val directory = context.getDir(DIRECTORY, Context.MODE_PRIVATE)
 
     /**
-     * Lock for handling changes to [currentFile]
-     */
-    private val fileLock = ReentrantLock()
-
-    /**
      * Lock for handling changes to the files within [DIRECTORY]
      */
     private val directoryLock = ReentrantLock()
@@ -70,20 +65,20 @@ internal class RadarLogBuffer(
         private set
 
     init {
-        //First find current file
+        // First find current file
         val files = directory.listFiles()
         if (files?.isNotEmpty() == true) {
-            //This gets the latest file that was in use if it can, otherwise it returns the first one.
+            // This gets the latest file that was in use if it can, otherwise it returns the first one.
             currentFile = files.maxByOrNull { getLastModified(it) }!!.name
-            //This is initialized to the number of lines in the current file
+            // This is initialized to the number of lines in the current file
             size = FileInputStream(File(directory, currentFile)).bufferedReader().readLines().size
             if (files.size > 2) {
-                //This case likely means the app started and ended several times without completing a purge. To prevent
-                //excessive log files, purge them now.
+                // This case likely means the app started and ended several times without completing a purge. To prevent
+                // excessive log files, purge them now.
                 purgeInactiveFiles()
             }
         } else {
-            //If no such file exists yet, create one.
+            // If no such file exists yet, create one.
             currentFile = getNewFilePath()
             size = 0
         }
@@ -100,10 +95,10 @@ internal class RadarLogBuffer(
             if (isFull()) {
                 purgeInactiveFiles()
             }
-            //Remove line-breaks to ensure each line in the file is a separate log event
+            // Remove line-breaks to ensure each line in the file is a separate log event
             val radarLog = RadarLog(level, message.replace('\n', '\t')).toJson()
 
-            //Locks file operations while writing to the currentFile
+            // Locks file operations while writing to the currentFile
             fileOp {
                 FileOutputStream(File(directory, currentFile), true).use { fileOutputStream ->
                     fileOutputStream.write("$radarLog\n".toByteArray())
@@ -120,20 +115,20 @@ internal class RadarLogBuffer(
      * @return a [Flushable] containing all stored logs
      */
     fun getLogs(): Flushable<RadarLog> {
-        val (files, list) = directoryOp {
+        val (files, list) = fileOp {
             val files = directory.listFiles()
             val list = mutableListOf<RadarLog>()
-            //Now iterate over the old list of files
+            // Now iterate over the old list of files
             files?.forEach { file ->
                 FileInputStream(file).bufferedReader().forEachLine { line ->
                     list.add(RadarLog.fromJson(JSONObject(line)))
                 }
             }
-            files to list
-        }
-        fileOp {
-            //Create a new currentFile
+            // Create a new currentFile
             currentFile = getNewFilePath()
+
+            // return files and logs
+            files to list
         }
         return object : Flushable<RadarLog> {
 
@@ -141,10 +136,12 @@ internal class RadarLogBuffer(
 
             override fun onFlush(success: Boolean) {
                 if (success) {
-                    directoryOp { files?.forEach { it.delete() } }
-                    fileOp { size -= list.size % LOG_BUFFER_SIZE_LIMIT }
+                    fileOp {
+                        files?.forEach { it.delete() }
+                        size -= list.size % LOG_BUFFER_SIZE_LIMIT
+                    }
                 }
-                //else do nothing. These logs will be stored until a later time.
+                // else do nothing. These logs will be stored until a later time.
             }
         }
     }
@@ -162,27 +159,25 @@ internal class RadarLogBuffer(
      * Clears oldest logs and adds a "purged" log line
      */
     private fun purgeInactiveFiles() {
-        directoryOp {
-            fileOp {
-                val files = directory.listFiles()
-                if (files != null && files.isNotEmpty()) {
-                    if (files.size > 2) {
-                        //Delete all previous files. By allowing 2 files, it allows a max number of logs to be at most
-                        //2 x LOG_BUFFER_SIZE_LIMIT
-                        val otherFiles = files.toMutableList()
-                        for (file in otherFiles) {
-                            if (file.name == currentFile) {
-                                otherFiles.remove(file)
-                                break
-                            }
+        fileOp {
+            val files = directory.listFiles()
+            if (files != null && files.isNotEmpty()) {
+                if (files.size > 2) {
+                    // Delete all previous files. By allowing 2 files, it allows a max number of logs to be at most
+                    // 2 x LOG_BUFFER_SIZE_LIMIT
+                    val otherFiles = files.toMutableList()
+                    for (file in otherFiles) {
+                        if (file.name == currentFile) {
+                            otherFiles.remove(file)
+                            break
                         }
-                        otherFiles.forEach { it.delete() }
                     }
-                    //Store current file for sending later, and set currentFile to a new file
-                    currentFile = getNewFilePath()
+                    otherFiles.forEach { it.delete() }
                 }
-                size = 0
+                // Store current file for sending later, and set currentFile to a new file
+                currentFile = getNewFilePath()
             }
+            size = 0
         }
         write(Radar.RadarLogLevel.DEBUG, "------ purged oldest logs -----")
     }
@@ -199,27 +194,12 @@ internal class RadarLogBuffer(
     }
 
     /**
-     * Perform a blocking operation on the current file
-     *
-     * @param[block] the operation to perform
-     * @return the result of the [block]
-     */
-    private inline fun <T> fileOp(block: () -> T): T {
-        fileLock.lock()
-        try {
-            return block.invoke()
-        } finally {
-            fileLock.unlock()
-        }
-    }
-
-    /**
      * Perform a blocking operation on the file system
      *
      * @param[block] the operation to perform
      * @return the result of the [block]
      */
-    private inline fun <T> directoryOp(block: () -> T): T {
+    private inline fun <T> fileOp(block: () -> T): T {
         directoryLock.lock()
         try {
             return block.invoke()
@@ -241,5 +221,4 @@ internal class RadarLogBuffer(
             0L
         }
     }
-
 }
