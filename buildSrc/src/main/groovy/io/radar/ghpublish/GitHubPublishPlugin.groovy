@@ -22,7 +22,9 @@ class GitHubPublishPlugin implements Plugin<Project> {
             group 'publishing'
             description 'Publishes a release on GitHub'
             doLast {
-                URL address = new URL("https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases")
+                String url = extension.releasesUrl.get() ?:
+                        "https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/releases"
+                URL address = new URL(url)
                 HttpsURLConnection connection = address.openConnection()
                 connection.setRequestProperty 'accept', 'application/vnd.github.v3+json'
                 connection.setRequestProperty 'Authentication', "token $GITHUB_TOKEN"

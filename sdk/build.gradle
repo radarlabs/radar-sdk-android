@@ -10,9 +10,18 @@ apply plugin: 'io.radar.ghpublish'
 ext {
     radarVersion = "3.2.2"
 }
-String branch = System.getenv('CIRCLE_BRANCH') ?: ''
-boolean publishAsDraft = (branch != 'production')
-String buildNumber = publishAsDraft ? ".${System.getenv('CIRCLE_BUILD_NUM') ?: System.currentTimeMillis()}" : ''
+
+boolean publishAsDraft = true
+String buildNumber = ".${System.currentTimeMillis()}"
+if (Boolean.getBoolean('GITHUB_ACTIONS')) {
+//    publishAsDraft = System.getenv('GITHUB_WORKFLOW') == 'Radar Release Action'
+//    buildNumber = publishAsDraft ? ".${System.getenv('GITHUB_RUN_NUMBER')}" : ''
+    publishAsDraft = true
+    buildNumber = ''
+} else if (Boolean.getBoolean('CIRCLECI')) {
+    publishAsDraft = System.getenv('CIRCLE_BRANCH') != 'production'
+    buildNumber = publishAsDraft ? ".${System.getenv('CIRCLE_BUILD_NUM')}" : ''
+}
 
 android {
     compileSdkVersion 31
@@ -51,7 +60,7 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "androidx.appcompat:appcompat:1.3.1"
-    implementation "androidx.core:core-ktx:1.6.0"
+    implementation "androidx.core:core-ktx:1.7.0"
     implementation "com.google.android.gms:play-services-ads-identifier:17.1.0"
     implementation "com.google.android.gms:play-services-location:18.0.0"
     testImplementation "androidx.test.ext:junit:1.1.3"

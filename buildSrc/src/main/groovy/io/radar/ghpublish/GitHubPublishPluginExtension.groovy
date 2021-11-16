@@ -9,6 +9,8 @@ abstract class GitHubPublishPluginExtension {
 
     abstract Property<String> getTagName()
 
+    abstract Property<String> getReleasesUrl()
+
     boolean draft = false
 
     boolean prerelease = false
