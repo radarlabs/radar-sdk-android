@@ -2,6 +2,7 @@ package io.radar.mvnpublish
 
 import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.publish.maven.MavenPublication
@@ -29,7 +30,8 @@ class RadarMavenPublishPluginExtension {
         String username = project.properties[USERNAME] ?: System.getenv('NEXUS_USERNAME') ?: EMPTY_STRING
         String password = project.properties[PASSWORD] ?: System.getenv('NEXUS_PASSWORD') ?: EMPTY_STRING
         DefaultPasswordCredentials credentials = new DefaultPasswordCredentials(username, password)
-        project.publishing {
+        DependencySet projectDependencies = project.configurations.implementation.allDependencies
+        project.publishing {//TODO likely a scoping issue using closures instead of real objects.
             publications {
                 sdk(MavenPublication) {
                     groupId publication.group.get()
@@ -69,7 +71,7 @@ class RadarMavenPublishPluginExtension {
 
                         withXml {
                             Node dependenciesNode = asNode().appendNode('dependencies')
-                            project.configurations.implementation.allDependencies.each { dependency ->
+                            projectDependencies.each { dependency ->
                                 if (dependency.group && dependency.name && dependency.version) {
                                     Node dependencyNode = dependenciesNode.appendNode('dependency')
                                     dependencyNode.appendNode('groupId', dependency.group)

@@ -27,6 +27,7 @@ class RadarMavenPublishPluginTest {
             from project.buildDir
         }
         assert project.mvnpublish && project.mvnpublish instanceof RadarMavenPublishPluginExtension
+        project.pluginManager.apply 'java'
         RadarMavenPublishPluginExtension extension = project.mvnpublish
         extension.publication {
             name = 'Radar Plugin Test'

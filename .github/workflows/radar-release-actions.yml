@@ -1,6 +1,8 @@
 # Trigger an SDK publication to Maven Central when a release is created on GitHub.
 name: Radar Release Action
-on: [release]
+on:
+  release:
+    types: [ published ]
 jobs:
   Build-And-Publish:
     runs-on: ubuntu-latest
