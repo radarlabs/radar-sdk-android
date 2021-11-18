@@ -13,6 +13,6 @@ jobs:
           name: Build
           command: ./gradlew check build assembleAndroidTest
 workflows:
-  build_test_and_deploy:
+  build_and_test:
     jobs:
       - build_and_test
