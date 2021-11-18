@@ -12,39 +12,7 @@ jobs:
       - run:
           name: Build
           command: ./gradlew check build assembleAndroidTest
-#  publish_to_maven:
-#    docker:
-#      - image: circleci/android:api-30
-#    steps:
-#      - run:
-#          name: Publish to Maven
-#          command: ./gradlew publish
-#  publish_github_release:
-#    docker:
-#      - image: cibuilds/github:0.10
-#    steps:
-#      - run:
-#          name: Publish Release on GitHub
-#          command: ./gradlew createGitHubRelease
 workflows:
   build_test_and_deploy:
     jobs:
       - build_and_test
-#      - publish_to_maven:
-#          context: Global
-#          filters:
-#            branches:
-#              only:
-#                - "master"
-#                - "production"
-#          requires:
-#            - build_and_test
-#      - publish_github_release:
-#          context: Global
-#          filters:
-#            branches:
-#              only:
-#                - "master"
-#                - "production"
-#          requires:
-#            - publish_to_maven

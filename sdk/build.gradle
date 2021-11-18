@@ -1,3 +1,4 @@
+import io.radar.ci.GitHubActions
 import io.radar.mvnpublish.MavenServer
 
 apply plugin: "com.android.library"
@@ -13,14 +14,14 @@ ext {
 
 boolean publishAsDraft = true
 String buildNumber = ".${System.currentTimeMillis()}"
-if (Boolean.getBoolean('GITHUB_ACTIONS')) {
-//    publishAsDraft = System.getenv('GITHUB_WORKFLOW') == 'Radar Release Action'
-//    buildNumber = publishAsDraft ? ".${System.getenv('GITHUB_RUN_NUMBER')}" : ''
+GitHubActions githubRelease = GitHubActions.get()
+if (githubRelease) {
+//    publishAsDraft = githubRelease.workflow == 'Radar Release Action'
+//    buildNumber = publishAsDraft ? ".$githubRelease.runNumber" : ''
     publishAsDraft = true
     buildNumber = ''
-} else if (Boolean.getBoolean('CIRCLECI')) {
-    publishAsDraft = System.getenv('CIRCLE_BRANCH') != 'production'
-    buildNumber = publishAsDraft ? ".${System.getenv('CIRCLE_BUILD_NUM')}" : ''
+    //Use the tag from the release name as the version-to-publish / include in source code
+    ext.radarVersion = githubRelease.tag
 }
 
 android {
