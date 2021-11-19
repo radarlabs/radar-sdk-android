@@ -9,7 +9,7 @@ class GitHubActionsTest {
 
     @Test
     void testGet() {
-        if (Boolean.getBoolean('GITHUB_ACTIONS')) {
+        if (Boolean.parseBoolean(System.getenv('GITHUB_ACTIONS'))) {
             assert GitHubActions.get()
         } else {
             assert !GitHubActions.get()

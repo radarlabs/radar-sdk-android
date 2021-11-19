@@ -18,7 +18,7 @@ class GitHubActions {
     }
 
     static GitHubActions get() {
-        if (Boolean.getBoolean('GITHUB_ACTIONS')) {
+        if (Boolean.parseBoolean(System.getenv('GITHUB_ACTIONS'))) {
             return new GitHubActions()
         }
         null
