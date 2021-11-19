@@ -5,16 +5,13 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.artifacts.dsl.RepositoryHandler
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.api.artifacts.repositories.PasswordCredentials
 import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.internal.credentials.DefaultPasswordCredentials
 
 class RadarMavenPublishPluginExtension {
 
     private static final String RADAR_LABS = 'Radar Labs, Inc.'
     private static final String RADAR_URL = 'https://radar.io'
-    private static final String USERNAME = 'nexusUsername'
-    private static final String PASSWORD = 'nexusPassword'
-    private static final String EMPTY_STRING = ''
 
     private final Project project
 
@@ -27,9 +24,6 @@ class RadarMavenPublishPluginExtension {
         RadarPublication publication = new DefaultRadarPublication(project.objects)
         closure.setDelegate(publication)
         closure.run()
-        String username = project.properties[USERNAME] ?: System.getenv('NEXUS_USERNAME') ?: EMPTY_STRING
-        String password = project.properties[PASSWORD] ?: System.getenv('NEXUS_PASSWORD') ?: EMPTY_STRING
-        DefaultPasswordCredentials credentials = new DefaultPasswordCredentials(username, password)
         DependencySet projectDependencies = project.configurations.implementation.allDependencies
         project.publishing {
             publications {
@@ -93,10 +87,16 @@ class RadarMavenPublishPluginExtension {
                         @Override
                         void execute(MavenArtifactRepository artifactory) {
                             artifactory.url publication.server.url
-                            artifactory.credentials {
-                                username = credentials.username
-                                password = credentials.password
+                            artifactory.credentials new Action<PasswordCredentials>() {
+
+                                @Override
+                                void execute(PasswordCredentials passwordCredentials) {
+                                    passwordCredentials.username = System.getenv 'NEXUS_USERNAME'
+                                    passwordCredentials.password = System.getenv 'NEXUS_PASSWORD'
+                                }
+
                             }
+
                         }
 
                     }

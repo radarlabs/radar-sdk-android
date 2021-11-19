@@ -16,8 +16,6 @@ boolean publishAsDraft = true
 String buildNumber = ".${System.currentTimeMillis()}"
 GitHubActions githubRelease = GitHubActions.get()
 if (githubRelease) {
-//    publishAsDraft = githubRelease.workflow == 'Radar Release Action'
-//    buildNumber = publishAsDraft ? ".$githubRelease.runNumber" : ''
     publishAsDraft = true
     buildNumber = ''
     //Use the tag from the release name as the version-to-publish / include in source code
