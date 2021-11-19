@@ -106,6 +106,9 @@ class RadarMavenPublishPluginExtension {
         }
 
         project.signing {
+            String signingKey = project.findProperty('signingKey')
+            String signingPassword = project.findProperty('signingPassword')
+            useInMemoryPgpKeys(signingKey, signingPassword)
             sign project.publishing.publications.sdk
         }
     }
