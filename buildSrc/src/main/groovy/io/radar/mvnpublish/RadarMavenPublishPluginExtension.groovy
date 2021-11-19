@@ -21,7 +21,7 @@ class RadarMavenPublishPluginExtension {
 
     void publication(Closure closure) {
         closure.setResolveStrategy(Closure.DELEGATE_FIRST)
-        RadarPublication publication = new DefaultRadarPublication(project.objects)
+        RadarPublication publication = new RadarPublication(project.objects)
         closure.setDelegate(publication)
         closure.run()
         DependencySet projectDependencies = project.configurations.implementation.allDependencies

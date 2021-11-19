@@ -6,17 +6,14 @@ apply plugin: "kotlin-android"
 apply plugin: "kotlin-android-extensions"
 apply plugin: "org.jetbrains.dokka"
 apply plugin: 'io.radar.mvnpublish'
-apply plugin: 'io.radar.ghpublish'
 
 ext {
     radarVersion = "3.2.2"
 }
 
-boolean publishAsDraft = true
 String buildNumber = ".${System.currentTimeMillis()}"
 GitHubActions githubRelease = GitHubActions.get()
 if (githubRelease) {
-    publishAsDraft = true
     buildNumber = ''
     //Use the tag from the release name as the version-to-publish / include in source code
     ext.radarVersion = githubRelease.tag
@@ -96,13 +93,6 @@ artifacts {
     archives androidSourcesJar, androidJavadocsJar
 }
 
-ghpublish {
-    tagName = "$radarVersion$buildNumber"
-    draft = publishAsDraft
-    prerelease = publishAsDraft
-    generateReleaseNotes = true
-}
-
 mvnpublish {
     publication {
         name = 'Radar Android SDK'
@@ -112,6 +102,6 @@ mvnpublish {
         artifactId = 'sdk'
         version = "$radarVersion$buildNumber"
         artifacts = ["$buildDir/outputs/aar/$project.name-release.aar", androidSourcesJar, androidJavadocsJar]
-        server = publishAsDraft ? MavenServer.STAGING : MavenServer.RELEASE
+        server = MavenServer.STAGING
     }
 }

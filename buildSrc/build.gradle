@@ -4,10 +4,6 @@ plugins {
 
 gradlePlugin {
     plugins {
-        'github-publish' {
-            id = 'io.radar.ghpublish'
-            implementationClass = 'io.radar.ghpublish.GitHubPublishPlugin'
-        }
         'radar-maven-publish' {
             id = 'io.radar.mvnpublish'
             implementationClass = 'io.radar.mvnpublish.RadarMavenPublishPlugin'

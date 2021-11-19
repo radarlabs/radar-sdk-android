@@ -1,24 +1,87 @@
 package io.radar.mvnpublish
 
-import org.gradle.api.Action
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.publish.maven.MavenPomScm
 
-interface RadarPublication {
+class RadarPublication {
 
-    Property<String> getName()
+    private String name
 
-    Property<String> getDescription()
+    private String description
 
-    Property<String> getRepositoryName()
+    private String repositoryName
 
-    Property<String> getGroup()
+    private String group
 
-    Property<String> getArtifactId()
+    private String artifactId
 
-    Property<String> getVersion()
+    private String version
 
-    Iterable getArtifacts()
+    Iterable artifacts = []
 
-    MavenServer getServer()
+    MavenServer server = MavenServer.STAGING
+
+    private final ObjectFactory objects
+
+    RadarPublication(ObjectFactory objects) {
+        this.objects = objects
+    }
+
+    private Property<String> getStringProperty(String value) {
+        if (value) {
+            Property<String> property = objects.property(String)
+            property.set(value)
+            property
+        } else {
+            throw new IllegalStateException('Missing value')
+        }
+    }
+
+    void setName(String name) {
+        this.name = name
+    }
+
+    Property<String> getName() {
+        getStringProperty(name)
+    }
+
+    void setDescription(String description) {
+        this.description = description
+    }
+
+    Property<String> getDescription() {
+        getStringProperty(description)
+    }
+
+    void setGroup(String group) {
+        this.group = group
+    }
+
+    Property<String> getGroup() {
+        getStringProperty(group)
+    }
+
+    void setArtifactId(String artifactId) {
+        this.artifactId = artifactId
+    }
+
+    Property<String> getArtifactId() {
+        getStringProperty(artifactId)
+    }
+
+    void setVersion(String version) {
+        this.version = version
+    }
+
+    Property<String> getVersion() {
+        getStringProperty(version)
+    }
+
+    void setRepositoryName(String repositoryName) {
+        this.repositoryName = repositoryName
+    }
+
+    Property<String> getRepositoryName() {
+        getStringProperty(repositoryName)
+    }
 }
