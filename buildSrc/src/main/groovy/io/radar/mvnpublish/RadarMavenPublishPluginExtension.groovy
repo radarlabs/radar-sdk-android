@@ -31,7 +31,7 @@ class RadarMavenPublishPluginExtension {
         String password = project.properties[PASSWORD] ?: System.getenv('NEXUS_PASSWORD') ?: EMPTY_STRING
         DefaultPasswordCredentials credentials = new DefaultPasswordCredentials(username, password)
         DependencySet projectDependencies = project.configurations.implementation.allDependencies
-        project.publishing {//TODO likely a scoping issue using closures instead of real objects.
+        project.publishing {
             publications {
                 sdk(MavenPublication) {
                     groupId publication.group.get()
