@@ -102,6 +102,6 @@ mvnpublish {
         artifactId = 'sdk'
         version = "$radarVersion$buildNumber"
         artifacts = ["$buildDir/outputs/aar/$project.name-release.aar", androidSourcesJar, androidJavadocsJar]
-        server = MavenServer.STAGING
+        server = MavenServer.RELEASE
     }
 }

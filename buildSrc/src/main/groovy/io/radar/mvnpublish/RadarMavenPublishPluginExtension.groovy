@@ -8,6 +8,9 @@ import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.artifacts.repositories.PasswordCredentials
 import org.gradle.api.publish.maven.MavenPublication
 
+/**
+ * Configures publication tasks for Radar modules
+ */
 class RadarMavenPublishPluginExtension {
 
     private static final String RADAR_LABS = 'Radar Labs, Inc.'
@@ -15,15 +18,25 @@ class RadarMavenPublishPluginExtension {
 
     private final Project project
 
+    /* package */ String publicationGroup
+    /* package */ String publicationDescription
+
     RadarMavenPublishPluginExtension(Project project) {
         this.project = project
     }
 
     void publication(Closure closure) {
+        if (publicationGroup != null) {
+            //This plugin is not designed to support multiple publications within a single module.
+            project.logger.warn 'Publication already configured'
+            return
+        }
         closure.setResolveStrategy(Closure.DELEGATE_FIRST)
         RadarPublication publication = new RadarPublication(project.objects)
         closure.setDelegate(publication)
         closure.run()
+        publicationGroup = publication.group.get()
+        publicationDescription = publication.description.get()
         DependencySet projectDependencies = project.configurations.implementation.allDependencies
         project.publishing {
             publications {
@@ -86,7 +99,7 @@ class RadarMavenPublishPluginExtension {
 
                         @Override
                         void execute(MavenArtifactRepository artifactory) {
-                            artifactory.url publication.server.url
+                            artifactory.url MavenServer.STAGING.url
                             artifactory.credentials new Action<PasswordCredentials>() {
 
                                 @Override
@@ -110,6 +123,10 @@ class RadarMavenPublishPluginExtension {
             String signingPassword = project.findProperty('SIGNINGPASSWORD')
             useInMemoryPgpKeys(signingKey, signingPassword)
             sign project.publishing.publications.sdk
+        }
+
+        if (publication.server == MavenServer.RELEASE) {
+            project.tasks.findByName('publish').finalizedBy(project.tasks.findByName('releaseSdkToMavenCentral'))
         }
     }
 }
