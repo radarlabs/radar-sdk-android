@@ -64,10 +64,16 @@ class RadarMavenPublishPluginTest {
         assert project.signing && project.signing instanceof SigningExtension
         assert project.tasks.findByName('signSdkPublication')
 
+        Task prePublishTask = project.tasks.findByName('prePublish')
+        assert prePublishTask
+
         Task releaseTask = project.tasks.findByName('releaseSdkToMavenCentral')
         assert releaseTask
 
-        TaskDependency publishDependencies = project.tasks.findByName('publish').finalizedBy
+        Task publishTask = project.tasks.findByName('publish')
+        assert publishTask.dependsOn.contains(prePublishTask)
+
+        TaskDependency publishDependencies = publishTask.finalizedBy
         if (mavenServer == MavenServer.RELEASE) {
             assert publishDependencies.getDependencies(null).contains(releaseTask)
         } else {

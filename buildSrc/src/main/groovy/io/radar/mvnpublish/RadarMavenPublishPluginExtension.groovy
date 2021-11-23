@@ -1,5 +1,6 @@
 package io.radar.mvnpublish
 
+import groovy.transform.PackageScope
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.artifacts.DependencySet
@@ -18,8 +19,10 @@ class RadarMavenPublishPluginExtension {
 
     private final Project project
 
-    /* package */ String publicationGroup
-    /* package */ String publicationDescription
+    @PackageScope
+    String publicationGroup
+    @PackageScope
+    String publicationDescription
 
     RadarMavenPublishPluginExtension(Project project) {
         this.project = project
