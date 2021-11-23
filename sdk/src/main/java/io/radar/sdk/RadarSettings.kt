@@ -7,6 +7,7 @@ import org.json.JSONObject
 import java.text.DecimalFormat
 import java.util.UUID
 
+
 internal object RadarSettings {
 
     private const val KEY_PUBLISHABLE_KEY = "publishable_key"
@@ -174,7 +175,7 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putString(KEY_TRACKING_OPTIONS, optionsJson) }
     }
 
-    private fun getFallbackTrackingOptions(context: Context): RadarTrackingOptions? {
+    internal fun getFallbackTrackingOptions(context: Context): RadarTrackingOptions? {
         val keyExists = getSharedPreferences(context).contains(KEY_FALLBACK_TRACKING_OPTIONS)
         return if (keyExists) getTrackingOptionsByKey(context, KEY_FALLBACK_TRACKING_OPTIONS) else null
     }
