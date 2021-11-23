@@ -19,8 +19,8 @@ import static io.github.gradlenexus.publishplugin.internal.NexusClient.*
 class RadarNexusClient extends NexusClient {
 
     private static final URI BASE_URL = new URI('https://s01.oss.sonatype.org/service/local/')
-    private static final String USERNAME = System.getenv 'NEXUS_USERNAME'
-    private static final String PASSWORD = System.getenv 'NEXUS_PASSWORD'
+    private static final String USERNAME = System.getenv 'NEXUS_USERNAME' ?: ''
+    private static final String PASSWORD = System.getenv 'NEXUS_PASSWORD' ?: ''
     private final ApiExtensions api
 
     RadarNexusClient() {
