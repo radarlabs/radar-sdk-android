@@ -3,7 +3,7 @@ package io.radar.sdk.model
 import io.radar.sdk.RadarTrackingOptions
 import org.json.JSONObject
 
-data class RadarMeta(
+internal data class RadarMeta(
     val config: JSONObject?,
     val remoteTrackingOptions: RadarTrackingOptions?
 ) {
