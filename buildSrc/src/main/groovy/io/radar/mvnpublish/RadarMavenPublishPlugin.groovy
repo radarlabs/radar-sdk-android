@@ -1,6 +1,5 @@
 package io.radar.mvnpublish
 
-import io.github.gradlenexus.publishplugin.TransitionCheckOptions
 import io.github.gradlenexus.publishplugin.internal.BasicActionRetrier
 import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
 import org.gradle.api.Plugin
