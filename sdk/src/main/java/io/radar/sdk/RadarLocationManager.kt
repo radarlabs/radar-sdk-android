@@ -249,7 +249,7 @@ internal class RadarLocationManager(
         }
     }
 
-    internal fun updateTrackingFromMeta(context: Context, meta: RadarApiClient.RadarMeta?) {
+    internal fun updateTrackingFromMeta(context: Context, meta: RadarMeta?) {
         if (meta?.remoteTrackingOptions != null) {
             // use remotely-configured options if specified
             RadarSettings.setTrackingOptions(context, meta.remoteTrackingOptions)
@@ -549,7 +549,7 @@ internal class RadarLocationManager(
                     events: Array<RadarEvent>?,
                     user: RadarUser?,
                     nearbyGeofences: Array<RadarGeofence>?,
-                    meta: RadarApiClient.RadarMeta?
+                    meta: RadarMeta?
                 ) {
                     if (user != null) {
                         val inGeofences = user.geofences != null && user.geofences.isNotEmpty()

@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import io.radar.sdk.model.RadarMeta
 import org.json.JSONObject
 import kotlin.math.max
 
@@ -45,7 +46,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
                         override fun onComplete(
                             status: Radar.RadarStatus,
                             res: JSONObject?,
-                            meta: RadarApiClient.RadarMeta?
+                            meta: RadarMeta?
                         ) {
                             Radar.locationManager?.updateTrackingFromMeta(
                                 activity.applicationContext,
