@@ -8,7 +8,7 @@ internal data class RadarMeta(
     val remoteTrackingOptions: RadarTrackingOptions?
 ) {
     companion object {
-        fun parse(res: JSONObject?): RadarMeta {
+        fun fromJson(res: JSONObject?): RadarMeta {
             val meta: JSONObject? = res?.optJSONObject("meta")
 
             val config: JSONObject? = meta?.optJSONObject("config")

@@ -105,7 +105,7 @@ internal class RadarApiClient(
 
         apiHelper.request(context, "GET", url, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                callback?.onComplete(status, res, RadarMeta.parse(res))
+                callback?.onComplete(status, res, RadarMeta.fromJson(res))
             }
         })
     }
@@ -234,7 +234,7 @@ internal class RadarApiClient(
 
                 RadarState.setLastFailedStoppedLocation(context, null)
 
-                val meta = RadarMeta.parse(res)
+                val meta = RadarMeta.fromJson(res)
 
                 val events = res.optJSONArray("events")?.let { eventsArr ->
                     RadarEvent.fromJson(eventsArr)
