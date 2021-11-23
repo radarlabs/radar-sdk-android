@@ -1,7 +1,7 @@
 ![Radar](https://raw.githubusercontent.com/radarlabs/radar-sdk-android/master/logo.png?v=3)
 
 [![Maven Central](https://shields.io/maven-central/v/io.radar/sdk)](https://search.maven.org/artifact/io.radar/sdk)
-[![CircleCI](https://circleci.com/gh/radarlabs/radar-sdk-android/tree/master.svg?style=shield)](https://app.circleci.com/pipelines/github/radarlabs/radar-sdk-android?branch=master)]
+[![CircleCI](https://circleci.com/gh/radarlabs/radar-sdk-android/tree/master.svg?style=shield)](https://app.circleci.com/pipelines/github/radarlabs/radar-sdk-android?branch=master)
 
 [Radar](https://radar.io) is the leading geofencing and location tracking platform.
 
