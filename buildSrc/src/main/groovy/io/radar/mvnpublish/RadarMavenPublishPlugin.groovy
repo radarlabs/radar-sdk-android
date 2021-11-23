@@ -1,5 +1,8 @@
 package io.radar.mvnpublish
 
+import io.github.gradlenexus.publishplugin.TransitionCheckOptions
+import io.github.gradlenexus.publishplugin.internal.BasicActionRetrier
+import io.github.gradlenexus.publishplugin.internal.StagingRepositoryTransitioner
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -22,10 +25,13 @@ class RadarMavenPublishPlugin implements Plugin<Project> {
                     System.getenv('NEXUS_USERNAME'), System.getenv('NEXUS_PASSWORD'))
             doLast {
                 String stagingInfoId = client.findStagingProfileId(extension.publicationGroup)
-                String repositoryId = client.getRepositoryIdFromProfile(stagingInfoId)
-                client.closeStagingRepository(repositoryId, extension.publicationDescription)
+                RadarNexusClient.ProfileRepository repository = client.getRepositoryIdFromProfile(stagingInfoId)
+
+                StagingRepositoryTransitioner transitioner = new StagingRepositoryTransitioner(client,
+                        new BasicActionRetrier(60, Duration.ofSeconds(10), repository.transitioning))
+                transitioner.effectivelyClose(repository.repositoryId, extension.publicationDescription)
                 logger.lifecycle("\tClosed the remote staging repository.")
-                client.releaseStagingRepository(repositoryId, extension.publicationDescription)
+                transitioner.effectivelyRelease(repository.repositoryId, extension.publicationDescription)
                 logger.lifecycle("\tReleased the remote staging repository.")
             }
         }
