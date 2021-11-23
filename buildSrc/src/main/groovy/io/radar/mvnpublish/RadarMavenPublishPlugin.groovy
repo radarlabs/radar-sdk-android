@@ -28,8 +28,10 @@ meets expected preconditions.'''
             doLast {
                 String stagingInfoId = client.findStagingProfileId(extension.publicationGroup)
                 List<String> repositoryIds = client.getRepositoryIdsFromProfile(stagingInfoId)
-                transitioner.effectivelyDrop(repositoryIds, 'Clean up stale staging repositories.')
-                project.logger.lifecycle('\tDropped the remote staging repositories.')
+                if (!repositoryIds.empty) {
+                    transitioner.effectivelyDrop(repositoryIds, 'Clean up stale staging repositories.')
+                    project.logger.lifecycle('\tDropped the remote staging repositories.')
+                }
             }
         }
         project.tasks.findByName('publish').dependsOn(prePublish)
