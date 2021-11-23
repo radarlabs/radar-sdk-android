@@ -180,26 +180,25 @@ internal object RadarSettings {
     }
 
     internal fun setFallbackTrackingOptions(context: Context, options: RadarTrackingOptions) {
-        val optionsObj = options.toJson()
-        val optionsJson = optionsObj.toString()
+        val optionsJson = options.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_FALLBACK_TRACKING_OPTIONS, optionsJson) }
     }
 
     internal fun getForegroundService(context: Context): RadarTrackingOptions.RadarTrackingOptionsForegroundService? {
         val foregroundJson = getSharedPreferences(context).getString(KEY_FOREGROUND_SERVICE, null)
-        if (foregroundJson != null) {
+        return if (foregroundJson == null) {
+            null
+        } else {
             val foregroundObj = JSONObject(foregroundJson)
-            return RadarTrackingOptions.RadarTrackingOptionsForegroundService.fromJson(foregroundObj)
+            RadarTrackingOptions.RadarTrackingOptionsForegroundService.fromJson(foregroundObj)
         }
-        return null
     }
 
     internal fun setForegroundService(
         context: Context,
         foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService
     ) {
-        val foregroundObj = foregroundService.toJson()
-        val foregroundJson = foregroundObj.toString()
+        val foregroundJson = foregroundService.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_FOREGROUND_SERVICE, foregroundJson) }
     }
 
