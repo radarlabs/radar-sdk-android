@@ -19,12 +19,10 @@ import static io.github.gradlenexus.publishplugin.internal.NexusClient.*
 class RadarNexusClient extends NexusClient {
 
     private static final URI BASE_URL = new URI('https://s01.oss.sonatype.org/service/local/')
-    private static final String USERNAME = System.getenv 'NEXUS_USERNAME'
-    private static final String PASSWORD = System.getenv 'NEXUS_PASSWORD'
     private final ApiExtensions api
 
-    RadarNexusClient() {
-        super(BASE_URL, USERNAME, PASSWORD, null, null)
+    RadarNexusClient(String username, String password) {
+        super(BASE_URL, username, password, null, null)
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder()
                 .addInterceptor { chain ->
                     String version = NexusClient.package.implementationVersion ?: 'dev'
@@ -32,8 +30,8 @@ class RadarNexusClient extends NexusClient {
                             .header('User-Agent', "gradle-nexus-publish-plugin/$version")
                             .build())
                 }
-        if (USERNAME && PASSWORD) {
-            String credentials = Credentials.basic(USERNAME, PASSWORD)
+        if (username && password) {
+            String credentials = Credentials.basic(username, password)
             httpClient.addInterceptor { chain ->
                 chain.proceed(chain.request().newBuilder()
                         .header('Authorization', credentials)

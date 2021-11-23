@@ -18,7 +18,8 @@ class RadarMavenPublishPlugin implements Plugin<Project> {
         project.tasks.create('releaseSdkToMavenCentral') {
             group = 'publishing'
             description = 'Release the artifact to maven central and close the staging repo.'
-            RadarNexusClient client = new RadarNexusClient()
+            RadarNexusClient client = new RadarNexusClient(
+                    System.getenv('NEXUS_USERNAME'), System.getenv('NEXUS_PASSWORD'))
             doLast {
                 String stagingInfoId = client.findStagingProfileId(extension.publicationGroup)
                 String repositoryId = client.getRepositoryIdFromProfile(stagingInfoId)
