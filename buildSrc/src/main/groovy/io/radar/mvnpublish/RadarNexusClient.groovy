@@ -52,13 +52,13 @@ class RadarNexusClient extends NexusClient {
      * @param stagingProfileId ID of the staging artifact profile
      * @return the repository ID for the given profile ID
      */
-    ProfileRepository getRepositoryIdFromProfile(String stagingProfileId) {
+    String getRepositoryIdFromProfile(String stagingProfileId) {
         Response<ProfileRepository> response = api.profileRepositories.execute()
         if (response.successful) {
             Dto<List<ProfileRepository>> repositoriesResponse = response.body()
             for (ProfileRepository repository : repositoriesResponse.data) {
                 if (repository.profileId == stagingProfileId) {
-                    return repository
+                    return repository.repositoryId
                 }
             }
             throw new IllegalStateException('No repository for given profile ID')
@@ -85,6 +85,5 @@ class RadarNexusClient extends NexusClient {
     class ProfileRepository {
         String profileId
         String repositoryId
-        boolean transitioning
     }
 }
