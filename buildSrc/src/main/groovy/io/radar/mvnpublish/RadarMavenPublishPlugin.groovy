@@ -23,10 +23,10 @@ class RadarMavenPublishPlugin implements Plugin<Project> {
             doLast {
                 String stagingInfoId = client.findStagingProfileId(extension.publicationGroup)
                 String repositoryId = client.getRepositoryIdFromProfile(stagingInfoId)
-                client.releaseStagingRepository(repositoryId, extension.publicationDescription)
-                logger.lifecycle("\tReleased the remote staging repository.")
                 client.closeStagingRepository(repositoryId, extension.publicationDescription)
                 logger.lifecycle("\tClosed the remote staging repository.")
+                client.releaseStagingRepository(repositoryId, extension.publicationDescription)
+                logger.lifecycle("\tReleased the remote staging repository.")
             }
         }
     }
