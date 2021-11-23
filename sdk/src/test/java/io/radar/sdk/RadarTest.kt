@@ -1276,14 +1276,12 @@ class RadarTest {
 
     @Test
     fun test_Radar_trackingOptionsFallback_success() {
-        assertEquals(null, RadarSettings.getFallbackTrackingOptions(context))
-        RadarSettings.setTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
-        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarSettings.getTrackingOptions(context))
-        RadarSettings.revertToFallbackTrackingOptions(context)
-        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarSettings.getTrackingOptions(context))
-
         RadarSettings.setFallbackTrackingOptions(context, RadarTrackingOptions.RESPONSIVE)
         assertEquals(RadarTrackingOptions.RESPONSIVE, RadarSettings.getFallbackTrackingOptions(context))
+
+        RadarSettings.setTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
+        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarSettings.getTrackingOptions(context))
+
         RadarSettings.revertToFallbackTrackingOptions(context)
         assertEquals(RadarTrackingOptions.RESPONSIVE, RadarSettings.getTrackingOptions(context))
     }
