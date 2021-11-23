@@ -6,13 +6,13 @@ import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.model.RadarMeta
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.*
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.lang.Exception
 import java.net.URL
 import java.util.*
 
@@ -86,35 +86,6 @@ internal class RadarApiClient(
         )
     }
 
-    data class RadarMeta(
-        val config: JSONObject?,
-        val remoteTrackingOptions: RadarTrackingOptions?
-    )
-
-    private fun parseMeta(res: JSONObject?): RadarMeta {
-        var meta: JSONObject? = null
-        if (res?.has("meta") == true) {
-            meta = res.getJSONObject("meta")
-        }
-
-        var config: JSONObject? = null
-        if (meta?.has("config") == true) {
-            config = meta.getJSONObject("config")
-        }
-
-        var remoteTrackingOptions: RadarTrackingOptions? = null
-        if (meta?.has("trackingOptions") == true) {
-            try {
-                val rawOptions = meta.getJSONObject("trackingOptions")
-                remoteTrackingOptions = RadarTrackingOptions.fromJson(rawOptions)
-            } catch (e: Exception) {
-                logger.e("Error parsing tracking options from meta", e)
-            }
-        }
-
-        return RadarMeta(config = config, remoteTrackingOptions = remoteTrackingOptions)
-    }
-
     internal fun getConfig(callback: RadarGetConfigApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
@@ -134,7 +105,7 @@ internal class RadarApiClient(
 
         apiHelper.request(context, "GET", url, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                callback?.onComplete(status, res, parseMeta(res))
+                callback?.onComplete(status, res, RadarMeta.parse(res))
             }
         })
     }
@@ -263,7 +234,7 @@ internal class RadarApiClient(
 
                 RadarState.setLastFailedStoppedLocation(context, null)
 
-                val meta = parseMeta(res)
+                val meta = RadarMeta.parse(res)
 
                 val events = res.optJSONArray("events")?.let { eventsArr ->
                     RadarEvent.fromJson(eventsArr)
