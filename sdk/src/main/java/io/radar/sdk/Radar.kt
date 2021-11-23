@@ -392,7 +392,7 @@ object Radar {
             override fun onComplete(
                 status: RadarStatus,
                 res: JSONObject?,
-                meta: RadarApiClient.RadarMeta?
+                meta: RadarMeta?
             ) {
                 locationManager?.updateTrackingFromMeta(context, meta)
             }
@@ -653,7 +653,7 @@ object Radar {
                             events: Array<RadarEvent>?,
                             user: RadarUser?,
                             nearbyGeofences: Array<RadarGeofence>?,
-                            meta: RadarApiClient.RadarMeta?,
+                            meta: RadarMeta?,
                         ) {
                             callback?.onComplete(status, location, events, user)
                         }
@@ -730,7 +730,7 @@ object Radar {
                 events: Array<RadarEvent>?,
                 user: RadarUser?,
                 nearbyGeofences: Array<RadarGeofence>?,
-                meta: RadarApiClient.RadarMeta?,
+                meta: RadarMeta?,
             ) {
                 callback?.onComplete(status, location, events, user)
             }
@@ -843,7 +843,7 @@ object Radar {
                                 events: Array<RadarEvent>?,
                                 user: RadarUser?,
                                 nearbyGeofences: Array<RadarGeofence>?,
-                                meta: RadarApiClient.RadarMeta?,
+                                meta: RadarMeta?,
                             ) {
                                 callback?.onComplete(status, location, events, user)
 
