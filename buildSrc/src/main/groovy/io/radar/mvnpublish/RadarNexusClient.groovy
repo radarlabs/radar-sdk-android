@@ -19,30 +19,30 @@ import static io.github.gradlenexus.publishplugin.internal.NexusClient.*
 class RadarNexusClient extends NexusClient {
 
     private static final URI BASE_URL = new URI('https://s01.oss.sonatype.org/service/local/')
-    private static final String USERNAME = System.getenv 'NEXUS_USERNAME' ?: ''
-    private static final String PASSWORD = System.getenv 'NEXUS_PASSWORD' ?: ''
+    private static final String USERNAME = System.getenv 'NEXUS_USERNAME'
+    private static final String PASSWORD = System.getenv 'NEXUS_PASSWORD'
     private final ApiExtensions api
 
     RadarNexusClient() {
         super(BASE_URL, USERNAME, PASSWORD, null, null)
-
-        String credentials = Credentials.basic(USERNAME, PASSWORD)
-        OkHttpClient httpClient = new OkHttpClient.Builder()
-                .addInterceptor { chain ->
-                    chain.proceed(chain.request().newBuilder()
-                            .header('Authorization', credentials)
-                            .build())
-                }
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder()
                 .addInterceptor { chain ->
                     String version = NexusClient.package.implementationVersion ?: 'dev'
                     chain.proceed(chain.request().newBuilder()
                             .header('User-Agent', "gradle-nexus-publish-plugin/$version")
                             .build())
                 }
-                .build()
+        if (USERNAME && PASSWORD) {
+            String credentials = Credentials.basic(USERNAME, PASSWORD)
+            httpClient.addInterceptor { chain ->
+                chain.proceed(chain.request().newBuilder()
+                        .header('Authorization', credentials)
+                        .build())
+            }
+        }
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL.toString())
-                .client(httpClient)
+                .client(httpClient.build())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         api = retrofit.create(ApiExtensions)
