@@ -394,7 +394,15 @@ object Radar {
         val application = this.context as? Application
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks())
 
-        this.apiClient.getConfig()
+        this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                meta: RadarMeta?
+            ) {
+                locationManager?.updateTrackingFromMeta(context, meta)
+            }
+        })
 
         logger.i("📍️ Radar initialized")
     }
@@ -645,10 +653,15 @@ object Radar {
 
                 val callTrackApi = { nearbyBeacons: Array<String>? ->
                     apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, nearbyBeacons, object : RadarApiClient.RadarTrackApiCallback {
-                        override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
-                            handler.post {
-                                callback?.onComplete(status, location, events, user)
-                            }
+                        override fun onComplete(
+                            status: RadarStatus,
+                            res: JSONObject?,
+                            events: Array<RadarEvent>?,
+                            user: RadarUser?,
+                            nearbyGeofences: Array<RadarGeofence>?,
+                            meta: RadarMeta?,
+                        ) {
+                            callback?.onComplete(status, location, events, user)
                         }
                     })
                 }
@@ -717,10 +730,15 @@ object Radar {
         }
 
         apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
-                handler.post {
-                    callback?.onComplete(status, location, events, user)
-                }
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                events: Array<RadarEvent>?,
+                user: RadarUser?,
+                nearbyGeofences: Array<RadarGeofence>?,
+                meta: RadarMeta?,
+            ) {
+                callback?.onComplete(status, location, events, user)
             }
         })
     }
@@ -825,10 +843,15 @@ object Radar {
                         val stopped = (i == 0) || (i == coordinates.size - 1)
 
                         apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
-                            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
-                                handler.post {
-                                    callback?.onComplete(status, location, events, user)
-                                }
+                            override fun onComplete(
+                                status: RadarStatus,
+                                res: JSONObject?,
+                                events: Array<RadarEvent>?,
+                                user: RadarUser?,
+                                nearbyGeofences: Array<RadarGeofence>?,
+                                meta: RadarMeta?,
+                            ) {
+                                callback?.onComplete(status, location, events, user)
 
                                 if (i < coordinates.size - 1) {
                                     handler.postDelayed(track, intervalLimit * 1000L)
@@ -917,6 +940,23 @@ object Radar {
         }
 
         return RadarSettings.getTrackingOptions(context)
+    }
+
+    /**
+     * Settings for the foreground notification when the foregroundServiceEnabled parameter
+     * is true on Radar tracking options.
+     *
+     * @see [](https://radar.io/documentation/sdk/tracking)
+     *
+     * @param[options] Foreground service options
+     */
+    @JvmStatic
+    fun setForegroundServiceOptions(options: RadarTrackingOptions.RadarTrackingOptionsForegroundService) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setForegroundService(context, options)
     }
 
     /**

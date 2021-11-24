@@ -107,7 +107,7 @@ data class RadarTrackingOptions(
     /**
      * If set, starts a foreground service and shows a notification during tracking.
      */
-    var foregroundService: RadarTrackingOptionsForegroundService?,
+    var foregroundServiceEnabled: Boolean,
 
     /**
      * Determines whether to monitor beacons.
@@ -348,7 +348,7 @@ data class RadarTrackingOptions(
             movingGeofenceRadius = 0,
             syncGeofences = false,
             syncGeofencesLimit = 0,
-            foregroundService = RadarTrackingOptionsForegroundService(),
+            foregroundServiceEnabled = true,
             beacons = false
         )
 
@@ -377,7 +377,7 @@ data class RadarTrackingOptions(
             movingGeofenceRadius = 100,
             syncGeofences = true,
             syncGeofencesLimit = 10,
-            foregroundService = null,
+            foregroundServiceEnabled = false,
             beacons = false
         )
 
@@ -406,7 +406,7 @@ data class RadarTrackingOptions(
             movingGeofenceRadius = 0,
             syncGeofences = true,
             syncGeofencesLimit = 10,
-            foregroundService = null,
+            foregroundServiceEnabled = false,
             beacons = false
         )
 
@@ -428,7 +428,7 @@ data class RadarTrackingOptions(
         internal const val KEY_MOVING_GEOFENCE_RADIUS = "movingGeofenceRadius"
         internal const val KEY_SYNC_GEOFENCES = "syncGeofences"
         internal const val KEY_SYNC_GEOFENCES_LIMIT = "syncGeofencesLimit"
-        internal const val KEY_FOREGROUND_SERVICE = "foregroundService"
+        internal const val KEY_FOREGROUND_SERVICE_ENABLED = "foregroundServiceEnabled"
         internal const val KEY_BEACONS = "beacons"
 
         @JvmStatic
@@ -470,11 +470,10 @@ data class RadarTrackingOptions(
                 movingGeofenceRadius = obj.optInt(KEY_MOVING_GEOFENCE_RADIUS, 100),
                 syncGeofences = obj.optBoolean(KEY_SYNC_GEOFENCES),
                 syncGeofencesLimit = obj.optInt(KEY_SYNC_GEOFENCES_LIMIT, 10),
-                foregroundService = RadarTrackingOptionsForegroundService.fromJson(obj.optJSONObject(KEY_FOREGROUND_SERVICE)),
+                foregroundServiceEnabled = obj.optBoolean(KEY_FOREGROUND_SERVICE_ENABLED, false),
                 beacons = obj.optBoolean(KEY_BEACONS)
             )
         }
-
     }
 
     fun toJson(): JSONObject {
@@ -497,7 +496,7 @@ data class RadarTrackingOptions(
         obj.put(KEY_MOVING_GEOFENCE_RADIUS, movingGeofenceRadius)
         obj.put(KEY_SYNC_GEOFENCES, syncGeofences)
         obj.put(KEY_SYNC_GEOFENCES_LIMIT, syncGeofencesLimit)
-        obj.put(KEY_FOREGROUND_SERVICE, foregroundService?.toJson())
+        obj.put(KEY_FOREGROUND_SERVICE_ENABLED, foregroundServiceEnabled)
         obj.put(KEY_BEACONS, beacons)
         return obj
     }

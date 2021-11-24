@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.model.RadarMeta
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.*
@@ -22,7 +23,18 @@ internal class RadarApiClient(
 ) {
 
     interface RadarTrackApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, events: Array<RadarEvent>? = null, user: RadarUser? = null, nearbyGeofences: Array<RadarGeofence>? = null)
+        fun onComplete(
+            status: RadarStatus,
+            res: JSONObject? = null,
+            events: Array<RadarEvent>? = null,
+            user: RadarUser? = null,
+            nearbyGeofences: Array<RadarGeofence>? = null,
+            meta: RadarMeta? = null
+        )
+    }
+
+    interface RadarGetConfigApiCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject?, meta: RadarMeta?)
     }
 
     interface RadarTripApiCallback {
@@ -78,7 +90,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun getConfig() {
+    internal fun getConfig(callback: RadarGetConfigApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
         val queryParams = StringBuilder()
@@ -100,13 +112,7 @@ internal class RadarApiClient(
                 if (status == RadarStatus.SUCCESS) {
                     Radar.flushLogs()
                 }
-                if (res != null && res.has("meta")) {
-                    val meta = res.getJSONObject("meta")
-                    if (meta.has("config")) {
-                        val config = meta.getJSONObject("config")
-                        RadarSettings.setConfig(context, config)
-                    }
-                }
+                callback?.onComplete(status, res, RadarMeta.fromJson(res))
             }
         })
     }
@@ -151,7 +157,6 @@ internal class RadarApiClient(
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
             return
         }
 
@@ -236,6 +241,12 @@ internal class RadarApiClient(
             params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
             params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
             params.putOpt("sessionId", RadarSettings.getSessionId(context))
+            params.putOpt("trackingOptions", RadarSettings.getTrackingOptions(context).toJson())
+
+            val listenToServer = RadarSettings.getListenToServerTrackingOptions(context)
+            if (listenToServer) {
+                params.putOpt("listenToServer", listenToServer)
+            }
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
@@ -267,13 +278,7 @@ internal class RadarApiClient(
 
                 RadarState.setLastFailedStoppedLocation(context, null)
 
-                if (res.has("meta")) {
-                    val meta = res.getJSONObject("meta")
-                    if (meta.has("config")) {
-                        val config = meta.getJSONObject("config")
-                        RadarSettings.setConfig(context, config)
-                    }
-                }
+                val meta = RadarMeta.fromJson(res)
 
                 val events = res.optJSONArray("events")?.let { eventsArr ->
                     RadarEvent.fromJson(eventsArr)
@@ -297,7 +302,14 @@ internal class RadarApiClient(
                         Radar.sendEvents(events, user)
                     }
 
-                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
+                    callback?.onComplete(
+                        RadarStatus.SUCCESS,
+                        res,
+                        events,
+                        user,
+                        nearbyGeofences,
+                        meta
+                    )
 
                     return
                 }
