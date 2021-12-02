@@ -146,6 +146,7 @@ class RadarLogBufferTest {
         val size = Random.nextInt(10)
         val file = File(directory, name)
         file.createNewFile()
+        file.deleteOnExit()
         val radarLog = RadarLog(Radar.RadarLogLevel.DEBUG, name)
         repeat(size) { file.appendText("${radarLog.toJson()}\n") }
         return size
