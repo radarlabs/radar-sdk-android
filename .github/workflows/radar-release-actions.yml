@@ -1,0 +1,31 @@
+# Trigger an SDK publication to Maven Central when a release is created on GitHub.
+name: Radar Release Action
+on:
+  release:
+    types: [ published ]
+jobs:
+  Build-And-Publish:
+    runs-on: ubuntu-latest
+    steps:
+      # Prepare Environment
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - name: Configure Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+      - name: Accept Android Licenses
+        run: yes | sdkmanager --licenses || true
+      # Gradle Build & Publish
+      - name: Build SDK
+        run: ./gradlew build
+      - name: Publish to Maven
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+          ORG_GRADLE_PROJECT_SIGNINGKEY: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
+          ORG_GRADLE_PROJECT_SIGNINGPASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
+        run: ./gradlew publish
