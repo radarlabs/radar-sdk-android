@@ -932,7 +932,7 @@ object Radar {
      *
      * @see [](https://radar.io/documentation/sdk/android#listening-for-events-with-a-receiver)
      *
-     * * @param[receiver] A delegate for client-side delivery of events, location updates, and debug logs. If `null`, the previous receiver will be cleared.
+     * @param[receiver] A delegate for client-side delivery of events, location updates, and debug logs. If `null`, the previous receiver will be cleared.
      */
     @JvmStatic
     fun setReceiver(receiver: RadarReceiver?) {
