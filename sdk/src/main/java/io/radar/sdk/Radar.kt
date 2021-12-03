@@ -340,7 +340,20 @@ object Radar {
     internal lateinit var beaconManager: RadarBeaconManager
 
     /**
-     * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods.
+     * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#initialize-sdk)
+     *
+     * @param[context] The context
+     * @param[publishableKey] Your publishable API key
+     */
+    @JvmStatic
+    fun initialize(context: Context?, publishableKey: String? = null) {
+        initialize(context, publishableKey, null)
+    }
+
+    /**
+     * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
      *
      * @see [](https://radar.io/documentation/sdk/android#initialize-sdk)
      *
@@ -912,6 +925,22 @@ object Radar {
         }
 
         return RadarSettings.getTrackingOptions(context)
+    }
+
+    /**
+     * Sets a receiver for client-side delivery of events, location updates, and debug logs.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#listening-for-events-with-a-receiver)
+     *
+     * @param[receiver] A delegate for client-side delivery of events, location updates, and debug logs. If `null`, the previous receiver will be cleared.
+     */
+    @JvmStatic
+    fun setReceiver(receiver: RadarReceiver?) {
+        if (!initialized) {
+            return
+        }
+
+        this.receiver = receiver
     }
 
     /**
