@@ -11,7 +11,7 @@ internal data class RadarLog(
     val level: Radar.RadarLogLevel,
     val message: String,
     val createdAt: Date = Date()
-) {
+) : Comparable<RadarLog> {
 
     companion object {
         private const val CREATED_AT = "createdAt"
@@ -34,5 +34,9 @@ internal data class RadarLog(
             putOpt(LEVEL, level.name)
             putOpt(MESSAGE, message)
         }
+    }
+
+    override fun compareTo(other: RadarLog): Int {
+        return createdAt.compareTo(other.createdAt)
     }
 }

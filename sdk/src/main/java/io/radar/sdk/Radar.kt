@@ -8,7 +8,9 @@ import android.os.Build
 import android.os.Handler
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.util.RadarFileSystemLogBuffer
 import io.radar.sdk.util.RadarLogBuffer
+import io.radar.sdk.util.RadarSimpleLogBuffer
 import org.json.JSONObject
 import java.util.*
 
@@ -19,6 +21,14 @@ import java.util.*
  */
 @SuppressLint("StaticFieldLeak")
 object Radar {
+
+    /**
+     * Determines which [RadarLogBuffer] to use:
+     *
+     * true - [RadarSimpleLogBuffer]
+     * false - [RadarFileSystemLogBuffer]
+     */
+    private const val USE_IN_MEMORY_LOG_BUFFER = true
 
     /**
      * Called when a location request succeeds, fails, or times out.
@@ -361,7 +371,11 @@ object Radar {
         this.receiver = receiver
 
         if (!this::logBuffer.isInitialized) {
-            this.logBuffer = RadarLogBuffer(this.context)
+            this.logBuffer = if (USE_IN_MEMORY_LOG_BUFFER) {
+                RadarSimpleLogBuffer()
+            } else {
+                RadarFileSystemLogBuffer(this.context)
+            }
         }
 
         if (!this::logger.isInitialized) {

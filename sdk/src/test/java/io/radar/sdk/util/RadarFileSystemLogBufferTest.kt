@@ -23,7 +23,7 @@ import kotlin.random.Random
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.P])
-class RadarLogBufferTest {
+class RadarFileSystemLogBufferTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val directory = context.getDir("RadarLogs", Context.MODE_PRIVATE)
@@ -34,7 +34,7 @@ class RadarLogBufferTest {
         assertEquals(0, directory.listFiles()!!.size)
 
         // create the log buffer
-        val logBuffer = RadarLogBuffer(context, InlineExecutorService())
+        val logBuffer = RadarFileSystemLogBuffer(context, InlineExecutorService())
 
         // preconditions
         assertEquals(1, directory.listFiles()!!.size)
@@ -112,7 +112,7 @@ class RadarLogBufferTest {
         var size = writeNewFile()
         assertEquals(1, directory.listFiles()!!.size)
 
-        var logBuffer = RadarLogBuffer(context, InlineExecutorService())
+        var logBuffer = RadarFileSystemLogBuffer(context, InlineExecutorService())
         // precondition for the rest of this test
         Assume.assumeThat(logBuffer.getLastModified(directory.listFiles()!![0]), isGreaterThan(0L))
 
@@ -123,7 +123,7 @@ class RadarLogBufferTest {
         // Keeps latest file as log file
         size = writeNewFile()
         assertEquals(2, directory.listFiles()!!.size)
-        logBuffer = RadarLogBuffer(context, InlineExecutorService())
+        logBuffer = RadarFileSystemLogBuffer(context, InlineExecutorService())
         assertEquals(2, directory.listFiles()!!.size)
         assertEquals(size, logBuffer.size)
 
@@ -131,7 +131,7 @@ class RadarLogBufferTest {
         writeNewFile()
         size = writeNewFile()
         assertEquals(4, directory.listFiles()!!.size)
-        logBuffer = RadarLogBuffer(context, InlineExecutorService())
+        logBuffer = RadarFileSystemLogBuffer(context, InlineExecutorService())
         // two will be left, since the latest file will be kept and a new one will be created.
         assertEquals(2, directory.listFiles()!!.size)
         // size will be 1, because the purge methods writes a log to the buffer
