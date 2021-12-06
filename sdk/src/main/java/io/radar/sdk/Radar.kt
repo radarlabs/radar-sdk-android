@@ -348,7 +348,7 @@ object Radar {
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var beaconManager: RadarBeaconManager
-    internal lateinit var logBuffer: RadarLogBuffer
+    private lateinit var logBuffer: RadarLogBuffer
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -2193,7 +2193,7 @@ object Radar {
      */
     @JvmStatic
     internal fun flushLogs() {
-        if (!initialized) {
+        if (!initialized || !isTestKey()) {
             return
         }
         val flushable = logBuffer.getFlushableLogsStash()
@@ -2204,6 +2204,16 @@ object Radar {
                     flushable.onFlush(status == RadarStatus.SUCCESS)
                 }
             })
+        }
+    }
+
+    @JvmStatic
+    private fun isTestKey(): Boolean {
+        val key = RadarSettings.getPublishableKey(this.context)
+        return if (key == null) {
+            false
+        } else {
+            key.startsWith("prj_test") || key.startsWith("org_test")
         }
     }
 
@@ -2349,7 +2359,9 @@ object Radar {
 
     internal fun sendLog(level: RadarLogLevel, message: String) {
         receiver?.onLog(context, message)
-        logBuffer.write(level, message)
+        if (isTestKey()) {
+            logBuffer.write(level, message)
+        }
     }
 
 }
