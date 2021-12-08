@@ -14,7 +14,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.locks.ReentrantLock
 
 /**
- * Wraps the filesystem to support log caching
+ * Stores logs in files for persistent client-side logging
  */
 internal class RadarFileSystemLogBuffer(
     /**

@@ -21,6 +21,9 @@ import java.io.File
 import java.util.*
 import kotlin.random.Random
 
+/**
+ * Unit tests [RadarFileSystemLogBuffer]
+ */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.P])
 class RadarFileSystemLogBufferTest {
