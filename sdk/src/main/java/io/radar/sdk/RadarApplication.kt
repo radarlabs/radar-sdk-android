@@ -9,19 +9,24 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
+import io.radar.sdk.util.RadarLogBuffer
+import io.radar.sdk.util.RadarSimpleLogBuffer
+import org.json.JSONObject
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
  * Contains core radar classes.
  */
+@Suppress("LongParameterList")
 internal class RadarApplication(
     val context: Context,
-    val receiver: RadarReceiver?,
+    var receiver: RadarReceiver?,
     apiHelper: RadarApiHelper? = null,
     locationManagerClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context),
     permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper(),
-    loggerExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+    loggerExecutor: ExecutorService = Executors.newSingleThreadExecutor(),
+    val logBuffer: RadarLogBuffer = RadarSimpleLogBuffer()
 ) : ContextWrapper(context) {
     val handler = Handler(mainLooper)
     val settings = RadarSettings(this)
@@ -82,6 +87,33 @@ internal class RadarApplication(
                     "link" to "https://radar.io/dashboard/events/${event._id}"
                 )
             )
+        }
+    }
+
+    fun isTestKey(): Boolean {
+        val key = settings.getPublishableKey()
+        return if (key == null) {
+            false
+        } else {
+            key.startsWith("prj_test") || key.startsWith("org_test")
+        }
+    }
+
+    /**
+     * Sends Radar log events to the server
+     */
+    fun flushLogs(onComplete: () -> Unit) {
+        if (isTestKey()) {
+            val flushable = logBuffer.getFlushableLogsStash()
+            val logs = flushable.get()
+            if (logs.isNotEmpty()) {
+                apiClient.log(logs, object : RadarApiClient.RadarLogCallback {
+                    override fun onComplete(status: Radar.RadarStatus, res: JSONObject?) {
+                        flushable.onFlush(status == Radar.RadarStatus.SUCCESS)
+                        onComplete.invoke()
+                    }
+                })
+            }
         }
     }
 }

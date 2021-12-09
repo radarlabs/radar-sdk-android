@@ -9,6 +9,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.every
 import io.mockk.slot
 import io.mockk.spyk
+import io.radar.sdk.matchers.RangeMatcher.Companion.isAtLeast
+import io.radar.sdk.matchers.RangeMatcher.Companion.isLessThan
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarContext
@@ -19,6 +21,7 @@ import io.radar.sdk.model.RadarRouteMatrix
 import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.util.FastPostable
+import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.SysOutLogReceiver
 import org.awaitility.kotlin.await
 import org.json.JSONObject
@@ -26,6 +29,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeFalse
 import org.junit.Before
@@ -44,8 +48,13 @@ class RadarApiClientIntegrationTest {
 
     private val apiKey = System.getProperty("radar_test_key")
     private val apiHost = System.getProperty("radar_test_host")
+    private val logBuffer = RadarSimpleLogBuffer()
     private val apiHelper = RadarApiHelper(
-        logger = RadarLogger(RadarApplication(ApplicationProvider.getApplicationContext(), SysOutLogReceiver())),
+        logger = RadarLogger(RadarApplication(
+            context = ApplicationProvider.getApplicationContext(),
+            receiver = SysOutLogReceiver(),
+            logBuffer = logBuffer
+        )),
         executor = InlineExecutorService(),
         handler = FastPostable()
     )
@@ -53,18 +62,23 @@ class RadarApiClientIntegrationTest {
     private val app = RadarApplication(
         context = ApplicationProvider.getApplicationContext(),
         receiver = null,
-        apiHelper = interceptor
+        apiHelper = interceptor,
+        logBuffer = logBuffer
     )
     private val api = app.apiClient
     private var status: Radar.RadarStatus? = null
     private var response: JSONObject? = null
     private var model: Any? = null
 
-    private val location: Location = Location("test")
+    private val location: Location = Location("test").apply {
+        latitude = 40.6782
+        longitude = -73.9442
+    }
 
-    init {
-        location.latitude = 40.6782
-        location.longitude = -73.9442
+    private fun RadarSimpleLogBuffer.size(): Int {
+        val logs = getFlushableLogsStash()
+        logs.onFlush(false)
+        return logs.get().size
     }
 
     @Before
@@ -98,51 +112,45 @@ class RadarApiClientIntegrationTest {
     fun tearDown() {
         app.settings.setPublishableKey(null)
         app.settings.setHost(null)
+        app.settings.setId(null)
         status = null
         response = null
         model = null
     }
 
     @Test
-    fun testGetConfig() {
-        app.settings.setConfig(null)
-        assertNull(app.settings.getConfig())
-        api.getConfig()
-        awaitSuccess()
-        assertNotNull(response)
-        val meta = response!!.optJSONObject("meta")
-        if (meta!!.has("config")) {
-            assertNotNull(app.settings.getConfig())
-        }
+    fun testGetConfigWithoutUserId() {
+        assertEquals(0, logBuffer.size())
+        val size = writeLogs()
+        assertEquals(size, logBuffer.size())
+        getConfig(false)
+        //Logs won't be pushed if the user id is not set yet (ie no tracking endpoint has been hit)
+        assertThat(logBuffer.size(), isAtLeast(size))
+    }
+
+    @Test
+    fun testGetConfigWithUserId() {
+        assertEquals(0, logBuffer.size())
+        val size = writeLogs()
+        assertEquals(size, logBuffer.size())
+        track()
+        getConfig(true)
+        //This check verifies that the log buffer cleared out too.
+        await.until { isLessThan(size).matches(logBuffer.size()) }
     }
 
     @Test
     fun testTrack() {
-        mockDeviceId()
-        api.track(
-            location = location,
-            stopped = false,
-            foreground = true,
-            source = Radar.RadarLocationSource.MANUAL_LOCATION,
-            replayed = false,
-            nearbyBeacons = null,
-            callback = object : RadarApiClient.RadarTrackApiCallback {
-                override fun onComplete(
-                    status: Radar.RadarStatus,
-                    res: JSONObject?,
-                    events: Array<RadarEvent>?,
-                    user: RadarUser?,
-                    nearbyGeofences: Array<RadarGeofence>?
-                ) {
-                    this@RadarApiClientIntegrationTest.status = status
-                    this@RadarApiClientIntegrationTest.response = res
-                }
-            })
-        awaitSuccess()
+        assertEquals(0, logBuffer.size())
+        val size = writeLogs()
+        assertEquals(size, logBuffer.size())
+        track()
         assertNotNull(response)
         val user = RadarUser.fromJson(response!!.optJSONObject("user"))
         assertEquals(location.latitude, user!!.location.latitude, 0.0)
         assertEquals(location.longitude, user.location.longitude, 0.0)
+        //This check verifies that the log buffer cleared out too.
+        await.until { isLessThan(size).matches(logBuffer.size()) }
     }
 
     @Test
@@ -316,6 +324,63 @@ class RadarApiClientIntegrationTest {
         awaitSuccess()
         assertNotNull(response)
         assertNotNull(model)
+    }
+
+    private fun getConfig(expectSuccess: Boolean) {
+        app.settings.setConfig(null)
+        assertNull(app.settings.getConfig())
+        api.getConfig()
+        if (expectSuccess) {
+            awaitSuccess()
+        } else {
+            awaitComplete()
+        }
+        if (status == Radar.RadarStatus.SUCCESS) {
+            assertNotNull(response)
+            val meta = response!!.optJSONObject("meta")
+            if (meta!!.has("config")) {
+                //This occurs after logs have been flushed (on success)
+                await.until { app.settings.getConfig() != null }
+            }
+        }
+    }
+
+    /**
+     * Perform a track request. Do this first for tests that require the user id to be configured in radar settings.
+     */
+    private fun track() {
+        mockDeviceId()
+        api.track(
+            location = location,
+            stopped = false,
+            foreground = true,
+            source = Radar.RadarLocationSource.MANUAL_LOCATION,
+            replayed = false,
+            nearbyBeacons = null,
+            callback = object : RadarApiClient.RadarTrackApiCallback {
+                override fun onComplete(
+                    status: Radar.RadarStatus,
+                    res: JSONObject?,
+                    events: Array<RadarEvent>?,
+                    user: RadarUser?,
+                    nearbyGeofences: Array<RadarGeofence>?
+                ) {
+                    this@RadarApiClientIntegrationTest.status = status
+                    this@RadarApiClientIntegrationTest.response = res
+                }
+            })
+        awaitSuccess()
+    }
+
+    private fun writeLogs(): Int {
+        //Use 3 as the min since size checks after an api call should expect additional logs from the request & response
+        val size = kotlin.random.Random.nextInt(3, 10)
+        repeat(size) { app.logBuffer.write(Radar.RadarLogLevel.DEBUG, UUID.randomUUID().toString()) }
+        return size
+    }
+
+    private fun awaitComplete() {
+        await.until { status != null }
     }
 
     private fun awaitSuccess() {

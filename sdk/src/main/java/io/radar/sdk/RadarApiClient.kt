@@ -146,15 +146,19 @@ internal class RadarApiClient(
                 .headers(headers)
                 .callback(object : RadarApiHelper.RadarApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                        if (status == RadarStatus.SUCCESS) {
-                            Radar.flushLogs()
-                        }
-                        if (res != null && res.has("meta")) {
-                            val meta = res.getJSONObject("meta")
-                            if (meta.has("config")) {
-                                val config = meta.getJSONObject("config")
-                                app.settings.setConfig(config)
+                        val onComplete = {
+                            if (res != null && res.has("meta")) {
+                                val meta = res.getJSONObject("meta")
+                                if (meta.has("config")) {
+                                    val config = meta.getJSONObject("config")
+                                    app.settings.setConfig(config)
+                                }
                             }
+                        }
+                        if (status == RadarStatus.SUCCESS) {
+                            app.flushLogs(onComplete)
+                        } else {
+                            onComplete.invoke()
                         }
                     }
                 })
@@ -259,17 +263,17 @@ internal class RadarApiClient(
     }
 
     internal fun log(logs: List<RadarLog>, callback: RadarLogCallback?) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
+        val publishableKey = app.settings.getPublishableKey()
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
             return
         }
         val params = JSONObject()
         try {
-            params.putOpt("id", RadarSettings.getId(context))
-            params.putOpt("deviceId", RadarUtils.getDeviceId(context))
-            params.putOpt("installId", RadarSettings.getInstallId(context))
-            params.putOpt("sessionId", RadarSettings.getSessionId(context))
+            params.putOpt("id", app.settings.getId())
+            params.putOpt("deviceId", RadarUtils.getDeviceId(app))
+            params.putOpt("installId", app.settings.getInstallId())
+            params.putOpt("sessionId", app.settings.getSessionId())
             val array = JSONArray()
             logs.forEach { log -> array.put(log.toJson()) }
             params.putOpt("logs", array)
@@ -277,21 +281,21 @@ internal class RadarApiClient(
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
             return
         }
-        val host = RadarSettings.getHost(context)
+        val host = app.settings.getHost()
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/logs")
             .build()
-        apiHelper.request(context = context,
-            method = "POST",
-            url = URL(uri.toString()),
-            headers = headers(publishableKey),
-            params = params,
-            sleep = false,
-            callback = object : RadarApiHelper.RadarApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                    callback?.onComplete(status, res)
-                }
-            })
+        apiHelper.request(
+            RadarApiRequest.Builder("POST", URL(uri.toString()), false)
+                .headers(headers(publishableKey))
+                .params(params)
+                .callback(object : RadarApiHelper.RadarApiCallback {
+                    override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                        callback?.onComplete(status, res)
+                    }
+                })
+                .build()
+        )
     }
 
     internal fun track(
@@ -322,9 +326,10 @@ internal class RadarApiClient(
             params.putOpt("replayed", replayed)
             addDeviceMetadata(params)
             params.putOpt("source", Radar.stringForSource(source))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                val mocked = location.isFromMockProvider
-                params.putOpt("mocked", mocked)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                params.putOpt("mocked", location.isMock)
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                params.putOpt("mocked", location.isFromMockProvider)
             }
             addTripOptions(params)
             if (options.syncGeofences) {
@@ -384,7 +389,6 @@ internal class RadarApiClient(
                     callback?.onComplete(status)
                     return
                 }
-                Radar.flushLogs()
 
                 app.state.setLastFailedStoppedLocation(null)
 
@@ -418,7 +422,9 @@ internal class RadarApiClient(
                         app.sendEvents(events, user)
                     }
 
-                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
+                    app.flushLogs {
+                        callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
+                    }
                     return
                 }
 

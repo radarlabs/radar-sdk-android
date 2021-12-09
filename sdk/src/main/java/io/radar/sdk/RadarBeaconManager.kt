@@ -2,10 +2,12 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
+import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -61,6 +63,17 @@ internal class RadarBeaconManager(
         }
     }
 
+    private fun initializeBluetooth() {
+        if (!this::adapter.isInitialized) {
+            adapter = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                val bluetoothManager = app.context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+                bluetoothManager.adapter
+            } else {
+                BluetoothAdapter.getDefaultAdapter()
+            }
+        }
+    }
+
     @Suppress("ReturnCount", "LongMethod")
     @RequiresApi(Build.VERSION_CODES.O)
     fun startMonitoringBeacons(beacons: Array<RadarBeacon>) {
@@ -75,9 +88,7 @@ internal class RadarBeaconManager(
             return
         }
 
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
-        }
+        initializeBluetooth()
 
         if (!adapter.isEnabled) {
             app.logger.d("Bluetooth not enabled")
@@ -148,9 +159,7 @@ internal class RadarBeaconManager(
             return
         }
 
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
-        }
+        initializeBluetooth()
 
         if (adapter.isEnabled) {
             app.logger.d("Stopping monitoring beacons")
@@ -174,9 +183,7 @@ internal class RadarBeaconManager(
             callback?.onComplete(RadarStatus.ERROR_BLUETOOTH)
             return
         }
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
-        }
+        initializeBluetooth()
         if (!adapter.isEnabled) {
             app.logger.d("Bluetooth not enabled")
             app.sendError(RadarStatus.ERROR_BLUETOOTH)

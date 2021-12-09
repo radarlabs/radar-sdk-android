@@ -7,7 +7,16 @@ import android.location.Location
 import android.os.Build
 import android.util.Log
 import androidx.annotation.VisibleForTesting
-import io.radar.sdk.model.*
+import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarRouteMatrix
+import io.radar.sdk.model.RadarRoutes
+import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
 import java.util.*
 
@@ -1060,7 +1069,8 @@ object Radar {
      *
      * @see [](https://radar.io/documentation/sdk/android#listening-for-events-with-a-receiver)
      *
-     * @param[receiver] A delegate for client-side delivery of events, location updates, and debug logs. If `null`, the previous receiver will be cleared.
+     * @param[receiver] A delegate for client-side delivery of events, location updates, and debug logs. If `null`, the
+     * previous receiver will be cleared.
      */
     @JvmStatic
     fun setReceiver(receiver: RadarReceiver?) {
@@ -1068,7 +1078,7 @@ object Radar {
             return
         }
 
-        this.receiver = receiver
+        app.receiver = receiver
     }
 
     /**
@@ -2323,35 +2333,6 @@ object Radar {
     }
 
     /**
-     * Sends Radar log events to the server
-     */
-    @JvmStatic
-    internal fun flushLogs() {
-        if (!initialized || !isTestKey()) {
-            return
-        }
-        val flushable = logBuffer.getFlushableLogsStash()
-        val logs = flushable.get()
-        if (logs.isNotEmpty()) {
-            apiClient.log(logs, object : RadarApiClient.RadarLogCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                    flushable.onFlush(status == RadarStatus.SUCCESS)
-                }
-            })
-        }
-    }
-
-    @JvmStatic
-    private fun isTestKey(): Boolean {
-        val key = RadarSettings.getPublishableKey(this.context)
-        return if (key == null) {
-            false
-        } else {
-            key.startsWith("prj_test") || key.startsWith("org_test")
-        }
-    }
-
-    /**
      * Returns a display string for a location source value.
      *
      * @param[source] A location source value.
@@ -2433,7 +2414,9 @@ object Radar {
             obj.put("speedAccuracy", location.speedAccuracyMetersPerSecond)
             obj.put("courseAccuracy", location.bearingAccuracyDegrees)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            obj.put("mocked", location.isMock)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             obj.put("mocked", location.isFromMockProvider)
         }
         return obj

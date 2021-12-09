@@ -11,7 +11,6 @@ import io.radar.sdk.model.RadarUser
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
-
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.android.util.concurrent.InlineExecutorService
@@ -54,6 +53,7 @@ class RadarLoggerTest {
         every { app.settings } answers { settings }
         every { app.receiver } answers { receiver }
         every { settings.getLogLevel() } answers { logLevel }
+        every { app.isTestKey() } answers { false }
     }
 
     @After

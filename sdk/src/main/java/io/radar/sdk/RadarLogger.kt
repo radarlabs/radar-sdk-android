@@ -50,11 +50,7 @@ internal class RadarLogger(
         val level = app.settings.getLogLevel()
         if (level >= logLevel) {
             executor.submit {
-                Log.println(logLevel.priority, TAG, "$message\n${Log.getStackTraceString(throwable)}")
-                app.receiver?.onLog(app, message)
-                if (Radar.isTestKey()) {
-                    logBuffer.write(level, message)
-                }
+                print(logLevel, message, throwable)
             }
         }
     }
@@ -71,13 +67,16 @@ internal class RadarLogger(
                 }
                 // Remove the last semicolon.
                 logMessage = logMessage.substring(0, logMessage.length - 1)
-
-                Log.println(logLevel.priority, TAG, "$logMessage\n${Log.getStackTraceString(throwable)}")
-                app.receiver?.onLog(app, logMessage)
-                if (Radar.isTestKey()) {
-                    logBuffer.write(level, message)
-                }
+                print(logLevel, logMessage, throwable)
             }
+        }
+    }
+
+    private fun print(logLevel: RadarLogLevel, message: String, throwable: Throwable?) {
+        Log.println(logLevel.priority, TAG, "$message\n${Log.getStackTraceString(throwable)}")
+        app.receiver?.onLog(app, message)
+        if (app.isTestKey()) {
+            app.logBuffer.write(logLevel, message)
         }
     }
 

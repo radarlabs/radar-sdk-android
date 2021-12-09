@@ -17,6 +17,7 @@ import java.util.*
 class RadarSimpleLogBufferTest {
 
     @Test
+    @Suppress("LongMethod")
     fun testLifecycle() {
 
         // create the log buffer

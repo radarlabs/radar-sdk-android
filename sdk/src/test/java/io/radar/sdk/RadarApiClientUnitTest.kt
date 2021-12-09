@@ -13,6 +13,7 @@ import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarContext
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarLog
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarRouteMatrix
 import io.radar.sdk.model.RadarRoutes
@@ -250,6 +251,17 @@ class RadarApiClientUnitTest {
                 override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, matrix: RadarRouteMatrix?) = Unit
             }
         )
+        awaitSuccess()
+    }
+
+    @Test
+    fun testLog() {
+        val size = kotlin.random.Random.nextInt(10)
+        val list = mutableListOf<RadarLog>()
+        repeat(size) { list += RadarLog(Radar.RadarLogLevel.DEBUG, UUID.randomUUID().toString()) }
+        api.log(list, object : RadarApiClient.RadarLogCallback {
+            override fun onComplete(status: Radar.RadarStatus, res: JSONObject?) = Unit
+        })
         awaitSuccess()
     }
 

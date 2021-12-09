@@ -165,7 +165,8 @@ internal class RadarLocationManager(
                 else -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
             }
 
-            val locationRequest = LocationRequest().apply {
+            val locationRequest = LocationRequest.create().apply {
+                this.isWaitForAccurateLocation = false
                 this.priority = priority
                 this.interval = interval * 1000L
                 this.fastestInterval = fastestInterval * 1000L
@@ -470,7 +471,11 @@ internal class RadarLocationManager(
         val wasStopped = context.state.getStopped()
         var stopped: Boolean
 
-        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION || source == RadarLocationSource.BEACON_ENTER)
+        val force = source in listOf(
+            RadarLocationSource.FOREGROUND_LOCATION,
+            RadarLocationSource.MANUAL_LOCATION,
+            RadarLocationSource.BEACON_ENTER
+        )
         if (!force && location.accuracy > 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
             context.logger.d("Skipping location: inaccurate", "accuracy" to location.accuracy)
             this.updateTracking(location)
