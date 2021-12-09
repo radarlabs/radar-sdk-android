@@ -7,17 +7,7 @@ import android.location.Location
 import android.os.Build
 import android.util.Log
 import androidx.annotation.VisibleForTesting
-import io.radar.sdk.model.RadarAddress
-import io.radar.sdk.model.RadarBeacon
-import io.radar.sdk.model.RadarContext
-import io.radar.sdk.model.RadarEvent
-import io.radar.sdk.model.RadarEvent.RadarEventVerification
-import io.radar.sdk.model.RadarGeofence
-import io.radar.sdk.model.RadarPlace
-import io.radar.sdk.model.RadarRouteMatrix
-import io.radar.sdk.model.RadarRoutes
-import io.radar.sdk.model.RadarTrip
-import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.*
 import org.json.JSONObject
 import java.util.*
 
@@ -392,7 +382,21 @@ object Radar {
         private set
 
     /**
-     * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any
+     * Initializes the Radar SDK. Call this method from the main thread in your `Application.onCreate()` before calling
+     * any other Radar methods.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#initialize-sdk)
+     *
+     * @param[context] The context
+     * @param[publishableKey] Your publishable API key
+     */
+    @JvmStatic
+    fun initialize(context: Context?, publishableKey: String? = null) {
+        initialize(context, publishableKey, null)
+    }
+
+    /**
+     * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any
      * other Radar methods.
      *
      * @see [](https://radar.io/documentation/sdk/android#initialize-sdk)
@@ -1052,6 +1056,22 @@ object Radar {
     }
 
     /**
+     * Sets a receiver for client-side delivery of events, location updates, and debug logs.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#listening-for-events-with-a-receiver)
+     *
+     * @param[receiver] A delegate for client-side delivery of events, location updates, and debug logs. If `null`, the previous receiver will be cleared.
+     */
+    @JvmStatic
+    fun setReceiver(receiver: RadarReceiver?) {
+        if (!initialized) {
+            return
+        }
+
+        this.receiver = receiver
+    }
+
+    /**
      * Accepts an event. Events can be accepted after user check-ins or other forms of verification. Event verifications
      * will be used to improve the accuracy and confidence level of future events.
      *
@@ -1066,7 +1086,7 @@ object Radar {
             return
         }
 
-        app.apiClient.verifyEvent(eventId, RadarEventVerification.ACCEPT, verifiedPlaceId)
+        app.apiClient.verifyEvent(eventId, RadarEvent.RadarEventVerification.ACCEPT, verifiedPlaceId)
     }
 
     /**
@@ -1083,7 +1103,7 @@ object Radar {
             return
         }
 
-        app.apiClient.verifyEvent(eventId, RadarEventVerification.REJECT)
+        app.apiClient.verifyEvent(eventId, RadarEvent.RadarEventVerification.REJECT)
     }
 
     /**
@@ -2300,6 +2320,35 @@ object Radar {
         }
 
         app.settings.setLogLevel(level)
+    }
+
+    /**
+     * Sends Radar log events to the server
+     */
+    @JvmStatic
+    internal fun flushLogs() {
+        if (!initialized || !isTestKey()) {
+            return
+        }
+        val flushable = logBuffer.getFlushableLogsStash()
+        val logs = flushable.get()
+        if (logs.isNotEmpty()) {
+            apiClient.log(logs, object : RadarApiClient.RadarLogCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                    flushable.onFlush(status == RadarStatus.SUCCESS)
+                }
+            })
+        }
+    }
+
+    @JvmStatic
+    private fun isTestKey(): Boolean {
+        val key = RadarSettings.getPublishableKey(this.context)
+        return if (key == null) {
+            false
+        } else {
+            key.startsWith("prj_test") || key.startsWith("org_test")
+        }
     }
 
     /**

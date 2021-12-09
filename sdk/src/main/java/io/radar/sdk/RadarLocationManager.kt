@@ -470,7 +470,7 @@ internal class RadarLocationManager(
         val wasStopped = context.state.getStopped()
         var stopped: Boolean
 
-        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION)
+        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION || source == RadarLocationSource.BEACON_ENTER)
         if (!force && location.accuracy > 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
             context.logger.d("Skipping location: inaccurate", "accuracy" to location.accuracy)
             this.updateTracking(location)

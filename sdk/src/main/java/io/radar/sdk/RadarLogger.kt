@@ -52,6 +52,9 @@ internal class RadarLogger(
             executor.submit {
                 Log.println(logLevel.priority, TAG, "$message\n${Log.getStackTraceString(throwable)}")
                 app.receiver?.onLog(app, message)
+                if (Radar.isTestKey()) {
+                    logBuffer.write(level, message)
+                }
             }
         }
     }
@@ -71,6 +74,9 @@ internal class RadarLogger(
 
                 Log.println(logLevel.priority, TAG, "$logMessage\n${Log.getStackTraceString(throwable)}")
                 app.receiver?.onLog(app, logMessage)
+                if (Radar.isTestKey()) {
+                    logBuffer.write(level, message)
+                }
             }
         }
     }
