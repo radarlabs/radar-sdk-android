@@ -8,7 +8,7 @@
 .idea/libraries
 .idea/
 .DS_Store
-/build
+*/build
 /captures
 .externalNativeBuild
 /buildSrc/build
