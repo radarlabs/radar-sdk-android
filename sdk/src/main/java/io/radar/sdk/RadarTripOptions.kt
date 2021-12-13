@@ -89,4 +89,13 @@ data class RadarTripOptions(
                 this.mode == other.mode
     }
 
+    override fun hashCode(): Int {
+        var result = externalId.hashCode()
+        result = 31 * result + (metadata?.hashCode() ?: 0)
+        result = 31 * result + (destinationGeofenceTag?.hashCode() ?: 0)
+        result = 31 * result + (destinationGeofenceExternalId?.hashCode() ?: 0)
+        result = 31 * result + mode.hashCode()
+        return result
+    }
+
 }

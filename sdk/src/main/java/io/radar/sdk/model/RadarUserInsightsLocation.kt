@@ -1,9 +1,7 @@
 package io.radar.sdk.model
 
 import android.annotation.SuppressLint
-import org.json.JSONException
 import org.json.JSONObject
-import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
@@ -140,7 +138,7 @@ class RadarUserInsightsLocation(
         }
 
         @JvmStatic
-        fun stringForType(type: RadarUserInsightsLocationType): String? {
+        fun stringForType(type: RadarUserInsightsLocationType): String {
             return when (type) {
                 RadarUserInsightsLocationType.HOME -> "home"
                 RadarUserInsightsLocationType.OFFICE -> "office"

@@ -371,7 +371,7 @@ object Radar {
         MOTORBIKE("motorbike");
 
         companion object {
-            fun fromString(mode: String) = values().find { it.modeString == mode }
+            fun fromString(mode: String) = values().find { it.modeString.equals(mode, true) }
         }
     }
 
@@ -824,13 +824,13 @@ object Radar {
         }
 
         app.apiClient.track(
-            location,
-            false,
-            true,
-            RadarLocationSource.MANUAL_LOCATION,
-            false,
-            null,
-            object : RadarApiClient.RadarTrackApiCallback {
+            location = location,
+            stopped = false,
+            foreground = true,
+            source = RadarLocationSource.MANUAL_LOCATION,
+            replayed = false,
+            nearbyBeacons = null,
+            callback = object : RadarApiClient.RadarTrackApiCallback {
                 override fun onComplete(
                     status: RadarStatus,
                     res: JSONObject?,
@@ -2340,7 +2340,7 @@ object Radar {
      * @return A display string for the location source value.
      */
     @JvmStatic
-    fun stringForSource(source: RadarLocationSource): String? {
+    fun stringForSource(source: RadarLocationSource): String {
         return when (source) {
             RadarLocationSource.FOREGROUND_LOCATION -> "FOREGROUND_LOCATION"
             RadarLocationSource.BACKGROUND_LOCATION -> "BACKGROUND_LOCATION"
@@ -2363,7 +2363,7 @@ object Radar {
      * @return A display string for the travel mode value.
      */
     @JvmStatic
-    fun stringForMode(mode: RadarRouteMode): String? {
+    fun stringForMode(mode: RadarRouteMode): String {
         return when (mode) {
             RadarRouteMode.FOOT -> "foot"
             RadarRouteMode.BIKE -> "bike"
@@ -2381,7 +2381,7 @@ object Radar {
      * @return A display string for the trip status value.
      */
     @JvmStatic
-    fun stringForTripStatus(status: RadarTrip.RadarTripStatus): String? {
+    fun stringForTripStatus(status: RadarTrip.RadarTripStatus): String {
         return when (status) {
             RadarTrip.RadarTripStatus.STARTED -> "started"
             RadarTrip.RadarTripStatus.APPROACHING -> "approaching"

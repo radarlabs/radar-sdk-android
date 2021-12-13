@@ -3,7 +3,6 @@ package io.radar.sdk
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanRecord
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.RadarBeacon
 import java.nio.ByteBuffer
