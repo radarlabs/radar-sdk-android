@@ -80,7 +80,7 @@ dokkaHtml.configure {
 }
 
 dokkaJavadoc.configure {
-    outputDirectory.set(file("$rootDir/javadocs"))
+    outputDirectory.set(file("$buildDir/javadocs"))
 }
 
 task androidJavadocsJar(type: Jar, dependsOn: dokkaJavadoc) {
