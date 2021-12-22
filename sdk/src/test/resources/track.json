@@ -179,7 +179,8 @@
       },
       "source": "BACKGROUND_LOCATION",
       "fraud": {
-         "proxy": true
+         "proxy": true,
+         "mocked": true
       },
       "trip": {
          "_id": "5f3e50491c2b7d005c81f5d9",
