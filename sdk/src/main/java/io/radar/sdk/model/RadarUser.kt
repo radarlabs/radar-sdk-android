@@ -122,16 +122,16 @@ class RadarUser(
     val trip: RadarTrip?,
 
     /**
-     * A boolean indicating whether the user's location is being mocked, such as in a simulation. May be `null` if
+     * A boolean indicating whether the user's location is being mocked, such as in a simulation. May be `false` if
      * Fraud is not enabled.
      */
-    val mocked: Boolean? = null
+    val mocked: Boolean = false
 ) {
 
     /**
      * Learned fraud state for the user. May be `null` if Fraud is not enabled.
      */
-    val fraud: RadarFraud? = if (mocked == null) null else RadarFraud(proxy, mocked)
+    val fraud: RadarFraud = RadarFraud(proxy, mocked)
 
     internal companion object {
         private const val FIELD_ID = "_id"
@@ -226,7 +226,7 @@ class RadarUser(
                 segments,
                 topChains,
                 source,
-                fraud.proxy ?: false,
+                fraud.proxy,
                 trip,
                 fraud.mocked
             )
@@ -261,7 +261,7 @@ class RadarUser(
         obj.putOpt(FIELD_SEGMENTS, RadarSegment.toJson(this.segments))
         obj.putOpt(FIELD_TOP_CHAINS, RadarChain.toJson(this.topChains))
         obj.putOpt(FIELD_SOURCE, Radar.stringForSource(this.source))
-        obj.putOpt(FIELD_FRAUD, this.fraud?.toJson())
+        obj.putOpt(FIELD_FRAUD, this.fraud.toJson())
         obj.putOpt(FIELD_TRIP, this.trip?.toJson())
         return obj
     }

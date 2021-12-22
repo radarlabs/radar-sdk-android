@@ -7,15 +7,15 @@ import org.json.JSONObject
  */
 data class RadarFraud(
     /**
-     * A boolean indicating whether the user's IP address is a known proxy. May be `null` if Fraud is not enabled.
+     * A boolean indicating whether the user's IP address is a known proxy. May be `false` if Fraud is not enabled.
      */
-    val proxy: Boolean?,
+    val proxy: Boolean,
 
     /**
      * A boolean indicating whether or not the user's location is being mocked, such as in a simulation. May be
-     * `null` if Fraud is not enabled.
+     * `false` if Fraud is not enabled.
      */
-    val mocked: Boolean?
+    val mocked: Boolean
 ) {
     companion object {
         private const val PROXY = "proxy"
@@ -24,8 +24,8 @@ data class RadarFraud(
         @JvmStatic
         fun fromJson(json: JSONObject?): RadarFraud {
             return RadarFraud(
-                proxy = json?.optBoolean(PROXY),
-                mocked = json?.optBoolean(MOCKED)
+                proxy = json?.optBoolean(PROXY, false) ?: false,
+                mocked = json?.optBoolean(MOCKED, false) ?: false
             )
         }
     }
