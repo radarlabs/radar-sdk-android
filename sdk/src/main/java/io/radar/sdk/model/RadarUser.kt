@@ -122,7 +122,7 @@ class RadarUser(
     val trip: RadarTrip?,
 
     /**
-     * A boolean indicating whether the user's IP address is being mocked, such as in a simulation. May be `false` if
+     * A boolean indicating whether the user's location is being mocked, such as in a simulation. May be `null` if
      * Fraud is not enabled.
      */
     val mocked: Boolean? = null

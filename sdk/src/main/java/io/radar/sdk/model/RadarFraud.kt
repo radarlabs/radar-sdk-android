@@ -12,7 +12,7 @@ data class RadarFraud(
     val proxy: Boolean?,
 
     /**
-     * A boolean indicating whether or not the user's IP address is being mocked, such as in a simulation. May be
+     * A boolean indicating whether or not the user's location is being mocked, such as in a simulation. May be
      * `null` if Fraud is not enabled.
      */
     val mocked: Boolean?
