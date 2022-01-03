@@ -11,7 +11,7 @@ plugins {
 }
 
 ext {
-    radarVersion = '3.3.0-beta.2'
+    radarVersion = '3.2.4'
 }
 
 String buildNumber = ".${System.currentTimeMillis()}"
@@ -184,7 +184,7 @@ dokkaHtml.configure {
 }
 
 dokkaJavadoc.configure {
-    outputDirectory.set(file("$rootDir/javadocs"))
+    outputDirectory.set(file("$buildDir/javadocs"))
 }
 
 task androidJavadocsJar(type: Jar, dependsOn: dokkaJavadoc) {

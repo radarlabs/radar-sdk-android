@@ -130,8 +130,19 @@ class RadarUser(
     /**
      * The user's current trip.
      */
-    val trip: RadarTrip?
+    val trip: RadarTrip?,
+
+    /**
+     * A boolean indicating whether the user's location is being mocked, such as in a simulation. May be `false` if
+     * Fraud is not enabled.
+     */
+    val mocked: Boolean = false
 ) {
+
+    /**
+     * Learned fraud state for the user. May be `null` if Fraud is not enabled.
+     */
+    val fraud: RadarFraud = RadarFraud(proxy, mocked)
 
     internal companion object {
         private const val FIELD_ID = "_id"
@@ -157,7 +168,6 @@ class RadarUser(
         private const val FIELD_TOP_CHAINS = "topChains"
         private const val FIELD_SOURCE = "source"
         private const val FIELD_FRAUD = "fraud"
-        private const val FIELD_PROXY = "proxy"
         private const val FIELD_TRIP = "trip"
 
         @JvmStatic
@@ -204,12 +214,34 @@ class RadarUser(
                 "MOCK_LOCATION" -> Radar.RadarLocationSource.MOCK_LOCATION
                 else -> Radar.RadarLocationSource.UNKNOWN
             }
-            val proxy = obj.optJSONObject(FIELD_FRAUD)?.optBoolean(FIELD_PROXY) ?: false
+            val fraud = RadarFraud.fromJson(obj.optJSONObject(FIELD_FRAUD))
             val trip = RadarTrip.fromJson(obj.optJSONObject(FIELD_TRIP))
 
-            return RadarUser(id, userId, deviceId, description, metadata, location, geofences, place, insights, beacons,
-                stopped, foreground, country, state, dma, postalCode, nearbyPlaceChains, segments, topChains, source,
-                proxy, trip)
+            return RadarUser(
+                _id = id,
+                userId = userId,
+                deviceId = deviceId,
+                description = description,
+                metadata = metadata,
+                location = location,
+                geofences = geofences,
+                place = place,
+                insights = insights,
+                beacons = beacons,
+                stopped = stopped,
+                foreground = foreground,
+                country = country,
+                state = state,
+                dma = dma,
+                postalCode = postalCode,
+                nearbyPlaceChains = nearbyPlaceChains,
+                segments = segments,
+                topChains = topChains,
+                source = source,
+                proxy = fraud.proxy,
+                trip = trip,
+                mocked = fraud.mocked
+            )
         }
     }
 
@@ -241,9 +273,7 @@ class RadarUser(
         obj.putOpt(FIELD_SEGMENTS, RadarSegment.toJson(this.segments))
         obj.putOpt(FIELD_TOP_CHAINS, RadarChain.toJson(this.topChains))
         obj.putOpt(FIELD_SOURCE, Radar.stringForSource(this.source))
-        val fraudObj = JSONObject()
-        fraudObj.putOpt(FIELD_PROXY, this.proxy)
-        obj.putOpt(FIELD_FRAUD, fraudObj)
+        obj.putOpt(FIELD_FRAUD, this.fraud.toJson())
         obj.putOpt(FIELD_TRIP, this.trip?.toJson())
         return obj
     }
