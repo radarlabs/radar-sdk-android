@@ -217,31 +217,9 @@ class RadarUser(
             val fraud = RadarFraud.fromJson(obj.optJSONObject(FIELD_FRAUD))
             val trip = RadarTrip.fromJson(obj.optJSONObject(FIELD_TRIP))
 
-            return RadarUser(
-                _id = id,
-                userId = userId,
-                deviceId = deviceId,
-                description = description,
-                metadata = metadata,
-                location = location,
-                geofences = geofences,
-                place = place,
-                insights = insights,
-                beacons = beacons,
-                stopped = stopped,
-                foreground = foreground,
-                country = country,
-                state = state,
-                dma = dma,
-                postalCode = postalCode,
-                nearbyPlaceChains = nearbyPlaceChains,
-                segments = segments,
-                topChains = topChains,
-                source = source,
-                proxy = fraud.proxy,
-                trip = trip,
-                mocked = fraud.mocked
-            )
+            return RadarUser(id, userId, deviceId, description, metadata, location, geofences, place, insights, beacons,
+                stopped, foreground, country, state, dma, postalCode, nearbyPlaceChains, segments, topChains, source,
+                fraud.proxy, trip, fraud.mocked)
         }
     }
 
