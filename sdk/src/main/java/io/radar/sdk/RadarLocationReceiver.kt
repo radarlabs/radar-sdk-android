@@ -118,7 +118,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
             }
             ACTION_LOCATION -> {
                 val result = LocationResult.extractResult(intent)
-                result.lastLocation.also {
+                result?.lastLocation?.also {
                     val source = Radar.RadarLocationSource.BACKGROUND_LOCATION
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
