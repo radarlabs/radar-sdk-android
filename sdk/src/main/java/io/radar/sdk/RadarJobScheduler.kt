@@ -13,6 +13,8 @@ import android.os.Looper
 import android.os.PersistableBundle
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarLocationSource
+import io.radar.sdk.Radar.stringForSource
+import java.util.concurrent.atomic.AtomicInteger
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class RadarJobScheduler : JobService() {
@@ -24,8 +26,8 @@ class RadarJobScheduler : JobService() {
         private const val EXTRA_PROVIDER = "provider"
         private const val EXTRA_TIME = "time"
         private const val EXTRA_SOURCE = "source"
-
         private const val JOB_ID = 20160525 // random job ID (Radar's birthday!)
+        private val counter = AtomicInteger(0)
 
         internal fun scheduleJob(context: Context, location: Location, source: RadarLocationSource) {
             val componentName = ComponentName(context, RadarJobScheduler::class.java)
@@ -45,7 +47,24 @@ class RadarJobScheduler : JobService() {
                 .build()
 
             val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-            jobScheduler.schedule(jobInfo)
+            val result = jobScheduler.schedule(jobInfo)
+            val success = result == JobScheduler.RESULT_SUCCESS
+            if (success) {
+                Radar.logger.d(
+                    "Schedule Location Job |" +
+                            " location = $location;" +
+                            " source = ${stringForSource(source)};" +
+                            " success = $success;" +
+                            " overwrites = ${counter.getAndIncrement()}"
+                )
+            } else {
+                Radar.logger.d(
+                    "Failed to Schedule Location Job |" +
+                            " location = $location;" +
+                            " source = ${stringForSource(source)};"
+                )
+            }
+
         }
     }
 
@@ -64,7 +83,19 @@ class RadarJobScheduler : JobService() {
             this.time = time
         }
 
-        val sourceStr = extras.getString(EXTRA_SOURCE) ?: return false
+        val sourceStr = extras.getString(EXTRA_SOURCE)
+        Radar.logger.d(
+            "Start Location Job | " +
+                    "location = $location; " +
+                    "source = ${sourceStr}; " +
+                    "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
+                    "performanceState = ${Radar.batteryManager.getBatteryState().performanceState.name}; " +
+                    "requestNumber = ${counter.get()}"
+        )
+
+        if (sourceStr == null) {
+            return false
+        }
 
         val source = RadarLocationSource.valueOf(sourceStr)
 
@@ -74,10 +105,31 @@ class RadarJobScheduler : JobService() {
             this.jobFinished(params, false)
         }, 10000)
 
+        counter.set(0)
         return true
     }
 
     override fun onStopJob(params: JobParameters): Boolean {
+        if (Radar.isTestKey()) {
+            val extras = params.extras
+            val latitude = extras.getDouble(EXTRA_LATITUDE)
+            val longitude = extras.getDouble(EXTRA_LONGITUDE)
+            val accuracy = extras.getDouble(EXTRA_ACCURACY).toFloat()
+            val provider = extras.getString(EXTRA_PROVIDER)
+            val time = extras.getLong(EXTRA_TIME)
+
+            val location = Location(provider).apply {
+                this.latitude = latitude
+                this.longitude = longitude
+                this.accuracy = accuracy
+                this.time = time
+            }
+
+            val source = extras.getString(EXTRA_SOURCE)
+            //this may occur, for example, if a new location job is scheduled before the current job finishes executing.
+            Radar.logger.d("Stop Location Job | location = $location; source = $source")
+        }
+
         return false
     }
 
