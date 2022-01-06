@@ -27,28 +27,32 @@ internal data class BatteryState(
         if (powerSaveMode != null) {
             val isAffectedByPowerSaver = powerSaveMode && !isIgnoringBatteryOptimizations
             val isLocationAffectedByPowerSaver = locationPowerSaveMode != RadarBatteryManager.locationUnaffected
-            if (isDeviceIdleMode) {
-                if (isAffectedByPowerSaver) {
-                    if (isLocationAffectedByPowerSaver) {
-                        //Idle, with power saver and location throttled
-                        performanceState = PerformanceState.LOWEST
+            when {
+                isDeviceIdleMode -> {
+                    performanceState = if (isAffectedByPowerSaver) {
+                        if (isLocationAffectedByPowerSaver) {
+                            //Idle, with power saver and location throttled
+                            PerformanceState.LOWEST
+                        } else {
+                            //Idle with Power Saver
+                            PerformanceState.LOW
+                        }
                     } else {
-                        //Idle with Power Saver
-                        performanceState = PerformanceState.LOW
+                        //Idle Only
+                        PerformanceState.IDLE
                     }
-                } else {
-                    //Idle Only
-                    performanceState = PerformanceState.IDLE
                 }
-            } else if (isAffectedByPowerSaver) {
-                if (isLocationAffectedByPowerSaver) {
-                    //Optimized And Location Throttled
-                    performanceState = PerformanceState.LOCATIONS_LOW_PERFORMANCE
-                } else {
-                    performanceState = PerformanceState.OPTIMIZED
+                isAffectedByPowerSaver -> {
+                    performanceState = if (isLocationAffectedByPowerSaver) {
+                        //Optimized And Location Throttled
+                        PerformanceState.LOCATIONS_LOW_PERFORMANCE
+                    } else {
+                        PerformanceState.OPTIMIZED
+                    }
                 }
-            } else {
-                performanceState = PerformanceState.OK
+                else -> {
+                    performanceState = PerformanceState.OK
+                }
             }
         } else {
             performanceState = PerformanceState.OK
