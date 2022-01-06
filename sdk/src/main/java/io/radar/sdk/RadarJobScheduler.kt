@@ -84,14 +84,23 @@ class RadarJobScheduler : JobService() {
         }
 
         val sourceStr = extras.getString(EXTRA_SOURCE)
-        Radar.logger.d(
-            "Start Location Job | " +
-                    "location = $location; " +
-                    "source = ${sourceStr}; " +
-                    "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
-                    "performanceState = ${Radar.batteryManager.getBatteryState().performanceState.name}; " +
-                    "requestNumber = ${counter.get()}"
-        )
+        if (Radar.isTestKey()) {
+            val batteryState = Radar.batteryManager.getBatteryState()
+            Radar.logger.d(
+                "Start Location Job | " +
+                        "location = $location; " +
+                        "source = ${sourceStr}; " +
+                        "requestNumber = ${counter.get()}; " +
+                        "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
+                        "performanceState = ${batteryState.performanceState.name}; " +
+                        "isCharging = ${batteryState.isCharging}; " +
+                        "batteryPercentage = ${batteryState.percent}; " +
+                        "isPowerSaveMode = ${batteryState.powerSaveMode}; " +
+                        "isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations}; " +
+                        "locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()}; " +
+                        "isDozeMode = ${batteryState.isDeviceIdleMode}"
+            )
+        }
 
         if (sourceStr == null) {
             return false

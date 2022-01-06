@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
+import io.radar.sdk.util.BatteryState
 
 /**
  * Handles battery-related information within the Radar SDK
@@ -15,13 +16,15 @@ import android.os.PowerManager
 internal class RadarBatteryManager(
     private val context: Context
 ) {
+    companion object {
+        val locationUnaffected = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            PowerManager.LOCATION_MODE_NO_CHANGE
+        } else {
+            0
+        }
+    }
 
     private val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager?
-    private val locationUnaffected = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        PowerManager.LOCATION_MODE_NO_CHANGE
-    } else {
-        0
-    }
     private val usageStatsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
         context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager?
     } else {
@@ -47,45 +50,18 @@ internal class RadarBatteryManager(
             val scale: Int = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
             level * 100 / scale.toFloat()
         }
-        return BatteryState(isCharging, batteryPct ?: 0F, getPerformanceState())
+        return BatteryState(
+            isCharging = isCharging,
+            percent = batteryPct ?: 0F,
+            powerSaveMode = isPowerSaveMode(),
+            isIgnoringBatteryOptimizations = isIgnoringBatteryOptimizations(),
+            locationPowerSaveMode = getLocationPowerSaveMode(),
+            isDeviceIdleMode = isDeviceIdleMode()
+        )
     }
 
     @SuppressLint("NewApi")
     fun getAppStandbyBucket(): Int? = usageStatsManager?.appStandbyBucket
-
-    /**
-     * Get the performance state. This uses Android's [PowerManager] to gather information
-     * about the current optimization settings that could affect the SDK's performance, and returns
-     * a simplified status which identifies whether or not battery optimizations may be affecting
-     * the SDK's responsiveness.
-     */
-    private fun getPerformanceState(): PerformanceState {
-        val powerSaveMode = isPowerSaveMode()
-        if (powerSaveMode != null) {
-            val isAffectedByPowerSaver = powerSaveMode && !isIgnoringBatteryOptimizations()
-            val isLocationAffectedByPowerSaver = getLocationPowerSaveMode() != locationUnaffected
-            if (isDeviceIdleMode()) {
-                if (isAffectedByPowerSaver) {
-                    if (isLocationAffectedByPowerSaver) {
-                        //Idle, with power saver and location throttled
-                        return PerformanceState.LOWEST
-                    }
-                    //Idle with Power Saver
-                    return PerformanceState.LOW
-                } else {
-                    //Idle Only
-                    return PerformanceState.IDLE
-                }
-            } else if (isAffectedByPowerSaver) {
-                if (isLocationAffectedByPowerSaver) {
-                    //Optimized And Location Throttled
-                    return PerformanceState.LOCATIONS_LOW_PERFORMANCE
-                }
-                return PerformanceState.OPTIMIZED
-            }
-        }
-        return PerformanceState.OK
-    }
 
     private fun isPowerSaveMode(): Boolean? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -117,47 +93,5 @@ internal class RadarBatteryManager(
         }
         return false
     }
-
-    internal enum class PerformanceState {
-
-        /**
-         * No performance optimizations are in affect, or the app is exempt
-         */
-        OK,
-
-        /**
-         * Performance Mode is optimized. Location settings for performance mode are either
-         * fully allowed, or device does not support more granular performance settings.
-         */
-        OPTIMIZED,
-
-        /**
-         * Performance Mode is optimized, and location polling is affected by it.
-         */
-        LOCATIONS_LOW_PERFORMANCE,
-
-        /**
-         * Device is in an Idle state, and performance mode is not optimized.
-         */
-        IDLE,
-
-        /**
-         * Device is Idle and performance is optimized. Location settings for performance mode are either
-         * fully allowed, or device does not support more granular performance settings.
-         */
-        LOW,
-
-        /**
-         * Device is idle, performance is optimized, and location polling is affected by the performance
-         * optimization.
-         */
-        LOWEST
-
-    }
-
-    /**
-     * Contains information about the battery state
-     */
-    internal class BatteryState(val isCharging: Boolean, val percent: Float, val performanceState: PerformanceState)
 
 }

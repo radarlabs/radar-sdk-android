@@ -8,6 +8,7 @@ import android.os.PowerManager
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.radar.sdk.util.BatteryState
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -152,25 +153,25 @@ class RadarBatteryManagerTests {
             if (powerSaveMode) {
                 if (idleMode) {
                     if (locationPowerSaveMode == PowerManager.LOCATION_MODE_NO_CHANGE && !ignoreBatteryOptimizations) {
-                        assertEquals(RadarBatteryManager.PerformanceState.LOW, performanceState)
+                        assertEquals(BatteryState.PerformanceState.LOW, performanceState)
                     } else if (ignoreBatteryOptimizations) {
-                        assertEquals(RadarBatteryManager.PerformanceState.IDLE, performanceState)
+                        assertEquals(BatteryState.PerformanceState.IDLE, performanceState)
                     } else {
-                        assertEquals(RadarBatteryManager.PerformanceState.LOWEST, performanceState)
+                        assertEquals(BatteryState.PerformanceState.LOWEST, performanceState)
                     }
                 } else if (locationPowerSaveMode == PowerManager.LOCATION_MODE_NO_CHANGE
                     && !ignoreBatteryOptimizations
                 ) {
-                    assertEquals(RadarBatteryManager.PerformanceState.OPTIMIZED, performanceState)
+                    assertEquals(BatteryState.PerformanceState.OPTIMIZED, performanceState)
                 } else if (ignoreBatteryOptimizations) {
-                    assertEquals(RadarBatteryManager.PerformanceState.OK, performanceState)
+                    assertEquals(BatteryState.PerformanceState.OK, performanceState)
                 } else {
-                    assertEquals(RadarBatteryManager.PerformanceState.LOCATIONS_LOW_PERFORMANCE, performanceState)
+                    assertEquals(BatteryState.PerformanceState.LOCATIONS_LOW_PERFORMANCE, performanceState)
                 }
             } else if (idleMode) {
-                assertEquals(RadarBatteryManager.PerformanceState.IDLE, performanceState)
+                assertEquals(BatteryState.PerformanceState.IDLE, performanceState)
             } else {
-                assertEquals(RadarBatteryManager.PerformanceState.OK, performanceState)
+                assertEquals(BatteryState.PerformanceState.OK, performanceState)
             }
         }
     }

@@ -386,16 +386,24 @@ internal class RadarLocationManager(
     }
 
     fun handleLocation(location: Location?, source: RadarLocationSource) {
-        val latency = if (location == null) -1 else Date().time - location.time
-        val standbyBucket = batteryManager.getAppStandbyBucket()
-        val batteryState = batteryManager.getBatteryState()
-        logger.d(
-            "Handling location | " +
-                    "location = $location; " +
-                    "latency = $latency; " +
-                    "standbyBucket = $standbyBucket; " +
-                    "performanceState = ${batteryState.performanceState.name}"
-        )
+        if (Radar.isTestKey()) {
+            val latency = if (location == null) -1 else Date().time - location.time
+            val standbyBucket = batteryManager.getAppStandbyBucket()
+            val batteryState = batteryManager.getBatteryState()
+            logger.d(
+                "Handling location | " +
+                        "location = $location; " +
+                        "latency = $latency; " +
+                        "standbyBucket = $standbyBucket; " +
+                        "performanceState = ${batteryState.performanceState.name}; " +
+                        "isCharging = ${batteryState.isCharging}; " +
+                        "batteryPercentage = ${batteryState.percent}; " +
+                        "isPowerSaveMode = ${batteryState.powerSaveMode}; " +
+                        "isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations}; " +
+                        "locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()}; " +
+                        "isDozeMode = ${batteryState.isDeviceIdleMode}"
+            )
+        }
         if (location == null || !RadarUtils.valid(location)) {
             logger.d("Invalid location | source = $source; location = $location")
 

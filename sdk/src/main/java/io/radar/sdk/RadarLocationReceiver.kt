@@ -102,7 +102,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
         when (intent.action) {
             ACTION_BUBBLE_GEOFENCE, ACTION_SYNCED_GEOFENCES -> {
                 val event = GeofencingEvent.fromIntent(intent)
-                event.triggeringLocation.also {
+                event?.triggeringLocation?.also {
                     val source = when (event.geofenceTransition) {
                         Geofence.GEOFENCE_TRANSITION_ENTER -> Radar.RadarLocationSource.GEOFENCE_ENTER
                         Geofence.GEOFENCE_TRANSITION_DWELL -> Radar.RadarLocationSource.GEOFENCE_DWELL
