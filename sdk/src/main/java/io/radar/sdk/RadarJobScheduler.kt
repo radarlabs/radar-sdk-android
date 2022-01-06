@@ -51,7 +51,7 @@ class RadarJobScheduler : JobService() {
             val success = result == JobScheduler.RESULT_SUCCESS
             if (success) {
                 Radar.logger.d(
-                    "Schedule Location Job |" +
+                    "Scheduling Location Job |" +
                             " location = $location;" +
                             " source = ${stringForSource(source)};" +
                             " success = $success;" +
@@ -87,7 +87,7 @@ class RadarJobScheduler : JobService() {
         if (Radar.isTestKey()) {
             val batteryState = Radar.batteryManager.getBatteryState()
             Radar.logger.d(
-                "Start Location Job | " +
+                "Starting Location Job | " +
                         "location = $location; " +
                         "source = ${sourceStr}; " +
                         "requestNumber = ${counter.get()}; " +
@@ -136,7 +136,7 @@ class RadarJobScheduler : JobService() {
 
             val source = extras.getString(EXTRA_SOURCE)
             //this may occur, for example, if a new location job is scheduled before the current job finishes executing.
-            Radar.logger.d("Stop Location Job | location = $location; source = $source")
+            Radar.logger.d("Stopping Location Job | location = $location; source = $source")
         }
 
         return false
