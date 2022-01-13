@@ -17,7 +17,7 @@ internal class RadarLogger(
         if (level >= RadarLogLevel.DEBUG) {
             Log.d(TAG, message, throwable)
 
-            Radar.sendLog(RadarLogLevel.DEBUG, message)
+            Radar.sendLog(message)
         }
     }
 
@@ -26,7 +26,7 @@ internal class RadarLogger(
         if (level >= RadarLogLevel.INFO) {
             Log.i(TAG, message, throwable)
 
-            Radar.sendLog(RadarLogLevel.INFO, message)
+            Radar.sendLog(message)
         }
     }
 
@@ -35,7 +35,7 @@ internal class RadarLogger(
         if (level >= RadarLogLevel.WARNING) {
             Log.w(TAG, message, throwable)
 
-            Radar.sendLog(RadarLogLevel.WARNING, message)
+            Radar.sendLog(message)
         }
     }
 
@@ -44,7 +44,7 @@ internal class RadarLogger(
         if (level >= RadarLogLevel.ERROR) {
             Log.e(TAG, message, throwable)
 
-            Radar.sendLog(RadarLogLevel.ERROR, message)
+            Radar.sendLog(message)
         }
     }
 
