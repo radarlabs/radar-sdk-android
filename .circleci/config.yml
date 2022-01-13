@@ -11,7 +11,7 @@ jobs:
           command: yes | sdkmanager --licenses || true
       - run:
           name: Build
-          command: ./gradlew check build assembleAndroidTest --stacktrace
+          command: ./gradlew check build assembleAndroidTest
 workflows:
   build_and_test:
     jobs:

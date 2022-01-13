@@ -61,10 +61,6 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null, matrix: RadarRouteMatrix? = null)
     }
 
-    internal interface RadarLogCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null)
-    }
-
     private fun headers(publishableKey: String): Map<String, String> {
         return mapOf(
             "Authorization" to publishableKey,
@@ -97,9 +93,6 @@ internal class RadarApiClient(
 
         apiHelper.request(context, "GET", url, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                if (status == RadarStatus.SUCCESS) {
-                    Radar.flushLogs()
-                }
                 if (res != null && res.has("meta")) {
                     val meta = res.getJSONObject("meta")
                     if (meta.has("config")) {
@@ -109,42 +102,6 @@ internal class RadarApiClient(
                 }
             }
         })
-    }
-
-    internal fun log(logs: List<RadarLog>, callback: RadarLogCallback?) {
-        val publishableKey = RadarSettings.getPublishableKey(context)
-        if (publishableKey == null) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-            return
-        }
-        val params = JSONObject()
-        try {
-            params.putOpt("id", RadarSettings.getId(context))
-            params.putOpt("deviceId", RadarUtils.getDeviceId(context))
-            params.putOpt("installId", RadarSettings.getInstallId(context))
-            params.putOpt("sessionId", RadarSettings.getSessionId(context))
-            val array = JSONArray()
-            logs.forEach { log -> array.put(log.toJson()) }
-            params.putOpt("logs", array)
-        } catch (e: JSONException) {
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
-            return
-        }
-        val host = RadarSettings.getHost(context)
-        val uri = Uri.parse(host).buildUpon()
-            .appendEncodedPath("v1/logs")
-            .build()
-        apiHelper.request(context = context,
-            method = "POST",
-            url = URL(uri.toString()),
-            headers = headers(publishableKey),
-            params = params,
-            sleep = false,
-            callback = object : RadarApiHelper.RadarApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                    callback?.onComplete(status, res)
-                }
-            })
     }
 
     internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, nearbyBeacons: Array<String>?, callback: RadarTrackApiCallback? = null) {
@@ -263,7 +220,6 @@ internal class RadarApiClient(
 
                     return
                 }
-                Radar.flushLogs()
 
                 RadarState.setLastFailedStoppedLocation(context, null)
 
