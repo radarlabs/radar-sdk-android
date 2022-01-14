@@ -104,6 +104,21 @@ internal class RadarApiClient(
         })
     }
 
+    /**
+     * Validates any Number values before putting them into the JSON object. This ensures [JSONObject.put] doesn't throw
+     * an exception when infinite or NaN values are placed in the JSON.
+     */
+    private fun JSONObject.putValid(key: String, value: Any?) {
+        if (value is Number) {
+            val dbl = value.toDouble()
+            if (dbl.isInfinite() || dbl.isNaN()) {
+                logger.d("Excluding $key: Value is not valid.")
+                return
+            }
+        }
+        putOpt(key, value)
+    }
+
     internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, nearbyBeacons: Array<String>?, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -116,83 +131,83 @@ internal class RadarApiClient(
         val options = RadarSettings.getTrackingOptions(context)
         val tripOptions = RadarSettings.getTripOptions(context)
         try {
-            params.putOpt("id", RadarSettings.getId(context))
-            params.putOpt("installId", RadarSettings.getInstallId(context))
-            params.putOpt("userId", RadarSettings.getUserId(context))
-            params.putOpt("deviceId", RadarUtils.getDeviceId(context))
-            params.putOpt("description", RadarSettings.getDescription(context))
-            params.putOpt("metadata", RadarSettings.getMetadata(context))
+            params.putValid("id", RadarSettings.getId(context))
+            params.putValid("installId", RadarSettings.getInstallId(context))
+            params.putValid("userId", RadarSettings.getUserId(context))
+            params.putValid("deviceId", RadarUtils.getDeviceId(context))
+            params.putValid("description", RadarSettings.getDescription(context))
+            params.putValid("metadata", RadarSettings.getMetadata(context))
             if (RadarSettings.getAdIdEnabled(context)) {
-                params.putOpt("adId", RadarUtils.getAdId(context))
+                params.putValid("adId", RadarUtils.getAdId(context))
             }
-            params.putOpt("latitude", location.latitude)
-            params.putOpt("longitude", location.longitude)
+            params.putValid("latitude", location.latitude)
+            params.putValid("longitude", location.longitude)
             var accuracy = location.accuracy
             if (!location.hasAccuracy() || location.accuracy.isNaN() || accuracy <= 0) {
                 accuracy = 1F
             }
-            params.putOpt("accuracy", accuracy)
+            params.putValid("accuracy", accuracy)
             if (location.hasSpeed() && !location.speed.isNaN()) {
-                params.putOpt("speed", location.speed)
+                params.putValid("speed", location.speed)
             }
             if (location.hasBearing() && !location.bearing.isNaN()) {
-                params.putOpt("course", location.bearing)
+                params.putValid("course", location.bearing)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (location.hasVerticalAccuracy() && !location.verticalAccuracyMeters.isNaN()) {
-                    params.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
+                    params.putValid("verticalAccuracy", location.verticalAccuracyMeters)
                 }
                 if (location.hasSpeedAccuracy() && !location.speedAccuracyMetersPerSecond.isNaN()) {
-                    params.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
+                    params.putValid("speedAccuracy", location.speedAccuracyMetersPerSecond)
                 }
                 if (location.hasBearingAccuracy() && !location.bearingAccuracyDegrees.isNaN()) {
-                    params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
+                    params.putValid("courseAccuracy", location.bearingAccuracyDegrees)
                 }
             }
             if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
-                params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
+                params.putValid("updatedAtMsDiff", updatedAtMsDiff)
             }
-            params.putOpt("foreground", foreground)
-            params.putOpt("stopped", stopped)
-            params.putOpt("replayed", replayed)
-            params.putOpt("deviceType", "Android")
-            params.putOpt("deviceMake", RadarUtils.deviceMake)
-            params.putOpt("sdkVersion", RadarUtils.sdkVersion)
-            params.putOpt("deviceModel", RadarUtils.deviceModel)
-            params.putOpt("deviceOS", RadarUtils.deviceOS)
-            params.putOpt("deviceType", RadarUtils.deviceType)
-            params.putOpt("deviceMake", RadarUtils.deviceMake)
-            params.putOpt("country", RadarUtils.country)
-            params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
-            params.putOpt("source", Radar.stringForSource(source))
+            params.putValid("foreground", foreground)
+            params.putValid("stopped", stopped)
+            params.putValid("replayed", replayed)
+            params.putValid("deviceType", "Android")
+            params.putValid("deviceMake", RadarUtils.deviceMake)
+            params.putValid("sdkVersion", RadarUtils.sdkVersion)
+            params.putValid("deviceModel", RadarUtils.deviceModel)
+            params.putValid("deviceOS", RadarUtils.deviceOS)
+            params.putValid("deviceType", RadarUtils.deviceType)
+            params.putValid("deviceMake", RadarUtils.deviceMake)
+            params.putValid("country", RadarUtils.country)
+            params.putValid("timeZoneOffset", RadarUtils.timeZoneOffset)
+            params.putValid("source", Radar.stringForSource(source))
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 val mocked = location.isFromMockProvider
-                params.putOpt("mocked", mocked)
+                params.putValid("mocked", mocked)
             }
             if (tripOptions != null) {
                 val tripOptionsObj = JSONObject()
-                tripOptionsObj.putOpt("externalId", tripOptions.externalId)
-                tripOptionsObj.putOpt("metadata", tripOptions.metadata)
-                tripOptionsObj.putOpt("destinationGeofenceTag", tripOptions.destinationGeofenceTag)
-                tripOptionsObj.putOpt("destinationGeofenceExternalId", tripOptions.destinationGeofenceExternalId)
-                tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
-                params.putOpt("tripOptions", tripOptionsObj)
+                tripOptionsObj.putValid("externalId", tripOptions.externalId)
+                tripOptionsObj.putValid("metadata", tripOptions.metadata)
+                tripOptionsObj.putValid("destinationGeofenceTag", tripOptions.destinationGeofenceTag)
+                tripOptionsObj.putValid("destinationGeofenceExternalId", tripOptions.destinationGeofenceExternalId)
+                tripOptionsObj.putValid("mode", Radar.stringForMode(tripOptions.mode))
+                params.putValid("tripOptions", tripOptionsObj)
             }
             if (options.syncGeofences) {
-                params.putOpt("nearbyGeofences", true)
-                params.putOpt("nearbyGeofencesLimit", options.syncGeofencesLimit)
+                params.putValid("nearbyGeofences", true)
+                params.putValid("nearbyGeofencesLimit", options.syncGeofencesLimit)
             }
             if (nearbyBeacons != null) {
                 val nearbyBeaconsArr = JSONArray()
                 for (nearbyBeacon in nearbyBeacons) {
                     nearbyBeaconsArr.put(nearbyBeacon)
                 }
-                params.putOpt("nearbyBeacons", nearbyBeaconsArr)
+                params.putValid("nearbyBeacons", nearbyBeaconsArr)
             }
-            params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
-            params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
-            params.putOpt("sessionId", RadarSettings.getSessionId(context))
+            params.putValid("locationAuthorization", RadarUtils.getLocationAuthorization(context))
+            params.putValid("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
+            params.putValid("sessionId", RadarSettings.getSessionId(context))
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
