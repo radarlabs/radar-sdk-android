@@ -30,8 +30,13 @@ internal open class RadarApiHelper(
                          headers: Map<String, String>?,
                          params: JSONObject?,
                          sleep: Boolean,
-                         callback: RadarApiCallback? = null) {
-        logger?.d("📍 Radar API request | method = ${method}; url = ${url}; headers = ${headers}; params = $params")
+                         callback: RadarApiCallback? = null,
+                         stream: Boolean = false) {
+        if (stream) {
+            logger?.d("📍 Radar API request | method = $method; url = $url; headers = $headers; params = <stream>")
+        } else {
+            logger?.d("📍 Radar API request | method = $method; url = $url; headers = $headers; params = $params")
+        }
         
         executor.execute {
             try {
@@ -48,6 +53,9 @@ internal open class RadarApiHelper(
                 urlConnection.requestMethod = method
                 urlConnection.connectTimeout = 10000
                 urlConnection.readTimeout = 10000
+                if (stream) {
+                    urlConnection.setChunkedStreamingMode(1024)
+                }
 
                 if (params != null) {
                     urlConnection.doOutput = true

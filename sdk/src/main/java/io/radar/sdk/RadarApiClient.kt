@@ -134,7 +134,8 @@ internal class RadarApiClient(
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/logs")
             .build()
-        apiHelper.request(context = context,
+        apiHelper.request(
+            context = context,
             method = "POST",
             url = URL(uri.toString()),
             headers = headers(publishableKey),
@@ -144,7 +145,9 @@ internal class RadarApiClient(
                 override fun onComplete(status: RadarStatus, res: JSONObject?) {
                     callback?.onComplete(status, res)
                 }
-            })
+            },
+            stream = true
+        )
     }
 
     internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, nearbyBeacons: Array<String>?, callback: RadarTrackApiCallback? = null) {
