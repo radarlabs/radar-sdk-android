@@ -16,7 +16,8 @@ internal class RadarApiHelperMock : RadarApiHelper() {
                          params: JSONObject?,
                          sleep: Boolean,
                          callback: RadarApiCallback?,
-                         stream: Boolean) {
+                         stream: Boolean,
+                         logPayload: Boolean) {
         callback?.onComplete(mockStatus, mockResponse)
     }
 

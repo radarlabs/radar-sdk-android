@@ -146,7 +146,12 @@ internal class RadarApiClient(
                     callback?.onComplete(status, res)
                 }
             },
-            stream = true
+            stream = true,
+            // Do not log the saved log events. If the logs themselves were logged it would create a redundancy and
+            // eventually lead to a crash when creating a downstream log request, since these will log to memory as a
+            // single log entry. Then each time after, this log entry would contain more and more logs, eventually
+            // causing an out of memory exception.
+            logPayload = false
         )
     }
 

@@ -31,11 +31,12 @@ internal open class RadarApiHelper(
                          params: JSONObject?,
                          sleep: Boolean,
                          callback: RadarApiCallback? = null,
-                         stream: Boolean = false) {
-        if (stream) {
-            logger?.d("📍 Radar API request | method = $method; url = $url; headers = $headers; params = <stream>")
-        } else {
+                         stream: Boolean = false,
+                         logPayload: Boolean = true) {
+        if (logPayload) {
             logger?.d("📍 Radar API request | method = $method; url = $url; headers = $headers; params = $params")
+        } else {
+            logger?.d("📍 Radar API request | method = $method; url = $url; headers = $headers")
         }
         
         executor.execute {
