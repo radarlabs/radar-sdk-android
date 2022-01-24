@@ -56,6 +56,6 @@ internal class RadarSimpleLogBuffer : RadarLogBuffer {
     private fun purgeOldestLogs() {
         val logs = mutableListOf<RadarLog>()
         list.drainTo(logs, HALF_CAPACITY)
-        write(Radar.RadarLogLevel.DEBUG, "------ purged oldest logs ------")
+        write(Radar.RadarLogLevel.DEBUG, "----- purged oldest logs -----")
     }
 }
