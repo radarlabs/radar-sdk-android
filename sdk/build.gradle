@@ -13,10 +13,17 @@ ext {
 
 String buildNumber = ".${System.currentTimeMillis()}"
 GitHubActions githubRelease = GitHubActions.get()
+boolean isSnapshot = false
 if (githubRelease) {
-    buildNumber = ''
-    //Use the tag from the release name as the version-to-publish / include in source code
-    ext.radarVersion = githubRelease.tag
+    if (githubRelease.snapshot) {
+        //Use the existing radarVersion with the -SNAPSHOT suffix
+        isSnapshot = true
+        buildNumber = '-SNAPSHOT'
+    } else {
+        buildNumber = ''
+        //Use the tag from the release name as the version-to-publish / include in source code
+        ext.radarVersion = githubRelease.tag
+    }
 }
 
 android {
@@ -102,6 +109,6 @@ mvnpublish {
         artifactId = 'sdk'
         version = "$radarVersion$buildNumber"
         artifacts = ["$buildDir/outputs/aar/$project.name-release.aar", androidSourcesJar, androidJavadocsJar]
-        server = MavenServer.RELEASE
+        server = isSnapshot ? MavenServer.SNAPSHOT : MavenServer.RELEASE
     }
 }

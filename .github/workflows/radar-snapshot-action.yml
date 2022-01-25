@@ -1,8 +1,9 @@
-# Trigger an SDK publication to Maven Central when a release is created on GitHub.
-name: Radar Release Action
+# Trigger an SDK publication to SNAPSHOTS repo on Maven Central when a commit is pushed to develop.
+name: Radar Snapshot Action
 on:
-  release:
-    types: [ published ]
+  push:
+    branches:
+      - develop
 jobs:
   Build-And-Publish:
     runs-on: ubuntu-latest
@@ -26,5 +27,5 @@ jobs:
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
           ORG_GRADLE_PROJECT_SIGNINGKEY: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
           ORG_GRADLE_PROJECT_SIGNINGPASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
-          SNAPSHOT: false
+          SNAPSHOT: true
         run: ./gradlew publish
