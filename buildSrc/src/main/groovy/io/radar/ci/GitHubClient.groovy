@@ -25,9 +25,11 @@ class GitHubClient {
 
     private static void request(String url, String method, JSONObject body, String username, String password, ApiCallback callback) {
         HttpURLConnection connection = new URL(url).openConnection()
-        connection.setRequestProperty('accept', 'application/vnd.github.v3+json')
+        connection.setRequestProperty('Accept', 'application/vnd.github.v3+json')
+        connection.setRequestProperty('Content-Type', 'application/json')
+        String credentials = new String(Base64.encoder.encode("$username:$password".getBytes('UTF-8')))
         if (username != null && password != null) {
-            connection.setRequestProperty('Authorization', "Basic ${Base64.encoder.encode("$username:$password".bytes)}")
+            connection.setRequestProperty('Authorization', "Basic $credentials")
         }
         connection.requestMethod = method
         connection.connectTimeout = 10000
@@ -43,10 +45,10 @@ class GitHubClient {
         String data
         boolean isSuccessful
         if ((200..400).contains(connection.responseCode)) {
-            data = new String(connection.inputStream.readAllBytes())
+            data = readAll(connection.inputStream)
             isSuccessful = true
         } else {
-            data = new String(connection.errorStream.readAllBytes())
+            data = readAll(connection.errorStream)
             isSuccessful = false
         }
         callback.onResult(new ApiResponse() {
@@ -74,6 +76,16 @@ class GitHubClient {
         })
 
         connection.disconnect()
+    }
+
+    private static String readAll(InputStream stream) {
+        if (stream == null) {
+            return null
+        }
+        Scanner scanner = new Scanner(stream, 'UTF-8').useDelimiter('\\A')
+        String body = scanner.hasNext() ? scanner.next() : null
+        stream.close()
+        body
     }
 
     interface ApiCallback {

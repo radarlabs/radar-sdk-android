@@ -35,4 +35,6 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    systemProperty 'PAT_USERNAME', project.properties['PAT_USERNAME'] ?: ''
+    systemProperty 'PAT_TOKEN', project.properties['PAT_TOKEN'] ?: ''
 }

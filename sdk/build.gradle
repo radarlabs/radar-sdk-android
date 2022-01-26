@@ -1,9 +1,7 @@
 import io.radar.ci.GitHubActions
 import io.radar.ci.GitHubClient
+import io.radar.ci.SnapshotDispatcher
 import io.radar.mvnpublish.MavenServer
-import org.json.JSONObject
-
-import java.util.concurrent.TimeoutException
 
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
@@ -122,21 +120,8 @@ task dispatchSnapshot {
     description 'Send event to notify listeners that a new SNAPSHOT build has been published.'
     String username = System.getenv('PAT_USERNAME')
     String password = System.getenv('PAT_TOKEN')
-    JSONObject json = new JSONObject()
-    json.put('version', "$radarVersion$buildNumber")
-    json.put('repo', MavenServer.SNAPSHOT.url)
     doLast {
-        List<GitHubClient.ApiResponse> response = []
-        GitHubClient.repositoryDispatch('snapshot', json, username, password) { response.add it }
-        int counter = 0
-        while (response.empty) {
-            if (counter == 10) {
-                throw new TimeoutException('No response received from dispatch event')
-            }
-            Thread.sleep(1000)
-            counter++
-        }
-        GitHubClient.ApiResponse result = response[0]
+        GitHubClient.ApiResponse result = SnapshotDispatcher.dispatchSnapshotEvent(username, password, "$radarVersion$buildNumber")
         if (result.success) {
             logger.debug("Successfully sent repository dispatch ($result.status)!")
         } else {
