@@ -21,11 +21,13 @@ jobs:
       # Gradle Build & Publish
       - name: Build SDK
         run: ./gradlew build
-      - name: Publish to Maven
+      - name: Publish to Maven #and dispatch snapshot event
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
           ORG_GRADLE_PROJECT_SIGNINGKEY: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
           ORG_GRADLE_PROJECT_SIGNINGPASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
+#          PAT_USERNAME: ${{ secrets.PAT_USERNAME }}
+#          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
           SNAPSHOT: true
-        run: ./gradlew publish
+        run: ./gradlew publish #dispatchSnapshot
