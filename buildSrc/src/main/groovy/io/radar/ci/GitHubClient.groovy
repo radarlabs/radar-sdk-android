@@ -7,9 +7,6 @@ import org.json.JSONObject
  */
 class GitHubClient {
 
-    private static final String OWNER = 'radarlabs'
-    private static final String REPO = 'radar-sdk-android'
-
     static void repositoryDispatch(String eventType,
                                    JSONObject clientPayload = null,
                                    String username = null,
@@ -20,7 +17,7 @@ class GitHubClient {
         if (clientPayload != null) {
             body.put('client_payload', clientPayload)
         }
-        request("https://api.github.com/repos/$OWNER/$REPO/dispatches", 'POST', body, username, password, callback)
+        request("https://api.github.com/repos/radarlabs/toolkit-android/dispatches", 'POST', body, username, password, callback)
     }
 
     private static void request(String url, String method, JSONObject body, String username, String password, ApiCallback callback) {

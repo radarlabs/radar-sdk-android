@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException
 class SnapshotDispatcher {
 
     /**
-     * Blocking call to send repository dispatch with information about the given version
+     * Blocking call to send toolkit dispatch with information about the given SDK version
      *
      * @param username GitHub Username
      * @param token GitHub personal access token
