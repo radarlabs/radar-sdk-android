@@ -21,13 +21,13 @@ jobs:
       # Gradle Build & Publish
       - name: Build SDK
         run: ./gradlew build
-      - name: Publish to Maven #and dispatch snapshot event
+      - name: Publish to Maven and dispatch snapshot event
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
           ORG_GRADLE_PROJECT_SIGNINGKEY: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
           ORG_GRADLE_PROJECT_SIGNINGPASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
-#          PAT_USERNAME: ${{ secrets.PAT_USERNAME }}
-#          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+          PAT_USERNAME: radar-circleci
+          PAT_TOKEN: ${{ secrets.RADAR_CIRCLECI_PAT }}
           SNAPSHOT: true
-        run: ./gradlew publish #dispatchSnapshot
+        run: ./gradlew publish dispatchSnapshot
