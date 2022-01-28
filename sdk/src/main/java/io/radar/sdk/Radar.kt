@@ -340,7 +340,6 @@ object Radar {
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var beaconManager: RadarBeaconManager
     private lateinit var logBuffer: RadarLogBuffer
-    internal lateinit var batteryManager: RadarBatteryManager
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -392,16 +391,13 @@ object Radar {
         if (!this::apiClient.isInitialized) {
             this.apiClient = RadarApiClient(this.context, logger)
         }
-        if (!this::batteryManager.isInitialized) {
-            this.batteryManager = RadarBatteryManager(this.context)
-        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (!this::beaconManager.isInitialized) {
                 this.beaconManager = RadarBeaconManager(this.context, logger)
             }
         }
         if (!this::locationManager.isInitialized) {
-            this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager)
+            this.locationManager = RadarLocationManager(this.context, apiClient, logger)
             this.locationManager.updateTracking()
         }
 
@@ -2199,7 +2195,7 @@ object Radar {
     }
 
     @JvmStatic
-    internal fun isTestKey(): Boolean {
+    private fun isTestKey(): Boolean {
         val key = RadarSettings.getPublishableKey(this.context)
         return if (key == null) {
             false
