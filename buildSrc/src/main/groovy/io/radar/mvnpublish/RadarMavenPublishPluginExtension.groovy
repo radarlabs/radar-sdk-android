@@ -41,6 +41,7 @@ class RadarMavenPublishPluginExtension {
         publicationGroup = publication.group.get()
         publicationDescription = publication.description.get()
         DependencySet projectDependencies = project.configurations.implementation.allDependencies
+        boolean isSnapshot = publication.version.get().endsWith('-SNAPSHOT')
         project.publishing {
             publications {
                 sdk(MavenPublication) {
@@ -102,7 +103,7 @@ class RadarMavenPublishPluginExtension {
 
                         @Override
                         void execute(MavenArtifactRepository artifactory) {
-                            artifactory.url MavenServer.STAGING.url
+                            artifactory.url = (isSnapshot ? MavenServer.SNAPSHOT : MavenServer.STAGING).url
                             artifactory.credentials new Action<PasswordCredentials>() {
 
                                 @Override
@@ -129,7 +130,11 @@ class RadarMavenPublishPluginExtension {
         }
 
         if (publication.server == MavenServer.RELEASE) {
-            project.tasks.findByName('publish').finalizedBy(project.tasks.findByName('releaseSdkToMavenCentral'))
+            if (isSnapshot) {
+                throw new IllegalArgumentException('Snapshot builds cannot be promoted to release.')
+            } else {
+                project.tasks.findByName('publish').finalizedBy(project.tasks.findByName('releaseSdkToMavenCentral'))
+            }
         }
     }
 }
