@@ -13,7 +13,8 @@ class GitHubActionsTest {
             assert GitHubActions.get()
             String snapshot = System.getenv 'SNAPSHOT'
             //ensures that this variable is defined in GitHub Action workflows
-            assert 'true'.equalsIgnoreCase(snapshot) || 'false'.equalsIgnoreCase(snapshot)
+            boolean isSnapshotEnvBoolean = 'true'.equalsIgnoreCase(snapshot) || 'false'.equalsIgnoreCase(snapshot)
+            assert isSnapshotEnvBoolean : "SNAPSHOT: $snapshot"
         } else {
             assert !GitHubActions.get()
         }
