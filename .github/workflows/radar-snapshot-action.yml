@@ -19,9 +19,7 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
       # Gradle Build & Publish
-      - name: Build SDK
-        run: ./gradlew build
-      - name: Publish to Maven and dispatch snapshot event
+      - name: Build SDK, publish to Maven, and dispatch snapshot event
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
@@ -30,4 +28,4 @@ jobs:
           PAT_USERNAME: radar-circleci
           PAT_TOKEN: ${{ secrets.RADAR_CIRCLECI_PAT }}
           SNAPSHOT: true
-        run: ./gradlew publish dispatchSnapshot
+        run: ./gradlew build publish dispatchSnapshot
