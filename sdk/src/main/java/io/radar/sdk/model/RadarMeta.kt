@@ -3,23 +3,28 @@ package io.radar.sdk.model
 import io.radar.sdk.RadarTrackingOptions
 import org.json.JSONObject
 
+/**
+ * Defines Metadata that is used by the Radar SDK
+ */
 internal data class RadarMeta(
     val config: JSONObject?,
     val remoteTrackingOptions: RadarTrackingOptions?
 ) {
     companion object {
+        private const val META = "meta"
+        private const val CONFIG = "config"
+        private const val TRACKING_OPTIONS = "trackingOptions"
+
         fun fromJson(res: JSONObject?): RadarMeta {
-            val meta: JSONObject? = res?.optJSONObject("meta")
+            val meta = res?.optJSONObject(META)
+            val config = meta?.optJSONObject(CONFIG)
+            val rawOptions = meta?.optJSONObject(TRACKING_OPTIONS)
 
-            val config: JSONObject? = meta?.optJSONObject("config")
-            val rawOptions = meta?.optJSONObject("trackingOptions")
-
-            var remoteTrackingOptions: RadarTrackingOptions? = null
-            if (rawOptions != null) {
-                remoteTrackingOptions = RadarTrackingOptions.fromJson(rawOptions)
+            return if (rawOptions == null) {
+                RadarMeta(config, null)
+            } else {
+                RadarMeta(config, RadarTrackingOptions.fromJson(rawOptions))
             }
-
-            return RadarMeta(config, remoteTrackingOptions)
         }
     }
 }

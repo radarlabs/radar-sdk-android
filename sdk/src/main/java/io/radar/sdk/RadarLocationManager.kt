@@ -130,7 +130,7 @@ internal class RadarLocationManager(
     fun stopTracking() {
         this.started = false
         RadarSettings.setTracking(context, false)
-        RadarSettings.setListenToServerTrackingOptions(context, false)
+        RadarSettings.setShouldListenToServerTrackingOptions(context, false)
         this.updateTracking()
     }
 
@@ -250,15 +250,15 @@ internal class RadarLocationManager(
         }
     }
 
-    internal fun updateTrackingFromMeta(context: Context, meta: RadarMeta?) {
+    internal fun updateTrackingFromMeta(meta: RadarMeta?) {
         if (meta?.remoteTrackingOptions != null) {
             // use remotely-configured options if specified
             RadarSettings.setTrackingOptions(context, meta.remoteTrackingOptions)
-            RadarSettings.setListenToServerTrackingOptions(context, true)
+            RadarSettings.setShouldListenToServerTrackingOptions(context, true)
         } else {
             // fallback
             RadarSettings.revertToFallbackTrackingOptions(context)
-            RadarSettings.setListenToServerTrackingOptions(context, false)
+            RadarSettings.setShouldListenToServerTrackingOptions(context, false)
         }
         updateTracking()
     }
@@ -583,7 +583,7 @@ internal class RadarLocationManager(
                         locationManager.stopForegroundService()
                     }
 
-                    updateTrackingFromMeta(context, meta)
+                    updateTrackingFromMeta(meta)
                 }
             })
         }

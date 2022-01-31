@@ -121,11 +121,11 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putBoolean(KEY_TRACKING, tracking) }
     }
 
-    internal fun getListenToServerTrackingOptions(context: Context): Boolean {
+    internal fun getShouldListenToServerTrackingOptions(context: Context): Boolean {
         return getSharedPreferences(context).getBoolean(KEY_SERVER_TRACKING, false)
     }
 
-    internal fun setListenToServerTrackingOptions(context: Context, tracking: Boolean) {
+    internal fun setShouldListenToServerTrackingOptions(context: Context, tracking: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_SERVER_TRACKING, tracking) }
     }
 

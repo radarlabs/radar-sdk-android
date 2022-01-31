@@ -34,7 +34,7 @@ internal class RadarApiClient(
     }
 
     interface RadarGetConfigApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject?, meta: RadarMeta?)
+        fun onComplete(meta: RadarMeta?)
     }
 
     interface RadarTripApiCallback {
@@ -112,7 +112,7 @@ internal class RadarApiClient(
                 if (status == RadarStatus.SUCCESS) {
                     Radar.flushLogs()
                 }
-                callback?.onComplete(status, res, RadarMeta.fromJson(res))
+                callback?.onComplete(RadarMeta.fromJson(res))
             }
         })
     }
@@ -250,7 +250,7 @@ internal class RadarApiClient(
             params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
             params.putOpt("sessionId", RadarSettings.getSessionId(context))
             params.putOpt("trackingOptions", RadarSettings.getTrackingOptions(context).toJson())
-            params.putOpt("listenToServer", RadarSettings.getListenToServerTrackingOptions(context))
+            params.putOpt("listenToServer", RadarSettings.getShouldListenToServerTrackingOptions(context))
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
