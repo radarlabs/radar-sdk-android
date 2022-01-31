@@ -37,7 +37,7 @@ internal class RadarSimpleLogBuffer : RadarLogBuffer {
 
             override fun onFlush(success: Boolean) {
                 if (!success) {
-                    //reverse order to ensure the logs will purge correctly (oldest logs purged first)
+                    // Reverse the logs to ensure that the oldest will get purged first
                     logs.reverse()
                     logs.forEach {
                         if (!list.offerFirst(it)) {

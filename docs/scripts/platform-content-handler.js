@@ -28,7 +28,7 @@ window.addEventListener('load', () => {
 
 const initHidingLeftNavigation = () => {
     document.getElementById("leftToggler").onclick = function(event) {
-        //Events need to be prevented from bubbling since they will trigger next handler
+        // Events need to be prevented from bubbling since they will trigger next handler
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
@@ -142,7 +142,7 @@ function initializeFiltering() {
     let cached = window.localStorage.getItem('inactive-filters')
     if (cached) {
         let parsed = JSON.parse(cached)
-        //Events are used by react to get values in 'on this page'
+        // Events are used by react to get values in 'on this page'
         const event = new CustomEvent('sourceset-filter-change', { detail: parsed });
         window.dispatchEvent(event);
 
@@ -249,7 +249,7 @@ function refreshFiltering() {
         )
     const event = new CustomEvent('sourceset-filter-change', { detail: sourcesetList });
     window.dispatchEvent(event);
-    
+
     refreshFilterButtons()
     refreshPlatformTabs()
 }

@@ -120,7 +120,7 @@ internal object RadarUtils {
         return latitudeValid && longitudeValid && accuracyValid
     }
 
-    // based on https://github.com/flutter/plugins/tree/master/packages/device_info/device_info
+    // Based on https://github.com/flutter/plugins/tree/master/packages/device_info/device_info
     internal fun isEmulator(): Boolean {
         return (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
                 || Build.FINGERPRINT.startsWith("generic")

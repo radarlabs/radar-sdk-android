@@ -7,13 +7,17 @@ class GitHubActions {
 
     final String ref
     final String tag
-    final String workflow
+    final boolean snapshot
     final String runNumber
 
     private GitHubActions() {
         ref = System.getenv 'GITHUB_REF'
-        tag = getTag ref
-        workflow = System.getenv 'GITHUB_WORKFLOW'
+        snapshot = Boolean.valueOf System.getenv('SNAPSHOT')
+        if (snapshot) {
+            tag = null
+        } else {
+            tag = getTag ref
+        }
         runNumber = System.getenv 'GITHUB_RUN_NUMBER'
     }
 
