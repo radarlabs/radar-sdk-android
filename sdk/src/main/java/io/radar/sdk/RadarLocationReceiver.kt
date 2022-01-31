@@ -109,7 +109,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
                         else -> Radar.RadarLocationSource.GEOFENCE_EXIT
                     }
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
                         RadarJobScheduler.scheduleJob(context, it, source)
                     } else {
                         Radar.handleLocation(context, it, source)
@@ -121,7 +121,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 result?.lastLocation?.also {
                     val source = Radar.RadarLocationSource.BACKGROUND_LOCATION
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
                         RadarJobScheduler.scheduleJob(context, it, source)
                     } else {
                         Radar.handleLocation(context, it, source)
