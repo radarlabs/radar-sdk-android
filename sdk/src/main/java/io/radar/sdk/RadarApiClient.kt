@@ -112,13 +112,6 @@ internal class RadarApiClient(
                 if (status == RadarStatus.SUCCESS) {
                     Radar.flushLogs()
                 }
-                if (res != null && res.has("meta")) {
-                    val meta = res.getJSONObject("meta")
-                    if (meta.has("config")) {
-                        val config = meta.getJSONObject("config")
-                        RadarSettings.setConfig(context, config)
-                    }
-                }
                 callback?.onComplete(status, res, RadarMeta.fromJson(res))
             }
         })
