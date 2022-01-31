@@ -12,10 +12,6 @@ plugins {
     id 'io.gitlab.arturbosch.detekt' version "$detekt_version"
 }
 
-ext {
-    radarVersion = '3.3.1'
-}
-
 String buildNumber = ".${System.currentTimeMillis()}"
 GitHubActions githubRelease = GitHubActions.get()
 boolean isSnapshot = false
@@ -153,9 +149,9 @@ check {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "androidx.appcompat:appcompat:1.4.0"
-    implementation "androidx.core:core-ktx:1.7.0"
-    implementation "com.google.android.gms:play-services-ads-identifier:17.1.0"
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation "com.google.android.gms:play-services-ads-identifier:18.0.1"
     implementation "com.google.android.gms:play-services-location:18.0.0"
 
     //unit tests
