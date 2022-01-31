@@ -9,10 +9,15 @@ import java.util.concurrent.LinkedBlockingDeque
  */
 internal class RadarSimpleLogBuffer : RadarLogBuffer {
 
+    private companion object {
+        const val MAXIMUM_CAPACITY = 1000
+        const val HALF_CAPACITY = MAXIMUM_CAPACITY / 2
+    }
+
     /**
      * Concurrency-safe list of logs with a maximum capacity of 1000
      */
-    private val list = LinkedBlockingDeque<RadarLog>(1000)
+    private val list = LinkedBlockingDeque<RadarLog>(MAXIMUM_CAPACITY)
 
     override fun write(level: Radar.RadarLogLevel, message: String) {
         if (!list.offer(RadarLog(level, message))) {
@@ -37,7 +42,6 @@ internal class RadarSimpleLogBuffer : RadarLogBuffer {
                     logs.forEach {
                         if (!list.offerFirst(it)) {
                             purgeOldestLogs()
-                            return@forEach
                         }
                     }
                 }
@@ -51,7 +55,7 @@ internal class RadarSimpleLogBuffer : RadarLogBuffer {
      */
     private fun purgeOldestLogs() {
         val logs = mutableListOf<RadarLog>()
-        list.drainTo(logs, 500)
-        write(Radar.RadarLogLevel.DEBUG, "------ purged oldest logs -----")
+        list.drainTo(logs, HALF_CAPACITY)
+        write(Radar.RadarLogLevel.DEBUG, "----- purged oldest logs -----")
     }
 }

@@ -455,8 +455,26 @@ internal class RadarLocationManager(
 
     @Suppress("ComplexMethod", "ComplexCondition", "ReturnCount", "LongMethod")
     fun handleLocation(location: Location?, source: RadarLocationSource) {
-        context.logger.d("Handling location", "location" to location)
-
+        val props = mutableMapOf<String, Any?>("location" to location)
+        if (context.isTestKey()) {
+            val latency = if (location == null) -1 else Date().time - location.time
+            val standbyBucket = context.batteryManager.getAppStandbyBucket()
+            val batteryState = context.batteryManager.getBatteryState()
+            props.putAll(
+                mapOf(
+                    "latency" to latency,
+                    "standbyBucket" to standbyBucket,
+                    "performanceState" to batteryState.performanceState.name,
+                    "isCharging" to batteryState.isCharging,
+                    "batteryPercentage" to batteryState.percent,
+                    "isPowerSaveMode" to batteryState.powerSaveMode,
+                    "isIgnoringBatteryOptimizations" to batteryState.isIgnoringBatteryOptimizations,
+                    "locationPowerSaveMode" to batteryState.getPowerLocationPowerSaveModeString(),
+                    "isDozeMode" to batteryState.isDeviceIdleMode
+                )
+            )
+        }
+        context.logger.d("Handling location", props)
         if (location == null || !RadarUtils.valid(location)) {
             context.logger.d("Invalid location", mapOf("source" to source, "location" to location))
 

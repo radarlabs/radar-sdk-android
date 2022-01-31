@@ -2,12 +2,13 @@ package io.radar.mvnpublish
 
 enum MavenServer {
 
-    STAGING('staging'),
-    RELEASE('release');
+    STAGING('service/local/staging/deploy/maven2'),
+    RELEASE('service/local/release/deploy/maven2'),
+    SNAPSHOT('content/repositories/snapshots');
 
     final String url
 
-    MavenServer(String name) {
-        url = "https://s01.oss.sonatype.org/service/local/$name/deploy/maven2"
+    MavenServer(String path) {
+        url = "https://s01.oss.sonatype.org/$path"
     }
 }

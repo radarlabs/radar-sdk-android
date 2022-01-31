@@ -371,7 +371,7 @@ data class RadarTrackingOptions(
             stoppedGeofenceRadius = 0,
             useMovingGeofence = false,
             movingGeofenceRadius = 0,
-            syncGeofences = false,
+            syncGeofences = true,
             syncGeofencesLimit = 0,
             foregroundService = RadarTrackingOptionsForegroundService(),
             beacons = false

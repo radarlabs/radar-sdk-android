@@ -35,6 +35,7 @@ internal class RadarApplication(
     val apiClient = RadarApiClient(this, apiHelper ?: RadarApiHelper(logger))
     val locationManager = RadarLocationManager(this, locationManagerClient, permissionsHelper)
     val beaconManager: RadarBeaconManager?
+    val batteryManager = RadarBatteryManager(context)
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

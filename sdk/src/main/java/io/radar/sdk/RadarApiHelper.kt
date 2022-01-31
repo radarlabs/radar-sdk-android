@@ -35,13 +35,19 @@ internal class RadarApiHelper(
         urlConnection.requestMethod = request.method
         urlConnection.connectTimeout = 10000
         urlConnection.readTimeout = 10000
+        if (request.stream) {
+            urlConnection.setChunkedStreamingMode(1024)
+        }
         return urlConnection
     }
 
     @Suppress("LongMethod")
     internal fun request(request: RadarApiRequest) {
-        logger?.d("📍 Radar API request", mapOf("method" to request.method, "url" to request.url,
-            "headers" to request.headers, "params" to request.params))
+        val props = mutableMapOf("method" to request.method, "url" to request.url, "headers" to request.headers)
+        if (request.logPayload) {
+            props["params"] = request.params
+        }
+        logger?.d("📍 Radar API request", props)
         executor.execute {
             var urlConnection: HttpURLConnection? = null
             try {

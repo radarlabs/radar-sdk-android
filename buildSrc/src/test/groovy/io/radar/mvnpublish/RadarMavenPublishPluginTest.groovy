@@ -10,17 +10,21 @@ import org.gradle.api.tasks.TaskDependency
 import org.gradle.jvm.tasks.Jar
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.jupiter.api.RepeatedTest
-import org.junit.jupiter.api.RepetitionInfo
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+
+import java.util.stream.Stream
 
 /**
  * Unit tests {@link RadarMavenPublishPlugin}
  */
 class RadarMavenPublishPluginTest {
 
-    @RepeatedTest(2)
-    void testApply(RepetitionInfo repetitionInfo) {
-        MavenServer mavenServer = repetitionInfo.currentRepetition % 2 == 0 ? MavenServer.STAGING : MavenServer.RELEASE
+    @ParameterizedTest
+    @MethodSource("provideParameters")
+    void testApply(MavenServer mavenServer, boolean isSnapshot) {
         Project project = ProjectBuilder.builder().build()
         assert !project.pluginManager.findPlugin('maven-publish')
         assert !project.pluginManager.findPlugin('signing')
@@ -33,17 +37,25 @@ class RadarMavenPublishPluginTest {
         assert project.mvnpublish && project.mvnpublish instanceof RadarMavenPublishPluginExtension
         project.pluginManager.apply 'java'
         RadarMavenPublishPluginExtension extension = project.mvnpublish
-        extension.publication {
+        Closure pluginConfig = {
             name = 'Radar Plugin Test'
             description = 'Test that the plugin works as expected'
             repositoryName = 'radar-sdk-test'
             group = 'io.radar'
             artifactId = 'test'
-            version = "20.jay.st"
+            version = "20.jay.st${isSnapshot ? '-SNAPSHOT' : ''}"
             artifacts = ["$project.buildDir/file.aar", project.buildJar]
             server = mavenServer
         }
+        if (mavenServer == MavenServer.RELEASE && isSnapshot) {
+            Assertions.assertThrows(IllegalArgumentException) {
+                extension.publication pluginConfig
+            }
+            return
+        }
+        extension.publication pluginConfig
         project.evaluate()
+
         PublishingExtension publishingExtension = project.publishing
         assert project.tasks.findByName('publishSdkPublicationToMavenLocal')
         assert project.tasks.findByName('publishSdkPublicationToMavenRepository')
@@ -54,12 +66,20 @@ class RadarMavenPublishPluginTest {
         MavenPublication mvn = publication
         assert mvn.groupId == 'io.radar'
         assert mvn.artifactId == 'test'
-        assert mvn.version == '20.jay.st'
+        if (isSnapshot) {
+            assert mvn.version == '20.jay.st-SNAPSHOT'
+        } else {
+            assert mvn.version == '20.jay.st'
+        }
 
         assert publishingExtension.repositories.size() == 1
         assert publishingExtension.repositories[0] instanceof MavenArtifactRepository
         MavenArtifactRepository artifactory = publishingExtension.repositories[0]
-        assert artifactory.url.toString() == MavenServer.STAGING.url
+        if (isSnapshot) {
+            assert artifactory.url.toString() == MavenServer.SNAPSHOT.url
+        } else {
+            assert artifactory.url.toString() == MavenServer.STAGING.url
+        }
 
         assert project.signing && project.signing instanceof SigningExtension
         assert project.tasks.findByName('signSdkPublication')
@@ -79,5 +99,14 @@ class RadarMavenPublishPluginTest {
         } else {
             assert !publishDependencies.getDependencies(null).contains(releaseTask)
         }
+    }
+
+    private static Stream<Arguments> provideParameters() {
+        return Stream.of(
+                Arguments.of(MavenServer.SNAPSHOT, false),
+                Arguments.of(MavenServer.SNAPSHOT, true),
+                Arguments.of(MavenServer.RELEASE, false),
+                Arguments.of(MavenServer.RELEASE, true),
+        )
     }
 }
