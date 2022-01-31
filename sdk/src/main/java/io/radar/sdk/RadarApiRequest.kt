@@ -3,6 +3,7 @@ package io.radar.sdk
 import org.json.JSONObject
 import java.net.URL
 
+@Suppress("LongParameterList")
 internal class RadarApiRequest private constructor(
     val method: String,
     val url: URL,
