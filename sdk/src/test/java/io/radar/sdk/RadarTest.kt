@@ -158,6 +158,9 @@ class RadarTest {
         assertChainsOk(user?.topChains)
         assertNotEquals(user?.source, Radar.RadarLocationSource.UNKNOWN)
         assertTrue(user?.proxy ?: false)
+        assertTrue(user?.mocked ?: false)
+        assertTrue(user?.fraud?.proxy ?: false)
+        assertTrue(user?.fraud?.mocked ?: false)
         assertTripOk(user?.trip)
     }
 

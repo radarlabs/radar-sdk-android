@@ -22,6 +22,7 @@ internal class RadarLocationManager(
     private val context: Context,
     private val apiClient: RadarApiClient,
     private val logger: RadarLogger,
+    private val batteryManager: RadarBatteryManager,
     internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper()
 ) {
 
@@ -400,8 +401,24 @@ internal class RadarLocationManager(
     }
 
     fun handleLocation(location: Location?, source: RadarLocationSource) {
-        logger.d("Handling location | location = $location")
-
+        if (Radar.isTestKey()) {
+            val latency = if (location == null) -1 else Date().time - location.time
+            val standbyBucket = batteryManager.getAppStandbyBucket()
+            val batteryState = batteryManager.getBatteryState()
+            logger.d(
+                "Handling location | " +
+                        "location = $location; " +
+                        "latency = $latency; " +
+                        "standbyBucket = $standbyBucket; " +
+                        "performanceState = ${batteryState.performanceState.name}; " +
+                        "isCharging = ${batteryState.isCharging}; " +
+                        "batteryPercentage = ${batteryState.percent}; " +
+                        "isPowerSaveMode = ${batteryState.powerSaveMode}; " +
+                        "isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations}; " +
+                        "locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()}; " +
+                        "isDozeMode = ${batteryState.isDeviceIdleMode}"
+            )
+        }
         if (location == null || !RadarUtils.valid(location)) {
             logger.d("Invalid location | source = $source; location = $location")
 
@@ -416,7 +433,7 @@ internal class RadarLocationManager(
         val wasStopped = RadarState.getStopped(context)
         var stopped: Boolean
 
-        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION)
+        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION || source == RadarLocationSource.BEACON_ENTER)
         if (!force && location.accuracy > 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
             logger.d("Skipping location: inaccurate | accuracy = ${location.accuracy}")
 

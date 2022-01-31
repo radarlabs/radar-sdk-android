@@ -8,6 +8,8 @@ import android.os.Build
 import android.os.Handler
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.util.RadarLogBuffer
+import io.radar.sdk.util.RadarSimpleLogBuffer
 import org.json.JSONObject
 import java.util.*
 
@@ -337,9 +339,24 @@ object Radar {
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var beaconManager: RadarBeaconManager
+    private lateinit var logBuffer: RadarLogBuffer
+    internal lateinit var batteryManager: RadarBatteryManager
 
     /**
-     * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods.
+     * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#initialize-sdk)
+     *
+     * @param[context] The context
+     * @param[publishableKey] Your publishable API key
+     */
+    @JvmStatic
+    fun initialize(context: Context?, publishableKey: String? = null) {
+        initialize(context, publishableKey, null)
+    }
+
+    /**
+     * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
      *
      * @see [](https://radar.io/documentation/sdk/android#initialize-sdk)
      *
@@ -358,6 +375,10 @@ object Radar {
         this.handler = Handler(this.context.mainLooper)
         this.receiver = receiver
 
+        if (!this::logBuffer.isInitialized) {
+            this.logBuffer = RadarSimpleLogBuffer()
+        }
+
         if (!this::logger.isInitialized) {
             this.logger = RadarLogger(this.context)
         }
@@ -371,13 +392,16 @@ object Radar {
         if (!this::apiClient.isInitialized) {
             this.apiClient = RadarApiClient(this.context, logger)
         }
+        if (!this::batteryManager.isInitialized) {
+            this.batteryManager = RadarBatteryManager(this.context)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (!this::beaconManager.isInitialized) {
                 this.beaconManager = RadarBeaconManager(this.context, logger)
             }
         }
         if (!this::locationManager.isInitialized) {
-            this.locationManager = RadarLocationManager(this.context, apiClient, logger)
+            this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager)
             this.locationManager.updateTracking()
         }
 
@@ -951,6 +975,22 @@ object Radar {
         }
 
         RadarSettings.setForegroundService(context, options)
+    }
+
+    /**
+     * Sets a receiver for client-side delivery of events, location updates, and debug logs.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#listening-for-events-with-a-receiver)
+     *
+     * @param[receiver] A delegate for client-side delivery of events, location updates, and debug logs. If `null`, the previous receiver will be cleared.
+     */
+    @JvmStatic
+    fun setReceiver(receiver: RadarReceiver?) {
+        if (!initialized) {
+            return
+        }
+
+        this.receiver = receiver
     }
 
     /**
@@ -2180,6 +2220,35 @@ object Radar {
     }
 
     /**
+     * Sends Radar log events to the server
+     */
+    @JvmStatic
+    internal fun flushLogs() {
+        if (!initialized || !isTestKey()) {
+            return
+        }
+        val flushable = logBuffer.getFlushableLogsStash()
+        val logs = flushable.get()
+        if (logs.isNotEmpty()) {
+            apiClient.log(logs, object : RadarApiClient.RadarLogCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                    flushable.onFlush(status == RadarStatus.SUCCESS)
+                }
+            })
+        }
+    }
+
+    @JvmStatic
+    internal fun isTestKey(): Boolean {
+        val key = RadarSettings.getPublishableKey(this.context)
+        return if (key == null) {
+            false
+        } else {
+            key.startsWith("prj_test") || key.startsWith("org_test")
+        }
+    }
+
+    /**
      * Returns a display string for a location source value.
      *
      * @param[source] A location source value.
@@ -2319,8 +2388,11 @@ object Radar {
         logger.i("📍️ Radar error received | status = $status")
     }
 
-    internal fun sendLog(message: String) {
+    internal fun sendLog(level: RadarLogLevel, message: String) {
         receiver?.onLog(context, message)
+        if (isTestKey()) {
+            logBuffer.write(level, message)
+        }
     }
 
 }

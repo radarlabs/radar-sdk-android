@@ -1,6 +1,5 @@
 package io.radar.sdk
 
-import io.radar.sdk.model.RadarGeofence
 import org.json.JSONObject
 import java.util.Date
 
@@ -346,7 +345,7 @@ data class RadarTrackingOptions(
             stoppedGeofenceRadius = 0,
             useMovingGeofence = false,
             movingGeofenceRadius = 0,
-            syncGeofences = false,
+            syncGeofences = true,
             syncGeofencesLimit = 0,
             foregroundServiceEnabled = true,
             beacons = false
