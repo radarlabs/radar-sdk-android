@@ -1,11 +1,11 @@
 # Migration guides
 
-## 3.2.x to 3.3.x
+## 3.3.x to 3.4.x
 
 - `foregroundService` is no longer available in `RadarTrackingOptions`. This has been replaced by `Radar.setForegroundServiceOptions` instead.
 
 ```kotlin
-// 3.3.x - enabling foreground service
+// 3.4.x - enabling foreground service
 
 // enable or disable the foreground service
 val trackingOptions: RadarTrackingOptions = RadarTrackingOptions(...)
@@ -20,13 +20,17 @@ Radar.startTracking(trackingOptions)
 ```
 
 ```kotlin
-// 3.2.x - enabling foreground service
+// 3.3.x - enabling foreground service
 
 val trackingOptions: RadarTrackingOptions = RadarTrackingOptions(...)
 trackingOptions.foregroundService = RadarTrackingOptionsForegroundService(...)
 
 Radar.startTracking(trackingOptions)
 ```
+
+## 3.2.x to 3.3.x
+
+No changes needed.
 
 ## 3.1.x to 3.2.x
 
