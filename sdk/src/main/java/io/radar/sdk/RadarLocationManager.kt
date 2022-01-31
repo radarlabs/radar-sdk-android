@@ -406,6 +406,7 @@ internal class RadarLocationManager(
         } else {
             logger.d("Handling location | location = $location")
         }
+
         if (location == null || !RadarUtils.valid(location)) {
             logger.d("Invalid location | source = $source; location = $location")
 
