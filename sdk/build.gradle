@@ -1,4 +1,6 @@
 import io.radar.ci.GitHubActions
+import io.radar.ci.GitHubClient
+import io.radar.ci.SnapshotDispatcher
 import io.radar.mvnpublish.MavenServer
 
 apply plugin: "com.android.library"
@@ -8,15 +10,22 @@ apply plugin: "org.jetbrains.dokka"
 apply plugin: 'io.radar.mvnpublish'
 
 ext {
-    radarVersion = '3.3.0'
+    radarVersion = '3.3.1'
 }
 
 String buildNumber = ".${System.currentTimeMillis()}"
 GitHubActions githubRelease = GitHubActions.get()
+boolean isSnapshot = false
 if (githubRelease) {
-    buildNumber = ''
-    //Use the tag from the release name as the version-to-publish / include in source code
-    ext.radarVersion = githubRelease.tag
+    if (githubRelease.snapshot) {
+        //Use the existing radarVersion with the -SNAPSHOT suffix
+        isSnapshot = true
+        buildNumber = '-SNAPSHOT'
+    } else {
+        buildNumber = ''
+        //Use the tag from the release name as the version-to-publish / include in source code
+        ext.radarVersion = githubRelease.tag
+    }
 }
 
 android {
@@ -102,6 +111,21 @@ mvnpublish {
         artifactId = 'sdk'
         version = "$radarVersion$buildNumber"
         artifacts = ["$buildDir/outputs/aar/$project.name-release.aar", androidSourcesJar, androidJavadocsJar]
-        server = MavenServer.RELEASE
+        server = isSnapshot ? MavenServer.SNAPSHOT : MavenServer.RELEASE
+    }
+}
+
+task dispatchSnapshot {
+    group 'ci'
+    description 'Send event to notify listeners that a new SNAPSHOT build has been published.'
+    String username = System.getenv('PAT_USERNAME')
+    String password = System.getenv('PAT_TOKEN')
+    doLast {
+        GitHubClient.ApiResponse result = SnapshotDispatcher.dispatchSnapshotEvent(username, password, "$radarVersion$buildNumber")
+        if (result.success) {
+            logger.debug("Successfully sent repository dispatch ($result.status)!")
+        } else {
+            logger.log(LogLevel.ERROR, "Could not send repository dispatch! $result.status: ${result.message ?: ''}\n ${result.data ?: ''}")
+        }
     }
 }

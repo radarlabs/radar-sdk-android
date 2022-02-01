@@ -28,8 +28,8 @@ class RadarLocationReceiver : BroadcastReceiver() {
             val intent = baseIntent(context).apply {
                 action = ACTION_LOCATION
             }
-            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             } else {
                 PendingIntent.FLAG_UPDATE_CURRENT
             }
@@ -98,6 +98,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
 
     @SuppressLint("MissingPermission")
     override fun onReceive(context: Context, intent: Intent) {
+        Radar.logger.d("Broadcast Received | action = ${intent.action}")
         when (intent.action) {
             ACTION_BUBBLE_GEOFENCE, ACTION_SYNCED_GEOFENCES -> {
                 val event = GeofencingEvent.fromIntent(intent)
@@ -108,7 +109,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
                         else -> Radar.RadarLocationSource.GEOFENCE_EXIT
                     }
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
                         RadarJobScheduler.scheduleJob(context, it, source)
                     } else {
                         Radar.handleLocation(context, it, source)
@@ -120,7 +121,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 result?.lastLocation?.also {
                     val source = Radar.RadarLocationSource.BACKGROUND_LOCATION
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
                         RadarJobScheduler.scheduleJob(context, it, source)
                     } else {
                         Radar.handleLocation(context, it, source)
