@@ -475,6 +475,7 @@ internal class RadarLocationManager(
             )
         }
         context.logger.d("Handling location", props)
+
         if (location == null || !RadarUtils.valid(location)) {
             context.logger.d("Invalid location", mapOf("source" to source, "location" to location))
 
