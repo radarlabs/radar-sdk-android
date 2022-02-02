@@ -673,7 +673,9 @@ object Radar {
                             nearbyGeofences: Array<RadarGeofence>?,
                             meta: RadarMeta?,
                         ) {
-                            callback?.onComplete(status, location, events, user)
+                            handler.post {
+                                callback?.onComplete(status, location, events, user)
+                            }
                         }
                     })
                 }
@@ -750,7 +752,9 @@ object Radar {
                 nearbyGeofences: Array<RadarGeofence>?,
                 meta: RadarMeta?,
             ) {
-                callback?.onComplete(status, location, events, user)
+                handler.post {
+                    callback?.onComplete(status, location, events, user)
+                }
             }
         })
     }
@@ -863,7 +867,9 @@ object Radar {
                                 nearbyGeofences: Array<RadarGeofence>?,
                                 meta: RadarMeta?,
                             ) {
-                                callback?.onComplete(status, location, events, user)
+                                handler.post {
+                                    callback?.onComplete(status, location, events, user)
+                                }
 
                                 if (i < coordinates.size - 1) {
                                     handler.postDelayed(track, intervalLimit * 1000L)

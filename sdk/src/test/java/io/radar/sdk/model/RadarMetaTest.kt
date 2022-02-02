@@ -17,14 +17,11 @@ class RadarMetaTest {
     @Test
     fun testFromJson() {
         val meta = JSONObject()
-        val config = JSONObject()
-        meta.putOpt("config", config)
         val trackingOptions = RadarTrackingOptions.RESPONSIVE
         meta.putOpt("trackingOptions", trackingOptions.toJson())
         val json = JSONObject()
         json.putOpt("meta", meta)
         val obj = RadarMeta.fromJson(json)
-        assertNotNull(obj.config)
         assertNotNull(obj.remoteTrackingOptions)
         assertEquals(trackingOptions.desiredStoppedUpdateInterval, obj.remoteTrackingOptions!!.desiredStoppedUpdateInterval)
         assertEquals(trackingOptions.fastestStoppedUpdateInterval, obj.remoteTrackingOptions.fastestStoppedUpdateInterval)
