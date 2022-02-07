@@ -18,12 +18,12 @@ GitHubActions githubRelease = GitHubActions.get()
 boolean isSnapshot = false
 if (githubRelease) {
     if (githubRelease.snapshot) {
-        //Use the existing radarVersion with the -SNAPSHOT suffix
+        // Use the existing radarVersion with the -SNAPSHOT suffix
         isSnapshot = true
         buildNumber = '-SNAPSHOT'
     } else {
         buildNumber = ''
-        //Use the tag from the release name as the version-to-publish / include in source code
+        // Use the tag from the release name as the version-to-publish / include in source code
         ext.radarVersion = githubRelease.tag
     }
 }
