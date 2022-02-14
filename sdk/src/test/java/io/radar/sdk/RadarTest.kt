@@ -533,6 +533,13 @@ class RadarTest {
 
         Radar.stopTracking()
 
+        Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+            "Text",
+            "Title",
+            1337,
+            true
+        ))
+
         val options = RadarTrackingOptions.EFFICIENT
         options.desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW
         val now = Date()
@@ -541,12 +548,6 @@ class RadarTest {
         options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.NONE
         options.syncGeofences = true
         options.syncGeofencesLimit = 100
-        options.foregroundService = RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-            "Text",
-            "Title",
-            1337,
-            true
-        )
         Radar.startTracking(options)
         assertEquals(options, Radar.getTrackingOptions())
         assertTrue(Radar.isTracking())
@@ -1274,6 +1275,18 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertRoutesOk(callbackRoutes)
+    }
+
+    @Test
+    fun test_Radar_trackingOptionsFallback_success() {
+        RadarSettings.setFallbackTrackingOptions(context, RadarTrackingOptions.RESPONSIVE)
+        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarSettings.getFallbackTrackingOptions(context))
+
+        RadarSettings.setTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
+        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarSettings.getTrackingOptions(context))
+
+        RadarSettings.revertToFallbackTrackingOptions(context)
+        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarSettings.getTrackingOptions(context))
     }
 
 }

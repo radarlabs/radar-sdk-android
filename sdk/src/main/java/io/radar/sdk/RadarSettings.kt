@@ -18,10 +18,12 @@ internal object RadarSettings {
     private const val KEY_METADATA = "user_metadata"
     private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
     private const val KEY_TRACKING = "background_tracking"
+    private const val KEY_SERVER_TRACKING = "server_tracking_options"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
+    private const val KEY_FALLBACK_TRACKING_OPTIONS = "fallback_tracking_options"
+    private const val KEY_FOREGROUND_SERVICE = "foreground_service"
     private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
-    private const val KEY_CONFIG = "config"
     private const val KEY_HOST = "host"
     private const val KEY_PERMISSIONS_DENIED = "permissions_denied"
 
@@ -118,8 +120,27 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putBoolean(KEY_TRACKING, tracking) }
     }
 
+    internal fun getShouldListenToServerTrackingOptions(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_SERVER_TRACKING, false)
+    }
+
+    internal fun setShouldListenToServerTrackingOptions(context: Context, tracking: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_SERVER_TRACKING, tracking) }
+    }
+
+    internal fun revertToFallbackTrackingOptions(context: Context) {
+        val fallbackTrackingOptions = getFallbackTrackingOptions(context)
+        if (fallbackTrackingOptions != null) {
+            setTrackingOptions(context, fallbackTrackingOptions)
+        }
+    }
+
     internal fun getTrackingOptions(context: Context): RadarTrackingOptions {
-        val optionsJson = getSharedPreferences(context).getString(KEY_TRACKING_OPTIONS, null)
+        return getTrackingOptionsByKey(context, KEY_TRACKING_OPTIONS)
+    }
+
+    private fun getTrackingOptionsByKey(context: Context, key: String): RadarTrackingOptions {
+        val optionsJson = getSharedPreferences(context).getString(key, null)
         val options: RadarTrackingOptions?
         if (optionsJson != null) { // v3 tracking options set
             val optionsObj = JSONObject(optionsJson)
@@ -153,6 +174,34 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putString(KEY_TRACKING_OPTIONS, optionsJson) }
     }
 
+    internal fun getFallbackTrackingOptions(context: Context): RadarTrackingOptions? {
+        val keyExists = getSharedPreferences(context).contains(KEY_FALLBACK_TRACKING_OPTIONS)
+        return if (keyExists) getTrackingOptionsByKey(context, KEY_FALLBACK_TRACKING_OPTIONS) else null
+    }
+
+    internal fun setFallbackTrackingOptions(context: Context, options: RadarTrackingOptions) {
+        val optionsJson = options.toJson().toString()
+        getSharedPreferences(context).edit { putString(KEY_FALLBACK_TRACKING_OPTIONS, optionsJson) }
+    }
+
+    internal fun getForegroundService(context: Context): RadarTrackingOptions.RadarTrackingOptionsForegroundService? {
+        val foregroundJson = getSharedPreferences(context).getString(KEY_FOREGROUND_SERVICE, null)
+        return if (foregroundJson == null) {
+            null
+        } else {
+            val foregroundObj = JSONObject(foregroundJson)
+            RadarTrackingOptions.RadarTrackingOptionsForegroundService.fromJson(foregroundObj)
+        }
+    }
+
+    internal fun setForegroundService(
+        context: Context,
+        foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService
+    ) {
+        val foregroundJson = foregroundService.toJson().toString()
+        getSharedPreferences(context).edit { putString(KEY_FOREGROUND_SERVICE, foregroundJson) }
+    }
+
     internal fun getTripOptions(context: Context): RadarTripOptions? {
         val optionsJson = getSharedPreferences(context).getString(KEY_TRIP_OPTIONS, null) ?: return null
         val optionsObj = JSONObject(optionsJson)
@@ -173,11 +222,6 @@ internal object RadarSettings {
     internal fun setLogLevel(context: Context, level: Radar.RadarLogLevel) {
         val logLevelInt = level.value
         getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, logLevelInt) }
-    }
-
-    internal fun setConfig(context: Context, config: JSONObject?) {
-        val configJson = config.toString()
-        getSharedPreferences(context).edit { putString(KEY_CONFIG, configJson) }
     }
 
     internal fun getHost(context: Context): String {
