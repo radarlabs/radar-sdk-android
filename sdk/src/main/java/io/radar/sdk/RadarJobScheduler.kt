@@ -51,7 +51,7 @@ class RadarJobScheduler : JobService() {
             val result = jobScheduler.schedule(jobInfo)
             if (result == JobScheduler.RESULT_SUCCESS) {
                 Radar.logger.d(
-                    "Scheduling Location Job |" +
+                    "Scheduling location job |" +
                             " jobId = $jobId;" +
                             " location = $location;" +
                             " source = ${stringForSource(source)}"
