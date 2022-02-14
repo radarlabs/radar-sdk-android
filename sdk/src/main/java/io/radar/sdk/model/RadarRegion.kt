@@ -12,6 +12,7 @@ class RadarRegion(
     /**
      * The Radar ID of the region.
      */
+    @Suppress("ConstructorParameterNaming")
     val _id: String,
 
     /**

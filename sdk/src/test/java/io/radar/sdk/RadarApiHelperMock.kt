@@ -1,24 +1,23 @@
 package io.radar.sdk
 
-import android.content.Context
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.slot
 import org.json.JSONObject
-import java.net.URL
 
-internal class RadarApiHelperMock : RadarApiHelper() {
+internal class RadarApiHelperMock {
 
-    internal var mockStatus: Radar.RadarStatus = Radar.RadarStatus.ERROR_UNKNOWN
-    internal var mockResponse: JSONObject? = null
+    var mockStatus: Radar.RadarStatus = Radar.RadarStatus.ERROR_UNKNOWN
+    var mockResponse: JSONObject? = null
+    val helper = mockk<RadarApiHelper>()
 
-    override fun request(context: Context,
-                         method: String,
-                         url: URL,
-                         headers: Map<String, String>?,
-                         params: JSONObject?,
-                         sleep: Boolean,
-                         callback: RadarApiCallback?,
-                         stream: Boolean,
-                         logPayload: Boolean) {
-        callback?.onComplete(mockStatus, mockResponse)
+    init {
+        val slot = slot<RadarApiRequest>()
+        every {
+            helper.request(capture(slot))
+        } answers {
+            slot.captured.callback?.onComplete(mockStatus, mockResponse)
+        }
     }
 
 }

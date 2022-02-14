@@ -18,7 +18,7 @@ internal object RadarUtils {
 
     private const val KEY_AD_ID = "adId"
 
-    private fun getSharedPreferences(context: Context): SharedPreferences {
+    internal fun getSharedPreferences(context: RadarApplication): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
     }
 
@@ -41,7 +41,7 @@ internal object RadarUtils {
             return offset / 1000
         }
 
-    internal fun loadAdId(context: Context) {
+    internal fun loadAdId(context: RadarApplication) {
         Thread {
             try {
                 val advertisingIdInfo = AdvertisingIdClient.getAdvertisingIdInfo(context)
@@ -51,18 +51,17 @@ internal object RadarUtils {
                     advertisingIdInfo.id
                 }
                 getSharedPreferences(context).edit { putString(KEY_AD_ID, adId) }
-            } catch (e: Exception) {
-
+            } catch (ignored: Exception) {
             }
         }.start()
     }
 
-    internal fun getAdId(context: Context): String? {
+    internal fun getAdId(context: RadarApplication): String? {
         return getSharedPreferences(context).getString(KEY_AD_ID, null)
     }
 
     @SuppressLint("HardwareIds")
-    internal fun getDeviceId(context: Context): String? {
+    internal fun getDeviceId(context: RadarApplication): String? {
         return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
     }
 
@@ -70,13 +69,14 @@ internal object RadarUtils {
 
     internal val deviceMake =  Build.MANUFACTURER
 
-    internal fun getLocationAuthorization(context: Context): String {
+    internal fun getLocationAuthorization(context: RadarApplication): String {
         var locationAuthorization = "NOT_DETERMINED"
-        if (RadarSettings.getPermissionsDenied(context)) {
+        if (context.settings.getPermissionsDenied()) {
             locationAuthorization = "DENIED"
         }
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        RadarPermissionsHelper.isPermissionGranted(context, Manifest.permission.ACCESS_FINE_LOCATION)
+        if (RadarPermissionsHelper.isPermissionGranted(context, Manifest.permission.ACCESS_FINE_LOCATION) ||
+            RadarPermissionsHelper.isPermissionGranted(context, Manifest.permission.ACCESS_COARSE_LOCATION)) {
             locationAuthorization = "GRANTED_FOREGROUND"
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
@@ -89,11 +89,11 @@ internal object RadarUtils {
         return locationAuthorization
     }
 
-    internal fun getBluetoothSupported(context: Context): Boolean {
+    internal fun getBluetoothSupported(context: RadarApplication): Boolean {
         return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
     }
 
-    internal fun getLocationAccuracyAuthorization(context: Context): String {
+    internal fun getLocationAccuracyAuthorization(context: RadarApplication): String {
         val olderThanAndroidS = Build.VERSION.SDK_INT < Build.VERSION_CODES.S
         val fineLocationGranted =
             ContextCompat.checkSelfPermission(
@@ -108,9 +108,10 @@ internal object RadarUtils {
         }
     }
 
-    internal fun getLocationEnabled(context: Context): Boolean {
+    internal fun getLocationEnabled(context: RadarApplication): Boolean {
         val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return manager.isProviderEnabled(LocationManager.GPS_PROVIDER) || manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        return manager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+                || manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
     internal fun valid(location: Location): Boolean {
@@ -121,6 +122,7 @@ internal object RadarUtils {
     }
 
     // based on https://github.com/flutter/plugins/tree/master/packages/device_info/device_info
+    @Suppress("ComplexMethod")
     internal fun isEmulator(): Boolean {
         return (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
                 || Build.FINGERPRINT.startsWith("generic")
@@ -137,7 +139,7 @@ internal object RadarUtils {
                 || Build.PRODUCT.contains("sdk_x86")
                 || Build.PRODUCT.contains("vbox86p")
                 || Build.PRODUCT.contains("emulator")
-                || Build.PRODUCT.contains("simulator");
+                || Build.PRODUCT.contains("simulator")
     }
 
 }

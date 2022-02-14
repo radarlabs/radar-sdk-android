@@ -1,0 +1,12 @@
+# Override default settings. See https://github.com/detekt/detekt/blob/main/detekt-core/src/main/resources/default-detekt-config.yml
+
+style:
+  NewLineAtEndOfFile:
+    active: false
+  MagicNumber:
+    active: false
+exceptions:
+  SwallowedException:
+    active: false
+  TooGenericExceptionCaught:
+    active: false

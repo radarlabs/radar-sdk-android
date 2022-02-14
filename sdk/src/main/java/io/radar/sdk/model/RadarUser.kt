@@ -10,14 +10,17 @@ import org.json.JSONObject
  *
  * @see [](https://radar.io/documentation)
  */
+@Suppress("LongParameterList")
 class RadarUser(
     /**
      * The Radar ID of the user.
      */
+    @Suppress("ConstructorParameterNaming")
     val _id: String,
 
     /**
-     * The unique ID of the user, provided when you identified the user. May be `null` if the user has not been identified.
+     * The unique ID of the user, provided when you identified the user. May be `null` if the user has not been
+     * identified.
      */
     val userId: String?,
 
@@ -42,22 +45,26 @@ class RadarUser(
     val location: Location,
 
     /**
-     * The user's current geofences. May be `null` or empty if the user is not in any geofences. See [](https://radar.io/documentation/geofences).
+     * The user's current geofences. May be `null` or empty if the user is not in any geofences.
+     * See [](https://radar.io/documentation/geofences).
      */
     val geofences: Array<RadarGeofence>?,
 
     /**
-     * The user's current place. May be `null` if the user is not at a place or if Places is not enabled. See [](https://radar.io/documentation/places).
+     * The user's current place. May be `null` if the user is not at a place or if Places is not enabled.
+     * See [](https://radar.io/documentation/places).
      */
     val place: RadarPlace?,
 
     /**
-     * Learned insights for the user. May be `null` if no insights are available or if Insights is not enabled. See [](https://radar.io/documentation/insights).
+     * Learned insights for the user. May be `null` if no insights are available or if Insights is not enabled.
+     * See [](https://radar.io/documentation/insights).
      */
     val insights: RadarUserInsights?,
 
     /**
-     * The user's nearby beacons. May be `null` or empty if the user is not near any beacons or if Beacons is not enabled. See [](https://radar.io/documentation/beacons).
+     * The user's nearby beacons. May be `null` or empty if the user is not near any beacons or if Beacons is not
+     * enabled. See [](https://radar.io/documentation/beacons).
      */
     val beacons: Array<RadarBeacon>?,
 
@@ -72,22 +79,26 @@ class RadarUser(
     val foreground: Boolean,
 
     /**
-     * The user's current country. May be `null` if country is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The user's current country. May be `null` if country is not available or if Regions is not enabled.
+     * See [](https://radar.io/documentation/regions).
      */
     val country: RadarRegion?,
 
     /**
-     * The user's current state. May be `null` if state is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The user's current state. May be `null` if state is not available or if Regions is not enabled.
+     * See [](https://radar.io/documentation/regions).
      */
     val state: RadarRegion?,
 
     /**
-     * The user's current designated market area (DMA). May be `null` if DMA is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The user's current designated market area (DMA). May be `null` if DMA is not available or if Regions is not
+     * enabled. See [](https://radar.io/documentation/regions).
      */
     val dma: RadarRegion?,
 
     /**
-     * The user's current postal code. May be `null` if postal code is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The user's current postal code. May be `null` if postal code is not available or if Regions is not enabled.
+     * See [](https://radar.io/documentation/regions).
      */
     val postalCode: RadarRegion?,
 
@@ -160,6 +171,7 @@ class RadarUser(
         private const val FIELD_TRIP = "trip"
 
         @JvmStatic
+        @Suppress("ComplexMethod")
         fun fromJson(obj: JSONObject?): RadarUser? {
             if (obj == null) {
                 return null
@@ -205,31 +217,9 @@ class RadarUser(
             val fraud = RadarFraud.fromJson(obj.optJSONObject(FIELD_FRAUD))
             val trip = RadarTrip.fromJson(obj.optJSONObject(FIELD_TRIP))
 
-            return RadarUser(
-                id,
-                userId,
-                deviceId,
-                description,
-                metadata,
-                location,
-                geofences,
-                place,
-                insights,
-                beacons,
-                stopped,
-                foreground,
-                country,
-                state,
-                dma,
-                postalCode,
-                nearbyPlaceChains,
-                segments,
-                topChains,
-                source,
-                fraud.proxy,
-                trip,
-                fraud.mocked
-            )
+            return RadarUser(id, userId, deviceId, description, metadata, location, geofences, place, insights, beacons,
+                stopped, foreground, country, state, dma, postalCode, nearbyPlaceChains, segments, topChains, source,
+                fraud.proxy, trip, fraud.mocked)
         }
     }
 

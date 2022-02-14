@@ -3,14 +3,13 @@ import io.radar.ci.GitHubClient
 import io.radar.ci.SnapshotDispatcher
 import io.radar.mvnpublish.MavenServer
 
-apply plugin: "com.android.library"
-apply plugin: "kotlin-android"
-apply plugin: "kotlin-android-extensions"
-apply plugin: "org.jetbrains.dokka"
-apply plugin: 'io.radar.mvnpublish'
-
-ext {
-    radarVersion = '3.3.3'
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+    id 'org.jetbrains.dokka'
+    id 'io.radar.mvnpublish'
+    id 'jacoco'
+    id 'io.gitlab.arturbosch.detekt' version "$detekt_version"
 }
 
 String buildNumber = ".${System.currentTimeMillis()}"
@@ -28,6 +27,9 @@ if (githubRelease) {
     }
 }
 
+String testKey = project.properties['radarTestKey']
+String testHost = project.properties['radarTestHost']
+
 android {
     compileSdkVersion 31
     compileOptions {
@@ -43,11 +45,21 @@ android {
         targetSdkVersion 31
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
         multiDexEnabled = true
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+        }
+        debug {
+            testCoverageEnabled true
+            // Allows integration testing against real endpoints
+            if (testKey) {
+                buildConfigField "String", 'radar_test_key', $/"$testKey"/$
+            }
+            if (testHost) {
+                buildConfigField "String", 'radar_test_host', $/"$testHost"/$
+            }
         }
     }
     testOptions {
@@ -60,16 +72,102 @@ android {
     }
 }
 
+tasks.withType(Test) {
+    jacoco.includeNoLocationClasses = true
+    jacoco.excludes = ['jdk.internal.*']
+    testLogging {
+        showStandardStreams = true
+        events = ['passed', 'failed', 'skipped']
+    }
+    // Allows local integration testing against real endpoints
+    systemProperty 'radar_test_key', testKey
+    systemProperty 'radar_test_host', testHost
+}
+
+tasks.whenTaskAdded {
+    if (it.name == 'testReleaseUnitTest') {
+        it.enabled = false
+    }
+}
+
+detekt {
+    toolVersion = "$detekt_version"
+    ignoreFailures = false
+    config = rootProject.files('tools/detekt/radar-detekt-config.yml')
+    buildUponDefaultConfig = true
+    reports {
+        html.enabled = true
+        xml.enabled = false
+        txt.enabled = false
+        sarif.enabled = false
+    }
+}
+
+jacoco {
+    toolVersion = "$jacoco_version"
+}
+
+//See https://youtrack.jetbrains.com/issue/KT-44757
+configurations.all {
+    resolutionStrategy {
+        eachDependency { details ->
+            if ('org.jacoco' == details.requested.group) {
+                details.useVersion "$jacoco_version"
+            }
+        }
+    }
+}
+
+task jacocoTestReport(type: JacocoReport) {
+    dependsOn 'testDebugUnitTest'
+    //Android tests are only used for real integration testing
+    if (testKey != null && !testKey.empty && testHost != null && !testHost.empty) {
+        dependsOn 'createDebugAndroidTestCoverageReport'
+    }
+    reports {
+        xml.enabled = false
+        html.enabled = true
+    }
+
+    FileTree debugTree = fileTree "$buildDir/tmp/kotlin-classes/debug"
+    String mainSrc = "$projectDir/src/main/java"
+
+    sourceDirectories.setFrom mainSrc
+    classDirectories.setFrom debugTree
+    executionData.setFrom fileTree(
+            dir: "$buildDir",
+            includes: ['outputs/code_coverage/debugAndroidTest/connected/*coverage.ec',
+                       'outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec']
+    )
+}
+
+check {
+    finalizedBy tasks.jacocoTestReport
+}
+
 dependencies {
-    implementation fileTree(dir: "libs", include: ["*.jar"])
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
+    coreLibraryDesugaring('com.android.tools:desugar_jdk_libs:1.1.5')
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "androidx.appcompat:appcompat:1.4.0"
-    implementation "androidx.core:core-ktx:1.7.0"
-    implementation "com.google.android.gms:play-services-ads-identifier:17.1.0"
-    implementation "com.google.android.gms:play-services-location:18.0.0"
-    testImplementation "androidx.test.ext:junit:1.1.3"
-    testImplementation "org.robolectric:robolectric:4.5.1"
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
+    implementation 'com.google.android.gms:play-services-location:18.0.0'
+
+    // Unit tests
+    testImplementation 'androidx.test.ext:junit:1.1.3'
+    testImplementation 'org.robolectric:robolectric:4.5.1'
+    testImplementation "io.mockk:mockk:$mockk_version"
+    testImplementation "io.mockk:mockk-agent-jvm:$mockk_version"
+    testImplementation 'org.awaitility:awaitility-kotlin:4.1.0'
+
+    // Instrumentation tests
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test:rules:1.4.0'
+    androidTestImplementation "androidx.test.ext:junit:1.1.3"
+    androidTestImplementation "io.mockk:mockk-android:$mockk_version"
+    androidTestImplementation ('org.awaitility:awaitility-kotlin:4.1.0') {
+        exclude group: 'org.hamcrest'
+    }
 }
 
 task androidSourcesJar(type: Jar) {

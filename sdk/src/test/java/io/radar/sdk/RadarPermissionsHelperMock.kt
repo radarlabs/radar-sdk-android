@@ -1,13 +1,15 @@
 package io.radar.sdk
 
-import android.content.Context
+import io.mockk.every
+import io.mockk.spyk
 
-internal class RadarPermissionsHelperMock : RadarPermissionsHelper() {
+internal class RadarPermissionsHelperMock {
 
-    internal var mockFineLocationPermissionGranted: Boolean = false
+    var mockFineLocationPermissionGranted: Boolean = false
+    val helper = spyk(RadarPermissionsHelper())
 
-    override fun fineLocationPermissionGranted(context: Context): Boolean {
-        return mockFineLocationPermissionGranted
+    init {
+        every { helper.fineLocationPermissionGranted(allAny()) } answers { mockFineLocationPermissionGranted }
     }
 
 }

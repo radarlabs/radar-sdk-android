@@ -1,7 +1,6 @@
 package io.radar.sdk.model
 
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -20,11 +19,7 @@ class RadarRouteGeometry(
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarRouteGeometry? {
-            if (obj == null) {
-                return null
-            }
-
-            obj.optJSONArray(FIELD_COORDINATES)?.let { coordinatesArr ->
+            obj?.optJSONArray(FIELD_COORDINATES)?.let { coordinatesArr ->
                 val coordinates = Array(coordinatesArr.length()) { index ->
                     coordinatesArr.optJSONArray(index)?.let { coordinate ->
                         RadarCoordinate(
@@ -35,7 +30,6 @@ class RadarRouteGeometry(
                 }
                 return RadarRouteGeometry(coordinates)
             }
-
             return null
         }
     }

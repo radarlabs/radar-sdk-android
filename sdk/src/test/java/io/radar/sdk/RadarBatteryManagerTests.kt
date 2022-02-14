@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.core.app.ApplicationProvider.getApplicationContext
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.util.BatteryState
@@ -112,6 +111,7 @@ class RadarBatteryManagerTests {
                 Is Ignore Battery Optimization: {3}
             """
             )
+            @Suppress("NestedBlockDepth")
             fun data(): Collection<Any> {
                 // This many for-loops is not ideal, however Robolectric does not easily support JUnit Theories, so this
                 // is the best option

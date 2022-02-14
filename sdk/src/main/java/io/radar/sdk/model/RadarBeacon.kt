@@ -8,10 +8,12 @@ import org.json.JSONObject
  *
  * @see [](https://radar.io/documentation/beacons)
  */
+@Suppress("LongParameterList")
 class RadarBeacon (
     /**
      * The Radar ID of the point.
      */
+    @Suppress("ConstructorParameterNaming")
     val _id: String,
 
     /**

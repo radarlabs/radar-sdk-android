@@ -98,11 +98,11 @@ class RadarLocationReceiver : BroadcastReceiver() {
 
     @SuppressLint("MissingPermission")
     override fun onReceive(context: Context, intent: Intent) {
-        Radar.logger.d("Broadcast Received | action = ${intent.action}")
+        Radar.app.logger.d("Broadcast Received", "action" to intent.action)
         when (intent.action) {
             ACTION_BUBBLE_GEOFENCE, ACTION_SYNCED_GEOFENCES -> {
                 val event = GeofencingEvent.fromIntent(intent)
-                event?.triggeringLocation?.also {
+                event.triggeringLocation.also {
                     val source = when (event.geofenceTransition) {
                         Geofence.GEOFENCE_TRANSITION_ENTER -> Radar.RadarLocationSource.GEOFENCE_ENTER
                         Geofence.GEOFENCE_TRANSITION_DWELL -> Radar.RadarLocationSource.GEOFENCE_DWELL
@@ -118,7 +118,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
             }
             ACTION_LOCATION -> {
                 val result = LocationResult.extractResult(intent)
-                result?.lastLocation?.also {
+                result.lastLocation.also {
                     val source = Radar.RadarLocationSource.BACKGROUND_LOCATION
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {

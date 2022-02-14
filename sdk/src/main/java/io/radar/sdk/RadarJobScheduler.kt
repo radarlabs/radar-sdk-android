@@ -48,20 +48,13 @@ class RadarJobScheduler : JobService() {
 
             val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
             val result = jobScheduler.schedule(jobInfo)
+            val props = mutableMapOf("location" to location, "source" to stringForSource(source))
             if (result == JobScheduler.RESULT_SUCCESS) {
-                Radar.logger.d(
-                    "Scheduling Location Job |" +
-                            " location = $location;" +
-                            " source = ${stringForSource(source)};" +
-                            " success = true;" +
-                            " overwrites = ${counter.getAndIncrement()}"
-                )
+                props["success"] = true
+                props["overwrites"] = counter.getAndIncrement()
+                Radar.app.logger.d("Scheduling Location Job", props)
             } else {
-                Radar.logger.d(
-                    "Failed to Schedule Location Job |" +
-                            " location = $location;" +
-                            " source = ${stringForSource(source)};"
-                )
+                Radar.app.logger.d("Failed to Schedule Location Job", props)
             }
 
         }
@@ -83,22 +76,21 @@ class RadarJobScheduler : JobService() {
         }
 
         val sourceStr = extras.getString(EXTRA_SOURCE)
-        if (Radar.isTestKey()) {
-            val batteryState = Radar.batteryManager.getBatteryState()
-            Radar.logger.d(
-                "Starting Location Job | " +
-                        "location = $location; " +
-                        "source = ${sourceStr}; " +
-                        "requestNumber = ${counter.get()}; " +
-                        "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
-                        "performanceState = ${batteryState.performanceState.name}; " +
-                        "isCharging = ${batteryState.isCharging}; " +
-                        "batteryPercentage = ${batteryState.percent}; " +
-                        "isPowerSaveMode = ${batteryState.powerSaveMode}; " +
-                        "isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations}; " +
-                        "locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()}; " +
-                        "isDozeMode = ${batteryState.isDeviceIdleMode}"
-            )
+        if (Radar.app.isTestKey()) {
+            val batteryState = Radar.app.batteryManager.getBatteryState()
+            Radar.app.logger.d("Starting Location Job", mapOf(
+                "location" to location,
+                "source" to sourceStr,
+                "requestNumber" to counter.get(),
+                "standbyBucket" to Radar.app.batteryManager.getAppStandbyBucket(),
+                "performanceState" to batteryState.performanceState.name,
+                "isCharging" to batteryState.isCharging,
+                "batteryPercentage" to batteryState.percent,
+                "isPowerSaveMode" to batteryState.powerSaveMode,
+                "isIgnoringBatteryOptimizations" to batteryState.isIgnoringBatteryOptimizations,
+                "locationPowerSaveMode" to batteryState.getPowerLocationPowerSaveModeString(),
+                "isDozeMode" to batteryState.isDeviceIdleMode
+            ))
         }
 
         if (sourceStr == null) {
@@ -118,7 +110,7 @@ class RadarJobScheduler : JobService() {
     }
 
     override fun onStopJob(params: JobParameters): Boolean {
-        if (Radar.isTestKey()) {
+        if (Radar.app.isTestKey()) {
             val extras = params.extras
             val latitude = extras.getDouble(EXTRA_LATITUDE)
             val longitude = extras.getDouble(EXTRA_LONGITUDE)
@@ -135,7 +127,7 @@ class RadarJobScheduler : JobService() {
 
             val source = extras.getString(EXTRA_SOURCE)
             //this may occur, for example, if a new location job is scheduled before the current job finishes executing.
-            Radar.logger.d("Stopping Location Job | location = $location; source = $source")
+            Radar.app.logger.d("Stopping Location Job", mapOf("location" to location, "source" to source))
         }
 
         return false
