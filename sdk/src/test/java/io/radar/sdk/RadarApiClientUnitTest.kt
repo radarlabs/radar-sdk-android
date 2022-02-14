@@ -17,20 +17,23 @@ import io.radar.sdk.model.RadarLog
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarRouteMatrix
 import io.radar.sdk.model.RadarRoutes
+import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarUser
 import org.awaitility.kotlin.await
 import org.json.JSONObject
 import org.junit.After
-import org.junit.Assert
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import java.net.URL
 import java.util.*
 
 /**
- * Unit tests [RadarApiClient]. This class makes heavy use of mocks, so it's best to think of this as ensuring the
- * API calls walk through correctly and the callbacks are hit as expected.
+ * Unit tests [RadarApiClient].
  *
  * @see [RadarApiClientIntegrationTest]
  */
@@ -47,6 +50,7 @@ class RadarApiClientUnitTest {
     )
     private val api = app.apiClient
     private var status: Radar.RadarStatus? = null
+    private var request: RadarApiRequest? = null
 
     private val location: Location = Location("test")
 
@@ -60,6 +64,7 @@ class RadarApiClientUnitTest {
         val slot = slot<RadarApiRequest>()
         every { interceptor.request(capture(slot)) } answers {
             val request = slot.captured
+            this@RadarApiClientUnitTest.request = request
             apiHelper.mockStatus = Radar.RadarStatus.SUCCESS
             apiHelper.helper.request(
                 RadarApiRequest.Builder(request.method, request.url, request.sleep)
@@ -83,130 +88,365 @@ class RadarApiClientUnitTest {
         app.settings.setPublishableKey(null)
         app.settings.setHost(null)
         status = null
+        request = null
+    }
+
+    private fun Location.coords(): String {
+        return "$latitude,$longitude"
+    }
+
+    private fun verifyRequest(request: RadarApiRequest) {
+        assertNotNull(this.request)
+        assertEquals(request.method, this.request!!.method)
+        assertEquals(request.url, this.request!!.url)
+        assertEquals(request.headers, this.request!!.headers)
+        if (this.request!!.params == null) {
+            assertNull(request.params)
+        } else {
+            assertEquals(request.params!!.length(), this.request!!.params!!.length())
+            request.params.keys().forEach { key ->
+                val expected = request.params[key]
+                val actual = this.request!!.params!![key]
+                assertEquals(expected, actual)
+            }
+        }
+        assertEquals(request.sleep, this.request!!.sleep)
+    }
+
+    /**
+     * Helps test success and failure branches of API methods
+     */
+    private fun executeApiCall(call: () -> Unit) {
+        app.settings.setPublishableKey(null)
+        call.invoke()
+        awaitFailure()
+        app.settings.setPublishableKey(RadarTest.publishableKey)
+        call.invoke()
+        awaitSuccess()
+    }
+
+    private fun getDefaultHeaders(): Map<String, String> {
+        return mapOf(
+            "Authorization" to RadarTest.publishableKey,
+            "Content-Type" to "application/json",
+            "X-Radar-Config" to "true",
+            "X-Radar-Device-Make" to RadarUtils.deviceMake,
+            "X-Radar-Device-Model" to RadarUtils.deviceModel,
+            "X-Radar-Device-OS" to RadarUtils.deviceOS,
+            "X-Radar-Device-Type" to RadarUtils.deviceType,
+            "X-Radar-SDK-Version" to RadarUtils.sdkVersion
+        )
     }
 
     @Test
     fun testGetConfig() {
         app.settings.setConfig(null)
-        Assert.assertNull(app.settings.getConfig())
+        assertNull(app.settings.getConfig())
         api.getConfig()
         awaitSuccess()
+        verifyRequest(
+            RadarApiRequest.get(
+                URL(
+                    "https://api.radar.io/v1/config" +
+                            "?installId=${app.settings.getInstallId()}" +
+                            "&sessionId=${app.settings.getSessionId()}" +
+                            "&locationAuthorization=NOT_DETERMINED" +
+                            "&locationAccuracyAuthorization=FULL"
+                ), false
+            ).headers(getDefaultHeaders()).build()
+        )
     }
 
     @Test
     fun testTrack() {
         mockDeviceId()
-        api.track(
-            location = location,
-            stopped = false,
-            foreground = true,
-            source = Radar.RadarLocationSource.MANUAL_LOCATION,
-            replayed = false,
-            nearbyBeacons = null,
-            callback = object : RadarApiClient.RadarTrackApiCallback {
-                override fun onComplete(
-                    status: Radar.RadarStatus,
-                    res: JSONObject?,
-                    events: Array<RadarEvent>?,
-                    user: RadarUser?,
-                    nearbyGeofences: Array<RadarGeofence>?
-                ) = Unit
-            })
-        awaitSuccess()
+        executeApiCall {
+            api.track(
+                location = location,
+                stopped = false,
+                foreground = true,
+                source = Radar.RadarLocationSource.MANUAL_LOCATION,
+                replayed = false,
+                nearbyBeacons = null,
+                callback = object : RadarApiClient.RadarTrackApiCallback {
+                    override fun onComplete(
+                        status: Radar.RadarStatus,
+                        res: JSONObject?,
+                        events: Array<RadarEvent>?,
+                        user: RadarUser?,
+                        nearbyGeofences: Array<RadarGeofence>?
+                    ) {
+                        this@RadarApiClientUnitTest.status = status
+                    }
+
+                }
+            )
+        }
     }
 
     @Test
     fun testGetContext() {
-        api.getContext(location, object : RadarApiClient.RadarContextApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, context: RadarContext?) = Unit
-        })
-        awaitSuccess()
+        executeApiCall {
+            api.getContext(location, object : RadarApiClient.RadarContextApiCallback {
+                override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, context: RadarContext?) {
+                    this@RadarApiClientUnitTest.status = status
+                }
+            })
+        }
+        verifyRequest(
+            RadarApiRequest.get(
+                URL("https://api.radar.io/v1/context?coordinates=${location.coords()}"),
+                false
+            ).headers(getDefaultHeaders()).build()
+        )
+    }
+
+    private fun searchPlaces(chains: Array<String>?, categories: Array<String>?, groups: Array<String>?) {
+        executeApiCall {
+            api.searchPlaces(
+                location = location,
+                radius = 1,
+                chains = chains,
+                categories = categories,
+                groups = groups,
+                limit = 10,
+                callback = object : RadarApiClient.RadarSearchPlacesApiCallback {
+                    override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, places: Array<RadarPlace>?) {
+                        this@RadarApiClientUnitTest.status = status
+                    }
+                })
+        }
+        val search = when {
+            chains != null -> {
+                "&chains=${chains.joinToString(",")}"
+            }
+            categories != null -> {
+                "&categories=${categories.joinToString(",")}"
+            }
+            groups != null -> {
+                "&groups=${groups.joinToString(",")}"
+            }
+            else -> {
+                throw AssertionError("Must pass one non-null parameter")
+            }
+        }
+        verifyRequest(
+            RadarApiRequest.get(
+                URL(
+                    "https://api.radar.io/v1/search/places" +
+                            "?near=${location.coords()}" +
+                            "&radius=1" +
+                            "&limit=10" +
+                            search
+                ),
+                false
+            ).headers(getDefaultHeaders()).build()
+        )
     }
 
     @Test
     fun testSearchPlaces() {
-        api.searchPlaces(
-            location = location,
-            radius = 1,
-            chains = null,
-            categories = arrayOf("restaurant", "bar"),
-            groups = null,
-            limit = 10,
-            callback = object : RadarApiClient.RadarSearchPlacesApiCallback {
-                override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, places: Array<RadarPlace>?) = Unit
-            })
-        awaitSuccess()
+        searchPlaces(arrayOf("radar"), null, null)
+        searchPlaces(null, arrayOf("restaurant", "bar"), null)
+        searchPlaces(null, null, arrayOf("major-us-airport"))
     }
 
     @Test
     fun testSearchGeofences() {
-        api.searchGeofences(
-            location = location,
-            radius = 1,
-            tags = null,
-            metadata = null,
-            limit = 10,
-            callback = object : RadarApiClient.RadarSearchGeofencesApiCallback {
-                override fun onComplete(
-                    status: Radar.RadarStatus,
-                    res: JSONObject?,
-                    geofences: Array<RadarGeofence>?) = Unit
-            })
-        awaitSuccess()
+        executeApiCall {
+            api.searchGeofences(
+                location = location,
+                radius = 1,
+                tags = arrayOf("restaurant", "bar"),
+                metadata = JSONObject(mapOf("foo" to "bar", "ra" to "dar")),
+                limit = 10,
+                callback = object : RadarApiClient.RadarSearchGeofencesApiCallback {
+                    override fun onComplete(
+                        status: Radar.RadarStatus,
+                        res: JSONObject?,
+                        geofences: Array<RadarGeofence>?
+                    ) {
+                        this@RadarApiClientUnitTest.status = status
+                    }
+                })
+        }
+        verifyRequest(
+            RadarApiRequest.get(
+                URL(
+                    "https://api.radar.io/v1/search/geofences" +
+                            "?near=${location.coords()}" +
+                            "&radius=1" +
+                            "&limit=10" +
+                            "&tags=restaurant,bar" +
+                            "&metadata[foo]=bar" +
+                            "&metadata[ra]=dar"
+                ),
+                false
+            ).headers(getDefaultHeaders()).build()
+        )
     }
 
     @Test
     fun testSearchBeacons() {
-        api.searchBeacons(location, 1, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) = Unit
-        })
-        awaitSuccess()
+        executeApiCall {
+            api.searchBeacons(location, 1, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
+                    this@RadarApiClientUnitTest.status = status
+                }
+            })
+        }
+        verifyRequest(
+            RadarApiRequest.get(
+                URL(
+                    "https://api.radar.io/v1/search/beacons" +
+                            "?near=${location.coords()}" +
+                            "&radius=1" +
+                            "&limit=10"
+                ),
+                false
+            ).headers(getDefaultHeaders()).build()
+        )
     }
 
     @Test
     fun testAutocomplete() {
-        api.autocomplete(
-            query = "brooklyn roasting",
-            near = location,
-            layers = null,
-            limit = 10,
-            country = "USA",
-            callback = object : RadarApiClient.RadarGeocodeApiCallback {
-                override fun onComplete(
-                    status: Radar.RadarStatus,
-                    res: JSONObject?,
-                    addresses: Array<RadarAddress>?) = Unit
-            })
+        executeApiCall {
+            api.autocomplete(
+                query = "brooklyn roasting",
+                near = location,
+                layers = null,
+                limit = 10,
+                country = "USA",
+                callback = object : RadarApiClient.RadarGeocodeApiCallback {
+                    override fun onComplete(
+                        status: Radar.RadarStatus,
+                        res: JSONObject?,
+                        addresses: Array<RadarAddress>?
+                    ) {
+                        this@RadarApiClientUnitTest.status = status
+                    }
+                })
+        }
+        verifyRequest(
+            RadarApiRequest.get(
+                URL(
+                    "https://api.radar.io/v1/search/autocomplete" +
+                            "?query=brooklyn%20roasting" +
+                            "&near=${location.coords()}" +
+                            "&limit=10" +
+                            "&country=USA"
+                ),
+                false
+            ).headers(getDefaultHeaders()).build()
+        )
+    }
+
+    @Test
+    fun testUpdateTrip() {
+        val tripId = UUID.randomUUID().toString()
+        val apiCall = {
+            api.updateTrip(
+                RadarTripOptions(tripId),
+                RadarTrip.RadarTripStatus.STARTED,
+                object : RadarApiClient.RadarTripApiCallback {
+                    override fun onComplete(
+                        status: Radar.RadarStatus,
+                        res: JSONObject?,
+                        trip: RadarTrip?,
+                        events: Array<RadarEvent>?
+                    ) {
+                        this@RadarApiClientUnitTest.status = status
+                    }
+
+                })
+        }
+        app.settings.setPublishableKey(null)
+        apiCall.invoke()
+        awaitFailure()
+        app.settings.setPublishableKey(RadarTest.publishableKey)
+        try {
+            apiCall.invoke()
+        } catch (ignored: Exception) {
+            //PATCH not supported in Junit test, but the request parameters can still be verified
+        }
+        verifyRequest(
+            RadarApiRequest.Builder("PATCH", URL("https://api.radar.io/v1/trips/$tripId"), false)
+                .headers(getDefaultHeaders())
+                .params(JSONObject(mapOf("status" to "started", "mode" to "car")))
+                .build()
+        )
+    }
+
+    @Test
+    fun testVerifyEvent() {
+        val eventId = UUID.randomUUID().toString()
+        val placeId = UUID.randomUUID().toString()
+        api.verifyEvent(eventId, RadarEvent.RadarEventVerification.ACCEPT, placeId)
         awaitSuccess()
+        val params = JSONObject()
+        params.put("verification", RadarEvent.RadarEventVerification.ACCEPT)
+        params.put("verifiedPlaceId", placeId)
+        verifyRequest(
+            RadarApiRequest.Builder("PUT", URL("https://api.radar.io/v1/events/$eventId/verification"), false)
+                .headers(getDefaultHeaders())
+                .params(params)
+                .build()
+        )
     }
 
     @Test
     fun testGeocode() {
-        api.geocode("20 jay street brooklyn ny", object : RadarApiClient.RadarGeocodeApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) = Unit
-        })
-        awaitSuccess()
+        executeApiCall {
+            api.geocode("20 jay street brooklyn ny", object : RadarApiClient.RadarGeocodeApiCallback {
+                override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
+                    this@RadarApiClientUnitTest.status = status
+                }
+            })
+        }
+        verifyRequest(
+            RadarApiRequest.get(
+                URL("https://api.radar.io/v1/geocode/forward?query=20%20jay%20street%20brooklyn%20ny"),
+                false
+            ).headers(getDefaultHeaders()).build()
+        )
     }
 
     @Test
     fun testReverseGeocode() {
-        api.reverseGeocode(location, object : RadarApiClient.RadarGeocodeApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) = Unit
-        })
-        awaitSuccess()
+        executeApiCall {
+            api.reverseGeocode(location, object : RadarApiClient.RadarGeocodeApiCallback {
+                override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
+                    this@RadarApiClientUnitTest.status = status
+                }
+            })
+        }
+        verifyRequest(
+            RadarApiRequest.get(
+                URL("https://api.radar.io/v1/geocode/reverse?coordinates=${location.coords()}"),
+                false
+            ).headers(getDefaultHeaders()).build()
+        )
     }
 
     @Test
     fun testIpGeocode() {
-        api.ipGeocode(object : RadarApiClient.RadarIpGeocodeApiCallback {
-            override fun onComplete(
-                status: Radar.RadarStatus,
-                res: JSONObject?,
-                address: RadarAddress?,
-                proxy: Boolean
-            ) = Unit
-        })
-        awaitSuccess()
+        executeApiCall {
+            api.ipGeocode(object : RadarApiClient.RadarIpGeocodeApiCallback {
+                override fun onComplete(
+                    status: Radar.RadarStatus,
+                    res: JSONObject?,
+                    address: RadarAddress?,
+                    proxy: Boolean
+                ) {
+                    this@RadarApiClientUnitTest.status = status
+                }
+            })
+        }
+        verifyRequest(
+            RadarApiRequest.get(URL("https://api.radar.io/v1/geocode/ip"), false)
+                .headers(getDefaultHeaders())
+                .build()
+        )
     }
 
     @Test
@@ -214,16 +454,33 @@ class RadarApiClientUnitTest {
         val destination = Location(location)
         destination.latitude++
         destination.longitude--
-        api.getDistance(
-            origin = location,
-            destination = destination,
-            modes = EnumSet.of(Radar.RadarRouteMode.FOOT, Radar.RadarRouteMode.BIKE),
-            units = Radar.RadarRouteUnits.IMPERIAL,
-            geometryPoints = 20,
-            callback = object : RadarApiClient.RadarDistanceApiCallback {
-                override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, routes: RadarRoutes?) = Unit
-            })
-        awaitSuccess()
+        executeApiCall {
+            api.getDistance(
+                origin = location,
+                destination = destination,
+                modes = EnumSet.of(Radar.RadarRouteMode.BIKE, Radar.RadarRouteMode.FOOT),
+                units = Radar.RadarRouteUnits.IMPERIAL,
+                geometryPoints = 20,
+                callback = object : RadarApiClient.RadarDistanceApiCallback {
+                    override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, routes: RadarRoutes?) {
+                        this@RadarApiClientUnitTest.status = status
+                    }
+                })
+        }
+        verifyRequest(
+            RadarApiRequest.get(
+                URL(
+                    "https://api.radar.io/v1/route/distance" +
+                            "?origin=${location.coords()}" +
+                            "&destination=${destination.coords()}" +
+                            "&modes=foot,bike" +
+                            "&units=imperial" +
+                            "&geometry=linestring" +
+                            "&geometryPoints=20"
+                ),
+                false
+            ).headers(getDefaultHeaders()).build()
+        )
     }
 
     @Test
@@ -242,16 +499,31 @@ class RadarApiClientUnitTest {
         trenton.latitude = 40.2206
         trenton.longitude = -74.7597
 
-        api.getMatrix(
-            origins = arrayOf(brooklyn, manhattan),
-            destinations = arrayOf(atlanticCity, trenton),
-            mode = Radar.RadarRouteMode.TRUCK,
-            units = Radar.RadarRouteUnits.METRIC,
-            callback = object : RadarApiClient.RadarMatrixApiCallback {
-                override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, matrix: RadarRouteMatrix?) = Unit
-            }
+        executeApiCall {
+            api.getMatrix(
+                origins = arrayOf(brooklyn, manhattan),
+                destinations = arrayOf(atlanticCity, trenton),
+                mode = Radar.RadarRouteMode.TRUCK,
+                units = Radar.RadarRouteUnits.METRIC,
+                callback = object : RadarApiClient.RadarMatrixApiCallback {
+                    override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, matrix: RadarRouteMatrix?) {
+                        this@RadarApiClientUnitTest.status = status
+                    }
+                }
+            )
+        }
+        verifyRequest(
+            RadarApiRequest.get(
+                URL(
+                    "https://api.radar.io/v1/route/matrix" +
+                            "?origins=${brooklyn.coords()}|${manhattan.coords()}" +
+                            "&destinations=${atlanticCity.coords()}|${trenton.coords()}" +
+                            "&mode=truck" +
+                            "&units=metric"
+                ),
+                false
+            ).headers(getDefaultHeaders()).build()
         )
-        awaitSuccess()
     }
 
     @Test
@@ -267,6 +539,10 @@ class RadarApiClientUnitTest {
 
     private fun awaitSuccess() {
         await.until { status == Radar.RadarStatus.SUCCESS }
+    }
+
+    private fun awaitFailure() {
+        await.until { status == Radar.RadarStatus.ERROR_PUBLISHABLE_KEY }
     }
 
     /**

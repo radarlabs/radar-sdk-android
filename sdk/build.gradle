@@ -119,6 +119,7 @@ configurations.all {
 }
 
 task jacocoTestReport(type: JacocoReport) {
+    group 'verification'
     dependsOn 'testDebugUnitTest'
     //Android tests are only used for real integration testing
     if (testKey != null && !testKey.empty && testHost != null && !testHost.empty) {

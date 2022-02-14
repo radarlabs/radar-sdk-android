@@ -382,12 +382,12 @@ object Radar {
     /**
      * The distance units for routes. See [](https://radar.io/documentation/api#routing).
      */
-    enum class RadarRouteUnits {
+    enum class RadarRouteUnits(val metricString: String) {
         /** Imperial (feet) */
-        IMPERIAL,
+        IMPERIAL("imperial"),
 
         /** Metric (meters) */
-        METRIC
+        METRIC("metric")
     }
 
     private var initialized = false
@@ -2366,13 +2366,7 @@ object Radar {
      */
     @JvmStatic
     fun stringForMode(mode: RadarRouteMode): String {
-        return when (mode) {
-            RadarRouteMode.FOOT -> "foot"
-            RadarRouteMode.BIKE -> "bike"
-            RadarRouteMode.CAR -> "car"
-            RadarRouteMode.TRUCK -> "truck"
-            RadarRouteMode.MOTORBIKE -> "motorbike"
-        }
+        return mode.modeString
     }
 
     /**
