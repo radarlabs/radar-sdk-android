@@ -8,8 +8,8 @@ import android.os.Build
 import android.os.Handler
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.util.RadarFileSystemLogBuffer
 import io.radar.sdk.util.RadarLogBuffer
-import io.radar.sdk.util.RadarSimpleLogBuffer
 import org.json.JSONObject
 import java.util.*
 
@@ -376,7 +376,7 @@ object Radar {
         this.receiver = receiver
 
         if (!this::logBuffer.isInitialized) {
-            this.logBuffer = RadarSimpleLogBuffer()
+            this.logBuffer = RadarFileSystemLogBuffer(this.context)
         }
 
         if (!this::logger.isInitialized) {
