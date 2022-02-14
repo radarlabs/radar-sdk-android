@@ -40,7 +40,8 @@ class RadarJobScheduler : JobService() {
                 putString(EXTRA_SOURCE, source.name)
             }
 
-            val jobInfo = JobInfo.Builder(JOB_ID, componentName)
+            val jobId = JOB_ID + counter.getAndIncrement() % 10 // cycle through 10 unique job IDs
+            val jobInfo = JobInfo.Builder(jobId, componentName)
                 .setExtras(extras)
                 .setMinimumLatency(0)
                 .setOverrideDeadline(0)
@@ -51,14 +52,14 @@ class RadarJobScheduler : JobService() {
             if (result == JobScheduler.RESULT_SUCCESS) {
                 Radar.logger.d(
                     "Scheduling Location Job |" +
+                            " jobId = $jobId;" +
                             " location = $location;" +
-                            " source = ${stringForSource(source)};" +
-                            " success = true;" +
-                            " overwrites = ${counter.getAndIncrement()}"
+                            " source = ${stringForSource(source)}"
                 )
             } else {
                 Radar.logger.d(
-                    "Failed to Schedule Location Job |" +
+                    "Failed to schedule location job |" +
+                            " jobId = $jobId;" +
                             " location = $location;" +
                             " source = ${stringForSource(source)};"
                 )
@@ -86,18 +87,18 @@ class RadarJobScheduler : JobService() {
         if (Radar.isTestKey()) {
             val batteryState = Radar.batteryManager.getBatteryState()
             Radar.logger.d(
-                "Starting Location Job | " +
-                        "location = $location; " +
-                        "source = ${sourceStr}; " +
-                        "requestNumber = ${counter.get()}; " +
-                        "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
-                        "performanceState = ${batteryState.performanceState.name}; " +
-                        "isCharging = ${batteryState.isCharging}; " +
-                        "batteryPercentage = ${batteryState.percent}; " +
-                        "isPowerSaveMode = ${batteryState.powerSaveMode}; " +
-                        "isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations}; " +
-                        "locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()}; " +
-                        "isDozeMode = ${batteryState.isDeviceIdleMode}"
+                "Starting location job |" +
+                        " location = $location;" +
+                        " source = ${sourceStr};" +
+                        " requestNumber = ${counter.get()};" +
+                        " standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()};" +
+                        " performanceState = ${batteryState.performanceState.name};" +
+                        " isCharging = ${batteryState.isCharging};" +
+                        " batteryPercentage = ${batteryState.percent};" +
+                        " isPowerSaveMode = ${batteryState.powerSaveMode};" +
+                        " isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations};" +
+                        " locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()};" +
+                        " isDozeMode = ${batteryState.isDeviceIdleMode}"
             )
         }
 
@@ -134,8 +135,10 @@ class RadarJobScheduler : JobService() {
             }
 
             val source = extras.getString(EXTRA_SOURCE)
-            //this may occur, for example, if a new location job is scheduled before the current job finishes executing.
-            Radar.logger.d("Stopping Location Job | location = $location; source = $source")
+            Radar.logger.d("Stopping location job |" +
+                                   " location = $location; " +
+                                   " source = $source"
+            )
         }
 
         return false
