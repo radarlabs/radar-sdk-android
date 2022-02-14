@@ -45,6 +45,7 @@ class RadarJobScheduler : JobService() {
                 .setExtras(extras)
                 .setMinimumLatency(0)
                 .setOverrideDeadline(0)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .build()
 
             val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
