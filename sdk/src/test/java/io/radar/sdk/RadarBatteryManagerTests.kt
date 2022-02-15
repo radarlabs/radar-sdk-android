@@ -98,14 +98,14 @@ class RadarBatteryManagerTests {
                 PowerManager.LOCATION_MODE_THROTTLE_REQUESTS_WHEN_SCREEN_OFF
             )
 
-            //doze mode
+            // Doze mode
             private val idleModes = arrayOf(true, false)
 
             private val ignoreBatteryOptimizations = arrayOf(true, false)
 
             @JvmStatic
             @ParameterizedRobolectricTestRunner.Parameters(
-                name = """{index}: 
+                name = """{index}:
                 Power Save Mode: {0},
                 Location Power Save Mode: {1},
                 Idle Mode: {2},

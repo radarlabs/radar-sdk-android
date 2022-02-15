@@ -612,7 +612,7 @@ internal class RadarLocationManager(
                         .putExtra("text", foregroundService.text)
                         .putExtra("icon", foregroundService.icon )
                         .putExtra("activity", foregroundService.activity)
-                    logger.d("Starting foreground service with intent | $intent")
+                    logger.d("Starting foreground service with intent | intent = $intent")
                     context.applicationContext.startForegroundService(intent)
                     RadarForegroundService.started = true
                 }
