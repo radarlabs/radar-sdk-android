@@ -1,7 +1,6 @@
-version: 2.1
+version: 2
 jobs:
   build_and_test:
-    working_directory: ~/sdk
     docker:
       - image: circleci/android:api-30
     steps:
@@ -11,8 +10,23 @@ jobs:
           command: yes | sdkmanager --licenses || true
       - run:
           name: Build
-          command: ./gradlew check build assembleAndroidTest --stacktrace
+          command: ./gradlew check
+      # JUnit Test Results
+      - store_test_results:
+          path: sdk/build/test-results/testDebugUnitTest/TEST-io.radar.sdk.RadarTest.xml
+      # Jacoco Coverage Report
+      - store_artifacts:
+          path: sdk/build/reports/jacoco/jacocoTestReport/html
+          destination: jacoco
+      # Lint Static Analysis Report
+      - store_artifacts:
+          path: sdk/build/reports/lint-results.html
+      # Detekt Static Analysis Report
+      - store_artifacts:
+          path: sdk/build/reports/detekt/debug.html
+          destination: detekt-results.html
 workflows:
+  version: 2
   build_and_test:
     jobs:
       - build_and_test
