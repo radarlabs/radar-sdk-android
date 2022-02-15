@@ -8,10 +8,12 @@ import org.json.JSONObject
  *
  * @see [](https://radar.io/documentation/beacons)
  */
-class RadarBeacon (
+@Suppress("LongParameterList")
+class RadarBeacon(
     /**
      * The Radar ID of the point.
      */
+    @Suppress("ConstructorParameterNaming")
     val _id: String,
 
     /**
@@ -102,7 +104,7 @@ class RadarBeacon (
         }
 
         @JvmStatic
-        fun toJson(beacons: Array<RadarBeacon> ?): JSONArray? {
+        fun toJson(beacons: Array<RadarBeacon>?): JSONArray? {
             if (beacons == null) {
                 return null
             }

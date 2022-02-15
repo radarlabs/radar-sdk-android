@@ -1,7 +1,6 @@
 package io.radar.sdk.model
 
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -9,10 +8,12 @@ import org.json.JSONObject
  *
  * @see [](https://radar.io/documentation/places)
  */
+@Suppress("LongParameterList")
 class RadarPlace(
     /**
      * The Radar ID of the place.
      */
+    @Suppress("ConstructorParameterNaming")
     val _id: String,
 
     /**
@@ -21,12 +22,14 @@ class RadarPlace(
     val name: String,
 
     /**
-     * The categories of the place. For a full list of categories, see [](https://radar.io/documentation/places/categories).
+     * The categories of the place. For a full list of categories,
+     * see [](https://radar.io/documentation/places/categories).
      */
     val categories: Array<String>,
 
     /**
-     * The chain of the place, if known. May be `null` for places without a chain. For a full list of chains, see [](https://radar.io/documentation/places/chains).
+     * The chain of the place, if known. May be `null` for places without a chain. For a full list of chains,
+     * see [](https://radar.io/documentation/places/chains).
      */
     val chain: RadarChain?,
 
@@ -41,7 +44,8 @@ class RadarPlace(
     val group: String?,
 
     /**
-     * The metadata for the place, if part of a group. For details of metadata fields see [](https://radar.io/documentation/places/groups).
+     * The metadata for the place, if part of a group. For details of metadata fields
+     * see [](https://radar.io/documentation/places/groups).
      */
     val metadata: JSONObject?
 ) {

@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport")
+
 package io.radar.sdk.model
 
 import android.annotation.SuppressLint
@@ -12,10 +14,12 @@ import java.util.TimeZone
 /**
  * Represents a change in user state.
  */
+@Suppress("LongParameterList")
 class RadarEvent(
     /**
      * The Radar ID of the event.
      */
+    @Suppress("ConstructorParameterNaming")
     val _id: String,
 
     /**
@@ -97,65 +101,97 @@ class RadarEvent(
     /**
      * The types for events.
      */
-    enum class RadarEventType {
+    enum class RadarEventType(val typeString: String) {
         /** Unknown */
-        UNKNOWN,
+        UNKNOWN(""),
+
         /** `user.entered_geofence` */
-        USER_ENTERED_GEOFENCE,
+        USER_ENTERED_GEOFENCE("user.entered_geofence"),
+
         /** `user.exited_geofence` */
-        USER_EXITED_GEOFENCE,
+        USER_EXITED_GEOFENCE("user.exited_geofence"),
+
         /** `user.entered_home` */
-        USER_ENTERED_HOME,
+        USER_ENTERED_HOME("user.entered_home"),
+
         /** `user.exited_home` */
-        USER_EXITED_HOME,
+        USER_EXITED_HOME("user.exited_home"),
+
         /** `user.entered_office` */
-        USER_ENTERED_OFFICE,
+        USER_ENTERED_OFFICE("user.entered_office"),
+
         /** `user.exited_office` */
-        USER_EXITED_OFFICE,
+        USER_EXITED_OFFICE("user.exited_office"),
+
         /** `user.started_traveling` */
-        USER_STARTED_TRAVELING,
+        USER_STARTED_TRAVELING("user.started_traveling"),
+
         /** `user.stopped_traveling` */
-        USER_STOPPED_TRAVELING,
+        USER_STOPPED_TRAVELING("user.stopped_traveling"),
+
         /** `user.entered_place` */
-        USER_ENTERED_PLACE,
+        USER_ENTERED_PLACE("user.entered_place"),
+
         /** `user.exited_place` */
-        USER_EXITED_PLACE,
+        USER_EXITED_PLACE("user.exited_place"),
+
         /** `user.nearby_place_chain` */
-        USER_NEARBY_PLACE_CHAIN,
+        USER_NEARBY_PLACE_CHAIN("user.nearby_place_chain"),
+
         /** `user.entered_region_country` */
-        USER_ENTERED_REGION_COUNTRY,
+        USER_ENTERED_REGION_COUNTRY("user.entered_region_country"),
+
         /** `user.exited_region_country` */
-        USER_EXITED_REGION_COUNTRY,
+        USER_EXITED_REGION_COUNTRY("user.exited_region_country"),
+
         /** `user.entered_region_state` */
-        USER_ENTERED_REGION_STATE,
+        USER_ENTERED_REGION_STATE("user.entered_region_state"),
+
         /** `user.exited_region_state` */
-        USER_EXITED_REGION_STATE,
+        USER_EXITED_REGION_STATE("user.exited_region_state"),
+
         /** `user.entered_region_dma` */
-        USER_ENTERED_REGION_DMA,
+        USER_ENTERED_REGION_DMA("user.entered_region_dma"),
+
         /** `user.exited_region_dma` */
-        USER_EXITED_REGION_DMA,
+        USER_EXITED_REGION_DMA("user.exited_region_dma"),
+
         /** `user.started_commuting` */
-        USER_STARTED_COMMUTING,
+        USER_STARTED_COMMUTING("user.started_commuting"),
+
         /** `user.stopped_commuting` */
-        USER_STOPPED_COMMUTING,
+        USER_STOPPED_COMMUTING("user.stopped_commuting"),
+
         /** `user.started_trip` */
-        USER_STARTED_TRIP,
+        USER_STARTED_TRIP("user.started_trip"),
+
         /** `user.updated_trip` */
-        USER_UPDATED_TRIP,
+        USER_UPDATED_TRIP("user.updated_trip"),
+
         /** `user.approaching_trip_destination` */
-        USER_APPROACHING_TRIP_DESTINATION,
+        USER_APPROACHING_TRIP_DESTINATION("user.approaching_trip_destination"),
+
         /** `user.arrived_at_trip_destination` */
-        USER_ARRIVED_AT_TRIP_DESTINATION,
+        USER_ARRIVED_AT_TRIP_DESTINATION("user.arrived_at_trip_destination"),
+
         /** `user.stopped_trip` */
-        USER_STOPPED_TRIP,
+        USER_STOPPED_TRIP("user.stopped_trip"),
+
         /** `user.entered_beacon` */
-        USER_ENTERED_BEACON,
+        USER_ENTERED_BEACON("user.entered_beacon"),
+
         /** `user.exited_beacon` */
-        USER_EXITED_BEACON,
+        USER_EXITED_BEACON("user.exited_beacon"),
+
         /** `user.entered_region_postal_code` */
-        USER_ENTERED_REGION_POSTAL_CODE,
+        USER_ENTERED_REGION_POSTAL_CODE("user.entered_region_postal_code"),
+
         /** `user.exited_region_postal_code` */
-        USER_EXITED_REGION_POSTAL_CODE
+        USER_EXITED_REGION_POSTAL_CODE("user.exited_region_postal_code");
+
+        companion object {
+            fun fromType(type: String) = values().find { it.typeString == type } ?: UNKNOWN
+        }
     }
 
     /**
@@ -164,10 +200,13 @@ class RadarEvent(
     enum class RadarEventConfidence {
         /** Unknown confidence */
         NONE,
+
         /** Low confidence */
         LOW,
+
         /** Medium confidence */
         MEDIUM,
+
         /** High confidence */
         HIGH
     }
@@ -178,8 +217,10 @@ class RadarEvent(
     enum class RadarEventVerification {
         /** Accept event */
         ACCEPT,
+
         /** Unverify event */
         UNVERIFY,
+
         /** Reject event */
         REJECT
     }
@@ -205,6 +246,7 @@ class RadarEvent(
         private const val FIELD_LOCATION_ACCURACY = "locationAccuracy"
 
         @JvmStatic
+        @Suppress("ComplexMethod", "LongMethod")
         @SuppressLint("SimpleDateFormat")
         private fun fromJson(obj: JSONObject?): RadarEvent? {
             if (obj == null) {
@@ -221,37 +263,7 @@ class RadarEvent(
                 dateFormat.parse(actualCreatedAtStr)
             } ?: Date()
             val live = obj.optBoolean(FIELD_LIVE)
-            val type = when (obj.optString(FIELD_TYPE)) {
-                "user.entered_geofence" -> USER_ENTERED_GEOFENCE
-                "user.exited_geofence" -> USER_EXITED_GEOFENCE
-                "user.entered_home" -> USER_ENTERED_HOME
-                "user.exited_home" -> USER_EXITED_HOME
-                "user.entered_office" -> USER_ENTERED_OFFICE
-                "user.exited_office" -> USER_EXITED_OFFICE
-                "user.started_traveling" -> USER_STARTED_TRAVELING
-                "user.stopped_traveling" -> USER_STOPPED_TRAVELING
-                "user.entered_place" -> USER_ENTERED_PLACE
-                "user.exited_place" -> USER_EXITED_PLACE
-                "user.nearby_place_chain" -> USER_NEARBY_PLACE_CHAIN
-                "user.entered_region_country" -> USER_ENTERED_REGION_COUNTRY
-                "user.exited_region_country" -> USER_EXITED_REGION_COUNTRY
-                "user.entered_region_state" -> USER_ENTERED_REGION_STATE
-                "user.exited_region_state" -> USER_EXITED_REGION_STATE
-                "user.entered_region_dma" -> USER_ENTERED_REGION_DMA
-                "user.exited_region_dma" -> USER_EXITED_REGION_DMA
-                "user.started_commuting" -> USER_STARTED_COMMUTING
-                "user.stopped_commuting" -> USER_STOPPED_COMMUTING
-                "user.started_trip" -> USER_STARTED_TRIP
-                "user.updated_trip" -> USER_UPDATED_TRIP
-                "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
-                "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
-                "user.stopped_trip" -> USER_STOPPED_TRIP
-                "user.entered_beacon" -> USER_ENTERED_BEACON
-                "user.exited_beacon" -> USER_EXITED_BEACON
-                "user.entered_region_postal_code" -> USER_ENTERED_REGION_POSTAL_CODE
-                "user.exited_region_postal_code" -> USER_EXITED_REGION_POSTAL_CODE
-                else -> UNKNOWN
-            }
+            val type = RadarEventType.fromType(obj.optString(FIELD_TYPE))
             val geofence = RadarGeofence.fromJson(obj.optJSONObject(FIELD_GEOFENCE))
             val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
             val region = RadarRegion.fromJson(obj.optJSONObject(FIELD_REGION))
@@ -300,7 +312,7 @@ class RadarEvent(
         }
 
         @JvmStatic
-        fun toJson(events: Array<RadarEvent> ?): JSONArray? {
+        fun toJson(events: Array<RadarEvent>?): JSONArray? {
             if (events == null) {
                 return null
             }
@@ -313,39 +325,7 @@ class RadarEvent(
         }
 
         @JvmStatic
-        fun stringForType(type: RadarEventType): String? {
-            return when (type) {
-                USER_ENTERED_GEOFENCE -> "user.entered_geofence"
-                USER_EXITED_GEOFENCE -> "user.exited_geofence"
-                USER_ENTERED_HOME -> "user.entered_home"
-                USER_EXITED_HOME -> "user.exited_home"
-                USER_ENTERED_OFFICE -> "user.entered_office"
-                USER_EXITED_OFFICE -> "user.exited_office"
-                USER_STARTED_TRAVELING -> "user.started_traveling"
-                USER_STOPPED_TRAVELING -> "user.stopped_traveling"
-                USER_ENTERED_PLACE -> "user.entered_place"
-                USER_EXITED_PLACE -> "user.exited_place"
-                USER_NEARBY_PLACE_CHAIN -> "user.nearby_place_chain"
-                USER_ENTERED_REGION_COUNTRY -> "user.entered_region_country"
-                USER_EXITED_REGION_COUNTRY -> "user.exited_region_country"
-                USER_ENTERED_REGION_STATE -> "user.entered_region_state"
-                USER_EXITED_REGION_STATE -> "user.exited_region_state"
-                USER_ENTERED_REGION_DMA -> "user.entered_region_dma"
-                USER_EXITED_REGION_DMA -> "user.exited_region_dma"
-                USER_STARTED_COMMUTING -> "user.started_commuting"
-                USER_STOPPED_COMMUTING -> "user.stopped_commuting"
-                USER_STARTED_TRIP -> "user.started_trip"
-                USER_UPDATED_TRIP -> "user.updated_trip"
-                USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
-                USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
-                USER_STOPPED_TRIP -> "user.stopped_trip"
-                USER_ENTERED_BEACON -> "user.entered_beacon"
-                USER_EXITED_BEACON -> "user.exited_beacon"
-                USER_ENTERED_REGION_POSTAL_CODE -> "user.entered_region_postal_code"
-                USER_EXITED_REGION_POSTAL_CODE -> "user.exited_region_postal_code"
-                else -> null
-            }
-        }
+        fun stringForType(type: RadarEventType) = if (type == UNKNOWN) null else type.typeString
     }
 
     fun toJson(): JSONObject {

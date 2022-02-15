@@ -6,6 +6,7 @@ import org.json.JSONObject
 /**
  * Represents an address.
  */
+@Suppress("LongParameterList")
 class RadarAddress(
     /**
      * The location coordinate of the address.
@@ -18,8 +19,8 @@ class RadarAddress(
     val formattedAddress: String?,
 
     /**
-    * The name of the country of the address.
-    */
+     * The name of the country of the address.
+     */
     val country: String?,
 
     /**
@@ -136,6 +137,7 @@ class RadarAddress(
         private const val FIELD_CONFIDENCE = "confidence"
 
         @JvmStatic
+        @Suppress("ComplexMethod")
         fun fromJson(obj: JSONObject?): RadarAddress? {
             if (obj == null) {
                 return null
@@ -159,7 +161,7 @@ class RadarAddress(
             val number = obj.optString(FIELD_NUMBER) ?: null
             val addressLabel = obj.optString(FIELD_ADDRESS_LABEL) ?: null
             val placeLabel = obj.optString(FIELD_PLACE_LABEL) ?: null
-            val confidence = when(obj.optString(FIELD_CONFIDENCE)) {
+            val confidence = when (obj.optString(FIELD_CONFIDENCE)) {
                 "exact" -> RadarAddressConfidence.EXACT
                 "interpolated" -> RadarAddressConfidence.INTERPOLATED
                 "fallback" -> RadarAddressConfidence.FALLBACK
@@ -215,7 +217,7 @@ class RadarAddress(
 
         @JvmStatic
         fun stringForConfidence(confidence: RadarAddressConfidence): String {
-            return when(confidence) {
+            return when (confidence) {
                 RadarAddressConfidence.EXACT -> "exact"
                 RadarAddressConfidence.INTERPOLATED -> "interpolated"
                 RadarAddressConfidence.FALLBACK -> "fallback"

@@ -9,32 +9,38 @@ import org.json.JSONObject
  */
 class RadarContext(
     /**
-     * An array of the geofences for the location. May be empty if the location is not in any geofences. See [](https://radar.io/documentation/geofences).
+     * An array of the geofences for the location. May be empty if the location is not in any geofences.
+     * See [](https://radar.io/documentation/geofences).
      */
     val geofences: Array<RadarGeofence>,
 
     /**
-     * The place for the location. May be `null` if the location is not at a place or if Places is not enabled. See [](https://radar.io/documentation/places).
+     * The place for the location. May be `null` if the location is not at a place or if Places is not enabled.
+     * See [](https://radar.io/documentation/places).
      */
     val place: RadarPlace?,
 
     /**
-     * The country of the location. May be `null` if country is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The country of the location. May be `null` if country is not available or if Regions is not enabled.
+     * See [](https://radar.io/documentation/regions).
      */
     val country: RadarRegion?,
 
     /**
-     * The state of the location. May be `null` if state is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The state of the location. May be `null` if state is not available or if Regions is not enabled.
+     * See [](https://radar.io/documentation/regions).
      */
     val state: RadarRegion?,
 
     /**
-     * The designated market area (DMA) of the location. May be `null` if DMA is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The designated market area (DMA) of the location. May be `null` if DMA is not available or if Regions is not
+     * enabled. See [](https://radar.io/documentation/regions).
      */
     val dma: RadarRegion?,
 
     /**
-     * The postal code of the location. May be `null` if postal code is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The postal code of the location. May be `null` if postal code is not available or if Regions is not enabled.
+     * See [](https://radar.io/documentation/regions).
      */
     val postalCode: RadarRegion?
 ) {

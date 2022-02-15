@@ -1,18 +1,16 @@
 package io.radar.sdk.model
 
 import android.annotation.SuppressLint
-import org.json.JSONException
 import org.json.JSONObject
-import java.text.ParseException
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.TimeZone
+import java.util.*
 
 /**
  * Represents a learned home or work location.
  *
  * @see [](https://radar.io/documentation/insights)
  */
+@Suppress("LongParameterList")
 class RadarUserInsightsLocation(
     /**
      * The type of the learned location.

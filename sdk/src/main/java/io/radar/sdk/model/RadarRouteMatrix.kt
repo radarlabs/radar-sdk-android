@@ -37,21 +37,16 @@ class RadarRouteMatrix(
     }
 
     fun routeBetween(originIndex: Int, destinationIndex: Int): RadarRoute? {
-        if (matrix == null) {
+        if (matrix == null || originIndex >= matrix.size) {
             return null
         }
 
-        if (originIndex >= matrix.size) {
-            return null
+        val routes = matrix[originIndex]
+        return if (routes == null || destinationIndex >= routes.size) {
+            null
+        } else {
+            routes[destinationIndex]
         }
-
-        val routes = matrix[originIndex] ?: return null
-
-        if (destinationIndex >= routes.size) {
-            return null
-        }
-
-        return routes[destinationIndex]
     }
 
     fun toJson(): JSONArray {
