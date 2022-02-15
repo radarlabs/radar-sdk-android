@@ -7,6 +7,7 @@ import org.json.JSONObject
 import java.text.DecimalFormat
 import java.util.UUID
 
+@Suppress("TooManyFunctions")
 internal object RadarSettings {
 
     private const val KEY_PUBLISHABLE_KEY = "publishable_key"
@@ -31,7 +32,7 @@ internal object RadarSettings {
     private const val KEY_OLD_OFFLINE_MODE = "offline_mode"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
-        return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
+        return RadarUtils.getSharedPreferences(context)
     }
 
     internal fun getPublishableKey(context: Context): String? {
@@ -72,6 +73,7 @@ internal object RadarSettings {
         return getSharedPreferences(context).getString(KEY_ID, null)
     }
 
+    @Suppress("FunctionParameterNaming")
     internal fun setId(context: Context, _id: String?) {
         getSharedPreferences(context).edit { putString(KEY_ID, _id) }
     }
