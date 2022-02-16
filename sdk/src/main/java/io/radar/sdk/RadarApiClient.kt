@@ -6,7 +6,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
-import io.radar.sdk.model.RadarMeta
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.*
@@ -29,7 +28,7 @@ internal class RadarApiClient(
             events: Array<RadarEvent>? = null,
             user: RadarUser? = null,
             nearbyGeofences: Array<RadarGeofence>? = null,
-            meta: RadarMeta? = null
+            config: RadarConfig? = null
         )
     }
 
@@ -283,7 +282,7 @@ internal class RadarApiClient(
 
                 RadarState.setLastFailedStoppedLocation(context, null)
 
-                val meta = RadarMeta.fromJson(res)
+                val config = RadarConfig.fromJson(res)
 
                 val events = res.optJSONArray("events")?.let { eventsArr ->
                     RadarEvent.fromJson(eventsArr)
@@ -307,7 +306,7 @@ internal class RadarApiClient(
                         Radar.sendEvents(events, user)
                     }
 
-                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, meta)
+                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config)
 
                     return
                 }

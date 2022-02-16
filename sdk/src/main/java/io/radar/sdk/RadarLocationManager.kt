@@ -570,7 +570,7 @@ internal class RadarLocationManager(
                     events: Array<RadarEvent>?,
                     user: RadarUser?,
                     nearbyGeofences: Array<RadarGeofence>?,
-                    meta: RadarMeta?
+                    config: RadarConfig?
                 ) {
                     if (user != null) {
                         val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
@@ -587,7 +587,7 @@ internal class RadarLocationManager(
                         locationManager.stopForegroundService()
                     }
 
-                    updateTrackingFromMeta(meta)
+                    updateTrackingFromMeta(config?.meta)
                 }
             })
         }

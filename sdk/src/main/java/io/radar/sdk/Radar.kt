@@ -674,7 +674,7 @@ object Radar {
                             events: Array<RadarEvent>?,
                             user: RadarUser?,
                             nearbyGeofences: Array<RadarGeofence>?,
-                            meta: RadarMeta?,
+                            config: RadarConfig?,
                         ) {
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
@@ -753,7 +753,7 @@ object Radar {
                 events: Array<RadarEvent>?,
                 user: RadarUser?,
                 nearbyGeofences: Array<RadarGeofence>?,
-                meta: RadarMeta?,
+                config: RadarConfig?,
             ) {
                 handler.post {
                     callback?.onComplete(status, location, events, user)
@@ -868,7 +868,7 @@ object Radar {
                                 events: Array<RadarEvent>?,
                                 user: RadarUser?,
                                 nearbyGeofences: Array<RadarGeofence>?,
-                                meta: RadarMeta?,
+                                config: RadarConfig?,
                             ) {
                                 handler.post {
                                     callback?.onComplete(status, location, events, user)
