@@ -1278,14 +1278,14 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_trackingOptionsFallback_success() {
-        RadarSettings.setFallbackTrackingOptions(context, RadarTrackingOptions.RESPONSIVE)
-        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarSettings.getFallbackTrackingOptions(context))
+    fun test_Radar_trackingOptionsRemote_success() {
+        RadarSettings.setRemoteTrackingOptions(context, RadarTrackingOptions.RESPONSIVE)
+        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarSettings.getRemoteTrackingOptions(context))
 
         RadarSettings.setTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
         assertEquals(RadarTrackingOptions.CONTINUOUS, RadarSettings.getTrackingOptions(context))
 
-        RadarSettings.revertToFallbackTrackingOptions(context)
+        RadarSettings.removeRemoteTrackingOptions(context)
         assertEquals(RadarTrackingOptions.RESPONSIVE, RadarSettings.getTrackingOptions(context))
     }
 

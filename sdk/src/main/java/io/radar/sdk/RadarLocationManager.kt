@@ -123,7 +123,6 @@ internal class RadarLocationManager(
 
         RadarSettings.setTracking(context, true)
         RadarSettings.setTrackingOptions(context, options)
-        RadarSettings.setFallbackTrackingOptions(context, options)
         this.updateTracking()
     }
 
@@ -185,7 +184,7 @@ internal class RadarLocationManager(
 
     internal fun updateTracking(location: Location? = null) {
         var tracking = RadarSettings.getTracking(context)
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = Radar.getTrackingOptions()
 
         logger.d("Updating tracking | options = $options; location = $location")
 
@@ -253,11 +252,13 @@ internal class RadarLocationManager(
     internal fun updateTrackingFromMeta(meta: RadarMeta?) {
         if (meta?.remoteTrackingOptions != null) {
             // use remotely-configured options if specified
-            RadarSettings.setTrackingOptions(context, meta.remoteTrackingOptions)
+            logger.d("Listening to server tracking options")
+            RadarSettings.setRemoteTrackingOptions(context, meta.remoteTrackingOptions)
             RadarSettings.setShouldListenToServerTrackingOptions(context, true)
         } else {
             // fallback
-            RadarSettings.revertToFallbackTrackingOptions(context)
+            logger.d("Not listening to server tracking options; reverting to fallback values")
+            RadarSettings.removeRemoteTrackingOptions(context)
             RadarSettings.setShouldListenToServerTrackingOptions(context, false)
         }
         updateTracking()
@@ -270,7 +271,7 @@ internal class RadarLocationManager(
 
         this.removeBubbleGeofences()
 
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = Radar.getTrackingOptions()
 
         if (stopped && options.useStoppedGeofence) {
             val identifier = BUBBLE_STOPPED_GEOFENCE_REQUEST_ID
@@ -331,7 +332,7 @@ internal class RadarLocationManager(
     private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
         this.removeSyncedGeofences()
 
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = Radar.getTrackingOptions()
         if (!options.syncGeofences || radarGeofences == null) {
             return
         }
@@ -432,7 +433,7 @@ internal class RadarLocationManager(
             return
         }
 
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = Radar.getTrackingOptions()
         val wasStopped = RadarState.getStopped(context)
         var stopped: Boolean
 
@@ -550,7 +551,7 @@ internal class RadarLocationManager(
     }
 
     private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = Radar.getTrackingOptions()
         val foregroundService = RadarSettings.getForegroundService(context)
 
         if (foregroundService != null && foregroundService.updatesOnly) {

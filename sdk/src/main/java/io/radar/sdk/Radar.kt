@@ -955,13 +955,8 @@ object Radar {
      * @return The current tracking options.
      */
     @JvmStatic
-    fun getTrackingOptions(): RadarTrackingOptions? {
-        if (!initialized) {
-            return null
-        }
-
-        return RadarSettings.getTrackingOptions(context)
-    }
+    fun getTrackingOptions() = RadarSettings.getRemoteTrackingOptions(context)
+        ?: RadarSettings.getTrackingOptions(context)
 
     /**
      * Settings for the foreground notification when the foregroundServiceEnabled parameter

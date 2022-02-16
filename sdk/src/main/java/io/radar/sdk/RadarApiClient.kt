@@ -170,7 +170,7 @@ internal class RadarApiClient(
         }
 
         val params = JSONObject()
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = Radar.getTrackingOptions()
         val tripOptions = RadarSettings.getTripOptions(context)
         try {
             params.putOpt("id", RadarSettings.getId(context))

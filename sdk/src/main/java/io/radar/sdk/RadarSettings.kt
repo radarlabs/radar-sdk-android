@@ -21,7 +21,7 @@ internal object RadarSettings {
     private const val KEY_TRACKING = "background_tracking"
     private const val KEY_SERVER_TRACKING = "server_tracking_options"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
-    private const val KEY_FALLBACK_TRACKING_OPTIONS = "fallback_tracking_options"
+    private const val KEY_REMOTE_TRACKING_OPTIONS = "remote_tracking_options"
     private const val KEY_FOREGROUND_SERVICE = "foreground_service"
     private const val KEY_FEATURE_SETTINGS = "foreground_service"
     private const val KEY_TRIP_OPTIONS = "trip_options"
@@ -130,11 +130,8 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putBoolean(KEY_SERVER_TRACKING, tracking) }
     }
 
-    internal fun revertToFallbackTrackingOptions(context: Context) {
-        val fallbackTrackingOptions = getFallbackTrackingOptions(context)
-        if (fallbackTrackingOptions != null) {
-            setTrackingOptions(context, fallbackTrackingOptions)
-        }
+    internal fun removeRemoteTrackingOptions(context: Context) {
+        getSharedPreferences(context).edit { remove(KEY_REMOTE_TRACKING_OPTIONS) }
     }
 
     internal fun getTrackingOptions(context: Context): RadarTrackingOptions {
@@ -176,14 +173,14 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putString(KEY_TRACKING_OPTIONS, optionsJson) }
     }
 
-    internal fun getFallbackTrackingOptions(context: Context): RadarTrackingOptions? {
-        val keyExists = getSharedPreferences(context).contains(KEY_FALLBACK_TRACKING_OPTIONS)
-        return if (keyExists) getTrackingOptionsByKey(context, KEY_FALLBACK_TRACKING_OPTIONS) else null
+    internal fun getRemoteTrackingOptions(context: Context): RadarTrackingOptions? {
+        val keyExists = getSharedPreferences(context).contains(KEY_REMOTE_TRACKING_OPTIONS)
+        return if (keyExists) getTrackingOptionsByKey(context, KEY_REMOTE_TRACKING_OPTIONS) else null
     }
 
-    internal fun setFallbackTrackingOptions(context: Context, options: RadarTrackingOptions) {
+    internal fun setRemoteTrackingOptions(context: Context, options: RadarTrackingOptions) {
         val optionsJson = options.toJson().toString()
-        getSharedPreferences(context).edit { putString(KEY_FALLBACK_TRACKING_OPTIONS, optionsJson) }
+        getSharedPreferences(context).edit { putString(KEY_REMOTE_TRACKING_OPTIONS, optionsJson) }
     }
 
     internal fun getForegroundService(context: Context): RadarTrackingOptions.RadarTrackingOptionsForegroundService? {
