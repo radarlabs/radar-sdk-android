@@ -1284,9 +1284,10 @@ class RadarTest {
 
         RadarSettings.setTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
         assertEquals(RadarTrackingOptions.CONTINUOUS, RadarSettings.getTrackingOptions(context))
+        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarSettings.getRemoteTrackingOptions(context))
 
         RadarSettings.removeRemoteTrackingOptions(context)
-        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarSettings.getTrackingOptions(context))
+        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarSettings.getTrackingOptions(context))
     }
 
 }
