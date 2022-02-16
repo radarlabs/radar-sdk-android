@@ -415,7 +415,7 @@ object Radar {
         this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config.meta)
-                RadarSettings.setFeatureSettings(context, config.settings)
+                RadarSettings.setFeatureSettings(context, config.featureSettings)
             }
         })
 

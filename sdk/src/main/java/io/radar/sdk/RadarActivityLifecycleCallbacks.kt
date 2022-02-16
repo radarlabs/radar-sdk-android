@@ -9,7 +9,6 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
-import io.radar.sdk.model.RadarMeta
 import kotlin.math.max
 
 internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCallbacks {
@@ -45,7 +44,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
                     Radar.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
                         override fun onComplete(config: RadarConfig) {
                             Radar.locationManager.updateTrackingFromMeta(config.meta)
-                            RadarSettings.setFeatureSettings(activity.applicationContext, config.settings)
+                            RadarSettings.setFeatureSettings(activity.applicationContext, config.featureSettings)
                         }
                     })
                 }

@@ -7,16 +7,16 @@ import org.json.JSONObject
  */
 internal data class RadarConfig(
     val meta: RadarMeta,
-    val settings: RadarFeatureSettings
+    val featureSettings: RadarFeatureSettings
 ) {
 
     companion object {
         private const val META = "meta"
-        private const val SETTINGS = "settings"
+        private const val FEATURE_SETTINGS = "settings"
 
         fun fromJson(res: JSONObject?) = RadarConfig(
             RadarMeta.fromJson(res?.optJSONObject(META)),
-            RadarFeatureSettings.fromJson(res?.optJSONObject(SETTINGS))
+            RadarFeatureSettings.fromJson(res?.optJSONObject(FEATURE_SETTINGS))
         )
     }
 }
