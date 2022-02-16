@@ -413,7 +413,10 @@ object Radar {
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks())
 
         this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(meta: RadarMeta?) = locationManager.updateTrackingFromMeta(meta)
+            override fun onComplete(config: RadarConfig) {
+                locationManager.updateTrackingFromMeta(config.meta)
+                RadarSettings.setFeatureSettings(context, config.settings)
+            }
         })
 
         logger.i("📍️ Radar initialized")

@@ -3,6 +3,7 @@ package io.radar.sdk
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import io.radar.sdk.model.RadarFeatureSettings
 import org.json.JSONObject
 import java.text.DecimalFormat
 import java.util.UUID
@@ -22,6 +23,7 @@ internal object RadarSettings {
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
     private const val KEY_FALLBACK_TRACKING_OPTIONS = "fallback_tracking_options"
     private const val KEY_FOREGROUND_SERVICE = "foreground_service"
+    private const val KEY_FEATURE_SETTINGS = "foreground_service"
     private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
     private const val KEY_HOST = "host"
@@ -212,6 +214,16 @@ internal object RadarSettings {
         val optionsObj = options?.toJson()
         val optionsJson = optionsObj?.toString()
         getSharedPreferences(context).edit { putString(KEY_TRIP_OPTIONS, optionsJson) }
+    }
+
+    fun setFeatureSettings(context: Context, featureSettings: RadarFeatureSettings) {
+        getSharedPreferences(context).edit { putString(KEY_FEATURE_SETTINGS, featureSettings.toJson().toString()) }
+    }
+
+    fun getFeatureSettings(context: Context): RadarFeatureSettings {
+        val optionsJson = getSharedPreferences(context).getString(KEY_FEATURE_SETTINGS, null)
+            ?: return RadarFeatureSettings.default()
+        return RadarFeatureSettings.fromJson(JSONObject(optionsJson))
     }
 
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {
