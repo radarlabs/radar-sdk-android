@@ -4,7 +4,7 @@ buildscript {
         detekt_version = '1.18.1'
         jacoco_version = '0.8.7'
 
-        radarVersion = '3.3.3'
+        radarVersion = '3.4.0'
     }
     repositories {
         google()
