@@ -1,6 +1,24 @@
+import io.radar.ci.GitHubActions
+
 buildscript {
     ext.kotlin_version = "1.5.21"
     ext.detekt_version = '1.18.1'
+    ext.radarVersion = '3.4.0'
+
+    ext.buildNumber = ".${System.currentTimeMillis()}"
+    GitHubActions githubRelease = GitHubActions.get()
+    ext.isSnapshot = false
+    if (githubRelease) {
+        if (githubRelease.snapshot) {
+            // Use the existing radarVersion with the -SNAPSHOT suffix
+            ext.isSnapshot = true
+            ext.buildNumber = '-SNAPSHOT'
+        } else {
+            ext.buildNumber = ''
+            // Use the tag from the release name as the version-to-publish / include in source code
+            ext.radarVersion = githubRelease.tag
+        }
+    }
     repositories {
         google()
         mavenCentral()
