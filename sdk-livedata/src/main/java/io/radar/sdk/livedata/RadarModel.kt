@@ -114,4 +114,4 @@ class RadarModel internal constructor() {
     fun getLogMessage(): LiveData<String> {
         return logMessage
     }
-} 
+}
