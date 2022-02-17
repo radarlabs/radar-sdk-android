@@ -6,7 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarReceiver
-import io.radar.sdk.livedata.ktx.model.DeviceLocation
+import io.radar.sdk.livedata.model.DeviceLocation
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
 

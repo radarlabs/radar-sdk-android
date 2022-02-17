@@ -8,7 +8,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.MutableLiveData
-import io.radar.sdk.livedata.ktx.RadarModel
+import io.radar.sdk.livedata.RadarModel
 
 class MyRadarLiveDataReceiver(context: Context, model: RadarModel) {
     private companion object {
