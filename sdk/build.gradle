@@ -1,4 +1,3 @@
-import io.radar.ci.GitHubActions
 import io.radar.ci.GitHubClient
 import io.radar.ci.SnapshotDispatcher
 import io.radar.mvnpublish.MavenServer
