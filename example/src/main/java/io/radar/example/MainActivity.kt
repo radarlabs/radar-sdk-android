@@ -10,7 +10,7 @@ import androidx.core.app.ActivityCompat
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
-import io.radar.sdk.livedata.ktx.initializeAndObserve
+import io.radar.sdk.livedata.initializeAndObserve
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
