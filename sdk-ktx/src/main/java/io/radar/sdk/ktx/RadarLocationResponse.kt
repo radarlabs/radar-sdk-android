@@ -236,18 +236,9 @@ suspend fun Radar.trackCurrentLocation(
     }
 }
 
-/**
- * Manually updates the user's location. Note that these calls are subject to rate limits.
- *
- * @see [Radar Android SDK docs](https://radar.io/documentation/sdk/android#foreground-tracking)
- *
- * @param[location] A location for the user.
- *
- * @return tracking response
- */
-suspend fun Radar.trackLocation(location: Location): RadarTrackResponse {
+suspend fun Radar.trackLocation(): RadarTrackResponse {
     return suspendCoroutine { continuation ->
-        trackOnce(location, object : Radar.RadarTrackCallback {
+        trackOnce(object : Radar.RadarTrackCallback {
             override fun onComplete(
                 status: Radar.RadarStatus,
                 location: Location?,
@@ -261,27 +252,44 @@ suspend fun Radar.trackLocation(location: Location): RadarTrackResponse {
 }
 
 /**
- * Mocks tracking the user's location from an origin to a destination.
+ * Tracks the user's location once with the desired accuracy and optionally ranges beacons in the foreground.
  *
- * @see [Radar Android SDK docs](https://radar.io/documentation/sdk/android#mock-tracking-for-testing)
+ * @see [](https://radar.io/documentation/sdk/android#foreground-tracking)
  *
- * @param[origin] The origin.
- * @param[destination] The destination.
- * @param[mode] The travel mode.
- * @param[steps] The number of mock location updates.
- * @param[interval] The interval in seconds between each mock location update. A number between 1 and 60.
+ * @param[desiredAccuracy] The desired accuracy.
+ * @param[beacons] A boolean indicating whether to range beacons.
+ * @return tracking response
+ */
+suspend fun Radar.trackLocation(
+    desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy,
+    beacons: Boolean
+): RadarTrackResponse {
+    return suspendCoroutine { continuation ->
+        trackOnce(desiredAccuracy, beacons, object : Radar.RadarTrackCallback {
+            override fun onComplete(
+                status: Radar.RadarStatus,
+                location: Location?,
+                events: Array<RadarEvent>?,
+                user: RadarUser?
+            ) {
+                continuation.resume(RadarTrackResponse(status, location, events?.toList(), user))
+            }
+        })
+    }
+}
+
+/**
+ * Manually updates the user's location. Note that these calls are subject to rate limits.
+ *
+ * @see [Radar Android SDK docs](https://radar.io/documentation/sdk/android#foreground-tracking)
+ *
+ * @param[location] A location for the user.
  *
  * @return tracking response
  */
-suspend fun Radar.mockTrackLocation(
-    origin: Location,
-    destination: Location,
-    mode: Radar.RadarRouteMode,
-    steps: Int,
-    interval: Int
-): RadarTrackResponse {
+suspend fun Radar.trackLocation(location: Location): RadarTrackResponse {
     return suspendCoroutine { continuation ->
-        mockTracking(origin, destination, mode, steps, interval, object : Radar.RadarTrackCallback {
+        trackOnce(location, object : Radar.RadarTrackCallback {
             override fun onComplete(
                 status: Radar.RadarStatus,
                 location: Location?,
@@ -518,7 +526,7 @@ suspend fun Radar.getAutoComplete(
  *
  * @return geocode response data
  */
-suspend fun Radar.getAutocomplete(
+suspend fun Radar.getAutoComplete(
     query: String,
     near: Location? = null,
     layers: Array<String>? = null,
