@@ -251,13 +251,13 @@ internal class RadarLocationManager(
 
     internal fun updateTrackingFromMeta(meta: RadarMeta?) {
         if (meta?.remoteTrackingOptions != null) {
-            // use remotely-configured options if specified
-            logger.d("Listening to server tracking options")
+            // Use remotely-configured options if specified
+            logger.d("Adding server tracking options | options = ${meta.remoteTrackingOptions}")
             RadarSettings.setRemoteTrackingOptions(context, meta.remoteTrackingOptions)
             RadarSettings.setShouldListenToServerTrackingOptions(context, true)
         } else {
-            // fallback
-            logger.d("Not listening to server tracking options; reverting to fallback values")
+            // Fallback
+            logger.d("Removing server tracking options | options = ${Radar.getTrackingOptions()}")
             RadarSettings.removeRemoteTrackingOptions(context)
             RadarSettings.setShouldListenToServerTrackingOptions(context, false)
         }
