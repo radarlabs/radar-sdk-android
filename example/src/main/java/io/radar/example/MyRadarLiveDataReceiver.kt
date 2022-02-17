@@ -28,7 +28,9 @@ class MyRadarLiveDataReceiver(context: Context, model: RadarModel) {
             text.value = Utils.stringForRadarStatus(status)
         }
         model.getEvents().observeForever { events ->
-            events.forEach { event -> text.value = Utils.stringForRadarEvent(event) }
+            for (event in events) {
+                text.value = Utils.stringForRadarEvent(event)
+            }
         }
         model.getLogMessage().observeForever { message ->
             text.value = message
