@@ -1,0 +1,101 @@
+import io.radar.mvnpublish.MavenServer
+
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+    id 'org.jetbrains.dokka'
+    id 'io.radar.mvnpublish'
+    id 'io.gitlab.arturbosch.detekt' version "$detekt_version"
+}
+
+android {
+    compileSdk 31
+
+    defaultConfig {
+        minSdk 16
+        targetSdk 31
+
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    lintOptions {
+        warningsAsErrors true
+    }
+}
+
+tasks.withType(Test) {
+    testLogging {
+        showStandardStreams = true
+        events = ['passed', 'failed', 'skipped']
+    }
+}
+
+detekt {
+    toolVersion = "$detekt_version"
+    ignoreFailures = false
+    //config = rootProject.files('tools/detekt/radar-detekt-config.yml')
+    //buildUponDefaultConfig = true
+    reports {
+        html.enabled = true
+        xml.enabled = false
+        txt.enabled = false
+        sarif.enabled = false
+    }
+}
+
+dependencies {
+    implementation project(':sdk')
+}
+
+task androidSourcesJar(type: Jar) {
+    archiveClassifier.set('sources')
+    from android.sourceSets.main.java.srcDirs
+}
+
+dokkaHtml.configure {
+    outputDirectory.set(file("$buildDir/docs"))
+
+    dokkaSourceSets {
+        named('main') {
+            noAndroidSdkLink.set(false)
+        }
+    }
+}
+
+dokkaJavadoc.configure {
+    outputDirectory.set(file("$buildDir/javadocs"))
+}
+
+task androidJavadocsJar(type: Jar, dependsOn: dokkaJavadoc) {
+    archiveClassifier.set('javadoc')
+    from dokkaJavadoc.outputDirectory
+}
+
+artifacts {
+    archives androidSourcesJar, androidJavadocsJar
+}
+
+mvnpublish {
+    publication {
+        name = 'Radar Android SDK - Kotlin Extensions'
+        description = 'Core Kotlin Extensions for the Android SDK for Radar, the leading geofencing and location tracking platform'
+        repositoryName = 'radar-sdk-ktx'
+        group = 'io.radar'
+        artifactId = 'sdk-ktx'
+        version = "$radarVersion$buildNumber"
+        artifacts = ["$buildDir/outputs/aar/$project.name-release.aar", androidSourcesJar, androidJavadocsJar]
+        server = isSnapshot ? MavenServer.SNAPSHOT : MavenServer.RELEASE
+    }
+}

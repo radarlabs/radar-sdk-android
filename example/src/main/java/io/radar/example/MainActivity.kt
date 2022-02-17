@@ -10,6 +10,7 @@ import androidx.core.app.ActivityCompat
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
+import io.radar.sdk.livedata.ktx.initializeAndObserve
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -24,8 +25,10 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 0)
         }
 
-        val receiver = MyRadarReceiver()
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver)
+        MyRadarLiveDataReceiver(this, Radar.initializeAndObserve(this, "prj_test_pk_0000000000000000000000000000000000000000"))
+
+//        val receiver = MyRadarReceiver()
+//        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver)
 
         Radar.getLocation { status, location, stopped ->
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
