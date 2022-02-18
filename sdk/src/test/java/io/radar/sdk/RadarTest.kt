@@ -276,7 +276,7 @@ class RadarTest {
 
     @Test
     fun test_Radar_initialize() {
-        assertEquals(publishableKey, RadarSettings.getPublishableKey(context))
+        assertEquals(publishableKey, Radar.settings.getPublishableKey())
     }
 
     @Test

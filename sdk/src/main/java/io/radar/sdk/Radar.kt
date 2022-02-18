@@ -335,12 +335,13 @@ object Radar {
     private lateinit var context: Context
     private lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
-    internal lateinit var logger: RadarLogger
+    internal val logger = RadarLogger()
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var beaconManager: RadarBeaconManager
     private lateinit var logBuffer: RadarLogBuffer
     internal lateinit var batteryManager: RadarBatteryManager
+    internal lateinit var settings: RadarSettings
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -375,18 +376,18 @@ object Radar {
         this.handler = Handler(this.context.mainLooper)
         this.receiver = receiver
 
+        if (!this::settings.isInitialized) {
+            this.settings = RadarSettings(context)
+        }
+
         if (!this::logBuffer.isInitialized) {
             this.logBuffer = RadarSimpleLogBuffer()
         }
 
-        if (!this::logger.isInitialized) {
-            this.logger = RadarLogger(this.context)
-        }
-
-        RadarSettings.updateSessionId(this.context)
+        settings.updateSessionId()
 
         if (publishableKey != null) {
-            RadarSettings.setPublishableKey(this.context, publishableKey)
+            settings.setPublishableKey(publishableKey)
         }
 
         if (!this::apiClient.isInitialized) {
@@ -430,7 +431,7 @@ object Radar {
             return
         }
 
-        RadarSettings.setUserId(context, userId)
+        settings.setUserId(userId)
     }
 
     /**
@@ -446,7 +447,7 @@ object Radar {
             return null
         }
 
-        return RadarSettings.getUserId(context)
+        return settings.getUserId()
     }
 
     /**
@@ -462,7 +463,7 @@ object Radar {
             return
         }
 
-        RadarSettings.setDescription(context, description)
+        settings.setDescription(description)
     }
 
     /**
@@ -478,7 +479,7 @@ object Radar {
             return null
         }
 
-        return RadarSettings.getDescription(context)
+        return settings.getDescription()
     }
 
     /**
@@ -494,7 +495,7 @@ object Radar {
             return
         }
 
-        RadarSettings.setMetadata(context, metadata)
+        settings.setMetadata(metadata)
     }
 
     /**
@@ -510,7 +511,7 @@ object Radar {
             return null
         }
 
-        return RadarSettings.getMetadata(context)
+        return settings.getMetadata()
     }
 
     /**
@@ -520,7 +521,7 @@ object Radar {
      */
     @JvmStatic
     fun setAdIdEnabled(enabled: Boolean) {
-        RadarSettings.setAdIdEnabled(context, enabled)
+        settings.setAdIdEnabled(enabled)
     }
 
     /**
@@ -918,7 +919,7 @@ object Radar {
             return false
         }
 
-        return RadarSettings.getTracking(context)
+        return settings.getTracking()
     }
 
     /**
@@ -934,7 +935,7 @@ object Radar {
             return null
         }
 
-        return RadarSettings.getTrackingOptions(context)
+        return settings.getTrackingOptions()
     }
 
     /**
@@ -999,7 +1000,7 @@ object Radar {
             return null
         }
 
-        return RadarSettings.getTripOptions(context)
+        return settings.getTripOptions()
     }
 
     /**
@@ -1024,7 +1025,7 @@ object Radar {
                 events: Array<RadarEvent>?
             ) {
                 if (status == RadarStatus.SUCCESS) {
-                    RadarSettings.setTripOptions(context, options)
+                    settings.setTripOptions(options)
 
                     // flush location update to generate events
                     locationManager.getLocation(null)
@@ -1081,7 +1082,7 @@ object Radar {
                 events: Array<RadarEvent>?
             ) {
                 if (status == RadarStatus.SUCCESS) {
-                    RadarSettings.setTripOptions(context, options)
+                    settings.setTripOptions(options)
 
                     // flush location update to generate events
                     locationManager.getLocation(null)
@@ -1129,7 +1130,7 @@ object Radar {
             return
         }
 
-        val options = RadarSettings.getTripOptions(context)
+        val options = settings.getTripOptions()
         apiClient.updateTrip(options, RadarTrip.RadarTripStatus.COMPLETED, object : RadarApiClient.RadarTripApiCallback {
             override fun onComplete(
                 status: RadarStatus,
@@ -1138,7 +1139,7 @@ object Radar {
                 events: Array<RadarEvent>?
             ) {
                 if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
-                    RadarSettings.setTripOptions(context, null)
+                    settings.setTripOptions(null)
 
                     // flush location update to generate events
                     locationManager.getLocation(null)
@@ -1184,7 +1185,7 @@ object Radar {
             return
         }
 
-        val options = RadarSettings.getTripOptions(context)
+        val options = settings.getTripOptions()
         apiClient.updateTrip(options, RadarTrip.RadarTripStatus.CANCELED, object : RadarApiClient.RadarTripApiCallback {
             override fun onComplete(
                 status: RadarStatus,
@@ -1193,7 +1194,7 @@ object Radar {
                 events: Array<RadarEvent>?
             ) {
                 if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
-                    RadarSettings.setTripOptions(context, null)
+                    settings.setTripOptions(null)
 
                     // flush location update to generate events
                     locationManager.getLocation(null)
@@ -2176,7 +2177,7 @@ object Radar {
             return
         }
 
-        RadarSettings.setLogLevel(context, level)
+        settings.setLogLevel(level)
     }
 
     /**
@@ -2200,7 +2201,7 @@ object Radar {
 
     @JvmStatic
     internal fun isTestKey(): Boolean {
-        val key = RadarSettings.getPublishableKey(this.context)
+        val key = settings.getPublishableKey()
         return if (key == null) {
             false
         } else {

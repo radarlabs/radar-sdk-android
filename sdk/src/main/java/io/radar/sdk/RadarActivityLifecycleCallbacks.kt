@@ -24,11 +24,11 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
         try {
             if (ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED &&
                     ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
-                RadarSettings.setPermissionsDenied(activity.applicationContext, true)
+                Radar.settings.setPermissionsDenied(true)
             }
             if (ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_DENIED &&
                     ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_COARSE_LOCATION)) {
-                RadarSettings.setPermissionsDenied(activity.applicationContext, true)
+                Radar.settings.setPermissionsDenied(true)
             }
         } catch (e: Exception) {
             Log.e(TAG, e.message, e)
@@ -38,7 +38,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
     override fun onActivityResumed(activity: Activity) {
         if (count == 0) {
             try {
-                val updated = RadarSettings.updateSessionId(activity.applicationContext)
+                val updated = Radar.settings.updateSessionId()
                 if (updated) {
                     Radar.apiClient.getConfig()
                 }

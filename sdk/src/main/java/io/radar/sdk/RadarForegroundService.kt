@@ -11,8 +11,6 @@ import androidx.annotation.RequiresApi
 @RequiresApi(Build.VERSION_CODES.O)
 class RadarForegroundService : Service() {
 
-    private lateinit var logger: RadarLogger
-
     internal companion object {
         internal var started: Boolean = false
 
@@ -20,23 +18,19 @@ class RadarForegroundService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (!this::logger.isInitialized) {
-            logger = RadarLogger(applicationContext)
-        }
-
         if (intent != null) {
             if (intent.action == "start") {
                 try {
                     startForegroundService(intent.extras)
                 } catch (e: Exception) {
-                    logger.e("Error starting foreground service", e)
+                    Radar.logger.e("Error starting foreground service", e)
                 }
             } else if (intent.action == "stop") {
                 try {
                     stopForeground(true)
                     stopSelf()
                 } catch (e: Exception) {
-                    logger.e("Error stopping foreground service", e)
+                    Radar.logger.e("Error stopping foreground service", e)
                 }
             }
         }
@@ -80,7 +74,7 @@ class RadarForegroundService : Service() {
                 builder = builder.setContentIntent(pendingIntent)
             }
         } catch (e: ClassNotFoundException) {
-            logger.e("Error setting foreground service content intent", e)
+            Radar.logger.e("Error setting foreground service content intent", e)
         }
         val notification = builder.build()
         startForeground(id, notification)

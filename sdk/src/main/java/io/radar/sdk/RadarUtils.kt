@@ -18,7 +18,7 @@ internal object RadarUtils {
 
     private const val KEY_AD_ID = "adId"
 
-    private fun getSharedPreferences(context: Context): SharedPreferences {
+    internal fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
     }
 
@@ -72,7 +72,7 @@ internal object RadarUtils {
 
     internal fun getLocationAuthorization(context: Context): String {
         var locationAuthorization = "NOT_DETERMINED"
-        if (RadarSettings.getPermissionsDenied(context)) {
+        if (Radar.settings.getPermissionsDenied()) {
             locationAuthorization = "DENIED"
         }
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
