@@ -14,7 +14,8 @@ import android.os.PersistableBundle
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.stringForSource
-import io.radar.sdk.util.JobMapper
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.random.Random
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class RadarJobScheduler : JobService() {
@@ -26,7 +27,15 @@ class RadarJobScheduler : JobService() {
         private const val EXTRA_PROVIDER = "provider"
         private const val EXTRA_TIME = "time"
         private const val EXTRA_SOURCE = "source"
-        private val jobs = JobMapper()
+        /**
+         * Base Job ID (Radar's birthday!)
+         */
+        private const val BASE_JOB_ID = 20160525
+
+        /**
+         * Current number of active jobs
+         */
+        private val counter = AtomicInteger()
 
         internal fun scheduleJob(context: Context, location: Location, source: RadarLocationSource) {
             val componentName = ComponentName(context, RadarJobScheduler::class.java)
@@ -40,7 +49,12 @@ class RadarJobScheduler : JobService() {
             }
 
             val settings = RadarSettings.getFeatureSettings(context)
-            val jobId = jobs.getJobId(settings.maxConcurrentJobs)
+            val jobId = if (counter.get() < settings.maxConcurrentJobs) {
+                BASE_JOB_ID + counter.incrementAndGet()
+            } else {
+                // Replace a random job
+                BASE_JOB_ID + Random.nextInt(settings.maxConcurrentJobs)
+            }
             val jobInfo = JobInfo.Builder(jobId, componentName)
                 .setExtras(extras)
                 .setMinimumLatency(0)
@@ -56,9 +70,7 @@ class RadarJobScheduler : JobService() {
                 Radar.logger.d(
                     "Scheduling Location Job |" +
                             " location = $location;" +
-                            " source = ${stringForSource(source)};" +
-                            " success = true;" +
-                            " overwrites = ${jobs.incAndGet(jobId)}"
+                            " source = ${stringForSource(source)};"
                 )
             } else {
                 Radar.logger.d(
@@ -93,7 +105,6 @@ class RadarJobScheduler : JobService() {
                 "Starting Location Job | " +
                         "location = $location; " +
                         "source = ${sourceStr}; " +
-                        "requestNumber = ${jobs.get(params.jobId)}; " +
                         "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
                         "performanceState = ${batteryState.performanceState.name}; " +
                         "isCharging = ${batteryState.isCharging}; " +
@@ -117,7 +128,7 @@ class RadarJobScheduler : JobService() {
             this.jobFinished(params, false)
         }, 10000)
 
-        jobs.clear(params.jobId)
+        counter.decrementAndGet()
         return true
     }
 
