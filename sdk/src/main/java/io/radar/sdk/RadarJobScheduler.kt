@@ -14,7 +14,7 @@ import android.os.PersistableBundle
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.stringForSource
-import java.util.concurrent.ConcurrentHashMap
+import io.radar.sdk.util.JobMapper
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class RadarJobScheduler : JobService() {
@@ -26,10 +26,7 @@ class RadarJobScheduler : JobService() {
         private const val EXTRA_PROVIDER = "provider"
         private const val EXTRA_TIME = "time"
         private const val EXTRA_SOURCE = "source"
-        // Random job ID (Radar's birthday!)
-        private const val JOB_ID = 20160525
-        private val counter: MutableMap<Int, Int> = ConcurrentHashMap()
-        private var maxConcurrentJobs: Int? = null
+        private val jobs = JobMapper()
 
         internal fun scheduleJob(context: Context, location: Location, source: RadarLocationSource) {
             val componentName = ComponentName(context, RadarJobScheduler::class.java)
@@ -43,39 +40,7 @@ class RadarJobScheduler : JobService() {
             }
 
             val settings = RadarSettings.getFeatureSettings(context)
-            val newMaxConcurrentJobs = settings.maxConcurrentJobs
-            val currentMax = maxConcurrentJobs
-            // This block ensures the number of "available" jobs remains limited to the size of this map.
-            when {
-                currentMax == null -> {
-                    // First assignment
-                    for (i in 0..newMaxConcurrentJobs) {
-                        counter[JOB_ID + i] = 0
-                    }
-                }
-                currentMax < newMaxConcurrentJobs -> {
-                    // More jobs available
-                    for (i in currentMax..newMaxConcurrentJobs) {
-                        counter[JOB_ID + i] = 0
-                    }
-                }
-                currentMax > newMaxConcurrentJobs -> {
-                    // Less jobs available
-                    for (i in currentMax..newMaxConcurrentJobs) {
-                        counter.remove(JOB_ID + i)
-                    }
-                }
-            }
-            maxConcurrentJobs = newMaxConcurrentJobs
-
-            val job = if (counter.any { it.value == 0 }) {
-                counter.minByOrNull { it.value }!!
-            } else {
-                // Overwrites the longest-scheduled-job
-                counter.maxByOrNull { it.value }!!
-            }
-
-            val jobId = job.key
+            val jobId = jobs.getJobId(settings.maxConcurrentJobs)
             val jobInfo = JobInfo.Builder(jobId, componentName)
                 .setExtras(extras)
                 .setMinimumLatency(0)
@@ -93,7 +58,7 @@ class RadarJobScheduler : JobService() {
                             " location = $location;" +
                             " source = ${stringForSource(source)};" +
                             " success = true;" +
-                            " overwrites = ${counter[jobId]}"
+                            " overwrites = ${jobs.incAndGet(jobId)}"
                 )
             } else {
                 Radar.logger.d(
@@ -128,7 +93,7 @@ class RadarJobScheduler : JobService() {
                 "Starting Location Job | " +
                         "location = $location; " +
                         "source = ${sourceStr}; " +
-                        "requestNumber = ${counter[params.jobId]}; " +
+                        "requestNumber = ${jobs.get(params.jobId)}; " +
                         "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
                         "performanceState = ${batteryState.performanceState.name}; " +
                         "isCharging = ${batteryState.isCharging}; " +
@@ -152,7 +117,7 @@ class RadarJobScheduler : JobService() {
             this.jobFinished(params, false)
         }, 10000)
 
-        counter[params.jobId] = 0
+        jobs.clear(params.jobId)
         return true
     }
 
