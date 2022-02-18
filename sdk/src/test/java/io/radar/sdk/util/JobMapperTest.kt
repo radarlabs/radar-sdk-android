@@ -53,7 +53,9 @@ class JobMapperTest {
     @Test
     fun testAdjustSize() {
         assertEquals(0, jobMapper.size)
-        jobMapper.getJobId(10)
+        for (i in 0..10) {
+            jobMapper.incAndGet(jobMapper.getJobId(i))
+        }
         assertEquals(10, jobMapper.size)
         jobMapper.getJobId(5)
         assertEquals(5, jobMapper.size)
@@ -78,7 +80,6 @@ class JobMapperTest {
     fun testClear() {
         val n = Random.nextInt(10) + 2
         val jobId = jobMapper.getJobId(n)
-        assertEquals(n, jobMapper.size)
         for (i in 0 until n) {
             jobMapper.incAndGet(jobId)
         }

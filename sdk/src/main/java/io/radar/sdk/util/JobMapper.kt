@@ -27,7 +27,7 @@ internal class JobMapper {
      * is available, it clears the highest counter and returns the associated Job ID.
      */
     fun getJobId(maxConcurrentJobs: Int): Int {
-        if (maxConcurrentJobs == 0) {
+        if (maxConcurrentJobs == 0 || counter.isEmpty()) {
             return DEFAULT_JOB_ID
         }
         adjustSize(maxConcurrentJobs)
@@ -36,10 +36,16 @@ internal class JobMapper {
                 return element.key
             }
         }
-        // Overwrites the longest-scheduled-job
-        val entry = counter.maxByOrNull { it.value }!!
-        counter[entry.key] = 0
-        return entry.key
+        return if (size < maxConcurrentJobs) {
+            val key = counter.maxByOrNull { it.key }!!.key + 1
+            counter[key] = 0
+            key
+        } else {
+            // Overwrites the longest-scheduled-job
+            val entry = counter.maxByOrNull { it.value }!!
+            counter[entry.key] = 0
+            entry.key
+        }
     }
 
     /**
@@ -48,12 +54,7 @@ internal class JobMapper {
      */
     @VisibleForTesting
     fun adjustSize(maxConcurrentJobs: Int) {
-        if (size < maxConcurrentJobs) {
-            // More jobs available
-            for (i in size until maxConcurrentJobs) {
-                counter[DEFAULT_JOB_ID + i] = 0
-            }
-        } else if (size > maxConcurrentJobs) {
+        if (size > maxConcurrentJobs) {
             // Less jobs available
             for (i in size until maxConcurrentJobs) {
                 counter.remove(DEFAULT_JOB_ID + i)
@@ -65,13 +66,13 @@ internal class JobMapper {
     /**
      * Get the counter for the given Job ID
      */
-    fun get(jobId: Int): Int = counter[jobId]!!
+    fun get(jobId: Int): Int = counter[jobId] ?: 0
 
     /**
      * Get and increment the counter for the given Job ID
      */
     fun incAndGet(jobId: Int): Int {
-        val value = counter[jobId]!! + 1
+        val value = get(jobId) + 1
         counter[jobId] = value
         return value
     }
@@ -80,7 +81,7 @@ internal class JobMapper {
      * Reset the counter for the given Job ID
      */
     fun clear(jobId: Int) {
-        counter[jobId] = 0
+        counter.remove(jobId)
     }
 
 }
