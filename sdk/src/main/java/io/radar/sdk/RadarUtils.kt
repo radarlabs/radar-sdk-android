@@ -18,7 +18,7 @@ internal object RadarUtils {
 
     private const val KEY_AD_ID = "adId"
 
-    private fun getSharedPreferences(context: Context): SharedPreferences {
+    internal fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
     }
 

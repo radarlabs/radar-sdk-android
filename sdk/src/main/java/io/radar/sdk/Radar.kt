@@ -341,6 +341,7 @@ object Radar {
     internal lateinit var beaconManager: RadarBeaconManager
     private lateinit var logBuffer: RadarLogBuffer
     internal lateinit var batteryManager: RadarBatteryManager
+    internal lateinit var state: RadarState
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -374,6 +375,10 @@ object Radar {
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
         this.receiver = receiver
+
+        if (!this::state.isInitialized) {
+            this.state = RadarState(this.context)
+        }
 
         if (!this::logBuffer.isInitialized) {
             this.logBuffer = RadarSimpleLogBuffer()
