@@ -15,7 +15,6 @@ import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.stringForSource
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.random.Random
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class RadarJobScheduler : JobService() {
@@ -49,12 +48,8 @@ class RadarJobScheduler : JobService() {
             }
 
             val settings = RadarSettings.getFeatureSettings(context)
-            val jobId = if (counter.get() < settings.maxConcurrentJobs) {
-                BASE_JOB_ID + counter.incrementAndGet()
-            } else {
-                // Replace a random job
-                BASE_JOB_ID + Random.nextInt(settings.maxConcurrentJobs)
-            }
+            val jobId = BASE_JOB_ID + (counter.incrementAndGet() % settings.maxConcurrentJobs)
+
             val jobInfo = JobInfo.Builder(jobId, componentName)
                 .setExtras(extras)
                 .setMinimumLatency(0)
@@ -128,7 +123,7 @@ class RadarJobScheduler : JobService() {
             this.jobFinished(params, false)
         }, 10000)
 
-        counter.decrementAndGet()
+        counter.set(0)
         return true
     }
 
