@@ -10,9 +10,9 @@ internal data class RadarFeatureSettings(
     val schedulerRequiresNetwork: Boolean
 ) {
     companion object {
-        private const val MAX_CONCURRENT_JOBS = "concurrent_jobs_int"
+        private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
         private const val DEFAULT_MAX_CONCURRENT_JOBS = 1
-        private const val SCHEDULER_REQUIRES_NETWORK = "scheduler_require_network_bool"
+        private const val SCHEDULER_REQUIRES_NETWORK = "networkAny"
 
         fun fromJson(json: JSONObject?): RadarFeatureSettings {
             return if (json == null) {

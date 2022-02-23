@@ -70,6 +70,8 @@ dependencies {
     implementation "com.google.android.gms:play-services-location:18.0.0"
     testImplementation "androidx.test.ext:junit:1.1.3"
     testImplementation "org.robolectric:robolectric:4.5.1"
+    // Allow pure junit testing with json api
+    testImplementation 'org.json:json:20211205'
 }
 
 task androidSourcesJar(type: Jar) {
