@@ -134,4 +134,9 @@ class RadarForegroundService : Service() {
         super.onDestroy()
         started = false
     }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        Radar.locationManager.handleTaskRemoved()
+    }
 }

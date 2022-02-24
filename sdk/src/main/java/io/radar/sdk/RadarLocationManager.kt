@@ -1,9 +1,7 @@
 package io.radar.sdk
 
 import android.annotation.SuppressLint
-import android.app.NotificationManager
 import android.content.Context
-import android.content.Intent
 import android.location.Location
 import android.os.Build
 import com.google.android.gms.location.*
@@ -171,7 +169,15 @@ internal class RadarLocationManager(
 
     internal fun handleBootCompleted() {
         logger.d("Handling boot completed")
+        wakeUp()
+    }
 
+    internal fun handleTaskRemoved() {
+        logger.d("Handling task removed")
+        wakeUp()
+    }
+
+    private fun wakeUp() {
         this.started = false
         RadarState.setStopped(context, false)
 
