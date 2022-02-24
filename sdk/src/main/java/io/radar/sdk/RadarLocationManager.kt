@@ -202,12 +202,13 @@ internal class RadarLocationManager(
         }
 
         if (tracking) {
-            val foregroundService = RadarSettings.getForegroundService(context)
-            if (foregroundService != null && options.foregroundServiceEnabled) {
+            if (options.foregroundServiceEnabled) {
+                val foregroundService = RadarSettings.getForegroundService(context)
+                    ?: RadarTrackingOptions.RadarTrackingOptionsForegroundService()
                 if (!foregroundService.updatesOnly) {
                     this.startForegroundService(foregroundService)
                 }
-            } else if (RadarForegroundService.started) {
+            } else {
                 this.stopForegroundService()
             }
 
@@ -238,9 +239,7 @@ internal class RadarLocationManager(
                 }
             }
         } else {
-            if (RadarForegroundService.started) {
-                this.stopForegroundService()
-            }
+            this.stopForegroundService()
             this.stopLocationUpdates()
             this.removeAllGeofences()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -629,17 +628,8 @@ internal class RadarLocationManager(
                 if (RadarForegroundService.started) {
                     logger.d("Already started foreground service")
                 } else {
-                    val intent = Intent(context, RadarForegroundService::class.java)
-                    intent.action = "start"
-                    intent.putExtra("id", foregroundService.id)
-                        .putExtra("importance", foregroundService.importance ?: NotificationManager.IMPORTANCE_DEFAULT)
-                        .putExtra("title", foregroundService.title)
-                        .putExtra("text", foregroundService.text)
-                        .putExtra("icon", foregroundService.icon )
-                        .putExtra("activity", foregroundService.activity)
+                    val intent = RadarForegroundService.startService(context, foregroundService)
                     logger.d("Starting foreground service with intent | intent = $intent")
-                    context.applicationContext.startForegroundService(intent)
-                    RadarForegroundService.started = true
                 }
             } catch (e: Exception) {
                 logger.e("Error starting foreground service with intent", e)
@@ -650,11 +640,9 @@ internal class RadarLocationManager(
     private fun stopForegroundService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
-                val intent = Intent(context, RadarForegroundService::class.java)
-                intent.action = "stop"
-                logger.d("Stopping foreground service with intent")
-                context.applicationContext.startService(intent)
-                RadarForegroundService.started = false
+                if (RadarForegroundService.stopService(context)) {
+                    logger.d("Stopping foreground service with intent")
+                }
             } catch (e: Exception) {
                 logger.e("Error stopping foreground service with intent", e)
             }
