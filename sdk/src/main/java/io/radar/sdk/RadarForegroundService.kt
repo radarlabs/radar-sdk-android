@@ -7,6 +7,13 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import androidx.annotation.RequiresApi
+import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.KEY_FOREGROUND_SERVICE_ACTIVITY
+import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.KEY_FOREGROUND_SERVICE_CHANNEL_NAME
+import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.KEY_FOREGROUND_SERVICE_ICON
+import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.KEY_FOREGROUND_SERVICE_ID
+import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.KEY_FOREGROUND_SERVICE_IMPORTANCE
+import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.KEY_FOREGROUND_SERVICE_TEXT
+import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.KEY_FOREGROUND_SERVICE_TITLE
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -22,12 +29,6 @@ class RadarForegroundService : Service() {
         private const val RADAR_CHANNEL = "RadarSDK"
         private const val STOP = "stop"
         private const val START = "start"
-        private const val ID = "id"
-        private const val IMPORTANCE = "importance"
-        private const val TITLE = "title"
-        private const val TEXT = "text"
-        private const val ICON = "icon"
-        private const val ACTIVITY = "activity"
 
         fun stopService(context: Context): Boolean {
             return if (started) {
@@ -46,12 +47,13 @@ class RadarForegroundService : Service() {
         ): Intent {
             val intent = Intent(context, RadarForegroundService::class.java)
             intent.action = START
-            intent.putExtra(ID, foregroundService.id)
-                .putExtra(IMPORTANCE, foregroundService.importance ?: NotificationManager.IMPORTANCE_DEFAULT)
-                .putExtra(TITLE, foregroundService.title)
-                .putExtra(TEXT, foregroundService.text)
-                .putExtra(ICON, foregroundService.icon )
-                .putExtra(ACTIVITY, foregroundService.activity)
+            intent.putExtra(KEY_FOREGROUND_SERVICE_ID, foregroundService.id)
+                .putExtra(KEY_FOREGROUND_SERVICE_IMPORTANCE, foregroundService.importance ?: NotificationManager.IMPORTANCE_DEFAULT)
+                .putExtra(KEY_FOREGROUND_SERVICE_TITLE, foregroundService.title)
+                .putExtra(KEY_FOREGROUND_SERVICE_TEXT, foregroundService.text)
+                .putExtra(KEY_FOREGROUND_SERVICE_ICON, foregroundService.icon )
+                .putExtra(KEY_FOREGROUND_SERVICE_ACTIVITY, foregroundService.activity)
+                .putExtra(KEY_FOREGROUND_SERVICE_CHANNEL_NAME, foregroundService.channelName)
             context.applicationContext.startForegroundService(intent)
             return intent
         }
@@ -87,16 +89,17 @@ class RadarForegroundService : Service() {
         started = true
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.deleteNotificationChannel(RADAR_CHANNEL)
-        var id = extras?.getInt(ID) ?: 0
+        var id = extras?.getInt(KEY_FOREGROUND_SERVICE_ID) ?: 0
         id = if (id == 0) NOTIFICATION_ID else id
-        var importance = extras?.getInt(IMPORTANCE) ?: 0
+        var importance = extras?.getInt(KEY_FOREGROUND_SERVICE_IMPORTANCE) ?: 0
         importance = if (importance == 0) NotificationManager.IMPORTANCE_DEFAULT else importance
-        val title = extras?.getString(TITLE)
-        val text = extras?.getString(TEXT) ?: "Location tracking started"
-        var icon = extras?.getInt(ICON) ?: 0
+        val title = extras?.getString(KEY_FOREGROUND_SERVICE_TITLE)
+        val text = extras?.getString(KEY_FOREGROUND_SERVICE_TEXT) ?: "Location tracking started"
+        var icon = extras?.getInt(KEY_FOREGROUND_SERVICE_ICON) ?: 0
         icon = if (icon == 0) this.applicationInfo.icon else icon
         val smallIcon = resources.getIdentifier(icon.toString(), "drawable", applicationContext.packageName)
-        val channel = NotificationChannel(RADAR_CHANNEL, RADAR_CHANNEL, importance)
+        val channelName = extras?.getString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME) ?: RADAR_CHANNEL
+        val channel = NotificationChannel(RADAR_CHANNEL, channelName, importance)
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
         var builder = Notification.Builder(applicationContext, RADAR_CHANNEL)
@@ -107,7 +110,7 @@ class RadarForegroundService : Service() {
             builder = builder.setContentTitle(title as CharSequence?)
         }
         try {
-            extras?.getString(ACTIVITY)?.let {
+            extras?.getString(KEY_FOREGROUND_SERVICE_ACTIVITY)?.let {
                 val activityClass = Class.forName(it)
                 val intent = Intent(this, activityClass)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
