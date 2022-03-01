@@ -51,7 +51,7 @@ class RadarForegroundService : Service() {
                 .putExtra(KEY_FOREGROUND_SERVICE_IMPORTANCE, foregroundService.importance ?: NotificationManager.IMPORTANCE_DEFAULT)
                 .putExtra(KEY_FOREGROUND_SERVICE_TITLE, foregroundService.title)
                 .putExtra(KEY_FOREGROUND_SERVICE_TEXT, foregroundService.text)
-                .putExtra(KEY_FOREGROUND_SERVICE_ICON, foregroundService.icon )
+                .putExtra(KEY_FOREGROUND_SERVICE_ICON, foregroundService.icon)
                 .putExtra(KEY_FOREGROUND_SERVICE_ACTIVITY, foregroundService.activity)
                 .putExtra(KEY_FOREGROUND_SERVICE_CHANNEL_NAME, foregroundService.channelName)
             context.applicationContext.startForegroundService(intent)
@@ -89,10 +89,8 @@ class RadarForegroundService : Service() {
         started = true
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.deleteNotificationChannel(RADAR_CHANNEL)
-        var id = extras?.getInt(KEY_FOREGROUND_SERVICE_ID) ?: 0
-        id = if (id == 0) NOTIFICATION_ID else id
-        var importance = extras?.getInt(KEY_FOREGROUND_SERVICE_IMPORTANCE) ?: 0
-        importance = if (importance == 0) NotificationManager.IMPORTANCE_DEFAULT else importance
+        val id = extras?.getInt(KEY_FOREGROUND_SERVICE_ID) ?: NOTIFICATION_ID
+        val importance = extras?.getInt(KEY_FOREGROUND_SERVICE_IMPORTANCE) ?: NotificationManager.IMPORTANCE_DEFAULT
         val title = extras?.getString(KEY_FOREGROUND_SERVICE_TITLE)
         val text = extras?.getString(KEY_FOREGROUND_SERVICE_TEXT) ?: "Location tracking started"
         var icon = extras?.getInt(KEY_FOREGROUND_SERVICE_ICON) ?: 0
