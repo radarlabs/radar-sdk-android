@@ -331,7 +331,7 @@ object Radar {
         METRIC
     }
 
-    private var initialized = false
+    internal var initialized = false
     private lateinit var context: Context
     private lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
