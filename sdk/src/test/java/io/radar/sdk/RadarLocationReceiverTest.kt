@@ -10,10 +10,17 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 
+/**
+ * Unit tests [RadarLocationReceiver]
+ */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.P])
 class RadarLocationReceiverTest {
 
+    /**
+     * This test ensures that [RadarLocationReceiver.onReceive] can be hit, even if [Radar.initialize] has not
+     * yet been called by the application.
+     */
     @Test
     fun testOnReceive() {
         Radar.initialized = false
