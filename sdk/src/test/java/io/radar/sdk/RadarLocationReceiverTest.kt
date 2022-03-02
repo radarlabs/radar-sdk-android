@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -17,7 +16,7 @@ class RadarLocationReceiverTest {
 
     @Test
     fun testOnReceive() {
-        assertFalse(Radar.initialized)
+        Radar.initialized = false
         try {
             RadarLocationReceiver().onReceive(ApplicationProvider.getApplicationContext(), Intent(""))
             assertTrue(Radar.initialized)
