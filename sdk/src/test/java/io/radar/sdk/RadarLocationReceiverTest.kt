@@ -23,7 +23,6 @@ class RadarLocationReceiverTest {
      */
     @Test
     fun testOnReceive() {
-        Radar.initialized = false
         try {
             RadarLocationReceiver().onReceive(ApplicationProvider.getApplicationContext(), Intent(""))
             assertTrue(Radar.initialized)
