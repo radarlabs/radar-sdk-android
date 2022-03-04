@@ -52,11 +52,6 @@ class RadarUser(
     val place: RadarPlace?,
 
     /**
-     * Learned insights for the user. May be `null` if no insights are available or if Insights is not enabled. See [](https://radar.io/documentation/insights).
-     */
-    val insights: RadarUserInsights?,
-
-    /**
      * The user's nearby beacons. May be `null` or empty if the user is not near any beacons or if Beacons is not enabled. See [](https://radar.io/documentation/beacons).
      */
     val beacons: Array<RadarBeacon>?,
@@ -144,7 +139,6 @@ class RadarUser(
         private const val FIELD_LOCATION_ACCURACY = "locationAccuracy"
         private const val FIELD_GEOFENCES = "geofences"
         private const val FIELD_PLACE = "place"
-        private const val FIELD_INSIGHTS = "insights"
         private const val FIELD_BEACONS = "beacons"
         private const val FIELD_STOPPED = "stopped"
         private const val FIELD_FOREGROUND = "foreground"
@@ -183,7 +177,6 @@ class RadarUser(
             }
             val geofences = RadarGeofence.fromJson(obj.optJSONArray(FIELD_GEOFENCES))
             val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
-            val insights = RadarUserInsights.fromJson(obj.optJSONObject(FIELD_INSIGHTS))
             val beacons = RadarBeacon.fromJson(obj.optJSONArray(FIELD_BEACONS))
             val country = RadarRegion.fromJson(obj.optJSONObject(FIELD_COUNTRY))
             val state = RadarRegion.fromJson(obj.optJSONObject(FIELD_STATE))
@@ -214,7 +207,6 @@ class RadarUser(
                 location,
                 geofences,
                 place,
-                insights,
                 beacons,
                 stopped,
                 foreground,
@@ -249,7 +241,6 @@ class RadarUser(
         obj.putOpt(FIELD_LOCATION, locationObj)
         obj.putOpt(FIELD_GEOFENCES, RadarGeofence.toJson(this.geofences))
         obj.putOpt(FIELD_PLACE, this.place?.toJson())
-        obj.putOpt(FIELD_INSIGHTS, this.insights?.toJson())
         obj.putOpt(FIELD_BEACONS, RadarBeacon.toJson(this.beacons))
         obj.putOpt(FIELD_STOPPED, this.stopped)
         obj.putOpt(FIELD_FOREGROUND, this.foreground)

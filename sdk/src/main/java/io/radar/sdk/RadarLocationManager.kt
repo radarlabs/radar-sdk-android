@@ -552,9 +552,7 @@ internal class RadarLocationManager(
                     if (user != null) {
                         val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
                         val atPlace = user.place != null
-                        val atHome = user.insights?.state?.home ?: false
-                        val atOffice = user.insights?.state?.office ?: false
-                        val canExit = inGeofences || atPlace || atHome || atOffice
+                        val canExit = inGeofences || atPlace
                         RadarState.setCanExit(context, canExit)
                     }
 
