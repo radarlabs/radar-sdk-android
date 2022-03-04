@@ -10,39 +10,6 @@
             40.783825
          ]
       },
-      "insights": {
-         "locations": [
-            {
-               "confidence": 3,
-               "type": "home",
-               "location": {
-                  "coordinates": [
-                     -73.987114,
-                     40.687183
-                  ],
-                  "type": "Point"
-               },
-               "updatedAt": "2018-10-06T15:30:03.704Z"
-            },
-            {
-               "confidence": 3,
-               "type": "office",
-               "location": {
-                  "coordinates": [
-                     -73.98685,
-                     40.703922
-                  ],
-                  "type": "Point"
-               },
-               "updatedAt": "2018-10-06T15:30:03.704Z"
-            }
-         ],
-         "state": {
-            "traveling": false,
-            "office": false,
-            "home": false
-         }
-      },
       "live": false,
       "geofences": [
          {
