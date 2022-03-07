@@ -249,7 +249,7 @@ internal class RadarApiClient(
             params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
             params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
             params.putOpt("sessionId", RadarSettings.getSessionId(context))
-            params.putOpt("trackingOptions", RadarSettings.getTrackingOptions(context).toJson())
+            params.putOpt("trackingOptions", Radar.getTrackingOptions().toJson())
             params.putOpt("listenToServer", RadarSettings.getShouldListenToServerTrackingOptions(context))
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
