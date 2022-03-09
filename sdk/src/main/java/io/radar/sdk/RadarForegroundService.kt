@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import androidx.annotation.RequiresApi
+import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.KEY_FOREGROUND_SERVICE_CHANNEL_NAME
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -56,7 +57,8 @@ class RadarForegroundService : Service() {
         var icon = extras?.getInt("icon") ?: 0
         icon = if (icon == 0) this.applicationInfo.icon else icon
         val smallIcon = resources.getIdentifier(icon.toString(), "drawable", applicationContext.packageName)
-        val channel = NotificationChannel("RadarSDK", "RadarSDK", importance)
+        val channelName = extras?.getString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME) ?: "Location Services"
+        val channel = NotificationChannel("RadarSDK", channelName, importance)
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
         var builder = Notification.Builder(applicationContext, "RadarSDK")

@@ -277,7 +277,13 @@ data class RadarTrackingOptions(
         /**
          * Determines the id of the notification. Optional, defaults to `20160525`.
          */
-        val id: Int? = null
+        val id: Int? = null,
+
+        /**
+         * Determines the user-facing channel name, which can be viewed in notification settings for the application.
+         * Optional, defaults to `"Location Services"`.
+         */
+        val channelName: String? = null
     ) {
 
         companion object {
@@ -288,6 +294,7 @@ data class RadarTrackingOptions(
             internal const val KEY_FOREGROUND_SERVICE_ACTIVITY = "activity"
             internal const val KEY_FOREGROUND_SERVICE_IMPORTANCE = "importance"
             internal const val KEY_FOREGROUND_SERVICE_ID = "id"
+            internal const val KEY_FOREGROUND_SERVICE_CHANNEL_NAME = "channelName"
 
             @JvmStatic
             fun fromJson(obj: JSONObject?): RadarTrackingOptionsForegroundService? {
@@ -302,8 +309,9 @@ data class RadarTrackingOptions(
                 val activity = if (obj.isNull(KEY_FOREGROUND_SERVICE_ACTIVITY)) null else obj.optString(KEY_FOREGROUND_SERVICE_ACTIVITY)
                 val importance = if (obj.isNull(KEY_FOREGROUND_SERVICE_IMPORTANCE)) null else obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
                 val id = if (obj.isNull(KEY_FOREGROUND_SERVICE_ID)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ID)
+                val channelName = if (obj.isNull(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)) null else obj.optString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)
 
-                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id)
+                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id, channelName)
             }
         }
 
@@ -317,6 +325,7 @@ data class RadarTrackingOptions(
             obj.put(KEY_FOREGROUND_SERVICE_UPDATES_ONLY, updatesOnly)
             obj.put(KEY_FOREGROUND_SERVICE_IMPORTANCE, importance)
             obj.put(KEY_FOREGROUND_SERVICE_ID, id)
+            obj.put(KEY_FOREGROUND_SERVICE_CHANNEL_NAME, channelName)
             return obj
         }
 

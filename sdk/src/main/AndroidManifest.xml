@@ -26,7 +26,6 @@
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="true" />
         <service android:name=".RadarForegroundService"
-            android:foregroundServiceType="location"
-            android:stopWithTask="true" />
+            android:foregroundServiceType="location" />
     </application>
 </manifest>
