@@ -281,7 +281,7 @@ data class RadarTrackingOptions(
 
         /**
          * Determines the user-facing channel name, which can be viewed in notification settings for the application.
-         * Optional, defaults to `"Location Tracking"`.
+         * Optional, defaults to `"Location Services"`.
          */
         val channelName: String? = null
     ) {
