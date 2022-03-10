@@ -258,9 +258,9 @@ internal class RadarLocationManager(
             RadarSettings.setShouldListenToServerTrackingOptions(context, true)
         } else {
             // Fallback
-            logger.d("Removing server tracking options | options = ${Radar.getTrackingOptions()}")
             RadarSettings.removeRemoteTrackingOptions(context)
             RadarSettings.setShouldListenToServerTrackingOptions(context, false)
+            logger.d("Removing server tracking options | options = ${Radar.getTrackingOptions()}")
         }
         updateTracking()
     }
