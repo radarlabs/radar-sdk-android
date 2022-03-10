@@ -1,5 +1,7 @@
 package io.radar.sdk
 
+import android.Manifest
+import android.app.Application
 import android.content.Context
 import android.location.Location
 import android.os.Build
@@ -11,6 +13,7 @@ import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.runner.RunWith
+import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
 import java.util.*
@@ -26,7 +29,7 @@ class RadarTest {
 
         const val publishableKey = "prj_test_pk_0000000000000000000000000000000000000000"
 
-        private val context: Context = ApplicationProvider.getApplicationContext()
+        private val context: Application = ApplicationProvider.getApplicationContext()
         private val apiHelperMock = RadarApiHelperMock()
         private val locationClientMock = FusedLocationProviderClientMock(context)
         private val permissionsHelperMock = RadarPermissionsHelperMock()
@@ -1290,4 +1293,25 @@ class RadarTest {
         assertEquals(RadarTrackingOptions.CONTINUOUS, RadarSettings.getTrackingOptions(context))
     }
 
+    @Test
+    fun test_Radar_startTracking() {
+        // Setup
+        val application = Shadows.shadowOf(context)
+        application.grantPermissions(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
+        RadarSettings.removeRemoteTrackingOptions(context)
+
+        // Preconditions
+        assertTrue(Radar.locationManager.startTracking())
+
+        // Test
+        Radar.locationManager.updateTrackingFromMeta(RadarMeta(RadarTrackingOptions.RESPONSIVE))
+        assertFalse(Radar.locationManager.startTracking())
+
+        // Cleanup
+        Radar.stopTracking()
+        Radar.locationManager.updateTrackingFromMeta(null)
+    }
 }

@@ -112,18 +112,23 @@ internal class RadarLocationManager(
         }
     }
 
-    fun startTracking(options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT) {
+    fun startTracking(options: RadarTrackingOptions = RadarTrackingOptions.EFFICIENT): Boolean {
+        if (RadarSettings.getShouldListenToServerTrackingOptions(context)) {
+            logger.e("Start Tracking Failed: Remote tracking options are enabled.")
+            return false
+        }
         this.stopLocationUpdates()
 
         if (!permissionsHelper.fineLocationPermissionGranted(context) && !permissionsHelper.coarseLocationPermissionGranted(context)) {
             Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
-
-            return
+            logger.e("Start Tracking Failed: No location permissions have been granted.")
+            return false
         }
 
         RadarSettings.setTracking(context, true)
         RadarSettings.setTrackingOptions(context, options)
         this.updateTracking()
+        return true
     }
 
     fun stopTracking() {
@@ -258,9 +263,9 @@ internal class RadarLocationManager(
             RadarSettings.setShouldListenToServerTrackingOptions(context, true)
         } else {
             // Fallback
-            logger.d("Removing server tracking options | options = ${Radar.getTrackingOptions()}")
             RadarSettings.removeRemoteTrackingOptions(context)
             RadarSettings.setShouldListenToServerTrackingOptions(context, false)
+            logger.d("Removing server tracking options | options = ${Radar.getTrackingOptions()}")
         }
         updateTracking()
     }
