@@ -220,8 +220,10 @@ internal class RadarLocationManager(
                     this.startLocationUpdates(options.desiredAccuracy, options.desiredStoppedUpdateInterval, options.fastestStoppedUpdateInterval)
                 }
 
-                if (options.useStoppedGeofence && location != null) {
-                    this.replaceBubbleGeofence(location, true)
+                if (options.useStoppedGeofence) {
+                    if (location != null) {
+                        this.replaceBubbleGeofence(location, true)
+                    }
                 } else {
                     this.removeBubbleGeofences()
                 }
@@ -391,10 +393,12 @@ internal class RadarLocationManager(
 
     private fun removeBubbleGeofences() {
         geofencingClient.removeGeofences(RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
+        logger.d("Removed bubble geofences")
     }
 
     private fun removeSyncedGeofences() {
         geofencingClient.removeGeofences(RadarLocationReceiver.getSyncedGeofencesPendingIntent(context))
+        logger.d("Removed synced geofences")
     }
 
     private fun removeAllGeofences() {
