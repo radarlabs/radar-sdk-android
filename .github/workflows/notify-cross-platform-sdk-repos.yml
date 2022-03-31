@@ -1,0 +1,21 @@
+# When a new release is created on GitHub, this workflow sends an event
+# to cross-platform SDK repos that depend on native Android SDK
+name: Update Cross-Platform SDKs
+on:
+  # Triggered when a new release is tagged in GitHub.
+  release:
+    types: [ published ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: macos-latest
+    steps:
+      - name: Notify React Native SDK
+        run: |
+          curl -X POST https://api.github.com/repos//radarlabs/react-native-radar/dispatches \
+          -H 'Accept: application/vnd.github.everest-preview+json' \
+          -u ${{ secrets.ACCESS_TOKEN }} \
+          --data '{"event_type": "android-sdk-released", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'", "tag": "'"${{ github.event.release.tag_name}}"'" }}'
