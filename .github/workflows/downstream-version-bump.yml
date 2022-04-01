@@ -10,13 +10,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  notify:
-    runs-on: macos-latest
+  dispatch:
+    strategy:
+      matrix:
+        repo: [
+          'radarlabs/react-native-radar',
+          'radarlabs/capacitor-radar',
+          'radarlabs/flutter-radar',
+          'radarlabs/radar-sdk-xamarin',
+          'radarlabs/cordova-plugin-radar',
+        ]
+    runs-on: ubuntu-latest
     steps:
-      - name: Notify React Native SDK
+      - name: Dispatch to downtream SDKs
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.RADAR_CIRCLECI_PAT }}
-          repository: radarlabs/react-native-radar
+          repository: ${{ matrix.repo }}
           event-type: android-sdk-release
           client-payload: '{"release": "${{ github.event.release.tag_name }}"}'
