@@ -1,6 +1,6 @@
 # When a new release is created on GitHub, this workflow sends an event
 # to cross-platform SDK repos that depend on native Android SDK
-name: Notify
+name: Downstream version bump
 on:
   # Triggered when a new release is tagged in GitHub.
   release:
@@ -16,7 +16,7 @@ jobs:
       - name: Notify React Native SDK
         uses: peter-evans/repository-dispatch@v2
         with:
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          token: ${{ secrets.RADAR_CIRCLECI_PAT }}
           repository: radarlabs/react-native-radar
           event-type: android-sdk-release
           client-payload: '{"release": "${{ github.event.release.tag_name }}"}'
