@@ -14,8 +14,9 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Notify React Native SDK
-        run: |
-          curl -X POST https://api.github.com/repos//radarlabs/react-native-radar/dispatches \
-          -H 'Accept: application/vnd.github.everest-preview+json' \
-          -u ${{ secrets.ACCESS_TOKEN }} \
-          --data '{"event_type": "android-sdk-released", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'", "tag": "'"${{ github.event.release.tag_name}}"'" }}'
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          repository: radarlabs/react-native-radar
+          event-type: android-sdk-release
+          client-payload: '{"release": "${{ github.event.release.tag_name }}"}'
