@@ -28,4 +28,4 @@ jobs:
           token: ${{ secrets.RADAR_CIRCLECI_PAT }}
           repository: ${{ matrix.repo }}
           event-type: android-sdk-release
-          client-payload: '{"release": "${{ github.event.release.tag_name }}"}'
+          client-payload: '{"release": "${{ github.event.release.tag_name }}", "platform": "android"}'
