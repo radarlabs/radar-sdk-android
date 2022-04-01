@@ -1,6 +1,6 @@
 # When a new release is created on GitHub, this workflow sends an event
 # to cross-platform SDK repos that depend on native Android SDK
-name: Update Cross-Platform SDKs
+name: Notify
 on:
   # Triggered when a new release is tagged in GitHub.
   release:
