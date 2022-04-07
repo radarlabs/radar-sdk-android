@@ -10,7 +10,7 @@ apply plugin: "org.jetbrains.dokka"
 apply plugin: 'io.radar.mvnpublish'
 
 ext {
-    radarVersion = '3.3.3'
+    radarVersion = '3.4.1'
 }
 
 String buildNumber = ".${System.currentTimeMillis()}"
@@ -18,12 +18,12 @@ GitHubActions githubRelease = GitHubActions.get()
 boolean isSnapshot = false
 if (githubRelease) {
     if (githubRelease.snapshot) {
-        //Use the existing radarVersion with the -SNAPSHOT suffix
+        // Use the existing radarVersion with the -SNAPSHOT suffix
         isSnapshot = true
         buildNumber = '-SNAPSHOT'
     } else {
         buildNumber = ''
-        //Use the tag from the release name as the version-to-publish / include in source code
+        // Use the tag from the release name as the version-to-publish / include in source code
         ext.radarVersion = githubRelease.tag
     }
 }
@@ -70,6 +70,8 @@ dependencies {
     implementation "com.google.android.gms:play-services-location:18.0.0"
     testImplementation "androidx.test.ext:junit:1.1.3"
     testImplementation "org.robolectric:robolectric:4.5.1"
+    // Allow pure junit testing with json api
+    testImplementation 'org.json:json:20211205'
 }
 
 task androidSourcesJar(type: Jar) {

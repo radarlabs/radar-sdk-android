@@ -22,7 +22,18 @@ internal class RadarApiClient(
 ) {
 
     interface RadarTrackApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, events: Array<RadarEvent>? = null, user: RadarUser? = null, nearbyGeofences: Array<RadarGeofence>? = null)
+        fun onComplete(
+            status: RadarStatus,
+            res: JSONObject? = null,
+            events: Array<RadarEvent>? = null,
+            user: RadarUser? = null,
+            nearbyGeofences: Array<RadarGeofence>? = null,
+            config: RadarConfig? = null
+        )
+    }
+
+    interface RadarGetConfigApiCallback {
+        fun onComplete(config: RadarConfig)
     }
 
     interface RadarTripApiCallback {
@@ -78,7 +89,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun getConfig() {
+    internal fun getConfig(callback: RadarGetConfigApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
         val queryParams = StringBuilder()
@@ -100,13 +111,7 @@ internal class RadarApiClient(
                 if (status == RadarStatus.SUCCESS) {
                     Radar.flushLogs()
                 }
-                if (res != null && res.has("meta")) {
-                    val meta = res.getJSONObject("meta")
-                    if (meta.has("config")) {
-                        val config = meta.getJSONObject("config")
-                        RadarSettings.setConfig(context, config)
-                    }
-                }
+                callback?.onComplete(RadarConfig.fromJson(res))
             }
         })
     }
@@ -164,7 +169,7 @@ internal class RadarApiClient(
         }
 
         val params = JSONObject()
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = Radar.getTrackingOptions()
         val tripOptions = RadarSettings.getTripOptions(context)
         try {
             params.putOpt("id", RadarSettings.getId(context))
@@ -244,6 +249,9 @@ internal class RadarApiClient(
             params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
             params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
             params.putOpt("sessionId", RadarSettings.getSessionId(context))
+            params.putOpt("trackingOptions", Radar.getTrackingOptions().toJson())
+            val usingRemoteTrackingOptions = RadarSettings.getTracking(context) && RadarSettings.getRemoteTrackingOptions(context) != null
+            params.putOpt("usingRemoteTrackingOptions", usingRemoteTrackingOptions)
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
@@ -275,13 +283,7 @@ internal class RadarApiClient(
 
                 RadarState.setLastFailedStoppedLocation(context, null)
 
-                if (res.has("meta")) {
-                    val meta = res.getJSONObject("meta")
-                    if (meta.has("config")) {
-                        val config = meta.getJSONObject("config")
-                        RadarSettings.setConfig(context, config)
-                    }
-                }
+                val config = RadarConfig.fromJson(res)
 
                 val events = res.optJSONArray("events")?.let { eventsArr ->
                     RadarEvent.fromJson(eventsArr)
@@ -305,7 +307,7 @@ internal class RadarApiClient(
                         Radar.sendEvents(events, user)
                     }
 
-                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
+                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config)
 
                     return
                 }

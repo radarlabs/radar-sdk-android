@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import io.radar.sdk.model.RadarConfig
 import kotlin.math.max
 
 internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCallbacks {
@@ -40,7 +41,12 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
             try {
                 val updated = RadarSettings.updateSessionId(activity.applicationContext)
                 if (updated) {
-                    Radar.apiClient.getConfig()
+                    Radar.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
+                        override fun onComplete(config: RadarConfig) {
+                            Radar.locationManager.updateTrackingFromMeta(config.meta)
+                            RadarSettings.setFeatureSettings(activity.applicationContext, config.featureSettings)
+                        }
+                    })
                 }
             } catch (e: Exception) {
                 Log.e(TAG, e.message, e)

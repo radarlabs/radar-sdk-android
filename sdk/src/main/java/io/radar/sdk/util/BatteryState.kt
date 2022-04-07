@@ -31,20 +31,20 @@ internal data class BatteryState(
                 isDeviceIdleMode -> {
                     performanceState = if (isAffectedByPowerSaver) {
                         if (isLocationAffectedByPowerSaver) {
-                            //Idle, with power saver and location throttled
+                            // Idle, with power saver and location throttled
                             PerformanceState.LOWEST
                         } else {
-                            //Idle with Power Saver
+                            // Idle with Power Saver
                             PerformanceState.LOW
                         }
                     } else {
-                        //Idle Only
+                        // Idle Only
                         PerformanceState.IDLE
                     }
                 }
                 isAffectedByPowerSaver -> {
                     performanceState = if (isLocationAffectedByPowerSaver) {
-                        //Optimized And Location Throttled
+                        // Optimized And Location Throttled
                         PerformanceState.LOCATIONS_LOW_PERFORMANCE
                     } else {
                         PerformanceState.OPTIMIZED

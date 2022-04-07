@@ -183,7 +183,7 @@ internal class RadarLocationManager(
 
     internal fun updateTracking(location: Location? = null) {
         var tracking = RadarSettings.getTracking(context)
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = Radar.getTrackingOptions()
 
         logger.d("Updating tracking | options = $options; location = $location")
 
@@ -200,9 +200,10 @@ internal class RadarLocationManager(
             RadarSettings.setTracking(context, false)
         }
 
-        val foregroundService = options.foregroundService
         if (tracking) {
-            if (foregroundService != null) {
+            if (options.foregroundServiceEnabled) {
+                val foregroundService = RadarSettings.getForegroundService(context)
+                    ?: RadarTrackingOptions.RadarTrackingOptionsForegroundService()
                 if (!foregroundService.updatesOnly) {
                     this.startForegroundService(foregroundService)
                 }
@@ -218,8 +219,10 @@ internal class RadarLocationManager(
                     this.startLocationUpdates(options.desiredAccuracy, options.desiredStoppedUpdateInterval, options.fastestStoppedUpdateInterval)
                 }
 
-                if (options.useStoppedGeofence && location != null) {
-                    this.replaceBubbleGeofence(location, true)
+                if (options.useStoppedGeofence) {
+                    if (location != null) {
+                        this.replaceBubbleGeofence(location, true)
+                    }
                 } else {
                     this.removeBubbleGeofences()
                 }
@@ -248,6 +251,17 @@ internal class RadarLocationManager(
         }
     }
 
+    internal fun updateTrackingFromMeta(meta: RadarMeta?) {
+        if (meta?.remoteTrackingOptions != null) {
+            logger.d("Setting remote tracking options | trackingOptions = ${meta.remoteTrackingOptions}")
+            RadarSettings.setRemoteTrackingOptions(context, meta.remoteTrackingOptions)
+        } else {
+            RadarSettings.removeRemoteTrackingOptions(context)
+            logger.d("Removed remote tracking options | trackingOptions = ${Radar.getTrackingOptions()}")
+        }
+        updateTracking()
+    }
+
     private fun replaceBubbleGeofence(location: Location?, stopped: Boolean) {
         if (location == null) {
             return
@@ -255,7 +269,7 @@ internal class RadarLocationManager(
 
         this.removeBubbleGeofences()
 
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = Radar.getTrackingOptions()
 
         if (stopped && options.useStoppedGeofence) {
             val identifier = BUBBLE_STOPPED_GEOFENCE_REQUEST_ID
@@ -316,7 +330,7 @@ internal class RadarLocationManager(
     private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
         this.removeSyncedGeofences()
 
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = Radar.getTrackingOptions()
         if (!options.syncGeofences || radarGeofences == null) {
             return
         }
@@ -374,10 +388,12 @@ internal class RadarLocationManager(
 
     private fun removeBubbleGeofences() {
         geofencingClient.removeGeofences(RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
+        logger.d("Removed bubble geofences")
     }
 
     private fun removeSyncedGeofences() {
         geofencingClient.removeGeofences(RadarLocationReceiver.getSyncedGeofencesPendingIntent(context))
+        logger.d("Removed synced geofences")
     }
 
     private fun removeAllGeofences() {
@@ -417,7 +433,7 @@ internal class RadarLocationManager(
             return
         }
 
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = Radar.getTrackingOptions()
         val wasStopped = RadarState.getStopped(context)
         var stopped: Boolean
 
@@ -535,8 +551,8 @@ internal class RadarLocationManager(
     }
 
     private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {
-        val options = RadarSettings.getTrackingOptions(context)
-        val foregroundService = options.foregroundService
+        val options = Radar.getTrackingOptions()
+        val foregroundService = RadarSettings.getForegroundService(context)
 
         if (foregroundService != null && foregroundService.updatesOnly) {
             this.startForegroundService(foregroundService)
@@ -548,7 +564,14 @@ internal class RadarLocationManager(
 
         val callTrackApi = { nearbyBeacons: Array<String>? ->
             this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, nearbyBeacons, object : RadarTrackApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
+                override fun onComplete(
+                    status: RadarStatus,
+                    res: JSONObject?,
+                    events: Array<RadarEvent>?,
+                    user: RadarUser?,
+                    nearbyGeofences: Array<RadarGeofence>?,
+                    config: RadarConfig?
+                ) {
                     if (user != null) {
                         val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
                         val atPlace = user.place != null
@@ -563,11 +586,14 @@ internal class RadarLocationManager(
                     if (foregroundService != null && foregroundService.updatesOnly) {
                         locationManager.stopForegroundService()
                     }
+
+                    updateTrackingFromMeta(config?.meta)
                 }
             })
         }
 
-        if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
+            && permissionsHelper.bluetoothPermissionsGranted(context)) {
             Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
                     if (status != RadarStatus.SUCCESS || beacons == null) {
@@ -612,7 +638,7 @@ internal class RadarLocationManager(
                         .putExtra("text", foregroundService.text)
                         .putExtra("icon", foregroundService.icon )
                         .putExtra("activity", foregroundService.activity)
-                    logger.d("Starting foreground service with intent | $intent")
+                    logger.d("Starting foreground service with intent | intent = $intent")
                     context.applicationContext.startForegroundService(intent)
                     RadarForegroundService.started = true
                 }

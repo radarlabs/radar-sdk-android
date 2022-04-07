@@ -30,7 +30,7 @@ class RadarMavenPublishPluginExtension {
 
     void publication(Closure closure) {
         if (publicationGroup != null) {
-            //This plugin is not designed to support multiple publications within a single module.
+            // This plugin is not designed to support multiple publications within a single module.
             project.logger.warn 'Publication already configured'
             return
         }
