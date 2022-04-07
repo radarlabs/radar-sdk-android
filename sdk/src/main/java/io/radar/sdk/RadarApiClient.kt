@@ -250,7 +250,8 @@ internal class RadarApiClient(
             params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
             params.putOpt("sessionId", RadarSettings.getSessionId(context))
             params.putOpt("trackingOptions", Radar.getTrackingOptions().toJson())
-            params.putOpt("listenToServer", RadarSettings.getShouldListenToServerTrackingOptions(context))
+            val usingRemoteTrackingOptions = RadarSettings.getTracking(context) && RadarSettings.getRemoteTrackingOptions(context) != null
+            params.putOpt("usingRemoteTrackingOptions", usingRemoteTrackingOptions)
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
