@@ -19,7 +19,6 @@ internal object RadarSettings {
     private const val KEY_METADATA = "user_metadata"
     private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
     private const val KEY_TRACKING = "background_tracking"
-    private const val KEY_SERVER_TRACKING = "listenToServerTrackingOptions"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
     private const val KEY_REMOTE_TRACKING_OPTIONS = "remote_tracking_options"
     private const val KEY_FOREGROUND_SERVICE = "foreground_service"
@@ -122,18 +121,6 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putBoolean(KEY_TRACKING, tracking) }
     }
 
-    internal fun getShouldListenToServerTrackingOptions(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_SERVER_TRACKING, false)
-    }
-
-    internal fun setShouldListenToServerTrackingOptions(context: Context, tracking: Boolean) {
-        getSharedPreferences(context).edit { putBoolean(KEY_SERVER_TRACKING, tracking) }
-    }
-
-    internal fun removeRemoteTrackingOptions(context: Context) {
-        getSharedPreferences(context).edit { remove(KEY_REMOTE_TRACKING_OPTIONS) }
-    }
-
     internal fun getTrackingOptions(context: Context): RadarTrackingOptions {
         return getTrackingOptionsByKey(context, KEY_TRACKING_OPTIONS)
     }
@@ -181,6 +168,10 @@ internal object RadarSettings {
     internal fun setRemoteTrackingOptions(context: Context, options: RadarTrackingOptions) {
         val optionsJson = options.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_REMOTE_TRACKING_OPTIONS, optionsJson) }
+    }
+
+    internal fun removeRemoteTrackingOptions(context: Context) {
+        getSharedPreferences(context).edit { remove(KEY_REMOTE_TRACKING_OPTIONS) }
     }
 
     internal fun getForegroundService(context: Context): RadarTrackingOptions.RadarTrackingOptionsForegroundService? {
