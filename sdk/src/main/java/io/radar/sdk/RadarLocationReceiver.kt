@@ -101,7 +101,9 @@ class RadarLocationReceiver : BroadcastReceiver() {
         if (!Radar.initialized) {
             Radar.initialize(context)
         }
+
         Radar.logger.d("Received broadcast | action = ${intent.action}")
+
         when (intent.action) {
             ACTION_BUBBLE_GEOFENCE, ACTION_SYNCED_GEOFENCES -> {
                 val event = GeofencingEvent.fromIntent(intent)
