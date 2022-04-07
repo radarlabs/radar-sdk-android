@@ -99,6 +99,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
     @SuppressLint("MissingPermission")
     override fun onReceive(context: Context, intent: Intent) {
         if (!Radar.initialized) {
+            // Radar must be initialized before using Radar.logger
             Radar.initialize(context)
         }
 
