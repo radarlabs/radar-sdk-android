@@ -37,6 +37,11 @@ class RadarJobScheduler : JobService() {
         private val counter = AtomicInteger()
 
         internal fun scheduleJob(context: Context, location: Location, source: RadarLocationSource) {
+            if (!Radar.initialized) {
+                // Radar must be initialized before using Radar.logger or other Radar members
+                Radar.initialize(context)
+            }
+
             val componentName = ComponentName(context, RadarJobScheduler::class.java)
             val extras = PersistableBundle().apply {
                 putDouble(EXTRA_LATITUDE, location.latitude)
@@ -79,6 +84,11 @@ class RadarJobScheduler : JobService() {
     }
 
     override fun onStartJob(params: JobParameters): Boolean {
+        if (!Radar.initialized) {
+            // Radar must be initialized before using Radar.logger or other Radar members
+            Radar.initialize(this.applicationContext)
+        }
+
         val extras = params.extras
         val latitude = extras.getDouble(EXTRA_LATITUDE)
         val longitude = extras.getDouble(EXTRA_LONGITUDE)
@@ -128,6 +138,11 @@ class RadarJobScheduler : JobService() {
     }
 
     override fun onStopJob(params: JobParameters): Boolean {
+        if (!Radar.initialized) {
+            // Radar must be initialized before using Radar.logger or other Radar members
+            Radar.initialize(this.applicationContext)
+        }
+
         if (Radar.isTestKey()) {
             val extras = params.extras
             val latitude = extras.getDouble(EXTRA_LATITUDE)
