@@ -145,7 +145,6 @@ internal class RadarBeaconManager(
         } catch (e: SecurityException) {
             logger.e("Error starting monitoring beacons", e)
         }
-        
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
