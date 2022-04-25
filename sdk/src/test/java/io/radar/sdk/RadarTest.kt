@@ -89,17 +89,6 @@ class RadarTest {
         assertNotNull(place?.location)
     }
 
-    private fun assertInsightsOk(insights: RadarUserInsights?) {
-        assertNotNull(insights)
-        assertNotNull(insights?.homeLocation)
-        assertNotNull(insights?.homeLocation?.updatedAt)
-        assertNotEquals(insights?.homeLocation?.confidence, RadarUserInsightsLocation.RadarUserInsightsLocationConfidence.NONE)
-        assertNotNull(insights?.officeLocation)
-        assertNotNull(insights?.officeLocation?.updatedAt)
-        assertNotEquals(insights?.officeLocation?.confidence, RadarUserInsightsLocation.RadarUserInsightsLocationConfidence.NONE)
-        assertNotNull(insights?.state)
-    }
-
     private fun assertRegionOk(region: RadarRegion?) {
         assertNotNull(region)
         assertNotNull(region?._id)
@@ -148,7 +137,6 @@ class RadarTest {
         assertNotNull(user?.location)
         assertGeofencesOk(user?.geofences)
         assertPlaceOk(user?.place)
-        assertInsightsOk(user?.insights)
         assertRegionOk(user?.country)
         assertRegionOk(user?.state)
         assertRegionOk(user?.dma)

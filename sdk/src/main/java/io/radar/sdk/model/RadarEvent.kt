@@ -104,18 +104,6 @@ class RadarEvent(
         USER_ENTERED_GEOFENCE,
         /** `user.exited_geofence` */
         USER_EXITED_GEOFENCE,
-        /** `user.entered_home` */
-        USER_ENTERED_HOME,
-        /** `user.exited_home` */
-        USER_EXITED_HOME,
-        /** `user.entered_office` */
-        USER_ENTERED_OFFICE,
-        /** `user.exited_office` */
-        USER_EXITED_OFFICE,
-        /** `user.started_traveling` */
-        USER_STARTED_TRAVELING,
-        /** `user.stopped_traveling` */
-        USER_STOPPED_TRAVELING,
         /** `user.entered_place` */
         USER_ENTERED_PLACE,
         /** `user.exited_place` */
@@ -134,10 +122,6 @@ class RadarEvent(
         USER_ENTERED_REGION_DMA,
         /** `user.exited_region_dma` */
         USER_EXITED_REGION_DMA,
-        /** `user.started_commuting` */
-        USER_STARTED_COMMUTING,
-        /** `user.stopped_commuting` */
-        USER_STOPPED_COMMUTING,
         /** `user.started_trip` */
         USER_STARTED_TRIP,
         /** `user.updated_trip` */
@@ -224,12 +208,6 @@ class RadarEvent(
             val type = when (obj.optString(FIELD_TYPE)) {
                 "user.entered_geofence" -> USER_ENTERED_GEOFENCE
                 "user.exited_geofence" -> USER_EXITED_GEOFENCE
-                "user.entered_home" -> USER_ENTERED_HOME
-                "user.exited_home" -> USER_EXITED_HOME
-                "user.entered_office" -> USER_ENTERED_OFFICE
-                "user.exited_office" -> USER_EXITED_OFFICE
-                "user.started_traveling" -> USER_STARTED_TRAVELING
-                "user.stopped_traveling" -> USER_STOPPED_TRAVELING
                 "user.entered_place" -> USER_ENTERED_PLACE
                 "user.exited_place" -> USER_EXITED_PLACE
                 "user.nearby_place_chain" -> USER_NEARBY_PLACE_CHAIN
@@ -239,8 +217,6 @@ class RadarEvent(
                 "user.exited_region_state" -> USER_EXITED_REGION_STATE
                 "user.entered_region_dma" -> USER_ENTERED_REGION_DMA
                 "user.exited_region_dma" -> USER_EXITED_REGION_DMA
-                "user.started_commuting" -> USER_STARTED_COMMUTING
-                "user.stopped_commuting" -> USER_STOPPED_COMMUTING
                 "user.started_trip" -> USER_STARTED_TRIP
                 "user.updated_trip" -> USER_UPDATED_TRIP
                 "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
@@ -317,12 +293,6 @@ class RadarEvent(
             return when (type) {
                 USER_ENTERED_GEOFENCE -> "user.entered_geofence"
                 USER_EXITED_GEOFENCE -> "user.exited_geofence"
-                USER_ENTERED_HOME -> "user.entered_home"
-                USER_EXITED_HOME -> "user.exited_home"
-                USER_ENTERED_OFFICE -> "user.entered_office"
-                USER_EXITED_OFFICE -> "user.exited_office"
-                USER_STARTED_TRAVELING -> "user.started_traveling"
-                USER_STOPPED_TRAVELING -> "user.stopped_traveling"
                 USER_ENTERED_PLACE -> "user.entered_place"
                 USER_EXITED_PLACE -> "user.exited_place"
                 USER_NEARBY_PLACE_CHAIN -> "user.nearby_place_chain"
@@ -332,8 +302,6 @@ class RadarEvent(
                 USER_EXITED_REGION_STATE -> "user.exited_region_state"
                 USER_ENTERED_REGION_DMA -> "user.entered_region_dma"
                 USER_EXITED_REGION_DMA -> "user.exited_region_dma"
-                USER_STARTED_COMMUTING -> "user.started_commuting"
-                USER_STOPPED_COMMUTING -> "user.stopped_commuting"
                 USER_STARTED_TRIP -> "user.started_trip"
                 USER_UPDATED_TRIP -> "user.updated_trip"
                 USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
