@@ -131,17 +131,21 @@ internal class RadarBeaconManager(
             return
         }
 
-        val scanSettings = ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
-            .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
-            .setReportDelay(30000)
-            .setMatchMode(ScanSettings.MATCH_MODE_STICKY)
-            .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
-            .build()
+        try {
+            val scanSettings = ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+                .setCallbackType(ScanSettings.CALLBACK_TYPE_FIRST_MATCH)
+                .setReportDelay(30000)
+                .setMatchMode(ScanSettings.MATCH_MODE_STICKY)
+                .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
+                .build()
 
-        logger.d("Starting monitoring beacons")
+            logger.d("Starting monitoring beacons")
 
-        adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, RadarLocationReceiver.getBeaconPendingIntent(context))
+            adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, RadarLocationReceiver.getBeaconPendingIntent(context))
+        } catch (e: SecurityException) {
+            logger.e("Error starting monitoring beacons", e)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

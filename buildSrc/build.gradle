@@ -1,0 +1,40 @@
+plugins {
+    id 'java-gradle-plugin'
+}
+
+gradlePlugin {
+    plugins {
+        'radar-maven-publish' {
+            id = 'io.radar.mvnpublish'
+            implementationClass = 'io.radar.mvnpublish.RadarMavenPublishPlugin'
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://plugins.gradle.org/m2/'
+    }
+}
+
+dependencies {
+    implementation 'org.json:json:20210307'
+    implementation ('io.github.gradle-nexus.publish-plugin:io.github.gradle-nexus.publish-plugin.gradle.plugin:1.1.0') {
+        exclude group: 'com.squareup.retrofit2'
+        exclude group: 'com.squareup.okhttp3'
+    }
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.2'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+    useJUnitPlatform()
+    systemProperty 'PAT_USERNAME', project.properties['PAT_USERNAME'] ?: ''
+    systemProperty 'PAT_TOKEN', project.properties['PAT_TOKEN'] ?: ''
+}

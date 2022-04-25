@@ -89,17 +89,6 @@ class RadarTest {
         assertNotNull(place?.location)
     }
 
-    private fun assertInsightsOk(insights: RadarUserInsights?) {
-        assertNotNull(insights)
-        assertNotNull(insights?.homeLocation)
-        assertNotNull(insights?.homeLocation?.updatedAt)
-        assertNotEquals(insights?.homeLocation?.confidence, RadarUserInsightsLocation.RadarUserInsightsLocationConfidence.NONE)
-        assertNotNull(insights?.officeLocation)
-        assertNotNull(insights?.officeLocation?.updatedAt)
-        assertNotEquals(insights?.officeLocation?.confidence, RadarUserInsightsLocation.RadarUserInsightsLocationConfidence.NONE)
-        assertNotNull(insights?.state)
-    }
-
     private fun assertRegionOk(region: RadarRegion?) {
         assertNotNull(region)
         assertNotNull(region?._id)
@@ -148,7 +137,6 @@ class RadarTest {
         assertNotNull(user?.location)
         assertGeofencesOk(user?.geofences)
         assertPlaceOk(user?.place)
-        assertInsightsOk(user?.insights)
         assertRegionOk(user?.country)
         assertRegionOk(user?.state)
         assertRegionOk(user?.dma)
@@ -158,6 +146,9 @@ class RadarTest {
         assertChainsOk(user?.topChains)
         assertNotEquals(user?.source, Radar.RadarLocationSource.UNKNOWN)
         assertTrue(user?.proxy ?: false)
+        assertTrue(user?.mocked ?: false)
+        assertTrue(user?.fraud?.proxy ?: false)
+        assertTrue(user?.fraud?.mocked ?: false)
         assertTripOk(user?.trip)
     }
 
@@ -530,6 +521,13 @@ class RadarTest {
 
         Radar.stopTracking()
 
+        Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+            "Text",
+            "Title",
+            1337,
+            true
+        ))
+
         val options = RadarTrackingOptions.EFFICIENT
         options.desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW
         val now = Date()
@@ -538,12 +536,6 @@ class RadarTest {
         options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.NONE
         options.syncGeofences = true
         options.syncGeofencesLimit = 100
-        options.foregroundService = RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-            "Text",
-            "Title",
-            1337,
-            true
-        )
         Radar.startTracking(options)
         assertEquals(options, Radar.getTrackingOptions())
         assertTrue(Radar.isTracking())
@@ -1271,6 +1263,19 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertRoutesOk(callbackRoutes)
+    }
+
+    @Test
+    fun test_Radar_trackingOptionsRemote_success() {
+        RadarSettings.setRemoteTrackingOptions(context, RadarTrackingOptions.RESPONSIVE)
+        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarSettings.getRemoteTrackingOptions(context))
+
+        RadarSettings.setTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
+        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarSettings.getTrackingOptions(context))
+        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarSettings.getRemoteTrackingOptions(context))
+
+        RadarSettings.removeRemoteTrackingOptions(context)
+        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarSettings.getTrackingOptions(context))
     }
 
 }

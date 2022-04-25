@@ -98,6 +98,13 @@ class RadarLocationReceiver : BroadcastReceiver() {
 
     @SuppressLint("MissingPermission")
     override fun onReceive(context: Context, intent: Intent) {
+        if (!Radar.initialized) {
+            // Radar must be initialized before using Radar.logger
+            Radar.initialize(context)
+        }
+
+        Radar.logger.d("Received broadcast | action = ${intent.action}")
+
         when (intent.action) {
             ACTION_BUBBLE_GEOFENCE, ACTION_SYNCED_GEOFENCES -> {
                 val event = GeofencingEvent.fromIntent(intent)
@@ -108,7 +115,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
                         else -> Radar.RadarLocationSource.GEOFENCE_EXIT
                     }
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
                         RadarJobScheduler.scheduleJob(context, it, source)
                     } else {
                         Radar.handleLocation(context, it, source)
@@ -120,7 +127,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 result?.lastLocation?.also {
                     val source = Radar.RadarLocationSource.BACKGROUND_LOCATION
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
                         RadarJobScheduler.scheduleJob(context, it, source)
                     } else {
                         Radar.handleLocation(context, it, source)

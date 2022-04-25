@@ -1,20 +1,39 @@
+import io.radar.ci.GitHubActions
+import io.radar.ci.GitHubClient
+import io.radar.ci.SnapshotDispatcher
+import io.radar.mvnpublish.MavenServer
+
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 apply plugin: "kotlin-android-extensions"
 apply plugin: "org.jetbrains.dokka"
-apply plugin: "maven-publish"
-apply plugin: "signing"
+apply plugin: 'io.radar.mvnpublish'
 
 ext {
-    radarVersion = "3.2.1"
+    radarVersion = '3.4.2'
+}
+
+String buildNumber = ".${System.currentTimeMillis()}"
+GitHubActions githubRelease = GitHubActions.get()
+boolean isSnapshot = false
+if (githubRelease) {
+    if (githubRelease.snapshot) {
+        // Use the existing radarVersion with the -SNAPSHOT suffix
+        isSnapshot = true
+        buildNumber = '-SNAPSHOT'
+    } else {
+        buildNumber = ''
+        // Use the tag from the release name as the version-to-publish / include in source code
+        ext.radarVersion = githubRelease.tag
+    }
 }
 
 android {
     compileSdkVersion 31
-     compileOptions {
-         coreLibraryDesugaringEnabled = true
-         sourceCompatibility = JavaVersion.VERSION_1_8
-         targetCompatibility = JavaVersion.VERSION_1_8
+    compileOptions {
+        coreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
         jvmTarget = "1.8"
@@ -45,15 +64,18 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "androidx.appcompat:appcompat:1.3.1"
-    implementation "androidx.core:core-ktx:1.6.0"
+    implementation "androidx.appcompat:appcompat:1.4.0"
+    implementation "androidx.core:core-ktx:1.7.0"
     implementation "com.google.android.gms:play-services-ads-identifier:17.1.0"
     implementation "com.google.android.gms:play-services-location:18.0.0"
     testImplementation "androidx.test.ext:junit:1.1.3"
     testImplementation "org.robolectric:robolectric:4.5.1"
+    // Allow pure junit testing with json api
+    testImplementation 'org.json:json:20211205'
 }
 
 task androidSourcesJar(type: Jar) {
+    group 'publishing'
     archiveClassifier.set("sources")
     from android.sourceSets.main.java.srcDirs
 }
@@ -69,10 +91,11 @@ dokkaHtml.configure {
 }
 
 dokkaJavadoc.configure {
-    outputDirectory.set(file("$rootDir/javadocs"))
+    outputDirectory.set(file("$buildDir/javadocs"))
 }
 
 task androidJavadocsJar(type: Jar, dependsOn: dokkaJavadoc) {
+    group 'publishing'
     archiveClassifier.set("javadoc")
     from dokkaJavadoc.outputDirectory
 }
@@ -81,73 +104,30 @@ artifacts {
     archives androidSourcesJar, androidJavadocsJar
 }
 
-publishing {
-    publications {
-        sdkPublication(MavenPublication) {
-            groupId "io.radar"
-            artifactId "sdk"
-            version radarVersion
-            artifact "$buildDir/outputs/aar/${project.getName()}-release.aar"
-            artifact androidSourcesJar
-            artifact androidJavadocsJar
-
-            pom {
-                name = "Radar Android SDK"
-                description = "Android SDK for Radar, the leading geofencing and location tracking platform"
-                url = "https://radar.io"
-
-                licenses {
-                    license {
-                        name = "Apache License, Version 2.0"
-                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-                    }
-                }
-
-                organization {
-                    name = "Radar Labs, Inc."
-                    url = "https://radar.io"
-                }
-
-                developers {
-                    developer {
-                        id = "radarlabs"
-                        name = "Radar Labs, Inc."
-                    }
-                }
-
-                scm {
-                    connection = "scm:git:git://github.com:radarlabs/radar-sdk-android.git"
-                    developerConnection = "scm:git:ssh://github.com:radarlabs/radar-sdk-android.git"
-                    url = "https://github.com/radarlabs/radar-sdk-android"
-                }
-
-                withXml {
-                    def dependenciesNode = asNode().appendNode('dependencies')
-                    configurations.implementation.allDependencies.each { dependency ->
-                        if (dependency.group == null || dependency.name == null || dependency.version == null) {
-                            return
-                        }
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-                        dependencyNode.appendNode('groupId', dependency.group)
-                        dependencyNode.appendNode('artifactId', dependency.name)
-                        dependencyNode.appendNode('version', dependency.version)
-                    }
-                }
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2"
-            credentials {
-                username = project.properties["nexusUsername"] != null ? project.properties["nexusUsername"] : ""
-                password = project.properties["nexusPassword"] != null ? project.properties["nexusPassword"] : ""
-            }
-        }
+mvnpublish {
+    publication {
+        name = 'Radar Android SDK'
+        description = 'Android SDK for Radar, the leading geofencing and location tracking platform'
+        repositoryName = 'radar-sdk-android'
+        group = 'io.radar'
+        artifactId = 'sdk'
+        version = "$radarVersion$buildNumber"
+        artifacts = ["$buildDir/outputs/aar/$project.name-release.aar", androidSourcesJar, androidJavadocsJar]
+        server = isSnapshot ? MavenServer.SNAPSHOT : MavenServer.RELEASE
     }
 }
 
-signing {
-    sign publishing.publications.sdkPublication
+task dispatchSnapshot {
+    group 'ci'
+    description 'Send event to notify listeners that a new SNAPSHOT build has been published.'
+    String username = System.getenv('PAT_USERNAME')
+    String password = System.getenv('PAT_TOKEN')
+    doLast {
+        GitHubClient.ApiResponse result = SnapshotDispatcher.dispatchSnapshotEvent(username, password, "$radarVersion$buildNumber")
+        if (result.success) {
+            logger.debug("Successfully sent repository dispatch ($result.status)!")
+        } else {
+            logger.log(LogLevel.ERROR, "Could not send repository dispatch! $result.status: ${result.message ?: ''}\n ${result.data ?: ''}")
+        }
+    }
 }

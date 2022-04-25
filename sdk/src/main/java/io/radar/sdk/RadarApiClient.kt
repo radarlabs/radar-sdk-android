@@ -22,7 +22,18 @@ internal class RadarApiClient(
 ) {
 
     interface RadarTrackApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, events: Array<RadarEvent>? = null, user: RadarUser? = null, nearbyGeofences: Array<RadarGeofence>? = null)
+        fun onComplete(
+            status: RadarStatus,
+            res: JSONObject? = null,
+            events: Array<RadarEvent>? = null,
+            user: RadarUser? = null,
+            nearbyGeofences: Array<RadarGeofence>? = null,
+            config: RadarConfig? = null
+        )
+    }
+
+    interface RadarGetConfigApiCallback {
+        fun onComplete(config: RadarConfig)
     }
 
     interface RadarTripApiCallback {
@@ -61,6 +72,10 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null, matrix: RadarRouteMatrix? = null)
     }
 
+    internal interface RadarLogCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null)
+    }
+
     private fun headers(publishableKey: String): Map<String, String> {
         return mapOf(
             "Authorization" to publishableKey,
@@ -74,7 +89,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun getConfig() {
+    internal fun getConfig(callback: RadarGetConfigApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
         val queryParams = StringBuilder()
@@ -93,15 +108,56 @@ internal class RadarApiClient(
 
         apiHelper.request(context, "GET", url, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                if (res != null && res.has("meta")) {
-                    val meta = res.getJSONObject("meta")
-                    if (meta.has("config")) {
-                        val config = meta.getJSONObject("config")
-                        RadarSettings.setConfig(context, config)
-                    }
+                if (status == RadarStatus.SUCCESS) {
+                    Radar.flushLogs()
                 }
+                callback?.onComplete(RadarConfig.fromJson(res))
             }
         })
+    }
+
+    internal fun log(logs: List<RadarLog>, callback: RadarLogCallback?) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            return
+        }
+        val params = JSONObject()
+        try {
+            params.putOpt("id", RadarSettings.getId(context))
+            params.putOpt("deviceId", RadarUtils.getDeviceId(context))
+            params.putOpt("installId", RadarSettings.getInstallId(context))
+            params.putOpt("sessionId", RadarSettings.getSessionId(context))
+            val array = JSONArray()
+            logs.forEach { log -> array.put(log.toJson()) }
+            params.putOpt("logs", array)
+        } catch (e: JSONException) {
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            return
+        }
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/logs")
+            .build()
+        apiHelper.request(
+            context = context,
+            method = "POST",
+            url = URL(uri.toString()),
+            headers = headers(publishableKey),
+            params = params,
+            sleep = false,
+            callback = object : RadarApiHelper.RadarApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                    callback?.onComplete(status, res)
+                }
+            },
+            stream = true,
+            // Do not log the saved log events. If the logs themselves were logged it would create a redundancy and
+            // eventually lead to a crash when creating a downstream log request, since these will log to memory as a
+            // single log entry. Then each time after, this log entry would contain more and more logs, eventually
+            // causing an out of memory exception.
+            logPayload = false
+        )
     }
 
     internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, nearbyBeacons: Array<String>?, nearbyBeaconRSSI: Map<String, Int>?, callback: RadarTrackApiCallback? = null) {
@@ -113,7 +169,7 @@ internal class RadarApiClient(
         }
 
         val params = JSONObject()
-        val options = RadarSettings.getTrackingOptions(context)
+        val options = Radar.getTrackingOptions()
         val tripOptions = RadarSettings.getTripOptions(context)
         try {
             params.putOpt("id", RadarSettings.getId(context))
@@ -200,6 +256,9 @@ internal class RadarApiClient(
             params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
             params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
             params.putOpt("sessionId", RadarSettings.getSessionId(context))
+            params.putOpt("trackingOptions", Radar.getTrackingOptions().toJson())
+            val usingRemoteTrackingOptions = RadarSettings.getTracking(context) && RadarSettings.getRemoteTrackingOptions(context) != null
+            params.putOpt("usingRemoteTrackingOptions", usingRemoteTrackingOptions)
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
@@ -227,16 +286,11 @@ internal class RadarApiClient(
 
                     return
                 }
+                Radar.flushLogs()
 
                 RadarState.setLastFailedStoppedLocation(context, null)
 
-                if (res.has("meta")) {
-                    val meta = res.getJSONObject("meta")
-                    if (meta.has("config")) {
-                        val config = meta.getJSONObject("config")
-                        RadarSettings.setConfig(context, config)
-                    }
-                }
+                val config = RadarConfig.fromJson(res)
 
                 val events = res.optJSONArray("events")?.let { eventsArr ->
                     RadarEvent.fromJson(eventsArr)
@@ -260,7 +314,7 @@ internal class RadarApiClient(
                         Radar.sendEvents(events, user)
                     }
 
-                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences)
+                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config)
 
                     return
                 }

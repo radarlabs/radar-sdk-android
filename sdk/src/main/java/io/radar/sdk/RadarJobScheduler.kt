@@ -13,6 +13,8 @@ import android.os.Looper
 import android.os.PersistableBundle
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarLocationSource
+import io.radar.sdk.Radar.stringForSource
+import java.util.concurrent.atomic.AtomicInteger
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class RadarJobScheduler : JobService() {
@@ -24,10 +26,22 @@ class RadarJobScheduler : JobService() {
         private const val EXTRA_PROVIDER = "provider"
         private const val EXTRA_TIME = "time"
         private const val EXTRA_SOURCE = "source"
+        /**
+         * Base Job ID (Radar's birthday!)
+         */
+        private const val BASE_JOB_ID = 20160525
 
-        private const val JOB_ID = 20160525 // random job ID (Radar's birthday!)
+        /**
+         * Current number of active jobs
+         */
+        private val counter = AtomicInteger()
 
         internal fun scheduleJob(context: Context, location: Location, source: RadarLocationSource) {
+            if (!Radar.initialized) {
+                // Radar must be initialized before using Radar.logger or other Radar members
+                Radar.initialize(context)
+            }
+
             val componentName = ComponentName(context, RadarJobScheduler::class.java)
             val extras = PersistableBundle().apply {
                 putDouble(EXTRA_LATITUDE, location.latitude)
@@ -38,18 +52,43 @@ class RadarJobScheduler : JobService() {
                 putString(EXTRA_SOURCE, source.name)
             }
 
-            val jobInfo = JobInfo.Builder(JOB_ID, componentName)
+            val settings = RadarSettings.getFeatureSettings(context)
+            val jobId = BASE_JOB_ID + (counter.incrementAndGet() % settings.maxConcurrentJobs)
+
+            val jobInfo = JobInfo.Builder(jobId, componentName)
                 .setExtras(extras)
                 .setMinimumLatency(0)
                 .setOverrideDeadline(0)
+                .setRequiredNetworkType(
+                    if (settings.schedulerRequiresNetwork) JobInfo.NETWORK_TYPE_ANY else JobInfo.NETWORK_TYPE_NONE
+                )
                 .build()
 
-            val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-            jobScheduler.schedule(jobInfo)
+            val jobScheduler = context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
+            val result = jobScheduler.schedule(jobInfo)
+            if (result == JobScheduler.RESULT_SUCCESS) {
+                Radar.logger.d(
+                    "Scheduling location job |" +
+                            " location = $location;" +
+                            " source = ${stringForSource(source)};"
+                )
+            } else {
+                Radar.logger.d(
+                    "Failed to schedule location job |" +
+                            " location = $location;" +
+                            " source = ${stringForSource(source)};"
+                )
+            }
+
         }
     }
 
     override fun onStartJob(params: JobParameters): Boolean {
+        if (!Radar.initialized) {
+            // Radar must be initialized before using Radar.logger or other Radar members
+            Radar.initialize(this.applicationContext)
+        }
+
         val extras = params.extras
         val latitude = extras.getDouble(EXTRA_LATITUDE)
         val longitude = extras.getDouble(EXTRA_LONGITUDE)
@@ -64,7 +103,27 @@ class RadarJobScheduler : JobService() {
             this.time = time
         }
 
-        val sourceStr = extras.getString(EXTRA_SOURCE) ?: return false
+        val sourceStr = extras.getString(EXTRA_SOURCE)
+        if (Radar.isTestKey()) {
+            val batteryState = Radar.batteryManager.getBatteryState()
+            Radar.logger.d(
+                "Starting location job | " +
+                        "location = $location; " +
+                        "source = ${sourceStr}; " +
+                        "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
+                        "performanceState = ${batteryState.performanceState.name}; " +
+                        "isCharging = ${batteryState.isCharging}; " +
+                        "batteryPercentage = ${batteryState.percent}; " +
+                        "isPowerSaveMode = ${batteryState.powerSaveMode}; " +
+                        "isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations}; " +
+                        "locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()}; " +
+                        "isDozeMode = ${batteryState.isDeviceIdleMode}"
+            )
+        }
+
+        if (sourceStr == null) {
+            return false
+        }
 
         val source = RadarLocationSource.valueOf(sourceStr)
 
@@ -74,10 +133,36 @@ class RadarJobScheduler : JobService() {
             this.jobFinished(params, false)
         }, 10000)
 
+        counter.set(0)
         return true
     }
 
     override fun onStopJob(params: JobParameters): Boolean {
+        if (!Radar.initialized) {
+            // Radar must be initialized before using Radar.logger or other Radar members
+            Radar.initialize(this.applicationContext)
+        }
+
+        if (Radar.isTestKey()) {
+            val extras = params.extras
+            val latitude = extras.getDouble(EXTRA_LATITUDE)
+            val longitude = extras.getDouble(EXTRA_LONGITUDE)
+            val accuracy = extras.getDouble(EXTRA_ACCURACY).toFloat()
+            val provider = extras.getString(EXTRA_PROVIDER)
+            val time = extras.getLong(EXTRA_TIME)
+
+            val location = Location(provider).apply {
+                this.latitude = latitude
+                this.longitude = longitude
+                this.accuracy = accuracy
+                this.time = time
+            }
+
+            val source = extras.getString(EXTRA_SOURCE)
+            // This may occur, for example, if a new location job is scheduled before the current job finishes executing.
+            Radar.logger.d("Stopping location job | location = $location; source = $source")
+        }
+
         return false
     }
 

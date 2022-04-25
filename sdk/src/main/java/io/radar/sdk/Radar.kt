@@ -6,9 +6,10 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
-import android.os.Looper
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.util.RadarLogBuffer
+import io.radar.sdk.util.RadarSimpleLogBuffer
 import org.json.JSONObject
 import java.util.*
 
@@ -332,7 +333,7 @@ object Radar {
         METRIC
     }
 
-    private var initialized = false
+    internal var initialized = false
     private lateinit var context: Context
     private lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
@@ -340,9 +341,24 @@ object Radar {
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var beaconManager: RadarBeaconManager
+    private lateinit var logBuffer: RadarLogBuffer
+    internal lateinit var batteryManager: RadarBatteryManager
 
     /**
-     * Initializes the Radar SDK. Call this method from the main thread in your `Application` class before calling any other Radar methods.
+     * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#initialize-sdk)
+     *
+     * @param[context] The context
+     * @param[publishableKey] Your publishable API key
+     */
+    @JvmStatic
+    fun initialize(context: Context?, publishableKey: String? = null) {
+        initialize(context, publishableKey, null)
+    }
+
+    /**
+     * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
      *
      * @see [](https://radar.io/documentation/sdk/android#initialize-sdk)
      *
@@ -361,6 +377,10 @@ object Radar {
         this.handler = Handler(this.context.mainLooper)
         this.receiver = receiver
 
+        if (!this::logBuffer.isInitialized) {
+            this.logBuffer = RadarSimpleLogBuffer()
+        }
+
         if (!this::logger.isInitialized) {
             this.logger = RadarLogger(this.context)
         }
@@ -374,13 +394,16 @@ object Radar {
         if (!this::apiClient.isInitialized) {
             this.apiClient = RadarApiClient(this.context, logger)
         }
+        if (!this::batteryManager.isInitialized) {
+            this.batteryManager = RadarBatteryManager(this.context)
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             if (!this::beaconManager.isInitialized) {
                 this.beaconManager = RadarBeaconManager(this.context, logger)
             }
         }
         if (!this::locationManager.isInitialized) {
-            this.locationManager = RadarLocationManager(this.context, apiClient, logger)
+            this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager)
             this.locationManager.updateTracking()
         }
 
@@ -391,7 +414,12 @@ object Radar {
         val application = this.context as? Application
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks())
 
-        this.apiClient.getConfig()
+        this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(config: RadarConfig) {
+                locationManager.updateTrackingFromMeta(config.meta)
+                RadarSettings.setFeatureSettings(context, config.featureSettings)
+            }
+        })
 
         logger.i("📍️ Radar initialized")
     }
@@ -640,9 +668,16 @@ object Radar {
                     return
                 }
 
-                val callTrackApi = { nearbyBeacons: Array<String>?, nearbyBeaconRSSI: Map<String, Int>? ->
+                val callTrackApi = { nearbyBeacons: Array<String>? ->
                     apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, nearbyBeacons, nearbyBeaconRSSI, object : RadarApiClient.RadarTrackApiCallback {
-                        override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
+                        override fun onComplete(
+                            status: RadarStatus,
+                            res: JSONObject?,
+                            events: Array<RadarEvent>?,
+                            user: RadarUser?,
+                            nearbyGeofences: Array<RadarGeofence>?,
+                            config: RadarConfig?,
+                        ) {
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
                             }
@@ -712,9 +747,16 @@ object Radar {
 
             return
         }
-
+        
         apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, null, object : RadarApiClient.RadarTrackApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                events: Array<RadarEvent>?,
+                user: RadarUser?,
+                nearbyGeofences: Array<RadarGeofence>?,
+                config: RadarConfig?,
+            ) {
                 handler.post {
                     callback?.onComplete(status, location, events, user)
                 }
@@ -822,7 +864,14 @@ object Radar {
                         val stopped = (i == 0) || (i == coordinates.size - 1)
 
                         apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, null, object : RadarApiClient.RadarTrackApiCallback {
-                            override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, nearbyGeofences: Array<RadarGeofence>?) {
+                            override fun onComplete(
+                                status: RadarStatus,
+                                res: JSONObject?,
+                                events: Array<RadarEvent>?,
+                                user: RadarUser?,
+                                nearbyGeofences: Array<RadarGeofence>?,
+                                config: RadarConfig?,
+                            ) {
                                 handler.post {
                                     callback?.onComplete(status, location, events, user)
                                 }
@@ -908,12 +957,40 @@ object Radar {
      * @return The current tracking options.
      */
     @JvmStatic
-    fun getTrackingOptions(): RadarTrackingOptions? {
+    fun getTrackingOptions() = RadarSettings.getRemoteTrackingOptions(context)
+        ?: RadarSettings.getTrackingOptions(context)
+
+    /**
+     * Settings for the foreground notification when the foregroundServiceEnabled parameter
+     * is true on Radar tracking options.
+     *
+     * @see [](https://radar.io/documentation/sdk/tracking)
+     *
+     * @param[options] Foreground service options
+     */
+    @JvmStatic
+    fun setForegroundServiceOptions(options: RadarTrackingOptions.RadarTrackingOptionsForegroundService) {
         if (!initialized) {
-            return null
+            return
         }
 
-        return RadarSettings.getTrackingOptions(context)
+        RadarSettings.setForegroundService(context, options)
+    }
+
+    /**
+     * Sets a receiver for client-side delivery of events, location updates, and debug logs.
+     *
+     * @see [](https://radar.io/documentation/sdk/android#listening-for-events-with-a-receiver)
+     *
+     * @param[receiver] A delegate for client-side delivery of events, location updates, and debug logs. If `null`, the previous receiver will be cleared.
+     */
+    @JvmStatic
+    fun setReceiver(receiver: RadarReceiver?) {
+        if (!initialized) {
+            return
+        }
+
+        this.receiver = receiver
     }
 
     /**
@@ -2143,6 +2220,35 @@ object Radar {
     }
 
     /**
+     * Sends Radar log events to the server
+     */
+    @JvmStatic
+    internal fun flushLogs() {
+        if (!initialized || !isTestKey()) {
+            return
+        }
+        val flushable = logBuffer.getFlushableLogsStash()
+        val logs = flushable.get()
+        if (logs.isNotEmpty()) {
+            apiClient.log(logs, object : RadarApiClient.RadarLogCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                    flushable.onFlush(status == RadarStatus.SUCCESS)
+                }
+            })
+        }
+    }
+
+    @JvmStatic
+    internal fun isTestKey(): Boolean {
+        val key = RadarSettings.getPublishableKey(this.context)
+        return if (key == null) {
+            false
+        } else {
+            key.startsWith("prj_test") || key.startsWith("org_test")
+        }
+    }
+
+    /**
      * Returns a display string for a location source value.
      *
      * @param[source] A location source value.
@@ -2283,8 +2389,11 @@ object Radar {
         logger.i("📍️ Radar error received | status = $status")
     }
 
-    internal fun sendLog(message: String) {
+    internal fun sendLog(level: RadarLogLevel, message: String) {
         receiver?.onLog(context, message)
+        if (isTestKey()) {
+            logBuffer.write(level, message)
+        }
     }
 
 }

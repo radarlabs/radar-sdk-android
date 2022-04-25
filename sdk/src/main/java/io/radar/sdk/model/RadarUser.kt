@@ -52,11 +52,6 @@ class RadarUser(
     val place: RadarPlace?,
 
     /**
-     * Learned insights for the user. May be `null` if no insights are available or if Insights is not enabled. See [](https://radar.io/documentation/insights).
-     */
-    val insights: RadarUserInsights?,
-
-    /**
      * The user's nearby beacons. May be `null` or empty if the user is not near any beacons or if Beacons is not enabled. See [](https://radar.io/documentation/beacons).
      */
     val beacons: Array<RadarBeacon>?,
@@ -119,8 +114,19 @@ class RadarUser(
     /**
      * The user's current trip.
      */
-    val trip: RadarTrip?
+    val trip: RadarTrip?,
+
+    /**
+     * A boolean indicating whether the user's location is being mocked, such as in a simulation. May be `false` if
+     * Fraud is not enabled.
+     */
+    val mocked: Boolean = false
 ) {
+
+    /**
+     * Learned fraud state for the user. May be `null` if Fraud is not enabled.
+     */
+    val fraud: RadarFraud = RadarFraud(proxy, mocked)
 
     internal companion object {
         private const val FIELD_ID = "_id"
@@ -133,7 +139,6 @@ class RadarUser(
         private const val FIELD_LOCATION_ACCURACY = "locationAccuracy"
         private const val FIELD_GEOFENCES = "geofences"
         private const val FIELD_PLACE = "place"
-        private const val FIELD_INSIGHTS = "insights"
         private const val FIELD_BEACONS = "beacons"
         private const val FIELD_STOPPED = "stopped"
         private const val FIELD_FOREGROUND = "foreground"
@@ -146,7 +151,6 @@ class RadarUser(
         private const val FIELD_TOP_CHAINS = "topChains"
         private const val FIELD_SOURCE = "source"
         private const val FIELD_FRAUD = "fraud"
-        private const val FIELD_PROXY = "proxy"
         private const val FIELD_TRIP = "trip"
 
         @JvmStatic
@@ -173,7 +177,6 @@ class RadarUser(
             }
             val geofences = RadarGeofence.fromJson(obj.optJSONArray(FIELD_GEOFENCES))
             val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
-            val insights = RadarUserInsights.fromJson(obj.optJSONObject(FIELD_INSIGHTS))
             val beacons = RadarBeacon.fromJson(obj.optJSONArray(FIELD_BEACONS))
             val country = RadarRegion.fromJson(obj.optJSONObject(FIELD_COUNTRY))
             val state = RadarRegion.fromJson(obj.optJSONObject(FIELD_STATE))
@@ -192,7 +195,7 @@ class RadarUser(
                 "MOCK_LOCATION" -> Radar.RadarLocationSource.MOCK_LOCATION
                 else -> Radar.RadarLocationSource.UNKNOWN
             }
-            val proxy = obj.optJSONObject(FIELD_FRAUD)?.optBoolean(FIELD_PROXY) ?: false
+            val fraud = RadarFraud.fromJson(obj.optJSONObject(FIELD_FRAUD))
             val trip = RadarTrip.fromJson(obj.optJSONObject(FIELD_TRIP))
 
             return RadarUser(
@@ -204,7 +207,6 @@ class RadarUser(
                 location,
                 geofences,
                 place,
-                insights,
                 beacons,
                 stopped,
                 foreground,
@@ -216,8 +218,9 @@ class RadarUser(
                 segments,
                 topChains,
                 source,
-                proxy,
-                trip
+                fraud.proxy,
+                trip,
+                fraud.mocked
             )
         }
     }
@@ -238,7 +241,6 @@ class RadarUser(
         obj.putOpt(FIELD_LOCATION, locationObj)
         obj.putOpt(FIELD_GEOFENCES, RadarGeofence.toJson(this.geofences))
         obj.putOpt(FIELD_PLACE, this.place?.toJson())
-        obj.putOpt(FIELD_INSIGHTS, this.insights?.toJson())
         obj.putOpt(FIELD_BEACONS, RadarBeacon.toJson(this.beacons))
         obj.putOpt(FIELD_STOPPED, this.stopped)
         obj.putOpt(FIELD_FOREGROUND, this.foreground)
@@ -250,9 +252,7 @@ class RadarUser(
         obj.putOpt(FIELD_SEGMENTS, RadarSegment.toJson(this.segments))
         obj.putOpt(FIELD_TOP_CHAINS, RadarChain.toJson(this.topChains))
         obj.putOpt(FIELD_SOURCE, Radar.stringForSource(this.source))
-        val fraudObj = JSONObject()
-        fraudObj.putOpt(FIELD_PROXY, this.proxy)
-        obj.putOpt(FIELD_FRAUD, fraudObj)
+        obj.putOpt(FIELD_FRAUD, this.fraud.toJson())
         obj.putOpt(FIELD_TRIP, this.trip?.toJson())
         return obj
     }
