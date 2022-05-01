@@ -47,16 +47,14 @@ object Radar {
     interface RadarBeaconCallback {
 
         /**
-         * Called when a beacon ranging request succeeds, fails, or times out. Receives the request status and, if successful, the nearby beacons and RSSI.
+         * Called when a beacon ranging request succeeds, fails, or times out. Receives the request status and, if successful, the nearby beacons.
          *
          * @param[status] RadarStatus The request status.
-         * @param[nearbyBeacons] Array<String>? If successful, the nearby beacons.
-         * @param[nearbyBeaconRSSI] Map<String, Int>? If successful, the RSSI of the nearby beacons.
+         * @param[beacons] Array<String>? If successful, the nearby beacons.
          */
         fun onComplete(
             status: RadarStatus,
-            nearbyBeacons: Array<String>? = null,
-            nearbyBeaconRSSI: Map<String, Int>? = null
+            beacons: Array<JSONObject>? = null
         )
 
     }
@@ -668,8 +666,8 @@ object Radar {
                     return
                 }
 
-                val callTrackApi = { nearbyBeacons: Array<String>? ->
-                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, nearbyBeacons, nearbyBeaconRSSI, object : RadarApiClient.RadarTrackApiCallback {
+                val callTrackApi = { beacons: Array<JSONObject>? ->
+                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, beacons, object : RadarApiClient.RadarTrackApiCallback {
                         override fun onComplete(
                             status: RadarStatus,
                             res: JSONObject?,
@@ -687,28 +685,42 @@ object Radar {
 
                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                        override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
+                        override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, beaconUUIDs: Array<String>?) {
                             if (status != RadarStatus.SUCCESS || beacons == null) {
-                                callTrackApi(null, null)
+                                callTrackApi(null)
 
                                 return
                             }
 
-                            beaconManager.rangeBeacons(beacons, object : RadarBeaconCallback {
-                                override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?, nearbyBeaconRSSI: Map<String, Int>?) {
-                                    if (status != RadarStatus.SUCCESS || nearbyBeacons == null) {
-                                        callTrackApi(null, null)
+                            if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
+                                beaconManager.rangeBeaconUUIDs(beaconUUIDs, object : RadarBeaconCallback {
+                                    override fun onComplete(status: RadarStatus, beacons: Array<JSONObject>?) {
+                                        if (status != RadarStatus.SUCCESS || beacons == null) {
+                                            callTrackApi(null)
 
-                                        return
+                                            return
+                                        }
+
+                                        callTrackApi(beacons)
                                     }
+                                })
+                            } else {
+                                beaconManager.rangeBeacons(beacons, object : RadarBeaconCallback {
+                                    override fun onComplete(status: RadarStatus, beacons: Array<JSONObject>?) {
+                                        if (status != RadarStatus.SUCCESS || beacons == null) {
+                                            callTrackApi(null)
 
-                                    callTrackApi(nearbyBeacons, nearbyBeaconRSSI)
-                                }
-                            })
+                                            return
+                                        }
+
+                                        callTrackApi(beacons)
+                                    }
+                                })
+                            }
                         }
                     })
                 } else {
-                    callTrackApi(null, null)
+                    callTrackApi(null)
                 }
             }
         })
@@ -748,7 +760,7 @@ object Radar {
             return
         }
         
-        apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, null, object : RadarApiClient.RadarTrackApiCallback {
+        apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
             override fun onComplete(
                 status: RadarStatus,
                 res: JSONObject?,
@@ -863,7 +875,7 @@ object Radar {
                         }
                         val stopped = (i == 0) || (i == coordinates.size - 1)
 
-                        apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, null, object : RadarApiClient.RadarTrackApiCallback {
+                        apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
                             override fun onComplete(
                                 status: RadarStatus,
                                 res: JSONObject?,

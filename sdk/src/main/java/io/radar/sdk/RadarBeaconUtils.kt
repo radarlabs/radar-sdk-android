@@ -6,6 +6,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.RadarBeacon
+import org.json.JSONObject
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -41,7 +42,29 @@ internal object RadarBeaconUtils {
             .build()
     }
 
-    fun getBeacon(beacons: Array<RadarBeacon>, scanRecord: ScanRecord): RadarBeacon? {
+    // TODO how to scan based on UUID only?
+    fun getScanFilter(beaconUUID: String): ScanFilter? {
+        val uuid = UUID.fromString(beaconUUID)
+
+        val manufacturerData = ByteBuffer.allocate(23)
+            .put(ByteArray(2) { 0x00.toByte() })
+            .putLong(uuid.mostSignificantBits)
+            .putLong(uuid.leastSignificantBits)
+            .put(ByteArray(9) { 0x00.toByte() })
+            .array()
+
+        val manufacturerDataMask = ByteBuffer.allocate(23)
+            .put(ByteArray(2) { 0x00.toByte() })
+            .put(ByteArray(20) { 0xFF.toByte() })
+            .put(ByteArray(1) { 0x00.toByte() })
+            .array()
+
+        return ScanFilter.Builder()
+            .setManufacturerData(MANUFACTURER_ID, manufacturerData, manufacturerDataMask)
+            .build()
+    }
+
+    fun getBeacon(scanRecord: ScanRecord): JSONObject? {
         val bytes = scanRecord.bytes
 
         var startByte = 2
@@ -64,7 +87,12 @@ internal object RadarBeaconUtils {
         val major = ((buf.get().toInt() and 0xFF) * 0x100 + (buf.get().toInt() and 0xFF)).toString()
         val minor = ((buf.get().toInt() and 0xFF) * 0x100 + (buf.get().toInt() and 0xFF)).toString()
 
-        return beacons.find { UUID.fromString(it.uuid).equals(uuid) && it.major == major && it.minor == minor }
+        val beacon = JSONObject()
+        beacon.put("uuid", uuid.toString())
+        beacon.put("major", major)
+        beacon.put("minor", minor)
+
+        return beacon
     }
 
 }

@@ -562,8 +562,8 @@ internal class RadarLocationManager(
 
         val locationManager = this
 
-        val callTrackApi = { nearbyBeacons: Array<String>? ->
-            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, nearbyBeacons, nearbyBeaconRSSI, object : RadarTrackApiCallback {
+        val callTrackApi = { beacons: Array<JSONObject>? ->
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, object : RadarTrackApiCallback {
                 override fun onComplete(
                     status: RadarStatus,
                     res: JSONObject?,
@@ -593,32 +593,36 @@ internal class RadarLocationManager(
         if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
             && permissionsHelper.bluetoothPermissionsGranted(context)) {
             Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, beaconUUIDs: Array<String>?) {
                     if (status != RadarStatus.SUCCESS || beacons == null) {
-                        callTrackApi(null, null)
+                        callTrackApi(null)
 
                         return
                     }
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        Radar.beaconManager.startMonitoringBeacons(beacons)
+                        if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
+                            Radar.beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
+                        } else {
+                            Radar.beaconManager.startMonitoringBeacons(beacons)
+                        }
                     }
 
                     Radar.beaconManager.rangeBeacons(beacons, object : Radar.RadarBeaconCallback {
-                        override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?, nearbyBeaconRSSI: Map<String, Int>?) {
-                            if (status != RadarStatus.SUCCESS || nearbyBeacons == null) {
-                                callTrackApi(null, null)
+                        override fun onComplete(status: RadarStatus, beacons: Array<JSONObject>?) {
+                            if (status != RadarStatus.SUCCESS || beacons == null) {
+                                callTrackApi(null)
 
                                 return
                             }
 
-                            callTrackApi(nearbyBeacons, nearbyBeaconRSSI)
+                            callTrackApi(beacons)
                         }
                     })
                 }
             })
         } else {
-            callTrackApi(null, null)
+            callTrackApi(null)
         }
     }
 
