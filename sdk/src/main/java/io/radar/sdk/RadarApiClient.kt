@@ -160,7 +160,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<JSONObject>?, callback: RadarTrackApiCallback? = null) {
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -239,7 +239,9 @@ internal class RadarApiClient(
                 params.putOpt("nearbyGeofences", true)
                 params.putOpt("nearbyGeofencesLimit", options.syncGeofencesLimit)
             }
-            params.putOpt("beacons", beacons)
+            if (beacons != null) {
+                params.putOpt("beacons", RadarBeacon.toJson(beacons))
+            }
             params.putOpt("sessionId", RadarSettings.getSessionId(context))
             params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
             params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))

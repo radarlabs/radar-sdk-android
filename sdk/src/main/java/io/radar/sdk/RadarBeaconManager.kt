@@ -15,7 +15,6 @@ import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarBeaconCallback
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarBeacon
-import org.json.JSONObject
 import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -31,7 +30,7 @@ internal class RadarBeaconManager(
     private var started = false
     private val callbacks = Collections.synchronizedList(mutableListOf<RadarBeaconCallback>())
     private var monitoredBeaconIdentifiers = setOf<String>()
-    private var nearbyBeacons = mutableSetOf<JSONObject>()
+    private var nearbyBeacons = mutableSetOf<RadarBeacon>()
     private var beacons = arrayOf<RadarBeacon>()
     private var beaconUUIDs = arrayOf<String>()
     private var scanCallback: ScanCallback? = null
@@ -51,7 +50,7 @@ internal class RadarBeaconManager(
         }
     }
 
-    private fun callCallbacks(nearbyBeacons: Array<JSONObject>? = null) {
+    private fun callCallbacks(nearbyBeacons: Array<RadarBeacon>? = null) {
         synchronized(callbacks) {
             if (callbacks.isEmpty()) {
                 return
@@ -90,7 +89,7 @@ internal class RadarBeaconManager(
             return
         }
 
-        val newBeaconIdentifiers = beacons.map { it._id }.toSet()
+        val newBeaconIdentifiers = beacons.mapNotNull { it._id }.toSet()
         if (monitoredBeaconIdentifiers == newBeaconIdentifiers) {
             logger.i("Already monitoring beacons")
 
@@ -522,10 +521,8 @@ internal class RadarBeaconManager(
     private fun handleScanResult(result: ScanResult?) {
         logger.d("Handling scan result")
 
-        result?.scanRecord?.let { scanRecord -> RadarBeaconUtils.getBeacon(scanRecord) }?.let { beacon ->
-            logger.d("Ranged beacon | beacon.uuid = ${beacon.getString("uuid")}; beacon.major = ${beacon.getInt("major")}; beacon.minor = ${beacon.getInt("minor")}; result.rssi = ${result.rssi}")
-
-            beacon.put("rssi", result.rssi)
+        result?.scanRecord?.let { scanRecord -> RadarBeaconUtils.getBeacon(result, scanRecord) }?.let { beacon ->
+            logger.d("Ranged beacon | beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
             nearbyBeacons.add(beacon)
         }

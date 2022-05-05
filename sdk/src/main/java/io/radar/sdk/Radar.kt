@@ -54,7 +54,7 @@ object Radar {
          */
         fun onComplete(
             status: RadarStatus,
-            beacons: Array<JSONObject>? = null
+            beacons: Array<RadarBeacon>? = null
         )
 
     }
@@ -666,7 +666,7 @@ object Radar {
                     return
                 }
 
-                val callTrackApi = { beacons: Array<JSONObject>? ->
+                val callTrackApi = { beacons: Array<RadarBeacon>? ->
                     apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, beacons, object : RadarApiClient.RadarTrackApiCallback {
                         override fun onComplete(
                             status: RadarStatus,
@@ -694,7 +694,7 @@ object Radar {
 
                             if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
                                 beaconManager.rangeBeaconUUIDs(beaconUUIDs, object : RadarBeaconCallback {
-                                    override fun onComplete(status: RadarStatus, beacons: Array<JSONObject>?) {
+                                    override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
                                         if (status != RadarStatus.SUCCESS || beacons == null) {
                                             callTrackApi(null)
 
@@ -706,7 +706,7 @@ object Radar {
                                 })
                             } else {
                                 beaconManager.rangeBeacons(beacons, object : RadarBeaconCallback {
-                                    override fun onComplete(status: RadarStatus, beacons: Array<JSONObject>?) {
+                                    override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
                                         if (status != RadarStatus.SUCCESS || beacons == null) {
                                             callTrackApi(null)
 
