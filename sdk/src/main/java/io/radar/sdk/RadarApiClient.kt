@@ -595,7 +595,7 @@ internal class RadarApiClient(
                     RadarBeacon.fromJson(beaconsArr)
                 }
 
-                val beaconUUIDs = res.optJSONObject("meta")?.optJSONObject("settings")?.optJSONObject("beacons")?.optJSONArray("beaconUUIDs")?.let { beaconUUIDs ->
+                val beaconUUIDs = res.optJSONObject("meta")?.optJSONObject("settings")?.optJSONObject("beacons")?.optJSONArray("uuids")?.let { beaconUUIDs ->
                     Array(beaconUUIDs.length()) { index ->
                         beaconUUIDs.getString(index)
                     }
