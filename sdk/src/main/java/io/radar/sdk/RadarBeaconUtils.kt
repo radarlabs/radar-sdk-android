@@ -42,7 +42,6 @@ internal object RadarBeaconUtils {
             .build()
     }
 
-    // TODO how to scan based on UUID only?
     fun getScanFilter(beaconUUID: String): ScanFilter? {
         val uuid = UUID.fromString(beaconUUID)
 
@@ -55,8 +54,8 @@ internal object RadarBeaconUtils {
 
         val manufacturerDataMask = ByteBuffer.allocate(23)
             .put(ByteArray(2) { 0x00.toByte() })
-            .put(ByteArray(20) { 0xFF.toByte() })
-            .put(ByteArray(1) { 0x00.toByte() })
+            .put(ByteArray(16) { 0xFF.toByte() })
+            .put(ByteArray(5) { 0x00.toByte() })
             .array()
 
         return ScanFilter.Builder()
