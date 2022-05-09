@@ -600,7 +600,7 @@ internal class RadarApiClient(
                 val beaconUUIDs = res.optJSONObject("meta")?.optJSONObject("settings")?.optJSONObject("beacons")?.optJSONArray("uuids")?.let { beaconUUIDs ->
                     Array(beaconUUIDs.length()) { index ->
                         beaconUUIDs.getString(index)
-                    }
+                    }.filter { uuid -> uuid.isNotEmpty() }.toTypedArray()
                 }
 
                 callback.onComplete(RadarStatus.SUCCESS, res, beacons, beaconUUIDs)
