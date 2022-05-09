@@ -1,14 +1,12 @@
 package io.radar.example
 
 import android.Manifest
-import android.content.Context
 import android.location.Location
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.core.app.ActivityCompat
-import androidx.core.content.edit
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
@@ -21,29 +19,22 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION), 0)
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION), 0)
         } else {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 0)
         }
 
-        this.applicationContext.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit { putString("host", "https://api-andrew-dev.radar.io") }
-
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "org_test_pk_e6d0bb91ac41b187b84f21ba18ca4e5794401997", receiver)
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver)
 
-        /*
         Radar.getLocation { status, location, stopped ->
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
         }
-         */
 
-        Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
-
-        Radar.trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, true) { status, location, events, user ->
+        Radar.trackOnce { status, location, events, user ->
             Log.v("example", "Track once: status = ${status}; location = $location; events = $events; user = $user")
         }
 
-        /*
         val options = RadarTrackingOptions.CONTINUOUS
         Radar.startTracking(options)
 
@@ -163,7 +154,6 @@ class MainActivity : AppCompatActivity() {
         ) { status, matrix ->
             Log.v("example", "Matrix: status = $status; matrix[0][0].duration.text = ${matrix?.routeBetween(0, 0)?.duration?.text}; matrix[0][1].duration.text = ${matrix?.routeBetween(0, 1)?.duration?.text}; matrix[1][0].duration.text = ${matrix?.routeBetween(1, 0)?.duration?.text};  matrix[1][1].duration.text = ${matrix?.routeBetween(1, 1)?.duration?.text}")
         }
-         */
     }
 
 }
