@@ -254,6 +254,8 @@ internal class RadarBeaconManager(
         logger.d("Stopping monitoring beacons")
 
         adapter.bluetoothLeScanner.stopScan(RadarLocationReceiver.getBeaconPendingIntent(context))
+
+        monitoredBeaconIdentifiers = setOf()
     }
 
     fun rangeBeacons(beacons: Array<RadarBeacon>, callback: RadarBeaconCallback?) {
