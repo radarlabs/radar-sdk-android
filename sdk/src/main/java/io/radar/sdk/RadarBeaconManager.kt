@@ -518,7 +518,19 @@ internal class RadarBeaconManager(
         this.nearbyBeacons.clear()
     }
 
-    private fun handleScanResult(result: ScanResult?) {
+    internal fun handleScanResults(scanResults: ArrayList<ScanResult>?) {
+        if (scanResults == null || scanResults.isEmpty()) {
+            logger.d("No scan results to handle")
+
+            return
+        }
+
+        scanResults.forEach { scanResult ->
+            this.handleScanResult(scanResult, false)
+        }
+    }
+
+    internal fun handleScanResult(result: ScanResult?, ranging: Boolean = true) {
         logger.d("Handling scan result")
 
         result?.scanRecord?.let { scanRecord -> RadarBeaconUtils.getBeacon(result, scanRecord) }?.let { beacon ->
@@ -527,7 +539,7 @@ internal class RadarBeaconManager(
             nearbyBeacons.add(beacon)
         }
 
-        if (this.nearbyBeacons.size == this.beacons.size) {
+        if (this.nearbyBeacons.size == this.beacons.size && ranging) {
             logger.d("Finished ranging")
 
             this.stopRanging()

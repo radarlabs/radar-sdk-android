@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.location.Location
 import android.os.Build
@@ -692,7 +693,19 @@ object Radar {
                                 return
                             }
 
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
+                                    Radar.beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
+                                } else {
+                                    Radar.beaconManager.startMonitoringBeacons(beacons)
+                                }
+                            }
+
                             if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
+                                }
+
                                 beaconManager.rangeBeaconUUIDs(beaconUUIDs, object : RadarBeaconCallback {
                                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
                                         if (status != RadarStatus.SUCCESS || beacons == null) {
@@ -705,6 +718,10 @@ object Radar {
                                     }
                                 })
                             } else {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    beaconManager.startMonitoringBeacons(beacons)
+                                }
+
                                 beaconManager.rangeBeacons(beacons, object : RadarBeaconCallback {
                                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
                                         if (status != RadarStatus.SUCCESS || beacons == null) {
@@ -2357,12 +2374,12 @@ object Radar {
         locationManager.handleLocation(location, source)
     }
 
-    internal fun handleBeacon(context: Context, source: RadarLocationSource) {
+    internal fun handleBeacons(context: Context, scanResults: ArrayList<ScanResult>?) {
         if (!initialized) {
             initialize(context)
         }
 
-        locationManager.handleBeacon(source)
+        locationManager.handleBeacons(scanResults)
     }
 
     internal fun handleBootCompleted(context: Context) {

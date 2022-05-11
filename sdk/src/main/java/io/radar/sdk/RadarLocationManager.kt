@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.app.NotificationManager
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.location.Location
@@ -103,8 +104,6 @@ internal class RadarLocationManager(
 
                 locationManager.handleLocation(location, source)
             }
-
-
         }.addOnCanceledListener {
             logger.d("Location request canceled")
 
@@ -162,10 +161,20 @@ internal class RadarLocationManager(
         this.started = false
     }
 
-    internal fun handleBeacon(source: RadarLocationSource) {
-        logger.d("Handling beacon | source = $source")
+    internal fun handleBeacons(scanResults: ArrayList<ScanResult>?) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            logger.d("Handling beacons | scanResults = $scanResults")
 
-        this.getLocation(RadarTrackingOptionsDesiredAccuracy.MEDIUM, source)
+            Radar.beaconManager.handleScanResults(scanResults)
+
+            val lastLocation = RadarState.getLastLocation(context)
+
+            if (lastLocation == null) {
+                logger.d("Not handling beacons, no last location")
+            }
+
+            this.handleLocation(lastLocation, RadarLocationSource.BEACON_ENTER)
+        }
     }
 
     internal fun handleBootCompleted() {
@@ -482,6 +491,8 @@ internal class RadarLocationManager(
         }
         val justStopped = stopped && !wasStopped
         RadarState.setStopped(context, stopped)
+
+        RadarState.setLastLocation(context, location)
 
         Radar.sendClientLocation(location, stopped, source)
 
