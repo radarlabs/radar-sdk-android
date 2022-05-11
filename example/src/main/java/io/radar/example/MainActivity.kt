@@ -29,25 +29,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "org_test_pk_5857c63d9c1565175db8b00750808a66a002acb8", receiver)
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver)
 
-        Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
-
-            /*
         Radar.getLocation { status, location, stopped ->
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
         }
-             */
 
-        Radar.trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, true) { status, location, events, user ->
+        Radar.trackOnce { status, location, events, user ->
             Log.v("example", "Track once: status = ${status}; location = $location; events = $events; user = $user")
         }
 
         val options = RadarTrackingOptions.RESPONSIVE
-        options.beacons = true
         Radar.startTracking(options)
 
-        /*
         Radar.getContext { status, location, context ->
             Log.v("example", "Context: status = $status; location = $location; context?.geofences = ${context?.geofences}; context?.place = ${context?.place}; context?.country = ${context?.country}")
         }
