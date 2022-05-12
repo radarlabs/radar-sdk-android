@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.location.Location
 import android.os.Build
@@ -47,14 +48,14 @@ object Radar {
     interface RadarBeaconCallback {
 
         /**
-         * Called when a beacon ranging request succeeds, fails, or times out. Receives the request status and, if successful, the nearby beacon identifiers.
+         * Called when a beacon ranging request succeeds, fails, or times out. Receives the request status and, if successful, the nearby beacons.
          *
          * @param[status] RadarStatus The request status.
-         * @param[nearbyBeacons] Array<String>? If successful, the nearby beacon identifiers.
+         * @param[beacons] Array<String>? If successful, the nearby beacons.
          */
         fun onComplete(
             status: RadarStatus,
-            nearbyBeacons: Array<String>? = null
+            beacons: Array<RadarBeacon>? = null
         )
 
     }
@@ -666,8 +667,8 @@ object Radar {
                     return
                 }
 
-                val callTrackApi = { nearbyBeacons: Array<String>? ->
-                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, nearbyBeacons, object : RadarApiClient.RadarTrackApiCallback {
+                val callTrackApi = { beacons: Array<RadarBeacon>? ->
+                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, beacons, object : RadarApiClient.RadarTrackApiCallback {
                         override fun onComplete(
                             status: RadarStatus,
                             res: JSONObject?,
@@ -685,24 +686,54 @@ object Radar {
 
                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                        override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
+                        override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, beaconUUIDs: Array<String>?) {
                             if (status != RadarStatus.SUCCESS || beacons == null) {
                                 callTrackApi(null)
 
                                 return
                             }
 
-                            beaconManager.rangeBeacons(beacons, object : RadarBeaconCallback {
-                                override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?) {
-                                    if (status != RadarStatus.SUCCESS || nearbyBeacons == null) {
-                                        callTrackApi(null)
-
-                                        return
-                                    }
-
-                                    callTrackApi(nearbyBeacons)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
+                                    Radar.beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
+                                } else {
+                                    Radar.beaconManager.startMonitoringBeacons(beacons)
                                 }
-                            })
+                            }
+
+                            if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
+                                }
+
+                                beaconManager.rangeBeaconUUIDs(beaconUUIDs, object : RadarBeaconCallback {
+                                    override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                                        if (status != RadarStatus.SUCCESS || beacons == null) {
+                                            callTrackApi(null)
+
+                                            return
+                                        }
+
+                                        callTrackApi(beacons)
+                                    }
+                                })
+                            } else {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    beaconManager.startMonitoringBeacons(beacons)
+                                }
+
+                                beaconManager.rangeBeacons(beacons, object : RadarBeaconCallback {
+                                    override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                                        if (status != RadarStatus.SUCCESS || beacons == null) {
+                                            callTrackApi(null)
+
+                                            return
+                                        }
+
+                                        callTrackApi(beacons)
+                                    }
+                                })
+                            }
                         }
                     })
                 } else {
@@ -745,7 +776,7 @@ object Radar {
 
             return
         }
-
+        
         apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
             override fun onComplete(
                 status: RadarStatus,
@@ -2254,7 +2285,7 @@ object Radar {
      * @return A display string for the location source value.
      */
     @JvmStatic
-    fun stringForSource(source: RadarLocationSource): String? {
+    fun stringForSource(source: RadarLocationSource): String {
         return when (source) {
             RadarLocationSource.FOREGROUND_LOCATION -> "FOREGROUND_LOCATION"
             RadarLocationSource.BACKGROUND_LOCATION -> "BACKGROUND_LOCATION"
@@ -2277,13 +2308,14 @@ object Radar {
      * @return A display string for the travel mode value.
      */
     @JvmStatic
-    fun stringForMode(mode: RadarRouteMode): String? {
+    fun stringForMode(mode: RadarRouteMode): String {
         return when (mode) {
             RadarRouteMode.FOOT -> "foot"
             RadarRouteMode.BIKE -> "bike"
             RadarRouteMode.CAR -> "car"
             RadarRouteMode.TRUCK -> "truck"
             RadarRouteMode.MOTORBIKE -> "motorbike"
+            else -> "car"
         }
     }
 
@@ -2295,7 +2327,7 @@ object Radar {
      * @return A display string for the trip status value.
      */
     @JvmStatic
-    fun stringForTripStatus(status: RadarTrip.RadarTripStatus): String? {
+    fun stringForTripStatus(status: RadarTrip.RadarTripStatus): String {
         return when (status) {
             RadarTrip.RadarTripStatus.STARTED -> "started"
             RadarTrip.RadarTripStatus.APPROACHING -> "approaching"
@@ -2342,12 +2374,12 @@ object Radar {
         locationManager.handleLocation(location, source)
     }
 
-    internal fun handleBeacon(context: Context, source: RadarLocationSource) {
+    internal fun handleBeacons(context: Context, scanResults: ArrayList<ScanResult>?) {
         if (!initialized) {
             initialize(context)
         }
 
-        locationManager.handleBeacon(source)
+        locationManager.handleBeacons(scanResults)
     }
 
     internal fun handleBootCompleted(context: Context) {

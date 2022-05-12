@@ -10,24 +10,24 @@ import org.json.JSONObject
  */
 class RadarBeacon (
     /**
-     * The Radar ID of the point.
+     * The Radar ID of the beacon.
      */
-    val _id: String,
+    val _id: String? = null,
 
     /**
      * The description of the beacon.
      */
-    val description: String,
+    val description: String? = null,
 
     /**
      * The tag of the beacon.
      */
-    val tag: String?,
+    val tag: String? = null,
 
     /**
      * The externalId of the beacon.
      */
-    val externalId: String?,
+    val externalId: String? = null,
 
     /**
      * The UUID of the beacon.
@@ -47,12 +47,17 @@ class RadarBeacon (
     /**
      * The optional set of custom key-value pairs for the beacon.
      */
-    val metadata: JSONObject?,
+    val metadata: JSONObject? = null,
+
+    /**
+     * The RSSI of the beacon.
+     */
+    val rssi: Int? = null,
 
     /**
      * The location of the beacon.
      */
-    val location: RadarCoordinate
+    val location: RadarCoordinate? = null
 ) {
     internal companion object {
         private const val FIELD_ID = "_id"
@@ -63,8 +68,10 @@ class RadarBeacon (
         private const val FIELD_MAJOR = "major"
         private const val FIELD_MINOR = "minor"
         private const val FIELD_METADATA = "metadata"
+        private const val FIELD_RSSI = "rssi"
         private const val FIELD_GEOMETRY = "geometry"
         private const val FIELD_COORDINATES = "coordinates"
+        private const val FIELD_TYPE = "type"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarBeacon? {
@@ -80,6 +87,7 @@ class RadarBeacon (
             val major: String = obj.optString(FIELD_MAJOR) ?: ""
             val minor: String = obj.optString(FIELD_MINOR) ?: ""
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
+            val rssi: Int = obj.optInt(FIELD_RSSI)
             val geometryObj = obj.optJSONObject(FIELD_GEOMETRY)
             val geometryCoordinatesObj = geometryObj?.optJSONArray(FIELD_COORDINATES)
             val geometry = RadarCoordinate(
@@ -87,7 +95,7 @@ class RadarBeacon (
                 geometryCoordinatesObj?.optDouble(0) ?: 0.0
             )
 
-            return RadarBeacon(id, description, tag, externalId, uuid, major, minor, metadata, geometry)
+            return RadarBeacon(id, description, tag, externalId, uuid, major, minor, metadata, rssi, geometry)
         }
 
         @JvmStatic
@@ -118,11 +126,34 @@ class RadarBeacon (
     fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_ID, this._id)
-        obj.putOpt(FIELD_UUID, this.uuid)
+        obj.putOpt(FIELD_UUID, this.uuid.lowercase())
         obj.putOpt(FIELD_MAJOR, this.major)
         obj.putOpt(FIELD_MINOR, this.minor)
         obj.putOpt(FIELD_METADATA, this.metadata)
+        obj.putOpt(FIELD_RSSI, this.rssi)
+        obj.putOpt(FIELD_TYPE, "ibeacon")
         return obj
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+
+        if (this.javaClass != other?.javaClass) {
+            return false
+        }
+
+        other as RadarBeacon
+
+        return this.uuid == other.uuid && this.major == other.major && this.minor == other.minor
+    }
+
+    override fun hashCode(): Int {
+        var result = uuid.hashCode()
+        result = 31 * result + major.hashCode()
+        result = 31 * result + minor.hashCode()
+        return result
     }
 
 }

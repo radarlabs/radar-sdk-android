@@ -2,8 +2,8 @@ package io.radar.sdk
 
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanRecord
+import android.bluetooth.le.ScanResult
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.RadarBeacon
 import java.nio.ByteBuffer
@@ -41,14 +41,36 @@ internal object RadarBeaconUtils {
             .build()
     }
 
-    fun getBeacon(beacons: Array<RadarBeacon>, scanRecord: ScanRecord): RadarBeacon? {
+    fun getScanFilter(beaconUUID: String): ScanFilter? {
+        val uuid = UUID.fromString(beaconUUID.lowercase())
+
+        val manufacturerData = ByteBuffer.allocate(23)
+            .put(ByteArray(2) { 0x00.toByte() })
+            .putLong(uuid.mostSignificantBits)
+            .putLong(uuid.leastSignificantBits)
+            .put(ByteArray(5) { 0x00.toByte() })
+            .array()
+
+        val manufacturerDataMask = ByteBuffer.allocate(23)
+            .put(ByteArray(2) { 0x00.toByte() })
+            .put(ByteArray(16) { 0xFF.toByte() })
+            .put(ByteArray(5) { 0x00.toByte() })
+            .array()
+
+        return ScanFilter.Builder()
+            .setManufacturerData(MANUFACTURER_ID, manufacturerData, manufacturerDataMask)
+            .build()
+    }
+
+    fun getBeacon(result: ScanResult, scanRecord: ScanRecord): RadarBeacon? {
         val bytes = scanRecord.bytes
 
         var startByte = 2
         var iBeacon = false
         while (startByte <= 5) {
             if ((bytes[startByte + 2].toInt() and 0xFF) == 0x02 &&
-                (bytes[startByte + 3].toInt() and 0xFF) == 0x15) {
+                (bytes[startByte + 3].toInt() and 0xFF) == 0x15
+            ) {
                 iBeacon = true
                 break
             }
@@ -64,7 +86,12 @@ internal object RadarBeaconUtils {
         val major = ((buf.get().toInt() and 0xFF) * 0x100 + (buf.get().toInt() and 0xFF)).toString()
         val minor = ((buf.get().toInt() and 0xFF) * 0x100 + (buf.get().toInt() and 0xFF)).toString()
 
-        return beacons.find { UUID.fromString(it.uuid).equals(uuid) && it.major == major && it.minor == minor }
+        return RadarBeacon(
+            uuid = uuid.toString(),
+            major = major,
+            minor = minor,
+            rssi = result.rssi
+        )
     }
 
 }

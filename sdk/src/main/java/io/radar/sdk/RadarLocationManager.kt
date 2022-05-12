@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.app.NotificationManager
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.location.Location
@@ -103,8 +104,6 @@ internal class RadarLocationManager(
 
                 locationManager.handleLocation(location, source)
             }
-
-
         }.addOnCanceledListener {
             logger.d("Location request canceled")
 
@@ -162,10 +161,20 @@ internal class RadarLocationManager(
         this.started = false
     }
 
-    internal fun handleBeacon(source: RadarLocationSource) {
-        logger.d("Handling beacon | source = $source")
+    internal fun handleBeacons(scanResults: ArrayList<ScanResult>?) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            logger.d("Handling beacons | scanResults = $scanResults")
 
-        this.getLocation(RadarTrackingOptionsDesiredAccuracy.MEDIUM, source)
+            Radar.beaconManager.handleScanResults(scanResults)
+
+            val lastLocation = RadarState.getLastLocation(context)
+
+            if (lastLocation == null) {
+                logger.d("Not handling beacons, no last location")
+            }
+
+            this.handleLocation(lastLocation, RadarLocationSource.BEACON_ENTER)
+        }
     }
 
     internal fun handleBootCompleted() {
@@ -483,6 +492,8 @@ internal class RadarLocationManager(
         val justStopped = stopped && !wasStopped
         RadarState.setStopped(context, stopped)
 
+        RadarState.setLastLocation(context, location)
+
         Radar.sendClientLocation(location, stopped, source)
 
         if (source != RadarLocationSource.MANUAL_LOCATION) {
@@ -562,8 +573,8 @@ internal class RadarLocationManager(
 
         val locationManager = this
 
-        val callTrackApi = { nearbyBeacons: Array<String>? ->
-            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, nearbyBeacons, object : RadarTrackApiCallback {
+        val callTrackApi = { beacons: Array<RadarBeacon>? ->
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, object : RadarTrackApiCallback {
                 override fun onComplete(
                     status: RadarStatus,
                     res: JSONObject?,
@@ -593,7 +604,7 @@ internal class RadarLocationManager(
         if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
             && permissionsHelper.bluetoothPermissionsGranted(context)) {
             Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?) {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, beaconUUIDs: Array<String>?) {
                     if (status != RadarStatus.SUCCESS || beacons == null) {
                         callTrackApi(null)
 
@@ -601,18 +612,22 @@ internal class RadarLocationManager(
                     }
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        Radar.beaconManager.startMonitoringBeacons(beacons)
+                        if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
+                            Radar.beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
+                        } else {
+                            Radar.beaconManager.startMonitoringBeacons(beacons)
+                        }
                     }
 
                     Radar.beaconManager.rangeBeacons(beacons, object : Radar.RadarBeaconCallback {
-                        override fun onComplete(status: RadarStatus, nearbyBeacons: Array<String>?) {
-                            if (status != RadarStatus.SUCCESS || nearbyBeacons == null) {
+                        override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                            if (status != RadarStatus.SUCCESS || beacons == null) {
                                 callTrackApi(null)
 
                                 return
                             }
 
-                            callTrackApi(nearbyBeacons)
+                            callTrackApi(beacons)
                         }
                     })
                 }
