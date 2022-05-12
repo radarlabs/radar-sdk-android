@@ -505,6 +505,10 @@ internal class RadarBeaconManager(
             return
         }
 
+        if (!this::adapter.isInitialized) {
+            adapter = BluetoothAdapter.getDefaultAdapter()
+        }
+
         logger.d("Stopping ranging")
 
         handler.removeCallbacksAndMessages(TIMEOUT_TOKEN)
