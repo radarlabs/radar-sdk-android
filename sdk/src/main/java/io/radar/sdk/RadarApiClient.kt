@@ -53,7 +53,7 @@ internal class RadarApiClient(
     }
 
     interface RadarSearchBeaconsApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, beacons: Array<RadarBeacon>? = null)
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, beacons: Array<RadarBeacon>? = null, beaconUUIDs: Array<String>? = null)
     }
 
     interface RadarGeocodeApiCallback {
@@ -160,7 +160,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, nearbyBeacons: Array<String>?, callback: RadarTrackApiCallback? = null) {
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -239,16 +239,12 @@ internal class RadarApiClient(
                 params.putOpt("nearbyGeofences", true)
                 params.putOpt("nearbyGeofencesLimit", options.syncGeofencesLimit)
             }
-            if (nearbyBeacons != null) {
-                val nearbyBeaconsArr = JSONArray()
-                for (nearbyBeacon in nearbyBeacons) {
-                    nearbyBeaconsArr.put(nearbyBeacon)
-                }
-                params.putOpt("nearbyBeacons", nearbyBeaconsArr)
+            if (beacons != null) {
+                params.putOpt("beacons", RadarBeacon.toJson(beacons))
             }
+            params.putOpt("sessionId", RadarSettings.getSessionId(context))
             params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
             params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
-            params.putOpt("sessionId", RadarSettings.getSessionId(context))
             params.putOpt("trackingOptions", Radar.getTrackingOptions().toJson())
             val usingRemoteTrackingOptions = RadarSettings.getTracking(context) && RadarSettings.getRemoteTrackingOptions(context) != null
             params.putOpt("usingRemoteTrackingOptions", usingRemoteTrackingOptions)
@@ -600,13 +596,14 @@ internal class RadarApiClient(
                 val beacons = res.optJSONArray("beacons")?.let { beaconsArr ->
                     RadarBeacon.fromJson(beaconsArr)
                 }
-                if (beacons != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, beacons)
 
-                    return
+                val beaconUUIDs = res.optJSONObject("meta")?.optJSONObject("settings")?.optJSONObject("beacons")?.optJSONArray("uuids")?.let { beaconUUIDs ->
+                    Array(beaconUUIDs.length()) { index ->
+                        beaconUUIDs.getString(index)
+                    }.filter { uuid -> uuid.isNotEmpty() }.toTypedArray()
                 }
 
-                callback.onComplete(RadarStatus.ERROR_SERVER)
+                callback.onComplete(RadarStatus.SUCCESS, res, beacons, beaconUUIDs)
             }
         })
     }

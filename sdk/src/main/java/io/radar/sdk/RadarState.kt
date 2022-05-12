@@ -8,6 +8,11 @@ import androidx.core.content.edit
 internal object RadarState {
 
     private const val KEY_STARTED = "has_started"
+    private const val KEY_LAST_LOCATION_LATITUDE = "last_location_latitude"
+    private const val KEY_LAST_LOCATION_LONGITUDE = "last_location_longitude"
+    private const val KEY_LAST_LOCATION_ACCURACY = "last_location_accuracy"
+    private const val KEY_LAST_LOCATION_PROVIDER = "last_location_provider"
+    private const val KEY_LAST_LOCATION_TIME = "last_location_time"
     private const val KEY_LAST_MOVED_LOCATION_LATITUDE = "last_moved_location_latitude"
     private const val KEY_LAST_MOVED_LOCATION_LONGITUDE = "last_moved_location_longitude"
     private const val KEY_LAST_MOVED_LOCATION_ACCURACY = "last_moved_location_accuracy"
@@ -25,6 +30,47 @@ internal object RadarState {
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
+    }
+
+    internal fun getLastLocation(context: Context): Location? {
+        val lastLocationLatitude = getSharedPreferences(context).getFloat(KEY_LAST_LOCATION_LATITUDE, 0f)
+        val lastLocationLongitude = getSharedPreferences(context).getFloat(KEY_LAST_LOCATION_LONGITUDE, 0f)
+        val lastLocationAccuracy = getSharedPreferences(context).getFloat(KEY_LAST_LOCATION_ACCURACY, 0f)
+        val lastLocationProvider = getSharedPreferences(context).getString(KEY_LAST_LOCATION_PROVIDER, "RadarSDK")
+        val lastLocationTime = getSharedPreferences(context).getLong(KEY_LAST_LOCATION_TIME, 0L)
+        val location = Location(lastLocationProvider)
+        location.latitude = lastLocationLatitude.toDouble()
+        location.longitude = lastLocationLongitude.toDouble()
+        location.accuracy = lastLocationAccuracy
+        location.time = lastLocationTime
+
+        if (!RadarUtils.valid(location)) {
+            return null
+        }
+
+        return location
+    }
+
+    internal fun setLastLocation(context: Context, location: Location?) {
+        if (location == null || !RadarUtils.valid(location)) {
+            getSharedPreferences(context).edit {
+                remove(KEY_LAST_LOCATION_LATITUDE)
+                remove(KEY_LAST_LOCATION_LONGITUDE)
+                remove(KEY_LAST_LOCATION_ACCURACY)
+                remove(KEY_LAST_LOCATION_PROVIDER)
+                remove(KEY_LAST_LOCATION_TIME)
+            }
+
+            return
+        }
+
+        getSharedPreferences(context).edit {
+            putFloat(KEY_LAST_LOCATION_LATITUDE, location.latitude.toFloat())
+            putFloat(KEY_LAST_LOCATION_LONGITUDE, location.longitude.toFloat())
+            putFloat(KEY_LAST_LOCATION_ACCURACY, location.accuracy)
+            putString(KEY_LAST_LOCATION_PROVIDER, location.provider)
+            putLong(KEY_LAST_LOCATION_TIME, location.time)
+        }
     }
 
     internal fun getLastMovedLocation(context: Context): Location? {
