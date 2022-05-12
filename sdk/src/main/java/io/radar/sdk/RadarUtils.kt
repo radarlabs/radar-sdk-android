@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -90,7 +91,7 @@ internal object RadarUtils {
     }
 
     internal fun getBluetoothSupported(context: Context): Boolean {
-        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && BluetoothAdapter.getDefaultAdapter() != null
     }
 
     internal fun getLocationAccuracyAuthorization(context: Context): String {
