@@ -10,9 +10,6 @@ import android.os.Build
 import android.os.PowerManager
 import io.radar.sdk.util.BatteryState
 
-/**
- * Handles battery-related information within the Radar SDK
- */
 internal class RadarBatteryManager(
     private val context: Context
 ) {
@@ -31,12 +28,6 @@ internal class RadarBatteryManager(
         null
     }
 
-    /**
-     * Get the battery percentage of the device
-     *
-     * @see <a href="https://developer.android.com/training/monitoring-device-state/battery-monitoring">
-     *     Android Battery Monitoring</a>
-     */
     fun getBatteryState(): BatteryState {
         val batteryStatus: Intent? = IntentFilter(Intent.ACTION_BATTERY_CHANGED).let { filter ->
             context.registerReceiver(null, filter)
@@ -77,9 +68,6 @@ internal class RadarBatteryManager(
         return locationUnaffected
     }
 
-    /**
-     * Check if the device is Idle/doze mode is enabled
-     */
     private fun isDeviceIdleMode(): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && powerManager != null) {
             return powerManager.isDeviceIdleMode

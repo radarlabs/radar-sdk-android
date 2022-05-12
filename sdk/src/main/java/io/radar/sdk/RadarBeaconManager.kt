@@ -181,7 +181,7 @@ internal class RadarBeaconManager(
 
         this.stopMonitoringBeacons()
 
-        if (beacons.isEmpty()) {
+        if (beaconUUIDs.isEmpty()) {
             logger.d("No beacon UUIDs to monitor")
 
             return

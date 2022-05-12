@@ -42,7 +42,7 @@ internal object RadarBeaconUtils {
     }
 
     fun getScanFilter(beaconUUID: String): ScanFilter? {
-        val uuid = UUID.fromString(beaconUUID)
+        val uuid = UUID.fromString(beaconUUID.lowercase())
 
         val manufacturerData = ByteBuffer.allocate(23)
             .put(ByteArray(2) { 0x00.toByte() })

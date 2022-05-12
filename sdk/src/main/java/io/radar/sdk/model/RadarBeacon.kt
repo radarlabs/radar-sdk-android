@@ -126,7 +126,7 @@ class RadarBeacon (
     fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_ID, this._id)
-        obj.putOpt(FIELD_UUID, this.uuid)
+        obj.putOpt(FIELD_UUID, this.uuid.lowercase())
         obj.putOpt(FIELD_MAJOR, this.major)
         obj.putOpt(FIELD_MINOR, this.minor)
         obj.putOpt(FIELD_METADATA, this.metadata)
