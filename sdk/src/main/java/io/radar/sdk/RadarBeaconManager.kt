@@ -143,7 +143,7 @@ internal class RadarBeaconManager(
             logger.d("Starting monitoring beacons")
 
             adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, RadarLocationReceiver.getBeaconPendingIntent(context))
-        } catch (e: SecurityException) {
+        } catch (e: Exception) {
             logger.e("Error starting monitoring beacons", e)
         }
     }
@@ -226,7 +226,7 @@ internal class RadarBeaconManager(
             logger.d("Starting monitoring beacon UUIDs")
 
             adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, RadarLocationReceiver.getBeaconPendingIntent(context))
-        } catch (e: SecurityException) {
+        } catch (e: Exception) {
             logger.e("Error starting monitoring beacon UUIDs", e)
         }
     }
@@ -253,7 +253,11 @@ internal class RadarBeaconManager(
 
         logger.d("Stopping monitoring beacons")
 
-        adapter.bluetoothLeScanner.stopScan(RadarLocationReceiver.getBeaconPendingIntent(context))
+        try {
+            adapter.bluetoothLeScanner.stopScan(RadarLocationReceiver.getBeaconPendingIntent(context))
+        } catch (e: Exception) {
+            logger.d("Error stopping monitoring beacons", e)
+        }
 
         monitoredBeaconIdentifiers = setOf()
     }
@@ -368,7 +372,11 @@ internal class RadarBeaconManager(
             }
         }
 
-        adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
+        try {
+            adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
+        } catch (e: Exception) {
+            logger.e("Error starting ranging beacons", e)
+        }
 
         handler.postAtTime({
             logger.d("Beacon ranging timeout")
@@ -487,7 +495,11 @@ internal class RadarBeaconManager(
             }
         }
 
-        adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
+        try {
+            adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
+        } catch (e: Exception) {
+            logger.e("Error starting ranging beacon UUIDs", e)
+        }
 
         handler.postAtTime({
             logger.d("Beacon ranging timeout")
@@ -513,7 +525,12 @@ internal class RadarBeaconManager(
 
         handler.removeCallbacksAndMessages(TIMEOUT_TOKEN)
 
-        adapter.bluetoothLeScanner.stopScan(scanCallback)
+        try {
+            adapter.bluetoothLeScanner.stopScan(scanCallback)
+        } catch (e: Exception) {
+            logger.d("Error stopping ranging beacons", e)
+        }
+        
         scanCallback = null
 
         this.callCallbacks(this.nearbyBeacons.toTypedArray())
