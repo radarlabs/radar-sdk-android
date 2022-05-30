@@ -396,7 +396,7 @@ object Radar {
         if (!this::batteryManager.isInitialized) {
             this.batteryManager = RadarBatteryManager(this.context)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (!this::beaconManager.isInitialized) {
                 this.beaconManager = RadarBeaconManager(this.context, logger)
             }
@@ -684,7 +684,7 @@ object Radar {
                     })
                 }
 
-                if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                         override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, beaconUUIDs: Array<String>?) {
                             if (status != RadarStatus.SUCCESS || beacons == null) {
@@ -693,18 +693,8 @@ object Radar {
                                 return
                             }
 
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
-                                    Radar.beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
-                                } else {
-                                    Radar.beaconManager.startMonitoringBeacons(beacons)
-                                }
-                            }
-
                             if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
-                                }
+                                beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
 
                                 beaconManager.rangeBeaconUUIDs(beaconUUIDs, object : RadarBeaconCallback {
                                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
@@ -718,9 +708,7 @@ object Radar {
                                     }
                                 })
                             } else {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    beaconManager.startMonitoringBeacons(beacons)
-                                }
+                                beaconManager.startMonitoringBeacons(beacons)
 
                                 beaconManager.rangeBeacons(beacons, object : RadarBeaconCallback {
                                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {

@@ -7,6 +7,7 @@ import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -17,7 +18,7 @@ import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarBeacon
 import java.util.*
 
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+@RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("MissingPermission")
 internal class RadarBeaconManager(
     private val context: Context,
@@ -65,7 +66,6 @@ internal class RadarBeaconManager(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun startMonitoringBeacons(beacons: Array<RadarBeacon>) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
@@ -73,7 +73,7 @@ internal class RadarBeaconManager(
             return
         }
 
-        if (!RadarUtils.getBluetoothSupported(context)) {
+        if (!isBluetoothSupported(context)) {
             logger.d("Bluetooth not supported")
 
             return
@@ -148,7 +148,6 @@ internal class RadarBeaconManager(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun startMonitoringBeaconUUIDs(beaconUUIDs: Array<String>) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
@@ -156,7 +155,7 @@ internal class RadarBeaconManager(
             return
         }
 
-        if (!RadarUtils.getBluetoothSupported(context)) {
+        if (!isBluetoothSupported(context)) {
             logger.d("Bluetooth not supported")
 
             return
@@ -231,13 +230,12 @@ internal class RadarBeaconManager(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun stopMonitoringBeacons() {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             return
         }
 
-        if (!RadarUtils.getBluetoothSupported(context)) {
+        if (!isBluetoothSupported(context)) {
             return
         }
 
@@ -262,7 +260,6 @@ internal class RadarBeaconManager(
         monitoredBeaconIdentifiers = setOf()
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun rangeBeacons(beacons: Array<RadarBeacon>, callback: RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
@@ -274,7 +271,7 @@ internal class RadarBeaconManager(
             return
         }
 
-        if (!RadarUtils.getBluetoothSupported(context)) {
+        if (!isBluetoothSupported(context)) {
             logger.d("Bluetooth not supported")
 
             Radar.sendError(RadarStatus.ERROR_BLUETOOTH)
@@ -386,7 +383,6 @@ internal class RadarBeaconManager(
         }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun rangeBeaconUUIDs(beaconUUIDs: Array<String>, callback: RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
@@ -398,7 +394,7 @@ internal class RadarBeaconManager(
             return
         }
 
-        if (!RadarUtils.getBluetoothSupported(context)) {
+        if (!isBluetoothSupported(context)) {
             logger.d("Bluetooth not supported")
 
             Radar.sendError(RadarStatus.ERROR_BLUETOOTH)
@@ -510,13 +506,12 @@ internal class RadarBeaconManager(
         }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun stopRanging() {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             return
         }
 
-        if (!RadarUtils.getBluetoothSupported(context)) {
+        if (!isBluetoothSupported(context)) {
             return
         }
 
@@ -570,6 +565,14 @@ internal class RadarBeaconManager(
 
             this.stopRanging()
         }
+    }
+
+    internal fun isBluetoothSupported(context: Context): Boolean {
+        if (!this::adapter.isInitialized) {
+            adapter = BluetoothAdapter.getDefaultAdapter()
+        }
+
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
     }
 
 }

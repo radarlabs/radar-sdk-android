@@ -162,7 +162,7 @@ internal class RadarLocationManager(
     }
 
     internal fun handleBeacons(scanResults: ArrayList<ScanResult>?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             logger.d("Handling beacons | scanResults = $scanResults")
 
             Radar.beaconManager.handleScanResults(scanResults)
@@ -601,7 +601,7 @@ internal class RadarLocationManager(
             })
         }
 
-        if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
+        if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             && permissionsHelper.bluetoothPermissionsGranted(context)) {
             Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, beaconUUIDs: Array<String>?) {
@@ -611,12 +611,10 @@ internal class RadarLocationManager(
                         return
                     }
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
-                            Radar.beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
-                        } else {
-                            Radar.beaconManager.startMonitoringBeacons(beacons)
-                        }
+                    if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
+                        Radar.beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
+                    } else {
+                        Radar.beaconManager.startMonitoringBeacons(beacons)
                     }
 
                     Radar.beaconManager.rangeBeacons(beacons, object : Radar.RadarBeaconCallback {

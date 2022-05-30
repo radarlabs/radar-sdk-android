@@ -91,12 +91,6 @@ internal object RadarUtils {
         return locationAuthorization
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    internal fun getBluetoothSupported(context: Context): Boolean {
-        val adapter = BluetoothAdapter.getDefaultAdapter()
-        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
-    }
-
     internal fun getLocationAccuracyAuthorization(context: Context): String {
         val olderThanAndroidS = Build.VERSION.SDK_INT < Build.VERSION_CODES.S
         val fineLocationGranted =
