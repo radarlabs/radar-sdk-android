@@ -262,6 +262,7 @@ internal class RadarBeaconManager(
         monitoredBeaconIdentifiers = setOf()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun rangeBeacons(beacons: Array<RadarBeacon>, callback: RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
@@ -385,6 +386,7 @@ internal class RadarBeaconManager(
         }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun rangeBeaconUUIDs(beaconUUIDs: Array<String>, callback: RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
@@ -508,6 +510,7 @@ internal class RadarBeaconManager(
         }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun stopRanging() {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             return
