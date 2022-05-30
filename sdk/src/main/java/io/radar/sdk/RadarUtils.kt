@@ -91,7 +91,8 @@ internal object RadarUtils {
     }
 
     internal fun getBluetoothSupported(context: Context): Boolean {
-        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && BluetoothAdapter.getDefaultAdapter() != null
+        val adapter = BluetoothAdapter.getDefaultAdapter()
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
     }
 
     internal fun getLocationAccuracyAuthorization(context: Context): String {
