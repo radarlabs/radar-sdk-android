@@ -10,6 +10,7 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
@@ -90,6 +91,7 @@ internal object RadarUtils {
         return locationAuthorization
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     internal fun getBluetoothSupported(context: Context): Boolean {
         val adapter = BluetoothAdapter.getDefaultAdapter()
         return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
