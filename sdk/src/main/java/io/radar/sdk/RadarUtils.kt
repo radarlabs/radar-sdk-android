@@ -2,7 +2,6 @@ package io.radar.sdk
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -10,7 +9,6 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
-import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
