@@ -113,7 +113,7 @@ internal class RadarBeaconManager(
             try {
                 logger.d("Building scan filter for monitoring | _id = ${beacon._id}")
 
-                scanFilter = RadarBeaconUtils.getScanFilter(beacon)
+                scanFilter = RadarBeaconUtils.getScanFilterForBeaconUUID(beacon)
             } catch (e: Exception) {
                 logger.d("Error building scan filter for monitoring | _id = ${beacon._id}", e)
             }
@@ -195,7 +195,7 @@ internal class RadarBeaconManager(
             try {
                 logger.d("Building scan filter for monitoring | beaconUUID = $beaconUUID")
 
-                scanFilter = RadarBeaconUtils.getScanFilter(beaconUUID)
+                scanFilter = RadarBeaconUtils.getScanFilterForBeaconUUID(beaconUUID)
             } catch (e: Exception) {
                 logger.d("Error building scan filter for monitoring | beaconUUID = $beaconUUID", e)
             }
@@ -321,7 +321,7 @@ internal class RadarBeaconManager(
             try {
                 logger.d("Building scan filter for ranging | _id = ${beacon._id}")
 
-                scanFilter = RadarBeaconUtils.getScanFilter(beacon)
+                scanFilter = RadarBeaconUtils.getScanFilterForBeaconUUID(beacon)
             } catch (e: Exception) {
                 logger.d("Error building scan filter for ranging | _id = ${beacon._id}", e)
             }
@@ -444,7 +444,7 @@ internal class RadarBeaconManager(
             try {
                 logger.d("Building scan filter for ranging | beaconUUID = $beaconUUID")
 
-                scanFilter = RadarBeaconUtils.getScanFilter(beaconUUID)
+                scanFilter = RadarBeaconUtils.getScanFilterForBeaconUUID(beaconUUID)
             } catch (e: Exception) {
                 logger.d("Error building scan filter for ranging | beaconUUID = $beaconUUID", e)
             }

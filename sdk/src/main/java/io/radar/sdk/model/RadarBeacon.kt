@@ -57,8 +57,24 @@ class RadarBeacon (
     /**
      * The location of the beacon.
      */
-    val location: RadarCoordinate? = null
+    val location: RadarCoordinate? = null,
+
+    /**
+     * The type of the beacon.
+     */
+    val type: RadarBeaconType
 ) {
+
+    /**
+     * The types for beacons.
+     */
+    enum class RadarBeaconType {
+        /** iBeacon */
+        IBEACON,
+        /** Eddystone */
+        EDDYSTONE
+    }
+
     internal companion object {
         private const val FIELD_ID = "_id"
         private const val FIELD_DESCRIPTION = "description"
@@ -94,8 +110,12 @@ class RadarBeacon (
                 geometryCoordinatesObj?.optDouble(1) ?: 0.0,
                 geometryCoordinatesObj?.optDouble(0) ?: 0.0
             )
+            val type = when (obj.optString(FIELD_TYPE)) {
+                "eddystone" -> RadarBeaconType.EDDYSTONE
+                else -> RadarBeaconType.IBEACON
+            }
 
-            return RadarBeacon(id, description, tag, externalId, uuid, major, minor, metadata, rssi, geometry)
+            return RadarBeacon(id, description, tag, externalId, uuid, major, minor, metadata, rssi, geometry, type)
         }
 
         @JvmStatic
@@ -121,6 +141,14 @@ class RadarBeacon (
             }
             return arr
         }
+
+        @JvmStatic
+        fun stringForType(type: RadarBeaconType): String? {
+            return when (type) {
+                RadarBeaconType.EDDYSTONE -> "eddystone"
+                RadarBeaconType.IBEACON -> "ibeacon"
+            }
+        }
     }
 
     fun toJson(): JSONObject {
@@ -131,7 +159,7 @@ class RadarBeacon (
         obj.putOpt(FIELD_MINOR, this.minor)
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_RSSI, this.rssi)
-        obj.putOpt(FIELD_TYPE, "ibeacon")
+        obj.putOpt(FIELD_TYPE, stringForType(this.type))
         return obj
     }
 
@@ -146,7 +174,7 @@ class RadarBeacon (
 
         other as RadarBeacon
 
-        return this.uuid == other.uuid && this.major == other.major && this.minor == other.minor
+        return this.uuid == other.uuid && this.major == other.major && this.minor == other.minor && this.type == other.type
     }
 
     override fun hashCode(): Int {
