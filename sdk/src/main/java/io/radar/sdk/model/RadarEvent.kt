@@ -2,12 +2,11 @@ package io.radar.sdk.model
 
 import android.annotation.SuppressLint
 import android.location.Location
+import io.radar.sdk.RadarUtils
 import io.radar.sdk.model.RadarEvent.RadarEventType.*
 import org.json.JSONArray
 import org.json.JSONObject
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.TimeZone
 
 /**
  * Represents a change in user state.
@@ -139,7 +138,9 @@ class RadarEvent(
         /** `user.entered_region_postal_code` */
         USER_ENTERED_REGION_POSTAL_CODE,
         /** `user.exited_region_postal_code` */
-        USER_EXITED_REGION_POSTAL_CODE
+        USER_EXITED_REGION_POSTAL_CODE,
+        /** `user.dwelled_in_geofence` */
+        USER_DWELLED_IN_GEOFENCE
     }
 
     /**
@@ -189,21 +190,14 @@ class RadarEvent(
         private const val FIELD_LOCATION_ACCURACY = "locationAccuracy"
 
         @JvmStatic
-        @SuppressLint("SimpleDateFormat")
         private fun fromJson(obj: JSONObject?): RadarEvent? {
             if (obj == null) {
                 return null
             }
 
             val id = obj.optString(FIELD_ID) ?: ""
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-            val createdAt = obj.optString(FIELD_CREATED).let { createdAtStr ->
-                dateFormat.parse(createdAtStr)
-            } ?: Date()
-            val actualCreatedAt = obj.optString(FIELD_ACTUAL_CREATED).let { actualCreatedAtStr ->
-                dateFormat.parse(actualCreatedAtStr)
-            } ?: Date()
+            val createdAt = RadarUtils.isoStringToDate(obj.optString(FIELD_CREATED)) ?: Date()
+            val actualCreatedAt = RadarUtils.isoStringToDate(obj.optString(FIELD_ACTUAL_CREATED)) ?: Date()
             val live = obj.optBoolean(FIELD_LIVE)
             val type = when (obj.optString(FIELD_TYPE)) {
                 "user.entered_geofence" -> USER_ENTERED_GEOFENCE
@@ -226,6 +220,7 @@ class RadarEvent(
                 "user.exited_beacon" -> USER_EXITED_BEACON
                 "user.entered_region_postal_code" -> USER_ENTERED_REGION_POSTAL_CODE
                 "user.exited_region_postal_code" -> USER_EXITED_REGION_POSTAL_CODE
+                "user.dwelled_in_geofence" -> USER_DWELLED_IN_GEOFENCE
                 else -> UNKNOWN
             }
             val geofence = RadarGeofence.fromJson(obj.optJSONObject(FIELD_GEOFENCE))
@@ -311,6 +306,7 @@ class RadarEvent(
                 USER_EXITED_BEACON -> "user.exited_beacon"
                 USER_ENTERED_REGION_POSTAL_CODE -> "user.entered_region_postal_code"
                 USER_EXITED_REGION_POSTAL_CODE -> "user.exited_region_postal_code"
+                USER_DWELLED_IN_GEOFENCE -> "user.dwelled_in_geofence"
                 else -> null
             }
         }

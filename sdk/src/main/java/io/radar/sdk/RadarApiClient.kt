@@ -13,6 +13,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.net.URL
+import java.text.SimpleDateFormat
 import java.util.*
 
 internal class RadarApiClient(
@@ -364,6 +365,7 @@ internal class RadarApiClient(
             params.putOpt("destinationGeofenceExternalId", options.destinationGeofenceExternalId)
         }
         params.putOpt("mode", Radar.stringForMode(options.mode))
+        params.putOpt("scheduledArrivalAt", RadarUtils.dateToISOString(options.scheduledArrivalAt))
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()

@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import org.json.JSONObject
+import java.util.*
 
 /**
  * An options class used to configure background tracking.
@@ -31,7 +32,12 @@ data class RadarTripOptions(
     /**
      * For trips with a destination, the travel mode.
      */
-    var mode: Radar.RadarRouteMode = Radar.RadarRouteMode.CAR
+    var mode: Radar.RadarRouteMode = Radar.RadarRouteMode.CAR,
+
+    /**
+     * The scheduled arrival time for the trip.
+     */
+    var scheduledArrivalAt: Date?
 ) {
 
     companion object {
@@ -41,6 +47,7 @@ data class RadarTripOptions(
         internal const val KEY_DESTINATION_GEOFENCE_TAG = "destinationGeofenceTag"
         internal const val KEY_DESTINATION_GEOFENCE_EXTERNAL_ID = "destinationGeofenceExternalId"
         internal const val KEY_MODE = "mode"
+        internal const val KEY_SCHEDULED_ARRIVAL_AT = "scheduledArrivalAt"
 
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTripOptions {
@@ -55,7 +62,10 @@ data class RadarTripOptions(
                     "truck" -> Radar.RadarRouteMode.TRUCK
                     "motorbike" -> Radar.RadarRouteMode.MOTORBIKE
                     else -> Radar.RadarRouteMode.CAR
-                }
+                },
+                scheduledArrivalAt = if (obj.has(KEY_SCHEDULED_ARRIVAL_AT)) Date(obj.optLong(
+                    KEY_SCHEDULED_ARRIVAL_AT
+                )) else null,
             )
         }
 
@@ -68,6 +78,7 @@ data class RadarTripOptions(
         obj.put(KEY_DESTINATION_GEOFENCE_TAG, destinationGeofenceTag)
         obj.put(KEY_DESTINATION_GEOFENCE_EXTERNAL_ID, destinationGeofenceExternalId)
         obj.put(KEY_MODE, Radar.stringForMode(mode))
+        obj.put(KEY_SCHEDULED_ARRIVAL_AT, scheduledArrivalAt?.time)
         return obj
     }
 
@@ -86,7 +97,8 @@ data class RadarTripOptions(
                 this.metadata?.toString() == other.metadata?.toString() &&
                 this.destinationGeofenceTag == other.destinationGeofenceTag &&
                 this.destinationGeofenceExternalId == other.destinationGeofenceExternalId &&
-                this.mode == other.mode
+                this.mode == other.mode &&
+                this.scheduledArrivalAt?.time == other.scheduledArrivalAt?.time
     }
 
 }
