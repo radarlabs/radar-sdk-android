@@ -171,8 +171,8 @@ class RadarEvent(
 
     internal companion object {
         private const val FIELD_ID = "_id"
-        private const val FIELD_CREATED = "createdAt"
-        private const val FIELD_ACTUAL_CREATED = "actualCreatedAt"
+        private const val FIELD_CREATED_AT = "createdAt"
+        private const val FIELD_ACTUAL_CREATED_AT = "actualCreatedAt"
         private const val FIELD_LIVE = "live"
         private const val FIELD_TYPE = "type"
         private const val FIELD_GEOFENCE = "geofence"
@@ -196,8 +196,8 @@ class RadarEvent(
             }
 
             val id = obj.optString(FIELD_ID) ?: ""
-            val createdAt = RadarUtils.isoStringToDate(obj.optString(FIELD_CREATED)) ?: Date()
-            val actualCreatedAt = RadarUtils.isoStringToDate(obj.optString(FIELD_ACTUAL_CREATED)) ?: Date()
+            val createdAt = RadarUtils.isoStringToDate(obj.optString(FIELD_CREATED_AT)) ?: Date()
+            val actualCreatedAt = RadarUtils.isoStringToDate(obj.optString(FIELD_ACTUAL_CREATED_AT)) ?: Date()
             val live = obj.optBoolean(FIELD_LIVE)
             val type = when (obj.optString(FIELD_TYPE)) {
                 "user.entered_geofence" -> USER_ENTERED_GEOFENCE
@@ -315,6 +315,8 @@ class RadarEvent(
     fun toJson(): JSONObject {
         val obj = JSONObject()
         obj.putOpt(FIELD_ID, this._id)
+        obj.putOpt(FIELD_CREATED_AT, RadarUtils.dateToISOString(this.createdAt))
+        obj.putOpt(FIELD_ACTUAL_CREATED_AT, RadarUtils.dateToISOString(this.actualCreatedAt))
         obj.putOpt(FIELD_LIVE, this.live)
         obj.putOpt(FIELD_TYPE, stringForType(this.type))
         obj.putOpt(FIELD_GEOFENCE, this.geofence?.toJson())
