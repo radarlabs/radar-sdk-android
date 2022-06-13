@@ -12,6 +12,8 @@ import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
+import io.radar.sdk.model.RadarEvent
+import java.text.SimpleDateFormat
 import java.util.*
 
 internal object RadarUtils {
@@ -134,6 +136,26 @@ internal object RadarUtils {
                 || Build.PRODUCT.contains("vbox86p")
                 || Build.PRODUCT.contains("emulator")
                 || Build.PRODUCT.contains("simulator");
+    }
+
+    internal fun isoStringToDate(str: String?): Date? {
+        if (str == null) {
+            return null
+        }
+
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        return dateFormat.parse(str)
+    }
+
+    internal fun dateToISOString(date: Date?): String? {
+        if (date == null) {
+            return null
+        }
+
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        return dateFormat.format(date)
     }
 
 }
