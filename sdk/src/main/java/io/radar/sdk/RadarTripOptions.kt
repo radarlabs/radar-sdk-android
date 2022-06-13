@@ -37,7 +37,7 @@ data class RadarTripOptions(
     /**
      * The scheduled arrival time for the trip.
      */
-    var scheduledArrivalAt: Date?
+    var scheduledArrivalAt: Date? = null
 ) {
 
     companion object {
