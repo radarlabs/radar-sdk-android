@@ -364,6 +364,7 @@ internal class RadarApiClient(
             params.putOpt("destinationGeofenceExternalId", options.destinationGeofenceExternalId)
         }
         params.putOpt("mode", Radar.stringForMode(options.mode))
+        params.putOpt("scheduledArrivalAt", RadarUtils.dateToISOString(options.scheduledArrivalAt))
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
