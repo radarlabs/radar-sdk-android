@@ -374,7 +374,10 @@ object Radar {
         this.initialized = true
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
-        this.receiver = receiver
+
+        if (receiver != null) {
+            this.receiver = receiver
+        }
 
         if (!this::logBuffer.isInitialized) {
             this.logBuffer = RadarSimpleLogBuffer()
