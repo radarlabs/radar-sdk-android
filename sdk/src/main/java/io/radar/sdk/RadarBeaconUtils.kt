@@ -13,8 +13,9 @@ import java.util.*
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal object RadarBeaconUtils {
 
-    private val EDDYSTONE_SERVICE_UUID = ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB")
     private const val IBEACON_MANUFACTURER_ID = 76
+    private val EDDYSTONE_SERVICE_UUID = ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB")
+    private val HEX = "0123456789abcdef".toCharArray()
 
     fun getScanFilterForBeaconUUID(beacon: RadarBeacon): ScanFilter? {
         if (beacon.type == RadarBeacon.RadarBeaconType.EDDYSTONE) {
@@ -23,8 +24,8 @@ internal object RadarBeaconUtils {
 
             val serviceData = ByteBuffer.allocate(18)
                 .put(ByteArray(2) { 0x00.toByte() })
-                .put(uid.toByteArray())
-                .put(identifier.toByteArray())
+                .put(this.toByteArray(uid, 10))
+                .put(this.toByteArray(identifier, 6))
                 .array()
 
             val serviceDataMask = ByteBuffer.allocate(18)
@@ -91,7 +92,7 @@ internal object RadarBeaconUtils {
     fun getScanFilterForBeaconUID(beaconUID: String): ScanFilter? {
         val serviceData = ByteBuffer.allocate(18)
             .put(ByteArray(2) { 0x00.toByte() })
-            .put(beaconUID.toByteArray())
+            .put(this.toByteArray(beaconUID, 10))
             .put(ByteArray(6) { 0x00.toByte() })
             .array()
 
@@ -114,8 +115,8 @@ internal object RadarBeaconUtils {
         val eddystone = scanRecord.serviceUuids.contains(EDDYSTONE_SERVICE_UUID)
 
         if (eddystone) {
-            val uid = ByteBuffer.wrap(bytes, 2, 10).toString()
-            val identifier = ByteBuffer.wrap(bytes, 12, 6).toString()
+            val uid = this.toHex(ByteBuffer.wrap(bytes, 2, 10).array())
+            val identifier = this.toHex(ByteBuffer.wrap(bytes, 12, 6).array())
 
             return RadarBeacon(
                 uuid = uid,
@@ -154,6 +155,23 @@ internal object RadarBeaconUtils {
                 type = RadarBeacon.RadarBeaconType.IBEACON
             )
         }
+    }
+
+    private fun toHex(bytes: ByteArray): String {
+        val hex = CharArray(2 * bytes.size)
+        bytes.forEachIndexed { i, byte ->
+            val unsigned = 0xff and byte.toInt()
+            hex[2 * i] = HEX[unsigned / 16]
+            hex[2 * i + 1] = HEX[unsigned % 16]
+        }
+        return hex.joinToString("")
+    }
+
+    private fun toByteArray(hex: String, max: Int): ByteArray {
+        return hex.chunked(2)
+            .map { it.toInt(16).toByte() }
+            .toByteArray()
+            .sliceArray(0..max)
     }
 
 }
