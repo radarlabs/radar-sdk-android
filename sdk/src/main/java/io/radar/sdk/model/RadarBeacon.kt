@@ -30,17 +30,17 @@ class RadarBeacon (
     val externalId: String? = null,
 
     /**
-     * The UUID of the beacon.
+     * For iBeacons, the UUID of the beacon. For Eddystone beacons, the UID of the beacon.
      */
     val uuid: String,
 
     /**
-     * The major ID of the beacon.
+     * For iBeacons, the major ID of the beacon. For Eddystone beacons, the instance ID of the beacon.
      */
     val major: String,
 
     /**
-     * The minor ID of the beacon.
+     * For iBeacons, the minor ID of the beacon.
      */
     val minor: String,
 
@@ -83,6 +83,8 @@ class RadarBeacon (
         private const val FIELD_UUID = "uuid"
         private const val FIELD_MAJOR = "major"
         private const val FIELD_MINOR = "minor"
+        private const val FIELD_UID = "uid"
+        private const val FIELD_INSTANCE = "instance"
         private const val FIELD_METADATA = "metadata"
         private const val FIELD_RSSI = "rssi"
         private const val FIELD_GEOMETRY = "geometry"
@@ -95,12 +97,23 @@ class RadarBeacon (
                 return null
             }
 
+            val type = when (obj.optString(FIELD_TYPE)) {
+                "eddystone" -> RadarBeaconType.EDDYSTONE
+                else -> RadarBeaconType.IBEACON
+            }
             val id: String = obj.optString(FIELD_ID) ?: ""
             val description: String = obj.optString(FIELD_DESCRIPTION) ?: ""
             val tag = obj.optString(FIELD_TAG) ?: null
             val externalId = obj.optString(FIELD_EXTERNAL_ID) ?: null
-            val uuid: String = obj.optString(FIELD_UUID) ?: ""
-            val major: String = obj.optString(FIELD_MAJOR) ?: ""
+            var uuid = ""
+            var major = ""
+            if (type == RadarBeaconType.EDDYSTONE) {
+                uuid = obj.optString(FIELD_UID) ?: ""
+                major = obj.optString(FIELD_INSTANCE) ?: ""
+            } else if (type == RadarBeaconType.IBEACON) {
+                uuid = obj.optString(FIELD_UUID) ?: ""
+                major = obj.optString(FIELD_MAJOR) ?: ""
+            }
             val minor: String = obj.optString(FIELD_MINOR) ?: ""
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
             val rssi: Int = obj.optInt(FIELD_RSSI)
@@ -110,10 +123,6 @@ class RadarBeacon (
                 geometryCoordinatesObj?.optDouble(1) ?: 0.0,
                 geometryCoordinatesObj?.optDouble(0) ?: 0.0
             )
-            val type = when (obj.optString(FIELD_TYPE)) {
-                "eddystone" -> RadarBeaconType.EDDYSTONE
-                else -> RadarBeaconType.IBEACON
-            }
 
             return RadarBeacon(id, description, tag, externalId, uuid, major, minor, metadata, rssi, geometry, type)
         }
@@ -153,13 +162,18 @@ class RadarBeacon (
 
     fun toJson(): JSONObject {
         val obj = JSONObject()
+        obj.putOpt(FIELD_TYPE, stringForType(this.type))
         obj.putOpt(FIELD_ID, this._id)
-        obj.putOpt(FIELD_UUID, this.uuid.lowercase())
-        obj.putOpt(FIELD_MAJOR, this.major)
-        obj.putOpt(FIELD_MINOR, this.minor)
+        if (this.type == RadarBeaconType.EDDYSTONE) {
+            obj.putOpt(FIELD_UID, this.uuid.lowercase())
+            obj.putOpt(FIELD_INSTANCE, this.major)
+        } else if (this.type == RadarBeaconType.IBEACON) {
+            obj.putOpt(FIELD_UUID, this.uuid.lowercase())
+            obj.putOpt(FIELD_MAJOR, this.major)
+            obj.putOpt(FIELD_MINOR, this.minor)
+        }
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_RSSI, this.rssi)
-        obj.putOpt(FIELD_TYPE, stringForType(this.type))
         return obj
     }
 

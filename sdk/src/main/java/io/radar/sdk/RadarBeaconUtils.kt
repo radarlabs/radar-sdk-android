@@ -5,6 +5,7 @@ import android.bluetooth.le.ScanRecord
 import android.bluetooth.le.ScanResult
 import android.os.Build
 import android.os.ParcelUuid
+import android.util.Log
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.RadarBeacon
 import java.nio.ByteBuffer
@@ -115,13 +116,16 @@ internal object RadarBeaconUtils {
         val eddystone = scanRecord.serviceUuids.contains(EDDYSTONE_SERVICE_UUID)
 
         if (eddystone) {
-            val uid = this.toHex(ByteBuffer.wrap(bytes, 2, 10).array())
-            val identifier = this.toHex(ByteBuffer.wrap(bytes, 12, 6).array())
+            val hex = this.toHex(bytes)
+            val startByte = 26
+
+            val uid = hex.substring(startByte until startByte + 20)
+            val identifier = hex.substring(startByte + 20 until startByte + 32)
 
             return RadarBeacon(
                 uuid = uid,
                 major = identifier,
-                minor = "0",
+                minor = "",
                 rssi = result.rssi,
                 type = RadarBeacon.RadarBeaconType.EDDYSTONE
             )
@@ -171,7 +175,7 @@ internal object RadarBeaconUtils {
         return hex.chunked(2)
             .map { it.toInt(16).toByte() }
             .toByteArray()
-            .sliceArray(0..max)
+            .sliceArray(0 until max)
     }
 
 }

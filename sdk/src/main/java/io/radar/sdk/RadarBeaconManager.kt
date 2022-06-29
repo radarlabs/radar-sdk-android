@@ -327,7 +327,7 @@ internal class RadarBeaconManager(
             }
 
             if (scanFilter != null) {
-                logger.d("Starting ranging beacon | _id = ${beacon._id}; uuid = ${beacon.uuid}; major = ${beacon.major}; minor = ${beacon.minor}")
+                logger.d("Starting ranging beacon | type = ${beacon.type}; _id = ${beacon._id}; uuid = ${beacon.uuid}; major = ${beacon.major}; minor = ${beacon.minor}")
 
                 scanFilters.add(scanFilter)
             }
