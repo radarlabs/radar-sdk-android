@@ -224,6 +224,22 @@ object Radar {
     }
 
     /**
+     * Called when a request to send a custom event succeeds, fails, or times out.
+     */
+     interface RadarSendEventCallback {
+        /**
+         * Called when a request to send a custom event succeeds, fails, or times out. Receives the request status and, if successful, the event.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[event] RadarEvent? If successful, the event.
+         */
+        fun (onComplete) (
+            status: RadarStatus,
+            event: RadarEvent? = null
+        )
+     }
+
+    /**
      * The status types for a request. See [](https://radar.io/documentation/sdk/android#foreground-tracking).
      */
     enum class RadarStatus {
@@ -767,7 +783,7 @@ object Radar {
 
             return
         }
-        
+
         apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
             override fun onComplete(
                 status: RadarStatus,
@@ -2224,6 +2240,91 @@ object Radar {
             }
         })
     }
+
+    /**
+     * Sends a custom event.
+     *
+     * @see [](https://radar.io/documentation/api#sen-event)
+     *
+     * @param[name] The name of the event.
+     * @param[metadata] The metadata associated with the event.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun sendEvent(name: String, metadata: JSONObject?, callback: RadarSendEventCallback) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        trackOnce(object : RadarTrackCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    handler.post {
+                        callback.onComplete(status)
+                    }
+
+                    return
+                }
+
+                apiClient.sendEvent(name, metadata, user, object : RadarApiHelper.RadarSendEventApiCallback {
+                    override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
+                        handler.post {
+                            callback.onComplete(status, event)
+                        }
+                    }
+                })
+            }
+        })
+    }
+
+    /**
+     * Sends a custom event.
+     *
+     * @see [](https//radar.io/documentation/api#send-event)
+     *
+     * @param[name] The name of the event.
+     * @param[metadata] The metadata associated with the event.
+     * @param[block] A block callback
+     */
+    fun sendEvent(name: String, metadata: JSONObject?, block: (status: RadarStatus, event: RadarEvent?) -> Unit) {
+        sendEvent(
+            name,
+            metadata,
+            object : RadarSendEventCallback {
+                override fun onComplete(status: RadarStatus, event: RadarEvent?) {
+                    block(status, event)
+                }
+            }
+        )
+    }
+
+    /**
+     * Sends a custom event with a manually provided location.
+     *
+     * @see [](https://radar.io/documentation/api#send-event)
+     *
+     * @param[name] The name of the event.
+     * @param[location] The location of the event.
+     * @param[metadata] The metadata associated with the event.
+     * @param[callback] A callback.
+     *
+     * TODO (jsani)
+     */
+
+    /**
+     * Sends a custom event with a manually provided location.
+     *
+     * @see [](https://radar.io/documentation/api#send-event)
+     *
+     * @param[name] The name of the event.
+     * @param[location] The location of the event.
+     * @param[metadata] The metadata associated with the event.
+     * @param[block] A block callback.
+     *
+     * TODO (jsani)
+     */
 
     /**
      * Sets the log level for debug logs.
