@@ -15,7 +15,6 @@ import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
 import io.radar.sdk.model.*
 import org.json.JSONObject
 import java.util.*
-import kotlin.collections.ArrayList
 
 @SuppressLint("MissingPermission")
 internal class RadarLocationManager(
@@ -27,7 +26,7 @@ internal class RadarLocationManager(
 ) {
 
     @SuppressLint("VisibleForTests")
-    internal var locationClient: RadarAbstractLocationClient = RadarGoogleLocationClient(context, logger)
+    internal var locationClient: RadarAbstractLocationClient = RadarGoogleLocationClient(context, logger) // TODO set based on build setting
     private var started = false
     private var startedDesiredAccuracy = RadarTrackingOptionsDesiredAccuracy.NONE
     private var startedInterval = 0

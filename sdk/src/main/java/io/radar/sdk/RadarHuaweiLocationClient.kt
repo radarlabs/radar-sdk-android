@@ -4,17 +4,18 @@ import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
 import android.location.Location
-import com.google.android.gms.location.*
+import android.os.Looper
+import com.huawei.hms.location.*
 
 @SuppressLint("MissingPermission")
-internal class RadarGoogleLocationClient(
+internal class RadarHuaweiLocationClient(
     context: Context,
     private val logger: RadarLogger
 ): RadarAbstractLocationClient() {
 
     @SuppressLint("VisibleForTests")
     val locationClient = FusedLocationProviderClient(context)
-    val geofencingClient = GeofencingClient(context)
+    val geofenceService = GeofenceService(context)
 
     override fun getCurrentLocation(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (location: Location?) -> Unit) {
         val priority = when(desiredAccuracy) {
@@ -26,11 +27,16 @@ internal class RadarGoogleLocationClient(
 
         logger.d("Requesting location")
 
-        locationClient.getCurrentLocation(priority, null).addOnSuccessListener { location ->
-            block(location)
-        }.addOnCanceledListener {
-            block(null)
+        val locationRequest = LocationRequest().apply {
+            this.priority = priority
+            this.numUpdates = 1
         }
+
+        locationClient.requestLocationUpdates(locationRequest, object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                block(locationResult.lastLocation)
+            }
+        }, Looper.getMainLooper())
     }
 
     override fun requestLocationUpdates(
@@ -76,42 +82,41 @@ internal class RadarGoogleLocationClient(
         val geofences = mutableListOf<Geofence>()
         abstractGeofences.forEach { abstractGeofence ->
             var geofenceBuilder = Geofence.Builder()
-                .setRequestId(abstractGeofence.requestId)
-                .setCircularRegion(abstractGeofence.latitude, abstractGeofence.longitude, abstractGeofence.radius)
-                .setExpirationDuration(Geofence.NEVER_EXPIRE)
-            var transitionTypes = 0
+                .setUniqueId(abstractGeofence.requestId)
+                .setRoundArea(abstractGeofence.latitude, abstractGeofence.longitude, abstractGeofence.radius)
+            var conversions = 0
             if (abstractGeofence.transitionEnter) {
-                transitionTypes = transitionTypes or Geofence.GEOFENCE_TRANSITION_ENTER
+                conversions = conversions or Geofence.ENTER_GEOFENCE_CONVERSION
             }
             if (abstractGeofence.transitionExit) {
-                transitionTypes = transitionTypes or Geofence.GEOFENCE_TRANSITION_EXIT
+                conversions = conversions or Geofence.EXIT_GEOFENCE_CONVERSION
             }
             if (abstractGeofence.transitionDwell) {
-                transitionTypes = transitionTypes or Geofence.GEOFENCE_TRANSITION_DWELL
+                conversions = conversions or Geofence.DWELL_GEOFENCE_CONVERSION
             }
-            geofenceBuilder = geofenceBuilder.setTransitionTypes(transitionTypes)
+            geofenceBuilder = geofenceBuilder.setConversions(conversions)
 
             val geofence = geofenceBuilder.build()
             geofences.add(geofence)
         }
 
-        var requestBuilder = GeofencingRequest.Builder()
-            .addGeofences(geofences)
-        var initialTrigger = 0
+        var requestBuilder = GeofenceRequest.Builder()
+            .createGeofenceList(geofences)
+        var initConversions = 0
         if (abstractGeofenceRequest.initialTriggerEnter) {
-            initialTrigger = initialTrigger or Geofence.GEOFENCE_TRANSITION_ENTER
+            initConversions = initConversions or Geofence.ENTER_GEOFENCE_CONVERSION
         }
         if (abstractGeofenceRequest.initialTriggerExit) {
-            initialTrigger = initialTrigger or Geofence.GEOFENCE_TRANSITION_EXIT
+            initConversions = initConversions or Geofence.EXIT_GEOFENCE_CONVERSION
         }
         if (abstractGeofenceRequest.initialTriggerDwell) {
-            initialTrigger = initialTrigger or Geofence.GEOFENCE_TRANSITION_DWELL
+            initConversions = initConversions or Geofence.DWELL_GEOFENCE_CONVERSION
         }
-        requestBuilder = requestBuilder.setInitialTrigger(initialTrigger)
+        requestBuilder = requestBuilder.setInitConversions(initConversions)
 
         val request = requestBuilder.build()
 
-        geofencingClient.addGeofences(request, pendingIntent).run {
+        geofenceService.createGeofenceList(request, pendingIntent).run {
             addOnSuccessListener {
                 block(true)
             }
@@ -124,7 +129,7 @@ internal class RadarGoogleLocationClient(
     override fun removeGeofences(
         pendingIntent: PendingIntent
     ) {
-        geofencingClient.removeGeofences(pendingIntent)
+        geofenceService.deleteGeofenceList(pendingIntent)
     }
 
 }
