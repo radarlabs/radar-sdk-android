@@ -2288,16 +2288,13 @@ object Radar {
      * @param[metadata] The metadata associated with the event.
      * @param[block] A block callback
      */
+    @JvmStatic
     fun sendEvent(name: String, metadata: JSONObject?, block: (status: RadarStatus, event: RadarEvent?) -> Unit) {
-        sendEvent(
-            name,
-            metadata,
-            object : RadarSendEventCallback {
-                override fun onComplete(status: RadarStatus, event: RadarEvent?) {
-                    block(status, event)
-                }
+        sendEvent( name, metadata, object : RadarSendEventCallback {
+            override fun onComplete(status: RadarStatus, event: RadarEvent?) {
+                block(status, event)
             }
-        )
+        })
     }
 
     /**
@@ -2309,9 +2306,35 @@ object Radar {
      * @param[location] The location of the event.
      * @param[metadata] The metadata associated with the event.
      * @param[callback] A callback.
-     *
-     * TODO (jsani)
      */
+    @JvmStatic
+    fun sendEvent(location: Location, name: String, metadata: JSONObject?, callback: RadarSendEventCallback) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        trackOnce(location, object : RadarTrackCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+                if (status != RadarStatus.SUCCESS || location == null) {
+                    handler.post {
+                        callback.onComplete(status)
+                    }
+
+                    return
+                }
+
+                apiClient.sendEvent(name, metadata, user, object : RadarApiClient.RadarSendEventApiCallback {
+                    override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
+                        handler.post {
+                            callback.onComplete(status, event)
+                        }
+                    }
+                })
+            }
+        })
+    }
 
     /**
      * Sends a custom event with a manually provided location.
@@ -2322,9 +2345,15 @@ object Radar {
      * @param[location] The location of the event.
      * @param[metadata] The metadata associated with the event.
      * @param[block] A block callback.
-     *
-     * TODO (jsani)
      */
+    @JvmStatic
+    fun sendEvent(location: Location, name: String, metadata: JSONObject?, block: (status: RadarStatus, event: RadarEvent?) -> Unit) {
+        sendEvent(location, name, metadata, object : RadarSendEventCallback {
+            override fun onComplete(status: RadarStatus, event: RadarEvent?) {
+                block(status, event)
+            }
+        })
+    }
 
     /**
      * Sets the log level for debug logs.
