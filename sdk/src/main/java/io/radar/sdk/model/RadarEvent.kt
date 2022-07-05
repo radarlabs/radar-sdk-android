@@ -190,7 +190,7 @@ class RadarEvent(
         private const val FIELD_LOCATION_ACCURACY = "locationAccuracy"
 
         @JvmStatic
-        private fun fromJson(obj: JSONObject?): RadarEvent? {
+        fun fromJson(obj: JSONObject?): RadarEvent? {
             if (obj == null) {
                 return null
             }
