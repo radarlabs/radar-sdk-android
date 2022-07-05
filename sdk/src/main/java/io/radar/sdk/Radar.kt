@@ -233,7 +233,7 @@ object Radar {
          * @param[status] RadarStatus The request status.
          * @param[event] RadarEvent? If successful, the event.
          */
-        fun (onComplete) (
+        fun onComplete(
             status: RadarStatus,
             event: RadarEvent? = null
         )
@@ -2260,7 +2260,7 @@ object Radar {
 
         trackOnce(object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
-                if (status != RadarStatus.SUCCESS || res == null) {
+                if (status != RadarStatus.SUCCESS || location == null) {
                     handler.post {
                         callback.onComplete(status)
                     }
@@ -2268,7 +2268,7 @@ object Radar {
                     return
                 }
 
-                apiClient.sendEvent(name, metadata, user, object : RadarApiHelper.RadarSendEventApiCallback {
+                apiClient.sendEvent(name, metadata, user, object : RadarApiClient.RadarSendEventApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
                         handler.post {
                             callback.onComplete(status, event)

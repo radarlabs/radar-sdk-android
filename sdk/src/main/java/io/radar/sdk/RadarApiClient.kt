@@ -955,9 +955,9 @@ internal class RadarApiClient(
 
     internal fun sendEvent(
         name: String,
-        metadata: JSONObject? = null,
-        user: RadarUser? = null,
-        callback: RadarSendEventApiCallback? = null
+        metadata: JSONObject?,
+        user: RadarUser?,
+        callback: RadarSendEventApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -985,34 +985,30 @@ internal class RadarApiClient(
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon().appendEncodedPath("v1/events").build()
-        apiHelper.request(
-            context = context,
-            method = "POST",
-            url = URL(uri.toString()),
-            headers = headers(publishableKey),
-            params = params,
-            sleep = false,
-            callback = object: RadarApiHelper.RadarSendEventApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                    if (status != RadarStatus.SUCCESS || res == null) {
-                        callback.onComplete(status)
+        val url = URL(uri.toString())
 
-                        return
-                    }
+        val headers = headers(publishableKey)
+        apiHelper.request(context, "POST", url, headers, params, false, object : RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback.onComplete(status)
 
-                    val event = res.optJSONObject("event")?.let { eventObj ->
-                        RadarEvent.fromJson(eventObj)
-                    }
-
-                    if (event != null) {
-                        callback.onComplete(RadarStatus.SUCCESS, res, event)
-
-                        return
-                    }
-
-                    callback.onComplete(RadarStatus.ERROR_SERVER)
+                    return
                 }
-            })
-        }
+
+                val event = res.optJSONObject("event")?.let { eventObj ->
+                    RadarEvent.fromJson(eventObj)
+                }
+
+                if (event != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, event)
+
+                    return
+                }
+
+                callback.onComplete(RadarStatus.ERROR_SERVER)
+            }
+        })
+    }
 
 }
