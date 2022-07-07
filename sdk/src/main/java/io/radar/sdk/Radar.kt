@@ -228,14 +228,19 @@ object Radar {
      */
      interface RadarSendEventCallback {
         /**
-         * Called when a request to send a custom event succeeds, fails, or times out. Receives the request status and, if successful, the event.
+         * Called when a request to send a custom event succeeds, fails, or times out. Receives the request status and, if successful, the user's location, an array of the events generated, and the user.
          *
          * @param[status] RadarStatus The request status.
-         * @param[event] RadarEvent? If successful, the event.
+         * @param[location] Location? If successful, the user's location.
+         * @param[events] Array<RadarEvent>? If successful, an array of the events generated, with the custom event at index 0.
+         * @param[user] RadarUser? If successful, the user.
+         *
          */
         fun onComplete(
             status: RadarStatus,
-            event: RadarEvent? = null
+            location: Location? = null,
+            events: Array<RadarEvent>? = null,
+            user: RadarUser? = null
         )
      }
 
@@ -2270,8 +2275,11 @@ object Radar {
 
                 apiClient.sendEvent(name, metadata, user, object : RadarApiClient.RadarSendEventApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
+                        val finalEvents = mutableListOf(events)
+                        finalEvents.add(0, event)
+
                         handler.post {
-                            callback.onComplete(status, event)
+                            callback.onComplete(status, location, finalEvents.toTypedArray(), user)
                         }
                     }
                 })
@@ -2289,10 +2297,10 @@ object Radar {
      * @param[block] A block callback
      */
     @JvmStatic
-    fun sendEvent(name: String, metadata: JSONObject?, block: (status: RadarStatus, event: RadarEvent?) -> Unit) {
+    fun sendEvent(name: String, metadata: JSONObject?, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
         sendEvent( name, metadata, object : RadarSendEventCallback {
-            override fun onComplete(status: RadarStatus, event: RadarEvent?) {
-                block(status, event)
+            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+                block(status, location, events, user)
             }
         })
     }
@@ -2327,8 +2335,11 @@ object Radar {
 
                 apiClient.sendEvent(name, metadata, user, object : RadarApiClient.RadarSendEventApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
+                        val finalEvents = mutableListOf(events)
+                        finalEvents.add(0, event)
+
                         handler.post {
-                            callback.onComplete(status, event)
+                            callback.onComplete(status, location, finalEvents.toTypedArray(), user)
                         }
                     }
                 })
@@ -2347,10 +2358,10 @@ object Radar {
      * @param[block] A block callback.
      */
     @JvmStatic
-    fun sendEvent(location: Location, name: String, metadata: JSONObject?, block: (status: RadarStatus, event: RadarEvent?) -> Unit) {
+    fun sendEvent(location: Location, name: String, metadata: JSONObject?, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
         sendEvent(location, name, metadata, object : RadarSendEventCallback {
-            override fun onComplete(status: RadarStatus, event: RadarEvent?) {
-                block(status, event)
+            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+                block(status, location, events, user)
             }
         })
     }
