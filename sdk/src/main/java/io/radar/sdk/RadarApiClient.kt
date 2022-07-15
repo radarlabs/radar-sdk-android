@@ -975,8 +975,7 @@ internal class RadarApiClient(
 
             params.putOpt("type", name)
             params.putOpt("metadata", metadata)
-            // user object returned from /track
-            params.putOpt("user", user?.toJson())
+
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
