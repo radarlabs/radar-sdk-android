@@ -2275,6 +2275,14 @@ object Radar {
 
                 apiClient.sendEvent(name, metadata, user, object : RadarApiClient.RadarSendEventApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
+                        if (status != RadarStatus.SUCCESS) {
+                            handler.post {
+                                callback.onComplete(status)
+                            }
+
+                            return
+                        }
+
                         val finalEvents = mutableListOf(events)
                         finalEvents.add(0, event)
 
@@ -2290,7 +2298,7 @@ object Radar {
     /**
      * Sends a custom event.
      *
-     * @see [](https//radar.io/documentation/api#send-event)
+     * @see [](https//radar.io/documentation/api#create-a-custom-event)
      *
      * @param[name] The name of the event.
      * @param[metadata] The metadata associated with the event.
@@ -2308,7 +2316,7 @@ object Radar {
     /**
      * Sends a custom event with a manually provided location.
      *
-     * @see [](https://radar.io/documentation/api#send-event)
+     * @see [](https://radar.io/documentation/api#create-a-custom-event)
      *
      * @param[name] The name of the event.
      * @param[location] The location of the event.
@@ -2335,6 +2343,14 @@ object Radar {
 
                 apiClient.sendEvent(name, metadata, user, object : RadarApiClient.RadarSendEventApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
+                        if (status != RadarStatus.SUCCESS) {
+                            handler.post {
+                                callback.onComplete(status)
+                            }
+
+                            return
+                        }
+
                         val finalEvents = mutableListOf(events)
                         finalEvents.add(0, event)
 
@@ -2350,7 +2366,7 @@ object Radar {
     /**
      * Sends a custom event with a manually provided location.
      *
-     * @see [](https://radar.io/documentation/api#send-event)
+     * @see [](https://radar.io/documentation/api#create-a-custom-event)
      *
      * @param[name] The name of the event.
      * @param[location] The location of the event.
