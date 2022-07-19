@@ -158,6 +158,24 @@ class MainActivity : AppCompatActivity() {
         ) { status, matrix ->
             Log.v("example", "Matrix: status = $status; matrix[0][0].duration.text = ${matrix?.routeBetween(0, 0)?.duration?.text}; matrix[0][1].duration.text = ${matrix?.routeBetween(0, 1)?.duration?.text}; matrix[1][0].duration.text = ${matrix?.routeBetween(1, 0)?.duration?.text};  matrix[1][1].duration.text = ${matrix?.routeBetween(1, 1)?.duration?.text}")
         }
+
+        Radar.sendEvent(
+            "app_open_android",
+            null
+        ) { status, location, events, user ->
+            Log.v("example", "Custom event: status = $status; location = $location; events = $events; user = $user")
+        }
+
+        // Send custom event with manual location
+        Radar.getLocation { status, location, stopped ->
+            Radar.sendEvent(
+                "app_open_android_manual",
+                $location,
+                {"foo": "bar"}
+            ) { status, location, events, user ->
+                Log.v("example", "Custom event: status = $status; location = $location; events = $events; user = $user")
+            }
+        }
     }
 
 }
