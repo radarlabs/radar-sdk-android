@@ -97,50 +97,51 @@ class RadarEvent(
      * The types for events.
      */
     enum class RadarEventType {
+        // These strings should match the values (and order) of the server's event constants.
         /** Unknown */
         UNKNOWN,
         /** `user.entered_geofence` */
         USER_ENTERED_GEOFENCE,
         /** `user.exited_geofence` */
         USER_EXITED_GEOFENCE,
+        /** `user.dwelled_in_geofence` */
+        USER_DWELLED_IN_GEOFENCE,
         /** `user.entered_place` */
         USER_ENTERED_PLACE,
         /** `user.exited_place` */
         USER_EXITED_PLACE,
-        /** `user.nearby_place_chain` */
-        USER_NEARBY_PLACE_CHAIN,
         /** `user.entered_region_country` */
         USER_ENTERED_REGION_COUNTRY,
         /** `user.exited_region_country` */
         USER_EXITED_REGION_COUNTRY,
-        /** `user.entered_region_state` */
-        USER_ENTERED_REGION_STATE,
-        /** `user.exited_region_state` */
-        USER_EXITED_REGION_STATE,
         /** `user.entered_region_dma` */
         USER_ENTERED_REGION_DMA,
         /** `user.exited_region_dma` */
         USER_EXITED_REGION_DMA,
-        /** `user.started_trip` */
-        USER_STARTED_TRIP,
-        /** `user.updated_trip` */
-        USER_UPDATED_TRIP,
-        /** `user.approaching_trip_destination` */
-        USER_APPROACHING_TRIP_DESTINATION,
-        /** `user.arrived_at_trip_destination` */
-        USER_ARRIVED_AT_TRIP_DESTINATION,
-        /** `user.stopped_trip` */
-        USER_STOPPED_TRIP,
-        /** `user.entered_beacon` */
-        USER_ENTERED_BEACON,
-        /** `user.exited_beacon` */
-        USER_EXITED_BEACON,
+        /** `user.entered_region_state` */
+        USER_ENTERED_REGION_STATE,
+        /** `user.exited_region_state` */
+        USER_EXITED_REGION_STATE,
         /** `user.entered_region_postal_code` */
         USER_ENTERED_REGION_POSTAL_CODE,
         /** `user.exited_region_postal_code` */
         USER_EXITED_REGION_POSTAL_CODE,
-        /** `user.dwelled_in_geofence` */
-        USER_DWELLED_IN_GEOFENCE
+        /** `user.nearby_place_chain` */
+        USER_NEARBY_PLACE_CHAIN,
+        /** `user.entered_beacon` */
+        USER_ENTERED_BEACON,
+        /** `user.exited_beacon` */
+        USER_EXITED_BEACON,
+        /** `user.started_trip` */
+        USER_STARTED_TRIP,
+        /** `user.updated_trip` */
+        USER_UPDATED_TRIP,
+        /** `user.stopped_trip` */
+        USER_STOPPED_TRIP,
+        /** `user.approaching_trip_destination` */
+        USER_APPROACHING_TRIP_DESTINATION,
+        /** `user.arrived_at_trip_destination` */
+        USER_ARRIVED_AT_TRIP_DESTINATION,
     }
 
     /**
@@ -199,28 +200,29 @@ class RadarEvent(
             val createdAt = RadarUtils.isoStringToDate(obj.optString(FIELD_CREATED_AT)) ?: Date()
             val actualCreatedAt = RadarUtils.isoStringToDate(obj.optString(FIELD_ACTUAL_CREATED_AT)) ?: Date()
             val live = obj.optBoolean(FIELD_LIVE)
+            // These strings should match the values (and order) of the server's event constants.
             val type = when (obj.optString(FIELD_TYPE)) {
                 "user.entered_geofence" -> USER_ENTERED_GEOFENCE
                 "user.exited_geofence" -> USER_EXITED_GEOFENCE
+                "user.dwelled_in_geofence" -> USER_DWELLED_IN_GEOFENCE
                 "user.entered_place" -> USER_ENTERED_PLACE
                 "user.exited_place" -> USER_EXITED_PLACE
-                "user.nearby_place_chain" -> USER_NEARBY_PLACE_CHAIN
                 "user.entered_region_country" -> USER_ENTERED_REGION_COUNTRY
                 "user.exited_region_country" -> USER_EXITED_REGION_COUNTRY
-                "user.entered_region_state" -> USER_ENTERED_REGION_STATE
-                "user.exited_region_state" -> USER_EXITED_REGION_STATE
                 "user.entered_region_dma" -> USER_ENTERED_REGION_DMA
                 "user.exited_region_dma" -> USER_EXITED_REGION_DMA
-                "user.started_trip" -> USER_STARTED_TRIP
-                "user.updated_trip" -> USER_UPDATED_TRIP
-                "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
-                "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
-                "user.stopped_trip" -> USER_STOPPED_TRIP
-                "user.entered_beacon" -> USER_ENTERED_BEACON
-                "user.exited_beacon" -> USER_EXITED_BEACON
+                "user.entered_region_state" -> USER_ENTERED_REGION_STATE
+                "user.exited_region_state" -> USER_EXITED_REGION_STATE
                 "user.entered_region_postal_code" -> USER_ENTERED_REGION_POSTAL_CODE
                 "user.exited_region_postal_code" -> USER_EXITED_REGION_POSTAL_CODE
-                "user.dwelled_in_geofence" -> USER_DWELLED_IN_GEOFENCE
+                "user.nearby_place_chain" -> USER_NEARBY_PLACE_CHAIN
+                "user.entered_beacon" -> USER_ENTERED_BEACON
+                "user.exited_beacon" -> USER_EXITED_BEACON
+                "user.started_trip" -> USER_STARTED_TRIP
+                "user.updated_trip" -> USER_UPDATED_TRIP
+                "user.stopped_trip" -> USER_STOPPED_TRIP
+                "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
+                "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
                 else -> UNKNOWN
             }
             val geofence = RadarGeofence.fromJson(obj.optJSONObject(FIELD_GEOFENCE))
@@ -286,27 +288,28 @@ class RadarEvent(
         @JvmStatic
         fun stringForType(type: RadarEventType): String? {
             return when (type) {
+                // These strings should match the values (and order) of the server's event constants.
                 USER_ENTERED_GEOFENCE -> "user.entered_geofence"
                 USER_EXITED_GEOFENCE -> "user.exited_geofence"
+                USER_DWELLED_IN_GEOFENCE -> "user.dwelled_in_geofence"
                 USER_ENTERED_PLACE -> "user.entered_place"
                 USER_EXITED_PLACE -> "user.exited_place"
-                USER_NEARBY_PLACE_CHAIN -> "user.nearby_place_chain"
                 USER_ENTERED_REGION_COUNTRY -> "user.entered_region_country"
                 USER_EXITED_REGION_COUNTRY -> "user.exited_region_country"
-                USER_ENTERED_REGION_STATE -> "user.entered_region_state"
-                USER_EXITED_REGION_STATE -> "user.exited_region_state"
                 USER_ENTERED_REGION_DMA -> "user.entered_region_dma"
                 USER_EXITED_REGION_DMA -> "user.exited_region_dma"
-                USER_STARTED_TRIP -> "user.started_trip"
-                USER_UPDATED_TRIP -> "user.updated_trip"
-                USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
-                USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
-                USER_STOPPED_TRIP -> "user.stopped_trip"
-                USER_ENTERED_BEACON -> "user.entered_beacon"
-                USER_EXITED_BEACON -> "user.exited_beacon"
+                USER_ENTERED_REGION_STATE -> "user.entered_region_state"
+                USER_EXITED_REGION_STATE -> "user.exited_region_state"
                 USER_ENTERED_REGION_POSTAL_CODE -> "user.entered_region_postal_code"
                 USER_EXITED_REGION_POSTAL_CODE -> "user.exited_region_postal_code"
-                USER_DWELLED_IN_GEOFENCE -> "user.dwelled_in_geofence"
+                USER_NEARBY_PLACE_CHAIN -> "user.nearby_place_chain"
+                USER_ENTERED_BEACON -> "user.entered_beacon"
+                USER_EXITED_BEACON -> "user.exited_beacon"
+                USER_STARTED_TRIP -> "user.started_trip"
+                USER_UPDATED_TRIP -> "user.updated_trip"
+                USER_STOPPED_TRIP -> "user.stopped_trip"
+                USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
+                USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
                 else -> null
             }
         }
