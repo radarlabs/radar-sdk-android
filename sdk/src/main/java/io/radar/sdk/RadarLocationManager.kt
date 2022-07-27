@@ -23,8 +23,8 @@ internal class RadarLocationManager(
     private val apiClient: RadarApiClient,
     private val logger: RadarLogger,
     private val batteryManager: RadarBatteryManager,
+    provider: Radar.RadarLocationServicesProvider,
     internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper(),
-    provider: Radar.RadarLocationServicesProvider
 ) {
 
     @SuppressLint("VisibleForTests")
