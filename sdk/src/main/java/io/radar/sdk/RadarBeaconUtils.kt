@@ -18,7 +18,7 @@ internal object RadarBeaconUtils {
     private val EDDYSTONE_SERVICE_UUID = ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB")
     private val HEX = "0123456789abcdef".toCharArray()
 
-    fun getScanFilterForBeaconUUID(beacon: RadarBeacon): ScanFilter? {
+    fun getScanFilterForBeacon(beacon: RadarBeacon): ScanFilter? {
         if (beacon.type == RadarBeacon.RadarBeaconType.EDDYSTONE) {
             val uid = beacon.uuid
             val identifier = beacon.major
@@ -69,7 +69,7 @@ internal object RadarBeaconUtils {
         return null
     }
 
-    fun getScanFilterForBeaconUUID(beaconUUID: String): ScanFilter? {
+    fun getScanFilterForBeacon(beaconUUID: String): ScanFilter? {
         val uuid = UUID.fromString(beaconUUID.lowercase())
 
         val manufacturerData = ByteBuffer.allocate(23)
