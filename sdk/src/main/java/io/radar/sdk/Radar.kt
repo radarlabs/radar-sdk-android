@@ -332,6 +332,16 @@ object Radar {
         METRIC
     }
 
+    /**
+     * The location services providers.
+     */
+    enum class RadarLocationServicesProvider {
+        /** Google Play Services Location (default) */
+        GOOGLE,
+        /** Huawei Mobile Services Location */
+        HUAWEI
+    }
+
     internal var initialized = false
     private lateinit var context: Context
     private lateinit var handler: Handler
@@ -364,9 +374,10 @@ object Radar {
      * @param[context] The context
      * @param[publishableKey] Your publishable API key
      * @param[receiver] An optional receiver for the client-side delivery of events
+     * @param[provider] An optional receiver for the client-side delivery of events
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null) {
+    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE) {
         if (context == null) {
             return
         }
@@ -405,7 +416,7 @@ object Radar {
             }
         }
         if (!this::locationManager.isInitialized) {
-            this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager)
+            this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager, provider)
             this.locationManager.updateTracking()
         }
 

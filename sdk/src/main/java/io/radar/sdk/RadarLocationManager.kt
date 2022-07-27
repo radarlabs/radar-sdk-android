@@ -8,6 +8,7 @@ import android.content.Intent
 import android.location.Location
 import android.os.Build
 import io.radar.sdk.Radar.RadarLocationCallback
+import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.RadarApiClient.RadarTrackApiCallback
@@ -22,11 +23,12 @@ internal class RadarLocationManager(
     private val apiClient: RadarApiClient,
     private val logger: RadarLogger,
     private val batteryManager: RadarBatteryManager,
-    internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper()
+    internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper(),
+    provider: Radar.RadarLocationServicesProvider
 ) {
 
     @SuppressLint("VisibleForTests")
-    internal var locationClient: RadarAbstractLocationClient = RadarGoogleLocationClient(context, logger) // TODO set based on build setting
+    internal var locationClient: RadarAbstractLocationClient = if (provider == HUAWEI) RadarHuaweiLocationClient(context, logger) else RadarGoogleLocationClient(context, logger)
     private var started = false
     private var startedDesiredAccuracy = RadarTrackingOptionsDesiredAccuracy.NONE
     private var startedInterval = 0
