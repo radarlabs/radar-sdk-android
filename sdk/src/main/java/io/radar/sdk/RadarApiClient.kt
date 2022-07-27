@@ -53,7 +53,7 @@ internal class RadarApiClient(
     }
 
     interface RadarSearchBeaconsApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, beacons: Array<RadarBeacon>? = null, beaconUUIDs: Array<String>? = null)
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, beacons: Array<RadarBeacon>? = null, uuids: Array<String>? = null, uids: Array<String>? = null)
     }
 
     interface RadarGeocodeApiCallback {
@@ -597,13 +597,19 @@ internal class RadarApiClient(
                     RadarBeacon.fromJson(beaconsArr)
                 }
 
-                val beaconUUIDs = res.optJSONObject("meta")?.optJSONObject("settings")?.optJSONObject("beacons")?.optJSONArray("uuids")?.let { beaconUUIDs ->
-                    Array(beaconUUIDs.length()) { index ->
-                        beaconUUIDs.getString(index)
+                val uuids = res.optJSONObject("meta")?.optJSONObject("settings")?.optJSONObject("beacons")?.optJSONArray("uuids")?.let { uuids ->
+                    Array(uuids.length()) { index ->
+                        uuids.getString(index)
                     }.filter { uuid -> uuid.isNotEmpty() }.toTypedArray()
                 }
 
-                callback.onComplete(RadarStatus.SUCCESS, res, beacons, beaconUUIDs)
+                val uids = res.optJSONObject("meta")?.optJSONObject("settings")?.optJSONObject("beacons")?.optJSONArray("uids")?.let { uids ->
+                    Array(uids.length()) { index ->
+                        uids.getString(index)
+                    }.filter { uid -> uid.isNotEmpty() }.toTypedArray()
+                }
+
+                callback.onComplete(RadarStatus.SUCCESS, res, beacons, uuids, uids)
             }
         })
     }

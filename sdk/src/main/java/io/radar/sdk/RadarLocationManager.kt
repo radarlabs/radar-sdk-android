@@ -604,15 +604,15 @@ internal class RadarLocationManager(
         if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             && permissionsHelper.bluetoothPermissionsGranted(context)) {
             Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, beaconUUIDs: Array<String>?) {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
                     if (status != RadarStatus.SUCCESS || beacons == null) {
                         callTrackApi(null)
 
                         return
                     }
 
-                    if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
-                        Radar.beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
+                    if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                        Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
                     } else {
                         Radar.beaconManager.startMonitoringBeacons(beacons)
                     }
