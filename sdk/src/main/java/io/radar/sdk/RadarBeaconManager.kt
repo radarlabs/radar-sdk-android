@@ -462,8 +462,8 @@ internal class RadarBeaconManager(
             return
         }
 
-        this.beaconUUIDs = beaconUUIDs ?: arrayOf<String>()
-        this.beaconUIDs = beaconUUIDs ?: arrayOf<String>()
+        this.beaconUUIDs = beaconUUIDs ?: arrayOf()
+        this.beaconUIDs = beaconUIDs ?: arrayOf()
         this.started = true
 
         val scanFilters = mutableListOf<ScanFilter>()
