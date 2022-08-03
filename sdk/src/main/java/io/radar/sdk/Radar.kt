@@ -2283,8 +2283,14 @@ object Radar {
                             return
                         }
 
-                        val finalEvents = mutableListOf(events)
-                        finalEvents.add(0, event)
+                        val finalEvents: MutableList<RadarEvent>
+
+                        if (events != null && event != null) {
+                            finalEvents = events.toMutableList()
+                            finalEvents.add(0, event)
+                        } else {
+                            finalEvents = mutableListOf(event!!)
+                        }
 
                         handler.post {
                             callback.onComplete(status, location, finalEvents.toTypedArray(), user)
@@ -2316,7 +2322,7 @@ object Radar {
     /**
      * Sends a custom event with a manually provided location.
      *
-     * @see [](https://radar.io/documentation/api#create-a-custom-event)
+     * @see [](https://radar.io/documentation/api#send-a-custom-event)
      *
      * @param[name] The name of the event.
      * @param[location] The location of the event.
@@ -2324,7 +2330,7 @@ object Radar {
      * @param[callback] A callback.
      */
     @JvmStatic
-    fun sendEvent(location: Location, name: String, metadata: JSONObject?, callback: RadarSendEventCallback) {
+    fun sendEvent(name: String, location: Location, metadata: JSONObject?, callback: RadarSendEventCallback) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2351,8 +2357,14 @@ object Radar {
                             return
                         }
 
-                        val finalEvents = mutableListOf(events)
-                        finalEvents.add(0, event)
+                        val finalEvents: MutableList<RadarEvent>
+
+                        if (events != null && event != null) {
+                            finalEvents = events.toMutableList()
+                            finalEvents.add(0, event)
+                        } else {
+                            finalEvents = mutableListOf(event!!)
+                        }
 
                         handler.post {
                             callback.onComplete(status, location, finalEvents.toTypedArray(), user)
@@ -2366,7 +2378,7 @@ object Radar {
     /**
      * Sends a custom event with a manually provided location.
      *
-     * @see [](https://radar.io/documentation/api#create-a-custom-event)
+     * @see [](https://radar.io/documentation/api#send-a-custom-event)
      *
      * @param[name] The name of the event.
      * @param[location] The location of the event.
@@ -2374,8 +2386,8 @@ object Radar {
      * @param[block] A block callback.
      */
     @JvmStatic
-    fun sendEvent(location: Location, name: String, metadata: JSONObject?, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        sendEvent(location, name, metadata, object : RadarSendEventCallback {
+    fun sendEvent(name: String, location: Location, metadata: JSONObject?, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+        sendEvent(name, location, metadata, object : RadarSendEventCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
             }
