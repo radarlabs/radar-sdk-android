@@ -38,6 +38,11 @@ class RadarEvent(
     val type: RadarEventType,
 
     /**
+     * The custom type of the event. This will only be set if the `type` is `CUSTOM`.
+     */
+    val customType: String?,
+
+    /**
      * The geofence for which the event was generated. May be `null` for non-geofence events.
      */
     val geofence: RadarGeofence?,
@@ -100,6 +105,11 @@ class RadarEvent(
         // These strings should match the values (and order) of the server's event constants.
         /** Unknown */
         UNKNOWN,
+        /**
+         * A custom type, created by calling `Radar.sendEvent()`. The custom value will be assigned
+         * to the `customType` property.
+         */
+        CUSTOM,
         /** `user.entered_geofence` */
         USER_ENTERED_GEOFENCE,
         /** `user.exited_geofence` */
@@ -176,6 +186,7 @@ class RadarEvent(
         private const val FIELD_ACTUAL_CREATED_AT = "actualCreatedAt"
         private const val FIELD_LIVE = "live"
         private const val FIELD_TYPE = "type"
+        private const val FIELD_CUSTOM_TYPE = "customType"
         private const val FIELD_GEOFENCE = "geofence"
         private const val FIELD_PLACE = "place"
         private const val FIELD_REGION = "region"
@@ -223,7 +234,12 @@ class RadarEvent(
                 "user.stopped_trip" -> USER_STOPPED_TRIP
                 "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
                 "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
-                else -> UNKNOWN
+                else -> CUSTOM
+            }
+            var customType: String? = null
+
+            if (type == CUSTOM) {
+                customType = obj.optString(FIELD_TYPE)
             }
             val geofence = RadarGeofence.fromJson(obj.optJSONObject(FIELD_GEOFENCE))
             val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
@@ -255,10 +271,12 @@ class RadarEvent(
                 time = createdAt.time
             }
 
-            return RadarEvent(
-                id, createdAt, actualCreatedAt, live, type, geofence, place, region, beacon, trip,
+            val event = RadarEvent(
+                id, createdAt, actualCreatedAt, live, type, customType, geofence, place, region, beacon, trip,
                 alternatePlaces, verifiedPlace, verification, confidence, duration, location
             )
+
+            return event
         }
 
         @JvmStatic
@@ -322,6 +340,7 @@ class RadarEvent(
         obj.putOpt(FIELD_ACTUAL_CREATED_AT, RadarUtils.dateToISOString(this.actualCreatedAt))
         obj.putOpt(FIELD_LIVE, this.live)
         obj.putOpt(FIELD_TYPE, stringForType(this.type))
+        obj.putOpt(FIELD_CUSTOM_TYPE, this.customType)
         obj.putOpt(FIELD_GEOFENCE, this.geofence?.toJson())
         obj.putOpt(FIELD_PLACE, this.place?.toJson())
         obj.putOpt(FIELD_CONFIDENCE, this.confidence)
