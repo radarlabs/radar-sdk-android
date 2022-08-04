@@ -55,7 +55,7 @@ android {
             includeAndroidResources = true
         }
     }
-    lint {
+    lintOptions {
         warningsAsErrors true
     }
 }
