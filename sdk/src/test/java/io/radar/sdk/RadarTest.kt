@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.content.Context
 import android.location.Location
+import android.net.Uri
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -13,6 +14,7 @@ import org.junit.Before
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
+import java.net.URL
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -1096,6 +1098,9 @@ class RadarTest {
     @Test
     fun test_Radar_reverseGeocode_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
+        locationClientMock.mockLocation = null
+
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
         val mockLocation = Location("RadarSDK")
         mockLocation.latitude = 40.78382
         mockLocation.longitude = -73.97536
@@ -1276,6 +1281,78 @@ class RadarTest {
 
         RadarSettings.removeRemoteTrackingOptions(context)
         assertEquals(RadarTrackingOptions.CONTINUOUS, RadarSettings.getTrackingOptions(context))
+    }
+
+    private fun setUpSendEventTest() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+
+        val host = RadarSettings.getHost(context)
+        val trackUri = Uri.parse(host)
+            .buildUpon()
+            .appendEncodedPath("v1/track")
+            .build()
+        val trackUrl = URL(trackUri.toString())
+        apiHelperMock.addMockResponse(trackUrl, RadarTestUtils.jsonObjectFromResource("/track.json")!!)
+
+        val eventUri = Uri.parse(host)
+            .buildUpon()
+            .appendEncodedPath("v1/events")
+            .build()
+        val eventUrl = URL(eventUri.toString())
+        apiHelperMock.addMockResponse(eventUrl, RadarTestUtils.jsonObjectFromResource("/custom_event.json")!!)
+
+
+    }
+
+    @Test
+    fun test_Radar_sendEventWithBlock_success() {
+        setUpSendEventTest()
+
+        val customType = "test_event" // has to match the property in the custom_event.json file!
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackEvents: Array<RadarEvent>? = null
+
+         Radar.sendEvent(customType, null) { status, location, events, user ->
+            callbackStatus = status
+            callbackEvents = events
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertEquals(customType, callbackEvents?.first()?.customType)
+    }
+
+    @Test
+    fun test_Radar_sendEventWithLocationAndBlock_success() {
+        setUpSendEventTest()
+
+        val customType = "test_event" // has to match the property in the custom_event.json file!
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackEvents: Array<RadarEvent>? = null
+
+        Radar.sendEvent(customType, locationClientMock.mockLocation!!, null) { status, location, events, user ->
+            callbackStatus = status
+            callbackEvents = events
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertEquals(customType, callbackEvents?.first()?.customType)
     }
 
 }

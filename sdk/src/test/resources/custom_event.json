@@ -1,0 +1,30 @@
+{
+    "meta": {
+        "code": 200
+    },
+    "event": {
+        "_id": "userId",
+        "actualCreatedAt": "2022-07-26T00:58:17.701Z",
+        "confidence": 3,
+        "createdAt": "2022-07-26T00:58:17.701Z",
+        "custom": 1,
+        "deviceMake": "Apple",
+        "deviceModel": "iPhone14,5",
+        "deviceOS": "15.5",
+        "deviceType": "iOS",
+        "foreground": 1,
+        "live": 0,
+        "locationAccuracyAuthorization": "FULL",
+        "locationAuthorization": "GRANTED_BACKGROUND",
+        "sdkVersion": "3.5.1",
+        "stopped": 1,
+        "type": "test_event",
+        "user": {
+            "_id": "userId",
+            "deviceId": "deviceId",
+            "installId": "installId",
+            "sdkVersion": "3.5.1",
+            "userId": "userId"
+        }
+    }
+}
