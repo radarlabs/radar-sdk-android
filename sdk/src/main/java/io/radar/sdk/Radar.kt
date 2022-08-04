@@ -2292,6 +2292,10 @@ object Radar {
                             finalEvents = mutableListOf(event!!)
                         }
 
+                        // The events are returned in the completion handler, but they're also
+                        // sent back via the RadarReciever.
+                        receiver?.onEventsReceived(context, finalEvents.toTypedArray(), user)
+
                         handler.post {
                             callback.onComplete(status, location, finalEvents.toTypedArray(), user)
                         }
@@ -2365,6 +2369,10 @@ object Radar {
                         } else {
                             finalEvents = mutableListOf(event!!)
                         }
+
+                        // The events are returned in the completion handler, but they're also
+                        // sent back via the RadarReciever.
+                        receiver?.onEventsReceived(context, finalEvents.toTypedArray(), user)
 
                         handler.post {
                             callback.onComplete(status, location, finalEvents.toTypedArray(), user)
