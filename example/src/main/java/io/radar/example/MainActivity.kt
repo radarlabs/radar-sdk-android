@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
         Radar.searchPlaces(
             1000,
             arrayOf("walmart"),
+            mapOf("orderPlaced" to "true"),
             null,
             null,
             10

@@ -447,6 +447,7 @@ internal class RadarApiClient(
         location: Location,
         radius: Int,
         chains: Array<String>?,
+        chainMetadata: Map<String, String>?,
         categories: Array<String>?,
         groups: Array<String>?,
         limit: Int?,
@@ -471,6 +472,10 @@ internal class RadarApiClient(
         }
         if (groups?.isNotEmpty() == true) {
             queryParams.append("&groups=${groups.joinToString(separator = ",")}")
+        }
+
+        chainMetadata?.entries?.forEach {
+            queryParams.append("&chainMetadata[:${it.key}]=:\"${it.value}\"");
         }
 
         val host = RadarSettings.getHost(context)
