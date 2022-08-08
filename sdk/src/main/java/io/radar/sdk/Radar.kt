@@ -2251,12 +2251,12 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
-     * @param[name] The name of the event.
+     * @param[customType] The name of the event.
      * @param[metadata] The metadata associated with the event.
      * @param[callback] A callback.
      */
     @JvmStatic
-    fun sendEvent(name: String, metadata: JSONObject?, callback: RadarSendEventCallback) {
+    fun sendEvent(customType: String, metadata: JSONObject?, callback: RadarSendEventCallback) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2273,7 +2273,7 @@ object Radar {
                     return
                 }
 
-                apiClient.sendEvent(name, metadata, user, object : RadarApiClient.RadarSendEventApiCallback {
+                apiClient.sendEvent(customType, metadata, user, object : RadarApiClient.RadarSendEventApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
                         if (status != RadarStatus.SUCCESS) {
                             handler.post {
@@ -2310,13 +2310,13 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
-     * @param[name] The name of the event.
+     * @param[customType] The name of the event.
      * @param[metadata] The metadata associated with the event.
      * @param[block] A block callback
      */
     @JvmStatic
-    fun sendEvent(name: String, metadata: JSONObject?, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        sendEvent( name, metadata, object : RadarSendEventCallback {
+    fun sendEvent(customType: String, metadata: JSONObject?, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+        sendEvent(customType, metadata, object : RadarSendEventCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
             }
@@ -2328,13 +2328,13 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
-     * @param[name] The name of the event.
+     * @param[customType] The name of the event.
      * @param[location] The location of the event.
      * @param[metadata] The metadata associated with the event.
      * @param[callback] A callback.
      */
     @JvmStatic
-    fun sendEvent(name: String, location: Location, metadata: JSONObject?, callback: RadarSendEventCallback) {
+    fun sendEvent(customType: String, location: Location, metadata: JSONObject?, callback: RadarSendEventCallback) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2351,7 +2351,7 @@ object Radar {
                     return
                 }
 
-                apiClient.sendEvent(name, metadata, user, object : RadarApiClient.RadarSendEventApiCallback {
+                apiClient.sendEvent(customType, metadata, user, object : RadarApiClient.RadarSendEventApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
                         if (status != RadarStatus.SUCCESS) {
                             handler.post {
@@ -2388,14 +2388,14 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
-     * @param[name] The name of the event.
+     * @param[customType] The name of the event.
      * @param[location] The location of the event.
      * @param[metadata] The metadata associated with the event.
      * @param[block] A block callback.
      */
     @JvmStatic
-    fun sendEvent(name: String, location: Location, metadata: JSONObject?, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        sendEvent(name, location, metadata, object : RadarSendEventCallback {
+    fun sendEvent(customType: String, location: Location, metadata: JSONObject?, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+        sendEvent(customType, location, metadata, object : RadarSendEventCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
             }
