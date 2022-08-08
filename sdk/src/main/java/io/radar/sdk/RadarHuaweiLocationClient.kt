@@ -5,7 +5,13 @@ import android.app.PendingIntent
 import android.content.Context
 import android.location.Location
 import android.os.Looper
-import com.huawei.hms.location.*
+import com.huawei.hms.location.FusedLocationProviderClient
+import com.huawei.hms.location.Geofence
+import com.huawei.hms.location.GeofenceRequest
+import com.huawei.hms.location.GeofenceService
+import com.huawei.hms.location.LocationCallback
+import com.huawei.hms.location.LocationRequest
+import com.huawei.hms.location.LocationResult
 
 @SuppressLint("MissingPermission")
 internal class RadarHuaweiLocationClient(
