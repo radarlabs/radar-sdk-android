@@ -112,8 +112,8 @@ internal object RadarBeaconUtils {
 
     fun getBeacon(result: ScanResult, scanRecord: ScanRecord): RadarBeacon? {
         val bytes = scanRecord.bytes
-
-        val eddystone = scanRecord.serviceUuids.contains(EDDYSTONE_SERVICE_UUID)
+        val serviceUuids = scanRecord.serviceUuids
+        val eddystone = serviceUuids != null && serviceUuids.contains(EDDYSTONE_SERVICE_UUID)
 
         if (eddystone) {
             val hex = this.toHex(bytes)
