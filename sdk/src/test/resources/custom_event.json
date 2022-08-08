@@ -16,6 +16,9 @@
         "live": 0,
         "locationAccuracyAuthorization": "FULL",
         "locationAuthorization": "GRANTED_BACKGROUND",
+        "metadata": {
+            "foo": "bar"
+        },
         "sdkVersion": "3.5.1",
         "stopped": 1,
         "type": "test_event",

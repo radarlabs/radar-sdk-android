@@ -1,6 +1,5 @@
 package io.radar.sdk.model
 
-import android.annotation.SuppressLint
 import android.location.Location
 import io.radar.sdk.RadarUtils
 import io.radar.sdk.model.RadarEvent.RadarEventType.*
@@ -95,7 +94,12 @@ class RadarEvent(
     /**
      * The location of the event.
      */
-    val location: Location
+    val location: Location,
+
+    /**
+     * The metadata of the event. Present on custom events only.
+     */
+    val metadata: JSONObject?
 ) {
 
     /**
@@ -200,6 +204,7 @@ class RadarEvent(
         private const val FIELD_LOCATION = "location"
         private const val FIELD_COORDINATES = "coordinates"
         private const val FIELD_LOCATION_ACCURACY = "locationAccuracy"
+        private const val FIELD_METADATA = "metadata"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarEvent? {
@@ -271,9 +276,11 @@ class RadarEvent(
                 time = createdAt.time
             }
 
-            val event = RadarEvent(
+            val metadata = obj.optJSONObject(FIELD_METADATA)
+
+            val  event = RadarEvent(
                 id, createdAt, actualCreatedAt, live, type, customType, geofence, place, region, beacon, trip,
-                alternatePlaces, verifiedPlace, verification, confidence, duration, location
+                alternatePlaces, verifiedPlace, verification, confidence, duration, location, metadata
             )
 
             return event
@@ -356,6 +363,8 @@ class RadarEvent(
         coordinatesArr.put(this.location.latitude)
         locationObj.putOpt("coordinates", coordinatesArr)
         obj.putOpt(FIELD_LOCATION, locationObj)
+        obj.putOpt(FIELD_METADATA, metadata)
+
         return obj
     }
 

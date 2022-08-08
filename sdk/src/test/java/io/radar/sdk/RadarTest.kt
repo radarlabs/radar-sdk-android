@@ -1319,8 +1319,10 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
         var callbackEvents: Array<RadarEvent>? = null
+        val metadata = JSONObject()
+        metadata.put("foo", "bar")
 
-         Radar.sendEvent(customType, null) { status, location, events, user ->
+        Radar.sendEvent(customType, metadata) { status, location, events, user ->
             callbackStatus = status
             callbackEvents = events
             latch.countDown()
@@ -1330,7 +1332,7 @@ class RadarTest {
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertEquals(customType, callbackEvents?.first()?.customType)
+        assertCustomEvent(callbackEvents, customType, metadata)
     }
 
     @Test
@@ -1341,6 +1343,8 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
         var callbackEvents: Array<RadarEvent>? = null
+        val metadata = JSONObject()
+        metadata.put("foo", "bar")
 
         Radar.sendEvent(customType, locationClientMock.mockLocation!!, null) { status, location, events, user ->
             callbackStatus = status
@@ -1352,7 +1356,22 @@ class RadarTest {
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertEquals(customType, callbackEvents?.first()?.customType)
+        assertCustomEvent(callbackEvents, customType, metadata)
+    }
+
+    private fun assertCustomEvent(
+        callbackEvents: Array<RadarEvent>?,
+        customType: String,
+        metadata: JSONObject
+    ) {
+        val firstEvent = callbackEvents?.first()
+        assertNotNull(firstEvent)
+        assertEquals(customType, firstEvent!!.customType)
+        assertNotNull(firstEvent!!.customType)
+
+        val returnedMetadata = firstEvent!!.metadata
+        assertNotNull(returnedMetadata)
+        assertEquals(metadata.get("foo"), returnedMetadata!!["foo"])
     }
 
 }
