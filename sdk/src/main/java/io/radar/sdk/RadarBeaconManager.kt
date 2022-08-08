@@ -34,6 +34,7 @@ internal class RadarBeaconManager(
     private var nearbyBeacons = mutableSetOf<RadarBeacon>()
     private var beacons = arrayOf<RadarBeacon>()
     private var beaconUUIDs = arrayOf<String>()
+    private var beaconUIDs = arrayOf<String>()
     private var scanCallback: ScanCallback? = null
     private val handler = Handler(Looper.getMainLooper())
 
@@ -113,7 +114,7 @@ internal class RadarBeaconManager(
             try {
                 logger.d("Building scan filter for monitoring | _id = ${beacon._id}")
 
-                scanFilter = RadarBeaconUtils.getScanFilter(beacon)
+                scanFilter = RadarBeaconUtils.getScanFilterForBeacon(beacon)
             } catch (e: Exception) {
                 logger.d("Error building scan filter for monitoring | _id = ${beacon._id}", e)
             }
@@ -148,7 +149,7 @@ internal class RadarBeaconManager(
         }
     }
 
-    fun startMonitoringBeaconUUIDs(beaconUUIDs: Array<String>) {
+    fun startMonitoringBeaconUUIDs(beaconUUIDs: Array<String>?, beaconUIDs: Array<String>?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
 
@@ -171,7 +172,13 @@ internal class RadarBeaconManager(
             return
         }
 
-        val newBeaconIdentifiers = beaconUUIDs.toSet()
+        val newBeaconIdentifiers = mutableSetOf<String>()
+        if (beaconUUIDs != null) {
+            newBeaconIdentifiers.addAll(beaconUUIDs)
+        }
+        if (beaconUIDs != null) {
+            newBeaconIdentifiers.addAll(beaconUIDs)
+        }
         if (monitoredBeaconIdentifiers == newBeaconIdentifiers) {
             logger.i("Already monitoring beacons")
 
@@ -180,8 +187,8 @@ internal class RadarBeaconManager(
 
         this.stopMonitoringBeacons()
 
-        if (beaconUUIDs.isEmpty()) {
-            logger.d("No beacon UUIDs to monitor")
+        if (beaconUUIDs.isNullOrEmpty() && beaconUIDs.isNullOrEmpty()) {
+            logger.d("No beacon UUIDs or UIDs to monitor")
 
             return
         }
@@ -190,20 +197,41 @@ internal class RadarBeaconManager(
 
         val scanFilters = mutableListOf<ScanFilter>()
 
-        for (beaconUUID in beaconUUIDs) {
-            var scanFilter: ScanFilter? = null
-            try {
-                logger.d("Building scan filter for monitoring | beaconUUID = $beaconUUID")
+        if (beaconUUIDs != null) {
+            for (beaconUUID in beaconUUIDs) {
+                var scanFilter: ScanFilter? = null
+                try {
+                    logger.d("Building scan filter for monitoring | beaconUUID = $beaconUUID")
 
-                scanFilter = RadarBeaconUtils.getScanFilter(beaconUUID)
-            } catch (e: Exception) {
-                logger.d("Error building scan filter for monitoring | beaconUUID = $beaconUUID", e)
+                    scanFilter = RadarBeaconUtils.getScanFilterForBeacon(beaconUUID)
+                } catch (e: Exception) {
+                    logger.d("Error building scan filter for monitoring | beaconUUID = $beaconUUID", e)
+                }
+
+                if (scanFilter != null) {
+                    logger.d("Starting monitoring beacon UUID | beaconUUID = $beaconUUID")
+
+                    scanFilters.add(scanFilter)
+                }
             }
+        }
 
-            if (scanFilter != null) {
-                logger.d("Starting monitoring beacon UUID | beaconUUID = $beaconUUID")
+        if (beaconUIDs != null) {
+            for (beaconUID in beaconUIDs) {
+                var scanFilter: ScanFilter? = null
+                try {
+                    logger.d("Building scan filter for monitoring | beaconUID = $beaconUID")
 
-                scanFilters.add(scanFilter)
+                    scanFilter = RadarBeaconUtils.getScanFilterForBeaconUID(beaconUID)
+                } catch (e: Exception) {
+                    logger.d("Error building scan filter for monitoring | beaconUID = $beaconUID", e)
+                }
+
+                if (scanFilter != null) {
+                    logger.d("Starting monitoring beacon UUID | beaconUID = $beaconUID")
+
+                    scanFilters.add(scanFilter)
+                }
             }
         }
 
@@ -321,13 +349,13 @@ internal class RadarBeaconManager(
             try {
                 logger.d("Building scan filter for ranging | _id = ${beacon._id}")
 
-                scanFilter = RadarBeaconUtils.getScanFilter(beacon)
+                scanFilter = RadarBeaconUtils.getScanFilterForBeacon(beacon)
             } catch (e: Exception) {
                 logger.d("Error building scan filter for ranging | _id = ${beacon._id}", e)
             }
 
             if (scanFilter != null) {
-                logger.d("Starting ranging beacon | _id = ${beacon._id}; uuid = ${beacon.uuid}; major = ${beacon.major}; minor = ${beacon.minor}")
+                logger.d("Starting ranging beacon | type = ${beacon.type}; _id = ${beacon._id}; uuid = ${beacon.uuid}; major = ${beacon.major}; minor = ${beacon.minor}")
 
                 scanFilters.add(scanFilter)
             }
@@ -383,7 +411,7 @@ internal class RadarBeaconManager(
         }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
 
-    fun rangeBeaconUUIDs(beaconUUIDs: Array<String>, callback: RadarBeaconCallback?) {
+    fun rangeBeaconUUIDs(beaconUUIDs: Array<String>?, beaconUIDs: Array<String>?, callback: RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
 
@@ -418,8 +446,8 @@ internal class RadarBeaconManager(
             return
         }
 
-        if (beaconUUIDs.isEmpty()) {
-            logger.d("No UUIDs to range")
+        if (beaconUUIDs.isNullOrEmpty() && beaconUIDs.isNullOrEmpty()) {
+            logger.d("No beacon UUIDs or UIDs to range")
 
             callback?.onComplete(RadarStatus.SUCCESS)
 
@@ -434,25 +462,47 @@ internal class RadarBeaconManager(
             return
         }
 
-        this.beaconUUIDs = beaconUUIDs
+        this.beaconUUIDs = beaconUUIDs ?: arrayOf()
+        this.beaconUIDs = beaconUIDs ?: arrayOf()
         this.started = true
 
         val scanFilters = mutableListOf<ScanFilter>()
 
-        for (beaconUUID in beaconUUIDs) {
-            var scanFilter: ScanFilter? = null
-            try {
-                logger.d("Building scan filter for ranging | beaconUUID = $beaconUUID")
+        if (beaconUUIDs != null) {
+            for (beaconUUID in beaconUUIDs) {
+                var scanFilter: ScanFilter? = null
+                try {
+                    logger.d("Building scan filter for ranging | beaconUUID = $beaconUUID")
 
-                scanFilter = RadarBeaconUtils.getScanFilter(beaconUUID)
-            } catch (e: Exception) {
-                logger.d("Error building scan filter for ranging | beaconUUID = $beaconUUID", e)
+                    scanFilter = RadarBeaconUtils.getScanFilterForBeacon(beaconUUID)
+                } catch (e: Exception) {
+                    logger.d("Error building scan filter for ranging | beaconUUID = $beaconUUID", e)
+                }
+
+                if (scanFilter != null) {
+                    logger.d("Starting ranging beacon UUID | beaconUUID = $beaconUUID")
+
+                    scanFilters.add(scanFilter)
+                }
             }
+        }
 
-            if (scanFilter != null) {
-                logger.d("Starting ranging beacon UUID | uuid = $beaconUUID")
+        if (beaconUIDs != null) {
+            for (beaconUID in beaconUIDs) {
+                var scanFilter: ScanFilter? = null
+                try {
+                    logger.d("Building scan filter for ranging | beaconUID = $beaconUID")
 
-                scanFilters.add(scanFilter)
+                    scanFilter = RadarBeaconUtils.getScanFilterForBeaconUID(beaconUID)
+                } catch (e: Exception) {
+                    logger.d("Error building scan filter for ranging | beaconUID = $beaconUID", e)
+                }
+
+                if (scanFilter != null) {
+                    logger.d("Starting ranging beacon UID | beaconUID = $beaconUID")
+
+                    scanFilters.add(scanFilter)
+                }
             }
         }
 
@@ -555,7 +605,7 @@ internal class RadarBeaconManager(
         logger.d("Handling scan result")
 
         result?.scanRecord?.let { scanRecord -> RadarBeaconUtils.getBeacon(result, scanRecord) }?.let { beacon ->
-            logger.d("Ranged beacon | beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+            logger.d("Ranged beacon | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
             nearbyBeacons.add(beacon)
         }

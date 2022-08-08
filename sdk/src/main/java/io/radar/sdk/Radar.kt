@@ -700,17 +700,17 @@ object Radar {
 
                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                        override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, beaconUUIDs: Array<String>?) {
+                        override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
                             if (status != RadarStatus.SUCCESS || beacons == null) {
                                 callTrackApi(null)
 
                                 return
                             }
 
-                            if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
-                                beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
+                            if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                                beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
-                                beaconManager.rangeBeaconUUIDs(beaconUUIDs, object : RadarBeaconCallback {
+                                beaconManager.rangeBeaconUUIDs(uuids, uids, object : RadarBeaconCallback {
                                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
                                         if (status != RadarStatus.SUCCESS || beacons == null) {
                                             callTrackApi(null)
