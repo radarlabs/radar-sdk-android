@@ -290,7 +290,7 @@ internal class RadarLocationManager(
                 radius = radius,
                 transitionExit = true,
                 transitionDwell = true,
-                loiteringDelay = options.stopDuration * 1000 + 10000
+                dwellDuration = options.stopDuration * 1000 + 10000
             )
 
             val geofenceRequest = RadarAbstractLocationClient.RadarAbstractGeofenceRequest(
@@ -342,7 +342,7 @@ internal class RadarLocationManager(
                         transitionEnter = true,
                         transitionExit = true,
                         transitionDwell = true,
-                        loiteringDelay = options.stopDuration * 1000 + 10000
+                        dwellDuration = options.stopDuration * 1000 + 10000
                     )
                     geofences.add(geofence)
 
