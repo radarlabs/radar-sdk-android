@@ -475,7 +475,7 @@ internal class RadarApiClient(
         }
 
         chainMetadata?.entries?.forEach {
-            queryParams.append("&chainMetadata[:${it.key}]=:\"${it.value}\"");
+            queryParams.append("&chainMetadata%5B${it.key}%5D=%22${it.value}%22");
         }
 
         val host = RadarSettings.getHost(context)

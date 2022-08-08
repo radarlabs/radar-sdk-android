@@ -768,7 +768,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.searchPlaces(1000, arrayOf("walmart"), null, null, 100) { status, _, _ ->
+        Radar.searchPlaces(1000, arrayOf("walmart"), null, null, null, 100) { status, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -787,7 +787,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
 
-        Radar.searchPlaces(1000, arrayOf("walmart"), null, null, 100) { status, _, _ ->
+        Radar.searchPlaces(1000, arrayOf("walmart"), null, null, null, 100) { status, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
@@ -815,7 +815,7 @@ class RadarTest {
         var callbackLocation: Location? = null
         var callbackPlaces: Array<RadarPlace>? = null
 
-        Radar.searchPlaces(1000, arrayOf("walmart"), null, null, 100) { status, location, places ->
+        Radar.searchPlaces(1000, arrayOf("walmart"), null, null, null, 100) { status, location, places ->
             callbackStatus = status
             callbackLocation = location
             callbackPlaces = places
@@ -846,7 +846,7 @@ class RadarTest {
         var callbackLocation: Location? = null
         var callbackPlaces: Array<RadarPlace>? = null
 
-        Radar.searchPlaces(mockLocation, 1000, arrayOf("walmart"), null, null, 100) { status, location, places ->
+        Radar.searchPlaces(mockLocation, 1000, arrayOf("walmart"), null, null, null, 100) { status, location, places ->
             callbackStatus = status
             callbackLocation = location
             callbackPlaces = places
