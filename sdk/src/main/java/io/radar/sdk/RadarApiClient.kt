@@ -129,7 +129,7 @@ internal class RadarApiClient(
             params.putOpt("installId", RadarSettings.getInstallId(context))
             params.putOpt("sessionId", RadarSettings.getSessionId(context))
             val array = JSONArray()
-            logs.forEach { log -> array.put(log.toJson()) }
+            logs.forEach { array.put(it.toJson()) }
             params.putOpt("logs", array)
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
