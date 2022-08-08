@@ -77,9 +77,6 @@ internal class RadarHuaweiLocationClient(
     ) {
         val geofences = mutableListOf<Geofence>()
         abstractGeofences.forEach { abstractGeofence ->
-            var geofenceBuilder = Geofence.Builder()
-                .setUniqueId(abstractGeofence.requestId)
-                .setRoundArea(abstractGeofence.latitude, abstractGeofence.longitude, abstractGeofence.radius)
             var conversions = 0
             if (abstractGeofence.transitionEnter) {
                 conversions = conversions or Geofence.ENTER_GEOFENCE_CONVERSION
@@ -90,14 +87,17 @@ internal class RadarHuaweiLocationClient(
             if (abstractGeofence.transitionDwell) {
                 conversions = conversions or Geofence.DWELL_GEOFENCE_CONVERSION
             }
-            geofenceBuilder = geofenceBuilder.setConversions(conversions)
 
-            val geofence = geofenceBuilder.build()
+            val geofence = Geofence.Builder()
+                .setUniqueId(abstractGeofence.requestId)
+                .setRoundArea(abstractGeofence.latitude, abstractGeofence.longitude, abstractGeofence.radius)
+                .setConversions(conversions)
+                .setDwellDelayTime(abstractGeofence.dwellDuration)
+                .build()
+
             geofences.add(geofence)
         }
 
-        var requestBuilder = GeofenceRequest.Builder()
-            .createGeofenceList(geofences)
         var initConversions = 0
         if (abstractGeofenceRequest.initialTriggerEnter) {
             initConversions = initConversions or Geofence.ENTER_GEOFENCE_CONVERSION
@@ -108,9 +108,11 @@ internal class RadarHuaweiLocationClient(
         if (abstractGeofenceRequest.initialTriggerDwell) {
             initConversions = initConversions or Geofence.DWELL_GEOFENCE_CONVERSION
         }
-        requestBuilder = requestBuilder.setInitConversions(initConversions)
 
-        val request = requestBuilder.build()
+        val request = GeofenceRequest.Builder()
+            .createGeofenceList(geofences)
+            .setInitConversions(initConversions)
+            .build()
 
         geofenceService.createGeofenceList(request, pendingIntent).run {
             addOnSuccessListener {

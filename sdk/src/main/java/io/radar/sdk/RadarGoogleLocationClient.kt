@@ -69,10 +69,6 @@ internal class RadarGoogleLocationClient(
     ) {
         val geofences = mutableListOf<Geofence>()
         abstractGeofences.forEach { abstractGeofence ->
-            var geofenceBuilder = Geofence.Builder()
-                .setRequestId(abstractGeofence.requestId)
-                .setCircularRegion(abstractGeofence.latitude, abstractGeofence.longitude, abstractGeofence.radius)
-                .setExpirationDuration(Geofence.NEVER_EXPIRE)
             var transitionTypes = 0
             if (abstractGeofence.transitionEnter) {
                 transitionTypes = transitionTypes or Geofence.GEOFENCE_TRANSITION_ENTER
@@ -83,14 +79,18 @@ internal class RadarGoogleLocationClient(
             if (abstractGeofence.transitionDwell) {
                 transitionTypes = transitionTypes or Geofence.GEOFENCE_TRANSITION_DWELL
             }
-            geofenceBuilder = geofenceBuilder.setTransitionTypes(transitionTypes)
 
-            val geofence = geofenceBuilder.build()
+            val geofence = Geofence.Builder()
+                .setRequestId(abstractGeofence.requestId)
+                .setCircularRegion(abstractGeofence.latitude, abstractGeofence.longitude, abstractGeofence.radius)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setTransitionTypes(transitionTypes)
+                .setLoiteringDelay(abstractGeofence.dwellDuration)
+                .build()
+
             geofences.add(geofence)
         }
 
-        var requestBuilder = GeofencingRequest.Builder()
-            .addGeofences(geofences)
         var initialTrigger = 0
         if (abstractGeofenceRequest.initialTriggerEnter) {
             initialTrigger = initialTrigger or Geofence.GEOFENCE_TRANSITION_ENTER
@@ -101,9 +101,11 @@ internal class RadarGoogleLocationClient(
         if (abstractGeofenceRequest.initialTriggerDwell) {
             initialTrigger = initialTrigger or Geofence.GEOFENCE_TRANSITION_DWELL
         }
-        requestBuilder = requestBuilder.setInitialTrigger(initialTrigger)
 
-        val request = requestBuilder.build()
+        val request = GeofencingRequest.Builder()
+            .addGeofences(geofences)
+            .setInitialTrigger(initialTrigger)
+            .build()
 
         geofencingClient.addGeofences(request, pendingIntent).run {
             addOnSuccessListener {

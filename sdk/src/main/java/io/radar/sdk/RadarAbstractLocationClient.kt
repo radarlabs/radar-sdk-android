@@ -13,8 +13,7 @@ internal abstract class RadarAbstractLocationClient() {
         val transitionEnter: Boolean = false,
         val transitionExit: Boolean = false,
         val transitionDwell: Boolean = false,
-        val dwellDuration: Long = 0,
-        val loiteringDelay: Int = 0
+        val dwellDuration: Int = 0
     )
 
     data class RadarAbstractGeofenceRequest(
