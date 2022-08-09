@@ -185,9 +185,12 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Matrix: status = $status; matrix[0][0].duration.text = ${matrix?.routeBetween(0, 0)?.duration?.text}; matrix[0][1].duration.text = ${matrix?.routeBetween(0, 1)?.duration?.text}; matrix[1][0].duration.text = ${matrix?.routeBetween(1, 0)?.duration?.text};  matrix[1][1].duration.text = ${matrix?.routeBetween(1, 1)?.duration?.text}")
         }
 
+        val customEventMetadata = JSONObject()
+        customEventMetadata.put("one", "two")
+
         Radar.sendEvent(
             "app_open_android",
-            null
+            customEventMetadata
         ) { status, location, events, user ->
             Log.v("example", "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
         }
@@ -196,7 +199,7 @@ class MainActivity : AppCompatActivity() {
         Radar.sendEvent(
             "app_open_android_manual",
             destination1,
-            JSONObject(mapOf("foo" to "bar"))
+            customEventMetadata
         ) { status, location, events, user ->
             Log.v("example", "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
         }

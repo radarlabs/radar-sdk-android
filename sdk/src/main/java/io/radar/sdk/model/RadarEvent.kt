@@ -278,7 +278,7 @@ class RadarEvent(
 
             val metadata = obj.optJSONObject(FIELD_METADATA)
 
-            val  event = RadarEvent(
+            val event = RadarEvent(
                 id, createdAt, actualCreatedAt, live, type, customType, geofence, place, region, beacon, trip,
                 alternatePlaces, verifiedPlace, verification, confidence, duration, location, metadata
             )
