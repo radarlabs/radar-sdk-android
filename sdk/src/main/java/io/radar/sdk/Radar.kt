@@ -226,7 +226,7 @@ object Radar {
     /**
      * Called when a request to send a custom event succeeds, fails, or times out.
      */
-     interface RadarSendEventCallback {
+    interface RadarSendEventCallback {
         /**
          * Called when a request to send a custom event succeeds, fails, or times out. Receives the request status and, if successful, the user's location, an array of the events generated, and the user.
          *
@@ -242,7 +242,7 @@ object Radar {
             events: Array<RadarEvent>? = null,
             user: RadarUser? = null
         )
-     }
+    }
 
     /**
      * The status types for a request. See [](https://radar.com/documentation/sdk/android#foreground-tracking).
@@ -321,7 +321,7 @@ object Radar {
 
         companion object {
             @JvmStatic
-            fun fromInt(value: Int) : RadarLogLevel {
+            fun fromInt(value: Int): RadarLogLevel {
                 return values().first { it.value == value }
             }
         }
@@ -2273,34 +2273,7 @@ object Radar {
                     return
                 }
 
-                apiClient.sendEvent(customType, metadata, user, object : RadarApiClient.RadarSendEventApiCallback {
-                    override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
-                        if (status != RadarStatus.SUCCESS) {
-                            handler.post {
-                                callback.onComplete(status)
-                            }
-
-                            return
-                        }
-
-                        val finalEvents: MutableList<RadarEvent>
-
-                        if (events != null && event != null) {
-                            finalEvents = events.toMutableList()
-                            finalEvents.add(0, event)
-                        } else {
-                            finalEvents = mutableListOf(event!!)
-                        }
-
-                        // The events are returned in the completion handler, but they're also
-                        // sent back via the RadarReciever.
-                        receiver?.onEventsReceived(context, finalEvents.toTypedArray(), user)
-
-                        handler.post {
-                            callback.onComplete(status, location, finalEvents.toTypedArray(), user)
-                        }
-                    }
-                })
+                sendEvent(customType, metadata, location, events, user, callback)
             }
         })
     }
@@ -2315,9 +2288,18 @@ object Radar {
      * @param[block] A block callback
      */
     @JvmStatic
-    fun sendEvent(customType: String, metadata: JSONObject?, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+    fun sendEvent(
+        customType: String,
+        metadata: JSONObject?,
+        block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit
+    ) {
         sendEvent(customType, metadata, object : RadarSendEventCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+            override fun onComplete(
+                status: RadarStatus,
+                location: Location?,
+                events: Array<RadarEvent>?,
+                user: RadarUser?
+            ) {
                 block(status, location, events, user)
             }
         })
@@ -2334,7 +2316,12 @@ object Radar {
      * @param[callback] A callback.
      */
     @JvmStatic
-    fun sendEvent(customType: String, location: Location, metadata: JSONObject?, callback: RadarSendEventCallback) {
+    fun sendEvent(
+        customType: String,
+        location: Location,
+        metadata: JSONObject?,
+        callback: RadarSendEventCallback
+    ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2351,34 +2338,7 @@ object Radar {
                     return
                 }
 
-                apiClient.sendEvent(customType, metadata, user, object : RadarApiClient.RadarSendEventApiCallback {
-                    override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
-                        if (status != RadarStatus.SUCCESS) {
-                            handler.post {
-                                callback.onComplete(status)
-                            }
-
-                            return
-                        }
-
-                        val finalEvents: MutableList<RadarEvent>
-
-                        if (events != null && event != null) {
-                            finalEvents = events.toMutableList()
-                            finalEvents.add(0, event)
-                        } else {
-                            finalEvents = mutableListOf(event!!)
-                        }
-
-                        // The events are returned in the completion handler, but they're also
-                        // sent back via the RadarReciever.
-                        receiver?.onEventsReceived(context, finalEvents.toTypedArray(), user)
-
-                        handler.post {
-                            callback.onComplete(status, location, finalEvents.toTypedArray(), user)
-                        }
-                    }
-                })
+                sendEvent(customType, metadata, location, events, user, callback)
             }
         })
     }
@@ -2394,12 +2354,65 @@ object Radar {
      * @param[block] A block callback.
      */
     @JvmStatic
-    fun sendEvent(customType: String, location: Location, metadata: JSONObject?, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+    fun sendEvent(
+        customType: String,
+        location: Location,
+        metadata: JSONObject?,
+        block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit
+    ) {
         sendEvent(customType, location, metadata, object : RadarSendEventCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+            override fun onComplete(
+                status: RadarStatus,
+                location: Location?,
+                events: Array<RadarEvent>?,
+                user: RadarUser?
+            ) {
                 block(status, location, events, user)
             }
         })
+    }
+
+    @JvmStatic
+    private fun sendEvent(
+        customType: String,
+        metadata: JSONObject?,
+        location: Location?,
+        events: Array<RadarEvent>?,
+        user: RadarUser?,
+        callback: RadarSendEventCallback
+    ) {
+        apiClient.sendEvent(
+            customType,
+            metadata,
+            user,
+            object : RadarApiClient.RadarSendEventApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
+                    if (status != RadarStatus.SUCCESS) {
+                        handler.post {
+                            callback.onComplete(status)
+                        }
+
+                        return
+                    }
+
+                    val finalEvents: MutableList<RadarEvent>
+
+                    if (events != null && event != null) {
+                        finalEvents = events.toMutableList()
+                        finalEvents.add(0, event)
+                    } else {
+                        finalEvents = mutableListOf(event!!)
+                    }
+
+                    // The events are returned in the completion handler, but they're also
+                    // sent back via the RadarReciever.
+                    receiver?.onEventsReceived(context, finalEvents.toTypedArray(), user)
+
+                    handler.post {
+                        callback.onComplete(status, location, finalEvents.toTypedArray(), user)
+                    }
+                }
+            })
     }
 
     /**
@@ -2576,7 +2589,11 @@ object Radar {
         logger.i("📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.com/dashboard/users/${user._id}")
     }
 
-    internal fun sendClientLocation(location: Location, stopped: Boolean, source: RadarLocationSource) {
+    internal fun sendClientLocation(
+        location: Location,
+        stopped: Boolean,
+        source: RadarLocationSource
+    ) {
         receiver?.onClientLocationUpdated(context, location, stopped, source)
     }
 
