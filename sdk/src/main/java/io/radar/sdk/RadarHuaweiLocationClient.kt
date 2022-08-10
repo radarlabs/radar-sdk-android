@@ -9,6 +9,7 @@ import com.huawei.hms.location.FusedLocationProviderClient
 import com.huawei.hms.location.Geofence
 import com.huawei.hms.location.GeofenceRequest
 import com.huawei.hms.location.GeofenceService
+import com.huawei.hms.location.LocationAvailability
 import com.huawei.hms.location.LocationCallback
 import com.huawei.hms.location.LocationRequest
 import com.huawei.hms.location.LocationResult
@@ -39,7 +40,9 @@ internal class RadarHuaweiLocationClient(
             override fun onLocationResult(locationResult: LocationResult) {
                 block(locationResult.lastLocation)
             }
-        }, Looper.getMainLooper())
+        }, Looper.getMainLooper()).addOnFailureListener {
+            block(null)
+        }
     }
 
     override fun requestLocationUpdates(
