@@ -30,6 +30,8 @@ internal class RadarHuaweiLocationClient(
 
         val locationRequest = LocationRequest().apply {
             this.priority = priority
+            this.interval = 0
+            this.fastestInterval = 0
             this.numUpdates = 1
         }
 
