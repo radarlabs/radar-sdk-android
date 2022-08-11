@@ -1,6 +1,5 @@
 package io.radar.sdk.model
 
-import android.annotation.SuppressLint
 import android.location.Location
 import io.radar.sdk.RadarUtils
 import io.radar.sdk.model.RadarEvent.RadarEventType.*
@@ -36,6 +35,11 @@ class RadarEvent(
      * The type of the event.
      */
     val type: RadarEventType,
+
+    /**
+     * The custom type of the event. This will only be set if the `type` is `CUSTOM`.
+     */
+    val customType: String?,
 
     /**
      * The geofence for which the event was generated. May be `null` for non-geofence events.
@@ -90,57 +94,68 @@ class RadarEvent(
     /**
      * The location of the event.
      */
-    val location: Location
+    val location: Location,
+
+    /**
+     * The metadata of the event. Present on custom events only.
+     */
+    val metadata: JSONObject?
 ) {
 
     /**
      * The types for events.
      */
     enum class RadarEventType {
+        // These strings should match the values (and order) of the server's event constants.
         /** Unknown */
         UNKNOWN,
+        /**
+         * A custom type, created by calling `Radar.sendEvent()`. The custom value will be assigned
+         * to the `customType` property.
+         */
+        CUSTOM,
         /** `user.entered_geofence` */
         USER_ENTERED_GEOFENCE,
         /** `user.exited_geofence` */
         USER_EXITED_GEOFENCE,
+        /** `user.dwelled_in_geofence` */
+        USER_DWELLED_IN_GEOFENCE,
         /** `user.entered_place` */
         USER_ENTERED_PLACE,
         /** `user.exited_place` */
         USER_EXITED_PLACE,
-        /** `user.nearby_place_chain` */
-        USER_NEARBY_PLACE_CHAIN,
         /** `user.entered_region_country` */
         USER_ENTERED_REGION_COUNTRY,
         /** `user.exited_region_country` */
         USER_EXITED_REGION_COUNTRY,
-        /** `user.entered_region_state` */
-        USER_ENTERED_REGION_STATE,
-        /** `user.exited_region_state` */
-        USER_EXITED_REGION_STATE,
         /** `user.entered_region_dma` */
         USER_ENTERED_REGION_DMA,
         /** `user.exited_region_dma` */
         USER_EXITED_REGION_DMA,
-        /** `user.started_trip` */
-        USER_STARTED_TRIP,
-        /** `user.updated_trip` */
-        USER_UPDATED_TRIP,
-        /** `user.approaching_trip_destination` */
-        USER_APPROACHING_TRIP_DESTINATION,
-        /** `user.arrived_at_trip_destination` */
-        USER_ARRIVED_AT_TRIP_DESTINATION,
-        /** `user.stopped_trip` */
-        USER_STOPPED_TRIP,
-        /** `user.entered_beacon` */
-        USER_ENTERED_BEACON,
-        /** `user.exited_beacon` */
-        USER_EXITED_BEACON,
+        /** `user.entered_region_state` */
+        USER_ENTERED_REGION_STATE,
+        /** `user.exited_region_state` */
+        USER_EXITED_REGION_STATE,
         /** `user.entered_region_postal_code` */
         USER_ENTERED_REGION_POSTAL_CODE,
         /** `user.exited_region_postal_code` */
         USER_EXITED_REGION_POSTAL_CODE,
-        /** `user.dwelled_in_geofence` */
-        USER_DWELLED_IN_GEOFENCE
+        /** `user.nearby_place_chain` */
+        USER_NEARBY_PLACE_CHAIN,
+        /** `user.entered_beacon` */
+        USER_ENTERED_BEACON,
+        /** `user.exited_beacon` */
+        USER_EXITED_BEACON,
+        /** `user.started_trip` */
+        USER_STARTED_TRIP,
+        /** `user.updated_trip` */
+        USER_UPDATED_TRIP,
+        /** `user.stopped_trip` */
+        USER_STOPPED_TRIP,
+        /** `user.approaching_trip_destination` */
+        USER_APPROACHING_TRIP_DESTINATION,
+        /** `user.arrived_at_trip_destination` */
+        USER_ARRIVED_AT_TRIP_DESTINATION,
     }
 
     /**
@@ -175,6 +190,7 @@ class RadarEvent(
         private const val FIELD_ACTUAL_CREATED_AT = "actualCreatedAt"
         private const val FIELD_LIVE = "live"
         private const val FIELD_TYPE = "type"
+        private const val FIELD_CUSTOM_TYPE = "customType"
         private const val FIELD_GEOFENCE = "geofence"
         private const val FIELD_PLACE = "place"
         private const val FIELD_REGION = "region"
@@ -188,9 +204,10 @@ class RadarEvent(
         private const val FIELD_LOCATION = "location"
         private const val FIELD_COORDINATES = "coordinates"
         private const val FIELD_LOCATION_ACCURACY = "locationAccuracy"
+        private const val FIELD_METADATA = "metadata"
 
         @JvmStatic
-        private fun fromJson(obj: JSONObject?): RadarEvent? {
+        fun fromJson(obj: JSONObject?): RadarEvent? {
             if (obj == null) {
                 return null
             }
@@ -199,29 +216,35 @@ class RadarEvent(
             val createdAt = RadarUtils.isoStringToDate(obj.optString(FIELD_CREATED_AT)) ?: Date()
             val actualCreatedAt = RadarUtils.isoStringToDate(obj.optString(FIELD_ACTUAL_CREATED_AT)) ?: Date()
             val live = obj.optBoolean(FIELD_LIVE)
+            // These strings should match the values (and order) of the server's event constants.
             val type = when (obj.optString(FIELD_TYPE)) {
                 "user.entered_geofence" -> USER_ENTERED_GEOFENCE
                 "user.exited_geofence" -> USER_EXITED_GEOFENCE
+                "user.dwelled_in_geofence" -> USER_DWELLED_IN_GEOFENCE
                 "user.entered_place" -> USER_ENTERED_PLACE
                 "user.exited_place" -> USER_EXITED_PLACE
-                "user.nearby_place_chain" -> USER_NEARBY_PLACE_CHAIN
                 "user.entered_region_country" -> USER_ENTERED_REGION_COUNTRY
                 "user.exited_region_country" -> USER_EXITED_REGION_COUNTRY
-                "user.entered_region_state" -> USER_ENTERED_REGION_STATE
-                "user.exited_region_state" -> USER_EXITED_REGION_STATE
                 "user.entered_region_dma" -> USER_ENTERED_REGION_DMA
                 "user.exited_region_dma" -> USER_EXITED_REGION_DMA
-                "user.started_trip" -> USER_STARTED_TRIP
-                "user.updated_trip" -> USER_UPDATED_TRIP
-                "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
-                "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
-                "user.stopped_trip" -> USER_STOPPED_TRIP
-                "user.entered_beacon" -> USER_ENTERED_BEACON
-                "user.exited_beacon" -> USER_EXITED_BEACON
+                "user.entered_region_state" -> USER_ENTERED_REGION_STATE
+                "user.exited_region_state" -> USER_EXITED_REGION_STATE
                 "user.entered_region_postal_code" -> USER_ENTERED_REGION_POSTAL_CODE
                 "user.exited_region_postal_code" -> USER_EXITED_REGION_POSTAL_CODE
-                "user.dwelled_in_geofence" -> USER_DWELLED_IN_GEOFENCE
-                else -> UNKNOWN
+                "user.nearby_place_chain" -> USER_NEARBY_PLACE_CHAIN
+                "user.entered_beacon" -> USER_ENTERED_BEACON
+                "user.exited_beacon" -> USER_EXITED_BEACON
+                "user.started_trip" -> USER_STARTED_TRIP
+                "user.updated_trip" -> USER_UPDATED_TRIP
+                "user.stopped_trip" -> USER_STOPPED_TRIP
+                "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
+                "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
+                else -> CUSTOM
+            }
+            var customType: String? = null
+
+            if (type == CUSTOM) {
+                customType = obj.optString(FIELD_TYPE)
             }
             val geofence = RadarGeofence.fromJson(obj.optJSONObject(FIELD_GEOFENCE))
             val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
@@ -253,10 +276,14 @@ class RadarEvent(
                 time = createdAt.time
             }
 
-            return RadarEvent(
-                id, createdAt, actualCreatedAt, live, type, geofence, place, region, beacon, trip,
-                alternatePlaces, verifiedPlace, verification, confidence, duration, location
+            val metadata = obj.optJSONObject(FIELD_METADATA)
+
+            val event = RadarEvent(
+                id, createdAt, actualCreatedAt, live, type, customType, geofence, place, region, beacon, trip,
+                alternatePlaces, verifiedPlace, verification, confidence, duration, location, metadata
             )
+
+            return event
         }
 
         @JvmStatic
@@ -286,27 +313,28 @@ class RadarEvent(
         @JvmStatic
         fun stringForType(type: RadarEventType): String? {
             return when (type) {
+                // These strings should match the values (and order) of the server's event constants.
                 USER_ENTERED_GEOFENCE -> "user.entered_geofence"
                 USER_EXITED_GEOFENCE -> "user.exited_geofence"
+                USER_DWELLED_IN_GEOFENCE -> "user.dwelled_in_geofence"
                 USER_ENTERED_PLACE -> "user.entered_place"
                 USER_EXITED_PLACE -> "user.exited_place"
-                USER_NEARBY_PLACE_CHAIN -> "user.nearby_place_chain"
                 USER_ENTERED_REGION_COUNTRY -> "user.entered_region_country"
                 USER_EXITED_REGION_COUNTRY -> "user.exited_region_country"
-                USER_ENTERED_REGION_STATE -> "user.entered_region_state"
-                USER_EXITED_REGION_STATE -> "user.exited_region_state"
                 USER_ENTERED_REGION_DMA -> "user.entered_region_dma"
                 USER_EXITED_REGION_DMA -> "user.exited_region_dma"
-                USER_STARTED_TRIP -> "user.started_trip"
-                USER_UPDATED_TRIP -> "user.updated_trip"
-                USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
-                USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
-                USER_STOPPED_TRIP -> "user.stopped_trip"
-                USER_ENTERED_BEACON -> "user.entered_beacon"
-                USER_EXITED_BEACON -> "user.exited_beacon"
+                USER_ENTERED_REGION_STATE -> "user.entered_region_state"
+                USER_EXITED_REGION_STATE -> "user.exited_region_state"
                 USER_ENTERED_REGION_POSTAL_CODE -> "user.entered_region_postal_code"
                 USER_EXITED_REGION_POSTAL_CODE -> "user.exited_region_postal_code"
-                USER_DWELLED_IN_GEOFENCE -> "user.dwelled_in_geofence"
+                USER_NEARBY_PLACE_CHAIN -> "user.nearby_place_chain"
+                USER_ENTERED_BEACON -> "user.entered_beacon"
+                USER_EXITED_BEACON -> "user.exited_beacon"
+                USER_STARTED_TRIP -> "user.started_trip"
+                USER_UPDATED_TRIP -> "user.updated_trip"
+                USER_STOPPED_TRIP -> "user.stopped_trip"
+                USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
+                USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
                 else -> null
             }
         }
@@ -319,6 +347,7 @@ class RadarEvent(
         obj.putOpt(FIELD_ACTUAL_CREATED_AT, RadarUtils.dateToISOString(this.actualCreatedAt))
         obj.putOpt(FIELD_LIVE, this.live)
         obj.putOpt(FIELD_TYPE, stringForType(this.type))
+        obj.putOpt(FIELD_CUSTOM_TYPE, this.customType)
         obj.putOpt(FIELD_GEOFENCE, this.geofence?.toJson())
         obj.putOpt(FIELD_PLACE, this.place?.toJson())
         obj.putOpt(FIELD_CONFIDENCE, this.confidence)
@@ -334,6 +363,8 @@ class RadarEvent(
         coordinatesArr.put(this.location.latitude)
         locationObj.putOpt("coordinates", coordinatesArr)
         obj.putOpt(FIELD_LOCATION, locationObj)
+        obj.putOpt(FIELD_METADATA, metadata)
+
         return obj
     }
 
