@@ -73,7 +73,7 @@ internal class RadarApiClient(
     }
 
     interface RadarSendEventApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, event: RadarEvent? = null)
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, events: Array<RadarEvent>? = null)
     }
 
     internal interface RadarLogCallback {
@@ -957,6 +957,7 @@ internal class RadarApiClient(
         name: String,
         metadata: JSONObject?,
         user: RadarUser?,
+        trackingEvents: Array<RadarEvent>?,
         callback: RadarSendEventApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -995,17 +996,23 @@ internal class RadarApiClient(
                     return
                 }
 
-                val event = res.optJSONObject("event")?.let { eventObj ->
+                val customEvent = res.optJSONObject("event")?.let { eventObj ->
                     RadarEvent.fromJson(eventObj)
                 }
 
-                if (event != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, event)
+                val allEvents: MutableList<RadarEvent> = mutableListOf()
 
-                    return
+                if (trackingEvents != null) {
+                    allEvents.addAll(trackingEvents)
                 }
 
-                callback.onComplete(RadarStatus.ERROR_SERVER)
+                if (customEvent != null) {
+                    allEvents.add(0, customEvent)
+                } else {
+                    callback.onComplete(RadarStatus.ERROR_SERVER)
+                }
+
+                callback.onComplete(RadarStatus.SUCCESS, res, allEvents.toTypedArray())
             }
         })
     }

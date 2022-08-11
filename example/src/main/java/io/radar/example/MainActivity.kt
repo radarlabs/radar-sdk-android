@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
 
         val runDemoButton = findViewById<Button>(R.id.runDemoButton)
         runDemoButton.setOnClickListener {
-            var requiredPermissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
+            val requiredPermissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 requiredPermissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)

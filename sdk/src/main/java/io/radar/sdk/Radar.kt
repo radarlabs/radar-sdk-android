@@ -2385,8 +2385,9 @@ object Radar {
             customType,
             metadata,
             user,
+            events,
             object : RadarApiClient.RadarSendEventApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?) {
                     if (status != RadarStatus.SUCCESS) {
                         handler.post {
                             callback.onComplete(status)
@@ -2395,21 +2396,14 @@ object Radar {
                         return
                     }
 
-                    val finalEvents: MutableList<RadarEvent>
-
-                    if (events != null && event != null) {
-                        finalEvents = events.toMutableList()
-                        finalEvents.add(0, event)
-                    } else {
-                        finalEvents = mutableListOf(event!!)
+                    if (events != null) {
+                        // The events are returned in the completion handler, but they're also
+                        // sent back via the RadarReceiver.
+                        receiver?.onEventsReceived(context, events, user)
                     }
 
-                    // The events are returned in the completion handler, but they're also
-                    // sent back via the RadarReciever.
-                    receiver?.onEventsReceived(context, finalEvents.toTypedArray(), user)
-
                     handler.post {
-                        callback.onComplete(status, location, finalEvents.toTypedArray(), user)
+                        callback.onComplete(status, location, events, user)
                     }
                 }
             })
