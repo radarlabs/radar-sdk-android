@@ -817,7 +817,7 @@ class RadarTest {
         var callbackLocation: Location? = null
         var callbackPlaces: Array<RadarPlace>? = null
 
-        Radar.searchPlaces(1000, arrayOf("walmart"), null, null, null, 100) { status, location, places ->
+        Radar.searchPlaces(1000, arrayOf("walmart"), null, null, 100) { status, location, places ->
             callbackStatus = status
             callbackLocation = location
             callbackPlaces = places
@@ -830,6 +830,40 @@ class RadarTest {
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertEquals(mockLocation, callbackLocation)
         assertPlacesOk(callbackPlaces)
+    }
+
+    @Test
+    fun test_Radar_searchPlacesWithChainMetadata_success() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_places_chain_metadata.json")
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackLocation: Location? = null
+        var callbackPlaces: Array<RadarPlace>? = null
+        val chainMetadata = mapOf("orderActive" to "true")
+
+        Radar.searchPlaces(1000, arrayOf("walmart"), chainMetadata, null, null, 100) { status, location, places ->
+            callbackStatus = status
+            callbackLocation = location
+            callbackPlaces = places
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertEquals(mockLocation, callbackLocation)
+        assertPlacesOk(callbackPlaces)
+        assertEquals(chainMetadata["orderActive"], callbackPlaces!!.first()!!.chain!!.metadata!!["orderActive"])
     }
 
     @Test
