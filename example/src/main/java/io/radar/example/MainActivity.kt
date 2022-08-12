@@ -6,28 +6,54 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import androidx.core.app.ActivityCompat
+import android.widget.Button
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
+import org.json.JSONObject
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var requestLocationPermissionLauncher: ActivityResultLauncher<Array<String>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION), 0)
+        requestLocationPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { isGrantedMap ->
+            // Check if the requested permission was granted
+            if (isGrantedMap.all { it.value == true }) {
+                runDemo()
             } else {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.BLUETOOTH_ADMIN, Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_BACKGROUND_LOCATION), 0)
+                Log.e("example", "Requires all location permissions to be granted")
             }
-        } else {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 0)
         }
 
+        val runDemoButton = findViewById<Button>(R.id.runDemoButton)
+        runDemoButton.setOnClickListener {
+            val requiredPermissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                requiredPermissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    requiredPermissions.add(Manifest.permission.BLUETOOTH_SCAN)
+                    requiredPermissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+                } else {
+                    requiredPermissions.add(Manifest.permission.BLUETOOTH_ADMIN)
+                }
+            }
+
+            requestLocationPermissionLauncher.launch(requiredPermissions.toTypedArray())
+        }
+    }
+
+    fun runDemo() {
         val receiver = MyRadarReceiver()
         Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver)
 
@@ -158,6 +184,25 @@ class MainActivity : AppCompatActivity() {
             Radar.RadarRouteUnits.IMPERIAL
         ) { status, matrix ->
             Log.v("example", "Matrix: status = $status; matrix[0][0].duration.text = ${matrix?.routeBetween(0, 0)?.duration?.text}; matrix[0][1].duration.text = ${matrix?.routeBetween(0, 1)?.duration?.text}; matrix[1][0].duration.text = ${matrix?.routeBetween(1, 0)?.duration?.text};  matrix[1][1].duration.text = ${matrix?.routeBetween(1, 1)?.duration?.text}")
+        }
+
+        val customEventMetadata = JSONObject()
+        customEventMetadata.put("one", "two")
+
+        Radar.sendEvent(
+            "app_open_android",
+            customEventMetadata
+        ) { status, location, events, user ->
+            Log.v("example", "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
+        }
+
+        // Send custom event with manual location
+        Radar.sendEvent(
+            "app_open_android_manual",
+            destination1,
+            customEventMetadata
+        ) { status, location, events, user ->
+            Log.v("example", "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
         }
     }
 
