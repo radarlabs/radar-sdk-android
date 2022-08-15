@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.app.PendingIntent
+import android.content.Intent
 import android.location.Location
 
 internal class RadarMockLocationProvider() : RadarAbstractLocationClient() {
@@ -42,6 +43,18 @@ internal class RadarMockLocationProvider() : RadarAbstractLocationClient() {
 
     override fun removeGeofences(pendingIntent: PendingIntent) {
 
+    }
+
+    override fun getLocationFromGeofenceIntent(intent: Intent): Location {
+        return mockLocation!!
+    }
+
+    override fun getSourceFromGeofenceIntent(intent: Intent): Radar.RadarLocationSource {
+        return Radar.RadarLocationSource.GEOFENCE_ENTER
+    }
+
+    override fun getLocationFromLocationIntent(intent: Intent): Location {
+        return mockLocation!!
     }
 
 }
