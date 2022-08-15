@@ -72,6 +72,8 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Context: status = $status; location = $location; context?.geofences = ${context?.geofences}; context?.place = ${context?.place}; context?.country = ${context?.country}")
         }
 
+        // In the Radar dashboard settings (https://radar.com/dashboard/settings), add this to
+        // the chain metadata: {"mcdonalds":{"orderActive":"true"}}.
         Radar.searchPlaces(
             1000,
             arrayOf("mcdonalds"),
