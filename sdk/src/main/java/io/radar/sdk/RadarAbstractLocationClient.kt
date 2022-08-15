@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.app.PendingIntent
+import android.content.Intent
 import android.location.Location
 
 internal abstract class RadarAbstractLocationClient() {
@@ -52,5 +53,17 @@ internal abstract class RadarAbstractLocationClient() {
     abstract fun removeGeofences(
         pendingIntent: PendingIntent
     )
+
+    abstract fun getLocationFromGeofenceIntent(
+        intent: Intent
+    ): Location
+
+    abstract fun getSourceFromGeofenceIntent(
+        intent: Intent
+    ): Radar.RadarLocationSource
+
+    abstract fun getLocationFromLocationIntent(
+        intent: Intent
+    ): Location
 
 }

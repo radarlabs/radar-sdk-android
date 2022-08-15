@@ -3,10 +3,12 @@ package io.radar.sdk
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.location.Location
 import android.os.Looper
 import com.huawei.hms.location.FusedLocationProviderClient
 import com.huawei.hms.location.Geofence
+import com.huawei.hms.location.GeofenceData
 import com.huawei.hms.location.GeofenceRequest
 import com.huawei.hms.location.GeofenceService
 import com.huawei.hms.location.LocationAvailability
@@ -133,6 +135,28 @@ internal class RadarHuaweiLocationClient(
         pendingIntent: PendingIntent
     ) {
         geofenceService.deleteGeofenceList(pendingIntent)
+    }
+
+    override fun getLocationFromGeofenceIntent(intent: Intent): Location {
+        val data = GeofenceData.getDataFromIntent(intent)
+
+        return data.convertingLocation
+    }
+
+    override fun getSourceFromGeofenceIntent(intent: Intent): Radar.RadarLocationSource {
+        val data = GeofenceData.getDataFromIntent(intent)
+
+        return when (data.conversion) {
+            Geofence.ENTER_GEOFENCE_CONVERSION -> Radar.RadarLocationSource.GEOFENCE_ENTER
+            Geofence.DWELL_GEOFENCE_CONVERSION -> Radar.RadarLocationSource.GEOFENCE_DWELL
+            else -> Radar.RadarLocationSource.GEOFENCE_EXIT
+        }
+    }
+
+    override fun getLocationFromLocationIntent(intent: Intent): Location {
+        val result = LocationResult.extractResult(intent)
+
+        return result.lastLocation
     }
 
     private fun priorityForDesiredAccuracy(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy) =

@@ -243,6 +243,18 @@ internal class RadarLocationManager(
         updateTracking()
     }
 
+    internal fun getLocationFromGeofenceIntent(intent: Intent): Location {
+        return locationClient.getLocationFromGeofenceIntent(intent)
+    }
+
+    internal fun getSourceFromGeofenceIntent(intent: Intent): RadarLocationSource {
+        return locationClient.getSourceFromGeofenceIntent(intent)
+    }
+
+    internal fun getLocationFromLocationIntent(intent: Intent): Location {
+        return locationClient.getLocationFromLocationIntent(intent)
+    }
+
     private fun replaceBubbleGeofence(location: Location?, stopped: Boolean) {
         if (location == null) {
             return

@@ -8,9 +8,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import com.google.android.gms.location.Geofence
-import com.google.android.gms.location.GeofencingEvent
-import com.google.android.gms.location.LocationResult
 
 class RadarLocationReceiver : BroadcastReceiver() {
 
@@ -109,31 +106,23 @@ class RadarLocationReceiver : BroadcastReceiver() {
 
         when (intent.action) {
             ACTION_BUBBLE_GEOFENCE, ACTION_SYNCED_GEOFENCES -> {
-                val event = GeofencingEvent.fromIntent(intent)
-                event?.triggeringLocation?.also {
-                    val source = when (event.geofenceTransition) {
-                        Geofence.GEOFENCE_TRANSITION_ENTER -> Radar.RadarLocationSource.GEOFENCE_ENTER
-                        Geofence.GEOFENCE_TRANSITION_DWELL -> Radar.RadarLocationSource.GEOFENCE_DWELL
-                        else -> Radar.RadarLocationSource.GEOFENCE_EXIT
-                    }
+                val location = Radar.locationManager.getLocationFromGeofenceIntent(intent)
+                val source = Radar.locationManager.getSourceFromGeofenceIntent(intent)
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
-                        RadarJobScheduler.scheduleJob(context, it, source)
-                    } else {
-                        Radar.handleLocation(context, it, source)
-                    }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
+                    RadarJobScheduler.scheduleJob(context, location, source)
+                } else {
+                    Radar.handleLocation(context, location, source)
                 }
             }
             ACTION_LOCATION -> {
-                val result = LocationResult.extractResult(intent)
-                result?.lastLocation?.also {
-                    val source = Radar.RadarLocationSource.BACKGROUND_LOCATION
+                val location = Radar.locationManager.getLocationFromLocationIntent(intent)
+                val source = Radar.RadarLocationSource.BACKGROUND_LOCATION
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
-                        RadarJobScheduler.scheduleJob(context, it, source)
-                    } else {
-                        Radar.handleLocation(context, it, source)
-                    }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
+                    RadarJobScheduler.scheduleJob(context, location, source)
+                } else {
+                    Radar.handleLocation(context, location, source)
                 }
             }
             ACTION_BEACON -> {

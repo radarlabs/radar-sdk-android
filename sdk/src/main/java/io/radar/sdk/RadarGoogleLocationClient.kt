@@ -3,12 +3,16 @@ package io.radar.sdk
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.location.Location
+import android.os.Build
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
+import com.google.android.gms.location.GeofencingEvent
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 
 @SuppressLint("MissingPermission")
 internal class RadarGoogleLocationClient(
@@ -130,5 +134,31 @@ internal class RadarGoogleLocationClient(
             RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW -> LocationRequest.PRIORITY_LOW_POWER
             RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.NONE -> LocationRequest.PRIORITY_NO_POWER
         }
+
+    override fun getLocationFromGeofenceIntent(intent: Intent): Location {
+        val event = GeofencingEvent.fromIntent(intent)
+
+        event.triggeringLocation.also {
+            return it
+        }
+    }
+
+    override fun getSourceFromGeofenceIntent(intent: Intent): Radar.RadarLocationSource {
+        val event = GeofencingEvent.fromIntent(intent)
+
+        return when (event.geofenceTransition) {
+            Geofence.GEOFENCE_TRANSITION_ENTER -> Radar.RadarLocationSource.GEOFENCE_ENTER
+            Geofence.GEOFENCE_TRANSITION_DWELL -> Radar.RadarLocationSource.GEOFENCE_DWELL
+            else -> Radar.RadarLocationSource.GEOFENCE_EXIT
+        }
+    }
+
+    override fun getLocationFromLocationIntent(intent: Intent): Location {
+        val result = LocationResult.extractResult(intent)
+
+        result.lastLocation.also {
+            return it
+        }
+    }
 
 }
