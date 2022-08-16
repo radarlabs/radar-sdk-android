@@ -40,6 +40,8 @@ internal class RadarHuaweiLocationClient(
 
         locationClient.requestLocationUpdates(locationRequest, object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
+                logger.d("Received current location")
+
                 block(locationResult.lastLocation)
             }
         }, Looper.getMainLooper()).addOnFailureListener {
@@ -100,6 +102,7 @@ internal class RadarHuaweiLocationClient(
                 .setRoundArea(abstractGeofence.latitude, abstractGeofence.longitude, abstractGeofence.radius)
                 .setConversions(conversions)
                 .setDwellDelayTime(abstractGeofence.dwellDuration)
+                .setValidContinueTime(-1)
                 .build()
 
             geofences.add(geofence)
@@ -137,14 +140,30 @@ internal class RadarHuaweiLocationClient(
         geofenceService.deleteGeofenceList(pendingIntent)
     }
 
-    override fun getLocationFromGeofenceIntent(intent: Intent): Location {
+    override fun getLocationFromGeofenceIntent(intent: Intent): Location? {
+        if (intent == null) {
+            return null
+        }
+
         val data = GeofenceData.getDataFromIntent(intent)
+
+        if (data == null) {
+            return null
+        }
 
         return data.convertingLocation
     }
 
-    override fun getSourceFromGeofenceIntent(intent: Intent): Radar.RadarLocationSource {
+    override fun getSourceFromGeofenceIntent(intent: Intent): Radar.RadarLocationSource? {
+        if (intent == null) {
+            return null
+        }
+
         val data = GeofenceData.getDataFromIntent(intent)
+
+        if (data == null) {
+            return null
+        }
 
         return when (data.conversion) {
             Geofence.ENTER_GEOFENCE_CONVERSION -> Radar.RadarLocationSource.GEOFENCE_ENTER
@@ -153,8 +172,16 @@ internal class RadarHuaweiLocationClient(
         }
     }
 
-    override fun getLocationFromLocationIntent(intent: Intent): Location {
+    override fun getLocationFromLocationIntent(intent: Intent): Location? {
+        if (intent == null) {
+            return null
+        }
+
         val result = LocationResult.extractResult(intent)
+
+        if (result == null) {
+            return null
+        }
 
         return result.lastLocation
     }

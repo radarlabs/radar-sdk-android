@@ -56,14 +56,14 @@ internal abstract class RadarAbstractLocationClient() {
 
     abstract fun getLocationFromGeofenceIntent(
         intent: Intent
-    ): Location
+    ): Location?
 
     abstract fun getSourceFromGeofenceIntent(
         intent: Intent
-    ): Radar.RadarLocationSource
+    ): Radar.RadarLocationSource?
 
     abstract fun getLocationFromLocationIntent(
         intent: Intent
-    ): Location
+    ): Location?
 
 }

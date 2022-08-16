@@ -30,6 +30,8 @@ internal class RadarGoogleLocationClient(
         logger.d("Requesting location")
 
         locationClient.getCurrentLocation(priority, null).addOnSuccessListener { location ->
+            logger.d("Received current location")
+
             block(location)
         }.addOnCanceledListener {
             block(null)
@@ -135,16 +137,32 @@ internal class RadarGoogleLocationClient(
             RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.NONE -> LocationRequest.PRIORITY_NO_POWER
         }
 
-    override fun getLocationFromGeofenceIntent(intent: Intent): Location {
+    override fun getLocationFromGeofenceIntent(intent: Intent): Location? {
+        if (intent == null) {
+            return null
+        }
+
         val event = GeofencingEvent.fromIntent(intent)
+
+        if (event == null) {
+            return null
+        }
 
         event.triggeringLocation.also {
             return it
         }
     }
 
-    override fun getSourceFromGeofenceIntent(intent: Intent): Radar.RadarLocationSource {
+    override fun getSourceFromGeofenceIntent(intent: Intent): Radar.RadarLocationSource? {
+        if (intent == null) {
+            return null
+        }
+
         val event = GeofencingEvent.fromIntent(intent)
+
+        if (event == null) {
+            return null
+        }
 
         return when (event.geofenceTransition) {
             Geofence.GEOFENCE_TRANSITION_ENTER -> Radar.RadarLocationSource.GEOFENCE_ENTER
@@ -153,12 +171,18 @@ internal class RadarGoogleLocationClient(
         }
     }
 
-    override fun getLocationFromLocationIntent(intent: Intent): Location {
+    override fun getLocationFromLocationIntent(intent: Intent): Location? {
+        if (intent == null) {
+            return null
+        }
+
         val result = LocationResult.extractResult(intent)
 
-        result.lastLocation.also {
-            return it
+        if (result == null) {
+            return null
         }
+
+        return result.lastLocation
     }
 
 }

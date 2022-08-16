@@ -109,6 +109,10 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 val location = Radar.locationManager.getLocationFromGeofenceIntent(intent)
                 val source = Radar.locationManager.getSourceFromGeofenceIntent(intent)
 
+                if (location == null || source == null) {
+                    return
+                }
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
                     RadarJobScheduler.scheduleJob(context, location, source)
                 } else {
@@ -118,6 +122,10 @@ class RadarLocationReceiver : BroadcastReceiver() {
             ACTION_LOCATION -> {
                 val location = Radar.locationManager.getLocationFromLocationIntent(intent)
                 val source = Radar.RadarLocationSource.BACKGROUND_LOCATION
+
+                if (location == null) {
+                    return
+                }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
                     RadarJobScheduler.scheduleJob(context, location, source)

@@ -422,6 +422,12 @@ object Radar {
 
         this.logger.d("Initializing")
 
+        if (provider == RadarLocationServicesProvider.GOOGLE) {
+            this.logger.d("Using Google location services")
+        } else if (provider == RadarLocationServicesProvider.HUAWEI) {
+            this.logger.d("Using Huawei location services")
+        }
+
         RadarUtils.loadAdId(this.context)
 
         val application = this.context as? Application
