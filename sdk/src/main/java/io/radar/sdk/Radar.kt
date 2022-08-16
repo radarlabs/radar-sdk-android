@@ -417,6 +417,7 @@ object Radar {
         }
         if (!this::locationManager.isInitialized) {
             this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager, provider)
+            RadarSettings.setLocationServicesProvider(this.context, provider)
             this.locationManager.updateTracking()
         }
 

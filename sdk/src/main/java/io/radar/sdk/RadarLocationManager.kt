@@ -8,6 +8,7 @@ import android.content.Intent
 import android.location.Location
 import android.os.Build
 import io.radar.sdk.Radar.RadarLocationCallback
+import io.radar.sdk.Radar.RadarLocationServicesProvider.GOOGLE
 import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
@@ -23,7 +24,7 @@ internal class RadarLocationManager(
     private val apiClient: RadarApiClient,
     private val logger: RadarLogger,
     private val batteryManager: RadarBatteryManager,
-    provider: Radar.RadarLocationServicesProvider,
+    private val provider: Radar.RadarLocationServicesProvider,
     internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper(),
 ) {
 
@@ -456,7 +457,7 @@ internal class RadarLocationManager(
                 RadarState.setLastMovedAt(context, lastMovedAt)
             }
             if (!force && lastMovedAt > location.time) {
-                logger.d("Skipping location: old | lastMovedAt = $lastMovedAt; location.time = $location.time")
+                logger.d("Skipping location: old | lastMovedAt = $lastMovedAt; location.time = ${location.time}")
 
                 return
             }

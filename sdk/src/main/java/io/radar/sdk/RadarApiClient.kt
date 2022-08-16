@@ -248,6 +248,7 @@ internal class RadarApiClient(
             params.putOpt("trackingOptions", Radar.getTrackingOptions().toJson())
             val usingRemoteTrackingOptions = RadarSettings.getTracking(context) && RadarSettings.getRemoteTrackingOptions(context) != null
             params.putOpt("usingRemoteTrackingOptions", usingRemoteTrackingOptions)
+            params.putOpt("locationServicesProvider", RadarSettings.getLocationServicesProvider(context))
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
