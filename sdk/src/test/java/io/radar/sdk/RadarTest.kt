@@ -1325,6 +1325,11 @@ class RadarTest {
         Radar.sendEvent(customType, metadata) { status, location, events, user ->
             callbackStatus = status
             callbackEvents = events
+
+            val customEventMetadata = events?.first()?.metadata
+            assertNotNull(customEventMetadata)
+            assertEquals("bar", customEventMetadata!!.get("foo"))
+
             latch.countDown()
         }
 
@@ -1349,6 +1354,11 @@ class RadarTest {
         Radar.sendEvent(customType, locationClientMock.mockLocation!!, null) { status, location, events, user ->
             callbackStatus = status
             callbackEvents = events
+
+            val customEventMetadata = events?.first()?.metadata
+            assertNotNull(customEventMetadata)
+            assertEquals("bar", customEventMetadata!!.get("foo"))
+
             latch.countDown()
         }
 
