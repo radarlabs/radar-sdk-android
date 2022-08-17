@@ -142,16 +142,20 @@ internal object RadarUtils {
     fun isRooted(): Boolean {
         val isEmulator = isEmulator()
         val buildTags = Build.TAGS
-        return if (!isEmulator && buildTags != null && buildTags.contains("test-keys")) {
-            true
-        } else {
-            var file = File("/system/app/Superuser.apk")
-            if (file.exists()) {
+        return try {
+            if (!isEmulator && buildTags != null && buildTags.contains("test-keys")) {
                 true
             } else {
-                file = File("/system/xbin/su")
-                !isEmulator && file.exists()
+                var file = File("/system/app/Superuser.apk")
+                if (file.exists()) {
+                    true
+                } else {
+                    file = File("/system/xbin/su")
+                    !isEmulator && file.exists()
+                }
             }
+        } catch (e: SecurityException) {
+            false
         }
     }
 
