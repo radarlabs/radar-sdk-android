@@ -30,7 +30,7 @@ class RadarTest {
 
         private val context: Context = ApplicationProvider.getApplicationContext()
         private val apiHelperMock = RadarApiHelperMock()
-        private val locationClientMock = FusedLocationProviderClientMock(context)
+        private val locationClientMock = RadarMockLocationProvider()
         private val permissionsHelperMock = RadarPermissionsHelperMock()
     }
 
