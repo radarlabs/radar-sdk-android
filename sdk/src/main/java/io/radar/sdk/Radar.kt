@@ -353,6 +353,16 @@ object Radar {
         METRIC
     }
 
+    /**
+     * The location services providers.
+     */
+    enum class RadarLocationServicesProvider {
+        /** Google Play Services Location (default) */
+        GOOGLE,
+        /** Huawei Mobile Services Location */
+        HUAWEI
+    }
+
     internal var initialized = false
     private lateinit var context: Context
     private lateinit var handler: Handler
@@ -385,9 +395,10 @@ object Radar {
      * @param[context] The context
      * @param[publishableKey] Your publishable API key
      * @param[receiver] An optional receiver for the client-side delivery of events
+     * @param[provider] An optional receiver for the client-side delivery of events
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null) {
+    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE) {
         if (context == null) {
             return
         }
@@ -426,11 +437,18 @@ object Radar {
             }
         }
         if (!this::locationManager.isInitialized) {
-            this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager)
+            this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager, provider)
+            RadarSettings.setLocationServicesProvider(this.context, provider)
             this.locationManager.updateTracking()
         }
 
         this.logger.d("Initializing")
+
+        if (provider == RadarLocationServicesProvider.GOOGLE) {
+            this.logger.d("Using Google location services")
+        } else if (provider == RadarLocationServicesProvider.HUAWEI) {
+            this.logger.d("Using Huawei location services")
+        }
 
         RadarUtils.loadAdId(this.context)
 
@@ -710,17 +728,17 @@ object Radar {
 
                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                        override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, beaconUUIDs: Array<String>?) {
+                        override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
                             if (status != RadarStatus.SUCCESS || beacons == null) {
                                 callTrackApi(null)
 
                                 return
                             }
 
-                            if (beaconUUIDs != null && beaconUUIDs.isNotEmpty()) {
-                                beaconManager.startMonitoringBeaconUUIDs(beaconUUIDs)
+                            if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                                beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
-                                beaconManager.rangeBeaconUUIDs(beaconUUIDs, object : RadarBeaconCallback {
+                                beaconManager.rangeBeaconUUIDs(uuids, uids, object : RadarBeaconCallback {
                                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
                                         if (status != RadarStatus.SUCCESS || beacons == null) {
                                             callTrackApi(null)

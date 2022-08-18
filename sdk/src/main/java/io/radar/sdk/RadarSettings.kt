@@ -11,6 +11,7 @@ import java.util.UUID
 internal object RadarSettings {
 
     private const val KEY_PUBLISHABLE_KEY = "publishable_key"
+    private const val KEY_LOCATION_SERVICES_PROVIDER = "provider"
     private const val KEY_INSTALL_ID = "install_id"
     private const val KEY_SESSION_ID = "session_id"
     private const val KEY_ID = "radar_user_id"
@@ -43,6 +44,14 @@ internal object RadarSettings {
 
     internal fun setPublishableKey(context: Context, publishableKey: String?) {
         getSharedPreferences(context).edit { putString(KEY_PUBLISHABLE_KEY, publishableKey) }
+    }
+
+    internal fun getLocationServicesProvider(context: Context): String? {
+        return getSharedPreferences(context).getString(KEY_LOCATION_SERVICES_PROVIDER, null)
+    }
+
+    internal fun setLocationServicesProvider(context: Context, provider: Radar.RadarLocationServicesProvider) {
+        getSharedPreferences(context).edit { putString(KEY_LOCATION_SERVICES_PROVIDER, provider.name) }
     }
 
     internal fun getInstallId(context: Context): String {

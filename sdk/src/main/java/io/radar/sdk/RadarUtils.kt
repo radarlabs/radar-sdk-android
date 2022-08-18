@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.google.android.gms.ads.identifier.AdvertisingIdClient
 import io.radar.sdk.model.RadarEvent
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -136,6 +137,26 @@ internal object RadarUtils {
                 || Build.PRODUCT.contains("vbox86p")
                 || Build.PRODUCT.contains("emulator")
                 || Build.PRODUCT.contains("simulator");
+    }
+
+    fun isRooted(): Boolean {
+        val isEmulator = isEmulator()
+        val buildTags = Build.TAGS
+        return try {
+            if (!isEmulator && buildTags != null && buildTags.contains("test-keys")) {
+                true
+            } else {
+                var file = File("/system/app/Superuser.apk")
+                if (file.exists()) {
+                    true
+                } else {
+                    file = File("/system/xbin/su")
+                    !isEmulator && file.exists()
+                }
+            }
+        } catch (e: SecurityException) {
+            false
+        }
     }
 
     internal fun isoStringToDate(str: String?): Date? {
