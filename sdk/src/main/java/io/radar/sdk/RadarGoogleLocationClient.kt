@@ -148,9 +148,7 @@ internal class RadarGoogleLocationClient(
             return null
         }
 
-        event.triggeringLocation.also {
-            return it
-        }
+        return event.triggeringLocation
     }
 
     override fun getSourceFromGeofenceIntent(intent: Intent): Radar.RadarLocationSource? {
