@@ -228,7 +228,7 @@ internal class RadarBeaconManager(
                 }
 
                 if (scanFilter != null) {
-                    logger.d("Starting monitoring beacon UUID | beaconUID = $beaconUID")
+                    logger.d("Starting monitoring beacon UID | beaconUID = $beaconUID")
 
                     scanFilters.add(scanFilter)
                 }
