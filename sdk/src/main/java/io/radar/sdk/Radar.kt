@@ -1346,6 +1346,33 @@ object Radar {
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
+        searchPlaces(radius, chains, null, categories, groups, limit, callback)
+    }
+
+    /**
+     * Gets the device's current location, then searches for places (with or without chain-specific
+     * metadata) near that location, sorted by distance.
+     *
+     * @see [](https://radar.io/documentation/api#search-places)
+     *
+     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[chains] An array of chain slugs to filter. See [](https://radar.io/documentation/places/chains)
+     * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
+     * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
+     * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
+     * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun searchPlaces(
+        radius: Int,
+        chains: Array<String>?,
+        chainMetadata: Map<String, String>?,
+        categories: Array<String>?,
+        groups: Array<String>?,
+        limit: Int?,
+        callback: RadarSearchPlacesCallback
+    ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1362,7 +1389,7 @@ object Radar {
                     return
                 }
 
-                apiClient.searchPlaces(location, radius, chains, categories, groups, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
+                apiClient.searchPlaces(location, radius, chains, chainMetadata, categories, groups, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, places: Array<RadarPlace>?) {
                         handler.post {
                             callback.onComplete(status, location, places)
@@ -1393,9 +1420,36 @@ object Radar {
         limit: Int?,
         block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
     ) {
+        searchPlaces(radius, chains, null, categories, groups, limit, block)
+    }
+
+    /**
+     * Gets the device's current location, then searches for places (with or without chain-specific
+     * metadata) near that location, sorted by distance.
+     *
+     * @see [](https://radar.io/documentation/api#search-places)
+     *
+     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[chains] An array of chain slugs to filter. See [](https://radar.io/documentation/places/chains)
+     * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
+     * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
+     * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
+     * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[block] A block callback.
+     */
+    fun searchPlaces(
+        radius: Int,
+        chains: Array<String>?,
+        chainMetadata: Map<String, String>?,
+        categories: Array<String>?,
+        groups: Array<String>?,
+        limit: Int?,
+        block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
+    ) {
         searchPlaces(
             radius,
             chains,
+            chainMetadata,
             categories,
             groups,
             limit,
@@ -1430,13 +1484,42 @@ object Radar {
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
+        searchPlaces(near, radius, chains, null, categories, groups, limit, callback)
+    }
+
+    /**
+     * Search for places (with or without chain-specific metadata) near a location, sorted by
+     * distance.
+     *
+     * @see [](https://radar.io/documentation/api#search-places)
+     *
+     * @param[near] The location to search.
+     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[chains] An array of chain slugs to filter. See [](https://radar.io/documentation/places/chains)
+     * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
+     * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
+     * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
+     * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun searchPlaces(
+        near: Location,
+        radius: Int,
+        chains: Array<String>?,
+        chainMetadata: Map<String, String>?,
+        categories: Array<String>?,
+        groups: Array<String>?,
+        limit: Int?,
+        callback: RadarSearchPlacesCallback
+    ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
 
-        apiClient.searchPlaces(near, radius, chains, categories, groups, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
+        apiClient.searchPlaces(near, radius, chains, chainMetadata, categories, groups, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, places: Array<RadarPlace>?) {
                 handler.post {
                     callback.onComplete(status, near, places)
@@ -1467,10 +1550,39 @@ object Radar {
         limit: Int?,
         block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
     ) {
+        searchPlaces(near, radius, chains, null, categories, groups, limit, block)
+    }
+
+    /**
+     * Search for places (with or without chain-specific metadata) near a location, sorted by
+     * distance.
+     *
+     * @see [](https://radar.io/documentation/api#search-places)
+     *
+     * @param[near] The location to search.
+     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[chains] An array of chain slugs to filter. See [](https://radar.io/documentation/places/chains)
+     * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
+     * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
+     * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
+     * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[block] A block callback.
+     */
+    fun searchPlaces(
+        near: Location,
+        radius: Int,
+        chains: Array<String>?,
+        chainMetadata: Map<String, String>?,
+        categories: Array<String>?,
+        groups: Array<String>?,
+        limit: Int?,
+        block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
+    ) {
         searchPlaces(
             near,
             radius,
             chains,
+            chainMetadata,
             categories,
             groups,
             limit,

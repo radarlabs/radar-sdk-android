@@ -1,0 +1,55 @@
+{
+    "meta": {
+        "code": 200
+    },
+    "places": [
+        {
+            "_id": "5dc9a5ed2004860034bc0767",
+            "categories": [
+                "food-beverage",
+                "restaurant",
+                "fast-food-restaurant"
+            ],
+            "chain": {
+                "domain": "mcdonalds.com",
+                "metadata": {
+                    "orderActive": "true"
+                },
+                "name": "McDonald's",
+                "slug": "mcdonalds"
+            },
+            "location": {
+                "coordinates": [
+                    -122.407687,
+                    37.789137
+                ],
+                "type": "Point"
+            },
+            "name": "McDonald's"
+        },
+        {
+            "_id" : "5dc9a5ee2004860034bc07e9",
+            "categories": [
+                "food-beverage",
+                "restaurant",
+                "fast-food-restaurant"
+            ],
+            "chain": {
+                "domain": "mcdonalds.com",
+                "metadata": {
+                    "orderActive": "true"
+                },
+                "name": "McDonald's",
+                "slug": "mcdonalds"
+            },
+            "location": {
+                "coordinates": [
+                    -122.4014864410883,
+                    37.78895421948911
+                ],
+                "type": "Point"
+            },
+            "name" : "McDonald's"
+        }
+    ]
+}
