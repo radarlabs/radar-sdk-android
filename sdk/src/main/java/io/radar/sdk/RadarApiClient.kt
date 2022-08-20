@@ -371,6 +371,9 @@ internal class RadarApiClient(
         }
         params.putOpt("mode", Radar.stringForMode(options.mode))
         params.putOpt("scheduledArrivalAt", RadarUtils.dateToISOString(options.scheduledArrivalAt))
+        if (options.approachingThreshold > 0) {
+            params.put("approachingThreshold", options.approachingThreshold)
+        }
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
