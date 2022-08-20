@@ -138,7 +138,8 @@ class MainActivity : AppCompatActivity() {
             null,
             "store",
             "123",
-            Radar.RadarRouteMode.CAR
+            Radar.RadarRouteMode.CAR,
+            approachingThreshold = 0
         )
         Radar.startTrip(tripOptions)
 
