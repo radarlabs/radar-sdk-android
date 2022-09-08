@@ -175,15 +175,20 @@ internal class RadarApiClient(
         val params = JSONObject()
         val options = Radar.getTrackingOptions()
         val tripOptions = RadarSettings.getTripOptions(context)
+        val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
         try {
-            params.putOpt("id", RadarSettings.getId(context))
-            params.putOpt("installId", RadarSettings.getInstallId(context))
-            params.putOpt("userId", RadarSettings.getUserId(context))
-            params.putOpt("deviceId", RadarUtils.getDeviceId(context))
-            params.putOpt("description", RadarSettings.getDescription(context))
-            params.putOpt("metadata", RadarSettings.getMetadata(context))
-            if (RadarSettings.getAdIdEnabled(context)) {
-                params.putOpt("adId", RadarUtils.getAdId(context))
+            params.putOpt("anonymous", anonymous)
+            if (!anonymous) {
+                params.putOpt("id", RadarSettings.getId(context))
+                params.putOpt("installId", RadarSettings.getInstallId(context))
+                params.putOpt("userId", RadarSettings.getUserId(context))
+                params.putOpt("deviceId", RadarUtils.getDeviceId(context))
+                params.putOpt("description", RadarSettings.getDescription(context))
+                params.putOpt("metadata", RadarSettings.getMetadata(context))
+                if (RadarSettings.getAdIdEnabled(context)) {
+                    params.putOpt("adId", RadarUtils.getAdId(context))
+                }
+                params.putOpt("sessionId", RadarSettings.getSessionId(context))
             }
             params.putOpt("latitude", location.latitude)
             params.putOpt("longitude", location.longitude)
@@ -246,7 +251,6 @@ internal class RadarApiClient(
             if (beacons != null) {
                 params.putOpt("beacons", RadarBeacon.toJson(beacons))
             }
-            params.putOpt("sessionId", RadarSettings.getSessionId(context))
             params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
             params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
             params.putOpt("trackingOptions", Radar.getTrackingOptions().toJson())
