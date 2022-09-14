@@ -178,7 +178,12 @@ internal class RadarApiClient(
         val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
         try {
             params.putOpt("anonymous", anonymous)
-            if (!anonymous) {
+            if (anonymous) {
+                params.putOpt("geofenceIds", RadarState.getGeofenceIds(context)?.toTypedArray())
+                params.putOpt("placeId", RadarState.getPlaceId(context))
+                params.putOpt("regionIds", RadarState.getRegionIds(context)?.toTypedArray())
+                params.putOpt("beaconIds", RadarState.getBeaconIds(context)?.toTypedArray())
+            } else {
                 params.putOpt("id", RadarSettings.getId(context))
                 params.putOpt("installId", RadarSettings.getInstallId(context))
                 params.putOpt("userId", RadarSettings.getUserId(context))
@@ -300,6 +305,32 @@ internal class RadarApiClient(
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
                     RadarGeofence.fromJson(nearbyGeofencesArr)
                 }
+
+                if (user != null) {
+                    val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
+                    val atPlace = user.place != null
+                    val canExit = inGeofences || atPlace
+                    RadarState.setCanExit(context, canExit)
+
+                    val geofenceIds = mutableSetOf<String>()
+                    user.geofences?.forEach { geofence -> geofenceIds.add(geofence._id) }
+                    RadarState.setGeofenceIds(context, geofenceIds)
+
+                    val placeId = user.place?._id
+                    RadarState.setPlaceId(context, placeId)
+
+                    val regionIds = mutableSetOf<String>()
+                    user.country?.let { country -> regionIds.add(country._id) }
+                    user.state?.let { state -> regionIds.add(state._id) }
+                    user.dma?.let { dma -> regionIds.add(dma._id) }
+                    user.postalCode?.let { postalCode -> regionIds.add(postalCode._id) }
+                    RadarState.setRegionIds(context, regionIds)
+
+                    val beaconIds = mutableSetOf<String>()
+                    user.beacons?.forEach { beacon -> beacon._id?.let { _id -> beaconIds.add(_id) } }
+                    RadarState.setBeaconIds(context, beaconIds)
+                }
+
                 if (events != null && user != null) {
                     RadarSettings.setId(context, user._id)
 
