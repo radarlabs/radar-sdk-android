@@ -639,14 +639,15 @@ class RadarTest {
 
     @Test
     fun test_Radar_startTrip() {
-        val options = RadarTripOptions("tripExternalId")
-        options.metadata = JSONObject(mapOf("foo" to "bar", "baz" to true, "qux" to 1))
-        options.destinationGeofenceTag = "tripDestinationGeofenceTag"
-        options.destinationGeofenceExternalId = "tripDestinationGeofenceExternalId"
-        options.mode = Radar.RadarRouteMode.FOOT
+        val tripOptions = RadarTripOptions("tripExternalId")
+        tripOptions.metadata = JSONObject(mapOf("foo" to "bar", "baz" to true, "qux" to 1))
+        tripOptions.destinationGeofenceTag = "tripDestinationGeofenceTag"
+        tripOptions.destinationGeofenceExternalId = "tripDestinationGeofenceExternalId"
+        tripOptions.mode = Radar.RadarRouteMode.FOOT
 
-        Radar.startTrip(options)
-        assertEquals(options, Radar.getTripOptions())
+        val onTripTrackingOptions = RadarTrackingOptions.CONTINUOUS
+        Radar.startTrip(tripOptions, onTripTrackingOptions)
+        assertEquals(tripOptions, Radar.getTripOptions())
     }
 
     @Test
