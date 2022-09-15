@@ -174,7 +174,6 @@ internal class RadarApiClient(
 
         val params = JSONObject()
         val options = Radar.getTrackingOptions()
-        val tripOptions = RadarSettings.getTripOptions(context)
         try {
             params.putOpt("id", RadarSettings.getId(context))
             params.putOpt("installId", RadarSettings.getInstallId(context))
@@ -229,15 +228,6 @@ internal class RadarApiClient(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 val mocked = location.isFromMockProvider
                 params.putOpt("mocked", mocked)
-            }
-            if (tripOptions != null) {
-                val tripOptionsObj = JSONObject()
-                tripOptionsObj.putOpt("externalId", tripOptions.externalId)
-                tripOptionsObj.putOpt("metadata", tripOptions.metadata)
-                tripOptionsObj.putOpt("destinationGeofenceTag", tripOptions.destinationGeofenceTag)
-                tripOptionsObj.putOpt("destinationGeofenceExternalId", tripOptions.destinationGeofenceExternalId)
-                tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
-                params.putOpt("tripOptions", tripOptionsObj)
             }
             if (options.syncGeofences) {
                 params.putOpt("nearbyGeofences", true)
@@ -341,6 +331,70 @@ internal class RadarApiClient(
         apiHelper.request(context, "PUT", url, headers, params, false)
     }
 
+    internal fun createTrip(options: RadarTripOptions?, callback: RadarTripApiCallback?) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val externalId = options?.externalId
+        if (externalId == null) {
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
+        }
+
+        val params = JSONObject()
+        params.putOpt("userId", RadarSettings.getUserId(context))
+        if (options.metadata != null) {
+            params.putOpt("metadata", options.metadata)
+        }
+        if (options.destinationGeofenceTag != null) {
+            params.putOpt("destinationGeofenceTag", options.destinationGeofenceTag)
+        }
+        if (options.destinationGeofenceExternalId != null) {
+            params.putOpt("destinationGeofenceExternalId", options.destinationGeofenceExternalId)
+        }
+        params.putOpt("mode", Radar.stringForMode(options.mode))
+        params.putOpt("scheduledArrivalAt", RadarUtils.dateToISOString(options.scheduledArrivalAt))
+        if (options.approachingThreshold > 0) {
+            params.put("approachingThreshold", options.approachingThreshold)
+        }
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/trips")
+            .build()
+        val url = URL(uri.toString())
+
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "POST", url, headers, params, false, object: RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback?.onComplete(status)
+
+                    return
+                }
+
+                val trip = res.optJSONObject("trip")?.let { tripObj ->
+                    RadarTrip.fromJson(tripObj)
+                }
+                val events = res.optJSONArray("events")?.let { eventsArr ->
+                    RadarEvent.fromJson(eventsArr)
+                }
+
+                if (events != null && events.isNotEmpty()) {
+                    Radar.sendEvents(events)
+                }
+
+                callback?.onComplete(RadarStatus.SUCCESS, res, trip, events)
+            }
+        })
+    }
+
     internal fun updateTrip(options: RadarTripOptions?, status: RadarTrip.RadarTripStatus?, callback: RadarTripApiCallback?) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -357,6 +411,7 @@ internal class RadarApiClient(
         }
 
         val params = JSONObject()
+        params.putOpt("userId", RadarSettings.getUserId(context))
         if (status != null && status != RadarTrip.RadarTripStatus.UNKNOWN) {
             params.putOpt("status", Radar.stringForTripStatus(status))
         }
@@ -379,6 +434,7 @@ internal class RadarApiClient(
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/trips/")
             .appendEncodedPath(externalId)
+            .appendEncodedPath("/update")
             .build()
         val url = URL(uri.toString())
 

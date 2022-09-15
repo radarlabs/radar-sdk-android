@@ -1110,12 +1110,12 @@ object Radar {
      * @param[callback] An optional callback.
      */
     @JvmStatic
-    fun startTrip(options: RadarTripOptions, callback: RadarTripCallback? = null) {
+    fun startTrip(options: RadarTripOptions, trackingOptions: RadarTrackingOptions?, callback: RadarTripCallback? = null) {
         if (!initialized) {
             return
         }
 
-        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.STARTED, object : RadarApiClient.RadarTripApiCallback {
+        apiClient.createTrip(options, object : RadarApiClient.RadarTripApiCallback {
             override fun onComplete(
                 status: RadarStatus,
                 res: JSONObject?,
@@ -1125,7 +1125,16 @@ object Radar {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, options)
 
+                    // if trackingOptions provided, startTracking
+                    if (trackingOptions != null) {
+                        // store previous tracking options for post-trip
+                        val previousTrackingOptions = Radar.getTrackingOptions();
+                        RadarSettings.setPreviousTrackingOptions(context, previousTrackingOptions);
+                        Radar.startTracking(trackingOptions);
+                    }
+
                     // flush location update to generate events
+                    // TODO: still needed?
                     locationManager.getLocation(null)
                 }
 
@@ -1145,8 +1154,8 @@ object Radar {
      * @param[block] An optional block callback.
      */
     @JvmStatic
-    fun startTrip(options: RadarTripOptions, block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
-        startTrip(options, object : RadarTripCallback {
+    fun startTrip(options: RadarTripOptions, trackingOptions: RadarTrackingOptions?, block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
+        startTrip(options, trackingOptions, object : RadarTripCallback {
             override fun onComplete(
                 status: RadarStatus,
                 trip: RadarTrip?,
@@ -1239,6 +1248,13 @@ object Radar {
                 if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
                     RadarSettings.setTripOptions(context, null)
 
+                    // return to previous tracking options after trip
+                    val previousTrackingOptions = RadarSettings.getPreviousTrackingOptions(context);
+                    if (previousTrackingOptions !== null) {
+                        RadarSettings.removePreviousTrackingOptions(context);
+                        Radar.startTracking(previousTrackingOptions);
+                    }
+
                     // flush location update to generate events
                     locationManager.getLocation(null)
                 }
@@ -1293,6 +1309,13 @@ object Radar {
             ) {
                 if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
                     RadarSettings.setTripOptions(context, null)
+
+                    // return to previous tracking options after trip
+                    val previousTrackingOptions = RadarSettings.getPreviousTrackingOptions(context);
+                    if (previousTrackingOptions !== null) {
+                        RadarSettings.removePreviousTrackingOptions(context);
+                        Radar.startTracking(previousTrackingOptions);
+                    }
 
                     // flush location update to generate events
                     locationManager.getLocation(null)
