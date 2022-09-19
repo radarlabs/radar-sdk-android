@@ -348,6 +348,7 @@ internal class RadarApiClient(
 
         val params = JSONObject()
         params.putOpt("userId", RadarSettings.getUserId(context))
+        params.putOpt("externalId", externalId)
         if (options.metadata != null) {
             params.putOpt("metadata", options.metadata)
         }
@@ -434,7 +435,7 @@ internal class RadarApiClient(
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/trips/")
             .appendEncodedPath(externalId)
-            .appendEncodedPath("/update")
+            .appendEncodedPath("update")
             .build()
         val url = URL(uri.toString())
 
