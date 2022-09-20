@@ -179,10 +179,11 @@ internal class RadarApiClient(
         try {
             params.putOpt("anonymous", anonymous)
             if (anonymous) {
-                params.putOpt("geofenceIds", RadarState.getGeofenceIds(context)?.toTypedArray())
+                params.putOpt("deviceId", "anonymous")
+                params.putOpt("geofenceIds", JSONArray(RadarState.getGeofenceIds(context)))
                 params.putOpt("placeId", RadarState.getPlaceId(context))
-                params.putOpt("regionIds", RadarState.getRegionIds(context)?.toTypedArray())
-                params.putOpt("beaconIds", RadarState.getBeaconIds(context)?.toTypedArray())
+                params.putOpt("regionIds", JSONArray(RadarState.getRegionIds(context)))
+                params.putOpt("beaconIds", JSONArray(RadarState.getBeaconIds(context)))
             } else {
                 params.putOpt("id", RadarSettings.getId(context))
                 params.putOpt("installId", RadarSettings.getInstallId(context))
