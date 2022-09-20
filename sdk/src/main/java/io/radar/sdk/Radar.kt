@@ -419,6 +419,12 @@ object Radar {
             this.logger = RadarLogger(this.context)
         }
 
+        // development
+        this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
+            .edit()
+            .putString("host", "https://api-bradley.radar-staging.com")
+            .apply()
+
         RadarSettings.updateSessionId(this.context)
 
         if (publishableKey != null) {
@@ -1249,11 +1255,7 @@ object Radar {
                     RadarSettings.setTripOptions(context, null)
 
                     // return to previous tracking options after trip
-                    val previousTrackingOptions = RadarSettings.getPreviousTrackingOptions(context);
-                    if (previousTrackingOptions !== null) {
-                        RadarSettings.removePreviousTrackingOptions(context);
-                        Radar.startTracking(previousTrackingOptions);
-                    }
+                    locationManager.restartPreviousTrackingOptions();
 
                     // flush location update to generate events
                     locationManager.getLocation(null)
@@ -1311,11 +1313,7 @@ object Radar {
                     RadarSettings.setTripOptions(context, null)
 
                     // return to previous tracking options after trip
-                    val previousTrackingOptions = RadarSettings.getPreviousTrackingOptions(context);
-                    if (previousTrackingOptions !== null) {
-                        RadarSettings.removePreviousTrackingOptions(context);
-                        Radar.startTracking(previousTrackingOptions);
-                    }
+                    locationManager.restartPreviousTrackingOptions();
 
                     // flush location update to generate events
                     locationManager.getLocation(null)

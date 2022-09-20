@@ -8,6 +8,7 @@ import android.os.SystemClock
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
+import io.radar.sdk.Radar.locationManager
 import io.radar.sdk.model.*
 import org.json.JSONArray
 import org.json.JSONException
@@ -290,7 +291,12 @@ internal class RadarApiClient(
                     RadarSettings.setId(context, user._id)
 
                     if (user.trip == null) {
-                        RadarSettings.setTripOptions(context, null)
+                        // if user was on a trip that ended server side, restore previous tracking options
+                        val tripOptions = RadarSettings.getTripOptions(context)
+                        if (tripOptions != null) {
+                            locationManager.restartPreviousTrackingOptions()
+                            RadarSettings.setTripOptions(context, null)
+                        }
                     }
 
                     Radar.sendLocation(location, user)
