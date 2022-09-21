@@ -116,6 +116,7 @@ internal class RadarLocationManager(
     fun stopTracking() {
         this.started = false
         RadarSettings.setTracking(context, false)
+        RadarSettings.setTrackingOptions(context, null)
         this.updateTracking()
     }
 
@@ -245,14 +246,14 @@ internal class RadarLocationManager(
     }
 
     internal fun restartPreviousTrackingOptions() {
-        val previousTrackingOptions = RadarSettings.getPreviousTrackingOptions(context);
-        if (previousTrackingOptions !== null) {
-            logger.d("Restarting previous tracking options | trackingOptions = ${previousTrackingOptions}")
-            RadarSettings.removePreviousTrackingOptions(context);
-            Radar.startTracking(previousTrackingOptions);
-
-            // TODO: handle tracking=false
+        val previousTrackingOptions = RadarSettings.getPreviousTrackingOptions(context)
+        logger.d("Restarting previous tracking options | trackingOptions = ${previousTrackingOptions}")
+        if (previousTrackingOptions == null) {
+            Radar.stopTracking()
+        } else {
+            Radar.startTracking(previousTrackingOptions)
         }
+        RadarSettings.removePreviousTrackingOptions(context)
     }
 
     internal fun getLocationFromGeofenceIntent(intent: Intent): Location? {
