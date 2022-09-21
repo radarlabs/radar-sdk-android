@@ -170,6 +170,10 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putString(KEY_TRACKING_OPTIONS, optionsJson) }
     }
 
+    internal fun removeTrackingOptions(context: Context) {
+        getSharedPreferences(context).edit { remove(KEY_TRACKING_OPTIONS) }
+    }
+
     internal fun getPreviousTrackingOptions(context: Context): RadarTrackingOptions {
         return getTrackingOptionsByKey(context, KEY_PREVIOUS_TRACKING_OPTIONS)
     }
