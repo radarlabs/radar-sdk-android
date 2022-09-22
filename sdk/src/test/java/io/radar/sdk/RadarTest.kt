@@ -639,11 +639,7 @@ class RadarTest {
 
     @Test
     fun test_Radar_startTrip() {
-        val tripOptions = RadarTripOptions("tripExternalId")
-        tripOptions.metadata = JSONObject(mapOf("foo" to "bar", "baz" to true, "qux" to 1))
-        tripOptions.destinationGeofenceTag = "tripDestinationGeofenceTag"
-        tripOptions.destinationGeofenceExternalId = "tripDestinationGeofenceExternalId"
-        tripOptions.mode = Radar.RadarRouteMode.FOOT
+        val tripOptions = getTestTripOptions()
 
         Radar.startTrip(tripOptions)
         assertEquals(tripOptions, Radar.getTripOptions())
@@ -656,11 +652,7 @@ class RadarTest {
         Radar.startTracking(responsive)
         assertTrue(Radar.isTracking())
 
-        val tripOptions = RadarTripOptions("tripExternalId")
-        tripOptions.metadata = JSONObject(mapOf("foo" to "bar", "baz" to true, "qux" to 1))
-        tripOptions.destinationGeofenceTag = "tripDestinationGeofenceTag"
-        tripOptions.destinationGeofenceExternalId = "tripDestinationGeofenceExternalId"
-        tripOptions.mode = Radar.RadarRouteMode.FOOT
+        val tripOptions = getTestTripOptions()
 
         // start trip w/ continuous mode
         val onTripTrackingOptions = RadarTrackingOptions.CONTINUOUS
@@ -668,6 +660,7 @@ class RadarTest {
             assertEquals(tripOptions, Radar.getTripOptions())
             assertEquals(onTripTrackingOptions, Radar.getTrackingOptions())
             assertEquals(responsive, RadarSettings.getPreviousTrackingOptions(context))
+            assertTrue(Radar.isTracking())
         }
 
         // returns back to responsive mode after trip
@@ -675,6 +668,30 @@ class RadarTest {
             assertEquals(null, RadarSettings.getPreviousTrackingOptions(context))
             assertEquals(responsive, Radar.getTrackingOptions())
             assertTrue(Radar.isTracking())
+        }
+    }
+
+    @Test
+    fun test_Radar_startTrip_notTracking() {
+        // not tracking before trip
+        Radar.stopTracking()
+
+        val tripOptions = getTestTripOptions()
+
+        // start trip w/ continuous mode
+        val continuous = RadarTrackingOptions.CONTINUOUS
+        Radar.startTrip(tripOptions, continuous) { status, trip, events ->
+            assertEquals(tripOptions, Radar.getTripOptions())
+            assertEquals(continuous, Radar.getTrackingOptions())
+            assertEquals(null, RadarSettings.getPreviousTrackingOptions(context))
+            assertTrue(Radar.isTracking())
+        }
+
+        // returns back to not tracking after trip
+        Radar.completeTrip() { _, _, _ ->
+            assertEquals(null, RadarSettings.getPreviousTrackingOptions(context))
+            assertEquals(continuous, Radar.getTrackingOptions())
+            assertFalse(Radar.isTracking())
         }
     }
 
@@ -1445,6 +1462,16 @@ class RadarTest {
         val returnedMetadata = firstEvent!!.metadata
         assertNotNull(returnedMetadata)
         assertEquals(metadata.get("foo"), returnedMetadata!!["foo"])
+    }
+
+    private fun getTestTripOptions(): RadarTripOptions {
+        val tripOptions = RadarTripOptions("tripExternalId")
+        tripOptions.metadata = JSONObject(mapOf("foo" to "bar", "baz" to true, "qux" to 1))
+        tripOptions.destinationGeofenceTag = "tripDestinationGeofenceTag"
+        tripOptions.destinationGeofenceExternalId = "tripDestinationGeofenceExternalId"
+        tripOptions.mode = Radar.RadarRouteMode.FOOT
+
+        return tripOptions
     }
 
 }
