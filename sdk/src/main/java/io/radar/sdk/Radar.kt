@@ -1131,11 +1131,18 @@ object Radar {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, options)
 
+                    // store previous tracking options for post-trip
+                    // if tracking was false, previousTrackingOptions will be null
+                    val isTracking = Radar.isTracking()
+                    if (isTracking) {
+                        val previousTrackingOptions = Radar.getTrackingOptions()
+                        RadarSettings.setPreviousTrackingOptions(context, previousTrackingOptions)
+                    } else {
+                        RadarSettings.removePreviousTrackingOptions(context)
+                    }
+
                     // if trackingOptions provided, startTracking
                     if (trackingOptions != null) {
-                        // store previous tracking options for post-trip
-                        val previousTrackingOptions = Radar.getTrackingOptions();
-                        RadarSettings.setPreviousTrackingOptions(context, previousTrackingOptions);
                         Radar.startTracking(trackingOptions);
                     }
 
