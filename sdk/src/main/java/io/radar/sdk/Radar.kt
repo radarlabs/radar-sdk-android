@@ -419,12 +419,6 @@ object Radar {
             this.logger = RadarLogger(this.context)
         }
 
-        // development
-        this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
-            .edit()
-            .putString("host", "https://api-bradley.radar-staging.com")
-            .apply()
-
         RadarSettings.updateSessionId(this.context)
 
         if (publishableKey != null) {
