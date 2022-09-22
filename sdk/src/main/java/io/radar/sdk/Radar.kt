@@ -568,6 +568,17 @@ object Radar {
     }
 
     /**
+     * Enables anonymous tracking for privacy reasons. Avoids creating user records on the server and avoids sending any stable device IDs, user IDs, and user metadata
+     * to the server when calling `trackOnce()` or `startTracking()`. Disabled by default.
+     *
+     * @param[enabled] A boolean indicating whether anonymous tracking should be enabled.
+     */
+    @JvmStatic
+    fun setAnonymousTrackingEnabled(enabled: Boolean) {
+        RadarSettings.setAnonymousTrackingEnabled(context, enabled)
+    }
+
+    /**
      * Enables `adId` (Android advertising ID) collection. Disabled by default.
      *
      * @param[enabled] A boolean indicating whether `adId` should be collected.

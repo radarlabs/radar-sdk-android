@@ -582,13 +582,6 @@ internal class RadarLocationManager(
                     nearbyGeofences: Array<RadarGeofence>?,
                     config: RadarConfig?
                 ) {
-                    if (user != null) {
-                        val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
-                        val atPlace = user.place != null
-                        val canExit = inGeofences || atPlace
-                        RadarState.setCanExit(context, canExit)
-                    }
-
                     locationManager.replaceSyncedGeofences(nearbyGeofences)
 
                     if (foregroundService != null && foregroundService.updatesOnly) {

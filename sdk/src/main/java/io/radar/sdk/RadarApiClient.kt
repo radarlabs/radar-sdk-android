@@ -175,15 +175,26 @@ internal class RadarApiClient(
 
         val params = JSONObject()
         val options = Radar.getTrackingOptions()
+        val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
         try {
-            params.putOpt("id", RadarSettings.getId(context))
-            params.putOpt("installId", RadarSettings.getInstallId(context))
-            params.putOpt("userId", RadarSettings.getUserId(context))
-            params.putOpt("deviceId", RadarUtils.getDeviceId(context))
-            params.putOpt("description", RadarSettings.getDescription(context))
-            params.putOpt("metadata", RadarSettings.getMetadata(context))
-            if (RadarSettings.getAdIdEnabled(context)) {
-                params.putOpt("adId", RadarUtils.getAdId(context))
+            params.putOpt("anonymous", anonymous)
+            if (anonymous) {
+                params.putOpt("deviceId", "anonymous")
+                params.putOpt("geofenceIds", JSONArray(RadarState.getGeofenceIds(context)))
+                params.putOpt("placeId", RadarState.getPlaceId(context))
+                params.putOpt("regionIds", JSONArray(RadarState.getRegionIds(context)))
+                params.putOpt("beaconIds", JSONArray(RadarState.getBeaconIds(context)))
+            } else {
+                params.putOpt("id", RadarSettings.getId(context))
+                params.putOpt("installId", RadarSettings.getInstallId(context))
+                params.putOpt("userId", RadarSettings.getUserId(context))
+                params.putOpt("deviceId", RadarUtils.getDeviceId(context))
+                params.putOpt("description", RadarSettings.getDescription(context))
+                params.putOpt("metadata", RadarSettings.getMetadata(context))
+                if (RadarSettings.getAdIdEnabled(context)) {
+                    params.putOpt("adId", RadarUtils.getAdId(context))
+                }
+                params.putOpt("sessionId", RadarSettings.getSessionId(context))
             }
             params.putOpt("latitude", location.latitude)
             params.putOpt("longitude", location.longitude)
@@ -237,7 +248,6 @@ internal class RadarApiClient(
             if (beacons != null) {
                 params.putOpt("beacons", RadarBeacon.toJson(beacons))
             }
-            params.putOpt("sessionId", RadarSettings.getSessionId(context))
             params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
             params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
             params.putOpt("trackingOptions", Radar.getTrackingOptions().toJson())
@@ -287,6 +297,32 @@ internal class RadarApiClient(
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
                     RadarGeofence.fromJson(nearbyGeofencesArr)
                 }
+
+                if (user != null) {
+                    val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
+                    val atPlace = user.place != null
+                    val canExit = inGeofences || atPlace
+                    RadarState.setCanExit(context, canExit)
+
+                    val geofenceIds = mutableSetOf<String>()
+                    user.geofences?.forEach { geofence -> geofenceIds.add(geofence._id) }
+                    RadarState.setGeofenceIds(context, geofenceIds)
+
+                    val placeId = user.place?._id
+                    RadarState.setPlaceId(context, placeId)
+
+                    val regionIds = mutableSetOf<String>()
+                    user.country?.let { country -> regionIds.add(country._id) }
+                    user.state?.let { state -> regionIds.add(state._id) }
+                    user.dma?.let { dma -> regionIds.add(dma._id) }
+                    user.postalCode?.let { postalCode -> regionIds.add(postalCode._id) }
+                    RadarState.setRegionIds(context, regionIds)
+
+                    val beaconIds = mutableSetOf<String>()
+                    user.beacons?.forEach { beacon -> beacon._id?.let { _id -> beaconIds.add(_id) } }
+                    RadarState.setBeaconIds(context, beaconIds)
+                }
+
                 if (events != null && user != null) {
                     RadarSettings.setId(context, user._id)
 

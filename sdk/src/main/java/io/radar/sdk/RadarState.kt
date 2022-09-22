@@ -27,6 +27,10 @@ internal object RadarState {
     private const val KEY_LAST_FAILED_STOPPED_LOCATION_ACCURACY = "last_failed_stopped_location_accuracy"
     private const val KEY_LAST_FAILED_STOPPED_LOCATION_PROVIDER = "last_failed_stopped_location_provider"
     private const val KEY_LAST_FAILED_STOPPED_LOCATION_TIME = "last_failed_stopped_location_time"
+    private const val KEY_GEOFENCE_IDS = "geofence_ids"
+    private const val KEY_PLACE_ID = "place_id"
+    private const val KEY_REGION_IDS = "region_ids"
+    private const val KEY_BEACON_IDS = "beacon_ids"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -177,6 +181,38 @@ internal object RadarState {
             putString(KEY_LAST_FAILED_STOPPED_LOCATION_PROVIDER, location.provider)
             putLong(KEY_LAST_FAILED_STOPPED_LOCATION_TIME, location.time)
         }
+    }
+
+    internal fun getGeofenceIds(context: Context): MutableSet<String>? {
+        return getSharedPreferences(context).getStringSet(KEY_GEOFENCE_IDS, null)
+    }
+
+    internal fun setGeofenceIds(context: Context, geofenceIds: Set<String>?) {
+        getSharedPreferences(context).edit { putStringSet(KEY_GEOFENCE_IDS, geofenceIds) }
+    }
+
+    internal fun getPlaceId(context: Context): String? {
+        return getSharedPreferences(context).getString(KEY_PLACE_ID, null)
+    }
+
+    internal fun setPlaceId(context: Context, placeId: String?) {
+        getSharedPreferences(context).edit { putString(KEY_PLACE_ID, placeId) }
+    }
+
+    internal fun getRegionIds(context: Context): MutableSet<String>? {
+        return getSharedPreferences(context).getStringSet(KEY_REGION_IDS, null)
+    }
+
+    internal fun setRegionIds(context: Context, regionIds: Set<String>?) {
+        getSharedPreferences(context).edit { putStringSet(KEY_REGION_IDS, regionIds) }
+    }
+
+    internal fun getBeaconIds(context: Context): MutableSet<String>? {
+        return getSharedPreferences(context).getStringSet(KEY_BEACON_IDS, null)
+    }
+
+    internal fun setBeaconIds(context: Context, beaconIds: Set<String>?) {
+        getSharedPreferences(context).edit { putStringSet(KEY_BEACON_IDS, beaconIds) }
     }
 
 }
