@@ -1116,7 +1116,7 @@ object Radar {
      * @param[callback] An optional callback.
      */
     @JvmStatic
-    fun startTrip(options: RadarTripOptions, trackingOptions: RadarTrackingOptions?, callback: RadarTripCallback? = null) {
+    fun startTrip(options: RadarTripOptions, trackingOptions: RadarTrackingOptions? = null, callback: RadarTripCallback? = null) {
         if (!initialized) {
             return
         }

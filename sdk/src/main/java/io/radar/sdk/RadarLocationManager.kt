@@ -116,7 +116,6 @@ internal class RadarLocationManager(
     fun stopTracking() {
         this.started = false
         RadarSettings.setTracking(context, false)
-        RadarSettings.removeTrackingOptions(context)
         this.updateTracking()
     }
 

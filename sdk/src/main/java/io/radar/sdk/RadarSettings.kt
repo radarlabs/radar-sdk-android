@@ -174,8 +174,9 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { remove(KEY_TRACKING_OPTIONS) }
     }
 
-    internal fun getPreviousTrackingOptions(context: Context): RadarTrackingOptions {
-        return getTrackingOptionsByKey(context, KEY_PREVIOUS_TRACKING_OPTIONS)
+    internal fun getPreviousTrackingOptions(context: Context): RadarTrackingOptions? {
+        val keyExists = getSharedPreferences(context).contains(KEY_PREVIOUS_TRACKING_OPTIONS)
+        return if (keyExists) getTrackingOptionsByKey(context, KEY_PREVIOUS_TRACKING_OPTIONS) else null
     }
 
     internal fun setPreviousTrackingOptions(context: Context, options: RadarTrackingOptions) {
