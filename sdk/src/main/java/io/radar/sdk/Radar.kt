@@ -1121,6 +1121,20 @@ object Radar {
      * @param[callback] An optional callback.
      */
     @JvmStatic
+    fun startTrip(options: RadarTripOptions, callback: RadarTripCallback? = null) {
+        startTrip(options, null, callback)
+    }
+
+    /**
+     * Starts a trip.
+     *
+     * @see [](https://radar.com/documentation/trip-tracking)
+     *
+     * @param[options] Configurable trip options.
+     * @param[trackingOptions] Tracking options to use during the trip
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
     fun startTrip(options: RadarTripOptions, trackingOptions: RadarTrackingOptions? = null, callback: RadarTripCallback? = null) {
         if (!initialized) {
             return
@@ -1169,6 +1183,27 @@ object Radar {
      * @see [](https://radar.com/documentation/trip-tracking)
      *
      * @param[options] Configurable trip options.
+     * @param[block] An optional block callback.
+     */
+    @JvmStatic
+    fun startTrip(options: RadarTripOptions, block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
+        startTrip(options, null, object : RadarTripCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
+                block(status, trip, events)
+            }
+        })
+    }
+    /**
+     * Starts a trip.
+     *
+     * @see [](https://radar.com/documentation/trip-tracking)
+     *
+     * @param[options] Configurable trip options.
+     * @param[trackingOptions] Tracking options to use during the trip
      * @param[block] An optional block callback.
      */
     @JvmStatic

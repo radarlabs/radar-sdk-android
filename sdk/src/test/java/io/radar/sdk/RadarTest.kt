@@ -641,8 +641,10 @@ class RadarTest {
     fun test_Radar_startTrip() {
         val tripOptions = getTestTripOptions()
 
-        Radar.startTrip(tripOptions)
-        assertEquals(tripOptions, Radar.getTripOptions())
+        Radar.startTrip(tripOptions) { status, trip, events ->
+            assertEquals(tripOptions, Radar.getTripOptions())
+            assertFalse(Radar.isTracking())
+        }
     }
 
     @Test
