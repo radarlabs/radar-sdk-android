@@ -174,7 +174,7 @@ internal class RadarBeaconManager(
             newBeaconIdentifiers.addAll(beaconUIDs)
         }
         if (monitoredBeaconIdentifiers == newBeaconIdentifiers) {
-            logger.i("Already monitoring beacons")
+            logger.d("Already monitoring beacons")
 
             return
         }
