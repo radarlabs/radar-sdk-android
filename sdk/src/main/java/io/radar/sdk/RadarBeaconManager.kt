@@ -92,7 +92,7 @@ internal class RadarBeaconManager(
 
         val newBeaconIdentifiers = beacons.mapNotNull { it._id }.toSet()
         if (monitoredBeaconIdentifiers == newBeaconIdentifiers) {
-            logger.i("Already monitoring beacons")
+            logger.d("Already monitoring beacons")
 
             return
         }
@@ -611,7 +611,7 @@ internal class RadarBeaconManager(
         return ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
             .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-            .setReportDelay(0)
+            .setReportDelay(20000)
             .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
             .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
             .build()

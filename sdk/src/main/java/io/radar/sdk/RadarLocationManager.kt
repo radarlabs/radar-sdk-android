@@ -417,7 +417,7 @@ internal class RadarLocationManager(
                         "isDozeMode = ${batteryState.isDeviceIdleMode}"
             )
         } else {
-            logger.d("Handling location | location = $location")
+            logger.d("Handling location | source = $source; location = $location")
         }
 
         if (location == null || !RadarUtils.valid(location)) {
@@ -594,21 +594,33 @@ internal class RadarLocationManager(
 
                     if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                         Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
+
+                        Radar.beaconManager.rangeBeaconUUIDs(uuids, uids, object : Radar.RadarBeaconCallback {
+                            override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                                if (status != RadarStatus.SUCCESS || beacons == null) {
+                                    callTrackApi(null)
+
+                                    return
+                                }
+
+                                callTrackApi(beacons)
+                            }
+                        })
                     } else {
                         Radar.beaconManager.startMonitoringBeacons(beacons)
-                    }
 
-                    Radar.beaconManager.rangeBeacons(beacons, object : Radar.RadarBeaconCallback {
-                        override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
-                            if (status != RadarStatus.SUCCESS || beacons == null) {
-                                callTrackApi(null)
+                        Radar.beaconManager.rangeBeacons(beacons, object : Radar.RadarBeaconCallback {
+                            override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                                if (status != RadarStatus.SUCCESS || beacons == null) {
+                                    callTrackApi(null)
 
-                                return
+                                    return
+                                }
+
+                                callTrackApi(beacons)
                             }
-
-                            callTrackApi(beacons)
-                        }
-                    })
+                        })
+                    }
                 }
             })
         } else {
