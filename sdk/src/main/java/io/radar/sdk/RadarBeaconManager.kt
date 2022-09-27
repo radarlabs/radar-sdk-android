@@ -133,7 +133,7 @@ internal class RadarBeaconManager(
         }
 
         try {
-            val scanSettings = getScanSettings()
+            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER, 20000)
 
             logger.d("Starting monitoring beacons")
 
@@ -236,7 +236,7 @@ internal class RadarBeaconManager(
         }
 
         try {
-            val scanSettings = getScanSettings()
+            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER, 20000)
 
             logger.d("Starting monitoring beacon UUIDs")
 
@@ -276,7 +276,7 @@ internal class RadarBeaconManager(
         monitoredBeaconIdentifiers = setOf()
     }
 
-    fun rangeBeacons(beacons: Array<RadarBeacon>, callback: RadarBeaconCallback?) {
+    fun rangeBeacons(beacons: Array<RadarBeacon>, background: Boolean, callback: RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
 
@@ -357,7 +357,8 @@ internal class RadarBeaconManager(
             return
         }
 
-        val scanSettings = getScanSettings()
+        val scanMode = if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY
+        val scanSettings = getScanSettings(scanMode, 0)
 
         val beaconManager = this
 
@@ -396,7 +397,7 @@ internal class RadarBeaconManager(
         }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
 
-    fun rangeBeaconUUIDs(beaconUUIDs: Array<String>?, beaconUIDs: Array<String>?, callback: RadarBeaconCallback?) {
+    fun rangeBeaconUUIDs(beaconUUIDs: Array<String>?, beaconUIDs: Array<String>?, background: Boolean, callback: RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
 
@@ -499,7 +500,8 @@ internal class RadarBeaconManager(
             return
         }
 
-        val scanSettings = getScanSettings()
+        val scanMode = if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY
+        val scanSettings = getScanSettings(scanMode, 0)
 
         val beaconManager = this
 
@@ -607,11 +609,11 @@ internal class RadarBeaconManager(
         return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
     }
 
-    private fun getScanSettings(): ScanSettings {
+    private fun getScanSettings(scanMode: Int, reportDelay: Long): ScanSettings {
         return ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+            .setScanMode(scanMode)
             .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-            .setReportDelay(20000)
+            .setReportDelay(reportDelay)
             .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
             .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
             .build()
