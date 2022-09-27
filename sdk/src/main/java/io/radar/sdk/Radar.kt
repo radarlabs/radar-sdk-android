@@ -749,7 +749,7 @@ object Radar {
                             if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                                 beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
-                                beaconManager.rangeBeaconUUIDs(uuids, uids, object : RadarBeaconCallback {
+                                beaconManager.rangeBeaconUUIDs(uuids, uids, false, object : RadarBeaconCallback {
                                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
                                         if (status != RadarStatus.SUCCESS || beacons == null) {
                                             callTrackApi(null)
@@ -763,7 +763,7 @@ object Radar {
                             } else {
                                 beaconManager.startMonitoringBeacons(beacons)
 
-                                beaconManager.rangeBeacons(beacons, object : RadarBeaconCallback {
+                                beaconManager.rangeBeacons(beacons, false, object : RadarBeaconCallback {
                                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
                                         if (status != RadarStatus.SUCCESS || beacons == null) {
                                             callTrackApi(null)
