@@ -1166,7 +1166,6 @@ object Radar {
                     }
 
                     // flush location update to generate events
-                    // TODO: still needed?
                     locationManager.getLocation(null)
                 }
 
@@ -1197,13 +1196,14 @@ object Radar {
             }
         })
     }
+
     /**
      * Starts a trip.
      *
      * @see [](https://radar.com/documentation/trip-tracking)
      *
      * @param[options] Configurable trip options.
-     * @param[trackingOptions] Tracking options to use during the trip
+     * @param[trackingOptions] Tracking options to use on trip.
      * @param[block] An optional block callback.
      */
     @JvmStatic
