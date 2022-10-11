@@ -175,6 +175,7 @@ internal class RadarApiClient(
 
         val params = JSONObject()
         val options = Radar.getTrackingOptions()
+        val tripOptions = RadarSettings.getTripOptions(context)
         val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
         try {
             params.putOpt("anonymous", anonymous)
@@ -240,6 +241,16 @@ internal class RadarApiClient(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 val mocked = location.isFromMockProvider
                 params.putOpt("mocked", mocked)
+            }
+            if (tripOptions != null) {
+                val tripOptionsObj = JSONObject()
+                tripOptionsObj.putOpt("v2", true)
+                tripOptionsObj.putOpt("externalId", tripOptions.externalId)
+                tripOptionsObj.putOpt("metadata", tripOptions.metadata)
+                tripOptionsObj.putOpt("destinationGeofenceTag", tripOptions.destinationGeofenceTag)
+                tripOptionsObj.putOpt("destinationGeofenceExternalId", tripOptions.destinationGeofenceExternalId)
+                tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
+                params.putOpt("tripOptions", tripOptionsObj)
             }
             if (options.syncGeofences) {
                 params.putOpt("nearbyGeofences", true)
