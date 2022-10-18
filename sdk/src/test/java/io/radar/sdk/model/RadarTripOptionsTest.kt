@@ -17,7 +17,7 @@ import java.util.*
 class RadarTripOptionsTest {
 
     @Test
-    fun testFromJsonWithNonZeroApproachingThreshold() {
+    fun testToFromJsonWithNonZeroApproachingThreshold() {
         val tripOptions = RadarTripOptions(
             externalId = "externalId",
             destinationGeofenceTag = "destinationGeofenceTag",
@@ -30,10 +30,17 @@ class RadarTripOptionsTest {
         assertEquals("destinationGeofenceTag", jsonObject["destinationGeofenceTag"])
         assertEquals("destinationGeofenceExternalId", jsonObject["destinationGeofenceExternalId"])
         assertEquals(5, jsonObject["approachingThreshold"])
+
+        // Deserialize it and compare them again
+        val deserializedTripOptions = RadarTripOptions.fromJson(jsonObject)
+        assertEquals(tripOptions.externalId, deserializedTripOptions.externalId)
+        assertEquals(tripOptions.destinationGeofenceTag, deserializedTripOptions.destinationGeofenceTag)
+        assertEquals(tripOptions.destinationGeofenceExternalId, deserializedTripOptions.destinationGeofenceExternalId)
+        assertEquals(tripOptions.approachingThreshold, deserializedTripOptions.approachingThreshold)
     }
 
     @Test
-    fun testFromJsonWithZeroApproachingThresholdIgnoresThreshold() {
+    fun testToFromJsonWithZeroApproachingThresholdIgnoresThreshold() {
         val tripOptions = RadarTripOptions(
             externalId = "externalId",
             destinationGeofenceTag = "destinationGeofenceTag",
@@ -46,10 +53,17 @@ class RadarTripOptionsTest {
         assertEquals("destinationGeofenceTag", jsonObject["destinationGeofenceTag"])
         assertEquals("destinationGeofenceExternalId", jsonObject["destinationGeofenceExternalId"])
         assertFalse(jsonObject.has("approachingThreshold"))
+
+        // Deserialize it and compare them again
+        val deserializedTripOptions = RadarTripOptions.fromJson(jsonObject)
+        assertEquals(tripOptions.externalId, deserializedTripOptions.externalId)
+        assertEquals(tripOptions.destinationGeofenceTag, deserializedTripOptions.destinationGeofenceTag)
+        assertEquals(tripOptions.destinationGeofenceExternalId, deserializedTripOptions.destinationGeofenceExternalId)
+        assertEquals(tripOptions.approachingThreshold, deserializedTripOptions.approachingThreshold) // both are 0
     }
 
     @Test
-    fun testFromJsonWithNegativeApproachingThresholdIgnoresThreshold() {
+    fun testToFromJsonWithNegativeApproachingThresholdIgnoresThreshold() {
         val tripOptions = RadarTripOptions(
             externalId = "externalId",
             destinationGeofenceTag = "destinationGeofenceTag",
@@ -62,6 +76,13 @@ class RadarTripOptionsTest {
         assertEquals("destinationGeofenceTag", jsonObject["destinationGeofenceTag"])
         assertEquals("destinationGeofenceExternalId", jsonObject["destinationGeofenceExternalId"])
         assertFalse(jsonObject.has("approachingThreshold"))
+
+        // Deserialize it and compare them again
+        val deserializedTripOptions = RadarTripOptions.fromJson(jsonObject)
+        assertEquals(tripOptions.externalId, deserializedTripOptions.externalId)
+        assertEquals(tripOptions.destinationGeofenceTag, deserializedTripOptions.destinationGeofenceTag)
+        assertEquals(tripOptions.destinationGeofenceExternalId, deserializedTripOptions.destinationGeofenceExternalId)
+        assertNotEquals(tripOptions.approachingThreshold, deserializedTripOptions.approachingThreshold)
     }
 
     @Test
