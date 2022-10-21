@@ -244,7 +244,7 @@ internal class RadarApiClient(
             }
             if (tripOptions != null) {
                 val tripOptionsObj = JSONObject()
-                tripOptionsObj.putOpt("v2", true)
+                tripOptionsObj.putOpt("version", "2")
                 tripOptionsObj.putOpt("externalId", tripOptions.externalId)
                 tripOptionsObj.putOpt("metadata", tripOptions.metadata)
                 tripOptionsObj.putOpt("destinationGeofenceTag", tripOptions.destinationGeofenceTag)
