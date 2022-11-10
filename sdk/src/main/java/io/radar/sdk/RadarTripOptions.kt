@@ -65,9 +65,16 @@ data class RadarTripOptions(
                     "motorbike" -> Radar.RadarRouteMode.MOTORBIKE
                     else -> Radar.RadarRouteMode.CAR
                 },
-                scheduledArrivalAt = if (obj.has(KEY_SCHEDULED_ARRIVAL_AT)) Date(obj.optLong(
-                    KEY_SCHEDULED_ARRIVAL_AT
-                )) else null,
+                scheduledArrivalAt = if (obj.has(KEY_SCHEDULED_ARRIVAL_AT)) {
+                    var scheduledArrivalAtLong = obj.optLong(
+                        KEY_SCHEDULED_ARRIVAL_AT
+                    )
+                    if (scheduledArrivalAtLong != 0L) {
+                        Date(scheduledArrivalAtLong)
+                    } else {
+                        RadarUtils.isoStringToDate(obj.optString(KEY_SCHEDULED_ARRIVAL_AT))
+                    }
+                } else null,
             )
         }
 
