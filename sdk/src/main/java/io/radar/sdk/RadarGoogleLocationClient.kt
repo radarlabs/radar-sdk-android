@@ -13,6 +13,7 @@ import com.google.android.gms.location.GeofencingEvent
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
 
 @SuppressLint("MissingPermission")
 internal class RadarGoogleLocationClient(
@@ -21,8 +22,8 @@ internal class RadarGoogleLocationClient(
 ): RadarAbstractLocationClient() {
 
     @SuppressLint("VisibleForTests")
-    val locationClient = FusedLocationProviderClient(context)
-    val geofencingClient = GeofencingClient(context)
+    val locationClient = LocationServices.getFusedLocationProviderClient(context)
+    val geofencingClient = LocationServices.getGeofencingClient(context)
 
     override fun getCurrentLocation(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (location: Location?) -> Unit) {
         val priority = priorityForDesiredAccuracy(desiredAccuracy)
