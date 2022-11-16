@@ -1155,7 +1155,7 @@ object Radar {
                     // if tracking was false, previousTrackingOptions will be null
                     val isTracking = Radar.isTracking()
                     if (isTracking) {
-                        val previousTrackingOptions = Radar.getTrackingOptions()
+                        val previousTrackingOptions = RadarSettings.getTrackingOptions(context)
                         RadarSettings.setPreviousTrackingOptions(context, previousTrackingOptions)
                     } else {
                         RadarSettings.removePreviousTrackingOptions(context)
