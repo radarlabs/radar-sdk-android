@@ -468,8 +468,26 @@ data class RadarTrackingOptions(
                 desiredAccuracy = desiredAccuracy,
                 stopDuration = obj.optInt(KEY_STOP_DURATION),
                 stopDistance = obj.optInt(KEY_STOP_DISTANCE),
-                startTrackingAfter = if (obj.has(KEY_START_TRACKING_AFTER)) Date(obj.optLong(KEY_START_TRACKING_AFTER)) else null,
-                stopTrackingAfter = if (obj.has(KEY_STOP_TRACKING_AFTER)) Date(obj.optLong(KEY_STOP_TRACKING_AFTER)) else null,
+                startTrackingAfter = if (obj.has(KEY_START_TRACKING_AFTER)) {
+                    var startTrackingAfterLong = obj.optLong(
+                        KEY_START_TRACKING_AFTER
+                    )
+                    if (startTrackingAfterLong != 0L) {
+                        Date(startTrackingAfterLong)
+                    } else {
+                        RadarUtils.isoStringToDate(obj.optString(KEY_START_TRACKING_AFTER))
+                    }
+                } else null,
+                stopTrackingAfter = if (obj.has(KEY_STOP_TRACKING_AFTER)) {
+                    var stopTrackingAfterLong = obj.optLong(
+                        KEY_STOP_TRACKING_AFTER
+                    )
+                    if (stopTrackingAfterLong != 0L) {
+                        Date(stopTrackingAfterLong)
+                    } else {
+                        RadarUtils.isoStringToDate(obj.optString(KEY_STOP_TRACKING_AFTER))
+                    }
+                } else null,
                 replay = replay,
                 sync = sync,
                 useStoppedGeofence = obj.optBoolean(KEY_USE_STOPPED_GEOFENCE),
