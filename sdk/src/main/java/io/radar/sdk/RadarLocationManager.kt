@@ -553,7 +553,7 @@ internal class RadarLocationManager(
         val options = Radar.getTrackingOptions()
         val foregroundService = RadarSettings.getForegroundService(context)
 
-        if (foregroundService != null && foregroundService.updatesOnly) {
+        if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
             this.startForegroundService(foregroundService)
         }
 
@@ -573,7 +573,7 @@ internal class RadarLocationManager(
                 ) {
                     locationManager.replaceSyncedGeofences(nearbyGeofences)
 
-                    if (foregroundService != null && foregroundService.updatesOnly) {
+                    if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
                         locationManager.stopForegroundService()
                     }
 
