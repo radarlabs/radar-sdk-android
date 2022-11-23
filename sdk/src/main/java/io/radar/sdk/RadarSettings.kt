@@ -192,14 +192,17 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { remove(KEY_REMOTE_TRACKING_OPTIONS) }
     }
 
-    internal fun getForegroundService(context: Context): RadarTrackingOptions.RadarTrackingOptionsForegroundService? {
+    internal fun getForegroundService(context: Context): RadarTrackingOptions.RadarTrackingOptionsForegroundService {
         val foregroundJson = getSharedPreferences(context).getString(KEY_FOREGROUND_SERVICE, null)
-        return if (foregroundJson == null) {
-            null
-        } else {
+        var foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService? = null
+        if (foregroundJson != null) {
             val foregroundObj = JSONObject(foregroundJson)
-            RadarTrackingOptions.RadarTrackingOptionsForegroundService.fromJson(foregroundObj)
+            foregroundService = RadarTrackingOptions.RadarTrackingOptionsForegroundService.fromJson(foregroundObj)
         }
+        if (foregroundService == null) {
+            foregroundService = RadarTrackingOptions.RadarTrackingOptionsForegroundService()
+        }
+        return foregroundService
     }
 
     internal fun setForegroundService(
