@@ -602,8 +602,11 @@ internal class RadarBeaconManager(
     }
 
     private fun isBluetoothSupported(context: Context): Boolean {
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
+        if(!this::adapter.isInitialized) {
+            val defaultAdapter = BluetoothAdapter.getDefaultAdapter()
+            if (defaultAdapter != null) {
+                adapter = defaultAdapter
+            }
         }
 
         return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null

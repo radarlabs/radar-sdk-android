@@ -403,7 +403,6 @@ object Radar {
             return
         }
 
-        this.initialized = true
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
 
@@ -461,6 +460,8 @@ object Radar {
                 RadarSettings.setFeatureSettings(context, config.featureSettings)
             }
         })
+
+        this.initialized = true
 
         logger.i("📍️ Radar initialized")
     }
