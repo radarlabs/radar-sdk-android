@@ -1,5 +1,7 @@
 package io.radar.sdk
 
+import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.RadarTripLeg
 import org.json.JSONObject
 import java.util.*
 
@@ -8,6 +10,7 @@ import java.util.*
  *
  * @see [](https://radar.io/documentation/sdk/android)
  */
+
 data class RadarTripOptions(
     /**
      * A stable unique ID for the trip.
@@ -30,6 +33,11 @@ data class RadarTripOptions(
     var destinationGeofenceExternalId: String? = null,
 
     /**
+     * For trips with multiple destinations
+     */
+    var legs: Array<RadarTripLeg>? = null,
+
+    /**
      * For trips with a destination, the travel mode.
      */
     var mode: Radar.RadarRouteMode = Radar.RadarRouteMode.CAR,
@@ -41,6 +49,45 @@ data class RadarTripOptions(
 
     var approachingThreshold: Int = 0
 ) {
+
+    // TripOptions constructor with single destination geofence fields
+    constructor(
+        externalId: String,
+        metadata: JSONObject? = null,
+        destinationGeofenceTag: String? = null,
+        destinationGeofenceExternalId: String? = null,
+        mode: Radar.RadarRouteMode = Radar.RadarRouteMode.CAR,
+        scheduledArrivalAt: Date? = null,
+        approachingThreshold: Int = 0,
+    ) : this (
+        externalId,
+        metadata,
+        destinationGeofenceTag,
+        destinationGeofenceExternalId,
+        null,
+        mode,
+        scheduledArrivalAt,
+        approachingThreshold,
+    )
+
+    // TripOptions constructor with legs for the trip
+    constructor(
+        externalId: String,
+        metadata: JSONObject? = null,
+        legs: Array<RadarTripLeg>?,
+        mode: Radar.RadarRouteMode = Radar.RadarRouteMode.CAR,
+        scheduledArrivalAt: Date? = null,
+        approachingThreshold: Int = 0,
+    ) : this (
+        externalId,
+        metadata,
+        null,
+        null,
+        legs,
+        mode,
+        scheduledArrivalAt,
+        approachingThreshold,
+    )
 
     companion object {
 
