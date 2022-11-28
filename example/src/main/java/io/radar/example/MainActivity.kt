@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
+import io.radar.sdk.RadarTripLeg
 import org.json.JSONObject
 import java.util.*
 
@@ -141,8 +142,27 @@ class MainActivity : AppCompatActivity() {
             Radar.RadarRouteMode.CAR,
             approachingThreshold = 0
         )
+
+        val destinationTripOptions = RadarTripOptions(
+            "300",
+            null,
+            "store",
+            "123"
+        )
+        val leg1 = RadarTripLeg(
+            destinationGeofenceTag = "store",
+            destinationGeofenceExternalId = "123"
+        )
+        val leg2 = RadarTripLeg(
+            address = "841 broadway nyc"
+        )
+        val TripOptionsWithMultipleLegs = RadarTripOptions(
+            "300",
+            null,
+            arrayOf(leg1, leg2)
+        )
         val onTripTrackingOptions = RadarTrackingOptions.CONTINUOUS
-        Radar.startTrip(tripOptions, onTripTrackingOptions)
+        Radar.startTrip(TripOptionsWithMultipleLegs, onTripTrackingOptions)
 
         var i = 0
         Radar.mockTracking(

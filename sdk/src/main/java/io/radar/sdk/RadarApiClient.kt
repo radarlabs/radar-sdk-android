@@ -411,6 +411,10 @@ internal class RadarApiClient(
         if (options.destinationGeofenceExternalId != null) {
             params.putOpt("destinationGeofenceExternalId", options.destinationGeofenceExternalId)
         }
+        // TODO: nest destination field in toJSON
+        if (options.legs != null) {
+            params.putOpt("legs", options.legs)
+        }
         params.putOpt("mode", Radar.stringForMode(options.mode))
         params.putOpt("scheduledArrivalAt", RadarUtils.dateToISOString(options.scheduledArrivalAt))
         if (options.approachingThreshold > 0) {
@@ -478,6 +482,11 @@ internal class RadarApiClient(
         if (options.destinationGeofenceExternalId != null) {
             params.putOpt("destinationGeofenceExternalId", options.destinationGeofenceExternalId)
         }
+        // TODO: nest destination field in toJSON
+        if (options.legs != null) {
+            params.putOpt("legs", options.legs)
+        }
+
         params.putOpt("mode", Radar.stringForMode(options.mode))
         params.putOpt("scheduledArrivalAt", RadarUtils.dateToISOString(options.scheduledArrivalAt))
         if (options.approachingThreshold > 0) {
