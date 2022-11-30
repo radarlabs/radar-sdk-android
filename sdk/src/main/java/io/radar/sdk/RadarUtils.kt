@@ -10,16 +10,10 @@ import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
-import androidx.core.content.edit
-import com.google.android.gms.ads.identifier.AdvertisingIdClient
-import io.radar.sdk.model.RadarEvent
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
 internal object RadarUtils {
-
-    private const val KEY_AD_ID = "adId"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -43,26 +37,6 @@ internal object RadarUtils {
             }
             return offset / 1000
         }
-
-    internal fun loadAdId(context: Context) {
-        Thread {
-            try {
-                val advertisingIdInfo = AdvertisingIdClient.getAdvertisingIdInfo(context)
-                val adId = if (advertisingIdInfo.isLimitAdTrackingEnabled) {
-                    "OptedOut"
-                } else {
-                    advertisingIdInfo.id
-                }
-                getSharedPreferences(context).edit { putString(KEY_AD_ID, adId) }
-            } catch (e: Exception) {
-
-            }
-        }.start()
-    }
-
-    internal fun getAdId(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_AD_ID, null)
-    }
 
     @SuppressLint("HardwareIds")
     internal fun getDeviceId(context: Context): String? {
@@ -137,26 +111,6 @@ internal object RadarUtils {
                 || Build.PRODUCT.contains("vbox86p")
                 || Build.PRODUCT.contains("emulator")
                 || Build.PRODUCT.contains("simulator");
-    }
-
-    fun isRooted(): Boolean {
-        val isEmulator = isEmulator()
-        val buildTags = Build.TAGS
-        return try {
-            if (!isEmulator && buildTags != null && buildTags.contains("test-keys")) {
-                true
-            } else {
-                var file = File("/system/app/Superuser.apk")
-                if (file.exists()) {
-                    true
-                } else {
-                    file = File("/system/xbin/su")
-                    !isEmulator && file.exists()
-                }
-            }
-        } catch (e: SecurityException) {
-            false
-        }
     }
 
     internal fun isoStringToDate(str: String?): Date? {

@@ -373,6 +373,7 @@ object Radar {
     internal lateinit var beaconManager: RadarBeaconManager
     private lateinit var logBuffer: RadarLogBuffer
     internal lateinit var batteryManager: RadarBatteryManager
+    private lateinit var fraudManager: RadarFraudManager
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -448,8 +449,6 @@ object Radar {
         } else if (provider == RadarLocationServicesProvider.HUAWEI) {
             this.logger.d("Using Huawei location services")
         }
-
-        RadarUtils.loadAdId(this.context)
 
         val application = this.context as? Application
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks())
@@ -571,16 +570,6 @@ object Radar {
     @JvmStatic
     fun setAnonymousTrackingEnabled(enabled: Boolean) {
         RadarSettings.setAnonymousTrackingEnabled(context, enabled)
-    }
-
-    /**
-     * Enables `adId` (Android advertising ID) collection. Disabled by default.
-     *
-     * @param[enabled] A boolean indicating whether `adId` should be collected.
-     */
-    @JvmStatic
-    fun setAdIdEnabled(enabled: Boolean) {
-        RadarSettings.setAdIdEnabled(context, enabled)
     }
 
     /**
@@ -846,6 +835,63 @@ object Radar {
     @JvmStatic
     fun trackOnce(location: Location, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
         trackOnce(location, object : RadarTrackCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+                block(status, location, events, user)
+            }
+        })
+    }
+
+    /**
+     * Tracks the user's location securely with device integrity information.
+     */
+    @JvmStatic
+    fun trackSecure(callback: RadarTrackCallback? = null) {
+        if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        if (!this::fraudManager.isInitialized) {
+            this.fraudManager = RadarFraudManager(this.context, logger)
+        }
+
+        locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                if (status != RadarStatus.SUCCESS || location == null) {
+                    handler.post {
+                        callback?.onComplete(status)
+                    }
+
+                    return
+                }
+
+                fraudManager.getIntegrityToken { integrityToken ->
+                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
+                        override fun onComplete(
+                            status: RadarStatus,
+                            res: JSONObject?,
+                            events: Array<RadarEvent>?,
+                            user: RadarUser?,
+                            nearbyGeofences: Array<RadarGeofence>?,
+                            config: RadarConfig?,
+                        ) {
+                            handler.post {
+                                callback?.onComplete(status, location, events, user)
+                            }
+                        }
+                    })
+                }
+            }
+        })
+    }
+
+    /**
+     * Tracks the user's location securely with device integrity information.
+     */
+    @JvmStatic
+    fun trackSecure(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+        trackSecure(object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
             }

@@ -191,9 +191,6 @@ internal class RadarApiClient(
                 params.putOpt("deviceId", RadarUtils.getDeviceId(context))
                 params.putOpt("description", RadarSettings.getDescription(context))
                 params.putOpt("metadata", RadarSettings.getMetadata(context))
-                if (RadarSettings.getAdIdEnabled(context)) {
-                    params.putOpt("adId", RadarUtils.getAdId(context))
-                }
                 params.putOpt("sessionId", RadarSettings.getSessionId(context))
             }
             params.putOpt("latitude", location.latitude)
@@ -263,7 +260,6 @@ internal class RadarApiClient(
             val usingRemoteTrackingOptions = RadarSettings.getTracking(context) && RadarSettings.getRemoteTrackingOptions(context) != null
             params.putOpt("usingRemoteTrackingOptions", usingRemoteTrackingOptions)
             params.putOpt("locationServicesProvider", RadarSettings.getLocationServicesProvider(context))
-            params.putOpt("rooted", RadarUtils.isRooted())
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
