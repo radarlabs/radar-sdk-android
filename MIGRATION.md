@@ -1,5 +1,8 @@
 # Migration guides
 
+## 3.5.7 to 3.5.8
+- If your application depends on classes in `com.google.android.gms.location`, you may need to update your code to reflect the changes made to `play-services-location` in version 20.0.0, as documented [here](https://developers.google.com/android/guides/releases#october_13_2022).  Version 3.5.8 of the Radar SDK updates `play-location-services` to version 21.0.1. Besides the Radar SDK, if your application does not depend on classes in `com.google.android.gms.location` no migrations are necessary.
+ 
 ## 3.3.x to 3.4.x
 
 - `foregroundService` is no longer available in `RadarTrackingOptions`. This has been replaced by `Radar.setForegroundServiceOptions` instead.
