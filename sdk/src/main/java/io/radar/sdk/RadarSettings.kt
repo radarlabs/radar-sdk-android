@@ -22,6 +22,7 @@ internal object RadarSettings {
     private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
     private const val KEY_TRACKING = "background_tracking"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
+    private const val KEY_PREVIOUS_TRACKING_OPTIONS = "previous_tracking_options"
     private const val KEY_REMOTE_TRACKING_OPTIONS = "remote_tracking_options"
     private const val KEY_FOREGROUND_SERVICE = "foreground_service"
     private const val KEY_FEATURE_SETTINGS = "feature_settings"
@@ -176,6 +177,21 @@ internal object RadarSettings {
         val optionsObj = options.toJson()
         val optionsJson = optionsObj.toString()
         getSharedPreferences(context).edit { putString(KEY_TRACKING_OPTIONS, optionsJson) }
+    }
+
+    internal fun getPreviousTrackingOptions(context: Context): RadarTrackingOptions? {
+        val keyExists = getSharedPreferences(context).contains(KEY_PREVIOUS_TRACKING_OPTIONS)
+        return if (keyExists) getTrackingOptionsByKey(context, KEY_PREVIOUS_TRACKING_OPTIONS) else null
+    }
+
+    internal fun setPreviousTrackingOptions(context: Context, options: RadarTrackingOptions) {
+        val optionsObj = options.toJson()
+        val optionsJson = optionsObj.toString()
+        getSharedPreferences(context).edit { putString(KEY_PREVIOUS_TRACKING_OPTIONS, optionsJson) }
+    }
+
+    internal fun removePreviousTrackingOptions(context: Context) {
+        getSharedPreferences(context).edit { remove(KEY_PREVIOUS_TRACKING_OPTIONS) }
     }
 
     internal fun getRemoteTrackingOptions(context: Context): RadarTrackingOptions? {
