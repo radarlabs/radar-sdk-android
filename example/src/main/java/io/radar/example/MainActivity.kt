@@ -141,7 +141,8 @@ class MainActivity : AppCompatActivity() {
             Radar.RadarRouteMode.CAR,
             approachingThreshold = 0
         )
-        Radar.startTrip(tripOptions)
+        val onTripTrackingOptions = RadarTrackingOptions.CONTINUOUS
+        Radar.startTrip(tripOptions, onTripTrackingOptions)
 
         var i = 0
         Radar.mockTracking(

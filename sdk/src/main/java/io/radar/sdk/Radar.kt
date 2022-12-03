@@ -1123,11 +1123,25 @@ object Radar {
      */
     @JvmStatic
     fun startTrip(options: RadarTripOptions, callback: RadarTripCallback? = null) {
+        startTrip(options, null, callback)
+    }
+
+    /**
+     * Starts a trip.
+     *
+     * @see [](https://radar.com/documentation/trip-tracking)
+     *
+     * @param[options] Configurable trip options.
+     * @param[trackingOptions] Tracking options to use during the trip
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun startTrip(options: RadarTripOptions, trackingOptions: RadarTrackingOptions? = null, callback: RadarTripCallback? = null) {
         if (!initialized) {
             return
         }
 
-        apiClient.updateTrip(options, RadarTrip.RadarTripStatus.STARTED, object : RadarApiClient.RadarTripApiCallback {
+        apiClient.createTrip(options, object : RadarApiClient.RadarTripApiCallback {
             override fun onComplete(
                 status: RadarStatus,
                 res: JSONObject?,
@@ -1136,6 +1150,21 @@ object Radar {
             ) {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, options)
+
+                    // store previous tracking options for post-trip
+                    // if tracking was false, previousTrackingOptions will be null
+                    val isTracking = Radar.isTracking()
+                    if (isTracking) {
+                        val previousTrackingOptions = RadarSettings.getTrackingOptions(context)
+                        RadarSettings.setPreviousTrackingOptions(context, previousTrackingOptions)
+                    } else {
+                        RadarSettings.removePreviousTrackingOptions(context)
+                    }
+
+                    // if trackingOptions provided, startTracking
+                    if (trackingOptions != null) {
+                        Radar.startTracking(trackingOptions);
+                    }
 
                     // flush location update to generate events
                     locationManager.getLocation(null)
@@ -1158,7 +1187,29 @@ object Radar {
      */
     @JvmStatic
     fun startTrip(options: RadarTripOptions, block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
-        startTrip(options, object : RadarTripCallback {
+        startTrip(options, null, object : RadarTripCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
+                block(status, trip, events)
+            }
+        })
+    }
+
+    /**
+     * Starts a trip.
+     *
+     * @see [](https://radar.com/documentation/trip-tracking)
+     *
+     * @param[options] Configurable trip options.
+     * @param[trackingOptions] Tracking options to use on trip.
+     * @param[block] An optional block callback.
+     */
+    @JvmStatic
+    fun startTrip(options: RadarTripOptions, trackingOptions: RadarTrackingOptions?, block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
+        startTrip(options, trackingOptions, object : RadarTripCallback {
             override fun onComplete(
                 status: RadarStatus,
                 trip: RadarTrip?,
@@ -1251,6 +1302,9 @@ object Radar {
                 if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
                     RadarSettings.setTripOptions(context, null)
 
+                    // return to previous tracking options after trip
+                    locationManager.restartPreviousTrackingOptions();
+
                     // flush location update to generate events
                     locationManager.getLocation(null)
                 }
@@ -1305,6 +1359,9 @@ object Radar {
             ) {
                 if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
                     RadarSettings.setTripOptions(context, null)
+
+                    // return to previous tracking options after trip
+                    locationManager.restartPreviousTrackingOptions();
 
                     // flush location update to generate events
                     locationManager.getLocation(null)
