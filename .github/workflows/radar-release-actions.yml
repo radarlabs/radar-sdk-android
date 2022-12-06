@@ -2,7 +2,8 @@
 name: Radar Release Action
 on:
   release:
-    types: [ published ]
+    # See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
+    types: [ released ]
 jobs:
   Build-And-Publish:
     runs-on: ubuntu-latest
