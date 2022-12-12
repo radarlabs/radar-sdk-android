@@ -31,6 +31,7 @@ internal object RadarState {
     private const val KEY_PLACE_ID = "place_id"
     private const val KEY_REGION_IDS = "region_ids"
     private const val KEY_BEACON_IDS = "beacon_ids"
+    private const val KEY_CURRENT_TRIP_LEG_ID = "current_trip_leg_id"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -213,6 +214,14 @@ internal object RadarState {
 
     internal fun setBeaconIds(context: Context, beaconIds: Set<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_BEACON_IDS, beaconIds) }
+    }
+
+    internal fun getCurrentTripLegId(context: Context): String? {
+        return getSharedPreferences(context).getString(KEY_CURRENT_TRIP_LEG_ID, null)
+    }
+
+    internal fun setCurrentTripLegId(context: Context, tripLegId: String?) {
+        getSharedPreferences(context).edit { putString(KEY_CURRENT_TRIP_LEG_ID, tripLegId) }
     }
 
 }

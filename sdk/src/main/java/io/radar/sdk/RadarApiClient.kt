@@ -332,6 +332,10 @@ internal class RadarApiClient(
                     val beaconIds = mutableSetOf<String>()
                     user.beacons?.forEach { beacon -> beacon._id?.let { _id -> beaconIds.add(_id) } }
                     RadarState.setBeaconIds(context, beaconIds)
+
+                    // set current trip leg in RadarState
+                    val currentLegId = user.trip?.currentLeg
+                    RadarState.setCurrentTripLegId(context, currentLegId)
                 }
 
                 if (events != null && user != null) {
@@ -343,6 +347,10 @@ internal class RadarApiClient(
                         if (tripOptions != null) {
                             locationManager.restartPreviousTrackingOptions()
                             RadarSettings.setTripOptions(context, null)
+                        }
+
+                        if (user.trip?.currentLeg != null) {
+//                            Log.v("sdk", "track: user.trip.currentLeg = ${user.trip.currentLeg}")
                         }
                     }
 
@@ -391,7 +399,6 @@ internal class RadarApiClient(
 
             return
         }
-
         val externalId = options?.externalId
         if (externalId == null) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
@@ -411,9 +418,8 @@ internal class RadarApiClient(
         if (options.destinationGeofenceExternalId != null) {
             params.putOpt("destinationGeofenceExternalId", options.destinationGeofenceExternalId)
         }
-        // TODO: nest destination field in toJSON
         if (options.legs != null) {
-            params.putOpt("legs", options.legs)
+            params.putOpt("legs", RadarTripLeg.toJson(options.legs))
         }
         params.putOpt("mode", Radar.stringForMode(options.mode))
         params.putOpt("scheduledArrivalAt", RadarUtils.dateToISOString(options.scheduledArrivalAt))
@@ -431,6 +437,7 @@ internal class RadarApiClient(
 
         apiHelper.request(context, "POST", url, headers, params, false, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
+
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback?.onComplete(status)
 
@@ -498,6 +505,131 @@ internal class RadarApiClient(
             .appendEncodedPath("v1/trips/")
             .appendEncodedPath(externalId)
             .appendEncodedPath("update")
+            .build()
+        val url = URL(uri.toString())
+
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "PATCH", url, headers, params, false, object: RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback?.onComplete(status)
+
+                    return
+                }
+
+                val trip = res.optJSONObject("trip")?.let { tripObj ->
+                    RadarTrip.fromJson(tripObj)
+                }
+                val events = res.optJSONArray("events")?.let { eventsArr ->
+                    RadarEvent.fromJson(eventsArr)
+                }
+
+                if (events != null && events.isNotEmpty()) {
+                    Radar.sendEvents(events)
+                }
+
+                callback?.onComplete(RadarStatus.SUCCESS, res, trip, events)
+            }
+        })
+    }
+
+    // POST /v1/trips/{tripId}/leg
+    // Add a leg to a trip.  Appends to the back by default
+    internal fun addTripLeg(
+        tripOptions: RadarTripOptions?,
+        leg: RadarTripLeg,
+        callback: RadarTripApiCallback?
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val externalId = tripOptions?.externalId
+        if (externalId == null) {
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
+        }
+
+        val params = JSONObject()
+        params.putOpt("userId", RadarSettings.getUserId(context))
+        params.putOpt("leg", leg.toJson())
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/trips/")
+            .appendEncodedPath(externalId)
+            .appendEncodedPath("leg")
+            .build()
+        val url = URL(uri.toString())
+
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "POST", url, headers, params, false, object: RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback?.onComplete(status)
+
+                    return
+                }
+
+                val trip = res.optJSONObject("trip")?.let { tripObj ->
+                    RadarTrip.fromJson(tripObj)
+                }
+                val events = res.optJSONArray("events")?.let { eventsArr ->
+                    RadarEvent.fromJson(eventsArr)
+                }
+
+                if (events != null && events.isNotEmpty()) {
+                    Radar.sendEvents(events)
+                }
+
+                callback?.onComplete(RadarStatus.SUCCESS, res, trip, events)
+            }
+        })
+    }
+
+    // PATCH /trips/{trip_id}/legs/{legId}
+    // Update the status of a leg manually (or data):
+    internal fun updateTripLeg(
+        tripOptions: RadarTripOptions?,
+        legId: String?,
+        status: RadarTrip.RadarTripStatus,
+        callback: RadarTripApiCallback?
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val externalId = tripOptions?.externalId
+        if (externalId == null) {
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
+        }
+
+        if (legId == null) {
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
+        }
+
+        val params = JSONObject()
+        params.putOpt("status", Radar.stringForTripStatus(status))
+
+        val host = RadarSettings.getHost(context)
+        val uri = Uri.parse(host).buildUpon()
+            .appendEncodedPath("v1/trips/")
+            .appendEncodedPath(externalId)
+            .appendEncodedPath("legs/")
+            .appendEncodedPath(legId)
             .build()
         val url = URL(uri.toString())
 

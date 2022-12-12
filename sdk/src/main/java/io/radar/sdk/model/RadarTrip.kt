@@ -58,7 +58,12 @@ class RadarTrip(
     /**
      * The status of the trip.
      */
-    val status: RadarTripStatus
+    val status: RadarTripStatus,
+
+    /**
+     * The current leg id of the trip (multi-destination trips)
+     */
+    val currentLeg: String?
 ) {
 
     enum class RadarTripStatus {
@@ -91,6 +96,7 @@ class RadarTrip(
         private const val FIELD_DISTANCE = "distance"
         private const val FIELD_DURATION = "duration"
         private const val FIELD_STATUS = "status"
+        private const val FIELD_CURRENT_LEG = "currentLeg"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarTrip? {
@@ -133,6 +139,7 @@ class RadarTrip(
                 "canceled" -> RadarTripStatus.CANCELED
                 else -> RadarTripStatus.UNKNOWN
             }
+            val currentLeg: String = obj.optString(FIELD_CURRENT_LEG) ?: ""
 
             return RadarTrip(
                 id,
@@ -144,7 +151,8 @@ class RadarTrip(
                 mode,
                 etaDistance,
                 etaDuration,
-                status
+                status,
+                currentLeg
             )
         }
 

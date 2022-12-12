@@ -1137,10 +1137,10 @@ object Radar {
      */
     @JvmStatic
     fun startTrip(options: RadarTripOptions, trackingOptions: RadarTrackingOptions? = null, callback: RadarTripCallback? = null) {
+
         if (!initialized) {
             return
         }
-
         apiClient.createTrip(options, object : RadarApiClient.RadarTripApiCallback {
             override fun onComplete(
                 status: RadarStatus,
@@ -1384,6 +1384,110 @@ object Radar {
     @JvmStatic
     fun cancelTrip(block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
         cancelTrip(object : RadarTripCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
+                block(status, trip, events)
+            }
+        })
+    }
+
+    /**
+     * Manually updates the current trip leg.
+     *
+     * @see [](https://radar.com/documentation/trip-tracking)
+     *
+     * @param[leg] Trip leg.
+     * @param[status] The trip status. To avoid updating status, pass UNKNOWN.
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun updateTripLeg(status: RadarTrip.RadarTripStatus, callback: RadarTripCallback? = null) {
+        if (!initialized) {
+            return
+        }
+
+        val options = RadarSettings.getTripOptions(context)
+        val legId = RadarState.getCurrentTripLegId(context)
+        apiClient.updateTripLeg(options, legId, status, object : RadarApiClient.RadarTripApiCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
+                handler.post {
+                    callback?.onComplete(status, trip, events)
+                }
+            }
+        })
+    }
+
+    /**
+     * Manually updates a trip leg.
+     *
+     * @see [](https://radar.com/documentation/trip-tracking)
+     *
+     * @param[leg] Trip leg.
+     * @param[status] The trip status. To avoid updating status, pass UNKNOWN.
+     * @param[block] An optional block callback.
+     */
+    @JvmStatic
+    fun updateTripLeg(status: RadarTrip.RadarTripStatus, block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
+        updateTripLeg(status, object : RadarTripCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
+                block(status, trip, events)
+            }
+        })
+    }
+
+    /**
+     * Completes the current trip leg.
+     *
+     * @param[callback] An optional callback.
+     *
+     * @see [](https://radar.com/documentation/trip-tracking)
+     */
+    @JvmStatic
+    fun completeTripLeg(callback: RadarTripCallback? = null) {
+        if (!initialized) {
+            return
+        }
+
+        val options = RadarSettings.getTripOptions(context)
+        // get current trip leg from tripOptions
+        val legId = "" // RadarState
+        val status = RadarTrip.RadarTripStatus.COMPLETED;
+        apiClient.updateTripLeg(options, legId, status, object : RadarApiClient.RadarTripApiCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
+                handler.post {
+                    callback?.onComplete(status, trip, events)
+                }
+            }
+        })
+    }
+
+    /**
+     * Completes the current trip leg.
+     *
+     * @see [](https://radar.com/documentation/trip-tracking)
+     *
+     * @param[block] An optional block callback.
+     */
+    @JvmStatic
+    fun completeTripLeg(block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
+        completeTripLeg(object : RadarTripCallback {
             override fun onComplete(
                 status: RadarStatus,
                 trip: RadarTrip?,
