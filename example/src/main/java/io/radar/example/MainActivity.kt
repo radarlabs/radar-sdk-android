@@ -61,6 +61,13 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
         }
 
+        Radar.trackSecure { status, location, events, user ->
+            Log.v(
+                "example",
+                "Track secure: status = ${status}; location = $location; events = $events; user = $user"
+            )
+        }
+
         Radar.trackOnce { status, location, events, user ->
             Log.v("example", "Track once: status = ${status}; location = $location; events = $events; user = $user")
         }

@@ -23,6 +23,10 @@ See an example app in `example/`.
 
 To run the example app, clone this repository, add your publishable API key in `MainActivity.java`, and build the app.
 
+## Testing Integrity API
+
+If you run the example app in the emulator, and receive a `IntegrityService : Failed to bind to the service.` error when `Radar.trackSecure` is called, you may need to run the app on a real device. See [Configure on-device developer options](https://developer.android.com/studio/debug/dev-options) for enabling USB debugging on a device.
+
 ## Support
 
 Have questions? We're here to help! Email us at [support@radar.io](mailto:support@radar.io).
