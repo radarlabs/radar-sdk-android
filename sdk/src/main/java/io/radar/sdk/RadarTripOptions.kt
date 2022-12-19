@@ -50,6 +50,7 @@ data class RadarTripOptions(
         internal const val KEY_DESTINATION_GEOFENCE_EXTERNAL_ID = "destinationGeofenceExternalId"
         internal const val KEY_MODE = "mode"
         internal const val KEY_SCHEDULED_ARRIVAL_AT = "scheduledArrivalAt"
+        internal const val KEY_APPROACHING_THRESHOLD = "approachingThreshold"
 
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTripOptions {
@@ -75,6 +76,7 @@ data class RadarTripOptions(
                         RadarUtils.isoStringToDate(obj.optString(KEY_SCHEDULED_ARRIVAL_AT))
                     }
                 } else null,
+                approachingThreshold = obj.optInt(KEY_APPROACHING_THRESHOLD)
             )
         }
 
@@ -88,6 +90,7 @@ data class RadarTripOptions(
         obj.put(KEY_DESTINATION_GEOFENCE_EXTERNAL_ID, destinationGeofenceExternalId)
         obj.put(KEY_MODE, Radar.stringForMode(mode))
         obj.put(KEY_SCHEDULED_ARRIVAL_AT, scheduledArrivalAt?.time)
+        obj.put(KEY_APPROACHING_THRESHOLD, approachingThreshold)
         return obj
     }
 
@@ -107,7 +110,8 @@ data class RadarTripOptions(
                 this.destinationGeofenceTag == other.destinationGeofenceTag &&
                 this.destinationGeofenceExternalId == other.destinationGeofenceExternalId &&
                 this.mode == other.mode &&
-                this.scheduledArrivalAt?.time == other.scheduledArrivalAt?.time
+                this.scheduledArrivalAt?.time == other.scheduledArrivalAt?.time &&
+                this.approachingThreshold == other.approachingThreshold
     }
 
 }
