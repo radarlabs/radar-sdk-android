@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.core.content.edit
 import io.radar.sdk.model.RadarFeatureSettings
 import org.json.JSONObject
@@ -26,6 +27,7 @@ internal object RadarSettings {
     private const val KEY_FOREGROUND_SERVICE = "foreground_service"
     private const val KEY_FEATURE_SETTINGS = "feature_settings"
     private const val KEY_TRIP_OPTIONS = "trip_options"
+    private const val KEY_VERIFICATION_SETTINGS = "verification_settings"
     private const val KEY_LOG_LEVEL = "log_level"
     private const val KEY_HOST = "host"
     private const val KEY_PERMISSIONS_DENIED = "permissions_denied"
@@ -212,6 +214,19 @@ internal object RadarSettings {
         val foregroundJson = foregroundService.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_FOREGROUND_SERVICE, foregroundJson) }
     }
+
+    internal fun getVerificationSettings(context: Context): RadarVerificationSettings? {
+        val optionsJson = getSharedPreferences(context).getString(KEY_VERIFICATION_SETTINGS, null) ?: return null
+        val optionsObj = JSONObject(optionsJson)
+        return RadarVerificationSettings.fromJson(optionsObj)
+    }
+
+    internal fun setVerificationSettings(context: Context, options: RadarVerificationSettings?) {
+        val optionsObj = options?.toJson()
+        val optionsJson = optionsObj?.toString()
+        getSharedPreferences(context).edit { putString(KEY_VERIFICATION_SETTINGS, optionsJson) }
+    }
+
 
     internal fun getTripOptions(context: Context): RadarTripOptions? {
         val optionsJson = getSharedPreferences(context).getString(KEY_TRIP_OPTIONS, null) ?: return null

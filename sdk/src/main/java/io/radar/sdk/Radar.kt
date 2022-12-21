@@ -457,6 +457,7 @@ object Radar {
             override fun onComplete(config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config.meta)
                 RadarSettings.setFeatureSettings(context, config.featureSettings)
+                RadarSettings.setVerificationSettings(context, config.meta.remoteVerificationOptions)
             }
         })
 
@@ -852,8 +853,10 @@ object Radar {
             return
         }
 
+        val verificationSettings = RadarSettings.getVerificationSettings(context)
+
         if (!this::fraudManager.isInitialized) {
-            this.fraudManager = RadarFraudManager(this.context, logger)
+            this.fraudManager = RadarFraudManager(this.context, verificationSettings, logger)
         }
 
         locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
