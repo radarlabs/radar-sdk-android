@@ -5,6 +5,7 @@ import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
+import android.util.Base64
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
@@ -14,6 +15,8 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.net.URL
 import java.util.*
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 internal class RadarApiClient(
     private val context: Context,
@@ -80,8 +83,8 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null)
     }
 
-    private fun headers(publishableKey: String): Map<String, String> {
-        return mapOf(
+    private fun headers(publishableKey: String, signature: String? = null, clientPublicKey: String? = null, clientPublicKeyMod: String? = null): Map<String, String> {
+        val headers = mutableMapOf(
             "Authorization" to publishableKey,
             "Content-Type" to "application/json",
             "X-Radar-Config" to "true",
@@ -91,6 +94,12 @@ internal class RadarApiClient(
             "X-Radar-Device-Type" to RadarUtils.deviceType,
             "X-Radar-SDK-Version" to RadarUtils.sdkVersion
         )
+        if (signature != null && clientPublicKey != null && clientPublicKeyMod != null){
+            headers.put("X-Radar-Signature", signature)
+            headers.put("X-Radar-Client-Public-Key", clientPublicKey)
+            headers.put("X-Radar-Client-Public-Key-Mod", clientPublicKeyMod)
+        }
+        return headers
     }
 
     internal fun getConfig(callback: RadarGetConfigApiCallback? = null) {
@@ -164,7 +173,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, callback: RadarTrackApiCallback? = null) {
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -260,6 +269,10 @@ internal class RadarApiClient(
             val usingRemoteTrackingOptions = RadarSettings.getTracking(context) && RadarSettings.getRemoteTrackingOptions(context) != null
             params.putOpt("usingRemoteTrackingOptions", usingRemoteTrackingOptions)
             params.putOpt("locationServicesProvider", RadarSettings.getLocationServicesProvider(context))
+            if (verified) {
+                params.putOpt("integrityToken", integrityToken)
+                params.putOpt("integrityException", integrityException)
+            }
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
@@ -272,7 +285,28 @@ internal class RadarApiClient(
             .build()
         val url = URL(uri.toString())
 
-        val headers = headers(publishableKey)
+        var base64Signature: String? = null
+        var base64ClientPublicKey: String? = null
+        var base64ClientPublicKeyMod: String? = null
+        if (verified) {
+            val serverPublicKey = RadarSettings.getServerPublicKey(context)
+            if (serverPublicKey != null) {
+                val clientPrivateKey = RadarSettings.getClientPrivateKey(context)
+                val clientPublicKey = RadarSettings.getClientPublicKey(context)
+                val clientPublicKeyMod = RadarSettings.getClientPublicKeyMod(context)
+                val sharedKey = serverPublicKey.modPow(clientPrivateKey, clientPublicKeyMod)
+                val alg = "HmacSHA256"
+                val signingKey = SecretKeySpec(sharedKey.toByteArray(), alg)
+                val mac = Mac.getInstance(alg)
+                mac.init(signingKey)
+                val signature = mac.doFinal(params.toString().toByteArray())
+                base64Signature = Base64.encode(signature, 0).toString()
+                base64ClientPublicKey = Base64.encode(clientPublicKey.toByteArray(), 0).toString()
+                base64ClientPublicKeyMod = Base64.encode(clientPublicKeyMod.toByteArray(), 0).toString()
+            }
+        }
+
+        val headers = headers(publishableKey, base64Signature, base64ClientPublicKey, base64ClientPublicKeyMod)
 
         apiHelper.request(context, "POST", url, headers, params, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {

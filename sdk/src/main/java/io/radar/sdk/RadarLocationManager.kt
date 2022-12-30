@@ -561,7 +561,7 @@ internal class RadarLocationManager(
         val locationManager = this
 
         val callTrackApi = { beacons: Array<RadarBeacon>? ->
-            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, object : RadarTrackApiCallback {
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, callback = object : RadarTrackApiCallback {
                 override fun onComplete(
                     status: RadarStatus,
                     res: JSONObject?,

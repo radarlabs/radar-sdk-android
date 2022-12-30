@@ -2,15 +2,25 @@ package io.radar.sdk
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Base64
 import androidx.core.content.edit
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import io.radar.sdk.model.RadarFeatureSettings
 import org.json.JSONObject
+import java.math.BigInteger
+import java.security.SecureRandom
 import java.text.DecimalFormat
-import java.util.UUID
+import java.util.*
+
 
 internal object RadarSettings {
 
     private const val KEY_PUBLISHABLE_KEY = "publishable_key"
+    private const val KEY_SERVER_PUBLIC_KEY = "server_public_key"
+    private const val KEY_CLIENT_PUBLIC_KEY_MOD = "client_public_key_mod"
+    private const val KEY_CLIENT_PUBLIC_KEY = "client_public_key"
+    private const val KEY_CLIENT_PRIVATE_KEY = "client_private_key"
     private const val KEY_LOCATION_SERVICES_PROVIDER = "provider"
     private const val KEY_INSTALL_ID = "install_id"
     private const val KEY_SESSION_ID = "session_id"
@@ -39,12 +49,78 @@ internal object RadarSettings {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
     }
 
+    private fun getEncryptedSharedPreferences(context: Context): SharedPreferences {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        return EncryptedSharedPreferences.create(
+            context,
+            "RadarSDK_encrypted",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
+
     internal fun getPublishableKey(context: Context): String? {
         return getSharedPreferences(context).getString(KEY_PUBLISHABLE_KEY, null)
     }
 
     internal fun setPublishableKey(context: Context, publishableKey: String?) {
         getSharedPreferences(context).edit { putString(KEY_PUBLISHABLE_KEY, publishableKey) }
+    }
+
+    internal fun getServerPublicKey(context: Context): BigInteger? {
+        val serverPublicKeyLong = getSharedPreferences(context).getLong(KEY_SERVER_PUBLIC_KEY, 0L)
+        if (serverPublicKeyLong == 0L) {
+            return null
+        }
+        return serverPublicKeyLong.toBigInteger()
+    }
+
+    internal fun setServerPublicKey(context: Context, base64ServerPublicKey: String?) {
+        val serverPublicKeyBytes = Base64.decode(base64ServerPublicKey, 0)
+        val serverPublicKey = BigInteger(serverPublicKeyBytes)
+        getEncryptedSharedPreferences(context).edit { putLong(KEY_SERVER_PUBLIC_KEY, serverPublicKey.toLong()) }
+    }
+
+    internal fun setClientPublicAndPrivateKeys(context: Context) {
+        val random = SecureRandom()
+        val clientPublicKeyMod = BigInteger.probablePrime(2048, random)
+        val clientPrime = BigInteger.probablePrime(2048, random)
+        val clientPrivateKey = BigInteger.probablePrime(2048, random)
+        val clientPublicKey = clientPrime.modPow(clientPrivateKey, clientPublicKeyMod)
+        getEncryptedSharedPreferences(context).edit { putLong(KEY_CLIENT_PRIVATE_KEY, clientPrivateKey.toLong()) }
+        getEncryptedSharedPreferences(context).edit { putLong(KEY_CLIENT_PUBLIC_KEY, clientPublicKey.toLong()) }
+        getEncryptedSharedPreferences(context).edit { putLong(KEY_CLIENT_PUBLIC_KEY_MOD, clientPublicKeyMod.toLong()) }
+    }
+
+    internal fun getClientPrivateKey(context: Context): BigInteger {
+        var clientPrivateKey = getSharedPreferences(context).getLong(KEY_CLIENT_PRIVATE_KEY, 0L)
+        if (clientPrivateKey == 0L) {
+            setClientPublicAndPrivateKeys(context)
+            clientPrivateKey = getSharedPreferences(context).getLong(KEY_CLIENT_PRIVATE_KEY, 0L)
+        }
+        return clientPrivateKey.toBigInteger()
+    }
+
+    internal fun getClientPublicKey(context: Context): BigInteger {
+        var clientPublicKey = getSharedPreferences(context).getLong(KEY_CLIENT_PUBLIC_KEY, 0L)
+        if (clientPublicKey == 0L) {
+            setClientPublicAndPrivateKeys(context)
+            clientPublicKey = getSharedPreferences(context).getLong(KEY_CLIENT_PUBLIC_KEY, 0L)
+        }
+        return clientPublicKey.toBigInteger()
+    }
+
+    internal fun getClientPublicKeyMod(context: Context): BigInteger {
+        var clientPublicKeyMod = getSharedPreferences(context).getLong(KEY_CLIENT_PUBLIC_KEY_MOD, 0L)
+        if (clientPublicKeyMod == 0L) {
+            setClientPublicAndPrivateKeys(context)
+            clientPublicKeyMod = getSharedPreferences(context).getLong(KEY_CLIENT_PUBLIC_KEY_MOD, 0L)
+        }
+        return clientPublicKeyMod.toBigInteger()
     }
 
     internal fun getLocationServicesProvider(context: Context): String? {
