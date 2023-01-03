@@ -842,7 +842,11 @@ object Radar {
     }
 
     /**
-     * Tracks the user's location with a cryptographic signature and device integrity information for location verification use cases.
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must call `setVerifiedHost()` and configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
      */
     @JvmStatic
     fun trackVerified(callback: RadarTrackCallback? = null) {
@@ -858,8 +862,6 @@ object Radar {
 
         apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(config: RadarConfig) {
-                RadarSettings.setServerPublicKey(context, config.serverPublicKey)
-
                 locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
                     override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
                         if (status != RadarStatus.SUCCESS || location == null) {
@@ -893,7 +895,11 @@ object Radar {
     }
 
     /**
-     * Tracks the user's location with a cryptographic signature and device integrity information for location verification use cases.
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must call `setVerifiedHost()` and configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
      */
     @JvmStatic
     fun trackVerified(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
@@ -902,6 +908,20 @@ object Radar {
                 block(status, location, events, user)
             }
         })
+    }
+
+    /**
+     * Sets the host for `trackVerify()`.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[verifiedHost] The host.
+     */
+    @JvmStatic
+    fun setVerifiedHost(verifiedHost: String) {
+        RadarSettings.setVerifiedHost(context, verifiedHost)
     }
 
     /**

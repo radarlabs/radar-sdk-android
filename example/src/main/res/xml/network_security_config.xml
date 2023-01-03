@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api-foo.radar.io</domain>
+        <pin-set>
+            <pin digest="SHA-256">9hdyeJFIEmx2Y01oXXXXXXXXXXmmSFZhBXXXXXXXXXX=</pin>
+            <pin digest="SHA-256">9Pacxtmctlq2Y73orFOOXXXXXXXXXXZhBXXXXXXXXXX=</pin>
+        </pin-set>
+    </domain-config>
+</network-security-config>
