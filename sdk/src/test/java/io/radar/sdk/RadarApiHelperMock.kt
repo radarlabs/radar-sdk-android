@@ -17,20 +17,23 @@ internal class RadarApiHelperMock : RadarApiHelper() {
      * The JSON responses that are expected to be returned by various URL requests. Call
      * `setMockResponse()` to associate a response with a URL.
      */
-    internal var mockResponses: MutableMap<URL, JSONObject> = mutableMapOf()
+    internal var mockResponses: MutableMap<String, JSONObject> = mutableMapOf()
 
-    override fun request(context: Context,
-                         method: String,
-                         url: URL,
-                         headers: Map<String, String>?,
-                         params: JSONObject?,
-                         sleep: Boolean,
-                         callback: RadarApiCallback?,
-                         stream: Boolean,
-                         logPayload: Boolean) {
+    override fun request(
+        context: Context,
+        method: String,
+        path: String,
+        headers: Map<String, String>?,
+        params: JSONObject?,
+        sleep: Boolean,
+        callback: RadarApiCallback?,
+        stream: Boolean,
+        logPayload: Boolean,
+        verified: Boolean
+    ) {
         // Use the entry in the mockResponses map, if any.
-        if (mockResponses.containsKey(url)) {
-            callback?.onComplete(mockStatus, mockResponses[url])
+        if (mockResponses.containsKey(path)) {
+            callback?.onComplete(mockStatus, mockResponses[path])
         } else {
             callback?.onComplete(mockStatus, mockResponse)
         }
@@ -41,8 +44,8 @@ internal class RadarApiHelperMock : RadarApiHelper() {
      * instance makes multiple requests in sequence, like when testing `Radar.sendEvent()`, which
      * first calls `/v1/track`, and then `/v1/event`.
      */
-    fun addMockResponse(url: URL, response: JSONObject) {
-        mockResponses[url] = response
+    fun addMockResponse(path: String, response: JSONObject) {
+        mockResponses[path] = response
     }
 
 }

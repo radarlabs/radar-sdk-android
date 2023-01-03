@@ -1326,23 +1326,10 @@ class RadarTest {
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         locationClientMock.mockLocation = mockLocation
-
-        val host = RadarSettings.getHost(context)
-        val trackUri = Uri.parse(host)
-            .buildUpon()
-            .appendEncodedPath("v1/track")
-            .build()
-        val trackUrl = URL(trackUri.toString())
-        apiHelperMock.addMockResponse(trackUrl, RadarTestUtils.jsonObjectFromResource("/track.json")!!)
-
-        val eventUri = Uri.parse(host)
-            .buildUpon()
-            .appendEncodedPath("v1/events")
-            .build()
-        val eventUrl = URL(eventUri.toString())
-        apiHelperMock.addMockResponse(eventUrl, RadarTestUtils.jsonObjectFromResource("/custom_event.json")!!)
-
-
+        val trackPath = "v1/track"
+        apiHelperMock.addMockResponse(trackPath, RadarTestUtils.jsonObjectFromResource("/track.json")!!)
+        val eventsPath = "v1/events"
+        apiHelperMock.addMockResponse(eventsPath, RadarTestUtils.jsonObjectFromResource("/custom_event.json")!!)
     }
 
     @Test
