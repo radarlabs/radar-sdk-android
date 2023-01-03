@@ -380,8 +380,8 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/sdk/android#initialize-sdk)
      *
-     * @param[context] The context
-     * @param[publishableKey] Your publishable API key
+     * @param[context] The context.
+     * @param[publishableKey] Your publishable API key.
      */
     @JvmStatic
     fun initialize(context: Context?, publishableKey: String? = null) {
@@ -393,10 +393,10 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/sdk/android#initialize-sdk)
      *
-     * @param[context] The context
-     * @param[publishableKey] Your publishable API key
-     * @param[receiver] An optional receiver for the client-side delivery of events
-     * @param[provider] The location services provider
+     * @param[context] The context.
+     * @param[publishableKey] Your publishable API key.
+     * @param[receiver] An optional receiver for the client-side delivery of events.
+     * @param[provider] The location services provider.
      */
     @JvmStatic
     fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE) {
