@@ -6,7 +6,7 @@ import org.json.JSONObject
 /**
  * Represents a region.
  *
- * @see [](https://radar.io/documentation/regions
+ * @see [](https://radar.com/documentation/regions
  */
 class RadarRegion(
     /**
