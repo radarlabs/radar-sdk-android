@@ -49,7 +49,7 @@ internal open class RadarApiHelper(
             RadarSettings.getHost(context)
         }
         val uri = Uri.parse(host).buildUpon()
-            .appendEncodedPath("v1/track")
+            .appendEncodedPath(path)
             .build()
         val url = URL(uri.toString())
 

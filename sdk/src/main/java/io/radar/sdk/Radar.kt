@@ -873,7 +873,7 @@ object Radar {
                         }
 
                         verificationManager.getIntegrityToken(config.googlePlayProjectNumber, config.nonce) { integrityToken, integrityException ->
-                            apiClient.track(location, false, true, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, object : RadarApiClient.RadarTrackApiCallback {
+                            apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, object : RadarApiClient.RadarTrackApiCallback {
                                 override fun onComplete(
                                     status: RadarStatus,
                                     res: JSONObject?,
