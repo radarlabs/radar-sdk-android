@@ -6,7 +6,7 @@ import org.json.JSONObject
 /**
  * Represents a Bluetooth beacon.
  *
- * @see [](https://radar.io/documentation/beacons)
+ * @see [](https://radar.com/documentation/beacons)
  */
 class RadarBeacon (
     /**

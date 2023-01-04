@@ -6,7 +6,7 @@ import org.json.JSONObject
 /**
  * Represents the chain of a place.
  *
- * @see [](https://radar.io/documentation/places)
+ * @see [](https://radar.com/documentation/places)
  */
 class RadarChain(
     /**
