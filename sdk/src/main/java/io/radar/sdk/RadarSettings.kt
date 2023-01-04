@@ -259,8 +259,8 @@ internal object RadarSettings {
         return getSharedPreferences(context).getBoolean(KEY_PERMISSIONS_DENIED, false)
     }
 
-    internal fun getVerifiedHost(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null)
+    internal fun getVerifiedHost(context: Context): String {
+        return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api.radar.io"
     }
 
     internal fun setVerifiedHost(context: Context, verifiedHost: String?) {

@@ -13,17 +13,21 @@ internal class RadarVerificationManager(
         logger.d("Requesting integrity token")
 
         if (googleCloudProjectNumber == null) {
-            logger.d("Missing Google Cloud project number")
+            val integrityException = "Missing Google Cloud project number"
 
-            block(null, null)
+            logger.d(integrityException)
+
+            block(null, integrityException)
 
             return
         }
 
         if (nonce == null) {
-            logger.d("Missing nonce")
+            val integrityException = "Missing nonce"
 
-            block(null, null)
+            logger.d(integrityException)
+
+            block(null, integrityException)
 
             return
         }
