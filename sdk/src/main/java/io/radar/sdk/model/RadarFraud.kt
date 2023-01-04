@@ -11,6 +11,16 @@ import org.json.JSONObject
  */
 data class RadarFraud(
     /**
+     * A boolean indicating whether the user passed fraud detection checks. May be `false` if Fraud is not enabled.
+     */
+    val passed: Boolean,
+
+    /**
+     * A boolean indicating whether fraud detection checks were bypassed for the user for testing. May be `false` if Fraud is not enabled.
+     */
+    val bypassed: Boolean,
+
+    /**
      * A boolean indicating whether the user's IP address is a known proxy. May be `false` if Fraud is not enabled.
      */
     val proxy: Boolean,
@@ -34,6 +44,8 @@ data class RadarFraud(
     val jumped: Boolean
 ) {
     companion object {
+        private const val PASSED = "passed"
+        private const val BYPASSED = "bypassed"
         private const val PROXY = "proxy"
         private const val MOCKED = "mocked"
         private const val COMPROMISED = "compromised"
@@ -42,6 +54,8 @@ data class RadarFraud(
         @JvmStatic
         fun fromJson(json: JSONObject?): RadarFraud {
             return RadarFraud(
+                passed = json?.optBoolean(PASSED, false) ?: false,
+                bypassed = json?.optBoolean(BYPASSED, false) ?: false,
                 proxy = json?.optBoolean(PROXY, false) ?: false,
                 mocked = json?.optBoolean(MOCKED, false) ?: false,
                 compromised = json?.optBoolean(COMPROMISED, false) ?: false,
@@ -52,6 +66,8 @@ data class RadarFraud(
 
     fun toJson(): JSONObject {
         return JSONObject().apply {
+            putOpt(PASSED, passed)
+            putOpt(BYPASSED, bypassed)
             putOpt(PROXY, proxy)
             putOpt(MOCKED, mocked)
             putOpt(COMPROMISED, compromised)

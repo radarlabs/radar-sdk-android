@@ -146,6 +146,8 @@
       },
       "source": "BACKGROUND_LOCATION",
       "fraud": {
+         "passed": true,
+         "bypassed": true,
          "proxy": true,
          "mocked": true,
          "compromised": true,

@@ -30,9 +30,14 @@ class RadarRegion(
     val type: String,
 
     /**
-     * The optional flag of the region
+     * The optional flag of the region.
      */
-    val flag: String?
+    val flag: String?,
+
+    /**
+     * A boolean indicating whether the region is allowed. May be `false` if Fraud is not enabled.
+     */
+    val allowed: Boolean = true
 ) {
 
     internal companion object {
@@ -41,6 +46,7 @@ class RadarRegion(
         private const val FIELD_NAME = "name"
         private const val FIELD_CODE = "code"
         private const val FIELD_FLAG = "flag"
+        private const val FIELD_ALLOWED = "allowed"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarRegion? {
@@ -53,8 +59,9 @@ class RadarRegion(
             val code = obj.optString(FIELD_CODE) ?: ""
             val type = obj.optString(FIELD_TYPE) ?: ""
             val flag = obj.optString(FIELD_FLAG) ?: null
+            val allowed = obj.optBoolean(FIELD_ALLOWED)
 
-            return RadarRegion(id, name, code, type, flag)
+            return RadarRegion(id, name, code, type, flag, allowed)
         }
 
         @JvmStatic
@@ -76,6 +83,7 @@ class RadarRegion(
         obj.putOpt(FIELD_CODE, this.code)
         obj.putOpt(FIELD_TYPE, this.type)
         obj.putOpt(FIELD_FLAG, this.flag)
+        obj.putOpt(FIELD_ALLOWED, this.allowed)
         return obj
     }
 
