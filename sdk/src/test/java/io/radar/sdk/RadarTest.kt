@@ -129,6 +129,14 @@ class RadarTest {
         assertEquals(trip?.status, RadarTrip.RadarTripStatus.STARTED)
     }
 
+    private fun assertFraudOk(fraud: RadarFraud?) {
+        assertNotNull(fraud)
+        assertTrue(fraud!!.proxy)
+        assertTrue(fraud.mocked)
+        assertTrue(fraud.compromised)
+        assertTrue(fraud.jumped)
+    }
+
     private fun assertUserOk(user: RadarUser?) {
         assertNotNull(user)
         assertNotNull(user?._id)
@@ -147,11 +155,8 @@ class RadarTest {
         assertSegmentsOk(user?.segments)
         assertChainsOk(user?.topChains)
         assertNotEquals(user?.source, Radar.RadarLocationSource.UNKNOWN)
-        assertTrue(user?.proxy ?: false)
-        assertTrue(user?.mocked ?: false)
-        assertTrue(user?.fraud?.proxy ?: false)
-        assertTrue(user?.fraud?.mocked ?: false)
         assertTripOk(user?.trip)
+        assertFraudOk(user?.fraud)
     }
 
     private fun assertEventsOk(events: Array<RadarEvent>?) {
