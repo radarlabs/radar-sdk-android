@@ -78,7 +78,7 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null)
     }
 
-    private fun headers(publishableKey: String, signature: String? = null, clientPublicKey: String? = null, clientPublicKeyMod: String? = null): Map<String, String> {
+    private fun headers(publishableKey: String): Map<String, String> {
         return mapOf(
             "Authorization" to publishableKey,
             "Content-Type" to "application/json",
@@ -91,7 +91,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun getConfig(callback: RadarGetConfigApiCallback? = null) {
+    internal fun getConfig(verified: Boolean = false, callback: RadarGetConfigApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
         val queryParams = StringBuilder()
@@ -99,6 +99,7 @@ internal class RadarApiClient(
         queryParams.append("&sessionId=${RadarSettings.getSessionId(context)}")
         queryParams.append("&locationAuthorization=${RadarUtils.getLocationAuthorization(context)}")
         queryParams.append("&locationAccuracyAuthorization=${RadarUtils.getLocationAccuracyAuthorization(context)}")
+        queryParams.append("&verified=$verified")
 
         val path = "v1/config?${queryParams}"
         val headers = headers(publishableKey)
@@ -250,6 +251,7 @@ internal class RadarApiClient(
             val usingRemoteTrackingOptions = RadarSettings.getTracking(context) && RadarSettings.getRemoteTrackingOptions(context) != null
             params.putOpt("usingRemoteTrackingOptions", usingRemoteTrackingOptions)
             params.putOpt("locationServicesProvider", RadarSettings.getLocationServicesProvider(context))
+            params.putOpt("verified", verified)
             if (verified) {
                 params.putOpt("integrityToken", integrityToken)
                 params.putOpt("integrityException", integrityException)

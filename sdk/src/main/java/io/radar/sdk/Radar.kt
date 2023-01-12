@@ -453,7 +453,7 @@ object Radar {
         val application = this.context as? Application
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks())
 
-        this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
+        this.apiClient.getConfig(false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config.meta)
                 RadarSettings.setFeatureSettings(context, config.featureSettings)
@@ -860,7 +860,7 @@ object Radar {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
+        apiClient.getConfig(true, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(config: RadarConfig) {
                 locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
                     override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
