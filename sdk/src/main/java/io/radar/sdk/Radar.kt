@@ -844,7 +844,7 @@ object Radar {
     /**
      * Tracks the user's location with device integrity information for location verification use cases.
      *
-     * Note that you must call `setVerifiedHost()` and configure SSL pinning before calling this method.
+     * Note that you must configure SSL pinning before calling this method.
      *
      * @see [](https://radar.com/documentation/fraud)
      */
@@ -897,7 +897,7 @@ object Radar {
     /**
      * Tracks the user's location with device integrity information for location verification use cases.
      *
-     * Note that you must call `setVerifiedHost()` and configure SSL pinning before calling this method.
+     * Note that you must configure SSL pinning before calling this method.
      *
      * @see [](https://radar.com/documentation/fraud)
      */
@@ -908,20 +908,6 @@ object Radar {
                 block(status, location, events, user)
             }
         })
-    }
-
-    /**
-     * Sets the host for `trackVerify()`.
-     *
-     * Note that you must configure SSL pinning before calling this method.
-     *
-     * @see [](https://radar.com/documentation/fraud)
-     *
-     * @param[verifiedHost] The host.
-     */
-    @JvmStatic
-    fun setVerifiedHost(verifiedHost: String) {
-        RadarSettings.setVerifiedHost(context, verifiedHost)
     }
 
     /**

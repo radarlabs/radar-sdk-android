@@ -134,13 +134,19 @@ internal open class RadarApiHelper(
                 urlConnection.disconnect()
             } catch (e: IOException) {
                 handler.post {
+                    logger?.d("Error calling API | e = ${e.localizedMessage}")
+
                     callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
                 }
             } catch (e: JSONException) {
+                logger?.d("Error calling API | e = ${e.localizedMessage}")
+
                 handler.post {
                     callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
                 }
             } catch (e: Exception) {
+                logger?.d("Error calling API | e = ${e.localizedMessage}")
+
                 handler.post {
                     callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
                 }

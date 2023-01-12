@@ -260,11 +260,7 @@ internal object RadarSettings {
     }
 
     internal fun getVerifiedHost(context: Context): String {
-        return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api.radar.io"
-    }
-
-    internal fun setVerifiedHost(context: Context, verifiedHost: String?) {
-        getSharedPreferences(context).edit { putString(KEY_VERIFIED_HOST, verifiedHost) }
+        return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api-verified.radar.io"
     }
 
 }

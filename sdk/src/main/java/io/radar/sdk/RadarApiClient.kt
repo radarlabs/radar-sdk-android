@@ -339,7 +339,7 @@ internal class RadarApiClient(
 
                 callback?.onComplete(RadarStatus.ERROR_SERVER)
             }
-        })
+        }, false, false, verified)
     }
 
     internal fun verifyEvent(eventId: String, verification: RadarEventVerification, verifiedPlaceId: String? = null) {
