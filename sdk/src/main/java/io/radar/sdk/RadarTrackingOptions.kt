@@ -111,8 +111,25 @@ data class RadarTrackingOptions(
     /**
      * Determines whether to monitor beacons.
      */
-    var beacons: Boolean
+    var beacons: Boolean,
+
+    /**
+     * Either `default` if these options were set by the server, `on-trip` if they were set specifically for using during trips, or `null` if they weren't set by the server.
+     */
+    var options: String? = null,
+
+    /**
+     * One of `"efficient"`, `"responsive"`, `"continuous"`, or `"custom"`.
+     */
+    var preset: RadarTrackingOptionsPreset
 ) {
+
+    enum class RadarTrackingOptionsPreset {
+        EFFICIENT,
+        RESPONSIVE,
+        CONTINUOUS,
+        CUSTOM
+    }
 
     /**
      * The location accuracy options.
@@ -357,7 +374,8 @@ data class RadarTrackingOptions(
             syncGeofences = true,
             syncGeofencesLimit = 0,
             foregroundServiceEnabled = true,
-            beacons = false
+            beacons = false,
+            preset = RadarTrackingOptionsPreset.CONTINUOUS
         )
 
         /**
@@ -386,7 +404,8 @@ data class RadarTrackingOptions(
             syncGeofences = true,
             syncGeofencesLimit = 10,
             foregroundServiceEnabled = false,
-            beacons = false
+            beacons = false,
+            preset = RadarTrackingOptionsPreset.RESPONSIVE
         )
 
         /**
@@ -415,7 +434,8 @@ data class RadarTrackingOptions(
             syncGeofences = true,
             syncGeofencesLimit = 10,
             foregroundServiceEnabled = false,
-            beacons = false
+            beacons = false,
+            preset = RadarTrackingOptionsPreset.EFFICIENT
         )
 
         internal const val KEY_DESIRED_STOPPED_UPDATE_INTERVAL = "desiredStoppedUpdateInterval"
@@ -438,6 +458,8 @@ data class RadarTrackingOptions(
         internal const val KEY_SYNC_GEOFENCES_LIMIT = "syncGeofencesLimit"
         internal const val KEY_FOREGROUND_SERVICE_ENABLED = "foregroundServiceEnabled"
         internal const val KEY_BEACONS = "beacons"
+        internal const val KEY_PRESET = "preset"
+        internal const val KEY_TYPE = "type"
 
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTrackingOptions {
@@ -457,6 +479,13 @@ data class RadarTrackingOptions(
                 RadarTrackingOptionsSync.fromRadarString(obj.optString(KEY_SYNC))
             } else {
                 RadarTrackingOptionsSync.fromInt(obj.optInt(KEY_SYNC))
+            }
+
+            val preset = when(obj.optString(KEY_PRESET)) {
+                "efficient" -> RadarTrackingOptionsPreset.EFFICIENT
+                "responsive" -> RadarTrackingOptionsPreset.RESPONSIVE
+                "continuous" -> RadarTrackingOptionsPreset.CONTINUOUS
+                else -> RadarTrackingOptionsPreset.CUSTOM
             }
 
             return RadarTrackingOptions(
@@ -497,7 +526,9 @@ data class RadarTrackingOptions(
                 syncGeofences = obj.optBoolean(KEY_SYNC_GEOFENCES),
                 syncGeofencesLimit = obj.optInt(KEY_SYNC_GEOFENCES_LIMIT, 10),
                 foregroundServiceEnabled = obj.optBoolean(KEY_FOREGROUND_SERVICE_ENABLED, false),
-                beacons = obj.optBoolean(KEY_BEACONS)
+                beacons = obj.optBoolean(KEY_BEACONS),
+                preset = preset,
+                type = obj.optString(KEY_TYPE)
             )
         }
 
