@@ -712,7 +712,7 @@ object Radar {
         }
 
         if (RadarSettings.getAnonymousTrackingEnabled(context)) {
-            this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
+            this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback, true {
                 override fun onComplete(config: RadarConfig) {
                     locationManager.updateTrackingFromMeta(config.meta)
                     RadarSettings.setFeatureSettings(context, config.featureSettings)

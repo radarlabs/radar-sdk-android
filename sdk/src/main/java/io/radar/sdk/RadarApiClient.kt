@@ -94,7 +94,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun getConfig(callback: RadarGetConfigApiCallback? = null) {
+    internal fun getConfig(callback: RadarGetConfigApiCallback? = null, trackUsage: Boolean? = false) {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
         val queryParams = StringBuilder()
