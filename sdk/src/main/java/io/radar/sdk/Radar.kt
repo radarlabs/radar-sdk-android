@@ -454,7 +454,8 @@ object Radar {
         val application = this.context as? Application
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks())
 
-        this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
+        val usage = "initialize"
+        this.apiClient.getConfig(usage, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config.meta)
                 RadarSettings.setFeatureSettings(context, config.featureSettings)
@@ -713,7 +714,7 @@ object Radar {
 
         if (RadarSettings.getAnonymousTrackingEnabled(context)) {
             val usage = "track"
-            this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback, usage {
+            this.apiClient.getConfig(usage, object : RadarApiClient.RadarGetConfigApiCallback {
                 override fun onComplete(config: RadarConfig) {
                     locationManager.updateTrackingFromMeta(config.meta)
                     RadarSettings.setFeatureSettings(context, config.featureSettings)
