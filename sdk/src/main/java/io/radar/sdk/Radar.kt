@@ -712,7 +712,8 @@ object Radar {
         }
 
         if (RadarSettings.getAnonymousTrackingEnabled(context)) {
-            this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback, true {
+            val usage = "track"
+            this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback, usage {
                 override fun onComplete(config: RadarConfig) {
                     locationManager.updateTrackingFromMeta(config.meta)
                     RadarSettings.setFeatureSettings(context, config.featureSettings)

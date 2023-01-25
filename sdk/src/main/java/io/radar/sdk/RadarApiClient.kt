@@ -94,7 +94,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun getConfig(callback: RadarGetConfigApiCallback? = null, trackUsage: Boolean? = false) {
+    internal fun getConfig(callback: RadarGetConfigApiCallback? = null, usage: String? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
         val queryParams = StringBuilder()
@@ -102,6 +102,9 @@ internal class RadarApiClient(
         queryParams.append("&sessionId=${RadarSettings.getSessionId(context)}")
         queryParams.append("&locationAuthorization=${RadarUtils.getLocationAuthorization(context)}")
         queryParams.append("&locationAccuracyAuthorization=${RadarUtils.getLocationAccuracyAuthorization(context)}")
+        if (usage != null) {
+            queryParams.append("&usage=${usage}")
+        }
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
