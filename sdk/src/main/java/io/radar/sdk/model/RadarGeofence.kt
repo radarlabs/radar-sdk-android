@@ -35,11 +35,23 @@ class RadarGeofence(
      */
     val metadata: JSONObject?,
 
+
     /**
      * The geometry of the geofence.
      */
-    val geometry: RadarGeofenceGeometry?
-) {
+    val geometry: RadarGeofenceGeometry?,
+
+    /**
+     * The radius of the geofence.
+     */
+    val geometryRadius: Double?,
+
+    /**
+     * The center of the geofence.
+     */
+    val geometryCenter: RadarCoordinate?,
+
+    ) {
 
     internal companion object {
         private const val FIELD_ID = "_id"
@@ -48,9 +60,9 @@ class RadarGeofence(
         private const val FIELD_EXTERNAL_ID = "externalId"
         private const val FIELD_METADATA = "metadata"
         private const val FIELD_TYPE = "type"
+        private const val FIELD_GEOMETRY = "geometry"
         private const val FIELD_GEOMETRY_RADIUS = "geometryRadius"
         private const val FIELD_GEOMETRY_CENTER = "geometryCenter"
-        private const val FIELD_GEOMETRY = "geometry"
         private const val FIELD_COORDINATES = "coordinates"
 
         private const val TYPE_CIRCLE = "circle"
@@ -104,7 +116,7 @@ class RadarGeofence(
                 else -> null
             } ?: RadarCircleGeometry(RadarCoordinate(0.0, 0.0), 0.0)
 
-            return RadarGeofence(id, description, tag, externalId, metadata, geometry)
+            return RadarGeofence(id, description, tag, externalId, metadata, geometry, radius, center)
         }
 
         @JvmStatic
@@ -139,6 +151,8 @@ class RadarGeofence(
         obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
         obj.putOpt(FIELD_DESCRIPTION, this.description)
         obj.putOpt(FIELD_METADATA, this.metadata)
+        obj.putOpt(FIELD_GEOMETRY_CENTER, this.geometryCenter?.toJson())
+        obj.putOpt(FIELD_GEOMETRY_RADIUS, this.geometryRadius)
         return obj
     }
 
