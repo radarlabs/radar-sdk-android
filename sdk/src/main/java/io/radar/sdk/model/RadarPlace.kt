@@ -125,6 +125,7 @@ class RadarPlace(
         obj.putOpt(FIELD_CHAIN, this.chain?.toJson())
         obj.putOpt(FIELD_GROUP, this.group)
         obj.putOpt(FIELD_METADATA, this.metadata)
+        obj.putOpt(FIELD_LOCATION, this.location.toJson())
         return obj
     }
 
