@@ -275,7 +275,7 @@ internal class RadarApiClient(
             return
         }
 
-        if (RadarSettings.getAnonymousTrackingEnabled(context)) {
+        if (anonymous) {
             val usage = "track"
             this.getConfig(usage)
         }
