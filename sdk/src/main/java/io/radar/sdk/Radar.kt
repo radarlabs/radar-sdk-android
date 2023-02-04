@@ -712,16 +712,6 @@ object Radar {
             return
         }
 
-        if (RadarSettings.getAnonymousTrackingEnabled(context)) {
-            val usage = "track"
-            this.apiClient.getConfig(usage, object : RadarApiClient.RadarGetConfigApiCallback {
-                override fun onComplete(config: RadarConfig) {
-                    locationManager.updateTrackingFromMeta(config.meta)
-                    RadarSettings.setFeatureSettings(context, config.featureSettings)
-                }
-            })
-        }
-
         locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
                 if (status != RadarStatus.SUCCESS || location == null) {

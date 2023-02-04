@@ -275,6 +275,11 @@ internal class RadarApiClient(
             return
         }
 
+        if (RadarSettings.getAnonymousTrackingEnabled(context)) {
+            val usage = "track"
+            this.getConfig(usage)
+        }
+
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/track")
