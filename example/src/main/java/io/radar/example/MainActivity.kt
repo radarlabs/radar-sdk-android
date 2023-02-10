@@ -193,7 +193,7 @@ class MainActivity : AppCompatActivity() {
         val customEventMetadata = JSONObject()
         customEventMetadata.put("one", "two")
 
-        Radar.sendEvent(
+        Radar.logConversion(
             "app_open_android",
             customEventMetadata
         ) { status, location, events, user ->
@@ -201,7 +201,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Send custom event with manual location
-        Radar.sendEvent(
+        Radar.logConversion(
             "app_open_android_manual",
             destination1,
             customEventMetadata
