@@ -1365,7 +1365,7 @@ class RadarTest {
         assertEquals(RadarTrackingOptions.CONTINUOUS, RadarSettings.getTrackingOptions(context))
     }
 
-    private fun setUpSendEventTest() {
+    private fun setUpLogConversionTest() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         val mockLocation = Location("RadarSDK")
@@ -1394,8 +1394,8 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_sendEventWithBlock_success() {
-        setUpSendEventTest()
+    fun test_Radar_logConversionWithBlock_success() {
+        setUpLogConversionTest()
 
         val customType = "test_event" // has to match the property in the custom_event.json file!
         val latch = CountDownLatch(1)
@@ -1404,7 +1404,7 @@ class RadarTest {
         val metadata = JSONObject()
         metadata.put("foo", "bar")
 
-        Radar.sendEvent(customType, metadata) { status, location, events, user ->
+        Radar.logConversion(customType, metadata) { status, location, events, user ->
             callbackStatus = status
             callbackEvents = events
 
@@ -1423,8 +1423,8 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_sendEventWithLocationAndBlock_success() {
-        setUpSendEventTest()
+    fun test_Radar_logConversionWithLocationAndBlock_success() {
+        setUpLogConversionTest()
 
         val customType = "test_event" // has to match the property in the custom_event.json file!
         val latch = CountDownLatch(1)
@@ -1433,7 +1433,7 @@ class RadarTest {
         val metadata = JSONObject()
         metadata.put("foo", "bar")
 
-        Radar.sendEvent(customType, locationClientMock.mockLocation!!, null) { status, location, events, user ->
+        Radar.logConversion(customType, locationClientMock.mockLocation!!, null) { status, location, events, user ->
             callbackStatus = status
             callbackEvents = events
 
