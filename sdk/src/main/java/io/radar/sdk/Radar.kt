@@ -2494,7 +2494,8 @@ object Radar {
         data: JSONObject?,
         callback: RadarLogConversionCallback
     ) {
-        data?.put("revenue", revenue);
+        val nonNullData = data ?: JSONObject()
+        nonNullData.put("revenue", revenue);
 
         logConversion(customType, data, callback)
     }
