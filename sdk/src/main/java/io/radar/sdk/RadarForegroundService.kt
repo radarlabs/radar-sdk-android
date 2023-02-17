@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import androidx.annotation.RequiresApi
+import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.KEY_FOREGROUND_SERVICE_CHANNEL_NAME
 
 
@@ -30,14 +31,14 @@ class RadarForegroundService : Service() {
                 try {
                     startForegroundService(intent.extras)
                 } catch (e: Exception) {
-                    logger.e("Error starting foreground service", e)
+                    logger.e("Error starting foreground service", RadarLogType.SDK_EXCEPTION, e)
                 }
             } else if (intent.action == "stop") {
                 try {
                     stopForeground(true)
                     stopSelf()
                 } catch (e: Exception) {
-                    logger.e("Error stopping foreground service", e)
+                    logger.e("Error stopping foreground service", RadarLogType.SDK_EXCEPTION, e)
                 }
             }
         }
@@ -82,7 +83,7 @@ class RadarForegroundService : Service() {
                 builder = builder.setContentIntent(pendingIntent)
             }
         } catch (e: ClassNotFoundException) {
-            logger.e("Error setting foreground service content intent", e)
+            logger.e("Error setting foreground service content intent", RadarLogType.SDK_EXCEPTION, e)
         }
         val notification = builder.build()
         startForeground(id, notification)

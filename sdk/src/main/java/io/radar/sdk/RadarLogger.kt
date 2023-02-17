@@ -3,6 +3,7 @@ package io.radar.sdk
 import android.content.Context
 import android.util.Log
 import io.radar.sdk.Radar.RadarLogLevel
+import io.radar.sdk.Radar.RadarLogType
 
 internal class RadarLogger(
     private val context: Context
@@ -12,7 +13,7 @@ internal class RadarLogger(
         private const val TAG = "RadarLogger"
     }
 
-    fun d(message: String, throwable: Throwable? = null) {
+    fun d(message: String, type: RadarLogType? = null, throwable: Throwable? = null) {
         val level = RadarSettings.getLogLevel(this.context)
         if (level >= RadarLogLevel.DEBUG) {
             Log.d(TAG, message, throwable)
@@ -21,7 +22,7 @@ internal class RadarLogger(
         }
     }
 
-    fun i(message: String, throwable: Throwable? = null) {
+    fun i(message: String, type: RadarLogType? = null, throwable: Throwable? = null) {
         val level = RadarSettings.getLogLevel(this.context)
         if (level >= RadarLogLevel.INFO) {
             Log.i(TAG, message, throwable)
@@ -30,7 +31,7 @@ internal class RadarLogger(
         }
     }
 
-    fun w(message: String, throwable: Throwable? = null) {
+    fun w(message: String, type: RadarLogType? = null, throwable: Throwable? = null) {
         val level = RadarSettings.getLogLevel(this.context)
         if (level >= RadarLogLevel.WARNING) {
             Log.w(TAG, message, throwable)
@@ -39,7 +40,7 @@ internal class RadarLogger(
         }
     }
 
-    fun e(message: String, throwable: Throwable? = null) {
+    fun e(message: String, type: RadarLogType? = null, throwable: Throwable? = null) {
         val level = RadarSettings.getLogLevel(this.context)
         if (level >= RadarLogLevel.ERROR) {
             Log.e(TAG, message, throwable)

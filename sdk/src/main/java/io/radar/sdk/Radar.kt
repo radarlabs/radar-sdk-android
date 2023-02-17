@@ -328,6 +328,25 @@ object Radar {
     }
 
     /**
+     * The classification type for debug logs.
+     */
+    enum class RadarLogType(val value: Int) {
+        NONE(0),
+        SDK_CALL(1),
+        SDK_ERROR(2),
+        SDK_EXCEPTION(3),
+        APP_LIFECYCLE_EVENT(4),
+        PERMISSION_EVENT(5);
+
+        companion object {
+            @JvmStatic
+            fun fromInt(value: Int): RadarLogType {
+                return values().first { it.value == value }
+            }
+        }
+    }
+
+    /**
      * The travel modes for routes. See [](https://radar.com/documentation/api#routing).
      */
     enum class RadarRouteMode {
@@ -441,7 +460,7 @@ object Radar {
             this.locationManager.updateTracking()
         }
 
-        this.logger.d("Initializing")
+        this.logger.i("Initializing", RadarLogType.SDK_CALL)
 
         if (provider == RadarLocationServicesProvider.GOOGLE) {
             this.logger.d("Using Google location services")
@@ -593,6 +612,7 @@ object Radar {
      */
     @JvmStatic
     fun getLocation(callback: RadarLocationCallback? = null) {
+        this.logger.i("Radar.getLocation called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -633,6 +653,7 @@ object Radar {
      */
     @JvmStatic
     fun getLocation(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, callback: RadarLocationCallback? = null) {
+        this.logger.i("Radar.getLocation called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -706,6 +727,7 @@ object Radar {
      */
     @JvmStatic
     fun trackOnce(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, beacons: Boolean, callback: RadarTrackCallback? = null) {
+        this.logger.i("Radar.trackOnce called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -862,7 +884,9 @@ object Radar {
      */
     @JvmStatic
     fun startTracking(options: RadarTrackingOptions) {
+        this.logger.i("Radar.startTracking called", RadarLogType.SDK_CALL)
         if (!initialized) {
+            // logger.w?
             return
         }
 
@@ -998,6 +1022,7 @@ object Radar {
      */
     @JvmStatic
     fun stopTracking() {
+        this.logger.i("Radar.stopTracking called", RadarLogType.SDK_CALL)
         if (!initialized) {
             return
         }
@@ -1138,6 +1163,7 @@ object Radar {
      */
     @JvmStatic
     fun startTrip(options: RadarTripOptions, trackingOptions: RadarTrackingOptions? = null, callback: RadarTripCallback? = null) {
+        this.logger.i("Radar.startTrip called", RadarLogType.SDK_CALL)
         if (!initialized) {
             return
         }
@@ -1232,6 +1258,7 @@ object Radar {
      */
     @JvmStatic
     fun updateTrip(options: RadarTripOptions, status: RadarTrip.RadarTripStatus?, callback: RadarTripCallback? = null) {
+        this.logger.i("Radar.updateTrip called", RadarLogType.SDK_CALL)
         if (!initialized) {
             return
         }
@@ -1288,6 +1315,7 @@ object Radar {
      */
     @JvmStatic
     fun completeTrip(callback: RadarTripCallback? = null) {
+        this.logger.i("Radar.completeTrip called", RadarLogType.SDK_CALL)
         if (!initialized) {
             return
         }
@@ -1346,6 +1374,7 @@ object Radar {
      */
     @JvmStatic
     fun cancelTrip(callback: RadarTripCallback? = null) {
+        this.logger.i("Radar.cancelTrip called", RadarLogType.SDK_CALL)
         if (!initialized) {
             return
         }
@@ -1443,6 +1472,7 @@ object Radar {
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
+        this.logger.i("Radar.searchPlaces called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1583,6 +1613,7 @@ object Radar {
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
+        this.logger.i("Radar.searchPlaces called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1683,6 +1714,7 @@ object Radar {
         limit: Int?,
         callback: RadarSearchGeofencesCallback
     ) {
+        this.logger.i("Radar.searchGeofences called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1762,6 +1794,7 @@ object Radar {
         limit: Int?,
         callback: RadarSearchGeofencesCallback
     ) {
+        this.logger.i("Radar.searchGeofences called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1829,6 +1862,7 @@ object Radar {
             limit: Int? = null,
             callback: RadarGeocodeCallback
     ) {
+        this.logger.i("Radar.autocomplete called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1895,6 +1929,7 @@ object Radar {
         country: String? = null,
         callback: RadarGeocodeCallback
     ) {
+        this.logger.i("Radar.autocomplete called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1957,6 +1992,7 @@ object Radar {
         query: String,
         callback: RadarGeocodeCallback
     ) {
+        this.logger.i("Radar.geocode called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2005,6 +2041,7 @@ object Radar {
     fun reverseGeocode(
         callback: RadarGeocodeCallback
     ) {
+        this.logger.i("Radar.reverseGeocode called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2064,6 +2101,7 @@ object Radar {
         location: Location,
         callback: RadarGeocodeCallback
     ) {
+        this.logger.i("Radar.reverseGeocode called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2112,6 +2150,7 @@ object Radar {
     fun ipGeocode(
         callback: RadarIpGeocodeCallback
     ) {
+        this.logger.i("Radar.ipGeocode called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2163,6 +2202,7 @@ object Radar {
         units: RadarRouteUnits,
         callback: RadarRouteCallback
     ) {
+        this.logger.i("Radar.getDistance called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2241,6 +2281,7 @@ object Radar {
         units: RadarRouteUnits,
         callback: RadarRouteCallback
     ) {
+        this.logger.i("Radar.getDistance called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2310,6 +2351,7 @@ object Radar {
         units: RadarRouteUnits,
         callback: RadarMatrixCallback
     ) {
+        this.logger.i("Radar.getMatrix called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2369,6 +2411,7 @@ object Radar {
     fun getContext(
         callback: RadarContextCallback
     ) {
+        this.logger.i("Radar.getContext called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2417,6 +2460,7 @@ object Radar {
      */
     @JvmStatic
     fun getContext(location: Location, callback: RadarContextCallback) {
+        this.logger.i("Radar.getContext called", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -2773,14 +2817,14 @@ object Radar {
         receiver?.onEventsReceived(context, events, user)
 
         for (event in events) {
-            logger.i("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.com/dashboard/events/${event._id}")
+            logger.d("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.com/dashboard/events/${event._id}")
         }
     }
 
     internal fun sendLocation(location: Location, user: RadarUser) {
         receiver?.onLocationUpdated(context, location, user)
 
-        logger.i("📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.com/dashboard/users/${user._id}")
+        logger.d("📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.com/dashboard/users/${user._id}")
     }
 
     internal fun sendClientLocation(

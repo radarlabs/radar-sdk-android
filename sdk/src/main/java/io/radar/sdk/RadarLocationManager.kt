@@ -11,6 +11,7 @@ import io.radar.sdk.Radar.RadarLocationCallback
 import io.radar.sdk.Radar.RadarLocationServicesProvider.GOOGLE
 import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
 import io.radar.sdk.Radar.RadarLocationSource
+import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.RadarApiClient.RadarTrackApiCallback
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
@@ -657,7 +658,7 @@ internal class RadarLocationManager(
                     RadarForegroundService.started = true
                 }
             } catch (e: Exception) {
-                logger.e("Error starting foreground service with intent", e)
+                logger.e("Error starting foreground service with intent", RadarLogType.SDK_EXCEPTION, e)
             }
         }
     }
@@ -671,7 +672,7 @@ internal class RadarLocationManager(
                 context.applicationContext.startService(intent)
                 RadarForegroundService.started = false
             } catch (e: Exception) {
-                logger.e("Error stopping foreground service with intent", e)
+                logger.e("Error stopping foreground service with intent", RadarLogType.SDK_EXCEPTION, e)
             }
         }
     }

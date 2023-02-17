@@ -14,6 +14,7 @@ import android.os.Looper
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarBeaconCallback
+import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarBeacon
 import java.util.*
@@ -116,7 +117,7 @@ internal class RadarBeaconManager(
 
                 scanFilter = RadarBeaconUtils.getScanFilterForBeacon(beacon)
             } catch (e: Exception) {
-                logger.d("Error building scan filter for monitoring | _id = ${beacon._id}", e)
+                logger.d("Error building scan filter for monitoring | _id = ${beacon._id}", RadarLogType.SDK_EXCEPTION, e)
             }
 
             if (scanFilter != null) {
@@ -139,7 +140,7 @@ internal class RadarBeaconManager(
 
             adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, RadarLocationReceiver.getBeaconPendingIntent(context))
         } catch (e: Exception) {
-            logger.e("Error starting monitoring beacons", e)
+            logger.e("Error starting monitoring beacons", RadarLogType.SDK_EXCEPTION, e)
         }
     }
 
@@ -199,7 +200,7 @@ internal class RadarBeaconManager(
 
                     scanFilter = RadarBeaconUtils.getScanFilterForBeacon(beaconUUID)
                 } catch (e: Exception) {
-                    logger.d("Error building scan filter for monitoring | beaconUUID = $beaconUUID", e)
+                    logger.d("Error building scan filter for monitoring | beaconUUID = $beaconUUID", RadarLogType.SDK_EXCEPTION, e)
                 }
 
                 if (scanFilter != null) {
@@ -218,7 +219,7 @@ internal class RadarBeaconManager(
 
                     scanFilter = RadarBeaconUtils.getScanFilterForBeaconUID(beaconUID)
                 } catch (e: Exception) {
-                    logger.d("Error building scan filter for monitoring | beaconUID = $beaconUID", e)
+                    logger.d("Error building scan filter for monitoring | beaconUID = $beaconUID", RadarLogType.SDK_EXCEPTION, e)
                 }
 
                 if (scanFilter != null) {
@@ -242,7 +243,7 @@ internal class RadarBeaconManager(
 
             adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, RadarLocationReceiver.getBeaconPendingIntent(context))
         } catch (e: Exception) {
-            logger.e("Error starting monitoring beacon UUIDs", e)
+            logger.e("Error starting monitoring beacon UUIDs", RadarLogType.SDK_EXCEPTION, e)
         }
     }
 
@@ -270,7 +271,7 @@ internal class RadarBeaconManager(
         try {
             adapter.bluetoothLeScanner.stopScan(RadarLocationReceiver.getBeaconPendingIntent(context))
         } catch (e: Exception) {
-            logger.d("Error stopping monitoring beacons", e)
+            logger.d("Error stopping monitoring beacons", RadarLogType.SDK_EXCEPTION, e)
         }
 
         monitoredBeaconIdentifiers = setOf()
@@ -339,7 +340,7 @@ internal class RadarBeaconManager(
 
                 scanFilter = RadarBeaconUtils.getScanFilterForBeacon(beacon)
             } catch (e: Exception) {
-                logger.d("Error building scan filter for ranging | _id = ${beacon._id}", e)
+                logger.d("Error building scan filter for ranging | _id = ${beacon._id}", RadarLogType.SDK_EXCEPTION, e)
             }
 
             if (scanFilter != null) {
@@ -387,7 +388,7 @@ internal class RadarBeaconManager(
         try {
             adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
         } catch (e: Exception) {
-            logger.e("Error starting ranging beacons", e)
+            logger.e("Error starting ranging beacons", RadarLogType.SDK_EXCEPTION, e)
         }
 
         handler.postAtTime({
@@ -462,7 +463,7 @@ internal class RadarBeaconManager(
 
                     scanFilter = RadarBeaconUtils.getScanFilterForBeacon(beaconUUID)
                 } catch (e: Exception) {
-                    logger.d("Error building scan filter for ranging | beaconUUID = $beaconUUID", e)
+                    logger.d("Error building scan filter for ranging | beaconUUID = $beaconUUID", RadarLogType.SDK_EXCEPTION, e)
                 }
 
                 if (scanFilter != null) {
@@ -481,7 +482,7 @@ internal class RadarBeaconManager(
 
                     scanFilter = RadarBeaconUtils.getScanFilterForBeaconUID(beaconUID)
                 } catch (e: Exception) {
-                    logger.d("Error building scan filter for ranging | beaconUID = $beaconUID", e)
+                    logger.d("Error building scan filter for ranging | beaconUID = $beaconUID", RadarLogType.SDK_EXCEPTION, e)
                 }
 
                 if (scanFilter != null) {
@@ -530,7 +531,7 @@ internal class RadarBeaconManager(
         try {
             adapter.bluetoothLeScanner.startScan(scanFilters, scanSettings, scanCallback)
         } catch (e: Exception) {
-            logger.e("Error starting ranging beacon UUIDs", e)
+            logger.e("Error starting ranging beacon UUIDs", RadarLogType.SDK_EXCEPTION, e)
         }
 
         handler.postAtTime({
@@ -560,7 +561,7 @@ internal class RadarBeaconManager(
         try {
             adapter.bluetoothLeScanner.stopScan(scanCallback)
         } catch (e: Exception) {
-            logger.d("Error stopping ranging beacons", e)
+            logger.d("Error stopping ranging beacons", RadarLogType.SDK_EXCEPTION, e)
         }
         
         scanCallback = null
