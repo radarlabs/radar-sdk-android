@@ -406,15 +406,11 @@ internal class RadarApiClient(
             params.put("approachingThreshold", options.approachingThreshold)
         }
 
-        val host = RadarSettings.getHost(context)
-        val uri = Uri.parse(host).buildUpon()
-            .appendEncodedPath("v1/trips")
-            .build()
-        val url = URL(uri.toString())
+        val path = "v1/trips"
 
         val headers = headers(publishableKey)
 
-        apiHelper.request(context, "POST", url, headers, params, false, object: RadarApiHelper.RadarApiCallback {
+        apiHelper.request(context, "POST", path, headers, params, false, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback?.onComplete(status)
