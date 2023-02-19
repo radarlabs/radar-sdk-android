@@ -115,7 +115,7 @@ internal class RadarApiClient(
                 }
                 callback?.onComplete(RadarConfig.fromJson(res))
             }
-        })
+        }, false, true, verified)
     }
 
     internal fun log(logs: List<RadarLog>, callback: RadarLogCallback?) {
