@@ -21,6 +21,11 @@ data class RadarFraud(
     val bypassed: Boolean,
 
     /**
+     * A boolean indicating whether the request was made with SSL pinning configured successfully. May be `false` if Fraud is not enabled.
+     */
+    val verified: Boolean,
+
+    /**
      * A boolean indicating whether the user's IP address is a known proxy. May be `false` if Fraud is not enabled.
      */
     val proxy: Boolean,
@@ -46,6 +51,7 @@ data class RadarFraud(
     companion object {
         private const val PASSED = "passed"
         private const val BYPASSED = "bypassed"
+        private const val VERIFIED = "verified"
         private const val PROXY = "proxy"
         private const val MOCKED = "mocked"
         private const val COMPROMISED = "compromised"
@@ -56,6 +62,7 @@ data class RadarFraud(
             return RadarFraud(
                 passed = json?.optBoolean(PASSED, false) ?: false,
                 bypassed = json?.optBoolean(BYPASSED, false) ?: false,
+                verified = json?.optBoolean(VERIFIED, false) ?: false,
                 proxy = json?.optBoolean(PROXY, false) ?: false,
                 mocked = json?.optBoolean(MOCKED, false) ?: false,
                 compromised = json?.optBoolean(COMPROMISED, false) ?: false,
@@ -68,6 +75,7 @@ data class RadarFraud(
         return JSONObject().apply {
             putOpt(PASSED, passed)
             putOpt(BYPASSED, bypassed)
+            putOpt(VERIFIED, verified)
             putOpt(PROXY, proxy)
             putOpt(MOCKED, mocked)
             putOpt(COMPROMISED, compromised)
