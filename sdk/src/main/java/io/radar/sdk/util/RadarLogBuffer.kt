@@ -11,7 +11,7 @@ internal interface RadarLogBuffer {
      * @param[level] log level
      * @param[message] log message
      */
-    fun write(level: Radar.RadarLogLevel, message: String)
+    fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType)
 
     /**
      * Creates a stash of the logs currently in the buffer and returns them as a [Flushable] so that a successful

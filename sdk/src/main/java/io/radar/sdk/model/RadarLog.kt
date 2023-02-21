@@ -9,6 +9,7 @@ import java.util.*
  */
 internal data class RadarLog(
     val level: Radar.RadarLogLevel,
+    val type: Radar.RadarLogType,
     val message: String,
     val createdAt: Date = Date()
 ) : Comparable<RadarLog> {
@@ -16,12 +17,14 @@ internal data class RadarLog(
     companion object {
         private const val CREATED_AT = "createdAt"
         private const val LEVEL = "level"
+        private const val TYPE = "type"
         private const val MESSAGE = "message"
 
         @JvmStatic
         fun fromJson(json: JSONObject): RadarLog {
             return RadarLog(
                 level = Radar.RadarLogLevel.valueOf(json.optString(LEVEL)),
+                type = Radar.RadarLogType.valueOf(json.optString(TYPE)),
                 message = json.optString(MESSAGE),
                 createdAt = Date(json.optLong(CREATED_AT))
             )
@@ -32,6 +35,7 @@ internal data class RadarLog(
         return JSONObject().apply {
             putOpt(CREATED_AT, createdAt.time)
             putOpt(LEVEL, level.name)
+            putOpt(TYPE, type.name)
             putOpt(MESSAGE, message)
         }
     }
