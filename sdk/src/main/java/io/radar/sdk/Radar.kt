@@ -2841,7 +2841,7 @@ object Radar {
         logger.i("📍️ Radar error received | status = $status")
     }
 
-    internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType) {
+    internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?) {
         receiver?.onLog(context, message)
         if (isTestKey()) {
             logBuffer.write(level, message, type)

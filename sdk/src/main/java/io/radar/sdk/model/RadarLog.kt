@@ -9,8 +9,8 @@ import java.util.*
  */
 internal data class RadarLog(
     val level: Radar.RadarLogLevel,
-    val type: Radar.RadarLogType,
     val message: String,
+    val type: Radar.RadarLogType?,
     val createdAt: Date = Date()
 ) : Comparable<RadarLog> {
 
@@ -35,7 +35,7 @@ internal data class RadarLog(
         return JSONObject().apply {
             putOpt(CREATED_AT, createdAt.time)
             putOpt(LEVEL, level.name)
-            putOpt(TYPE, type.name)
+            putOpt(TYPE, type?.name)
             putOpt(MESSAGE, message)
         }
     }

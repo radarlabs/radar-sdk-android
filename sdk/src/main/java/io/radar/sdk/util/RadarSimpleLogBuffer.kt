@@ -19,7 +19,7 @@ internal class RadarSimpleLogBuffer : RadarLogBuffer {
      */
     private val list = LinkedBlockingDeque<RadarLog>(MAXIMUM_CAPACITY)
 
-    override fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType) {
+    override fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType?) {
         if (!list.offer(RadarLog(level, message, type))) {
             purgeOldestLogs()
             list.put(RadarLog(level, message, type))
@@ -56,6 +56,6 @@ internal class RadarSimpleLogBuffer : RadarLogBuffer {
     private fun purgeOldestLogs() {
         val logs = mutableListOf<RadarLog>()
         list.drainTo(logs, HALF_CAPACITY)
-        write(Radar.RadarLogLevel.DEBUG, "----- purged oldest logs -----")
+        write(Radar.RadarLogLevel.DEBUG, "----- purged oldest logs -----", null)
     }
 }
