@@ -414,6 +414,10 @@ object Radar {
             this.logBuffer = RadarSimpleLogBuffer()
         }
 
+        if (!this::replayBuffer.isInitialized) {
+            this.replayBuffer = RadarSimpleReplayBuffer()
+        }
+
         if (!this::logger.isInitialized) {
             this.logger = RadarLogger(this.context)
         }
@@ -2640,6 +2644,24 @@ object Radar {
                 }
             })
         }
+    }
+
+    @JvmStatic
+    internal fun getReplays(): List<RadarReplay> {
+        val flushable = replayBuffer.getFlushableReplaysStash()
+        return flushable.get()
+    }
+
+    @JvmStatic
+    internal fun clearReplays() {
+        val flushable = replayBuffer.getFlushableReplaysStash()
+        flushable.onFlush(true)
+    }
+
+    @JvmStatic
+    internal fun addReplay(replayParams: JSON) {
+        replayParams.putOpt("replaying", true)
+        replayBuffer.add(RadarReplay(replayParams))
     }
 
     @JvmStatic

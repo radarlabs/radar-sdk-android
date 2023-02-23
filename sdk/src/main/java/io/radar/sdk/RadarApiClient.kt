@@ -284,14 +284,33 @@ internal class RadarApiClient(
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/track")
             .build()
-        val url = URL(uri.toString())
-
+        var url = URL(uri.toString())
         val headers = headers(publishableKey)
 
-        apiHelper.request(context, "POST", url, headers, params, true, object : RadarApiHelper.RadarApiCallback {
+        var requestParams = params
+        var replays = Radar.getReplays()
+        // replay count
+        val replayCount = replays.size
+        val replaying = replayCount > 0 && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL
+        if (replaying) {
+            val replayList = JSONArray()
+            for (replay in replays) {
+                replayList.put(replay)
+            }
+            replayList.put(params)
+            requestParams = replayList
+            val replayUri = Uri.parse(host).buildUpon()
+                .appendEncodedPath("v1/track/replay")
+                .build()
+            url = URL(replayUri.toString())
+        }
+
+        apiHelper.request(context, "POST", url, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
+                    if (replaying) {
+                        Radar.addReplay(params)
+                    } else if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
                         RadarState.setLastFailedStoppedLocation(context, location)
                     }
 
@@ -301,9 +320,14 @@ internal class RadarApiClient(
 
                     return
                 }
-                Radar.flushLogs()
 
-                RadarState.setLastFailedStoppedLocation(context, null)
+                if (replaying) {
+                    Radar.clearReplays()
+                } else {
+                    RadarState.setLastFailedStoppedLocation(context, null)
+                }
+
+                Radar.flushLogs()
 
                 val config = RadarConfig.fromJson(res)
 
@@ -369,7 +393,7 @@ internal class RadarApiClient(
 
                 callback?.onComplete(RadarStatus.ERROR_SERVER)
             }
-        })
+        }, false, !replaying)
     }
 
     internal fun verifyEvent(eventId: String, verification: RadarEventVerification, verifiedPlaceId: String? = null) {
