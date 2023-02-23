@@ -40,6 +40,6 @@ import org.json.JSONObject
     }
 
     override fun compareTo(other: RadarReplay): Int {
-        return replayParams.compareTo(other.replayParams)
+        return replayParams.toString().compareTo(other.replayParams.toString())
     }
 }

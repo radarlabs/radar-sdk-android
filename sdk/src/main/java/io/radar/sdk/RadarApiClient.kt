@@ -298,7 +298,8 @@ internal class RadarApiClient(
                 replayList.put(replay)
             }
             replayList.put(params)
-            requestParams = replayList
+            requestParams = JSONObject()
+            requestParams.putOpt("replays", replayList)
             val replayUri = Uri.parse(host).buildUpon()
                 .appendEncodedPath("v1/track/replay")
                 .build()

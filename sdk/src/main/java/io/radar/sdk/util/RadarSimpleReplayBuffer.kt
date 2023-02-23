@@ -1,9 +1,10 @@
-package.io.radar.sdk.util
+package io.radar.sdk.util
 
 import io.radar.sdk.Radar
 import io.radar.sdk.model.RadarReplay
 // TODO: determine if we need the above and below
 import java.util.concurrent.LinkedBlockingDeque
+import org.json.JSONObject
 
 /**
  * A buffer for replay events.
@@ -24,7 +25,7 @@ internal class RadarSimpleReplayBuffer : RadarReplayBuffer {
         buffer.add(RadarReplay(replayParams))
     }
 
-    override fun getFlushableReplayStash(): Flushable<RadarReplay> {
+    override fun getFlushableReplaysStash(): Flushable<RadarReplay> {
         val replays = mutableListOf<RadarReplay>()
         buffer.drainTo(replays)
 
@@ -41,3 +42,4 @@ internal class RadarSimpleReplayBuffer : RadarReplayBuffer {
             }
         }
     }
+}

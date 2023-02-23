@@ -18,5 +18,5 @@ internal interface RadarReplayBuffer {
      *
      * @return a [Flushable] containing all stored logs
      */
-    fun getFlushableReplayStash(): Flushable<RadarReplay>
+    fun getFlushableReplaysStash(): Flushable<RadarReplay>
 }
