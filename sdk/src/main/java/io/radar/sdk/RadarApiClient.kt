@@ -260,7 +260,9 @@ internal class RadarApiClient(
             if (verified) {
                 params.putOpt("integrityToken", integrityToken)
                 params.putOpt("integrityException", integrityException)
+                params.putOpt("sharing", RadarUtils.isScreenSharing(context))
             }
+            params.putOpt("appId", context.packageName)
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
@@ -357,7 +359,7 @@ internal class RadarApiClient(
 
                 callback?.onComplete(RadarStatus.ERROR_SERVER)
             }
-        }, false, false, verified)
+        }, false, true, verified)
     }
 
     internal fun verifyEvent(eventId: String, verification: RadarEventVerification, verifiedPlaceId: String? = null) {

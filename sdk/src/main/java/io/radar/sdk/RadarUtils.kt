@@ -10,6 +10,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
+import androidx.core.hardware.display.DisplayManagerCompat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -111,6 +112,15 @@ internal object RadarUtils {
                 || Build.PRODUCT.contains("vbox86p")
                 || Build.PRODUCT.contains("emulator")
                 || Build.PRODUCT.contains("simulator");
+    }
+
+    internal fun isScreenSharing(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < 17) {
+            return false
+        }
+        val displayManager = DisplayManagerCompat.getInstance(context)
+        return displayManager.getDisplays(DisplayManagerCompat.DISPLAY_CATEGORY_PRESENTATION)
+            .isNotEmpty()
     }
 
     internal fun isoStringToDate(str: String?): Date? {
