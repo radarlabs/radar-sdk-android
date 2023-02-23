@@ -2663,7 +2663,6 @@ object Radar {
 
     @JvmStatic
     internal fun addReplay(replayParams: JSONObject) {
-        replayParams.putOpt("replaying", true)
         replayBuffer.write(replayParams)
     }
 

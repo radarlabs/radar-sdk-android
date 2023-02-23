@@ -224,6 +224,7 @@ internal class RadarApiClient(
                     params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
                 }
             }
+            val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
             if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
                 params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
@@ -310,6 +311,9 @@ internal class RadarApiClient(
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     if (replaying) {
+                        params.putOpt("replayed", true)
+                        params.putOpt("updatedAtMs", nowMs)
+                        params.remove("updatedAtMsDiff")
                         Radar.addReplay(params)
                     } else if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
                         RadarState.setLastFailedStoppedLocation(context, location)
