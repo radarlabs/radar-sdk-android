@@ -297,13 +297,13 @@ internal class RadarApiClient(
         }
         val replaying = replayCount > 0 && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL
         if (replaying) {
-            val replayList = JSONArray()
+            val replayList = mutableListOf<JSONObject>()
             for (replay in replays) {
-                replayList.put(replay)
+                replayList.add(replay.replayParams)
             }
-            replayList.put(params)
+            replayList.add(params)
             requestParams = JSONObject()
-            requestParams.putOpt("replays", replayList)
+            requestParams.putOpt("replays", JSONArray(replayList))
             val replayUri = Uri.parse(host).buildUpon()
                 .appendEncodedPath("v1/track/replay")
                 .build()
@@ -313,7 +313,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "POST", url, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    if (replaying) {
+                    if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
                         params.putOpt("replayed", true)
                         params.putOpt("updatedAtMs", nowMS)
                         params.remove("updatedAtMsDiff")

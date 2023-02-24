@@ -16,18 +16,17 @@ internal class RadarSimpleReplayBuffer : RadarReplayBuffer {
         const val MAXIMUM_CAPACITY = 120
     }
 
-    private val buffer = LinkedBlockingDeque<RadarReplay>()
+    private val buffer = LinkedBlockingDeque<RadarReplay>(MAXIMUM_CAPACITY)
 
     override fun write(replayParams: JSONObject) {
         if (buffer.size >= MAXIMUM_CAPACITY) {
             buffer.removeFirst()
         }
-        buffer.add(RadarReplay(replayParams))
+        buffer.offer(RadarReplay(replayParams))
     }
 
     override fun getFlushableReplaysStash(): Flushable<RadarReplay> {
-        val replays = mutableListOf<RadarReplay>()
-        buffer.drainTo(replays)
+        val replays = buffer.toList()
 
         return object : Flushable<RadarReplay> {
 
@@ -38,7 +37,7 @@ internal class RadarSimpleReplayBuffer : RadarReplayBuffer {
             override fun onFlush(success: Boolean) {
                 if (success) {
                     buffer.clear()
-                } 
+                }
             }
         }
     }
