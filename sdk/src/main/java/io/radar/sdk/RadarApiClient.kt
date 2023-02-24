@@ -225,7 +225,6 @@ internal class RadarApiClient(
                     params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
                 }
             }
-            val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
             if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
                 params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
@@ -291,8 +290,8 @@ internal class RadarApiClient(
 
         var requestParams = params
         var replays = Radar.getReplays()
-        // replay count
         val replayCount = replays.size
+        val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
         val replaying = replayCount > 0 && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL
         if (replaying) {
             val replayList = JSONArray()
