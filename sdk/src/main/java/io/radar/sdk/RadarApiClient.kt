@@ -159,6 +159,7 @@ internal class RadarApiClient(
                     callback?.onComplete(status, res)
                 }
             },
+            extendedTimeout = false,
             stream = true,
             // Do not log the saved log events. If the logs themselves were logged it would create a redundancy and
             // eventually lead to a crash when creating a downstream log request, since these will log to memory as a
@@ -398,7 +399,7 @@ internal class RadarApiClient(
 
                 callback?.onComplete(RadarStatus.ERROR_SERVER)
             }
-        }, false, !replaying)
+        }, replaying, false, !replaying)
     }
 
     internal fun verifyEvent(eventId: String, verification: RadarEventVerification, verifiedPlaceId: String? = null) {
