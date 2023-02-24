@@ -14,6 +14,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import java.util.concurrent.TimeUnit
 
 import static io.github.gradlenexus.publishplugin.internal.NexusClient.*
 
@@ -35,6 +36,9 @@ class RadarNexusClient extends NexusClient {
     RadarNexusClient(String username, String password) {
         super(BASE_URL, username, password, null, null)
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder()
+                .writeTimeout(5, TimeUnit.MINUTES)
+                .readTimeout(5, TimeUnit.MINUTES)
+                .connectTimeout(5, TimeUnit.MINUTES)
                 .addInterceptor { chain ->
                     String version = NexusClient.package.implementationVersion ?: 'dev'
                     chain.proceed(chain.request().newBuilder()
