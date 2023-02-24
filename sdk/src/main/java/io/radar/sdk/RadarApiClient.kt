@@ -291,7 +291,10 @@ internal class RadarApiClient(
         var requestParams = params
         var replays = Radar.getReplays()
         val replayCount = replays.size
-        val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
+        var nowMS = System.currentTimeMillis()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            nowMS = SystemClock.elapsedRealtimeNanos() / 1000000
+        }
         val replaying = replayCount > 0 && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL
         if (replaying) {
             val replayList = JSONArray()
@@ -312,7 +315,7 @@ internal class RadarApiClient(
                 if (status != RadarStatus.SUCCESS || res == null) {
                     if (replaying) {
                         params.putOpt("replayed", true)
-                        params.putOpt("updatedAtMs", nowMs)
+                        params.putOpt("updatedAtMs", nowMS)
                         params.remove("updatedAtMsDiff")
                         Radar.addReplay(params)
                     } else if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
