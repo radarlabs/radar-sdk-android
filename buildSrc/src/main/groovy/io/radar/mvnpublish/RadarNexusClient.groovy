@@ -52,6 +52,8 @@ class RadarNexusClient extends NexusClient {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL.toString())
                 .client(httpClient.build())
+                .setConnectTimeout(30, TimeUnit.SECONDS)
+                .setReadTimeout(30, TimeUnit.SECONDS)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         api = retrofit.create(ApiExtensions)
