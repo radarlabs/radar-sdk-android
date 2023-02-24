@@ -35,6 +35,9 @@ class RadarNexusClient extends NexusClient {
     RadarNexusClient(String username, String password) {
         super(BASE_URL, username, password, null, null)
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder()
+                .writeTimeout(5, TimeUnit.MINUTES)
+                .readTimeout(5, TimeUnit.MINUTES)
+                .connectTimeout(5, TimeUnit.MINUTES)
                 .addInterceptor { chain ->
                     String version = NexusClient.package.implementationVersion ?: 'dev'
                     chain.proceed(chain.request().newBuilder()
@@ -52,8 +55,6 @@ class RadarNexusClient extends NexusClient {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL.toString())
                 .client(httpClient.build())
-                .setConnectTimeout(30, TimeUnit.SECONDS)
-                .setReadTimeout(30, TimeUnit.SECONDS)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
         api = retrofit.create(ApiExtensions)
