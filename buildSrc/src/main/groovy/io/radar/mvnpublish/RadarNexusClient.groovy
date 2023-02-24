@@ -14,6 +14,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import java.util.concurrent.TimeUnit
 
 import static io.github.gradlenexus.publishplugin.internal.NexusClient.*
 
