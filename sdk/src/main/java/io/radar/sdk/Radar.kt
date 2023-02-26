@@ -2603,12 +2603,6 @@ object Radar {
                         return
                     }
 
-                    if (events != null) {
-                        // The events are returned in the completion handler, but they're also
-                        // sent back via the RadarReceiver.
-                        receiver?.onEventsReceived(context, events, user)
-                    }
-
                     handler.post {
                         callback.onComplete(status, location, events, user)
                     }
