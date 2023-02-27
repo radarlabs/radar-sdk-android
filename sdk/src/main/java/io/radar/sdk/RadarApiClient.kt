@@ -331,10 +331,9 @@ internal class RadarApiClient(
 
                 if (replaying) {
                     Radar.clearReplays()
-                } else {
-                    RadarState.setLastFailedStoppedLocation(context, null)
                 }
 
+                RadarState.setLastFailedStoppedLocation(context, null)
                 Radar.flushLogs()
 
                 val config = RadarConfig.fromJson(res)
