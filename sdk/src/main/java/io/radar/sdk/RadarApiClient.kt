@@ -326,10 +326,7 @@ internal class RadarApiClient(
                     return
                 }
 
-                if (replaying) {
-                    Radar.clearReplays()
-                }
-
+                Radar.clearReplays()
                 RadarState.setLastFailedStoppedLocation(context, null)
                 Radar.flushLogs()
 
