@@ -463,6 +463,14 @@ object Radar {
 
         this.initialized = true
 
+        val appOpenMetadata = JSONObject().put("amount", 1)
+        logConversion(
+            "app_open",
+            appOpenMetadata
+        ) { status, location, events, user ->
+            this.logger.i( "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
+        }
+
         logger.i("📍️ Radar initialized")
     }
 
