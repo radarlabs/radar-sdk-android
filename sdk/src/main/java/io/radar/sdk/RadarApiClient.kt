@@ -292,9 +292,6 @@ internal class RadarApiClient(
         var replays = Radar.getReplays()
         val replayCount = replays.size
         var nowMS = System.currentTimeMillis()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            nowMS = SystemClock.elapsedRealtimeNanos() / 1000000
-        }
         val replaying = replayCount > 0 && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL
         if (replaying) {
             val replayList = mutableListOf<JSONObject>()
@@ -329,12 +326,8 @@ internal class RadarApiClient(
                     return
                 }
 
-                if (replaying) {
-                    Radar.clearReplays()
-                } else {
-                    RadarState.setLastFailedStoppedLocation(context, null)
-                }
-
+                Radar.clearReplays()
+                RadarState.setLastFailedStoppedLocation(context, null)
                 Radar.flushLogs()
 
                 val config = RadarConfig.fromJson(res)
