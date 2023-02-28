@@ -4,11 +4,14 @@ import android.Manifest
 import android.app.Activity
 import android.app.Application
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
 import kotlin.math.max
 
@@ -58,13 +61,23 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
 
         updatePermissionsDenied(activity)
 
-        val appOpenMetadata = JSONObject().put("amount", 1)
         Radar.logConversion(
             "app_open",
-            appOpenMetadata
-        ) { status, location, events, user ->
-            Log.i(TAG, "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
-        }
+            null,
+            null,
+            null,
+            null,
+            object : Radar.RadarLogConversionCallback {
+                override fun onComplete(
+                    status: Radar.RadarStatus,
+                    location: Location?,
+                    events: Array<RadarEvent>?,
+                    user: RadarUser?
+                ) {
+                    Log.i(TAG, "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
+                }
+            }
+        )
     }
 
     override fun onActivityPaused(activity: Activity) {

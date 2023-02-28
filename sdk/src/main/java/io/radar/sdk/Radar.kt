@@ -463,13 +463,23 @@ object Radar {
 
         this.initialized = true
 
-        val appOpenMetadata = JSONObject().put("amount", 1)
         logConversion(
             "app_open",
-            appOpenMetadata
-        ) { status, location, events, user ->
-            this.logger.i( "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
-        }
+            null,
+            null,
+            null,
+            null,
+            object : RadarLogConversionCallback {
+                override fun onComplete(
+                    status: RadarStatus,
+                    location: Location?,
+                    events: Array<RadarEvent>?,
+                    user: RadarUser?
+                ) {
+                    this@Radar.logger.i( "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
+                }
+            }
+        )
 
         logger.i("📍️ Radar initialized")
     }
@@ -2603,7 +2613,7 @@ object Radar {
     }
 
     @JvmStatic
-    private fun logConversion(
+    internal fun logConversion(
         customType: String,
         data: JSONObject?,
         location: Location?,
