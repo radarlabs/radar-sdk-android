@@ -779,7 +779,7 @@ object Radar {
                                 })
                             } else {
                                 callTrackApi(null)
-                             }
+                            }
                         }
                     })
                 } else {

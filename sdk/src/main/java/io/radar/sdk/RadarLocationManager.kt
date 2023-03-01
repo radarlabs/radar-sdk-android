@@ -610,7 +610,7 @@ internal class RadarLocationManager(
                                 callTrackApi(beacons)
                             }
                         })
-                    } else if (beacons != null) {
+                   } else if (beacons != null) {
                         Radar.beaconManager.startMonitoringBeacons(beacons)
 
                         Radar.beaconManager.rangeBeacons(beacons, true, object : Radar.RadarBeaconCallback {
@@ -624,8 +624,8 @@ internal class RadarLocationManager(
                                 callTrackApi(beacons)
                             }
                         })
-                    } else {
-                        callTrackApi(null)
+                   } else {
+                       callTrackApi(null)
                    }
                 }
             })
