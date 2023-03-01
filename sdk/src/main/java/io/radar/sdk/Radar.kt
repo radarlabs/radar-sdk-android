@@ -2610,7 +2610,7 @@ object Radar {
 
     @JvmStatic
     internal fun logConversion(
-        customType: String,
+        name: String,
         data: JSONObject? = null,
         location: Location? = null,
         events: Array<RadarEvent>? = null,
