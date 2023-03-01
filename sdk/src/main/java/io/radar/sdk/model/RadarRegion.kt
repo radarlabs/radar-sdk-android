@@ -37,7 +37,7 @@ class RadarRegion(
     /**
      * A boolean indicating whether the region is allowed. May be `false` if Fraud is not enabled.
      */
-    val allowed: Boolean = true
+    val allowed: Boolean = false
 ) {
 
     internal companion object {
