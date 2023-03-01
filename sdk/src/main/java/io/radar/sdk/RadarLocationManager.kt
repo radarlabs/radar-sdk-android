@@ -596,13 +596,7 @@ internal class RadarLocationManager(
             && permissionsHelper.bluetoothPermissionsGranted(context)) {
             Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
-                    if (status != RadarStatus.SUCCESS || beacons == null) {
-                        callTrackApi(null)
-
-                        return
-                    }
-
-                    if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                   if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                         Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
                         Radar.beaconManager.rangeBeaconUUIDs(uuids, uids, true, object : Radar.RadarBeaconCallback {
@@ -616,7 +610,7 @@ internal class RadarLocationManager(
                                 callTrackApi(beacons)
                             }
                         })
-                    } else {
+                    } else if (beacons != null) {
                         Radar.beaconManager.startMonitoringBeacons(beacons)
 
                         Radar.beaconManager.rangeBeacons(beacons, true, object : Radar.RadarBeaconCallback {
@@ -630,7 +624,9 @@ internal class RadarLocationManager(
                                 callTrackApi(beacons)
                             }
                         })
-                    }
+                    } else {
+                        callTrackApi(null)
+                   }
                 }
             })
         } else {

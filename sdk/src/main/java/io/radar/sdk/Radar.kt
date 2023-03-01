@@ -749,13 +749,7 @@ object Radar {
                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                         override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
-                            if (status != RadarStatus.SUCCESS || beacons == null) {
-                                callTrackApi(null)
-
-                                return
-                            }
-
-                            if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                             if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                                 beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
                                 beaconManager.rangeBeaconUUIDs(uuids, uids, false, object : RadarBeaconCallback {
@@ -769,7 +763,7 @@ object Radar {
                                         callTrackApi(beacons)
                                     }
                                 })
-                            } else {
+                            } else if (beacons != null) {
                                 beaconManager.startMonitoringBeacons(beacons)
 
                                 beaconManager.rangeBeacons(beacons, false, object : RadarBeaconCallback {
@@ -783,7 +777,9 @@ object Radar {
                                         callTrackApi(beacons)
                                     }
                                 })
-                            }
+                            } else {
+                                callTrackApi(null)
+                             }
                         }
                     })
                 } else {
