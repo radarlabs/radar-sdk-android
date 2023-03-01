@@ -379,6 +379,8 @@ internal class RadarApiClient(
                         }
                     }
 
+                    RadarSettings.setUserDebug(context, user.debug)
+
                     Radar.sendLocation(location, user)
 
                     if (events.isNotEmpty()) {
@@ -746,7 +748,17 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", url, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    var lastBeacons: Array<RadarBeacon>? = null
+                    var lastBeaconUUIDs: Array<String>? = null
+                    var lastBeaconUIDs: Array<String>? = null
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        lastBeacons = RadarState.getLastBeacons(context)
+                        lastBeaconUUIDs = RadarState.getLastBeaconUUIDs(context)
+                        lastBeaconUIDs = RadarState.getLastBeaconUIDs(context)
+                    }
+
+                    callback.onComplete(status, res, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
 
                     return
                 }
@@ -765,6 +777,12 @@ internal class RadarApiClient(
                     Array(uids.length()) { index ->
                         uids.getString(index)
                     }.filter { uid -> uid.isNotEmpty() }.toTypedArray()
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    RadarState.setLastBeacons(context, beacons)
+                    RadarState.setLastBeaconUUIDs(context, uuids)
+                    RadarState.setLastBeaconUUIDs(context, uids)
                 }
 
                 callback.onComplete(RadarStatus.SUCCESS, res, beacons, uuids, uids)

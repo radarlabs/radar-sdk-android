@@ -2768,12 +2768,12 @@ object Radar {
         locationManager.handleLocation(location, source)
     }
 
-    internal fun handleBeacons(context: Context, scanResults: ArrayList<ScanResult>?) {
+    internal fun handleBeacons(context: Context, beacons: Array<RadarBeacon>?) {
         if (!initialized) {
             initialize(context)
         }
 
-        locationManager.handleBeacons(scanResults)
+        locationManager.handleBeacons(beacons)
     }
 
     internal fun handleBootCompleted(context: Context) {

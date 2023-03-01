@@ -573,6 +573,24 @@ internal class RadarBeaconManager(
         this.nearbyBeacons.clear()
     }
 
+    internal fun handleBeacons(beacons: Array<RadarBeacon>?) {
+        if (beacons.isNullOrEmpty()) {
+            logger.d("No beacons to handle")
+
+            return
+        }
+
+        beacons.forEach { beacon ->
+            this.handleBeacon(beacon)
+        }
+    }
+
+    internal fun handleBeacon(beacon: RadarBeacon) {
+        logger.d("Handling beacon")
+
+        nearbyBeacons.add(beacon)
+    }
+
     internal fun handleScanResults(scanResults: ArrayList<ScanResult>?) {
         if (scanResults == null || scanResults.isEmpty()) {
             logger.d("No scan results to handle")
