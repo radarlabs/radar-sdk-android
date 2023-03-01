@@ -2628,6 +2628,7 @@ object Radar {
         if (!initialized || !isTestKey()) {
             return
         }
+
         val flushable = logBuffer.getFlushableLogsStash()
         val logs = flushable.get()
         if (logs.isNotEmpty()) {
