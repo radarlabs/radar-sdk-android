@@ -581,14 +581,10 @@ internal class RadarBeaconManager(
         }
 
         beacons.forEach { beacon ->
-            this.handleBeacon(beacon)
+            logger.d("Handling beacon | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+
+            nearbyBeacons.add(beacon)
         }
-    }
-
-    internal fun handleBeacon(beacon: RadarBeacon) {
-        logger.d("Handling beacon")
-
-        nearbyBeacons.add(beacon)
     }
 
     internal fun handleScanResults(scanResults: ArrayList<ScanResult>?) {

@@ -68,21 +68,9 @@ class RadarJobScheduler : JobService() {
             val jobScheduler = context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
             val result = jobScheduler.schedule(jobInfo)
             if (result == JobScheduler.RESULT_SUCCESS) {
-                Radar.logger.d(
-                    "Scheduling location job | location = $location; source = ${
-                        stringForSource(
-                            source
-                        )
-                    }"
-                )
+                Radar.logger.d("Scheduling location job | location = $location; source = ${stringForSource(source)}")
             } else {
-                Radar.logger.d(
-                    "Failed to schedule location job | location = $location; source = ${
-                        stringForSource(
-                            source
-                        )
-                    }"
-                )
+                Radar.logger.d("Failed to schedule location job | location = $location; source = ${stringForSource(source)}")
             }
         }
 
