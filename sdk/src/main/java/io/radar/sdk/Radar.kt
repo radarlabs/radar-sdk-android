@@ -2621,7 +2621,7 @@ object Radar {
     }
 
     /**
-     * Sends Radar log events to the server
+     * Flushes debug logs to the server.
      */
     @JvmStatic
     internal fun flushLogs() {
@@ -2660,10 +2660,11 @@ object Radar {
     @JvmStatic
     internal fun isTestKey(): Boolean {
         val key = RadarSettings.getPublishableKey(this.context)
+        val userDebug = RadarSettings.getUserDebug(this.context)
         return if (key == null) {
             false
         } else {
-            key.startsWith("prj_test") || key.startsWith("org_test")
+            key.startsWith("prj_test") || key.startsWith("org_test") || userDebug
         }
     }
 
