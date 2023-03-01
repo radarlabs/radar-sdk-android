@@ -74,7 +74,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
                     events: Array<RadarEvent>?,
                     user: RadarUser?
                 ) {
-                    Log.i(TAG, "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
+                    Log.i(null, "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
                 }
             }
         )

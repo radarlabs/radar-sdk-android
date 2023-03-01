@@ -476,7 +476,7 @@ object Radar {
                     events: Array<RadarEvent>?,
                     user: RadarUser?
                 ) {
-                    this@Radar.logger.i( "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
+                    this@Radar.logger.i("Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
                 }
             }
         )
