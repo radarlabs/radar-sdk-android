@@ -11,6 +11,7 @@ import org.json.JSONObject
 import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
@@ -32,6 +33,16 @@ class RadarTest {
         private val apiHelperMock = RadarApiHelperMock()
         private val locationClientMock = RadarMockLocationProvider()
         private val permissionsHelperMock = RadarPermissionsHelperMock()
+
+        @BeforeClass
+        @JvmStatic
+        fun setUp() {
+            Radar.initialize(context, publishableKey)
+
+            Radar.apiClient.apiHelper = apiHelperMock
+            Radar.locationManager.locationClient = locationClientMock
+            Radar.locationManager.permissionsHelper = permissionsHelperMock
+        }
     }
 
     private fun assertGeofencesOk(geofences: Array<RadarGeofence>?) {
@@ -253,15 +264,6 @@ class RadarTest {
         assertNotEquals(route?.distance?.value, 0)
         assertNotNull(route?.duration?.text)
         assertNotEquals(route?.duration?.value, 0)
-    }
-
-    @Before
-    fun setUp() {
-        Radar.initialize(context, publishableKey)
-
-        Radar.apiClient.apiHelper = apiHelperMock
-        Radar.locationManager.locationClient = locationClientMock
-        Radar.locationManager.permissionsHelper = permissionsHelperMock
     }
 
     @Test
