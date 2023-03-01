@@ -373,6 +373,11 @@ object Radar {
     internal lateinit var beaconManager: RadarBeaconManager
     private lateinit var logBuffer: RadarLogBuffer
     internal lateinit var batteryManager: RadarBatteryManager
+    private val cachedTrackInfo = object {
+        var location: Location? = null
+        var events: Array<RadarEvent>? = null
+        var user: RadarUser? = null
+    }
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -745,6 +750,14 @@ object Radar {
                             nearbyGeofences: Array<RadarGeofence>?,
                             config: RadarConfig?,
                         ) {
+                            if (status == RadarStatus.SUCCESS) {
+                                RadarSettings.updateLastTrackedTime(context)
+
+                                cachedTrackInfo.location = location
+                                cachedTrackInfo.events = events
+                                cachedTrackInfo.user = user
+                            }
+
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
                             }
@@ -2476,6 +2489,27 @@ object Radar {
             return
         }
 
+        if (RadarSettings.getPermissionsDenied(context)) {
+            sendLogConversionRequest(name, data, callback = callback)
+
+            return
+        }
+
+        val timestampSeconds = System.currentTimeMillis() / 1000
+        val lastTrackedTime = RadarSettings.getLastTrackedTime(context)
+        if (lastTrackedTime - timestampSeconds < 60) {
+            sendLogConversionRequest(
+                name,
+                data,
+                cachedTrackInfo.location,
+                cachedTrackInfo.events,
+                cachedTrackInfo.user,
+                callback
+            )
+
+            return
+        }
+
         trackOnce(object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 if (status != RadarStatus.SUCCESS || location == null) {
@@ -2560,6 +2594,27 @@ object Radar {
     ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        if (RadarSettings.getPermissionsDenied(context)) {
+            sendLogConversionRequest(name, data, location, callback = callback)
+
+            return
+        }
+
+        val timestampSeconds = System.currentTimeMillis() / 1000
+        val lastTrackedTime = RadarSettings.getLastTrackedTime(context)
+        if (lastTrackedTime - timestampSeconds < 60) {
+            sendLogConversionRequest(
+                name,
+                data,
+                cachedTrackInfo.location,
+                cachedTrackInfo.events,
+                cachedTrackInfo.user,
+                callback
+            )
 
             return
         }
