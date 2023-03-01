@@ -465,11 +465,7 @@ object Radar {
 
         logConversion(
             "app_open",
-            null,
-            null,
-            null,
-            null,
-            object : RadarLogConversionCallback {
+            callback = object : RadarLogConversionCallback {
                 override fun onComplete(
                     status: RadarStatus,
                     location: Location?,
@@ -2615,10 +2611,10 @@ object Radar {
     @JvmStatic
     internal fun logConversion(
         customType: String,
-        data: JSONObject?,
-        location: Location?,
-        events: Array<RadarEvent>?,
-        user: RadarUser?,
+        data: JSONObject? = null,
+        location: Location? = null,
+        events: Array<RadarEvent>? = null,
+        user: RadarUser? = null,
         callback: RadarLogConversionCallback
     ) {
         apiClient.sendEvent(

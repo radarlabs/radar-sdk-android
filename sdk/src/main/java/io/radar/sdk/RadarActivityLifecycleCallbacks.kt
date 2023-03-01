@@ -63,11 +63,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
 
         Radar.logConversion(
             "app_open",
-            null,
-            null,
-            null,
-            null,
-            object : Radar.RadarLogConversionCallback {
+            callback = object : Radar.RadarLogConversionCallback {
                 override fun onComplete(
                     status: Radar.RadarStatus,
                     location: Location?,
