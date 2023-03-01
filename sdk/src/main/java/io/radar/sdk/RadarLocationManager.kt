@@ -136,22 +136,6 @@ internal class RadarLocationManager(
         this.started = false
     }
 
-    internal fun handleBeacons(scanResults: ArrayList<ScanResult>?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            logger.d("Handling beacons | scanResults = $scanResults")
-
-            Radar.beaconManager.handleScanResults(scanResults)
-
-            val lastLocation = RadarState.getLastLocation(context)
-
-            if (lastLocation == null) {
-                logger.d("Not handling beacons, no last location")
-            }
-
-            this.handleLocation(lastLocation, RadarLocationSource.BEACON_ENTER)
-        }
-    }
-
     internal fun handleBeacons(beacons: Array<RadarBeacon>?) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             logger.d("Handling beacons | beacons = $beacons")

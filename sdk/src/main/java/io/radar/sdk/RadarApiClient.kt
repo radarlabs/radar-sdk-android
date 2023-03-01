@@ -782,7 +782,7 @@ internal class RadarApiClient(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     RadarState.setLastBeacons(context, beacons)
                     RadarState.setLastBeaconUUIDs(context, uuids)
-                    RadarState.setLastBeaconUUIDs(context, uids)
+                    RadarState.setLastBeaconUIDs(context, uids)
                 }
 
                 callback.onComplete(RadarStatus.SUCCESS, res, beacons, uuids, uids)

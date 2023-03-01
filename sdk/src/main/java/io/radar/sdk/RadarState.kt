@@ -230,7 +230,7 @@ internal object RadarState {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeacons(context: Context, beacons: Array<RadarBeacon>?) {
         val set = RadarBeaconUtils.stringSetForBeacons(beacons)
-        getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UUIDS, set) }
+        getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACONS, set) }
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
