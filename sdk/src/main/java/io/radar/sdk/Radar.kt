@@ -2446,7 +2446,7 @@ object Radar {
     }
 
     /**
-     * Logs a custom conversion.
+     * Logs a conversion.
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
@@ -2478,7 +2478,7 @@ object Radar {
     }
 
     /**
-     * Logs a conversion with a manually provided location.
+     * Logs a conversion with revenue.
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
@@ -2501,7 +2501,7 @@ object Radar {
     }
 
     /**
-     * Logs a custom conversion.
+     * Logs a conversion.
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
@@ -2528,7 +2528,7 @@ object Radar {
     }
 
     /**
-     * Logs a custom conversion with a manually provided location.
+     * Logs a conversion with a manually provided location.
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
@@ -2566,7 +2566,7 @@ object Radar {
     }
 
     /**
-     * Logs a custom conversion with a manually provided location.
+     * Logs a conversion with a manually provided location.
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
