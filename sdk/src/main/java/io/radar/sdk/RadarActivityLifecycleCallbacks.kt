@@ -12,7 +12,6 @@ import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
-import org.json.JSONObject
 import kotlin.math.max
 
 internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCallbacks {
@@ -61,7 +60,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
 
         updatePermissionsDenied(activity)
 
-        Radar.logConversion(
+        Radar.sendLogConversionRequest(
             "app_open",
             callback = object : Radar.RadarLogConversionCallback {
                 override fun onComplete(

@@ -463,7 +463,7 @@ object Radar {
 
         this.initialized = true
 
-        logConversion(
+        sendLogConversionRequest(
             "app_open",
             callback = object : RadarLogConversionCallback {
                 override fun onComplete(
@@ -2486,7 +2486,7 @@ object Radar {
                     return
                 }
 
-                logConversion(name, data, location, events, user, callback)
+                sendLogConversionRequest(name, data, location, events, user, callback)
             }
         })
     }
@@ -2574,7 +2574,7 @@ object Radar {
                     return
                 }
 
-                logConversion(name, data, location, events, user, callback)
+                sendLogConversionRequest(name, data, location, events, user, callback)
             }
         })
     }
@@ -2609,7 +2609,7 @@ object Radar {
     }
 
     @JvmStatic
-    internal fun logConversion(
+    internal fun sendLogConversionRequest(
         name: String,
         data: JSONObject? = null,
         location: Location? = null,
@@ -2617,6 +2617,12 @@ object Radar {
         user: RadarUser? = null,
         callback: RadarLogConversionCallback
     ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
         apiClient.sendEvent(
             name,
             data,
