@@ -594,46 +594,41 @@ internal class RadarLocationManager(
 
         if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             && permissionsHelper.bluetoothPermissionsGranted(context)) {
-            if (source == RadarLocationSource.BEACON_ENTER) {
-                val beacons = Radar.beaconManager.getNearbyBeacons()
-                callTrackApi(beacons)
-            } else {
-                Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                    override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
-                        if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                            Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
+            Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
+                   if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                        Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
-                            Radar.beaconManager.rangeBeaconUUIDs(uuids, uids, true, object : Radar.RadarBeaconCallback {
-                                override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
-                                    if (status != RadarStatus.SUCCESS || beacons == null) {
-                                        callTrackApi(null)
+                        Radar.beaconManager.rangeBeaconUUIDs(uuids, uids, true, object : Radar.RadarBeaconCallback {
+                            override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                                if (status != RadarStatus.SUCCESS || beacons == null) {
+                                    callTrackApi(null)
 
-                                        return
-                                    }
-
-                                    callTrackApi(beacons)
+                                    return
                                 }
-                            })
-                        } else if (beacons != null) {
-                            Radar.beaconManager.startMonitoringBeacons(beacons)
 
-                            Radar.beaconManager.rangeBeacons(beacons, true, object : Radar.RadarBeaconCallback {
-                                override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
-                                    if (status != RadarStatus.SUCCESS || beacons == null) {
-                                        callTrackApi(null)
+                                callTrackApi(beacons)
+                            }
+                        })
+                   } else if (beacons != null) {
+                        Radar.beaconManager.startMonitoringBeacons(beacons)
 
-                                        return
-                                    }
+                        Radar.beaconManager.rangeBeacons(beacons, true, object : Radar.RadarBeaconCallback {
+                            override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                                if (status != RadarStatus.SUCCESS || beacons == null) {
+                                    callTrackApi(null)
 
-                                    callTrackApi(beacons)
+                                    return
                                 }
-                            })
-                        } else {
-                            callTrackApi(null)
-                        }
-                    }
-                })
-            }
+
+                                callTrackApi(beacons)
+                            }
+                        })
+                   } else {
+                       callTrackApi(null)
+                   }
+                }
+            })
         } else {
             callTrackApi(null)
         }

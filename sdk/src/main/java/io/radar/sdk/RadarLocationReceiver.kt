@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -98,7 +99,6 @@ class RadarLocationReceiver : BroadcastReceiver() {
     @SuppressLint("MissingPermission")
     override fun onReceive(context: Context, intent: Intent) {
         if (!Radar.initialized) {
-            // Radar must be initialized before using Radar.logger
             Radar.initialize(context)
         }
 
@@ -137,9 +137,10 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     val bleCallbackType = intent.getIntExtra(BluetoothLeScanner.EXTRA_CALLBACK_TYPE, -1)
                     if (bleCallbackType != -1) {
+                        val source = if (bleCallbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) Radar.RadarLocationSource.BEACON_EXIT else Radar.RadarLocationSource.BEACON_ENTER
                         val scanResults: ArrayList<ScanResult>? = intent.getParcelableArrayListExtra(BluetoothLeScanner.EXTRA_LIST_SCAN_RESULT)
                         val beacons = RadarBeaconUtils.beaconsForScanResults(scanResults)
-                        RadarJobScheduler.scheduleJob(context, beacons)
+                        RadarJobScheduler.scheduleJob(context, beacons, source)
                     }
                 }
             }

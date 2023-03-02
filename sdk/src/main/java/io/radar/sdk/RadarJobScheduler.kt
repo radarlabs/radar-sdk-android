@@ -4,7 +4,6 @@ import android.app.job.JobInfo
 import android.app.job.JobParameters
 import android.app.job.JobScheduler
 import android.app.job.JobService
-import android.bluetooth.le.ScanResult
 import android.content.ComponentName
 import android.content.Context
 import android.location.Location
@@ -53,6 +52,8 @@ class RadarJobScheduler : JobService() {
                 putString(EXTRA_SOURCE, source.name)
             }
 
+            val sourceStr = stringForSource(source)
+
             val settings = RadarSettings.getFeatureSettings(context)
             val jobId = BASE_JOB_ID + (numActiveJobs.incrementAndGet() % settings.maxConcurrentJobs)
 
@@ -68,21 +69,29 @@ class RadarJobScheduler : JobService() {
             val jobScheduler = context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
             val result = jobScheduler.schedule(jobInfo)
             if (result == JobScheduler.RESULT_SUCCESS) {
-                Radar.logger.d("Scheduling location job | location = $location; source = ${stringForSource(source)}")
+                Radar.logger.d("Scheduling location job | source = $sourceStr; location = $location")
             } else {
-                Radar.logger.d("Failed to schedule location job | location = $location; source = ${stringForSource(source)}")
+                Radar.logger.d("Failed to schedule location job | source = $sourceStr; location = $location")
             }
         }
 
-        internal fun scheduleJob(context: Context, beacons: Array<RadarBeacon>) {
+        internal fun scheduleJob(
+            context: Context,
+            beacons: Array<RadarBeacon>,
+            source: RadarLocationSource
+        ) {
             if (!Radar.initialized) {
                 Radar.initialize(context)
             }
 
             val componentName = ComponentName(context, RadarJobScheduler::class.java)
+            val beaconsArr = RadarBeaconUtils.stringArrayForBeacons(beacons)
             val extras = PersistableBundle().apply {
-                putStringArray(EXTRA_BEACONS, RadarBeaconUtils.stringArrayForBeacons(beacons))
+                putStringArray(EXTRA_BEACONS, beaconsArr)
+                putString(EXTRA_SOURCE, source.name)
             }
+
+            val sourceStr = stringForSource(source)
 
             val settings = RadarSettings.getFeatureSettings(context)
             val jobId = BASE_JOB_ID + (numActiveJobs.incrementAndGet() % settings.maxConcurrentJobs)
@@ -99,9 +108,9 @@ class RadarJobScheduler : JobService() {
             val jobScheduler = context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
             val result = jobScheduler.schedule(jobInfo)
             if (result == JobScheduler.RESULT_SUCCESS) {
-                Radar.logger.d("Scheduling beacons job | beacons = $beacons")
+                Radar.logger.d("Scheduling beacons job | source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
             } else {
-                Radar.logger.d("Failed to schedule beacons job | beacons = $beacons")
+                Radar.logger.d("Failed to schedule beacons job | source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
             }
         }
     }
@@ -119,10 +128,14 @@ class RadarJobScheduler : JobService() {
         val provider = extras.getString(EXTRA_PROVIDER)
         val time = extras.getLong(EXTRA_TIME)
 
+        val sourceStr = extras.getString(EXTRA_SOURCE) ?: return false
+
+        val source = RadarLocationSource.valueOf(sourceStr)
+
         if (beaconsArr != null) {
             val beacons = RadarBeaconUtils.beaconsForStringArray(beaconsArr)
 
-            Radar.logger.d("Starting beacons job | beaconsArr = $beaconsArr")
+            Radar.logger.d("Starting beacons job | source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
 
             Radar.handleBeacons(this.applicationContext, beacons)
 
@@ -141,16 +154,12 @@ class RadarJobScheduler : JobService() {
                 this.time = time
             }
 
-            val sourceStr = extras.getString(EXTRA_SOURCE) ?: return false
-
-            val source = RadarLocationSource.valueOf(sourceStr)
-
             if (Radar.isTestKey()) {
                 val batteryState = Radar.batteryManager.getBatteryState()
                 Radar.logger.d(
                     "Starting location job | " +
+                            "source = $sourceStr; " +
                             "location = $location; " +
-                            "source = ${sourceStr}; " +
                             "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
                             "performanceState = ${batteryState.performanceState.name}; " +
                             "isCharging = ${batteryState.isCharging}; " +
@@ -161,7 +170,7 @@ class RadarJobScheduler : JobService() {
                             "isDozeMode = ${batteryState.isDeviceIdleMode}"
                 )
             } else {
-                Radar.logger.d("Starting location job | location = $location")
+                Radar.logger.d("Starting location job | source = $sourceStr; location = $location")
             }
 
             Radar.handleLocation(this.applicationContext, location, source)
@@ -191,7 +200,7 @@ class RadarJobScheduler : JobService() {
         val source = extras.getString(EXTRA_SOURCE)
 
         if (beaconsArr != null) {
-            Radar.logger.d("Stopping beacons job | beaconsArr = $beaconsArr")
+            Radar.logger.d("Stopping beacons job | source = $source; beaconsArr = ${beaconsArr.joinToString(",")}")
         } else {
             val location = Location(provider).apply {
                 this.latitude = latitude
@@ -200,7 +209,7 @@ class RadarJobScheduler : JobService() {
                 this.time = time
             }
 
-            Radar.logger.d("Stopping location job | location = $location; source = $source")
+            Radar.logger.d("Stopping location job | source = $source; location = $location")
         }
 
         return false

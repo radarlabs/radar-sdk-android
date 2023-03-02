@@ -67,10 +67,6 @@ internal class RadarBeaconManager(
         }
     }
 
-    fun getNearbyBeacons(): Array<RadarBeacon> {
-        return nearbyBeacons.toTypedArray()
-    }
-
     fun startMonitoringBeacons(beacons: Array<RadarBeacon>) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
@@ -137,7 +133,7 @@ internal class RadarBeaconManager(
         }
 
         try {
-            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER, 20000)
+            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER, ScanSettings.CALLBACK_TYPE_FIRST_MATCH or ScanSettings.CALLBACK_TYPE_MATCH_LOST, 20000)
 
             logger.d("Starting monitoring beacons")
 
@@ -240,7 +236,7 @@ internal class RadarBeaconManager(
         }
 
         try {
-            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER, 20000)
+            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER, ScanSettings.CALLBACK_TYPE_FIRST_MATCH or ScanSettings.CALLBACK_TYPE_MATCH_LOST, 20000)
 
             logger.d("Starting monitoring beacon UUIDs")
 
@@ -362,7 +358,7 @@ internal class RadarBeaconManager(
         }
 
         val scanMode = if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY
-        val scanSettings = getScanSettings(scanMode, 0)
+        val scanSettings = getScanSettings(scanMode, ScanSettings.CALLBACK_TYPE_ALL_MATCHES, 0)
 
         val beaconManager = this
 
@@ -505,7 +501,7 @@ internal class RadarBeaconManager(
         }
 
         val scanMode = if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY
-        val scanSettings = getScanSettings(scanMode, 0)
+        val scanSettings = getScanSettings(scanMode, ScanSettings.CALLBACK_TYPE_ALL_MATCHES, 0)
 
         val beaconManager = this
 
@@ -630,10 +626,10 @@ internal class RadarBeaconManager(
         return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
     }
 
-    private fun getScanSettings(scanMode: Int, reportDelay: Long): ScanSettings {
+    private fun getScanSettings(scanMode: Int, callbackType: Int, reportDelay: Long): ScanSettings {
         return ScanSettings.Builder()
             .setScanMode(scanMode)
-            .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+            .setCallbackType(callbackType)
             .setReportDelay(reportDelay)
             .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
             .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
