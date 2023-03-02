@@ -184,6 +184,8 @@ data class RadarTrackingOptions(
      * The replay options for failed location updates.
      */
     enum class RadarTrackingOptionsReplay(internal val replay: Int) {
+        /** Replays all failed location updates. */
+        ALL(2),
         /** Replays failed stops. */
         STOPS(1),
         /** Replays no location updates. */
@@ -192,6 +194,7 @@ data class RadarTrackingOptions(
         internal companion object {
             internal const val STOPS_STR = "stops"
             internal const val NONE_STR = "none"
+            internal const val ALL_STR = "all"
 
             fun fromInt(replay: Int?): RadarTrackingOptionsReplay {
                 for (value in values()) {
@@ -206,6 +209,7 @@ data class RadarTrackingOptions(
                 return when(replay) {
                     STOPS_STR -> STOPS
                     NONE_STR -> NONE
+                    ALL_STR -> ALL
                     else -> NONE
                 }
             }
@@ -215,6 +219,7 @@ data class RadarTrackingOptions(
             return when(this) {
                 STOPS -> STOPS_STR
                 NONE -> NONE_STR
+                ALL -> ALL_STR
             }
         }
     }

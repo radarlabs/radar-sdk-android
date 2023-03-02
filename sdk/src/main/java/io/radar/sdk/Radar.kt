@@ -11,6 +11,8 @@ import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.util.RadarLogBuffer
 import io.radar.sdk.util.RadarSimpleLogBuffer
+import io.radar.sdk.util.RadarReplayBuffer
+import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
 import java.util.*
 
@@ -372,6 +374,7 @@ object Radar {
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var beaconManager: RadarBeaconManager
     private lateinit var logBuffer: RadarLogBuffer
+    private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
 
     /**
@@ -414,6 +417,10 @@ object Radar {
             this.logBuffer = RadarSimpleLogBuffer()
         }
 
+        if (!this::replayBuffer.isInitialized) {
+            this.replayBuffer = RadarSimpleReplayBuffer()
+        }
+
         if (!this::logger.isInitialized) {
             this.logger = RadarLogger(this.context)
         }
@@ -454,7 +461,8 @@ object Radar {
         val application = this.context as? Application
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks())
 
-        this.apiClient.getConfig(object : RadarApiClient.RadarGetConfigApiCallback {
+        val usage = "initialize"
+        this.apiClient.getConfig(usage, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config.meta)
                 RadarSettings.setFeatureSettings(context, config.featureSettings)
@@ -2595,12 +2603,6 @@ object Radar {
                         return
                     }
 
-                    if (events != null) {
-                        // The events are returned in the completion handler, but they're also
-                        // sent back via the RadarReceiver.
-                        receiver?.onEventsReceived(context, events, user)
-                    }
-
                     handler.post {
                         callback.onComplete(status, location, events, user)
                     }
@@ -2639,6 +2641,24 @@ object Radar {
                 }
             })
         }
+    }
+
+    @JvmStatic
+    internal fun getReplays(): List<RadarReplay> {
+        val flushable = replayBuffer.getFlushableReplaysStash()
+        flushable.onFlush(false)
+        return flushable.get()
+    }
+
+    @JvmStatic
+    internal fun clearReplays() {
+        val flushable = replayBuffer.getFlushableReplaysStash()
+        flushable.onFlush(true)
+    }
+
+    @JvmStatic
+    internal fun addReplay(replayParams: JSONObject) {
+        replayBuffer.write(replayParams)
     }
 
     @JvmStatic
