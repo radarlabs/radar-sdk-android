@@ -32,6 +32,7 @@ internal open class RadarApiHelper(
                          params: JSONObject?,
                          sleep: Boolean,
                          callback: RadarApiCallback? = null,
+                         extendedTimeout: Boolean = false,
                          stream: Boolean = false,
                          logPayload: Boolean = true) {
         if (logPayload) {
@@ -54,7 +55,11 @@ internal open class RadarApiHelper(
                 }
                 urlConnection.requestMethod = method
                 urlConnection.connectTimeout = 10000
-                urlConnection.readTimeout = 10000
+                if (extendedTimeout) {
+                    urlConnection.readTimeout = 25000
+                } else {
+                    urlConnection.readTimeout = 10000
+                }
                 if (stream) {
                     urlConnection.setChunkedStreamingMode(1024)
                 }
