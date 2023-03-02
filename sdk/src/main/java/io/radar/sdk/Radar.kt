@@ -2817,14 +2817,14 @@ object Radar {
         receiver?.onEventsReceived(context, events, user)
 
         for (event in events) {
-            logger.d("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.com/dashboard/events/${event._id}")
+            logger.i("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.com/dashboard/events/${event._id}")
         }
     }
 
     internal fun sendLocation(location: Location, user: RadarUser) {
         receiver?.onLocationUpdated(context, location, user)
 
-        logger.d("📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.com/dashboard/users/${user._id}")
+        logger.i("📍 Radar location updated | coordinates = (${location.latitude}, ${location.longitude}); accuracy = ${location.accuracy} meters; link = https://radar.com/dashboard/users/${user._id}")
     }
 
     internal fun sendClientLocation(
@@ -2838,7 +2838,7 @@ object Radar {
     internal fun sendError(status: RadarStatus) {
         receiver?.onError(context, status)
 
-        logger.i("📍️ Radar error received | status = $status")
+        logger.e("📍️ Radar error received | status = $status", RadarLogType.SDK_ERROR)
     }
 
     internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?) {

@@ -12,6 +12,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
 import java.util.concurrent.Executors
+import io.radar.sdk.Radar.RadarLogType
 
 internal open class RadarApiHelper(
     private var logger: RadarLogger? = null
@@ -104,7 +105,7 @@ internal open class RadarApiHelper(
 
                     val res = JSONObject(body)
 
-                    logger?.d("📍 Radar API response | responseCode = ${urlConnection.responseCode}; res = $res")
+                    logger?.e("📍 Radar API response | method = ${method}; url = ${url}; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
                     
                     handler.post {
                         callback?.onComplete(status)
