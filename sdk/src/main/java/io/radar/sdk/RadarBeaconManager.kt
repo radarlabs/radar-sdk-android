@@ -573,7 +573,7 @@ internal class RadarBeaconManager(
         this.nearbyBeacons.clear()
     }
 
-    internal fun handleBeacons(beacons: Array<RadarBeacon>?) {
+    internal fun handleBeacons(beacons: Array<RadarBeacon>?, source: Radar.RadarLocationSource) {
         if (beacons.isNullOrEmpty()) {
             logger.d("No beacons to handle")
 
@@ -581,9 +581,15 @@ internal class RadarBeaconManager(
         }
 
         beacons.forEach { beacon ->
-            logger.d("Handling beacon | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+            if (source == Radar.RadarLocationSource.BEACON_EXIT) {
+                logger.d("Handling beacon exit | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
-            nearbyBeacons.add(beacon)
+                nearbyBeacons.remove(beacon)
+            } else {
+                logger.d("Handling beacon entry | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+
+                nearbyBeacons.add(beacon)
+            }
         }
     }
 

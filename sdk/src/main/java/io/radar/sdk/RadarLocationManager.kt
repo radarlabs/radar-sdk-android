@@ -136,11 +136,11 @@ internal class RadarLocationManager(
         this.started = false
     }
 
-    internal fun handleBeacons(beacons: Array<RadarBeacon>?) {
+    internal fun handleBeacons(beacons: Array<RadarBeacon>?, source: RadarLocationSource) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             logger.d("Handling beacons | beacons = $beacons")
 
-            Radar.beaconManager.handleBeacons(beacons)
+            Radar.beaconManager.handleBeacons(beacons, source)
 
             val lastLocation = RadarState.getLastLocation(context)
 
@@ -148,7 +148,7 @@ internal class RadarLocationManager(
                 logger.d("Not handling beacons, no last location")
             }
 
-            this.handleLocation(lastLocation, RadarLocationSource.BEACON_ENTER)
+            this.handleLocation(lastLocation, source)
         }
     }
 

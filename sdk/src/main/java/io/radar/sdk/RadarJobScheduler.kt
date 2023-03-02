@@ -30,8 +30,10 @@ class RadarJobScheduler : JobService() {
         private const val EXTRA_BEACONS = "beacons"
 
         private const val BASE_JOB_ID = 20160525
+        private const val BASE_JOB_ID_BEACONS = 20210216
 
         private val numActiveJobs = AtomicInteger()
+        private val numActiveBeaconJobs = AtomicInteger()
 
         internal fun scheduleJob(
             context: Context,
@@ -94,7 +96,7 @@ class RadarJobScheduler : JobService() {
             val sourceStr = stringForSource(source)
 
             val settings = RadarSettings.getFeatureSettings(context)
-            val jobId = BASE_JOB_ID + (numActiveJobs.incrementAndGet() % settings.maxConcurrentJobs)
+            val jobId = BASE_JOB_ID_BEACONS + (numActiveBeaconJobs.incrementAndGet() % settings.maxConcurrentJobs)
 
             val jobInfo = JobInfo.Builder(jobId, componentName)
                 .setExtras(extras)
@@ -137,13 +139,13 @@ class RadarJobScheduler : JobService() {
 
             Radar.logger.d("Starting beacons job | source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
 
-            Radar.handleBeacons(this.applicationContext, beacons)
+            Radar.handleBeacons(this.applicationContext, beacons, source)
 
             Handler(Looper.getMainLooper()).postDelayed({
                 this.jobFinished(params, false)
             }, 10000)
 
-            numActiveJobs.set(0)
+            numActiveBeaconJobs.set(0)
 
             return true
         } else {
