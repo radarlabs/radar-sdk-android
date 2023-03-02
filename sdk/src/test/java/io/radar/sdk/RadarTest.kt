@@ -36,19 +36,6 @@ class RadarTest {
         private val permissionsHelperMock = RadarPermissionsHelperMock()
     }
 
-    @Before
-    fun setUp() {
-        Radar.logger = RadarLogger(context)
-        Radar.apiClient = RadarApiClient(context, Radar.logger)
-        Radar.apiClient.apiHelper = apiHelperMock
-        setUpLogConversionTest()
-
-        Radar.initialize(context, publishableKey)
-
-        Radar.locationManager.locationClient = locationClientMock
-        Radar.locationManager.permissionsHelper = permissionsHelperMock
-    }
-
     private fun assertGeofencesOk(geofences: Array<RadarGeofence>?) {
         assertNotNull(geofences)
         geofences?.let {
@@ -268,6 +255,19 @@ class RadarTest {
         assertNotEquals(route?.distance?.value, 0)
         assertNotNull(route?.duration?.text)
         assertNotEquals(route?.duration?.value, 0)
+    }
+
+    @Before
+    fun setUp() {
+        Radar.logger = RadarLogger(context)
+        Radar.apiClient = RadarApiClient(context, Radar.logger)
+        Radar.apiClient.apiHelper = apiHelperMock
+        setUpLogConversionTest()
+
+        Radar.initialize(context, publishableKey)
+
+        Radar.locationManager.locationClient = locationClientMock
+        Radar.locationManager.permissionsHelper = permissionsHelperMock
     }
 
     @Test
