@@ -196,17 +196,8 @@ class MainActivity : AppCompatActivity() {
         Radar.logConversion(
             "app_open_android",
             customEventMetadata
-        ) { status, location, events, user ->
-            Log.v("example", "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
-        }
-
-        // Send custom event with manual location
-        Radar.logConversion(
-            "app_open_android_manual",
-            destination1,
-            customEventMetadata
-        ) { status, location, events, user ->
-            Log.v("example", "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
+        ) { status, event ->
+            Log.v("example", "Conversion type = ${event?.customType}: status = $status; event = $event")
         }
     }
 
