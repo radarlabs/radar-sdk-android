@@ -739,6 +739,10 @@ object Radar {
                             nearbyGeofences: Array<RadarGeofence>?,
                             config: RadarConfig?,
                         ) {
+                            if (status == RadarStatus.SUCCESS) {
+                                RadarSettings.updateLastTrackedTime(context)
+                            }
+
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
                             }
