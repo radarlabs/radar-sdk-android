@@ -87,19 +87,14 @@ class RadarJobScheduler : JobService() {
             val settings = RadarSettings.getFeatureSettings(context)
             val jobId = BASE_JOB_ID + (numActiveJobs.incrementAndGet() % settings.maxConcurrentJobs)
 
-            val jobInfoBuilder = JobInfo.Builder(jobId, componentName)
+            val jobInfo = JobInfo.Builder(jobId, componentName)
                 .setExtras(extras)
                 .setMinimumLatency(0)
                 .setOverrideDeadline(0)
                 .setRequiredNetworkType(
                     if (settings.schedulerRequiresNetwork) JobInfo.NETWORK_TYPE_ANY else JobInfo.NETWORK_TYPE_NONE
                 )
-
-            if (Build.VERSION.SDK_INT >= 31) {
-                jobInfoBuilder.setExpedited(true)
-            }
-
-            val jobInfo = jobInfoBuilder.build()
+                .build()
 
             val jobScheduler = context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
             val result = jobScheduler.schedule(jobInfo)

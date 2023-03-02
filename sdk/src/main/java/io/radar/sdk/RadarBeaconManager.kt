@@ -67,6 +67,10 @@ internal class RadarBeaconManager(
         }
     }
 
+    fun getNearbyBeacons(): Array<RadarBeacon> {
+        return nearbyBeacons.toTypedArray()
+    }
+
     fun startMonitoringBeacons(beacons: Array<RadarBeacon>) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
