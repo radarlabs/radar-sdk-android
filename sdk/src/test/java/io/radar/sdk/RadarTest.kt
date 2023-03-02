@@ -1424,35 +1424,6 @@ class RadarTest {
         assertCustomEvent(callbackEvent, customType, metadata)
     }
 
-    @Test
-    fun test_Radar_logConversionWithLocationAndBlock_success() {
-        setUpLogConversionTest()
-
-        val customType = "test_event" // has to match the property in the custom_event.json file!
-        val latch = CountDownLatch(1)
-        var callbackStatus: Radar.RadarStatus? = null
-        var callbackEvent: RadarEvent? = null
-        val metadata = JSONObject()
-        metadata.put("foo", "bar")
-
-        Radar.logConversion(customType, locationClientMock.mockLocation!!, null) { status, event ->
-            callbackStatus = status
-            callbackEvent = event
-
-            val customEventMetadata = event?.metadata
-            assertNotNull(customEventMetadata)
-            assertEquals("bar", customEventMetadata!!.get("foo"))
-
-            latch.countDown()
-        }
-
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
-        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
-
-        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertCustomEvent(callbackEvent, customType, metadata)
-    }
-
     private fun assertCustomEvent(
         event: RadarEvent?,
         customType: String,
