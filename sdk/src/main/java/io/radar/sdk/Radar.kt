@@ -463,6 +463,20 @@ object Radar {
 
         this.initialized = true
 
+        sendLogConversionRequest(
+            "app_open",
+            callback = object : RadarLogConversionCallback {
+                override fun onComplete(
+                    status: RadarStatus,
+                    location: Location?,
+                    events: Array<RadarEvent>?,
+                    user: RadarUser?
+                ) {
+                    this@Radar.logger.i("Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
+                }
+            }
+        )
+
         logger.i("📍️ Radar initialized")
     }
 
@@ -2472,7 +2486,7 @@ object Radar {
                     return
                 }
 
-                logConversion(name, data, location, events, user, callback)
+                sendLogConversionRequest(name, data, location, events, user, callback)
             }
         })
     }
@@ -2560,7 +2574,7 @@ object Radar {
                     return
                 }
 
-                logConversion(name, data, location, events, user, callback)
+                sendLogConversionRequest(name, data, location, events, user, callback)
             }
         })
     }
@@ -2595,14 +2609,20 @@ object Radar {
     }
 
     @JvmStatic
-    private fun logConversion(
+    internal fun sendLogConversionRequest(
         name: String,
-        data: JSONObject?,
-        location: Location?,
-        events: Array<RadarEvent>?,
-        user: RadarUser?,
+        data: JSONObject? = null,
+        location: Location? = null,
+        events: Array<RadarEvent>? = null,
+        user: RadarUser? = null,
         callback: RadarLogConversionCallback
     ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
         apiClient.sendEvent(
             name,
             data,

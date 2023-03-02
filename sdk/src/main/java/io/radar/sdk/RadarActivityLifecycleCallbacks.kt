@@ -4,11 +4,14 @@ import android.Manifest
 import android.app.Activity
 import android.app.Application
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarUser
 import kotlin.math.max
 
 internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCallbacks {
@@ -56,6 +59,20 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
         foreground = count > 0
 
         updatePermissionsDenied(activity)
+
+        Radar.sendLogConversionRequest(
+            "app_open",
+            callback = object : Radar.RadarLogConversionCallback {
+                override fun onComplete(
+                    status: Radar.RadarStatus,
+                    location: Location?,
+                    events: Array<RadarEvent>?,
+                    user: RadarUser?
+                ) {
+                    Log.i(null, "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
+                }
+            }
+        )
     }
 
     override fun onActivityPaused(activity: Activity) {

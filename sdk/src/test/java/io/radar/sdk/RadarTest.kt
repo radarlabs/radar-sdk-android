@@ -257,9 +257,13 @@ class RadarTest {
 
     @Before
     fun setUp() {
+        Radar.logger = RadarLogger(context)
+        Radar.apiClient = RadarApiClient(context, Radar.logger)
+        Radar.apiClient.apiHelper = apiHelperMock
+        setUpLogConversionTest()
+
         Radar.initialize(context, publishableKey)
 
-        Radar.apiClient.apiHelper = apiHelperMock
         Radar.locationManager.locationClient = locationClientMock
         Radar.locationManager.permissionsHelper = permissionsHelperMock
     }
