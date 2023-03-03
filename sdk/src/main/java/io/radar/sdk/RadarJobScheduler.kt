@@ -14,6 +14,7 @@ import android.os.PersistableBundle
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.stringForSource
+import io.radar.sdk.model.RadarBeacon
 import java.util.concurrent.atomic.AtomicInteger
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -26,19 +27,20 @@ class RadarJobScheduler : JobService() {
         private const val EXTRA_PROVIDER = "provider"
         private const val EXTRA_TIME = "time"
         private const val EXTRA_SOURCE = "source"
-        /**
-         * Base Job ID (Radar's birthday!)
-         */
+        private const val EXTRA_BEACONS = "beacons"
+
         private const val BASE_JOB_ID = 20160525
+        private const val BASE_JOB_ID_BEACONS = 20210216
 
-        /**
-         * Current number of active jobs
-         */
-        private val counter = AtomicInteger()
+        private val numActiveJobs = AtomicInteger()
+        private val numActiveBeaconJobs = AtomicInteger()
 
-        internal fun scheduleJob(context: Context, location: Location, source: RadarLocationSource) {
+        internal fun scheduleJob(
+            context: Context,
+            location: Location,
+            source: RadarLocationSource
+        ) {
             if (!Radar.initialized) {
-                // Radar must be initialized before using Radar.logger or other Radar members
                 Radar.initialize(context)
             }
 
@@ -52,8 +54,10 @@ class RadarJobScheduler : JobService() {
                 putString(EXTRA_SOURCE, source.name)
             }
 
+            val sourceStr = stringForSource(source)
+
             val settings = RadarSettings.getFeatureSettings(context)
-            val jobId = BASE_JOB_ID + (counter.incrementAndGet() % settings.maxConcurrentJobs)
+            val jobId = BASE_JOB_ID + (numActiveJobs.incrementAndGet() % settings.maxConcurrentJobs)
 
             val jobInfo = JobInfo.Builder(jobId, componentName)
                 .setExtras(extras)
@@ -67,90 +71,84 @@ class RadarJobScheduler : JobService() {
             val jobScheduler = context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
             val result = jobScheduler.schedule(jobInfo)
             if (result == JobScheduler.RESULT_SUCCESS) {
-                Radar.logger.d(
-                    "Scheduling location job |" +
-                            " location = $location;" +
-                            " source = ${stringForSource(source)};"
-                )
+                Radar.logger.d("Scheduling location job | source = $sourceStr; location = $location")
             } else {
-                Radar.logger.d(
-                    "Failed to schedule location job |" +
-                            " location = $location;" +
-                            " source = ${stringForSource(source)};"
-                )
+                Radar.logger.d("Failed to schedule location job | source = $sourceStr; location = $location")
+            }
+        }
+
+        internal fun scheduleJob(
+            context: Context,
+            beacons: Array<RadarBeacon>,
+            source: RadarLocationSource
+        ) {
+            if (!Radar.initialized) {
+                Radar.initialize(context)
             }
 
+            val componentName = ComponentName(context, RadarJobScheduler::class.java)
+            val beaconsArr = RadarBeaconUtils.stringArrayForBeacons(beacons)
+            val extras = PersistableBundle().apply {
+                putStringArray(EXTRA_BEACONS, beaconsArr)
+                putString(EXTRA_SOURCE, source.name)
+            }
+
+            val sourceStr = stringForSource(source)
+
+            val settings = RadarSettings.getFeatureSettings(context)
+            val jobId = BASE_JOB_ID_BEACONS + (numActiveBeaconJobs.incrementAndGet() % 10)
+
+            val jobInfo = JobInfo.Builder(jobId, componentName)
+                .setExtras(extras)
+                .setMinimumLatency(0)
+                .setOverrideDeadline(0)
+                .setRequiredNetworkType(
+                    if (settings.schedulerRequiresNetwork) JobInfo.NETWORK_TYPE_ANY else JobInfo.NETWORK_TYPE_NONE
+                )
+                .build()
+
+            val jobScheduler = context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
+            val result = jobScheduler.schedule(jobInfo)
+            if (result == JobScheduler.RESULT_SUCCESS) {
+                Radar.logger.d("Scheduling beacons job | source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
+            } else {
+                Radar.logger.d("Failed to schedule beacons job | source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
+            }
         }
     }
 
     override fun onStartJob(params: JobParameters): Boolean {
         if (!Radar.initialized) {
-            // Radar must be initialized before using Radar.logger or other Radar members
             Radar.initialize(this.applicationContext)
         }
 
         val extras = params.extras
+        val beaconsArr = extras.getStringArray(EXTRA_BEACONS)
         val latitude = extras.getDouble(EXTRA_LATITUDE)
         val longitude = extras.getDouble(EXTRA_LONGITUDE)
         val accuracy = extras.getDouble(EXTRA_ACCURACY).toFloat()
         val provider = extras.getString(EXTRA_PROVIDER)
         val time = extras.getLong(EXTRA_TIME)
 
-        val location = Location(provider).apply {
-            this.latitude = latitude
-            this.longitude = longitude
-            this.accuracy = accuracy
-            this.time = time
-        }
-
-        val sourceStr = extras.getString(EXTRA_SOURCE)
-        if (Radar.isTestKey()) {
-            val batteryState = Radar.batteryManager.getBatteryState()
-            Radar.logger.d(
-                "Starting location job | " +
-                        "location = $location; " +
-                        "source = ${sourceStr}; " +
-                        "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
-                        "performanceState = ${batteryState.performanceState.name}; " +
-                        "isCharging = ${batteryState.isCharging}; " +
-                        "batteryPercentage = ${batteryState.percent}; " +
-                        "isPowerSaveMode = ${batteryState.powerSaveMode}; " +
-                        "isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations}; " +
-                        "locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()}; " +
-                        "isDozeMode = ${batteryState.isDeviceIdleMode}"
-            )
-        }
-
-        if (sourceStr == null) {
-            return false
-        }
+        val sourceStr = extras.getString(EXTRA_SOURCE) ?: return false
 
         val source = RadarLocationSource.valueOf(sourceStr)
 
-        Radar.handleLocation(this.applicationContext, location, source)
+        if (beaconsArr != null) {
+            val beacons = RadarBeaconUtils.beaconsForStringArray(beaconsArr)
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            this.jobFinished(params, false)
-        }, 10000)
+            Radar.logger.d("Starting beacons job | source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
 
-        counter.set(0)
-        return true
-    }
+            Radar.handleBeacons(this.applicationContext, beacons, source)
 
-    override fun onStopJob(params: JobParameters): Boolean {
-        if (!Radar.initialized) {
-            // Radar must be initialized before using Radar.logger or other Radar members
-            Radar.initialize(this.applicationContext)
-        }
+            Handler(Looper.getMainLooper()).postDelayed({
+                this.jobFinished(params, false)
+            }, 10000)
 
-        if (Radar.isTestKey()) {
-            val extras = params.extras
-            val latitude = extras.getDouble(EXTRA_LATITUDE)
-            val longitude = extras.getDouble(EXTRA_LONGITUDE)
-            val accuracy = extras.getDouble(EXTRA_ACCURACY).toFloat()
-            val provider = extras.getString(EXTRA_PROVIDER)
-            val time = extras.getLong(EXTRA_TIME)
+            numActiveBeaconJobs.set(0)
 
+            return true
+        } else {
             val location = Location(provider).apply {
                 this.latitude = latitude
                 this.longitude = longitude
@@ -158,9 +156,62 @@ class RadarJobScheduler : JobService() {
                 this.time = time
             }
 
-            val source = extras.getString(EXTRA_SOURCE)
-            // This may occur, for example, if a new location job is scheduled before the current job finishes executing.
-            Radar.logger.d("Stopping location job | location = $location; source = $source")
+            if (Radar.isTestKey()) {
+                val batteryState = Radar.batteryManager.getBatteryState()
+                Radar.logger.d(
+                    "Starting location job | " +
+                            "source = $sourceStr; " +
+                            "location = $location; " +
+                            "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
+                            "performanceState = ${batteryState.performanceState.name}; " +
+                            "isCharging = ${batteryState.isCharging}; " +
+                            "batteryPercentage = ${batteryState.percent}; " +
+                            "isPowerSaveMode = ${batteryState.powerSaveMode}; " +
+                            "isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations}; " +
+                            "locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()}; " +
+                            "isDozeMode = ${batteryState.isDeviceIdleMode}"
+                )
+            } else {
+                Radar.logger.d("Starting location job | source = $sourceStr; location = $location")
+            }
+
+            Radar.handleLocation(this.applicationContext, location, source)
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                this.jobFinished(params, false)
+            }, 10000)
+
+            numActiveJobs.set(0)
+
+            return true
+        }
+    }
+
+    override fun onStopJob(params: JobParameters): Boolean {
+        if (!Radar.initialized) {
+            Radar.initialize(this.applicationContext)
+        }
+
+        val extras = params.extras
+        val beaconsArr = extras.getStringArray(EXTRA_BEACONS)
+        val latitude = extras.getDouble(EXTRA_LATITUDE)
+        val longitude = extras.getDouble(EXTRA_LONGITUDE)
+        val accuracy = extras.getDouble(EXTRA_ACCURACY).toFloat()
+        val provider = extras.getString(EXTRA_PROVIDER)
+        val time = extras.getLong(EXTRA_TIME)
+        val source = extras.getString(EXTRA_SOURCE)
+
+        if (beaconsArr != null) {
+            Radar.logger.d("Stopping beacons job | source = $source; beaconsArr = ${beaconsArr.joinToString(",")}")
+        } else {
+            val location = Location(provider).apply {
+                this.latitude = latitude
+                this.longitude = longitude
+                this.accuracy = accuracy
+                this.time = time
+            }
+
+            Radar.logger.d("Stopping location job | source = $source; location = $location")
         }
 
         return false

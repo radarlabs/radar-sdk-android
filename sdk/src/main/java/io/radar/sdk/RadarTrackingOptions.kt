@@ -353,7 +353,7 @@ data class RadarTrackingOptions(
             stopDistance = 70,
             startTrackingAfter = null,
             stopTrackingAfter = null,
-            replay = RadarTrackingOptionsReplay.NONE,
+            replay = RadarTrackingOptionsReplay.ALL,
             sync = RadarTrackingOptionsSync.ALL,
             useStoppedGeofence = false,
             stoppedGeofenceRadius = 0,
