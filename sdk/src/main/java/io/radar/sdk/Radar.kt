@@ -2474,16 +2474,12 @@ object Radar {
             return
         }
 
-        if (RadarSettings.getPermissionsDenied(context)) {
-            sendLogConversionRequest(name, metadata, callback = callback)
-
-            return
-        }
-
         // if trackOnce() has been called in the last 60 seconds, don't call it again
         val timestampSeconds = System.currentTimeMillis() / 1000
         val lastTrackedTime = RadarSettings.getLastTrackedTime(context)
-        if (lastTrackedTime - timestampSeconds < 60) {
+        val isLastTrackRecent = lastTrackedTime - timestampSeconds < 60
+
+        if (isLastTrackRecent || RadarSettings.getPermissionsDenied(context)) {
             sendLogConversionRequest(name, metadata, callback = callback)
 
             return
