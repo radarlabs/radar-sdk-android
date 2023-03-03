@@ -357,7 +357,8 @@ internal class RadarBeaconManager(
             return
         }
 
-        val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_LATENCY)
+        val scanMode = if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY
+        val scanSettings = getScanSettings(scanMode)
 
         val beaconManager = this
 
@@ -499,7 +500,8 @@ internal class RadarBeaconManager(
             return
         }
 
-        val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_LATENCY)
+        val scanMode = if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY
+        val scanSettings = getScanSettings(scanMode)
 
         val beaconManager = this
 
