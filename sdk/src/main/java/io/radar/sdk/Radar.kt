@@ -781,7 +781,7 @@ object Radar {
                                 callTrackApi(null)
                             }
                         }
-                    })
+                    }, false)
                 } else {
                     callTrackApi(null)
                 }

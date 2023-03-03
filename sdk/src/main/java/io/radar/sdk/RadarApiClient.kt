@@ -723,11 +723,22 @@ internal class RadarApiClient(
         location: Location,
         radius: Int,
         limit: Int?,
-        callback: RadarSearchBeaconsApiCallback
+        callback: RadarSearchBeaconsApiCallback,
+        cache: Boolean
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        if (cache && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val lastBeacons = RadarState.getLastBeacons(context)
+            val lastBeaconUUIDs = RadarState.getLastBeaconUUIDs(context)
+            val lastBeaconUIDs = RadarState.getLastBeaconUIDs(context)
+
+            callback.onComplete(RadarStatus.SUCCESS, null, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
 
             return
         }

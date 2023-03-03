@@ -590,10 +590,10 @@ internal class RadarLocationManager(
             })
         }
 
-        /*
         if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             && permissionsHelper.bluetoothPermissionsGranted(context)) {
-            Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
+            val cache = stopped || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT
+            this.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
                    if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                         Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
@@ -627,38 +627,7 @@ internal class RadarLocationManager(
                        callTrackApi(null)
                    }
                 }
-            })
-        } else {
-            callTrackApi(null)
-        }
-         */
-
-        if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-            && permissionsHelper.bluetoothPermissionsGranted(context)) {
-            if (source != RadarLocationSource.BEACON_ENTER && source != RadarLocationSource.BEACON_EXIT && source != RadarLocationSource.MOCK_LOCATION && source != RadarLocationSource.MANUAL_LOCATION) {
-                Radar.apiClient.searchBeacons(
-                    location,
-                    1000,
-                    10,
-                    object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                        override fun onComplete(
-                            status: RadarStatus,
-                            res: JSONObject?,
-                            beacons: Array<RadarBeacon>?,
-                            uuids: Array<String>?,
-                            uids: Array<String>?
-                        ) {
-                            if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
-                            } else if (beacons != null) {
-                                Radar.beaconManager.startMonitoringBeacons(beacons)
-                            }
-                        }
-                    })
-            }
-
-            val beacons = Radar.beaconManager.getNearbyBeacons()
-            callTrackApi(beacons)
+            }, cache)
         } else {
             callTrackApi(null)
         }
