@@ -133,7 +133,7 @@ internal class RadarBeaconManager(
         }
 
         try {
-            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER, ScanSettings.CALLBACK_TYPE_FIRST_MATCH or ScanSettings.CALLBACK_TYPE_MATCH_LOST, 0, ScanSettings.MATCH_MODE_STICKY)
+            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER)
 
             logger.d("Starting monitoring beacons")
 
@@ -236,7 +236,7 @@ internal class RadarBeaconManager(
         }
 
         try {
-            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER, ScanSettings.CALLBACK_TYPE_FIRST_MATCH or ScanSettings.CALLBACK_TYPE_MATCH_LOST, 0, ScanSettings.MATCH_MODE_STICKY)
+            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER)
 
             logger.d("Starting monitoring beacon UUIDs")
 
@@ -357,7 +357,7 @@ internal class RadarBeaconManager(
             return
         }
 
-        val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_LATENCY, ScanSettings.CALLBACK_TYPE_ALL_MATCHES, 0, ScanSettings.MATCH_MODE_AGGRESSIVE)
+        val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_LATENCY)
 
         val beaconManager = this
 
@@ -499,7 +499,7 @@ internal class RadarBeaconManager(
             return
         }
 
-        val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_LATENCY, ScanSettings.CALLBACK_TYPE_ALL_MATCHES, 0, ScanSettings.MATCH_MODE_AGGRESSIVE)
+        val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_LATENCY)
 
         val beaconManager = this
 
@@ -626,13 +626,9 @@ internal class RadarBeaconManager(
         return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
     }
 
-    private fun getScanSettings(scanMode: Int, callbackType: Int, reportDelay: Long, matchMode: Int): ScanSettings {
+    private fun getScanSettings(scanMode: Int): ScanSettings {
         return ScanSettings.Builder()
             .setScanMode(scanMode)
-            .setCallbackType(callbackType)
-            .setReportDelay(reportDelay)
-            .setMatchMode(matchMode)
-            .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
             .build()
     }
 
