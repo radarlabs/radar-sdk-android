@@ -379,6 +379,8 @@ internal class RadarApiClient(
                         }
                     }
 
+                    RadarSettings.setUserDebug(context, user.debug)
+
                     Radar.sendLocation(location, user)
 
                     if (events.isNotEmpty()) {
@@ -721,7 +723,8 @@ internal class RadarApiClient(
         location: Location,
         radius: Int,
         limit: Int?,
-        callback: RadarSearchBeaconsApiCallback
+        callback: RadarSearchBeaconsApiCallback,
+        cache: Boolean
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -730,10 +733,23 @@ internal class RadarApiClient(
             return
         }
 
+        if (cache && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val lastBeacons = RadarState.getLastBeacons(context)
+            val lastBeaconUUIDs = RadarState.getLastBeaconUUIDs(context)
+            val lastBeaconUIDs = RadarState.getLastBeaconUIDs(context)
+
+            logger.d("Using cached search beacons response | lastBeaconUUIDs = ${lastBeaconUUIDs?.joinToString(",")}; lastBeaconUIDs = ${lastBeaconUIDs?.joinToString(",")}")
+
+            callback.onComplete(RadarStatus.SUCCESS, null, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
+
+            return
+        }
+
         val queryParams = StringBuilder()
         queryParams.append("near=${location.latitude},${location.longitude}")
         queryParams.append("&radius=${radius}")
         queryParams.append("&limit=${limit}")
+        queryParams.append("&installId=${RadarSettings.getInstallId(context)}")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -746,7 +762,17 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", url, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    var lastBeacons: Array<RadarBeacon>? = null
+                    var lastBeaconUUIDs: Array<String>? = null
+                    var lastBeaconUIDs: Array<String>? = null
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        lastBeacons = RadarState.getLastBeacons(context)
+                        lastBeaconUUIDs = RadarState.getLastBeaconUUIDs(context)
+                        lastBeaconUIDs = RadarState.getLastBeaconUIDs(context)
+                    }
+
+                    callback.onComplete(status, res, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
 
                     return
                 }
@@ -765,6 +791,12 @@ internal class RadarApiClient(
                     Array(uids.length()) { index ->
                         uids.getString(index)
                     }.filter { uid -> uid.isNotEmpty() }.toTypedArray()
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    RadarState.setLastBeacons(context, beacons)
+                    RadarState.setLastBeaconUUIDs(context, uuids)
+                    RadarState.setLastBeaconUIDs(context, uids)
                 }
 
                 callback.onComplete(RadarStatus.SUCCESS, res, beacons, uuids, uids)
