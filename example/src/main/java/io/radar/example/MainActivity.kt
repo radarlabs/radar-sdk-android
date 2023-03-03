@@ -190,23 +190,14 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Matrix: status = $status; matrix[0][0].duration.text = ${matrix?.routeBetween(0, 0)?.duration?.text}; matrix[0][1].duration.text = ${matrix?.routeBetween(0, 1)?.duration?.text}; matrix[1][0].duration.text = ${matrix?.routeBetween(1, 0)?.duration?.text};  matrix[1][1].duration.text = ${matrix?.routeBetween(1, 1)?.duration?.text}")
         }
 
-        val customEventMetadata = JSONObject()
-        customEventMetadata.put("one", "two")
+        val conversionMetadata = JSONObject()
+        conversionMetadata.put("one", "two")
 
         Radar.logConversion(
             "app_open_android",
-            customEventMetadata
-        ) { status, location, events, user ->
-            Log.v("example", "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
-        }
-
-        // Send custom event with manual location
-        Radar.logConversion(
-            "app_open_android_manual",
-            destination1,
-            customEventMetadata
-        ) { status, location, events, user ->
-            Log.v("example", "Custom event type = ${events?.first()?.customType}: status = $status; location = $location; events = $events; user = $user")
+            conversionMetadata
+        ) { status, event ->
+            Log.v("example", "Conversion type = ${event?.conversionType}: status = $status; event = $event")
         }
     }
 
