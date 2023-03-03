@@ -738,6 +738,8 @@ internal class RadarApiClient(
             val lastBeaconUUIDs = RadarState.getLastBeaconUUIDs(context)
             val lastBeaconUIDs = RadarState.getLastBeaconUIDs(context)
 
+            logger.d("Using cached search beacons response | lastBeaconUUIDs = ${lastBeaconUUIDs?.joinToString(",")}; lastBeaconUIDs = ${lastBeaconUIDs?.joinToString(",")}")
+
             callback.onComplete(RadarStatus.SUCCESS, null, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
 
             return
