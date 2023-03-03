@@ -29,8 +29,8 @@ class RadarJobScheduler : JobService() {
         private const val EXTRA_SOURCE = "source"
         private const val EXTRA_BEACONS = "beacons"
 
-        private const val BASE_JOB_ID = 20160525
-        private const val BASE_JOB_ID_BEACONS = 20210216
+        private const val BASE_JOB_ID_LOCATIONS = 20160525 // Radar's birthday!
+        private const val BASE_JOB_ID_BEACONS = 20210216 // Beacons launch date
 
         private val numActiveLocationJobs = AtomicInteger()
         private val numActiveBeaconJobs = AtomicInteger()
@@ -57,7 +57,7 @@ class RadarJobScheduler : JobService() {
             val sourceStr = stringForSource(source)
 
             val settings = RadarSettings.getFeatureSettings(context)
-            val jobId = BASE_JOB_ID + (numActiveLocationJobs.incrementAndGet() % settings.maxConcurrentJobs)
+            val jobId = BASE_JOB_ID_LOCATIONS + (numActiveLocationJobs.incrementAndGet() % settings.maxConcurrentJobs)
 
             val jobInfo = JobInfo.Builder(jobId, componentName)
                 .setExtras(extras)
