@@ -36,7 +36,7 @@ internal object RadarState {
     private const val KEY_BEACON_IDS = "beacon_ids"
     private const val KEY_LAST_BEACONS = "last_beacons"
     private const val KEY_LAST_BEACON_UUIDS = "last_beacon_uuids"
-    private const val KEY_LAST_BEACON_UIDS = "last_beacon_uuids"
+    private const val KEY_LAST_BEACON_UIDS = "last_beacon_uids"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
