@@ -58,17 +58,9 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
 
         updatePermissionsDenied(activity)
 
-        Radar.sendLogConversionRequest(
-            "app_open",
-            callback = object : Radar.RadarLogConversionCallback {
-                override fun onComplete(
-                    status: Radar.RadarStatus,
-                    event: RadarEvent?
-                ) {
-                    Log.i(null, "Conversion type = ${event?.customType}: status = $status; event = $event")
-                }
-            }
-        )
+        Radar.logConversion("app_open", null) { status, event ->
+            Log.i(null, "Conversion type = ${event?.customType}: status = $status; event = $event")
+        }
     }
 
     override fun onActivityPaused(activity: Activity) {
