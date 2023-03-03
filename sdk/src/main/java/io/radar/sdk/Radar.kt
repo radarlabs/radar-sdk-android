@@ -228,7 +228,7 @@ object Radar {
      */
     interface RadarLogConversionCallback {
         /**
-         * Called when a request to log a conversion succeeds, fails, or times out. Receives the request status and, if successful, the user's location, an array of the events generated, and the user.
+         * Called when a request to log a conversion succeeds, fails, or times out. Receives the request status and, if successful, the conversion event generated.
          *
          * @param[status] RadarStatus The request status.
          * @param[event] RadarEvent? If successful, the conversion event.
