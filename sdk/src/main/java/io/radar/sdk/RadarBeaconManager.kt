@@ -42,6 +42,10 @@ internal class RadarBeaconManager(
         private const val TIMEOUT_TOKEN = "timeout"
     }
 
+    internal fun getNearbyBeacons(): Array<RadarBeacon>? {
+        return nearbyBeacons.toTypedArray()
+    }
+
     private fun addCallback(callback: RadarBeaconCallback?) {
        if (callback == null) {
             return

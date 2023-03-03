@@ -736,6 +736,7 @@ internal class RadarApiClient(
         queryParams.append("near=${location.latitude},${location.longitude}")
         queryParams.append("&radius=${radius}")
         queryParams.append("&limit=${limit}")
+        queryParams.append("&installId=${RadarSettings.getInstallId(context)}")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
