@@ -1124,17 +1124,17 @@ internal class RadarApiClient(
                     return
                 }
 
-                val customEvent = res.optJSONObject("event")?.let { eventObj ->
+                val conversionEvent = res.optJSONObject("event")?.let { eventObj ->
                     RadarEvent.fromJson(eventObj)
                 }
 
-                if (customEvent == null) {
+                if (conversionEvent == null) {
                     callback.onComplete(RadarStatus.ERROR_SERVER)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.SUCCESS, res, customEvent)
+                callback.onComplete(RadarStatus.SUCCESS, res, conversionEvent)
             }
         })
     }
