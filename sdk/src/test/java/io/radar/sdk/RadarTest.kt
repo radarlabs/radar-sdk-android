@@ -1433,7 +1433,7 @@ class RadarTest {
     ) {
         assertNotNull(event)
         assertEquals(conversionType, event!!.conversionType)
-        assertNotNull(event!!.type)
+        assertNotNull(event!!.conversionType)
 
         val returnedMetadata = event!!.metadata
         assertNotNull(returnedMetadata)
