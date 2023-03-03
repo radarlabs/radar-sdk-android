@@ -596,18 +596,22 @@ internal class RadarBeaconManager(
     internal fun handleScanResult(callbackType: Int, result: ScanResult?, ranging: Boolean = true) {
         logger.d("Handling scan result")
 
-        result?.scanRecord?.let { scanRecord -> RadarBeaconUtils.getBeacon(result, scanRecord) }?.let { beacon ->
-            logger.d("Ranged beacon | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+        try {
+            result?.scanRecord?.let { scanRecord -> RadarBeaconUtils.getBeacon(result, scanRecord) }?.let { beacon ->
+                logger.d("Ranged beacon | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
-            if (callbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) {
-                logger.d("Handling beacon exit | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+                if (callbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) {
+                    logger.d("Handling beacon exit | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
-                nearbyBeacons.remove(beacon)
-            } else {
-                logger.d("Handling beacon entry | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+                    nearbyBeacons.remove(beacon)
+                } else {
+                    logger.d("Handling beacon entry | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
-                nearbyBeacons.add(beacon)
+                    nearbyBeacons.add(beacon)
+                }
             }
+        } catch (e: Exception) {
+            logger.e("Error handling scan result", e)
         }
 
         if (this.nearbyBeacons.size == this.beacons.size && ranging) {
