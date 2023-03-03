@@ -77,8 +77,7 @@ internal class RadarApiClient(
         fun onComplete(
             status: RadarStatus,
             res: JSONObject? = null,
-            event: RadarEvent? = null,
-            user: RadarUser? = null
+            event: RadarEvent? = null
         )
     }
 
@@ -1129,17 +1128,13 @@ internal class RadarApiClient(
                     RadarEvent.fromJson(eventObj)
                 }
 
-                val user = res.optJSONObject("user")?.let { userObj ->
-                    RadarUser.fromJson(userObj)
-                }
-
                 if (customEvent == null) {
                     callback.onComplete(RadarStatus.ERROR_SERVER)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.SUCCESS, res, customEvent, user)
+                callback.onComplete(RadarStatus.SUCCESS, res, customEvent)
             }
         })
     }

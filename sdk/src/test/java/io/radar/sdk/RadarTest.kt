@@ -1392,7 +1392,7 @@ class RadarTest {
             .appendEncodedPath("v1/events")
             .build()
         val eventUrl = URL(eventUri.toString())
-        apiHelperMock.addMockResponse(eventUrl, RadarTestUtils.jsonObjectFromResource("/custom_event.json")!!)
+        apiHelperMock.addMockResponse(eventUrl, RadarTestUtils.jsonObjectFromResource("/conversion_event.json")!!)
 
 
     }
@@ -1401,20 +1401,20 @@ class RadarTest {
     fun test_Radar_logConversionWithBlock_success() {
         setUpLogConversionTest()
 
-        val customType = "test_event" // has to match the property in the custom_event.json file!
+        val conversionType = "test_event" // has to match the property in the conversion_event.json file!
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
         var callbackEvent: RadarEvent? = null
         val metadata = JSONObject()
         metadata.put("foo", "bar")
 
-        Radar.logConversion(customType, metadata) { status, event ->
+        Radar.logConversion(conversionType, metadata) { status, event ->
             callbackStatus = status
             callbackEvent = event
 
-            val customEventMetadata = event?.metadata
-            assertNotNull(customEventMetadata)
-            assertEquals("bar", customEventMetadata!!.get("foo"))
+            val conversionMetadata = event?.metadata
+            assertNotNull(conversionMetadata)
+            assertEquals("bar", conversionMetadata!!.get("foo"))
 
             latch.countDown()
         }
@@ -1423,17 +1423,17 @@ class RadarTest {
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertCustomEvent(callbackEvent, customType, metadata)
+        assertConversionEvent(callbackEvent, conversionType, metadata)
     }
 
-    private fun assertCustomEvent(
+    private fun assertConversionEvent(
         event: RadarEvent?,
-        customType: String,
+        conversionType: String,
         metadata: JSONObject
     ) {
         assertNotNull(event)
-        assertEquals(customType, event!!.customType)
-        assertNotNull(event!!.customType)
+        assertEquals(conversionType, event!!.conversionType)
+        assertNotNull(event!!.type)
 
         val returnedMetadata = event!!.metadata
         assertNotNull(returnedMetadata)
