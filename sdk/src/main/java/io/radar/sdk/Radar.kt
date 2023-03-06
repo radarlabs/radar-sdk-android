@@ -771,13 +771,7 @@ object Radar {
                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                         override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
-                            if (status != RadarStatus.SUCCESS || beacons == null) {
-                                callTrackApi(null)
-
-                                return
-                            }
-
-                            if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                             if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                                 beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
                                 beaconManager.rangeBeaconUUIDs(uuids, uids, false, object : RadarBeaconCallback {
@@ -791,7 +785,7 @@ object Radar {
                                         callTrackApi(beacons)
                                     }
                                 })
-                            } else {
+                            } else if (beacons != null) {
                                 beaconManager.startMonitoringBeacons(beacons)
 
                                 beaconManager.rangeBeacons(beacons, false, object : RadarBeaconCallback {
@@ -805,9 +799,11 @@ object Radar {
                                         callTrackApi(beacons)
                                     }
                                 })
+                            } else {
+                                callTrackApi(null)
                             }
                         }
-                    })
+                    }, false)
                 } else {
                     callTrackApi(null)
                 }
@@ -2669,13 +2665,14 @@ object Radar {
     }
 
     /**
-     * Sends Radar log events to the server
+     * Flushes debug logs to the server.
      */
     @JvmStatic
     internal fun flushLogs() {
         if (!initialized || !isTestKey()) {
             return
         }
+
         val flushable = logBuffer.getFlushableLogsStash()
         val logs = flushable.get()
         if (logs.isNotEmpty()) {
@@ -2708,10 +2705,11 @@ object Radar {
     @JvmStatic
     internal fun isTestKey(): Boolean {
         val key = RadarSettings.getPublishableKey(this.context)
+        val userDebug = RadarSettings.getUserDebug(this.context)
         return if (key == null) {
             false
         } else {
-            key.startsWith("prj_test") || key.startsWith("org_test")
+            key.startsWith("prj_test") || key.startsWith("org_test") || userDebug
         }
     }
 
@@ -2812,12 +2810,12 @@ object Radar {
         locationManager.handleLocation(location, source)
     }
 
-    internal fun handleBeacons(context: Context, scanResults: ArrayList<ScanResult>?) {
+    internal fun handleBeacons(context: Context, beacons: Array<RadarBeacon>?, source: RadarLocationSource) {
         if (!initialized) {
             initialize(context)
         }
 
-        locationManager.handleBeacons(scanResults)
+        locationManager.handleBeacons(beacons, source)
     }
 
     internal fun handleBootCompleted(context: Context) {
