@@ -32,11 +32,11 @@ internal object RadarSettings {
     private const val KEY_HOST = "host"
     private const val KEY_VERIFIED_HOST = "verified_host"
     private const val KEY_PERMISSIONS_DENIED = "permissions_denied"
-
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
     private const val KEY_OLD_SYNC_MODE = "sync_mode"
     private const val KEY_OLD_OFFLINE_MODE = "offline_mode"
+    private const val KEY_USER_DEBUG = "user_debug"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -255,7 +255,8 @@ internal object RadarSettings {
 
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {
         val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, 3)
-        return Radar.RadarLogLevel.fromInt(logLevelInt)
+        val userDebug = getUserDebug(context)
+        return if (userDebug) Radar.RadarLogLevel.DEBUG else Radar.RadarLogLevel.fromInt(logLevelInt)
     }
 
     internal fun setLogLevel(context: Context, level: Radar.RadarLogLevel) {
@@ -277,6 +278,14 @@ internal object RadarSettings {
 
     internal fun getVerifiedHost(context: Context): String {
         return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api-verified.radar.io"
+    }
+    
+    internal fun getUserDebug(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_USER_DEBUG, true)
+    }
+
+    internal fun setUserDebug(context: Context, userDebug: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_USER_DEBUG, userDebug) }
     }
 
 }

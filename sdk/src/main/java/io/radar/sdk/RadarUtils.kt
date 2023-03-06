@@ -11,6 +11,9 @@ import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.hardware.display.DisplayManagerCompat
+import androidx.core.content.edit
+import com.google.android.gms.ads.identifier.AdvertisingIdClient
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 

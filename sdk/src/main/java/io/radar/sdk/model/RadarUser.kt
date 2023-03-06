@@ -112,6 +112,11 @@ class RadarUser(
     val trip: RadarTrip?,
 
     /**
+     * A boolean indicating whether the user has been "Marked as Debug" in the dashboard.
+     */
+    val debug: Boolean = false,
+    
+    /**
      * The user's current fraud state. May be `null` if Fraud is not enabled. See [](https://radar.com/documentation/fraud).
      */
     val fraud: RadarFraud?
@@ -138,8 +143,9 @@ class RadarUser(
         private const val FIELD_SEGMENTS = "segments"
         private const val FIELD_TOP_CHAINS = "topChains"
         private const val FIELD_SOURCE = "source"
-        private const val FIELD_FRAUD = "fraud"
         private const val FIELD_TRIP = "trip"
+        private const val FIELD_DEBUG = "debug"
+        private const val FIELD_FRAUD = "fraud"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarUser? {
@@ -184,6 +190,7 @@ class RadarUser(
                 else -> Radar.RadarLocationSource.UNKNOWN
             }
             val trip = RadarTrip.fromJson(obj.optJSONObject(FIELD_TRIP))
+            val debug = obj.optBoolean(FIELD_DEBUG)
             val fraud = RadarFraud.fromJson(obj.optJSONObject(FIELD_FRAUD))
 
             return RadarUser(
@@ -207,6 +214,7 @@ class RadarUser(
                 topChains,
                 source,
                 trip,
+                debug,
                 fraud
             )
         }
@@ -240,6 +248,7 @@ class RadarUser(
         obj.putOpt(FIELD_TOP_CHAINS, RadarChain.toJson(this.topChains))
         obj.putOpt(FIELD_SOURCE, Radar.stringForSource(this.source))
         obj.putOpt(FIELD_TRIP, this.trip?.toJson())
+        obj.putOpt(FIELD_DEBUG, this.debug)
         obj.putOpt(FIELD_FRAUD, this.fraud?.toJson())
         return obj
     }

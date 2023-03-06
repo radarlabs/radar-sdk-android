@@ -133,7 +133,7 @@ internal class RadarBeaconManager(
         }
 
         try {
-            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER, 20000)
+            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER)
 
             logger.d("Starting monitoring beacons")
 
@@ -236,7 +236,7 @@ internal class RadarBeaconManager(
         }
 
         try {
-            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER, 20000)
+            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER)
 
             logger.d("Starting monitoring beacon UUIDs")
 
@@ -358,7 +358,7 @@ internal class RadarBeaconManager(
         }
 
         val scanMode = if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY
-        val scanSettings = getScanSettings(scanMode, 0)
+        val scanSettings = getScanSettings(scanMode)
 
         val beaconManager = this
 
@@ -366,13 +366,13 @@ internal class RadarBeaconManager(
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
                 super.onScanResult(callbackType, result)
 
-                beaconManager.handleScanResult(result)
+                beaconManager.handleScanResult(callbackType, result)
             }
 
             override fun onBatchScanResults(results: MutableList<ScanResult>?) {
                 super.onBatchScanResults(results)
 
-                results?.forEach { result -> beaconManager.handleScanResult(result) }
+                results?.forEach { result -> beaconManager.handleScanResult(ScanSettings.CALLBACK_TYPE_FIRST_MATCH, result) }
             }
 
             override fun onScanFailed(errorCode: Int) {
@@ -501,7 +501,7 @@ internal class RadarBeaconManager(
         }
 
         val scanMode = if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY
-        val scanSettings = getScanSettings(scanMode, 0)
+        val scanSettings = getScanSettings(scanMode)
 
         val beaconManager = this
 
@@ -509,13 +509,13 @@ internal class RadarBeaconManager(
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
                 super.onScanResult(callbackType, result)
 
-                beaconManager.handleScanResult(result)
+                beaconManager.handleScanResult(callbackType, result)
             }
 
             override fun onBatchScanResults(results: MutableList<ScanResult>?) {
                 super.onBatchScanResults(results)
 
-                results?.forEach { result -> beaconManager.handleScanResult(result) }
+                results?.forEach { result -> beaconManager.handleScanResult(ScanSettings.CALLBACK_TYPE_FIRST_MATCH, result) }
             }
 
             override fun onScanFailed(errorCode: Int) {
@@ -573,25 +573,45 @@ internal class RadarBeaconManager(
         this.nearbyBeacons.clear()
     }
 
-    internal fun handleScanResults(scanResults: ArrayList<ScanResult>?) {
-        if (scanResults == null || scanResults.isEmpty()) {
-            logger.d("No scan results to handle")
+    internal fun handleBeacons(beacons: Array<RadarBeacon>?, source: Radar.RadarLocationSource) {
+        if (beacons.isNullOrEmpty()) {
+            logger.d("No beacons to handle")
 
             return
         }
 
-        scanResults.forEach { scanResult ->
-            this.handleScanResult(scanResult, false)
+        beacons.forEach { beacon ->
+            if (source == Radar.RadarLocationSource.BEACON_EXIT) {
+                logger.d("Handling beacon exit | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+
+                nearbyBeacons.remove(beacon)
+            } else {
+                logger.d("Handling beacon entry | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+
+                nearbyBeacons.add(beacon)
+            }
         }
     }
 
-    internal fun handleScanResult(result: ScanResult?, ranging: Boolean = true) {
+    internal fun handleScanResult(callbackType: Int, result: ScanResult?, ranging: Boolean = true) {
         logger.d("Handling scan result")
 
-        result?.scanRecord?.let { scanRecord -> RadarBeaconUtils.getBeacon(result, scanRecord) }?.let { beacon ->
-            logger.d("Ranged beacon | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+        try {
+            result?.scanRecord?.let { scanRecord -> RadarBeaconUtils.getBeacon(result, scanRecord) }?.let { beacon ->
+                logger.d("Ranged beacon | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
-            nearbyBeacons.add(beacon)
+                if (callbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) {
+                    logger.d("Handling beacon exit | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+
+                    nearbyBeacons.remove(beacon)
+                } else {
+                    logger.d("Handling beacon entry | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+
+                    nearbyBeacons.add(beacon)
+                }
+            }
+        } catch (e: Exception) {
+            logger.e("Error handling scan result", e)
         }
 
         if (this.nearbyBeacons.size == this.beacons.size && ranging) {
@@ -612,13 +632,9 @@ internal class RadarBeaconManager(
         return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
     }
 
-    private fun getScanSettings(scanMode: Int, reportDelay: Long): ScanSettings {
+    private fun getScanSettings(scanMode: Int): ScanSettings {
         return ScanSettings.Builder()
             .setScanMode(scanMode)
-            .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
-            .setReportDelay(reportDelay)
-            .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
-            .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
             .build()
     }
 

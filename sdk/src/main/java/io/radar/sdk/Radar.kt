@@ -11,6 +11,8 @@ import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.util.RadarLogBuffer
 import io.radar.sdk.util.RadarSimpleLogBuffer
+import io.radar.sdk.util.RadarReplayBuffer
+import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
 import java.util.*
 
@@ -372,6 +374,7 @@ object Radar {
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var beaconManager: RadarBeaconManager
     private lateinit var logBuffer: RadarLogBuffer
+    private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
 
@@ -413,6 +416,10 @@ object Radar {
 
         if (!this::logBuffer.isInitialized) {
             this.logBuffer = RadarSimpleLogBuffer()
+        }
+
+        if (!this::replayBuffer.isInitialized) {
+            this.replayBuffer = RadarSimpleReplayBuffer()
         }
 
         if (!this::logger.isInitialized) {
@@ -731,13 +738,7 @@ object Radar {
                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                         override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
-                            if (status != RadarStatus.SUCCESS || beacons == null) {
-                                callTrackApi(null)
-
-                                return
-                            }
-
-                            if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                             if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                                 beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
                                 beaconManager.rangeBeaconUUIDs(uuids, uids, false, object : RadarBeaconCallback {
@@ -751,7 +752,7 @@ object Radar {
                                         callTrackApi(beacons)
                                     }
                                 })
-                            } else {
+                            } else if (beacons != null) {
                                 beaconManager.startMonitoringBeacons(beacons)
 
                                 beaconManager.rangeBeacons(beacons, false, object : RadarBeaconCallback {
@@ -765,9 +766,11 @@ object Radar {
                                         callTrackApi(beacons)
                                     }
                                 })
+                            } else {
+                                callTrackApi(null)
                             }
                         }
-                    })
+                    }, false)
                 } else {
                     callTrackApi(null)
                 }
@@ -2655,12 +2658,6 @@ object Radar {
                         return
                     }
 
-                    if (events != null) {
-                        // The events are returned in the completion handler, but they're also
-                        // sent back via the RadarReceiver.
-                        receiver?.onEventsReceived(context, events, user)
-                    }
-
                     handler.post {
                         callback.onComplete(status, location, events, user)
                     }
@@ -2683,13 +2680,14 @@ object Radar {
     }
 
     /**
-     * Sends Radar log events to the server
+     * Flushes debug logs to the server.
      */
     @JvmStatic
     internal fun flushLogs() {
         if (!initialized || !isTestKey()) {
             return
         }
+
         val flushable = logBuffer.getFlushableLogsStash()
         val logs = flushable.get()
         if (logs.isNotEmpty()) {
@@ -2702,12 +2700,31 @@ object Radar {
     }
 
     @JvmStatic
+    internal fun getReplays(): List<RadarReplay> {
+        val flushable = replayBuffer.getFlushableReplaysStash()
+        flushable.onFlush(false)
+        return flushable.get()
+    }
+
+    @JvmStatic
+    internal fun clearReplays() {
+        val flushable = replayBuffer.getFlushableReplaysStash()
+        flushable.onFlush(true)
+    }
+
+    @JvmStatic
+    internal fun addReplay(replayParams: JSONObject) {
+        replayBuffer.write(replayParams)
+    }
+
+    @JvmStatic
     internal fun isTestKey(): Boolean {
         val key = RadarSettings.getPublishableKey(this.context)
+        val userDebug = RadarSettings.getUserDebug(this.context)
         return if (key == null) {
             false
         } else {
-            key.startsWith("prj_test") || key.startsWith("org_test")
+            key.startsWith("prj_test") || key.startsWith("org_test") || userDebug
         }
     }
 
@@ -2808,12 +2825,12 @@ object Radar {
         locationManager.handleLocation(location, source)
     }
 
-    internal fun handleBeacons(context: Context, scanResults: ArrayList<ScanResult>?) {
+    internal fun handleBeacons(context: Context, beacons: Array<RadarBeacon>?, source: RadarLocationSource) {
         if (!initialized) {
             initialize(context)
         }
 
-        locationManager.handleBeacons(scanResults)
+        locationManager.handleBeacons(beacons, source)
     }
 
     internal fun handleBootCompleted(context: Context) {
