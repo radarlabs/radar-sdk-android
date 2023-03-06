@@ -96,7 +96,7 @@ class RadarJobScheduler : JobService() {
             val sourceStr = stringForSource(source)
 
             val settings = RadarSettings.getFeatureSettings(context)
-            val jobId = BASE_JOB_ID_BEACONS + (numActiveBeaconJobs.incrementAndGet() % 10)
+            val jobId = BASE_JOB_ID_BEACONS + (numActiveBeaconJobs.incrementAndGet() % settings.maxConcurrentJobs)
 
             val jobInfo = JobInfo.Builder(jobId, componentName)
                 .setExtras(extras)

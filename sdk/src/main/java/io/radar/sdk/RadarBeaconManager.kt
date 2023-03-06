@@ -133,7 +133,7 @@ internal class RadarBeaconManager(
         }
 
         try {
-            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER, ScanSettings.CALLBACK_TYPE_FIRST_MATCH or ScanSettings.CALLBACK_TYPE_MATCH_LOST, 0, ScanSettings.MATCH_MODE_STICKY)
+            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER)
 
             logger.d("Starting monitoring beacons")
 
@@ -236,7 +236,7 @@ internal class RadarBeaconManager(
         }
 
         try {
-            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER, ScanSettings.CALLBACK_TYPE_FIRST_MATCH or ScanSettings.CALLBACK_TYPE_MATCH_LOST, 0, ScanSettings.MATCH_MODE_STICKY)
+            val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_POWER)
 
             logger.d("Starting monitoring beacon UUIDs")
 
@@ -357,7 +357,8 @@ internal class RadarBeaconManager(
             return
         }
 
-        val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_LATENCY, ScanSettings.CALLBACK_TYPE_ALL_MATCHES, 0, ScanSettings.MATCH_MODE_AGGRESSIVE)
+        val scanMode = if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY
+        val scanSettings = getScanSettings(scanMode)
 
         val beaconManager = this
 
@@ -499,7 +500,8 @@ internal class RadarBeaconManager(
             return
         }
 
-        val scanSettings = getScanSettings(ScanSettings.SCAN_MODE_LOW_LATENCY, ScanSettings.CALLBACK_TYPE_ALL_MATCHES, 0, ScanSettings.MATCH_MODE_AGGRESSIVE)
+        val scanMode = if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY
+        val scanSettings = getScanSettings(scanMode)
 
         val beaconManager = this
 
@@ -594,18 +596,22 @@ internal class RadarBeaconManager(
     internal fun handleScanResult(callbackType: Int, result: ScanResult?, ranging: Boolean = true) {
         logger.d("Handling scan result")
 
-        result?.scanRecord?.let { scanRecord -> RadarBeaconUtils.getBeacon(result, scanRecord) }?.let { beacon ->
-            logger.d("Ranged beacon | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+        try {
+            result?.scanRecord?.let { scanRecord -> RadarBeaconUtils.getBeacon(result, scanRecord) }?.let { beacon ->
+                logger.d("Ranged beacon | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
-            if (callbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) {
-                logger.d("Handling beacon exit | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+                if (callbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) {
+                    logger.d("Handling beacon exit | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
-                nearbyBeacons.remove(beacon)
-            } else {
-                logger.d("Handling beacon entry | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+                    nearbyBeacons.remove(beacon)
+                } else {
+                    logger.d("Handling beacon entry | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
-                nearbyBeacons.add(beacon)
+                    nearbyBeacons.add(beacon)
+                }
             }
+        } catch (e: Exception) {
+            logger.e("Error handling scan result", e)
         }
 
         if (this.nearbyBeacons.size == this.beacons.size && ranging) {
@@ -626,13 +632,9 @@ internal class RadarBeaconManager(
         return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
     }
 
-    private fun getScanSettings(scanMode: Int, callbackType: Int, reportDelay: Long, matchMode: Int): ScanSettings {
+    private fun getScanSettings(scanMode: Int): ScanSettings {
         return ScanSettings.Builder()
             .setScanMode(scanMode)
-            .setCallbackType(callbackType)
-            .setReportDelay(reportDelay)
-            .setMatchMode(matchMode)
-            .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
             .build()
     }
 
