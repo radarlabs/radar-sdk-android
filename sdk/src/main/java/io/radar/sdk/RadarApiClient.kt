@@ -98,7 +98,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun getConfig(callback: RadarGetConfigApiCallback? = null) {
+    internal fun getConfig(usage: String? = null, callback: RadarGetConfigApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context) ?: return
 
         val queryParams = StringBuilder()
@@ -106,6 +106,9 @@ internal class RadarApiClient(
         queryParams.append("&sessionId=${RadarSettings.getSessionId(context)}")
         queryParams.append("&locationAuthorization=${RadarUtils.getLocationAuthorization(context)}")
         queryParams.append("&locationAccuracyAuthorization=${RadarUtils.getLocationAccuracyAuthorization(context)}")
+        if (usage != null) {
+            queryParams.append("&usage=${usage}")
+        }
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -160,6 +163,7 @@ internal class RadarApiClient(
                     callback?.onComplete(status, res)
                 }
             },
+            extendedTimeout = false,
             stream = true,
             // Do not log the saved log events. If the logs themselves were logged it would create a redundancy and
             // eventually lead to a crash when creating a downstream log request, since these will log to memory as a
@@ -276,18 +280,46 @@ internal class RadarApiClient(
             return
         }
 
+        if (anonymous) {
+            val usage = "track"
+            this.getConfig(usage)
+        }
+
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
             .appendEncodedPath("v1/track")
             .build()
-        val url = URL(uri.toString())
-
+        var url = URL(uri.toString())
         val headers = headers(publishableKey)
 
-        apiHelper.request(context, "POST", url, headers, params, true, object : RadarApiHelper.RadarApiCallback {
+        var requestParams = params
+        var replays = Radar.getReplays()
+        val replayCount = replays.size
+        var nowMS = System.currentTimeMillis()
+        val replaying = replayCount > 0 && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL
+        if (replaying) {
+            val replayList = mutableListOf<JSONObject>()
+            for (replay in replays) {
+                replayList.add(replay.replayParams)
+            }
+            replayList.add(params)
+            requestParams = JSONObject()
+            requestParams.putOpt("replays", JSONArray(replayList))
+            val replayUri = Uri.parse(host).buildUpon()
+                .appendEncodedPath("v1/track/replay")
+                .build()
+            url = URL(replayUri.toString())
+        }
+
+        apiHelper.request(context, "POST", url, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
+                    if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
+                        params.putOpt("replayed", true)
+                        params.putOpt("updatedAtMs", nowMS)
+                        params.remove("updatedAtMsDiff")
+                        Radar.addReplay(params)
+                    } else if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
                         RadarState.setLastFailedStoppedLocation(context, location)
                     }
 
@@ -297,9 +329,10 @@ internal class RadarApiClient(
 
                     return
                 }
-                Radar.flushLogs()
 
+                Radar.clearReplays()
                 RadarState.setLastFailedStoppedLocation(context, null)
+                Radar.flushLogs()
 
                 val config = RadarConfig.fromJson(res)
 
@@ -350,6 +383,8 @@ internal class RadarApiClient(
                         }
                     }
 
+                    RadarSettings.setUserDebug(context, user.debug)
+
                     Radar.sendLocation(location, user)
 
                     if (events.isNotEmpty()) {
@@ -365,7 +400,7 @@ internal class RadarApiClient(
 
                 callback?.onComplete(RadarStatus.ERROR_SERVER)
             }
-        })
+        }, replaying, false, !replaying)
     }
 
     internal fun verifyEvent(eventId: String, verification: RadarEventVerification, verifiedPlaceId: String? = null) {
@@ -692,7 +727,8 @@ internal class RadarApiClient(
         location: Location,
         radius: Int,
         limit: Int?,
-        callback: RadarSearchBeaconsApiCallback
+        callback: RadarSearchBeaconsApiCallback,
+        cache: Boolean
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -701,10 +737,23 @@ internal class RadarApiClient(
             return
         }
 
+        if (cache && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val lastBeacons = RadarState.getLastBeacons(context)
+            val lastBeaconUUIDs = RadarState.getLastBeaconUUIDs(context)
+            val lastBeaconUIDs = RadarState.getLastBeaconUIDs(context)
+
+            logger.d("Using cached search beacons response | lastBeaconUUIDs = ${lastBeaconUUIDs?.joinToString(",")}; lastBeaconUIDs = ${lastBeaconUIDs?.joinToString(",")}")
+
+            callback.onComplete(RadarStatus.SUCCESS, null, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
+
+            return
+        }
+
         val queryParams = StringBuilder()
         queryParams.append("near=${location.latitude},${location.longitude}")
         queryParams.append("&radius=${radius}")
         queryParams.append("&limit=${limit}")
+        queryParams.append("&installId=${RadarSettings.getInstallId(context)}")
 
         val host = RadarSettings.getHost(context)
         val uri = Uri.parse(host).buildUpon()
@@ -717,7 +766,17 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", url, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    var lastBeacons: Array<RadarBeacon>? = null
+                    var lastBeaconUUIDs: Array<String>? = null
+                    var lastBeaconUIDs: Array<String>? = null
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        lastBeacons = RadarState.getLastBeacons(context)
+                        lastBeaconUUIDs = RadarState.getLastBeaconUUIDs(context)
+                        lastBeaconUIDs = RadarState.getLastBeaconUIDs(context)
+                    }
+
+                    callback.onComplete(status, res, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
 
                     return
                 }
@@ -736,6 +795,12 @@ internal class RadarApiClient(
                     Array(uids.length()) { index ->
                         uids.getString(index)
                     }.filter { uid -> uid.isNotEmpty() }.toTypedArray()
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    RadarState.setLastBeacons(context, beacons)
+                    RadarState.setLastBeaconUUIDs(context, uuids)
+                    RadarState.setLastBeaconUIDs(context, uids)
                 }
 
                 callback.onComplete(RadarStatus.SUCCESS, res, beacons, uuids, uids)

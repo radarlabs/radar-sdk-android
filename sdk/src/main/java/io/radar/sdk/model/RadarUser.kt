@@ -120,7 +120,12 @@ class RadarUser(
      * A boolean indicating whether the user's location is being mocked, such as in a simulation. May be `false` if
      * Fraud is not enabled.
      */
-    val mocked: Boolean = false
+    val mocked: Boolean = false,
+
+    /**
+     * A boolean indicating whether the user has been "Marked as Debug" in the dashboard.
+     */
+    val debug: Boolean = false
 ) {
 
     /**
@@ -152,6 +157,7 @@ class RadarUser(
         private const val FIELD_SOURCE = "source"
         private const val FIELD_FRAUD = "fraud"
         private const val FIELD_TRIP = "trip"
+        private const val FIELD_DEBUG = "debug"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarUser? {
@@ -197,6 +203,7 @@ class RadarUser(
             }
             val fraud = RadarFraud.fromJson(obj.optJSONObject(FIELD_FRAUD))
             val trip = RadarTrip.fromJson(obj.optJSONObject(FIELD_TRIP))
+            val debug = obj.optBoolean(FIELD_DEBUG)
 
             return RadarUser(
                 id,
@@ -220,7 +227,8 @@ class RadarUser(
                 source,
                 fraud.proxy,
                 trip,
-                fraud.mocked
+                fraud.mocked,
+                debug
             )
         }
     }
@@ -254,6 +262,7 @@ class RadarUser(
         obj.putOpt(FIELD_SOURCE, Radar.stringForSource(this.source))
         obj.putOpt(FIELD_FRAUD, this.fraud.toJson())
         obj.putOpt(FIELD_TRIP, this.trip?.toJson())
+        obj.putOpt(FIELD_DEBUG, this.debug)
         return obj
     }
 

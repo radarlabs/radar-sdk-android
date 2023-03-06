@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.ParcelUuid
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.RadarBeacon
+import org.json.JSONObject
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -16,6 +17,69 @@ internal object RadarBeaconUtils {
     private const val IBEACON_MANUFACTURER_ID = 76
     private val EDDYSTONE_SERVICE_UUID = ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB")
     private val HEX = "0123456789abcdef".toCharArray()
+
+    fun beaconsForScanResults(scanResults: ArrayList<ScanResult>?): Array<RadarBeacon> {
+        if (scanResults.isNullOrEmpty()) {
+            return arrayOf()
+        }
+
+        val beacons = mutableListOf<RadarBeacon>()
+
+        scanResults.forEach { result ->
+            result.scanRecord?.let { scanRecord -> getBeacon(result, scanRecord) }?.let { beacon ->
+                beacons.add(beacon)
+            }
+        }
+
+        return beacons.toTypedArray()
+    }
+
+    fun stringSetForBeacons(beacons: Array<RadarBeacon>?): Set<String>? {
+        if (beacons == null) {
+            return null
+        }
+
+        val arr = stringArrayForBeacons(beacons)
+
+        return arr.toSet()
+    }
+
+    fun stringArrayForBeacons(beacons: Array<RadarBeacon>): Array<String> {
+        val arr = mutableListOf<String>()
+
+        beacons.forEach { beacon ->
+            arr.add(beacon.toJson().toString())
+        }
+
+        return arr.toTypedArray()
+    }
+
+    fun beaconsForStringSet(set: Set<String>?): Array<RadarBeacon>? {
+        if (set == null) {
+            return null
+        }
+
+        val arr = set.toTypedArray()
+
+        return beaconsForStringArray(arr)
+    }
+
+    fun beaconsForStringArray(arr: Array<String>?): Array<RadarBeacon>? {
+        if (arr == null) {
+            return null
+        }
+
+        val beacons = mutableListOf<RadarBeacon>()
+
+        arr.forEach { str ->
+            val beacon = RadarBeacon.fromJson(JSONObject(str))
+            if (beacon != null) {
+                beacons.add(beacon)
+            }
+        }
+
+        return beacons.toTypedArray()
+    }
 
     fun getScanFilterForBeacon(beacon: RadarBeacon): ScanFilter? {
         if (beacon.type == RadarBeacon.RadarBeaconType.EDDYSTONE) {

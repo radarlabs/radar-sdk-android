@@ -1026,6 +1026,14 @@ class RadarTest {
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertEquals(mockLocation, callbackLocation)
         assertGeofencesOk(callbackGeofences)
+
+        // test that a geofence.toJson has a radius and geometryCenter
+        val geofence = callbackGeofences!!.first()
+        val geofenceJson = geofence.toJson()
+        assertNotNull(geofenceJson)
+        assertTrue(geofenceJson.has("geometryRadius"))
+        assertTrue(geofenceJson.has("geometryCenter"))
+
     }
 
     @Test
