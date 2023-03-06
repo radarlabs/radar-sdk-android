@@ -58,7 +58,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
 
         updatePermissionsDenied(activity)
 
-        Radar.logConversion("app_open", null) { status, event ->
+        Radar.logConversion("app_open") { status, event ->
             Log.i(null, "Conversion type = ${event?.conversionType}: status = $status; event = $event")
         }
     }
