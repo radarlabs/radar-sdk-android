@@ -1442,7 +1442,7 @@ class RadarTest {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
         var callbackEvent: RadarEvent? = null
-        val revenue = 0.2f
+        val revenue = 0.2
         val metadata = JSONObject()
         metadata.put("foo", "bar")
 
@@ -1453,7 +1453,7 @@ class RadarTest {
             val conversionMetadata = event?.metadata
             assertNotNull(conversionMetadata)
             assertEquals("bar", conversionMetadata!!.get("foo"))
-            assertEquals(0.2, conversionMetadata!!.get("revenue"))
+            assertEquals(revenue, conversionMetadata!!.get("revenue"))
 
             latch.countDown()
         }

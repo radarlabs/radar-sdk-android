@@ -2542,7 +2542,7 @@ object Radar {
     @JvmStatic
     fun logConversion(
         conversionType: String,
-        revenue: Float,
+        revenue: Double,
         metadata: JSONObject? = null,
         callback: RadarLogConversionCallback
     ) {
@@ -2565,7 +2565,7 @@ object Radar {
     @JvmStatic
     fun logConversion(
         conversionType: String,
-        revenue: Float,
+        revenue: Double,
         metadata: JSONObject? = null,
         block: (status: RadarStatus, RadarEvent?) -> Unit
     ) {
