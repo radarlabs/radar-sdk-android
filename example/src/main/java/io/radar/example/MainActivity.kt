@@ -197,7 +197,7 @@ class MainActivity : AppCompatActivity() {
             "app_open_android",
             conversionMetadata
         ) { status, event ->
-            Log.v("example", "Conversion type = ${event?.conversionType}: status = $status; event = $event")
+            Log.v("example", "Conversion name = ${event?.conversionName}: status = $status; event = $event")
         }
     }
 

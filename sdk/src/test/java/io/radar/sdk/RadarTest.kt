@@ -1471,8 +1471,8 @@ class RadarTest {
         metadata: JSONObject
     ) {
         assertNotNull(event)
-        assertEquals(conversionType, event!!.conversionType)
-        assertNotNull(event!!.conversionType)
+        assertEquals(conversionType, event!!.conversionName)
+        assertNotNull(event!!.conversionName)
 
         val returnedMetadata = event!!.metadata
         assertNotNull(returnedMetadata)

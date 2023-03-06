@@ -37,9 +37,9 @@ class RadarEvent(
     val type: RadarEventType,
 
     /**
-     * The type of the conversion event. This will only be set if the `type` is `CONVERSION`.
+     * The name of the conversion event. This will only be set if the `type` is `CONVERSION`.
      */
-    val conversionType: String?,
+    val conversionName: String?,
 
     /**
      * The geofence for which the event was generated. May be `null` for non-geofence events.
@@ -240,10 +240,10 @@ class RadarEvent(
                 "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
                 else -> CONVERSION
             }
-            var conversionType: String? = null
+            var conversionName: String? = null
 
             if (type == CONVERSION) {
-                conversionType = obj.optString(FIELD_TYPE)
+                conversionName = obj.optString(FIELD_TYPE)
             }
             val geofence = RadarGeofence.fromJson(obj.optJSONObject(FIELD_GEOFENCE))
             val place = RadarPlace.fromJson(obj.optJSONObject(FIELD_PLACE))
@@ -278,7 +278,7 @@ class RadarEvent(
             val metadata = obj.optJSONObject(FIELD_METADATA)
 
             val event = RadarEvent(
-                id, createdAt, actualCreatedAt, live, type, conversionType, geofence, place, region, beacon, trip,
+                id, createdAt, actualCreatedAt, live, type, conversionName, geofence, place, region, beacon, trip,
                 alternatePlaces, verifiedPlace, verification, confidence, duration, location, metadata
             )
 
