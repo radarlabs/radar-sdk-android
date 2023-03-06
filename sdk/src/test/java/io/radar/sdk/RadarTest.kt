@@ -1434,6 +1434,37 @@ class RadarTest {
         assertConversionEvent(callbackEvent, conversionType, metadata)
     }
 
+    @Test
+    fun test_Radar_logConversionWithRevenueAndBlock_success() {
+        setUpLogConversionTest()
+
+        val conversionType = "test_event" // has to match the property in the conversion_event.json file!
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackEvent: RadarEvent? = null
+        val revenue = 0.2f
+        val metadata = JSONObject()
+        metadata.put("foo", "bar")
+
+        Radar.logConversion(conversionType, revenue, metadata) { status, event ->
+            callbackStatus = status
+            callbackEvent = event
+
+            val conversionMetadata = event?.metadata
+            assertNotNull(conversionMetadata)
+            assertEquals("bar", conversionMetadata!!.get("foo"))
+            assertEquals(0.2, conversionMetadata!!.get("revenue"))
+
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertConversionEvent(callbackEvent, conversionType, metadata)
+    }
+
     private fun assertConversionEvent(
         event: RadarEvent?,
         conversionType: String,
