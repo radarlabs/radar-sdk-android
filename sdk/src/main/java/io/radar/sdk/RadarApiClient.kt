@@ -281,8 +281,8 @@ internal class RadarApiClient(
         val replays = Radar.getReplays()
         val replayCount = replays.size
         var requestParams = params
-
         val nowMS = System.currentTimeMillis()
+
         val replaying = replayCount > 0 && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL
         if (replaying) {
             val replaysList = mutableListOf<JSONObject>()
