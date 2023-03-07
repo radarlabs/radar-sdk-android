@@ -270,40 +270,34 @@ internal class RadarApiClient(
             return
         }
 
-        val path = "v1/track"
+        var path = "v1/track"
+        val headers = headers(publishableKey)
 
         if (anonymous) {
             val usage = "track"
             this.getConfig(usage)
         }
 
-        val host = RadarSettings.getHost(context)
-        val uri = Uri.parse(host).buildUpon()
-            .appendEncodedPath("v1/track")
-            .build()
-        var url = URL(uri.toString())
-        val headers = headers(publishableKey)
-
-        var requestParams = params
-        var replays = Radar.getReplays()
+        val replays = Radar.getReplays()
         val replayCount = replays.size
-        var nowMS = System.currentTimeMillis()
+        var requestParams = params
+
+        val nowMS = System.currentTimeMillis()
         val replaying = replayCount > 0 && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL
         if (replaying) {
-            val replayList = mutableListOf<JSONObject>()
+            val replaysList = mutableListOf<JSONObject>()
             for (replay in replays) {
-                replayList.add(replay.replayParams)
+                replaysList.add(replay.replayParams)
             }
-            replayList.add(params)
+            replaysList.add(params)
+
+            path = "v1/track/replay"
+
             requestParams = JSONObject()
-            requestParams.putOpt("replays", JSONArray(replayList))
-            val replayUri = Uri.parse(host).buildUpon()
-                .appendEncodedPath("v1/track/replay")
-                .build()
-            url = URL(replayUri.toString())
+            requestParams.putOpt("replays", JSONArray(replaysList))
         }
 
-        apiHelper.request(context, "POST", url, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
+        apiHelper.request(context, "POST", path, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
