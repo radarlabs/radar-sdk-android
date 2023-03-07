@@ -22,8 +22,8 @@ val callback = object : Radar.RadarLogConversionCallback {
 
 Radar.logConversion("conversion_with_callback", metadata, callback)
 
-Radar.logConversion("conversion_with_revenue", metadata) { status, event ->
-
+Radar.logConversion("conversion_with_revenue", 0.2, metadata) { status, event ->
+      val revenue = event?.metadata?.get("revenue") // should be 0.2
 }
 ```
 
