@@ -1,5 +1,32 @@
 # Migration guides
 
+## 3.6.0 to 3.6.x
+- Custom events have been renamed to conversions.
+      - `Radar.sendEvent(customType, metadata, callback)` is now `Radar.logConversion(name, metadata, callback)`.
+      - `Radar.logConversion(name, revenue, metadata, callback)` has been added.
+      - `Radar.sendEvent(customType, metadata, location, callback)` has been removed.
+      - `RadarSendEventCallback` has been renamed to `RadarLogConversionCallback`.
+            - `onComplete(status, location, events, user)` is now `onComplete(status, event)`. `location` and `user` are no longer available, and only the conversion event is returned as `event` instead of a coalesced list of events.
+      - On `RadarEvent`, `customType` is now `conversionName`, and `RadarEventType.CUSTOM` is now `RadarEventType.CONVERSION`.
+
+```kotlin
+// 3.6.x - logging conversions
+val metadata = JSONObject().put("foo", "bar")
+
+val callback = object : Radar.RadarLogConversionCallback {
+      override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
+            val conversionName = event?.conversionName // should be "conversion_with_callback"
+            val conversionType = event?.type // should be RadarEvent.RadarEventType.CONVERSION
+      }
+}
+
+Radar.logConversion("conversion_with_callback", metadata, callback)
+
+Radar.logConversion("conversion_with_revenue", metadata) { status, event ->
+
+}
+```
+
 ## 3.5.7 to 3.5.8
 - If your application depends on classes in `com.google.android.gms.location`, you may need to update your code to reflect the changes made to `play-services-location` in version 20.0.0, as documented [here](https://developers.google.com/android/guides/releases#october_13_2022).  Version 3.5.8 of the Radar SDK updates `play-services-location` to version 21.0.1. Besides the Radar SDK, if your application does not depend on classes in `com.google.android.gms.location` no migrations are necessary.
  
