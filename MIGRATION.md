@@ -1,6 +1,6 @@
 # Migration guides
 
-## 3.6.0 to 3.6.x
+## 3.5.14 to 3.5.15
 - Custom events have been renamed to conversions.
       - `Radar.sendEvent(customType, metadata, callback)` is now `Radar.logConversion(name, metadata, callback)`.
       - `Radar.logConversion(name, revenue, metadata, callback)` has been added.
