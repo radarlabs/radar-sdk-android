@@ -231,14 +231,16 @@ internal class RadarLocationManager(
     }
 
     internal fun updateTrackingFromMeta(meta: RadarMeta?) {
-        if (meta?.remoteTrackingOptions != null) {
-            logger.d("Setting remote tracking options | trackingOptions = ${meta.remoteTrackingOptions}")
-            RadarSettings.setRemoteTrackingOptions(context, meta.remoteTrackingOptions)
-        } else {
-            RadarSettings.removeRemoteTrackingOptions(context)
-            logger.d("Removed remote tracking options | trackingOptions = ${Radar.getTrackingOptions()}")
+        if (meta != null) {
+            if (meta.remoteTrackingOptions != null) {
+                logger.d("Setting remote tracking options | trackingOptions = ${meta.remoteTrackingOptions}")
+                RadarSettings.setRemoteTrackingOptions(context, meta.remoteTrackingOptions)
+            } else {
+                RadarSettings.removeRemoteTrackingOptions(context)
+                logger.d("Removed remote tracking options | trackingOptions = ${Radar.getTrackingOptions()}")
+            }
+            updateTracking()
         }
-        updateTracking()
     }
 
     internal fun restartPreviousTrackingOptions() {
