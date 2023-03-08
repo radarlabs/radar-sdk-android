@@ -371,14 +371,15 @@ object Radar {
     private lateinit var logBuffer: RadarLogBuffer
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
+    private lateinit var verificationManager: RadarVerificationManager
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
      *
      * @see [](https://radar.com/documentation/sdk/android#initialize-sdk)
      *
-     * @param[context] The context
-     * @param[publishableKey] Your publishable API key
+     * @param[context] The context.
+     * @param[publishableKey] Your publishable API key.
      */
     @JvmStatic
     fun initialize(context: Context?, publishableKey: String? = null) {
@@ -390,10 +391,10 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/sdk/android#initialize-sdk)
      *
-     * @param[context] The context
-     * @param[publishableKey] Your publishable API key
-     * @param[receiver] An optional receiver for the client-side delivery of events
-     * @param[provider] An optional receiver for the client-side delivery of events
+     * @param[context] The context.
+     * @param[publishableKey] Your publishable API key.
+     * @param[receiver] An optional receiver for the client-side delivery of events.
+     * @param[provider] The location services provider.
      */
     @JvmStatic
     fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE) {
@@ -451,13 +452,11 @@ object Radar {
             this.logger.d("Using Huawei location services")
         }
 
-        RadarUtils.loadAdId(this.context)
-
         val application = this.context as? Application
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks())
 
         val usage = "initialize"
-        this.apiClient.getConfig(usage, object : RadarApiClient.RadarGetConfigApiCallback {
+        this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config.meta)
                 RadarSettings.setFeatureSettings(context, config.featureSettings)
@@ -586,16 +585,6 @@ object Radar {
     @JvmStatic
     fun setAnonymousTrackingEnabled(enabled: Boolean) {
         RadarSettings.setAnonymousTrackingEnabled(context, enabled)
-    }
-
-    /**
-     * Enables `adId` (Android advertising ID) collection. Disabled by default.
-     *
-     * @param[enabled] A boolean indicating whether `adId` should be collected.
-     */
-    @JvmStatic
-    fun setAdIdEnabled(enabled: Boolean) {
-        RadarSettings.setAdIdEnabled(context, enabled)
     }
 
     /**
@@ -737,7 +726,7 @@ object Radar {
                 }
 
                 val callTrackApi = { beacons: Array<RadarBeacon>? ->
-                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, beacons, object : RadarApiClient.RadarTrackApiCallback {
+                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, beacons, callback = object : RadarApiClient.RadarTrackApiCallback {
                         override fun onComplete(
                             status: RadarStatus,
                             res: JSONObject?,
@@ -834,7 +823,7 @@ object Radar {
             return
         }
 
-        apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
+        apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, callback = object : RadarApiClient.RadarTrackApiCallback {
             override fun onComplete(
                 status: RadarStatus,
                 res: JSONObject?,
@@ -861,6 +850,76 @@ object Radar {
     @JvmStatic
     fun trackOnce(location: Location, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
         trackOnce(location, object : RadarTrackCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+                block(status, location, events, user)
+            }
+        })
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @JvmStatic
+    fun trackVerified(callback: RadarTrackCallback? = null) {
+        if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        val usage = "verify"
+        apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(config: RadarConfig) {
+                locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
+                    override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                        if (status != RadarStatus.SUCCESS || location == null) {
+                            handler.post {
+                                callback?.onComplete(status)
+                            }
+
+                            return
+                        }
+
+                        verificationManager.getIntegrityToken(config.googlePlayProjectNumber, config.nonce) { integrityToken, integrityException ->
+                            apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, object : RadarApiClient.RadarTrackApiCallback {
+                                override fun onComplete(
+                                    status: RadarStatus,
+                                    res: JSONObject?,
+                                    events: Array<RadarEvent>?,
+                                    user: RadarUser?,
+                                    nearbyGeofences: Array<RadarGeofence>?,
+                                    config: RadarConfig?,
+                                ) {
+                                    handler.post {
+                                        callback?.onComplete(status, location, events, user)
+                                    }
+                                }
+                            })
+                        }
+                    }
+                })
+            }
+        })
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @JvmStatic
+    fun trackVerified(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+        trackVerified(object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
             }
@@ -949,7 +1008,7 @@ object Radar {
                         }
                         val stopped = (i == 0) || (i == coordinates.size - 1)
 
-                        apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, object : RadarApiClient.RadarTrackApiCallback {
+                        apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, callback = object : RadarApiClient.RadarTrackApiCallback {
                             override fun onComplete(
                                 status: RadarStatus,
                                 res: JSONObject?,

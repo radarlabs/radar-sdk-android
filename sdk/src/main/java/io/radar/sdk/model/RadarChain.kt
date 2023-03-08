@@ -6,16 +6,16 @@ import org.json.JSONObject
 /**
  * Represents the chain of a place.
  *
- * @see [](https://radar.io/documentation/places)
+ * @see [](https://radar.com/documentation/places)
  */
 class RadarChain(
     /**
-     * The unique ID of the chain. For a full list of chains, see [](https://radar.io/documentation/places/chains).
+     * The unique ID of the chain. For a full list of chains, see [](https://radar.com/documentation/places/chains).
      */
     val slug: String,
 
     /**
-     * The name of the chain. For a full list of chains, see [](https://radar.io/documentation/places/chains).
+     * The name of the chain. For a full list of chains, see [](https://radar.com/documentation/places/chains).
      */
     val name: String,
 

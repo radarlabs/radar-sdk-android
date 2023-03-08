@@ -7,7 +7,7 @@ import org.json.JSONObject
 /**
  * Represents a place.
  *
- * @see [](https://radar.io/documentation/places)
+ * @see [](https://radar.com/documentation/places)
  */
 class RadarPlace(
     /**

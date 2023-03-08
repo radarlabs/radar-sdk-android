@@ -7,9 +7,9 @@ import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
 
 /**
- * A receiver for client-side delivery of events, location updates, and debug logs. For more information, see [](https://radar.io/documentation/sdk).
+ * A receiver for client-side delivery of events, location updates, and debug logs. For more information, see [](https://radar.com/documentation/sdk).
  *
- * @see [](https://radar.io/documentation/sdk)
+ * @see [](https://radar.com/documentation/sdk)
  */
 abstract class RadarReceiver {
 

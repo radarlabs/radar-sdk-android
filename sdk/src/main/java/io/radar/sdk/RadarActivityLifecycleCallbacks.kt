@@ -42,7 +42,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
                 val updated = RadarSettings.updateSessionId(activity.applicationContext)
                 if (updated) {
                     val usage = "resume"
-                    Radar.apiClient.getConfig(usage, object : RadarApiClient.RadarGetConfigApiCallback {
+                    Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
                         override fun onComplete(config: RadarConfig) {
                             Radar.locationManager.updateTrackingFromMeta(config.meta)
                             RadarSettings.setFeatureSettings(activity.applicationContext, config.featureSettings)
