@@ -5,7 +5,7 @@ import org.json.JSONObject
 import java.util.*
 
 /**
- * Radar Log Payload
+ * Represents a log line.
  */
 internal data class RadarLog(
     val level: Radar.RadarLogLevel,

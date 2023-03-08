@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api-verified.radar.io</domain>
+        <pin-set>
+            <pin digest="SHA-256">15ktYXSSU2llpy7YyCgeqUKDBkjcimK/weUcec960sI=</pin>
+            <pin digest="SHA-256">15ktYXSSU2llpy7YyCgeqUKDBkjcimK/weUcec960sI=</pin>
+        </pin-set>
+    </domain-config>
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api-verified.radar-staging.com</domain>
+        <pin-set>
+            <pin digest="SHA-256">09MICn++JSUz2tk36fH+5qiuUAbbxx4JzrAHR3QHu/I=</pin>
+            <pin digest="SHA-256">09MICn++JSUz2tk36fH+5qiuUAbbxx4JzrAHR3QHu/I=</pin>
+        </pin-set>
+    </domain-config>
+</network-security-config>

@@ -4,9 +4,9 @@ import org.json.JSONObject
 import java.util.*
 
 /**
- * An options class used to configure background tracking.
+ * An options class used to configure trip options.
  *
- * @see [](https://radar.io/documentation/sdk/android)
+ * @see [](https://radar.com/documentation/trip-tracking)
  */
 data class RadarTripOptions(
     /**

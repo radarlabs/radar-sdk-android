@@ -5,7 +5,7 @@ import org.json.JSONObject
 /**
  * Represents the context for a location.
  *
- * @see [](https://radar.io/documentation/api#context)
+ * @see [](https://radar.com/documentation/api#context)
  */
 class RadarContext(
     /**
