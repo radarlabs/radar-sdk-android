@@ -361,9 +361,9 @@ object Radar {
     }
 
     internal var initialized = false
-    private lateinit var context: Context
+    internal lateinit var context: Context
     private lateinit var handler: Handler
-    private var receiver: RadarReceiver? = null
+    internal var receiver: RadarReceiver? = null
     internal lateinit var logger: RadarLogger
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
@@ -735,10 +735,6 @@ object Radar {
                             nearbyGeofences: Array<RadarGeofence>?,
                             config: RadarConfig?,
                         ) {
-                            if (status == RadarStatus.SUCCESS) {
-                                RadarSettings.updateLastTrackedTime(context)
-                            }
-
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
                             }
@@ -2539,9 +2535,12 @@ object Radar {
         // if trackOnce() has been returned in the last 60 seconds, don't call it again
         val timestampSeconds = System.currentTimeMillis() / 1000
         val lastTrackedTime = RadarSettings.getLastTrackedTime(context)
-        val isLastTrackRecent = lastTrackedTime - timestampSeconds < 60
+        val isLastTrackRecent = timestampSeconds - lastTrackedTime < 60
+        val doesNotHaveLocationPermissions =
+            !locationManager.permissionsHelper.fineLocationPermissionGranted(context)
+                    && !locationManager.permissionsHelper.coarseLocationPermissionGranted(context)
 
-        if (isLastTrackRecent || RadarSettings.getPermissionsDenied(context)) {
+        if (isLastTrackRecent || doesNotHaveLocationPermissions) {
             sendLogConversionRequest(name, metadata, callback = callback)
 
             return
@@ -2643,12 +2642,6 @@ object Radar {
         metadata: JSONObject? = null,
         callback: RadarLogConversionCallback
     ) {
-        if (!initialized) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
-            return
-        }
-
         apiClient.sendEvent(
             name,
             metadata,
@@ -2664,12 +2657,6 @@ object Radar {
                         }
 
                         return
-                    }
-
-                    if (event != null) {
-                        // The events are returned in the completion handler, but they're also
-                        // sent back via the RadarReceiver.
-                        receiver?.onEventsReceived(context, arrayOf(event), null)
                     }
 
                     handler.post {
