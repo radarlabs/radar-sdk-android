@@ -129,6 +129,14 @@ class RadarTest {
         assertEquals(trip?.status, RadarTrip.RadarTripStatus.STARTED)
     }
 
+    private fun assertFraudOk(fraud: RadarFraud?) {
+        assertNotNull(fraud)
+        assertTrue(fraud!!.proxy)
+        assertTrue(fraud.mocked)
+        assertTrue(fraud.compromised)
+        assertTrue(fraud.jumped)
+    }
+
     private fun assertUserOk(user: RadarUser?) {
         assertNotNull(user)
         assertNotNull(user?._id)
@@ -147,11 +155,8 @@ class RadarTest {
         assertSegmentsOk(user?.segments)
         assertChainsOk(user?.topChains)
         assertNotEquals(user?.source, Radar.RadarLocationSource.UNKNOWN)
-        assertTrue(user?.proxy ?: false)
-        assertTrue(user?.mocked ?: false)
-        assertTrue(user?.fraud?.proxy ?: false)
-        assertTrue(user?.fraud?.mocked ?: false)
         assertTripOk(user?.trip)
+        assertFraudOk(user?.fraud)
     }
 
     private fun assertEventsOk(events: Array<RadarEvent>?) {
@@ -1382,23 +1387,10 @@ class RadarTest {
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         locationClientMock.mockLocation = mockLocation
-
-        val host = RadarSettings.getHost(context)
-        val trackUri = Uri.parse(host)
-            .buildUpon()
-            .appendEncodedPath("v1/track")
-            .build()
-        val trackUrl = URL(trackUri.toString())
-        apiHelperMock.addMockResponse(trackUrl, RadarTestUtils.jsonObjectFromResource("/track.json")!!)
-
-        val eventUri = Uri.parse(host)
-            .buildUpon()
-            .appendEncodedPath("v1/events")
-            .build()
-        val eventUrl = URL(eventUri.toString())
-        apiHelperMock.addMockResponse(eventUrl, RadarTestUtils.jsonObjectFromResource("/custom_event.json")!!)
-
-
+        val trackPath = "v1/track"
+        apiHelperMock.addMockResponse(trackPath, RadarTestUtils.jsonObjectFromResource("/track.json")!!)
+        val eventsPath = "v1/events"
+        apiHelperMock.addMockResponse(eventsPath, RadarTestUtils.jsonObjectFromResource("/custom_event.json")!!)
     }
 
     @Test

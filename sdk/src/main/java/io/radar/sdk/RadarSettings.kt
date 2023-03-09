@@ -6,7 +6,8 @@ import androidx.core.content.edit
 import io.radar.sdk.model.RadarFeatureSettings
 import org.json.JSONObject
 import java.text.DecimalFormat
-import java.util.UUID
+import java.util.*
+
 
 internal object RadarSettings {
 
@@ -29,6 +30,7 @@ internal object RadarSettings {
     private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
     private const val KEY_HOST = "host"
+    private const val KEY_VERIFIED_HOST = "verified_host"
     private const val KEY_PERMISSIONS_DENIED = "permissions_denied"
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -274,6 +276,10 @@ internal object RadarSettings {
         return getSharedPreferences(context).getBoolean(KEY_PERMISSIONS_DENIED, false)
     }
 
+    internal fun getVerifiedHost(context: Context): String {
+        return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api-verified.radar.io"
+    }
+    
     internal fun getUserDebug(context: Context): Boolean {
         return getSharedPreferences(context).getBoolean(KEY_USER_DEBUG, true)
     }
