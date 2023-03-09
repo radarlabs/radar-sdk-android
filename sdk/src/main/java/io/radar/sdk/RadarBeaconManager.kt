@@ -612,7 +612,7 @@ internal class RadarBeaconManager(
                 }
             }
         } catch (e: Exception) {
-            logger.e("Error handling scan result", e)
+            logger.e("Error handling scan result", RadarLogType.SDK_EXCEPTION, e)
         }
 
         if (this.nearbyBeacons.size == this.beacons.size && ranging) {
