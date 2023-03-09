@@ -1116,10 +1116,6 @@ internal class RadarApiClient(
                     callback.onComplete(RadarStatus.ERROR_SERVER)
 
                     return
-                } else  {
-                    // The events are returned in the completion handler, but they're also
-                    // sent back via the RadarReceiver.
-                    Radar.receiver?.onEventsReceived(Radar.context, arrayOf(conversionEvent), null)
                 }
 
                 callback.onComplete(RadarStatus.SUCCESS, res, conversionEvent)

@@ -465,18 +465,6 @@ object Radar {
 
         this.initialized = true
 
-        sendLogConversionRequest(
-            "app_open",
-            callback = object : RadarLogConversionCallback {
-                override fun onComplete(
-                    status: RadarStatus,
-                    event: RadarEvent?
-                ) {
-                    this@Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
-                }
-            }
-        )
-
         logger.i("📍️ Radar initialized")
     }
 
