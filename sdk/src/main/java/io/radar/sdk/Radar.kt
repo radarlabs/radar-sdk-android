@@ -176,6 +176,18 @@ object Radar {
     }
 
     /**
+     * Called when a validateAddress request succeeds, fails, or times out.
+     * Receives the request status and, if successful, the address populated with a verification status.
+     */
+
+     interface RadarValidateAddressCallback {
+        fun onComplete(
+            status: RadarStatus,
+            address: RadarAddress? = null
+        )
+    }
+
+    /**
      * Called when an IP geocoding request succeeds, fails, or times out.
      */
     interface RadarIpGeocodeCallback {
@@ -1897,7 +1909,7 @@ object Radar {
             return
         }
 
-        apiClient.autocomplete(query, near, null, limit, null, object : RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.autocomplete(query, near, null, limit, null, null, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -1963,7 +1975,7 @@ object Radar {
             return
         }
 
-        apiClient.autocomplete(query, near, layers, limit, country, object : RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.autocomplete(query, near, layers, limit, country, null, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2001,6 +2013,141 @@ object Radar {
             object : RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
+                }
+            }
+        )
+    }
+
+
+    /**
+     * Autocompletes partial addresses and place names, sorted by relevance.
+     *
+     * @see [](https://radar.com/documentation/api#autocomplete)
+     *
+     * @param[query] The partial address or place name to autocomplete.
+     * @param[near] A location for the search.
+     * @param[layers] Optional layer filters.
+     * @param[limit] The max number of addresses to return. A number between 1 and 100.
+     * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun autocomplete(
+        query: String,
+        near: Location? = null,
+        layers: Array<String>? = null,
+        limit: Int? = null,
+        country: String? = null,
+        expandUnits: Boolean? = null,
+        callback: RadarGeocodeCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        apiClient.autocomplete(query, near, layers, limit, country, expandUnits, object : RadarApiClient.RadarGeocodeApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
+                handler.post {
+                    callback.onComplete(status, addresses)
+                }
+            }
+        })
+    }
+
+        /**
+     * Autocompletes partial addresses and place names, sorted by relevance.
+     *
+     * @see [](https://radar.com/documentation/api#autocomplete)
+     *
+     * @param[query] The partial address or place name to autocomplete.
+     * @param[near] A location for the search.
+     * @param[layers] Optional layer filters.
+     * @param[limit] The max number of addresses to return. A number between 1 and 100.
+     * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[block] A block callback.
+     */
+
+    fun autocomplete(
+        query: String,
+        near: Location? = null,
+        layers: Array<String>? = null,
+        limit: Int? = null,
+        country: String? = null,
+        expandUnits: Boolean? = null,
+        block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
+    ) {
+        autocomplete(
+            query,
+            near,
+            layers,
+            limit,
+            country,
+            expandUnits,
+            object : RadarGeocodeCallback {
+                override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
+                    block(status, addresses)
+                }
+            }
+        )
+    }
+
+    /**
+     * Validates an address, attaching to a verification status, property type, and plus4.
+     * 
+     * @see [](https://radar.com/documentation/api#validate-address)
+     * 
+     * @param[address] The address to validate.
+     * @param[callback] A callback.
+     * 
+     */
+
+    @JvmStatic
+    fun validateAddress(
+        address: RadarAddress?,
+        callback: RadarValidateAddressCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        if (address == null) {
+            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST, null)
+
+            return
+        }
+
+        apiClient.validateAddress(address, object: RadarApiClient.RadarValidateAddressAPICallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?) {
+                handler.post {
+                    callback.onComplete(status, address)
+                }
+            }
+        })
+    }
+
+    /**
+     * Validates an address, attaching to a verification status, property type, and plus4.
+     * 
+     * @see [](https://radar.com/documentation/api#validate-address)
+     * 
+     * @param[address] The address to validate.
+     * @param[block] A block callback.
+     * 
+     */
+
+    fun validateAddress(
+        address: RadarAddress?,
+        block: (status: RadarStatus, address: RadarAddress?) -> Unit
+    ) {
+        validateAddress(
+            address,
+            object : RadarValidateAddressCallback {
+                override fun onComplete(status: RadarStatus, address: RadarAddress?) {
+                    block(status, address)
                 }
             }
         )
