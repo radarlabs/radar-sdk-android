@@ -17,7 +17,8 @@
         "locationAccuracyAuthorization": "FULL",
         "locationAuthorization": "GRANTED_BACKGROUND",
         "metadata": {
-            "foo": "bar"
+            "foo": "bar",
+            "revenue": 0.2
         },
         "sdkVersion": "3.5.1",
         "stopped": 1,

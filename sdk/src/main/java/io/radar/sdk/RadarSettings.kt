@@ -30,8 +30,10 @@ internal object RadarSettings {
     private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
     private const val KEY_HOST = "host"
-    private const val KEY_VERIFIED_HOST = "verified_host"
     private const val KEY_PERMISSIONS_DENIED = "permissions_denied"
+    private const val KEY_LAST_TRACKED_TIME = "last_tracked_time"
+    private const val KEY_VERIFIED_HOST = "verified_host"
+
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
     private const val KEY_OLD_SYNC_MODE = "sync_mode"
@@ -276,10 +278,19 @@ internal object RadarSettings {
         return getSharedPreferences(context).getBoolean(KEY_PERMISSIONS_DENIED, false)
     }
 
+    internal fun updateLastTrackedTime(context: Context) {
+        val timestampSeconds = System.currentTimeMillis() / 1000
+        getSharedPreferences(context).edit { putLong(KEY_LAST_TRACKED_TIME, timestampSeconds) }
+    }
+
+    internal fun getLastTrackedTime(context: Context): Long {
+        return getSharedPreferences(context).getLong(KEY_LAST_TRACKED_TIME, 0)
+    }
+
     internal fun getVerifiedHost(context: Context): String {
         return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api-verified.radar.io"
     }
-    
+
     internal fun getUserDebug(context: Context): Boolean {
         return getSharedPreferences(context).getBoolean(KEY_USER_DEBUG, true)
     }

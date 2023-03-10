@@ -45,6 +45,7 @@ class Utils {
                 RadarEvent.RadarEventType.USER_EXITED_BEACON -> "Exited beacon ${event.beacon?.description}"
                 RadarEvent.RadarEventType.USER_ENTERED_REGION_POSTAL_CODE -> "Entered postal code ${event.region?.name} with $confidenceStr"
                 RadarEvent.RadarEventType.USER_EXITED_REGION_POSTAL_CODE -> "Exited postal code ${event.region?.name} with $confidenceStr"
+                RadarEvent.RadarEventType.CONVERSION -> "Received conversion event with name ${event.conversionName}"
                 else -> "Unknown"
             }
         }

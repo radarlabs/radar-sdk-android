@@ -72,7 +72,11 @@ internal class RadarApiClient(
     }
 
     interface RadarSendEventApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, events: Array<RadarEvent>? = null)
+        fun onComplete(
+            status: RadarStatus,
+            res: JSONObject? = null,
+            event: RadarEvent? = null
+        )
     }
 
     internal interface RadarLogCallback {
@@ -319,6 +323,7 @@ internal class RadarApiClient(
                 Radar.clearReplays()
                 RadarState.setLastFailedStoppedLocation(context, null)
                 Radar.flushLogs()
+                RadarSettings.updateLastTrackedTime(context)
 
                 val config = RadarConfig.fromJson(res)
 
@@ -1069,8 +1074,6 @@ internal class RadarApiClient(
     internal fun sendEvent(
         name: String,
         metadata: JSONObject?,
-        user: RadarUser?,
-        trackingEvents: Array<RadarEvent>?,
         callback: RadarSendEventApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -1105,23 +1108,17 @@ internal class RadarApiClient(
                     return
                 }
 
-                val customEvent = res.optJSONObject("event")?.let { eventObj ->
+                val conversionEvent = res.optJSONObject("event")?.let { eventObj ->
                     RadarEvent.fromJson(eventObj)
                 }
 
-                val allEvents: MutableList<RadarEvent> = mutableListOf()
-
-                if (trackingEvents != null) {
-                    allEvents.addAll(trackingEvents)
-                }
-
-                if (customEvent != null) {
-                    allEvents.add(0, customEvent)
-                } else {
+                if (conversionEvent == null) {
                     callback.onComplete(RadarStatus.ERROR_SERVER)
+
+                    return
                 }
 
-                callback.onComplete(RadarStatus.SUCCESS, res, allEvents.toTypedArray())
+                callback.onComplete(RadarStatus.SUCCESS, res, conversionEvent)
             }
         })
     }

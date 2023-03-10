@@ -2,7 +2,6 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.location.Location
 import android.os.Build
@@ -226,23 +225,19 @@ object Radar {
     }
 
     /**
-     * Called when a request to send a custom event succeeds, fails, or times out.
+     * Called when a request to log a conversion succeeds, fails, or times out.
      */
-    interface RadarSendEventCallback {
+    interface RadarLogConversionCallback {
         /**
-         * Called when a request to send a custom event succeeds, fails, or times out. Receives the request status and, if successful, the user's location, an array of the events generated, and the user.
+         * Called when a request to log a conversion succeeds, fails, or times out. Receives the request status and, if successful, the conversion event generated.
          *
          * @param[status] RadarStatus The request status.
-         * @param[location] Location? If successful, the user's location.
-         * @param[events] Array<RadarEvent>? If successful, an array of the events generated, with the custom event at index 0.
-         * @param[user] RadarUser? If successful, the user.
+         * @param[event] RadarEvent? If successful, the conversion event.
          *
          */
         fun onComplete(
             status: RadarStatus,
-            location: Location? = null,
-            events: Array<RadarEvent>? = null,
-            user: RadarUser? = null
+            event: RadarEvent? = null
         )
     }
 
@@ -2509,18 +2504,32 @@ object Radar {
     }
 
     /**
-     * Sends a custom event.
+     * Logs a conversion.
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
-     * @param[customType] The name of the event.
-     * @param[metadata] The metadata associated with the event.
+     * @param[name] The name of the conversion.
+     * @param[metadata] The metadata associated with the conversion.
      * @param[callback] A callback.
      */
     @JvmStatic
-    fun sendEvent(customType: String, metadata: JSONObject?, callback: RadarSendEventCallback) {
+    fun logConversion(name: String, metadata: JSONObject? = null, callback: RadarLogConversionCallback) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        // if trackOnce() has been returned in the last 60 seconds, don't call it again
+        val timestampSeconds = System.currentTimeMillis() / 1000
+        val lastTrackedTime = RadarSettings.getLastTrackedTime(context)
+        val isLastTrackRecent = timestampSeconds - lastTrackedTime < 60
+        val doesNotHaveLocationPermissions =
+            !locationManager.permissionsHelper.fineLocationPermissionGranted(context)
+                    && !locationManager.permissionsHelper.coarseLocationPermissionGranted(context)
+
+        if (isLastTrackRecent || doesNotHaveLocationPermissions) {
+            sendLogConversionRequest(name, metadata, callback = callback)
 
             return
         }
@@ -2535,121 +2544,101 @@ object Radar {
                     return
                 }
 
-                sendEvent(customType, metadata, location, events, user, callback)
+                sendLogConversionRequest(name, metadata, callback)
             }
         })
     }
 
     /**
-     * Sends a custom event.
+     * Logs a conversion.
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
-     * @param[customType] The name of the event.
-     * @param[metadata] The metadata associated with the event.
+     * @param[name] The name of the conversion.
+     * @param[metadata] The metadata associated with the conversion.
      * @param[block] A block callback
      */
     @JvmStatic
-    fun sendEvent(
-        customType: String,
-        metadata: JSONObject?,
-        block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit
+    fun logConversion(
+        name: String,
+        metadata: JSONObject? = null,
+        block: (status: RadarStatus, event: RadarEvent?) -> Unit
     ) {
-        sendEvent(customType, metadata, object : RadarSendEventCallback {
+        logConversion(name, metadata, object : RadarLogConversionCallback {
             override fun onComplete(
                 status: RadarStatus,
-                location: Location?,
-                events: Array<RadarEvent>?,
-                user: RadarUser?
+                event: RadarEvent?
             ) {
-                block(status, location, events, user)
+                block(status, event)
             }
         })
     }
 
     /**
-     * Sends a custom event with a manually provided location.
+     * Logs a conversion with revenue.
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
-     * @param[customType] The name of the event.
-     * @param[location] The location of the event.
-     * @param[metadata] The metadata associated with the event.
+     * @param[name] The name of the conversion.
+     * @param[revenue] The revenue generated by the conversion.
+     * @param[metadata] The metadata associated with the conversion.
      * @param[callback] A callback.
      */
     @JvmStatic
-    fun sendEvent(
-        customType: String,
-        location: Location,
-        metadata: JSONObject?,
-        callback: RadarSendEventCallback
+    fun logConversion(
+        name: String,
+        revenue: Double,
+        metadata: JSONObject? = null,
+        callback: RadarLogConversionCallback
     ) {
-        if (!initialized) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+        val nonNullMetadata = metadata ?: JSONObject()
+        nonNullMetadata.put("revenue", revenue);
 
-            return
-        }
-
-        trackOnce(location, object : RadarTrackCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
-                if (status != RadarStatus.SUCCESS || location == null) {
-                    handler.post {
-                        callback.onComplete(status)
-                    }
-
-                    return
-                }
-
-                sendEvent(customType, metadata, location, events, user, callback)
-            }
-        })
+        logConversion(name, nonNullMetadata, callback)
     }
 
     /**
-     * Sends a custom event with a manually provided location.
+     * Logs a conversion with revenue.
      *
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
-     * @param[customType] The name of the event.
-     * @param[location] The location of the event.
-     * @param[metadata] The metadata associated with the event.
+     * @param[name] The name of the conversion.
+     * @param[revenue] The revenue generated by the conversion.
+     * @param[metadata] The metadata associated with the conversion.
      * @param[block] A block callback.
      */
     @JvmStatic
-    fun sendEvent(
-        customType: String,
-        location: Location,
-        metadata: JSONObject?,
-        block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit
+    fun logConversion(
+        name: String,
+        revenue: Double,
+        metadata: JSONObject? = null,
+        block: (status: RadarStatus, RadarEvent?) -> Unit
     ) {
-        sendEvent(customType, location, metadata, object : RadarSendEventCallback {
+        logConversion(name, revenue, metadata, object : RadarLogConversionCallback {
             override fun onComplete(
                 status: RadarStatus,
-                location: Location?,
-                events: Array<RadarEvent>?,
-                user: RadarUser?
+                event: RadarEvent?
             ) {
-                block(status, location, events, user)
+                block(status, event)
             }
         })
     }
 
     @JvmStatic
-    private fun sendEvent(
-        customType: String,
-        metadata: JSONObject?,
-        location: Location?,
-        events: Array<RadarEvent>?,
-        user: RadarUser?,
-        callback: RadarSendEventCallback
+    internal fun sendLogConversionRequest(
+        name: String,
+        metadata: JSONObject? = null,
+        callback: RadarLogConversionCallback
     ) {
         apiClient.sendEvent(
-            customType,
+            name,
             metadata,
-            user,
-            events,
             object : RadarApiClient.RadarSendEventApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, events: Array<RadarEvent>?) {
+                override fun onComplete(
+                    status: RadarStatus,
+                    res: JSONObject?,
+                    event: RadarEvent?
+                ) {
                     if (status != RadarStatus.SUCCESS) {
                         handler.post {
                             callback.onComplete(status)
@@ -2659,7 +2648,7 @@ object Radar {
                     }
 
                     handler.post {
-                        callback.onComplete(status, location, events, user)
+                        callback.onComplete(status, event)
                     }
                 }
             })
