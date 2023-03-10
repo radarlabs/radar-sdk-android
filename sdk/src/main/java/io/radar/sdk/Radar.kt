@@ -361,9 +361,9 @@ object Radar {
     }
 
     internal var initialized = false
-    internal lateinit var context: Context
+    private lateinit var context: Context
     private lateinit var handler: Handler
-    internal var receiver: RadarReceiver? = null
+    private var receiver: RadarReceiver? = null
     internal lateinit var logger: RadarLogger
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
