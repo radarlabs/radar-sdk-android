@@ -2,12 +2,12 @@
 
 ## 3.6.0 to 3.6.1
 - Custom events have been renamed to conversions.
-      - `Radar.sendEvent(customType, metadata, callback)` is now `Radar.logConversion(name, metadata, callback)`.
-      - `Radar.logConversion(name, revenue, metadata, callback)` has been added.
-      - `Radar.sendEvent(customType, metadata, location, callback)` has been removed.
-      - `RadarSendEventCallback` has been renamed to `RadarLogConversionCallback`.
-            - `onComplete(status, location, events, user)` is now `onComplete(status, event)`. `location` and `user` are no longer available, and only the conversion event is returned as `event` instead of a coalesced list of events.
-      - On `RadarEvent`, `customType` is now `conversionName`, and `RadarEventType.CUSTOM` is now `RadarEventType.CONVERSION`.
+  - `Radar.sendEvent(customType, metadata, callback)` is now `Radar.logConversion(name, metadata, callback)`.
+  - `Radar.logConversion(name, revenue, metadata, callback)` has been added.
+  - `Radar.sendEvent(customType, metadata, location, callback)` has been removed.
+  - `RadarSendEventCallback` has been renamed to `RadarLogConversionCallback`.
+    - `onComplete(status, location, events, user)` is now `onComplete(status, event)`. `location` and `user` are no longer available, and only the conversion event is returned as `event` instead of a coalesced list of events.
+  - On `RadarEvent`, `customType` is now `conversionName`, and `RadarEventType.CUSTOM` is now `RadarEventType.CONVERSION`.
 
 ```kotlin
 // 3.6.1 - logging conversions
