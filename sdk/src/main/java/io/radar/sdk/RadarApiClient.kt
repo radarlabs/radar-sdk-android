@@ -865,7 +865,7 @@ internal class RadarApiClient(
                     else -> RadarAddressVerificationStatus.NONE
                 }
 
-                if (address != null && verificationStatus != null) {
+                if (address != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, address, verificationStatus)
 
                     return
