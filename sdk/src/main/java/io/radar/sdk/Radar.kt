@@ -2104,7 +2104,7 @@ object Radar {
     /**
      * Validates an address, attaching to a verification status, property type, and plus4.
      * 
-     * @see [](https://radar.com/documentation/api#validate-address)
+     * @see [](https://radar.com/documentation/api#validate-an-address)
      * 
      * @param[address] The address to validate.
      * @param[callback] A callback.
@@ -2140,7 +2140,7 @@ object Radar {
     /**
      * Validates an address, attaching to a verification status, property type, and plus4.
      * 
-     * @see [](https://radar.com/documentation/api#validate-address)
+     * @see [](https://radar.com/documentation/api#validate-an-address)
      * 
      * @param[address] The address to validate.
      * @param[block] A block callback.
