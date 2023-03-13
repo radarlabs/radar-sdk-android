@@ -135,8 +135,8 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Autocomplete: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
             Radar.validateAddress(
                 addresses?.get(0)
-            ) { status, address ->
-                Log.v("example", "Validate address: status = $status; address = ${address?.formattedAddress}, verificationStatus = ${address?.verificationStatus}")
+            ) { statusValidationRequest, address, verificationStatus->
+                Log.v("example", "Validate address: status = $statusValidationRequest; address = ${address?.formattedAddress}, verificationStatus = ${Radar.stringForVerificationStatus(verificationStatus)}")
             }
         }
 

@@ -108,12 +108,6 @@ class RadarAddress(
     val plus4: String?,
 
     /**
-     * The verification status of the address.
-     */
-    val verificationStatus: RadarAddressVerificationStatus,
-
-
-    /**
      * The confidence level of the geocoding result.
      */
     val confidence: RadarAddressConfidence
@@ -126,18 +120,6 @@ class RadarAddress(
         EXACT,
         INTERPOLATED,
         FALLBACK,
-        NONE
-    }
-
-    /**
-     * The verification status of the address.
-     */
-    enum class RadarAddressVerificationStatus {
-        VERIFIED,
-        PARTIALLY_VERIFIED,
-        AMBIGUOUS,
-        REVERTED,
-        UNVERIFIED,
         NONE
     }
 
@@ -163,7 +145,6 @@ class RadarAddress(
         private const val FIELD_PLACE_LABEL = "placeLabel"
         private const val FIELD_UNIT = "unit"
         private const val FIELD_PLUS4 = "plus4"
-        private const val FIELD_VERIFICATION_STATUS = "verificationStatus"
         private const val FIELD_CONFIDENCE = "confidence"
 
         @JvmStatic
@@ -192,14 +173,6 @@ class RadarAddress(
             val placeLabel = obj.optString(FIELD_PLACE_LABEL) ?: null
             val unit = obj.optString(FIELD_UNIT) ?: null
             val plus4 = obj.optString(FIELD_PLUS4) ?: null
-            val verificationStatus = when(obj.optString(FIELD_VERIFICATION_STATUS)) {
-                "V" -> RadarAddressVerificationStatus.VERIFIED
-                "P" -> RadarAddressVerificationStatus.PARTIALLY_VERIFIED
-                "A" -> RadarAddressVerificationStatus.AMBIGUOUS
-                "R" -> RadarAddressVerificationStatus.REVERTED
-                "U"-> RadarAddressVerificationStatus.UNVERIFIED
-                else -> RadarAddressVerificationStatus.NONE
-            }
             val confidence = when(obj.optString(FIELD_CONFIDENCE)) {
                 "exact" -> RadarAddressConfidence.EXACT
                 "interpolated" -> RadarAddressConfidence.INTERPOLATED
@@ -228,7 +201,6 @@ class RadarAddress(
                 placeLabel,
                 unit,
                 plus4,
-                verificationStatus,
                 confidence
             )
         }
@@ -266,18 +238,6 @@ class RadarAddress(
                 else -> "none"
             }
         }
-
-        @JvmStatic
-        fun stringForVerificationStatus(verificationStatus: RadarAddressVerificationStatus): String {
-            return when(verificationStatus) {
-                RadarAddressVerificationStatus.VERIFIED -> "V"
-                RadarAddressVerificationStatus.PARTIALLY_VERIFIED -> "P"
-                RadarAddressVerificationStatus.AMBIGUOUS -> "A"
-                RadarAddressVerificationStatus.REVERTED -> "R"
-                RadarAddressVerificationStatus.UNVERIFIED -> "U"
-                else -> "?"
-            }
-        }
     }
 
     fun toJson(): JSONObject {
@@ -303,7 +263,6 @@ class RadarAddress(
         obj.putOpt(FIELD_PLACE_LABEL, this.placeLabel)
         obj.putOpt(FIELD_UNIT, this.unit)
         obj.putOpt(FIELD_PLUS4, this.plus4)
-        obj.putOpt(FIELD_VERIFICATION_STATUS, stringForVerificationStatus(this.verificationStatus))
         obj.putOpt(FIELD_CONFIDENCE, stringForConfidence(this.confidence))
         return obj
     }

@@ -7,6 +7,7 @@ import android.os.SystemClock
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
+import io.radar.sdk.Radar.RadarAddressVerificationStatus
 import io.radar.sdk.Radar.locationManager
 import io.radar.sdk.model.*
 import org.json.JSONArray
@@ -56,7 +57,7 @@ internal class RadarApiClient(
     }
 
     interface RadarValidateAddressAPICallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null)
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null, verificationStatus: RadarAddressVerificationStatus? = null)
     }
 
     interface RadarGeocodeApiCallback {
@@ -855,8 +856,17 @@ internal class RadarApiClient(
                 val address = res.optJSONObject("address")?.let { address ->
                     RadarAddress.fromJson(address)
                 }
-                if (address != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, address)
+
+                val verificationStatus = when(res.optString("verificationStatus")) {
+                    "V" -> RadarAddressVerificationStatus.VERIFIED
+                    "P" -> RadarAddressVerificationStatus.PARTIALLY_VERIFIED
+                    "A" -> RadarAddressVerificationStatus.AMBIGUOUS
+                    "U"-> RadarAddressVerificationStatus.UNVERIFIED
+                    else -> RadarAddressVerificationStatus.NONE
+                }
+
+                if (address != null && verificationStatus != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, address, verificationStatus)
 
                     return
                 }

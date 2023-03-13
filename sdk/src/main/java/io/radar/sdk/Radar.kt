@@ -183,7 +183,8 @@ object Radar {
      interface RadarValidateAddressCallback {
         fun onComplete(
             status: RadarStatus,
-            address: RadarAddress? = null
+            address: RadarAddress? = null,
+            verificationStatus: RadarAddressVerificationStatus? = null
         )
     }
 
@@ -365,6 +366,18 @@ object Radar {
         IMPERIAL,
         /** Metric (meters) */
         METRIC
+    }
+
+
+    /**
+     * The verification status of an address.
+     */
+    enum class RadarAddressVerificationStatus {
+        VERIFIED,
+        PARTIALLY_VERIFIED,
+        AMBIGUOUS,
+        UNVERIFIED,
+        NONE
     }
 
     /**
@@ -2121,9 +2134,9 @@ object Radar {
         }
 
         apiClient.validateAddress(address, object: RadarApiClient.RadarValidateAddressAPICallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?, verificationStatus: RadarAddressVerificationStatus?) {
                 handler.post {
-                    callback.onComplete(status, address)
+                    callback.onComplete(status, address, verificationStatus)
                 }
             }
         })
@@ -2141,13 +2154,13 @@ object Radar {
 
     fun validateAddress(
         address: RadarAddress?,
-        block: (status: RadarStatus, address: RadarAddress?) -> Unit
+        block: (status: RadarStatus, address: RadarAddress?, verificationStatus: RadarAddressVerificationStatus?) -> Unit
     ) {
         validateAddress(
             address,
             object : RadarValidateAddressCallback {
-                override fun onComplete(status: RadarStatus, address: RadarAddress?) {
-                    block(status, address)
+                override fun onComplete(status: RadarStatus, address: RadarAddress?, verificationStatus: RadarAddressVerificationStatus?) {
+                    block(status, address, verificationStatus)
                 }
             }
         )
@@ -2914,6 +2927,27 @@ object Radar {
             RadarRouteMode.TRUCK -> "truck"
             RadarRouteMode.MOTORBIKE -> "motorbike"
             else -> "car"
+        }
+    }
+   
+    /**
+     * Returns a display string for a verification status value.
+     *
+     * @param[verificationStatus] A verification status value.
+     *
+     * @return A display string for the address verification status value.
+     */
+    @JvmStatic
+    fun stringForVerificationStatus(verificationStatus: RadarAddressVerificationStatus? = null ): String {
+        if (verificationStatus == null) {
+            return "UNKNOWN"
+        }
+        return when(verificationStatus) {
+            RadarAddressVerificationStatus.VERIFIED -> "VERIFIED"
+            RadarAddressVerificationStatus.PARTIALLY_VERIFIED -> "PARTIALLY_VERIFIED"
+            RadarAddressVerificationStatus.AMBIGUOUS -> "AMBIGUOUS"
+            RadarAddressVerificationStatus.UNVERIFIED -> "UNVERIFIED"
+            else -> "UNKNOWN"
         }
     }
 
