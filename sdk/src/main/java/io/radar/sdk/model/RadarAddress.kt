@@ -98,6 +98,16 @@ class RadarAddress(
     val placeLabel: String?,
 
     /**
+     * The unit of the address
+     */
+    val unit: String?,
+
+    /**
+     * The plus4 of the zip of the address
+     */
+    val plus4: String?,
+
+    /**
      * The confidence level of the geocoding result.
      */
     val confidence: RadarAddressConfidence
@@ -133,6 +143,8 @@ class RadarAddress(
         private const val FIELD_NUMBER = "number"
         private const val FIELD_ADDRESS_LABEL = "addressLabel"
         private const val FIELD_PLACE_LABEL = "placeLabel"
+        private const val FIELD_UNIT = "unit"
+        private const val FIELD_PLUS4 = "plus4"
         private const val FIELD_CONFIDENCE = "confidence"
 
         @JvmStatic
@@ -159,6 +171,8 @@ class RadarAddress(
             val number = obj.optString(FIELD_NUMBER) ?: null
             val addressLabel = obj.optString(FIELD_ADDRESS_LABEL) ?: null
             val placeLabel = obj.optString(FIELD_PLACE_LABEL) ?: null
+            val unit = obj.optString(FIELD_UNIT) ?: null
+            val plus4 = obj.optString(FIELD_PLUS4) ?: null
             val confidence = when(obj.optString(FIELD_CONFIDENCE)) {
                 "exact" -> RadarAddressConfidence.EXACT
                 "interpolated" -> RadarAddressConfidence.INTERPOLATED
@@ -185,6 +199,8 @@ class RadarAddress(
                 number,
                 addressLabel,
                 placeLabel,
+                unit,
+                plus4,
                 confidence
             )
         }
@@ -245,6 +261,8 @@ class RadarAddress(
         obj.putOpt(FIELD_NUMBER, this.number)
         obj.putOpt(FIELD_ADDRESS_LABEL, this.addressLabel)
         obj.putOpt(FIELD_PLACE_LABEL, this.placeLabel)
+        obj.putOpt(FIELD_UNIT, this.unit)
+        obj.putOpt(FIELD_PLUS4, this.plus4)
         obj.putOpt(FIELD_CONFIDENCE, stringForConfidence(this.confidence))
         return obj
     }

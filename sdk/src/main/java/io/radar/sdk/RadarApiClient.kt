@@ -7,6 +7,7 @@ import android.os.SystemClock
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
+import io.radar.sdk.Radar.RadarAddressVerificationStatus
 import io.radar.sdk.Radar.locationManager
 import io.radar.sdk.model.*
 import org.json.JSONArray
@@ -53,6 +54,10 @@ internal class RadarApiClient(
 
     interface RadarSearchBeaconsApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null, beacons: Array<RadarBeacon>? = null, uuids: Array<String>? = null, uids: Array<String>? = null)
+    }
+
+    interface RadarValidateAddressAPICallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null, verificationStatus: RadarAddressVerificationStatus? = null)
     }
 
     interface RadarGeocodeApiCallback {
@@ -768,6 +773,7 @@ internal class RadarApiClient(
         layers: Array<String>? = null,
         limit: Int? = null,
         country: String? = null,
+        expandUnits: Boolean? = null,
         callback: RadarGeocodeApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -789,6 +795,9 @@ internal class RadarApiClient(
         if (country != null) {
             queryParams.append("&country=${country}")
         }
+        if (expandUnits != null) {
+            queryParams.append("&expandUnits=${expandUnits}")
+        }
 
         val path = "v1/search/autocomplete?${queryParams}"
         val headers = headers(publishableKey)
@@ -806,6 +815,63 @@ internal class RadarApiClient(
                 }
                 if (addresses != null) {
                     callback.onComplete(RadarStatus.SUCCESS, res, addresses)
+
+                    return
+                }
+
+                callback.onComplete(RadarStatus.ERROR_SERVER)
+            }
+        })
+    }
+
+    internal fun validateAddress(
+        address: RadarAddress,
+        callback: RadarValidateAddressAPICallback
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val queryParams = StringBuilder()
+        queryParams.append("countryCode=${address.countryCode}")
+        queryParams.append("&stateCode=${address.stateCode}")
+        queryParams.append("&city=${address.city}")
+        queryParams.append("&number=${address.number}")
+        queryParams.append("&street=${address.street}")
+        queryParams.append("&postalCode=${address.postalCode}")
+
+        if (address.unit != null) {
+            queryParams.append("&unit=${address.unit}")
+        }
+
+        val path = "v1/addresses/validate?${queryParams}"
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback.onComplete(status)
+
+                    return
+                }
+
+                val address = res.optJSONObject("address")?.let { address ->
+                    RadarAddress.fromJson(address)
+                }
+
+                val verificationStatus = when(res.optString("verificationStatus")) {
+                    "V" -> RadarAddressVerificationStatus.VERIFIED
+                    "P" -> RadarAddressVerificationStatus.PARTIALLY_VERIFIED
+                    "A" -> RadarAddressVerificationStatus.AMBIGUOUS
+                    "U"-> RadarAddressVerificationStatus.UNVERIFIED
+                    else -> RadarAddressVerificationStatus.NONE
+                }
+
+                if (address != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, address, verificationStatus)
 
                     return
                 }
