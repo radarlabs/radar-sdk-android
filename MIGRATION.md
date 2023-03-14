@@ -1,6 +1,6 @@
 # Migration guides
 
-## 3.6.0 to 3.6.1
+## 3.6.x to 3.7.0
 - Custom events have been renamed to conversions.
   - `Radar.sendEvent(customType, metadata, callback)` is now `Radar.logConversion(name, metadata, callback)`.
   - `Radar.logConversion(name, revenue, metadata, callback)` has been added.
@@ -10,7 +10,7 @@
   - On `RadarEvent`, `customType` is now `conversionName`, and `RadarEventType.CUSTOM` is now `RadarEventType.CONVERSION`.
 
 ```kotlin
-// 3.6.1 - logging conversions
+// 3.7.0 - logging conversions
 val metadata = JSONObject().put("foo", "bar")
 
 val callback = object : Radar.RadarLogConversionCallback {
@@ -28,7 +28,7 @@ Radar.logConversion("conversion_with_revenue", 0.2, metadata) { status, event ->
 ```
 
 ```kotlin
-// 3.6.0 - logging conversions
+// 3.6.x - logging conversions
 val metadata = JSONObject().put("foo", "bar")
 
 val callback = object : Radar.RadarSendEventCallback {
@@ -39,7 +39,7 @@ val callback = object : Radar.RadarSendEventCallback {
 
 Radar.sendEvent("custom_event_with_callback", metadata, callback)
 
-// sendEvent() with location no longer exists in 3.6.1
+// sendEvent() with location no longer exists in 3.7.0
 Radar.sendEvent("event_with_location", Location(...), metadata) { status, location, events, user ->
 
 }
