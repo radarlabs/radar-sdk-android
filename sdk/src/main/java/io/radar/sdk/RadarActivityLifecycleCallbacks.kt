@@ -59,9 +59,9 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
         updatePermissionsDenied(activity)
 
         // TODO: log opened_app conversions once the desired logic is hashed out
-//        Radar.logConversion("opened_app") { status, event ->
-//            Log.i(null, "Conversion name = ${event?.conversionName}: status = $status; event = $event")
-//        }
+        Radar.logConversion("opened_app") { status, event ->
+            Log.i(null, "Conversion name = ${event?.conversionName}: status = $status; event = $event")
+        }
     }
 
     override fun onActivityPaused(activity: Activity) {
