@@ -143,7 +143,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
                             val beacons = RadarBeaconUtils.beaconsForScanResults(scanResults)
                             RadarJobScheduler.scheduleJob(context, beacons, source)
                         } catch (e: Exception) {
-                            Radar.logger.e("Error scheduling beacons job", e)
+                            Radar.logger.e("Error scheduling beacons job", Radar.RadarLogType.SDK_EXCEPTION, e)
                         }
                     }
                 }

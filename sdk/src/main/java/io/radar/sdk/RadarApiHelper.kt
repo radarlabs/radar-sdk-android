@@ -17,6 +17,7 @@ import java.security.cert.Certificate
 import java.security.cert.CertificateFactory
 import java.util.*
 import java.util.concurrent.Executors
+import io.radar.sdk.Radar.RadarLogType
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
@@ -129,7 +130,7 @@ internal open class RadarApiHelper(
 
                     val res = JSONObject(body)
 
-                    logger?.d("📍 Radar API response | responseCode = ${urlConnection.responseCode}; res = $res")
+                    logger?.e("📍 Radar API response | method = ${method}; url = ${url}; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
                     
                     handler.post {
                         callback?.onComplete(status)
