@@ -492,7 +492,6 @@ object Radar {
 
         this.initialized = true
 
-        logOpenedAppConversion()
         logger.i("📍️ Radar initialized")
     }
 
@@ -2818,10 +2817,10 @@ object Radar {
     }
 
     internal fun logOpenedAppConversion() {
-        // if opened_app has been logged in the last 1000 milliseconds, don't log it again
+        // if opened_app has been logged in the last 250 milliseconds, don't log it again
         val timestamp = System.currentTimeMillis()
         val lastAppOpenTime = RadarSettings.getLastAppOpenTimeMillis(context)
-        if (timestamp - lastAppOpenTime > 1000) {
+        if (timestamp - lastAppOpenTime > 250) {
             RadarSettings.updateLastAppOpenTimeMillis(context)
             sendLogConversionRequest("opened_app", callback = object : RadarLogConversionCallback {
                 override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
