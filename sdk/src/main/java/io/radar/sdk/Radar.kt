@@ -2712,6 +2712,7 @@ object Radar {
     /**
      * Logs a conversion.
      *
+     * TODO replace this url once the docs are updated
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
      * @param[name] The name of the conversion.
@@ -2758,6 +2759,7 @@ object Radar {
     /**
      * Logs a conversion.
      *
+     * TODO replace this url once the docs are updated
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
      * @param[name] The name of the conversion.
@@ -2783,6 +2785,7 @@ object Radar {
     /**
      * Logs a conversion with revenue.
      *
+     * TODO replace this url once the docs are updated
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
      * @param[name] The name of the conversion.
@@ -2806,6 +2809,7 @@ object Radar {
     /**
      * Logs a conversion with revenue.
      *
+     * TODO replace this url once the docs are updated
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
      * @param[name] The name of the conversion.
@@ -2861,10 +2865,10 @@ object Radar {
     }
 
     internal fun logOpenedAppConversion() {
-        // if opened_app has been logged in the last 250 milliseconds, don't log it again
+        // if opened_app has been logged in the last 1000 milliseconds, don't log it again
         val timestamp = System.currentTimeMillis()
         val lastAppOpenTime = RadarSettings.getLastAppOpenTimeMillis(context)
-        if (timestamp - lastAppOpenTime > 250) {
+        if (timestamp - lastAppOpenTime > 1000) {
             RadarSettings.updateLastAppOpenTimeMillis(context)
             sendLogConversionRequest("opened_app", callback = object : RadarLogConversionCallback {
                 override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
