@@ -446,8 +446,6 @@ object Radar {
             this.logger = RadarLogger(this.context)
         }
 
-        RadarSettings.updateSessionId(this.context)
-
         if (publishableKey != null) {
             RadarSettings.setPublishableKey(this.context, publishableKey)
         }
@@ -455,6 +453,9 @@ object Radar {
         if (!this::apiClient.isInitialized) {
             this.apiClient = RadarApiClient(this.context, logger)
         }
+
+        RadarSettings.updateSessionId(this.context)
+
         if (!this::batteryManager.isInitialized) {
             this.batteryManager = RadarBatteryManager(this.context)
         }

@@ -2,7 +2,9 @@ package io.radar.sdk
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.core.content.edit
+import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarFeatureSettings
 import org.json.JSONObject
 import java.text.DecimalFormat
@@ -78,6 +80,13 @@ internal object RadarSettings {
         val sessionIdSeconds = getSharedPreferences(context).getLong(KEY_SESSION_ID, 0)
         if (timestampSeconds - sessionIdSeconds > 300) {
             getSharedPreferences(context).edit { putLong(KEY_SESSION_ID, timestampSeconds) }
+
+            // log opened_app conversion whenever sessionId is updated
+            Radar.sendLogConversionRequest("opened_app", callback = object : Radar.RadarLogConversionCallback {
+                override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
+                    Log.i(null, "Conversion name = ${event?.conversionName}: status = $status; event = $event in updateSessionId")
+                }
+            })
 
             Radar.logger.d("New session | sessionId = ${this.getSessionId(context)}")
 

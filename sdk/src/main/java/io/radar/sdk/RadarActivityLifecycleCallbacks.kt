@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarEvent
 import kotlin.math.max
 
 internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCallbacks {
@@ -37,9 +38,10 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
     }
 
     override fun onActivityResumed(activity: Activity) {
+        var updated = false
         if (count == 0) {
             try {
-                val updated = RadarSettings.updateSessionId(activity.applicationContext)
+                updated = RadarSettings.updateSessionId(activity.applicationContext)
                 if (updated) {
                     val usage = "resume"
                     Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
@@ -56,12 +58,16 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
         count++
         foreground = count > 0
 
-        updatePermissionsDenied(activity)
-
-        // TODO: log opened_app conversions once the desired logic is hashed out
-        Radar.logConversion("opened_app") { status, event ->
-            Log.i(null, "Conversion name = ${event?.conversionName}: status = $status; event = $event")
+        if (!updated) {
+            // opened_app is logged when sessionId is updated, don't log it twice
+            Radar.sendLogConversionRequest("opened_app", callback = object : Radar.RadarLogConversionCallback {
+                override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
+                    Log.i(null, "Conversion name = ${event?.conversionName}: status = $status; event = $event in resume")
+                }
+            })
         }
+
+        updatePermissionsDenied(activity)
     }
 
     override fun onActivityPaused(activity: Activity) {
