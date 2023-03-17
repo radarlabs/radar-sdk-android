@@ -6,6 +6,7 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
+import android.util.Log
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.util.RadarLogBuffer
@@ -491,6 +492,7 @@ object Radar {
 
         this.initialized = true
 
+        logOpenedAppConversion()
         logger.i("📍️ Radar initialized")
     }
 
@@ -2813,6 +2815,20 @@ object Radar {
                     }
                 }
             })
+    }
+
+    internal fun logOpenedAppConversion() {
+        // if opened_app has been logged in the last 1000 milliseconds, don't log it again
+        val timestamp = System.currentTimeMillis()
+        val lastAppOpenTime = RadarSettings.getLastAppOpenTimeMillis(context)
+        if (timestamp - lastAppOpenTime > 1000) {
+            RadarSettings.updateLastAppOpenTimeMillis(context)
+            sendLogConversionRequest("opened_app", callback = object : RadarLogConversionCallback {
+                override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
+                    Log.i(null, "Conversion name = ${event?.conversionName}: status = $status; event = $event")
+                }
+            })
+        }
     }
 
     /**

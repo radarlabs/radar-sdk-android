@@ -38,10 +38,9 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
     }
 
     override fun onActivityResumed(activity: Activity) {
-        var updated = false
         if (count == 0) {
             try {
-                updated = RadarSettings.updateSessionId(activity.applicationContext)
+                val updated = RadarSettings.updateSessionId(activity.applicationContext)
                 if (updated) {
                     val usage = "resume"
                     Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
@@ -58,14 +57,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
         count++
         foreground = count > 0
 
-        if (!updated) {
-            // opened_app is logged when sessionId is updated, don't log it twice
-            Radar.sendLogConversionRequest("opened_app", callback = object : Radar.RadarLogConversionCallback {
-                override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
-                    Log.i(null, "Conversion name = ${event?.conversionName}: status = $status; event = $event in resume")
-                }
-            })
-        }
+        Radar.logOpenedAppConversion()
 
         updatePermissionsDenied(activity)
     }
