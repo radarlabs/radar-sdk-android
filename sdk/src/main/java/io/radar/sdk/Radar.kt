@@ -2709,10 +2709,10 @@ object Radar {
         })
     }
 
+    // TODO replace the docs url once the docs are updated
     /**
      * Logs a conversion.
      *
-     * TODO replace this url once the docs are updated
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
      * @param[name] The name of the conversion.
@@ -2756,10 +2756,10 @@ object Radar {
         })
     }
 
+    // TODO replace the docs url once the docs are updated
     /**
      * Logs a conversion.
      *
-     * TODO replace this url once the docs are updated
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
      * @param[name] The name of the conversion.
@@ -2782,10 +2782,10 @@ object Radar {
         })
     }
 
+    // TODO replace the docs url once the docs are updated
     /**
      * Logs a conversion with revenue.
      *
-     * TODO replace this url once the docs are updated
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
      * @param[name] The name of the conversion.
@@ -2806,10 +2806,10 @@ object Radar {
         logConversion(name, nonNullMetadata, callback)
     }
 
+    // TODO replace the docs url once the docs are updated
     /**
      * Logs a conversion with revenue.
      *
-     * TODO replace this url once the docs are updated
      * @see [](https://radar.com/documentation/api#send-a-custom-event)
      *
      * @param[name] The name of the conversion.
