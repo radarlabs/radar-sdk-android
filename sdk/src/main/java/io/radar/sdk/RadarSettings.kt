@@ -84,6 +84,7 @@ internal object RadarSettings {
 
             Radar.logger.d("New session | sessionId = ${this.getSessionId(context)}")
 
+
             return true
         }
         return false
