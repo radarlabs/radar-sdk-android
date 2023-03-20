@@ -7,7 +7,7 @@ import org.json.JSONObject
 /**
  * Represents a trip.
  *
- * @see [](https://radar.io/documentation/trip-tracking)
+ * @see [](https://radar.com/documentation/trip-tracking)
  */
 class RadarTrip(
     /**

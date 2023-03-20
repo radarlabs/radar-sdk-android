@@ -8,7 +8,7 @@ import org.json.JSONObject
 /**
  * Represents the current user state.
  *
- * @see [](https://radar.io/documentation)
+ * @see [](https://radar.com/documentation)
  */
 class RadarUser(
     /**
@@ -42,17 +42,17 @@ class RadarUser(
     val location: Location,
 
     /**
-     * The user's current geofences. May be `null` or empty if the user is not in any geofences. See [](https://radar.io/documentation/geofences).
+     * The user's current geofences. May be `null` or empty if the user is not in any geofences. See [](https://radar.com/documentation/geofences).
      */
     val geofences: Array<RadarGeofence>?,
 
     /**
-     * The user's current place. May be `null` if the user is not at a place or if Places is not enabled. See [](https://radar.io/documentation/places).
+     * The user's current place. May be `null` if the user is not at a place or if Places is not enabled. See [](https://radar.com/documentation/places).
      */
     val place: RadarPlace?,
 
     /**
-     * The user's nearby beacons. May be `null` or empty if the user is not near any beacons or if Beacons is not enabled. See [](https://radar.io/documentation/beacons).
+     * The user's nearby beacons. May be `null` or empty if the user is not near any beacons or if Beacons is not enabled. See [](https://radar.com/documentation/beacons).
      */
     val beacons: Array<RadarBeacon>?,
 
@@ -67,22 +67,22 @@ class RadarUser(
     val foreground: Boolean,
 
     /**
-     * The user's current country. May be `null` if country is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The user's current country. May be `null` if country is not available or if Regions is not enabled. See [](https://radar.com/documentation/regions).
      */
     val country: RadarRegion?,
 
     /**
-     * The user's current state. May be `null` if state is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The user's current state. May be `null` if state is not available or if Regions is not enabled. See [](https://radar.com/documentation/regions).
      */
     val state: RadarRegion?,
 
     /**
-     * The user's current designated market area (DMA). May be `null` if DMA is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The user's current designated market area (DMA). May be `null` if DMA is not available or if Regions is not enabled. See [](https://radar.com/documentation/regions).
      */
     val dma: RadarRegion?,
 
     /**
-     * The user's current postal code. May be `null` if postal code is not available or if Regions is not enabled. See [](https://radar.io/documentation/regions).
+     * The user's current postal code. May be `null` if postal code is not available or if Regions is not enabled. See [](https://radar.com/documentation/regions).
      */
     val postalCode: RadarRegion?,
 
@@ -107,27 +107,20 @@ class RadarUser(
     val source: Radar.RadarLocationSource,
 
     /**
-     * A boolean indicating whether the user's IP address is a known proxy. May be `false` if Fraud is not enabled.
-     */
-    val proxy: Boolean,
-
-    /**
-     * The user's current trip.
+     * The user's current trip. May be `null` if the user is not currently on a trip. See [](https://radar.com/documentation/trip-tracking).
      */
     val trip: RadarTrip?,
 
     /**
-     * A boolean indicating whether the user's location is being mocked, such as in a simulation. May be `false` if
-     * Fraud is not enabled.
+     * A boolean indicating whether the user has been "Marked as Debug" in the dashboard.
      */
-    val mocked: Boolean = false
-) {
-
+    val debug: Boolean = false,
+    
     /**
-     * Learned fraud state for the user. May be `null` if Fraud is not enabled.
+     * The user's current fraud state. May be `null` if Fraud is not enabled. See [](https://radar.com/documentation/fraud).
      */
-    val fraud: RadarFraud = RadarFraud(proxy, mocked)
-
+    val fraud: RadarFraud?
+) {
     internal companion object {
         private const val FIELD_ID = "_id"
         private const val FIELD_USER_ID = "userId"
@@ -150,8 +143,9 @@ class RadarUser(
         private const val FIELD_SEGMENTS = "segments"
         private const val FIELD_TOP_CHAINS = "topChains"
         private const val FIELD_SOURCE = "source"
-        private const val FIELD_FRAUD = "fraud"
         private const val FIELD_TRIP = "trip"
+        private const val FIELD_DEBUG = "debug"
+        private const val FIELD_FRAUD = "fraud"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarUser? {
@@ -195,8 +189,9 @@ class RadarUser(
                 "MOCK_LOCATION" -> Radar.RadarLocationSource.MOCK_LOCATION
                 else -> Radar.RadarLocationSource.UNKNOWN
             }
-            val fraud = RadarFraud.fromJson(obj.optJSONObject(FIELD_FRAUD))
             val trip = RadarTrip.fromJson(obj.optJSONObject(FIELD_TRIP))
+            val debug = obj.optBoolean(FIELD_DEBUG)
+            val fraud = RadarFraud.fromJson(obj.optJSONObject(FIELD_FRAUD))
 
             return RadarUser(
                 id,
@@ -218,9 +213,9 @@ class RadarUser(
                 segments,
                 topChains,
                 source,
-                fraud.proxy,
                 trip,
-                fraud.mocked
+                debug,
+                fraud
             )
         }
     }
@@ -252,8 +247,9 @@ class RadarUser(
         obj.putOpt(FIELD_SEGMENTS, RadarSegment.toJson(this.segments))
         obj.putOpt(FIELD_TOP_CHAINS, RadarChain.toJson(this.topChains))
         obj.putOpt(FIELD_SOURCE, Radar.stringForSource(this.source))
-        obj.putOpt(FIELD_FRAUD, this.fraud.toJson())
         obj.putOpt(FIELD_TRIP, this.trip?.toJson())
+        obj.putOpt(FIELD_DEBUG, this.debug)
+        obj.putOpt(FIELD_FRAUD, this.fraud?.toJson())
         return obj
     }
 

@@ -2,15 +2,14 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.app.NotificationManager
-import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
 import io.radar.sdk.Radar.RadarLocationCallback
-import io.radar.sdk.Radar.RadarLocationServicesProvider.GOOGLE
 import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
 import io.radar.sdk.Radar.RadarLocationSource
+import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.RadarApiClient.RadarTrackApiCallback
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
@@ -136,11 +135,11 @@ internal class RadarLocationManager(
         this.started = false
     }
 
-    internal fun handleBeacons(scanResults: ArrayList<ScanResult>?) {
+    internal fun handleBeacons(beacons: Array<RadarBeacon>?, source: RadarLocationSource) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            logger.d("Handling beacons | scanResults = $scanResults")
+            logger.d("Handling beacons")
 
-            Radar.beaconManager.handleScanResults(scanResults)
+            Radar.beaconManager.handleBeacons(beacons, source)
 
             val lastLocation = RadarState.getLastLocation(context)
 
@@ -148,7 +147,7 @@ internal class RadarLocationManager(
                 logger.d("Not handling beacons, no last location")
             }
 
-            this.handleLocation(lastLocation, RadarLocationSource.BEACON_ENTER)
+            this.handleLocation(lastLocation, source)
         }
     }
 
@@ -233,14 +232,16 @@ internal class RadarLocationManager(
     }
 
     internal fun updateTrackingFromMeta(meta: RadarMeta?) {
-        if (meta?.remoteTrackingOptions != null) {
-            logger.d("Setting remote tracking options | trackingOptions = ${meta.remoteTrackingOptions}")
-            RadarSettings.setRemoteTrackingOptions(context, meta.remoteTrackingOptions)
-        } else {
-            RadarSettings.removeRemoteTrackingOptions(context)
-            logger.d("Removed remote tracking options | trackingOptions = ${Radar.getTrackingOptions()}")
+        if (meta != null) {
+            if (meta.remoteTrackingOptions != null) {
+                logger.d("Setting remote tracking options | trackingOptions = ${meta.remoteTrackingOptions}")
+                RadarSettings.setRemoteTrackingOptions(context, meta.remoteTrackingOptions)
+            } else {
+                RadarSettings.removeRemoteTrackingOptions(context)
+                logger.d("Removed remote tracking options | trackingOptions = ${Radar.getTrackingOptions()}")
+            }
+            updateTracking()
         }
-        updateTracking()
     }
 
     internal fun restartPreviousTrackingOptions() {
@@ -444,7 +445,7 @@ internal class RadarLocationManager(
         val wasStopped = RadarState.getStopped(context)
         var stopped: Boolean
 
-        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION || source == RadarLocationSource.BEACON_ENTER)
+        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT)
         if (!force && location.accuracy > 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
             logger.d("Skipping location: inaccurate | accuracy = ${location.accuracy}")
 
@@ -572,7 +573,7 @@ internal class RadarLocationManager(
         val locationManager = this
 
         val callTrackApi = { beacons: Array<RadarBeacon>? ->
-            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, object : RadarTrackApiCallback {
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, callback = object : RadarTrackApiCallback {
                 override fun onComplete(
                     status: RadarStatus,
                     res: JSONObject?,
@@ -594,15 +595,10 @@ internal class RadarLocationManager(
 
         if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             && permissionsHelper.bluetoothPermissionsGranted(context)) {
-            Radar.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
+            val cache = stopped || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT
+            this.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
-                    if (status != RadarStatus.SUCCESS || beacons == null) {
-                        callTrackApi(null)
-
-                        return
-                    }
-
-                    if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                   if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                         Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
                         Radar.beaconManager.rangeBeaconUUIDs(uuids, uids, true, object : Radar.RadarBeaconCallback {
@@ -616,7 +612,7 @@ internal class RadarLocationManager(
                                 callTrackApi(beacons)
                             }
                         })
-                    } else {
+                   } else if (beacons != null) {
                         Radar.beaconManager.startMonitoringBeacons(beacons)
 
                         Radar.beaconManager.rangeBeacons(beacons, true, object : Radar.RadarBeaconCallback {
@@ -630,9 +626,11 @@ internal class RadarLocationManager(
                                 callTrackApi(beacons)
                             }
                         })
-                    }
+                   } else {
+                       callTrackApi(null)
+                   }
                 }
-            })
+            }, cache)
         } else {
             callTrackApi(null)
         }
@@ -657,7 +655,7 @@ internal class RadarLocationManager(
                     RadarForegroundService.started = true
                 }
             } catch (e: Exception) {
-                logger.e("Error starting foreground service with intent", e)
+                logger.e("Error starting foreground service with intent", RadarLogType.SDK_EXCEPTION, e)
             }
         }
     }
@@ -671,7 +669,7 @@ internal class RadarLocationManager(
                 context.applicationContext.startService(intent)
                 RadarForegroundService.started = false
             } catch (e: Exception) {
-                logger.e("Error stopping foreground service with intent", e)
+                logger.e("Error stopping foreground service with intent", RadarLogType.SDK_EXCEPTION, e)
             }
         }
     }

@@ -42,7 +42,7 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
                 val updated = RadarSettings.updateSessionId(activity.applicationContext)
                 if (updated) {
                     val usage = "resume"
-                    Radar.apiClient.getConfig(usage, object : RadarApiClient.RadarGetConfigApiCallback {
+                    Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
                         override fun onComplete(config: RadarConfig) {
                             Radar.locationManager.updateTrackingFromMeta(config.meta)
                             RadarSettings.setFeatureSettings(activity.applicationContext, config.featureSettings)
@@ -57,6 +57,11 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
         foreground = count > 0
 
         updatePermissionsDenied(activity)
+
+        // TODO: log opened_app conversions once the desired logic is hashed out
+//        Radar.logConversion("opened_app") { status, event ->
+//            Log.i(null, "Conversion name = ${event?.conversionName}: status = $status; event = $event")
+//        }
     }
 
     override fun onActivityPaused(activity: Activity) {

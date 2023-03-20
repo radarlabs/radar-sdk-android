@@ -3,7 +3,7 @@ package io.radar.sdk.model
 import org.json.JSONObject
 
 /**
- * Contains remote-configurable feature settings
+ * Represents server-side feature settings.
  */
 internal data class RadarFeatureSettings(
     val maxConcurrentJobs: Int,

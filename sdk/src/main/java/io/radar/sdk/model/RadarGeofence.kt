@@ -7,7 +7,7 @@ import org.json.JSONObject
 /**
  * Represents a geofence.
  *
- * @see [](https://radar.io/documentation/geofences)
+ * @see [](https://radar.com/documentation/geofences)
  */
 class RadarGeofence(
     /**
