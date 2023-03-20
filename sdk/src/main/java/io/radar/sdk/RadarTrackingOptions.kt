@@ -114,22 +114,10 @@ data class RadarTrackingOptions(
     var beacons: Boolean,
 
     /**
-     * Remote tracking options rule in use. Either `default`, `on-trip`, or `nil` if not set by the server.
+     * Remote tracking options rule in use. Either `default`, `on-trip`, or `null` if not set by the server.
      */
     var rule: String? = null,
-
-    /**
-     * One of `"efficient"`, `"responsive"`, `"continuous"`, or `"custom"`.
-     */
-    var preset: RadarTrackingOptionsPreset
 ) {
-
-    enum class RadarTrackingOptionsPreset {
-        EFFICIENT,
-        RESPONSIVE,
-        CONTINUOUS,
-        CUSTOM
-    }
 
     /**
      * The location accuracy options.
@@ -379,8 +367,7 @@ data class RadarTrackingOptions(
             syncGeofences = true,
             syncGeofencesLimit = 0,
             foregroundServiceEnabled = true,
-            beacons = false,
-            preset = RadarTrackingOptionsPreset.CONTINUOUS
+            beacons = false
         )
 
         /**
@@ -409,8 +396,7 @@ data class RadarTrackingOptions(
             syncGeofences = true,
             syncGeofencesLimit = 10,
             foregroundServiceEnabled = false,
-            beacons = false,
-            preset = RadarTrackingOptionsPreset.RESPONSIVE
+            beacons = false
         )
 
         /**
@@ -439,8 +425,7 @@ data class RadarTrackingOptions(
             syncGeofences = true,
             syncGeofencesLimit = 10,
             foregroundServiceEnabled = false,
-            beacons = false,
-            preset = RadarTrackingOptionsPreset.EFFICIENT
+            beacons = false
         )
 
         internal const val KEY_DESIRED_STOPPED_UPDATE_INTERVAL = "desiredStoppedUpdateInterval"
@@ -487,13 +472,6 @@ data class RadarTrackingOptions(
                 RadarTrackingOptionsSync.fromInt(obj.optInt(KEY_SYNC))
             }
 
-            val preset = when(obj.optString(KEY_PRESET)) {
-                "efficient" -> RadarTrackingOptionsPreset.EFFICIENT
-                "responsive" -> RadarTrackingOptionsPreset.RESPONSIVE
-                "continuous" -> RadarTrackingOptionsPreset.CONTINUOUS
-                else -> RadarTrackingOptionsPreset.CUSTOM
-            }
-
             return RadarTrackingOptions(
                 desiredStoppedUpdateInterval = obj.optInt(KEY_DESIRED_STOPPED_UPDATE_INTERVAL),
                 fastestStoppedUpdateInterval = obj.optInt(KEY_FASTEST_STOPPED_UPDATE_INTERVAL),
@@ -533,11 +511,9 @@ data class RadarTrackingOptions(
                 syncGeofencesLimit = obj.optInt(KEY_SYNC_GEOFENCES_LIMIT, 10),
                 foregroundServiceEnabled = obj.optBoolean(KEY_FOREGROUND_SERVICE_ENABLED, false),
                 beacons = obj.optBoolean(KEY_BEACONS),
-                preset = preset,
-                rule = obj.optString(KEY_TEMPORARY_TYPE)
+                rule = obj.optString(KEY_RULE, null)
             )
         }
-
     }
 
     fun toJson(): JSONObject {
