@@ -107,6 +107,7 @@ internal class RadarApiClient(
         val queryParams = StringBuilder()
         queryParams.append("installId=${RadarSettings.getInstallId(context)}")
         queryParams.append("&sessionId=${RadarSettings.getSessionId(context)}")
+        queryParams.append("&id=${RadarSettings.getId(context)}")
         queryParams.append("&locationAuthorization=${RadarUtils.getLocationAuthorization(context)}")
         queryParams.append("&locationAccuracyAuthorization=${RadarUtils.getLocationAccuracyAuthorization(context)}")
         queryParams.append("&verified=$verified")

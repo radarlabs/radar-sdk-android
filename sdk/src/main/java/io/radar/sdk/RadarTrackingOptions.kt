@@ -505,7 +505,6 @@ data class RadarTrackingOptions(
                 beacons = obj.optBoolean(KEY_BEACONS)
             )
         }
-
     }
 
     fun toJson(): JSONObject {
