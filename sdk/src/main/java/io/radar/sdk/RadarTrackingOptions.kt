@@ -111,12 +111,7 @@ data class RadarTrackingOptions(
     /**
      * Determines whether to monitor beacons.
      */
-    var beacons: Boolean,
-
-    /**
-     * Remote tracking options rule in use. Either `default`, `on-trip`, or `null` if not set by the server.
-     */
-    var rule: String? = null,
+    var beacons: Boolean
 ) {
 
     /**
@@ -448,9 +443,6 @@ data class RadarTrackingOptions(
         internal const val KEY_SYNC_GEOFENCES_LIMIT = "syncGeofencesLimit"
         internal const val KEY_FOREGROUND_SERVICE_ENABLED = "foregroundServiceEnabled"
         internal const val KEY_BEACONS = "beacons"
-        internal const val KEY_PRESET = "preset"
-        internal const val KEY_RULE = "rule"
-        internal const val KEY_TEMPORARY_TYPE = "type"
 
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTrackingOptions {
@@ -510,8 +502,7 @@ data class RadarTrackingOptions(
                 syncGeofences = obj.optBoolean(KEY_SYNC_GEOFENCES),
                 syncGeofencesLimit = obj.optInt(KEY_SYNC_GEOFENCES_LIMIT, 10),
                 foregroundServiceEnabled = obj.optBoolean(KEY_FOREGROUND_SERVICE_ENABLED, false),
-                beacons = obj.optBoolean(KEY_BEACONS),
-                rule = obj.optString(KEY_RULE, null)
+                beacons = obj.optBoolean(KEY_BEACONS)
             )
         }
     }
@@ -538,7 +529,6 @@ data class RadarTrackingOptions(
         obj.put(KEY_SYNC_GEOFENCES_LIMIT, syncGeofencesLimit)
         obj.put(KEY_FOREGROUND_SERVICE_ENABLED, foregroundServiceEnabled)
         obj.put(KEY_BEACONS, beacons)
-        obj.put(KEY_RULE, rule)
         return obj
     }
 
