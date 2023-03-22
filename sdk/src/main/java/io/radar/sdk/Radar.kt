@@ -2709,7 +2709,6 @@ object Radar {
         })
     }
 
-    // TODO replace the docs url once the docs are updated
     /**
      * Logs a conversion.
      *
@@ -2756,7 +2755,6 @@ object Radar {
         })
     }
 
-    // TODO replace the docs url once the docs are updated
     /**
      * Logs a conversion.
      *
@@ -2782,7 +2780,6 @@ object Radar {
         })
     }
 
-    // TODO replace the docs url once the docs are updated
     /**
      * Logs a conversion with revenue.
      *
@@ -2806,7 +2803,6 @@ object Radar {
         logConversion(name, nonNullMetadata, callback)
     }
 
-    // TODO replace the docs url once the docs are updated
     /**
      * Logs a conversion with revenue.
      *
