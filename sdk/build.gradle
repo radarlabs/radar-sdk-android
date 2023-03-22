@@ -74,15 +74,6 @@ dependencies {
     testImplementation 'org.json:json:20211205'
 }
 
-publishing {
-    repositories {
-        maven {
-            name = 'devLocalMaven'
-            url = '~/dev/mavenRepository'
-        }
-    }
-}
-
 task androidSourcesJar(type: Jar) {
     group 'publishing'
     archiveClassifier.set("sources")
