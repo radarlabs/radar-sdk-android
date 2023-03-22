@@ -6,12 +6,11 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
-import android.util.Log
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.util.RadarLogBuffer
-import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarReplayBuffer
+import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
 import java.util.*
@@ -2868,7 +2867,7 @@ object Radar {
             RadarSettings.updateLastAppOpenTimeMillis(context)
             sendLogConversionRequest("opened_app", callback = object : RadarLogConversionCallback {
                 override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
-                    Log.i(null, "Conversion name = ${event?.conversionName}: status = $status; event = $event")
+                    logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
                 }
             })
         }
