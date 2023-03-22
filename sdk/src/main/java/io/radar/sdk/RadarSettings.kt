@@ -33,6 +33,7 @@ internal object RadarSettings {
     private const val KEY_PERMISSIONS_DENIED = "permissions_denied"
     private const val KEY_LAST_TRACKED_TIME = "last_tracked_time"
     private const val KEY_VERIFIED_HOST = "verified_host"
+    private const val KEY_LAST_APP_OPEN_TIME = "last_app_open_time"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -79,7 +80,10 @@ internal object RadarSettings {
         if (timestampSeconds - sessionIdSeconds > 300) {
             getSharedPreferences(context).edit { putLong(KEY_SESSION_ID, timestampSeconds) }
 
-            Radar.logger.i("New session | sessionId = ${this.getSessionId(context)}")
+            Radar.logOpenedAppConversion()
+
+            Radar.logger.d("New session | sessionId = ${this.getSessionId(context)}")
+
 
             return true
         }
@@ -297,6 +301,15 @@ internal object RadarSettings {
 
     internal fun setUserDebug(context: Context, userDebug: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_USER_DEBUG, userDebug) }
+    }
+
+    internal fun getLastAppOpenTimeMillis(context: Context): Long {
+        return getSharedPreferences(context).getLong(KEY_LAST_APP_OPEN_TIME, 0)
+    }
+
+    internal fun updateLastAppOpenTimeMillis(context: Context) {
+        val timestampSeconds = System.currentTimeMillis()
+        getSharedPreferences(context).edit { putLong(KEY_LAST_APP_OPEN_TIME, timestampSeconds) }
     }
 
 }

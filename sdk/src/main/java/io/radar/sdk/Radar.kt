@@ -9,8 +9,8 @@ import android.os.Handler
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.util.RadarLogBuffer
-import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarReplayBuffer
+import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
 import java.util.*
@@ -465,8 +465,6 @@ object Radar {
             this.logger = RadarLogger(this.context)
         }
 
-        RadarSettings.updateSessionId(this.context)
-
         if (publishableKey != null) {
             RadarSettings.setPublishableKey(this.context, publishableKey)
         }
@@ -474,6 +472,9 @@ object Radar {
         if (!this::apiClient.isInitialized) {
             this.apiClient = RadarApiClient(this.context, logger)
         }
+
+        RadarSettings.updateSessionId(this.context)
+
         if (!this::batteryManager.isInitialized) {
             this.batteryManager = RadarBatteryManager(this.context)
         }
@@ -743,12 +744,12 @@ object Radar {
      */
     @JvmStatic
     fun trackOnce(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, beacons: Boolean, callback: RadarTrackCallback? = null) {
-        this.logger.i("trackOnce()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("trackOnce()", RadarLogType.SDK_CALL)
 
         locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -2724,7 +2725,7 @@ object Radar {
             return
         }
 
-        // if trackOnce() has been returned in the last 60 seconds, don't call it again
+        // if track() has been returned in the last 60 seconds, don't call it again
         val timestampSeconds = System.currentTimeMillis() / 1000
         val lastTrackedTime = RadarSettings.getLastTrackedTime(context)
         val isLastTrackRecent = timestampSeconds - lastTrackedTime < 60
@@ -2856,6 +2857,20 @@ object Radar {
                     }
                 }
             })
+    }
+
+    internal fun logOpenedAppConversion() {
+        // if opened_app has been logged in the last 1000 milliseconds, don't log it again
+        val timestamp = System.currentTimeMillis()
+        val lastAppOpenTime = RadarSettings.getLastAppOpenTimeMillis(context)
+        if (timestamp - lastAppOpenTime > 1000) {
+            RadarSettings.updateLastAppOpenTimeMillis(context)
+            sendLogConversionRequest("opened_app", callback = object : RadarLogConversionCallback {
+                override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
+                    logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
+                }
+            })
+        }
     }
 
     /**
