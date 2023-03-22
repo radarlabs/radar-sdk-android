@@ -2726,7 +2726,7 @@ object Radar {
             return
         }
 
-        // if trackOnce() has been returned in the last 60 seconds, don't call it again
+        // if track() has been returned in the last 60 seconds, don't call it again
         val timestampSeconds = System.currentTimeMillis() / 1000
         val lastTrackedTime = RadarSettings.getLastTrackedTime(context)
         val isLastTrackRecent = timestampSeconds - lastTrackedTime < 60
