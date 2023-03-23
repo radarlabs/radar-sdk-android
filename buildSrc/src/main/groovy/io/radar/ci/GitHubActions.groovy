@@ -16,7 +16,7 @@ class GitHubActions {
         if (snapshot) {
             tag = null
         } else {
-            tag = getTag ref
+            tag = System.getenv 'GITHUB_REF_NAME'
         }
         runNumber = System.getenv 'GITHUB_RUN_NUMBER'
     }
@@ -26,16 +26,6 @@ class GitHubActions {
             return new GitHubActions()
         }
         null
-    }
-
-    /**
-     * This assumes that the given ref uses the syntax 'refs/tags' and not 'refs/heads' or anything else.
-     *
-     * @param ref tag ref
-     * @return the tag for the given tag ref
-     */
-    static String getTag(String ref) {
-        ref[10..-1]
     }
 
 }
