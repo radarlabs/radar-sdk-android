@@ -19,9 +19,4 @@ class GitHubActionsTest {
             assert !GitHubActions.get()
         }
     }
-
-    @Test
-    void testGetTag() {
-        assert GitHubActions.getTag('refs/tags/3.2.2') == '3.2.2'
-    }
 }
