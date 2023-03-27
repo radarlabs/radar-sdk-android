@@ -629,12 +629,12 @@ object Radar {
      */
     @JvmStatic
     fun getLocation(callback: RadarLocationCallback? = null) {
-        this.logger.i("getLocation()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("getLocation()", RadarLogType.SDK_CALL)
 
         locationManager.getLocation(object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -670,12 +670,12 @@ object Radar {
      */
     @JvmStatic
     fun getLocation(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, callback: RadarLocationCallback? = null) {
-        this.logger.i("getLocation()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("getLocation()", RadarLogType.SDK_CALL)
 
         locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -967,12 +967,11 @@ object Radar {
      */
     @JvmStatic
     fun startTracking(options: RadarTrackingOptions) {
-        this.logger.i("startTracking()", RadarLogType.SDK_CALL)
         if (!initialized) {
-            // logger.w?
             return
         }
-
+        this.logger.i("startTracking()", RadarLogType.SDK_CALL)
+        
         locationManager.startTracking(options)
     }
 
@@ -1105,10 +1104,10 @@ object Radar {
      */
     @JvmStatic
     fun stopTracking() {
-        this.logger.i("stopTracking()", RadarLogType.SDK_CALL)
         if (!initialized) {
             return
         }
+        this.logger.i("stopTracking()", RadarLogType.SDK_CALL)
 
         locationManager.stopTracking()
     }
@@ -1246,10 +1245,10 @@ object Radar {
      */
     @JvmStatic
     fun startTrip(options: RadarTripOptions, trackingOptions: RadarTrackingOptions? = null, callback: RadarTripCallback? = null) {
-        this.logger.i("startTrip()", RadarLogType.SDK_CALL)
         if (!initialized) {
             return
         }
+        this.logger.i("startTrip()", RadarLogType.SDK_CALL)
 
         apiClient.createTrip(options, object : RadarApiClient.RadarTripApiCallback {
             override fun onComplete(
@@ -1341,10 +1340,10 @@ object Radar {
      */
     @JvmStatic
     fun updateTrip(options: RadarTripOptions, status: RadarTrip.RadarTripStatus?, callback: RadarTripCallback? = null) {
-        this.logger.i("updateTrip()", RadarLogType.SDK_CALL)
         if (!initialized) {
             return
         }
+        this.logger.i("updateTrip()", RadarLogType.SDK_CALL)
 
         apiClient.updateTrip(options, status, object : RadarApiClient.RadarTripApiCallback {
             override fun onComplete(
@@ -1398,10 +1397,10 @@ object Radar {
      */
     @JvmStatic
     fun completeTrip(callback: RadarTripCallback? = null) {
-        this.logger.i("completeTrip()", RadarLogType.SDK_CALL)
         if (!initialized) {
             return
         }
+        this.logger.i("completeTrip()", RadarLogType.SDK_CALL)
 
         val options = RadarSettings.getTripOptions(context)
         apiClient.updateTrip(options, RadarTrip.RadarTripStatus.COMPLETED, object : RadarApiClient.RadarTripApiCallback {
@@ -1457,10 +1456,10 @@ object Radar {
      */
     @JvmStatic
     fun cancelTrip(callback: RadarTripCallback? = null) {
-        this.logger.i("cancelTrip()", RadarLogType.SDK_CALL)
         if (!initialized) {
             return
         }
+        this.logger.i("cancelTrip()", RadarLogType.SDK_CALL)
 
         val options = RadarSettings.getTripOptions(context)
         apiClient.updateTrip(options, RadarTrip.RadarTripStatus.CANCELED, object : RadarApiClient.RadarTripApiCallback {
@@ -1555,12 +1554,12 @@ object Radar {
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
-        this.logger.i("searchPlaces()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("searchPlaces()", RadarLogType.SDK_CALL)
 
         locationManager.getLocation(object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -1696,12 +1695,12 @@ object Radar {
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
-        this.logger.i("searchPlaces()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("searchPlaces()", RadarLogType.SDK_CALL)
 
         apiClient.searchPlaces(near, radius, chains, chainMetadata, categories, groups, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, places: Array<RadarPlace>?) {
@@ -1797,12 +1796,12 @@ object Radar {
         limit: Int?,
         callback: RadarSearchGeofencesCallback
     ) {
-        this.logger.i("searchGeofences()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("searchGeofences()", RadarLogType.SDK_CALL)
 
         locationManager.getLocation(object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -1877,12 +1876,12 @@ object Radar {
         limit: Int?,
         callback: RadarSearchGeofencesCallback
     ) {
-        this.logger.i("searchGeofences()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("searchGeofences()", RadarLogType.SDK_CALL)
 
         apiClient.searchGeofences(near, radius, tags, metadata, limit, object : RadarApiClient.RadarSearchGeofencesApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) {
@@ -1945,12 +1944,12 @@ object Radar {
             limit: Int? = null,
             callback: RadarGeocodeCallback
     ) {
-        this.logger.i("autocomplete()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("autocomplete()", RadarLogType.SDK_CALL)
 
         apiClient.autocomplete(query, near, null, limit, null, null, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
@@ -2012,12 +2011,12 @@ object Radar {
         country: String? = null,
         callback: RadarGeocodeCallback
     ) {
-        this.logger.i("autocomplete()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("autocomplete()", RadarLogType.SDK_CALL)
 
         apiClient.autocomplete(query, near, layers, limit, country, null, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
@@ -2210,12 +2209,12 @@ object Radar {
         query: String,
         callback: RadarGeocodeCallback
     ) {
-        this.logger.i("geocode()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("geocode()", RadarLogType.SDK_CALL)
 
         apiClient.geocode(query, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
@@ -2259,12 +2258,12 @@ object Radar {
     fun reverseGeocode(
         callback: RadarGeocodeCallback
     ) {
-        this.logger.i("reverseGeocode()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("reverseGeocode()", RadarLogType.SDK_CALL)
 
         locationManager.getLocation(object: RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -2319,12 +2318,12 @@ object Radar {
         location: Location,
         callback: RadarGeocodeCallback
     ) {
-        this.logger.i("reverseGeocode()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("reverseGeocode()", RadarLogType.SDK_CALL)
 
         apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
@@ -2368,12 +2367,12 @@ object Radar {
     fun ipGeocode(
         callback: RadarIpGeocodeCallback
     ) {
-        this.logger.i("ipGeocode()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("ipGeocode()", RadarLogType.SDK_CALL)
 
         apiClient.ipGeocode(object: RadarApiClient.RadarIpGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?, proxy: Boolean) {
@@ -2420,12 +2419,12 @@ object Radar {
         units: RadarRouteUnits,
         callback: RadarRouteCallback
     ) {
-        this.logger.i("getDistance()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("getDistance()", RadarLogType.SDK_CALL)
 
         locationManager.getLocation(object: RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -2499,12 +2498,12 @@ object Radar {
         units: RadarRouteUnits,
         callback: RadarRouteCallback
     ) {
-        this.logger.i("getDistance()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("getDistance()", RadarLogType.SDK_CALL)
 
         apiClient.getDistance(origin, destination, modes, units, -1, object : RadarApiClient.RadarDistanceApiCallback {
             override fun onComplete(
@@ -2569,12 +2568,12 @@ object Radar {
         units: RadarRouteUnits,
         callback: RadarMatrixCallback
     ) {
-        this.logger.i("getMatrix()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("getMatrix()", RadarLogType.SDK_CALL)
 
         apiClient.getMatrix(origins, destinations, mode, units, object : RadarApiClient.RadarMatrixApiCallback {
             override fun onComplete(
@@ -2629,12 +2628,12 @@ object Radar {
     fun getContext(
         callback: RadarContextCallback
     ) {
-        this.logger.i("getContext()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("getContext()", RadarLogType.SDK_CALL)
 
         locationManager.getLocation(object: RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -2678,12 +2677,12 @@ object Radar {
      */
     @JvmStatic
     fun getContext(location: Location, callback: RadarContextCallback) {
-        this.logger.i("getContext()", RadarLogType.SDK_CALL)
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("getContext()", RadarLogType.SDK_CALL)
 
         apiClient.getContext(location, object : RadarApiClient.RadarContextApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, context: RadarContext?) {
