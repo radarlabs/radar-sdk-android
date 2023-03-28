@@ -89,7 +89,11 @@ data class RadarTripOptions(
         obj.put(KEY_DESTINATION_GEOFENCE_TAG, destinationGeofenceTag)
         obj.put(KEY_DESTINATION_GEOFENCE_EXTERNAL_ID, destinationGeofenceExternalId)
         obj.put(KEY_MODE, Radar.stringForMode(mode))
-        obj.put(KEY_SCHEDULED_ARRIVAL_AT, scheduledArrivalAt?.time)
+        scheduledArrivalAt?.let { arrival ->
+            if (arrival.time > 0) {
+                obj.put(KEY_SCHEDULED_ARRIVAL_AT, arrival.time)
+            }
+        }
         if (approachingThreshold > 0) {
             obj.put(KEY_APPROACHING_THRESHOLD, approachingThreshold)
         }
