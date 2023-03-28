@@ -21,18 +21,8 @@ See migration guides in `MIGRATION.md`.
 
 See an example app in `example/`.
 
-* Download and install Android Studio
-* Open Android Studio, accept the terms, install the components
-* In Android Studio, open the radar-sdk-android folder
-* Open `example/src/main/java/io/radar/example/MainActivity.kt`
-* Copy your production publishable key to the `Radar.initialize` call
-* Run the emulator (press the green play button)
-* Type "Settings" into the primary search bar, and then Location into "Search Settings" and click "Location (permission manager)"
-* Click "example" and change "Allow all of the time"
-* Use your mouse to swipe up from the bottom to get to the home screen
-* Type "example" into the main search bar again to run the app
-* Click "Run Demo"
+To run the example app, clone this repository, add your publishable API key in `MainActivity.swift`, and build the app.
 
 ## Support
 
-Have questions? We're here to help! Email us at [support@radar.io](mailto:support@radar.io).
+Have questions? We're here to help! Email us at [support@radar.com](mailto:support@radar.com).
