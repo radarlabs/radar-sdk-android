@@ -682,6 +682,19 @@ class RadarTest {
         }
     }
 
+    // Test that tripOptions to JSON correctly puts scheduledArrivalAt
+    @Test
+    fun test_Radar_startTrip_scheduledArrivalAt() {
+        val tripOptions = getTestTripOptions()
+        val tripOptionsJson = tripOptions.toJson()
+        assertFalse(tripOptionsJson.has("scheduledArrivalAt"))
+
+        val newScheduledArrivalAt = Date()
+        tripOptions.scheduledArrivalAt = newScheduledArrivalAt
+        val newTripOptionsJson = tripOptions.toJson()
+        assertEquals(newTripOptionsJson.getString("scheduledArrivalAt"), tripOptions.scheduledArrivalAt?.time)
+    }
+
     @Test
     fun test_Radar_startTrip_notTracking() {
         // not tracking before trip
