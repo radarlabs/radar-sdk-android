@@ -682,7 +682,6 @@ class RadarTest {
         }
     }
 
-    // Test that tripOptions to JSON correctly puts scheduledArrivalAt
     @Test
     fun test_Radar_startTrip_scheduledArrivalAt() {
         val tripOptions = getTestTripOptions()
