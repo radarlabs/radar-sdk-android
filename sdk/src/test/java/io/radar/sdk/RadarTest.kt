@@ -691,7 +691,7 @@ class RadarTest {
         val newScheduledArrivalAt = Date()
         tripOptions.scheduledArrivalAt = newScheduledArrivalAt
         val newTripOptionsJson = tripOptions.toJson()
-        assertEquals(newTripOptionsJson.getString("scheduledArrivalAt"), tripOptions.scheduledArrivalAt?.time)
+        assertEquals(newTripOptionsJson.getString("scheduledArrivalAt"), tripOptions.scheduledArrivalAt?.time.toString())
     }
 
     @Test
