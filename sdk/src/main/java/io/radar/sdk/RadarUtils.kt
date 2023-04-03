@@ -9,6 +9,7 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.hardware.display.DisplayManagerCompat
 import java.text.SimpleDateFormat
@@ -119,8 +120,11 @@ internal object RadarUtils {
             return false
         }
         val displayManager = DisplayManagerCompat.getInstance(context)
-        return displayManager.getDisplays(DisplayManagerCompat.DISPLAY_CATEGORY_PRESENTATION)
-            .isNotEmpty()
+        val multipleDisplays = displayManager.displays.size > 1
+
+        val sharing = RadarSettings.getSharing(context)
+
+        return multipleDisplays || sharing
     }
 
     internal fun isoStringToDate(str: String?): Date? {

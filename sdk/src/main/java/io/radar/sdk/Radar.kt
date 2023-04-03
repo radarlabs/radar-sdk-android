@@ -416,6 +416,7 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
+    private var fraud = false
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -497,8 +498,13 @@ object Radar {
             this.logger.d("Using Huawei location services")
         }
 
+        try {
+            Class.forName("com.google.android.play.core.integrity.IntegrityManagerFactory")
+            fraud = true // if IntegrityManagerFactory class is present, assume Fraud is enabled
+        } catch (_: ClassNotFoundException) {}
+
         val application = this.context as? Application
-        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks())
+        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
 
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
@@ -2865,7 +2871,7 @@ object Radar {
         if (timestamp - lastAppOpenTime > 1000) {
             RadarSettings.updateLastAppOpenTimeMillis(context)
             sendLogConversionRequest("opened_app", callback = object : RadarLogConversionCallback {
-                override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
+                override fun onComplete(status: RadarStatus, event: RadarEvent?) {
                     logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
                 }
             })

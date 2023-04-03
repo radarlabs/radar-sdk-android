@@ -34,6 +34,7 @@ internal object RadarSettings {
     private const val KEY_LAST_TRACKED_TIME = "last_tracked_time"
     private const val KEY_VERIFIED_HOST = "verified_host"
     private const val KEY_LAST_APP_OPEN_TIME = "last_app_open_time"
+    private const val KEY_SET_SHARING = "sharing"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -84,6 +85,7 @@ internal object RadarSettings {
 
             Radar.logger.d("New session | sessionId = ${this.getSessionId(context)}")
 
+            setSharing(context, false)
 
             return true
         }
@@ -310,6 +312,14 @@ internal object RadarSettings {
     internal fun updateLastAppOpenTimeMillis(context: Context) {
         val timestampSeconds = System.currentTimeMillis()
         getSharedPreferences(context).edit { putLong(KEY_LAST_APP_OPEN_TIME, timestampSeconds) }
+    }
+
+    internal fun getSharing(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_SET_SHARING, false)
+    }
+
+    internal fun setSharing(context: Context, sharing: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_SET_SHARING, sharing) }
     }
 
 }
