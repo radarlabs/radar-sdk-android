@@ -12,6 +12,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.hardware.display.DisplayManagerCompat
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -134,7 +135,11 @@ internal object RadarUtils {
 
         val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
         dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-        return dateFormat.parse(str)
+        try {
+            return dateFormat.parse(str)
+        } catch (pe: ParseException) {
+            return null;
+        }
     }
 
     internal fun dateToISOString(date: Date?): String? {
