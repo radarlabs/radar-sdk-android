@@ -9,7 +9,6 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.core.hardware.display.DisplayManagerCompat
 import java.text.ParseException
