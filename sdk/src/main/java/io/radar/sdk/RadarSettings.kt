@@ -34,7 +34,7 @@ internal object RadarSettings {
     private const val KEY_LAST_TRACKED_TIME = "last_tracked_time"
     private const val KEY_VERIFIED_HOST = "verified_host"
     private const val KEY_LAST_APP_OPEN_TIME = "last_app_open_time"
-    private const val KEY_SET_SHARING = "sharing"
+    private const val KEY_SHARING = "sharing"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -315,11 +315,11 @@ internal object RadarSettings {
     }
 
     internal fun getSharing(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_SET_SHARING, false)
+        return getSharedPreferences(context).getBoolean(KEY_SHARING, false)
     }
 
     internal fun setSharing(context: Context, sharing: Boolean) {
-        getSharedPreferences(context).edit { putBoolean(KEY_SET_SHARING, sharing) }
+        getSharedPreferences(context).edit { putBoolean(KEY_SHARING, sharing) }
     }
 
 }
