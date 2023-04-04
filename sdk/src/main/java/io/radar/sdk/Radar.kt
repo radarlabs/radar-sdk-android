@@ -2974,7 +2974,6 @@ object Radar {
             RadarRouteMode.CAR -> "car"
             RadarRouteMode.TRUCK -> "truck"
             RadarRouteMode.MOTORBIKE -> "motorbike"
-            else -> "car"
         }
     }
    
@@ -3040,7 +3039,10 @@ object Radar {
             obj.put("speedAccuracy", location.speedAccuracyMetersPerSecond)
             obj.put("courseAccuracy", location.bearingAccuracyDegrees)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            obj.put("mocked", location.isMock)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
             obj.put("mocked", location.isFromMockProvider)
         }
         return obj

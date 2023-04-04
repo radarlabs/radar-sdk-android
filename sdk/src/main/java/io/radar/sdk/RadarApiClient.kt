@@ -240,8 +240,11 @@ internal class RadarApiClient(
             params.putOpt("country", RadarUtils.country)
             params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
             params.putOpt("source", Radar.stringForSource(source))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                val mocked = location.isFromMockProvider
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val mocked = location.isMock
+                params.putOpt("mocked", mocked)
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                val mocked = location.isFromMockProvider // deprecated in API 31, but we can't supress the warning
                 params.putOpt("mocked", mocked)
             }
             if (tripOptions != null) {
@@ -373,8 +376,8 @@ internal class RadarApiClient(
 
                     if (user.trip == null) {
                         // if user was on a trip that ended server side, restore previous tracking options
-                        val tripOptions = RadarSettings.getTripOptions(context)
-                        if (tripOptions != null) {
+                        val previousTripOptions = RadarSettings.getTripOptions(context)
+                        if (previousTripOptions != null) {
                             locationManager.restartPreviousTrackingOptions()
                             RadarSettings.setTripOptions(context, null)
                         }
@@ -859,8 +862,8 @@ internal class RadarApiClient(
                     return
                 }
 
-                val address = res.optJSONObject("address")?.let { address ->
-                    RadarAddress.fromJson(address)
+                val responseAddress = res.optJSONObject("address")?.let { jsonAddress ->
+                    RadarAddress.fromJson(jsonAddress)
                 }
 
                 val verificationStatus = when(res.optString("verificationStatus")) {
@@ -871,8 +874,8 @@ internal class RadarApiClient(
                     else -> RadarAddressVerificationStatus.NONE
                 }
 
-                if (address != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, address, verificationStatus)
+                if (responseAddress != null) {
+                    callback.onComplete(RadarStatus.SUCCESS, res, responseAddress, verificationStatus)
 
                     return
                 }
@@ -1159,7 +1162,7 @@ internal class RadarApiClient(
             params.putOpt("type", name)
             params.putOpt("metadata", metadata)
         } catch (e: JSONException) {
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
             return
         }
