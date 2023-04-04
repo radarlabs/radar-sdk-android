@@ -416,7 +416,6 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
-    private var fraud = false
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -440,9 +439,10 @@ object Radar {
      * @param[publishableKey] Your publishable API key.
      * @param[receiver] An optional receiver for the client-side delivery of events.
      * @param[provider] The location services provider.
+     * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE) {
+    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false) {
         if (context == null) {
             return
         }
@@ -497,11 +497,6 @@ object Radar {
         } else if (provider == RadarLocationServicesProvider.HUAWEI) {
             this.logger.d("Using Huawei location services")
         }
-
-        try {
-            Class.forName("com.google.android.play.core.integrity.IntegrityManagerFactory")
-            fraud = true // if IntegrityManagerFactory class is present, assume Fraud is enabled
-        } catch (_: ClassNotFoundException) {}
 
         val application = this.context as? Application
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
