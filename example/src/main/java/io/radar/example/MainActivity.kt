@@ -23,6 +23,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val receiver = MyRadarReceiver()
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+
         requestLocationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { isGrantedMap ->
@@ -54,9 +57,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun runDemo() {
-        val receiver = MyRadarReceiver()
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver)
-
         Radar.getLocation { status, location, stopped ->
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
         }

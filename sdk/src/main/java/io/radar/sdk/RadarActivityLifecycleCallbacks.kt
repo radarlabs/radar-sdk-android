@@ -6,12 +6,18 @@ import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
 import kotlin.math.max
 
-internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCallbacks {
+
+internal class RadarActivityLifecycleCallbacks(
+    private val fraud: Boolean = false
+) : Application.ActivityLifecycleCallbacks {
     private var count = 0
 
     companion object {
@@ -59,6 +65,24 @@ internal class RadarActivityLifecycleCallbacks : Application.ActivityLifecycleCa
         Radar.logOpenedAppConversion()
 
         updatePermissionsDenied(activity)
+
+        if (fraud) {
+            val touchView = object: View(activity.applicationContext) {
+                override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+                    try {
+                        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN) {
+                            RadarSettings.setSharing(activity.applicationContext, true)
+                        }
+                    }  catch (e: Exception) {
+                        Log.e(TAG, e.message, e)
+                    }
+                    return super.dispatchTouchEvent(event)
+                }
+            }
+
+            activity.addContentView(touchView, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        }
+
     }
 
     override fun onActivityPaused(activity: Activity) {

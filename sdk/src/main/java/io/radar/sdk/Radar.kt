@@ -439,9 +439,10 @@ object Radar {
      * @param[publishableKey] Your publishable API key.
      * @param[receiver] An optional receiver for the client-side delivery of events.
      * @param[provider] The location services provider.
+     * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE) {
+    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false) {
         if (context == null) {
             return
         }
@@ -498,7 +499,7 @@ object Radar {
         }
 
         val application = this.context as? Application
-        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks())
+        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
 
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
@@ -2865,7 +2866,7 @@ object Radar {
         if (timestamp - lastAppOpenTime > 1000) {
             RadarSettings.updateLastAppOpenTimeMillis(context)
             sendLogConversionRequest("opened_app", callback = object : RadarLogConversionCallback {
-                override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
+                override fun onComplete(status: RadarStatus, event: RadarEvent?) {
                     logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
                 }
             })
