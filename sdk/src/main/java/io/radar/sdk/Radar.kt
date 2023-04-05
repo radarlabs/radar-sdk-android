@@ -3043,7 +3043,7 @@ object Radar {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             obj.put("mocked", location.isMock)
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            obj.put("mocked", location.isFromMockProvider)
+            obj.put("mocked", location.isFromMockProvider) // deprecated in Android 31, but we still support prior versions
         }
         return obj
     }

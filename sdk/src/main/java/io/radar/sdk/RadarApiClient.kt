@@ -244,7 +244,7 @@ internal class RadarApiClient(
                 val mocked = location.isMock
                 params.putOpt("mocked", mocked)
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                val mocked = location.isFromMockProvider // deprecated in API 31, but we can't supress the warning
+                val mocked = location.isFromMockProvider // deprecated in Android 31, but we still support prior versions
                 params.putOpt("mocked", mocked)
             }
             if (tripOptions != null) {
