@@ -82,7 +82,11 @@ internal class RadarBeaconManager(
         }
 
         if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                adapter = BluetoothAdapter.getAdapter()
+            } else {
+                adapter = BluetoothAdapter.getDefaultAdapter()
+            }
         }
 
         if (!adapter.isEnabled) {
@@ -158,7 +162,11 @@ internal class RadarBeaconManager(
         }
 
         if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                adapter = BluetoothAdapter.getAdapter()
+            } else {
+                adapter = BluetoothAdapter.getDefaultAdapter()
+            } 
         }
 
         if (!adapter.isEnabled) {
@@ -257,7 +265,11 @@ internal class RadarBeaconManager(
         }
 
         if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                adapter = BluetoothAdapter.getAdapter()
+            } else {
+                adapter = BluetoothAdapter.getDefaultAdapter()
+            } 
         }
 
         if (!adapter.isEnabled) {
@@ -299,7 +311,11 @@ internal class RadarBeaconManager(
         }
 
         if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                adapter = BluetoothAdapter.getAdapter()
+            } else {
+                adapter = BluetoothAdapter.getDefaultAdapter()
+            } 
         }
 
         if (!adapter.isEnabled) {
@@ -420,7 +436,11 @@ internal class RadarBeaconManager(
         }
 
         if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                adapter = BluetoothAdapter.getAdapter()
+            } else {
+                adapter = BluetoothAdapter.getDefaultAdapter()
+            } 
         }
 
         if (!adapter.isEnabled) {
@@ -551,7 +571,11 @@ internal class RadarBeaconManager(
         }
 
         if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                adapter = BluetoothAdapter.getAdapter()
+            } else {
+                adapter = BluetoothAdapter.getDefaultAdapter()
+            } 
         }
 
         logger.d("Stopping ranging")
@@ -624,7 +648,11 @@ internal class RadarBeaconManager(
 
     private fun isBluetoothSupported(context: Context): Boolean {
         if(!this::adapter.isInitialized) {
-            val defaultAdapter = BluetoothAdapter.getDefaultAdapter()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                defaultAdapter = BluetoothAdapter.getAdapter()
+            } else {
+                defaultAdapter = BluetoothAdapter.getDefaultAdapter()
+            }
             if (defaultAdapter != null) {
                 adapter = defaultAdapter
             }
