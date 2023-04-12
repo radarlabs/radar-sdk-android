@@ -172,7 +172,7 @@ internal class RadarGoogleLocationClient(
         }
     }
 
-    override fun getLocationFromLocationIntent(intent: Intent): Location? {
+    override fun getLocationsFromLocationIntent(intent: Intent): List<Location>? {
         if (intent == null) {
             return null
         }
@@ -185,7 +185,10 @@ internal class RadarGoogleLocationClient(
             return null
         }
 
-        return result.lastLocation
+        // return the locations
+        return result.locations
+
+
     }
 
 }

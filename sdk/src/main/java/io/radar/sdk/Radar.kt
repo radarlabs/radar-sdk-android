@@ -262,6 +262,8 @@ object Radar {
     enum class RadarStatus {
         /** Success */
         SUCCESS,
+        /** Aborted because there's nothing to send*/
+        ERROR_ABORTED,
         /** SDK not initialized */
         ERROR_PUBLISHABLE_KEY,
         /** Location permissions not granted */

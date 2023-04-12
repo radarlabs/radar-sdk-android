@@ -114,11 +114,11 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
-                    val jobId = RadarJobScheduler.scheduleJob(context, location, source)
+                    // val jobId = RadarJobScheduler.scheduleJob(context, location, source)
                     Radar.handleLocation(context, location, source, true)
-                    if (jobId != -1) {
-                        RadarJobScheduler.cancelJob(context, jobId)
-                    }
+                    // if (jobId != -1) {
+                    //     RadarJobScheduler.cancelJob(context, jobId)
+                    // }
                     // Schedule an onlyReplaying job
                     RadarJobScheduler.scheduleJob(context, true)
 
@@ -129,17 +129,29 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 }
             }
             ACTION_LOCATION -> {
-                val location = Radar.locationManager.getLocationFromLocationIntent(intent)
+                val locations = Radar.locationManager.getLocationsFromLocationIntent(intent)
                 val source = Radar.RadarLocationSource.BACKGROUND_LOCATION
 
-                if (location == null) {
+                if (locations == null) {
                     return
                 }
 
+                for (location in locations) {
+                    if (location == null) {
+                        continue
+                    }
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
+                        Radar.handleLocation(context, location, source, true)
+                        RadarJobScheduler.scheduleJob(context, true)
+                        // RadarJobScheduler.scheduleJob(context, location, source,
+                    } else {
+                        Radar.handleLocation(context, location, source)
+                    }
+                }
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
-                    RadarJobScheduler.scheduleJob(context, location, source)
-                } else {
-                    Radar.handleLocation(context, location, source)
+                    RadarJobScheduler.scheduleJob(context, true)
                 }
             }
             ACTION_BEACON -> {

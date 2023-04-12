@@ -16,6 +16,12 @@ import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
 import io.radar.sdk.model.*
 import org.json.JSONObject
 import java.util.*
+import io.radar.sdk.RadarAbstractLocationClient.RadarAbstractGeofence
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
+
+
 
 @SuppressLint("MissingPermission")
 internal class RadarLocationManager(
@@ -263,8 +269,8 @@ internal class RadarLocationManager(
         return locationClient.getSourceFromGeofenceIntent(intent)
     }
 
-    internal fun getLocationFromLocationIntent(intent: Intent): Location? {
-        return locationClient.getLocationFromLocationIntent(intent)
+    internal fun getLocationsFromLocationIntent(intent: Intent): List<Location>? {
+        return locationClient.getLocationsFromLocationIntent(intent)
     }
 
     private fun replaceBubbleGeofence(location: Location?, stopped: Boolean) {
@@ -288,15 +294,19 @@ internal class RadarLocationManager(
                 transitionExit = true
             )
 
-            val geofences = arrayOf(geofence)
+            val surroundingGeofences = this.createSurroundingGeofences(geofence)
+
+            val geofences: List<RadarAbstractGeofence> = listOf(geofence) + surroundingGeofences
+            val geofencesArray = geofences.toTypedArray()
 
             val request = RadarAbstractLocationClient.RadarAbstractGeofenceRequest(
                 initialTriggerExit = true
             )
 
             logger.d("Adding stopped bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier")
+            logger.d("Adding ${surroundingGeofences.size} surrounding geofences")
 
-            locationClient.addGeofences(geofences, request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context)) { success ->
+            locationClient.addGeofences(geofencesArray, request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context)) { success ->
                 if (success) {
                     logger.d("Successfully added stopped bubble geofence")
                 } else {
@@ -317,16 +327,19 @@ internal class RadarLocationManager(
                 dwellDuration = options.stopDuration * 1000 + 10000
             )
 
+            val surroundingGeofences = this.createSurroundingGeofences(geofence)
+
             val geofenceRequest = RadarAbstractLocationClient.RadarAbstractGeofenceRequest(
                 initialTriggerExit = true,
                 initialTriggerDwell = true
             )
 
-            val geofences = arrayOf(geofence)
+            val geofences: List<RadarAbstractGeofence> = listOf(geofence) + surroundingGeofences
+            val geofencesArray = geofences.toTypedArray()
 
             logger.d("Adding moving bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier")
 
-            locationClient.addGeofences(geofences, geofenceRequest, RadarLocationReceiver.getBubbleGeofencePendingIntent(context)) { success ->
+            locationClient.addGeofences(geofencesArray, geofenceRequest, RadarLocationReceiver.getBubbleGeofencePendingIntent(context)) { success ->
                 if (success) {
                     logger.d("Successfully added moving bubble geofence")
                 } else {
@@ -334,6 +347,36 @@ internal class RadarLocationManager(
                 }
             }
         }
+    }
+
+    private fun createSurroundingGeofences(bubbleGeofence: RadarAbstractGeofence, numGeofences: Int = 6): List<RadarAbstractGeofence> {
+        val surroundingGeofences = mutableListOf<RadarAbstractGeofence>()
+        val angleStep = 2 * PI / numGeofences
+        val distanceFromCenter = 1.66 * bubbleGeofence.radius
+
+        val metersPerDegreeLatitude = 111111.0
+        val metersPerDegreeLongitude = 111111.0 * cos(Math.toRadians(bubbleGeofence.latitude))
+    
+        for (i in 0 until numGeofences) {
+            val angle = i * angleStep
+            val offsetX = distanceFromCenter * cos(angle) / metersPerDegreeLongitude
+            val offsetY = distanceFromCenter * sin(angle) / metersPerDegreeLatitude
+            val latitude = bubbleGeofence.latitude + offsetX
+            val longitude = bubbleGeofence.longitude + offsetY
+            val requestId = "surrounding_geofence_${i + 1}"
+    
+            surroundingGeofences.add(
+                RadarAbstractGeofence(
+                    requestId = requestId,
+                    latitude = latitude,
+                    longitude = longitude,
+                    radius = bubbleGeofence.radius,
+                    transitionEnter = true,
+                )
+            )
+        }
+
+        return surroundingGeofences
     }
 
     private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
@@ -515,8 +558,9 @@ internal class RadarLocationManager(
         }
 
         val lastSentAt = RadarState.getLastSentAt(context)
+        // if offline, ensure we send location
         val ignoreSync =
-            lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed
+            lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed || offline 
         val now = System.currentTimeMillis()
         val lastSyncInterval = (now - lastSentAt) / 1000L
         if (!ignoreSync) {
@@ -556,11 +600,14 @@ internal class RadarLocationManager(
         if (source == RadarLocationSource.FOREGROUND_LOCATION) {
             return
         }
-
-        this.sendLocation(sendLocation, stopped, source, replayed, offline)
+        if (offline) {
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, null, callback = null, offline = true)
+            return
+        } 
+        this.sendLocation(sendLocation, stopped, source, replayed)
     }
 
-    private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean, offline: Boolean = false) {
+    private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {
         val options = Radar.getTrackingOptions()
         val foregroundService = RadarSettings.getForegroundService(context)
 
@@ -571,11 +618,6 @@ internal class RadarLocationManager(
         logger.d("Sending location | source = $source; location = $location; stopped = $stopped; replayed = $replayed")
 
         val locationManager = this
-
-        if (offline) {
-            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, null, callback = null, offline = true)
-            return
-        }
 
         val callTrackApi = { beacons: Array<RadarBeacon>? ->
             this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, callback = object : RadarTrackApiCallback {

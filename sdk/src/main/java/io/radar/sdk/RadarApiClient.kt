@@ -296,6 +296,12 @@ internal class RadarApiClient(
         val nowMS = System.currentTimeMillis()
 
         val replaying = replayCount > 0 && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && !verified
+
+        if (onlyReplaying && replayCount == 0) {
+            callback?.onComplete(RadarStatus.ERROR_ABORTED)
+
+            return
+        }
         if (replaying || onlyReplaying) {
             val replaysList = mutableListOf<JSONObject>()
             for (replay in replays) {
