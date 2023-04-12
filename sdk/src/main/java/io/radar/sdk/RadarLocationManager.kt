@@ -437,7 +437,7 @@ internal class RadarLocationManager(
         this.removeSyncedGeofences()
     }
 
-    fun handleLocation(location: Location?, source: RadarLocationSource) {
+    fun handleLocation(location: Location?, source: RadarLocationSource, offline: Boolean = false) {
         if (Radar.isTestKey()) {
             val latency = if (location == null) -1 else Date().time - location.time
             val standbyBucket = batteryManager.getAppStandbyBucket()
@@ -587,10 +587,10 @@ internal class RadarLocationManager(
             return
         }
 
-        this.sendLocation(sendLocation, stopped, source, replayed)
+        this.sendLocation(sendLocation, stopped, source, replayed, offline)
     }
 
-    private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {
+    private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean, offline: Boolean = false) {
         val options = Radar.getTrackingOptions()
         val foregroundService = RadarSettings.getForegroundService(context)
 
@@ -601,6 +601,11 @@ internal class RadarLocationManager(
         logger.d("Sending location | source = $source; location = $location; stopped = $stopped; replayed = $replayed")
 
         val locationManager = this
+
+        if (offline) {
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, null, callback = null, offline = true)
+            return
+        }
 
         val callTrackApi = { beacons: Array<RadarBeacon>? ->
             this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, callback = object : RadarTrackApiCallback {

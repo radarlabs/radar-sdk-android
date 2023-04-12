@@ -235,7 +235,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, callback: RadarTrackApiCallback? = null) {
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, callback: RadarTrackApiCallback? = null, offline: Boolean = false, onlyReplaying: Boolean = false) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -347,9 +347,11 @@ internal class RadarApiClient(
             }
             params.putOpt("appId", context.packageName)
         } catch (e: JSONException) {
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            if (!onlyReplaying) {
+                callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
-            return
+                return
+            }
         }
 
         var path = "v1/track"
@@ -364,19 +366,28 @@ internal class RadarApiClient(
         var requestParams = params
         val nowMS = System.currentTimeMillis()
 
-        // before we track, check if replays need to sync
-        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && hasReplays && !verified
-        if (replaying) {
-            Radar.flushReplays(
-                replayParams = params,
-                callback = object : Radar.RadarTrackCallback {
-                    override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
-                        // pass through flush replay onComplete for track callback
-                        callback?.onComplete(status)
-                    }
-                }
-            )
-            return
+        val replaying = replayCount > 0 && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && !verified
+        if (replaying || onlyReplaying) {
+            val replaysList = mutableListOf<JSONObject>()
+            for (replay in replays) {
+                replaysList.add(replay.replayParams)
+            }
+            if (!onlyReplaying) {
+            replaysList.add(params)
+            }
+
+            path = "v1/track/replay"
+
+            requestParams = JSONObject()
+            requestParams.putOpt("replays", JSONArray(replaysList))
+        }
+
+        if (offline) {
+           params.putOpt("replayed", true)
+           params.putOpt("updatedAtMs", nowMS)
+           params.remove("updatedAtMsDiff")
+           Radar.addReplay(params)
+           return
         }
 
         apiHelper.request(context, "POST", path, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {

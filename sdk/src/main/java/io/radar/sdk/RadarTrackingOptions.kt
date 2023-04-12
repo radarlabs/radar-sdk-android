@@ -387,7 +387,7 @@ data class RadarTrackingOptions(
          */
         @JvmField
         val RESPONSIVE = RadarTrackingOptions(
-            desiredStoppedUpdateInterval = 0,
+            desiredStoppedUpdateInterval = 1800,
             fastestStoppedUpdateInterval = 0,
             desiredMovingUpdateInterval = 150,
             fastestMovingUpdateInterval = 30,

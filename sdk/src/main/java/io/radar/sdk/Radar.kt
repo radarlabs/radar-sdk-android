@@ -13,6 +13,7 @@ import io.radar.sdk.util.RadarLogBuffer
 import io.radar.sdk.util.RadarReplayBuffer
 import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
+import io.radar.sdk.Radar.RadarLocationSource
 import org.json.JSONObject
 import java.util.*
 
@@ -770,6 +771,19 @@ object Radar {
         trackOnce(desiredAccuracy, false, block)
     }
 
+    // a function that calls the apiClient.track with the following params:             RadarApiClient.track(location, false, false, Radar.RadarLocationSource.MANUAL, false, true, null, null, null, null, null, true) 
+    // and then calls the callback with the following params:             callback.onComplete(status, location, events, user)
+    @JvmStatic
+    fun trackReplayOnly(location: Location) {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("trackReplayOnly()", RadarLogType.SDK_CALL)
+
+        apiClient.track(location, false, false, RadarLocationSource.UNKNOWN, false, null, false, null, null, null, false, true)
+
+    }
+
     /**
      * Tracks the user's location once with the desired accuracy and optionally ranges beacons in the foreground.
      *
@@ -861,6 +875,8 @@ object Radar {
             }
         })
     }
+
+
 
     /**
      * Tracks the user's location once with the desired accuracy and optionally ranges beacons in the foreground.
@@ -3320,12 +3336,12 @@ object Radar {
     }
 
 
-    internal fun handleLocation(context: Context, location: Location, source: RadarLocationSource) {
+    internal fun handleLocation(context: Context, location: Location, source: RadarLocationSource, offline: Boolean = false) {
         if (!initialized) {
             initialize(context)
         }
 
-        locationManager.handleLocation(location, source)
+        locationManager.handleLocation(location, source, offline)
     }
 
     internal fun handleBeacons(context: Context, beacons: Array<RadarBeacon>?, source: RadarLocationSource) {
