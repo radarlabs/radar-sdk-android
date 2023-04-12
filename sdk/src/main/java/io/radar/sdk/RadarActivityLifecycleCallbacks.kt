@@ -112,4 +112,7 @@ internal class RadarActivityLifecycleCallbacks(
         updatePermissionsDenied(activity)
     }
 
+    fun isAppInForeground(): Boolean {
+        return foreground
+    }
 }

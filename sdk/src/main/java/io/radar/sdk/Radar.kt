@@ -14,6 +14,7 @@ import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
 import java.util.*
+import io.radar.sdk.RadarActivityLifecycleCallbacks
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -416,6 +417,8 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
+    private var radarActivityLifecycleCallbacks: RadarActivityLifecycleCallbacks? = null
+
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -474,7 +477,19 @@ object Radar {
             this.apiClient = RadarApiClient(this.context, logger)
         }
 
-        RadarSettings.updateSessionId(this.context)
+        val application = this.context as? Application
+        if (application != null) {
+            radarActivityLifecycleCallbacks = RadarActivityLifecycleCallbacks(fraud)
+            application.registerActivityLifecycleCallbacks(radarActivityLifecycleCallbacks)
+        }
+    
+        val foregrounded = radarActivityLifecycleCallbacks?.isAppInForeground() ?: false
+        if (foregrounded) {
+            this.logger.d("App is foregrounded")
+            RadarSettings.updateSessionId(this.context)
+        } else {
+            this.logger.d("App is backgrounded, not updating session ID")
+        }
 
         if (!this::batteryManager.isInitialized) {
             this.batteryManager = RadarBatteryManager(this.context)
@@ -497,9 +512,6 @@ object Radar {
         } else if (provider == RadarLocationServicesProvider.HUAWEI) {
             this.logger.d("Using Huawei location services")
         }
-
-        val application = this.context as? Application
-        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
 
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
