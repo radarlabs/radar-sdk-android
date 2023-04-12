@@ -35,6 +35,7 @@ class RadarForegroundService : Service() {
                 }
             } else if (intent.action == "stop") {
                 try {
+                    logger.d("Stopping foreground service")
                     stopForeground(true)
                     stopSelf()
                 } catch (e: Exception) {
@@ -44,6 +45,12 @@ class RadarForegroundService : Service() {
         }
 
         return START_STICKY
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        started = false
+        logger.d("Foreground service destroyed")
     }
 
     private fun startForegroundService(extras: Bundle?) {

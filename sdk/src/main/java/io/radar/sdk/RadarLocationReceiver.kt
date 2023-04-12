@@ -114,7 +114,16 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
-                    RadarJobScheduler.scheduleJob(context, location, source)
+                    val jobId = RadarJobScheduler.scheduleJob(context, location, source)
+                    Radar.handleLocation(context, location, source, true)
+                    if (jobId != -1) {
+                        RadarJobScheduler.cancelJob(context, jobId)
+                    }
+                    // Schedule an onlyReplaying job
+                    RadarJobScheduler.scheduleJob(context, true)
+
+
+
                 } else {
                     Radar.handleLocation(context, location, source)
                 }

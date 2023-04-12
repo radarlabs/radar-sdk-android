@@ -16,6 +16,7 @@ import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.stringForSource
 import io.radar.sdk.model.RadarBeacon
 import java.util.concurrent.atomic.AtomicInteger
+import io.radar.sdk.RadarApiClient
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class RadarJobScheduler : JobService() {
@@ -28,6 +29,7 @@ class RadarJobScheduler : JobService() {
         private const val EXTRA_TIME = "time"
         private const val EXTRA_SOURCE = "source"
         private const val EXTRA_BEACONS = "beacons"
+        private const val EXTRA_ONLY_REPLAYING = "onlyReplaying"
 
         private const val BASE_JOB_ID_LOCATIONS = 20160525 // Radar's birthday!
         private const val BASE_JOB_ID_BEACONS = 20210216 // Beacons launch date
@@ -39,7 +41,7 @@ class RadarJobScheduler : JobService() {
             context: Context,
             location: Location,
             source: RadarLocationSource
-        ) {
+        ) : Int {
             if (!Radar.initialized) {
                 Radar.initialize(context)
             }
@@ -72,16 +74,58 @@ class RadarJobScheduler : JobService() {
             val result = jobScheduler.schedule(jobInfo)
             if (result == JobScheduler.RESULT_SUCCESS) {
                 Radar.logger.d("Scheduling location job | source = $sourceStr; location = $location")
+                return jobId
             } else {
                 Radar.logger.d("Failed to schedule location job | source = $sourceStr; location = $location")
+                return -1
             }
+        }
+
+        // function to schedule a job where we call track with onlyReplaying true
+        internal fun scheduleJob(context : Context, onlyReplaying : Boolean) : Int {
+            if (!Radar.initialized) {
+                Radar.initialize(context)
+            }
+
+            val componentName = ComponentName(context, RadarJobScheduler::class.java)
+            val extras = PersistableBundle().apply {
+                putBoolean(EXTRA_ONLY_REPLAYING, true)
+            }
+
+            val settings = RadarSettings.getFeatureSettings(context)
+            val jobId = BASE_JOB_ID_LOCATIONS + (999999)
+
+            val jobInfo = JobInfo.Builder(jobId, componentName)
+                .setExtras(extras)
+                .setMinimumLatency(0)
+                .setOverrideDeadline(0)
+                .setRequiredNetworkType(
+                    if (settings.schedulerRequiresNetwork) JobInfo.NETWORK_TYPE_ANY else JobInfo.NETWORK_TYPE_NONE
+                )
+                .build()
+
+            val jobScheduler = context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
+            val result = jobScheduler.schedule(jobInfo)
+            if (result == JobScheduler.RESULT_SUCCESS) {
+                Radar.logger.d("Scheduling replaying job | onlyReplaying = $onlyReplaying")
+                return jobId
+            } else {
+                Radar.logger.d("Failed to schedule location job | onlyReplaying = $onlyReplaying")
+                return -1
+            }
+        }
+
+        internal fun cancelJob(context: Context, jobId: Int) {
+            val jobScheduler = context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
+            Radar.logger.d("Cancelling job | jobId = $jobId")
+            jobScheduler.cancel(jobId)
         }
 
         internal fun scheduleJob(
             context: Context,
             beacons: Array<RadarBeacon>,
             source: RadarLocationSource
-        ) {
+        ) : Int {
             if (!Radar.initialized) {
                 Radar.initialize(context)
             }
@@ -111,8 +155,10 @@ class RadarJobScheduler : JobService() {
             val result = jobScheduler.schedule(jobInfo)
             if (result == JobScheduler.RESULT_SUCCESS) {
                 Radar.logger.d("Scheduling beacons job | source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
+                return jobId
             } else {
                 Radar.logger.d("Failed to schedule beacons job | source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
+                return -1
             }
         }
     }
@@ -129,6 +175,28 @@ class RadarJobScheduler : JobService() {
         val accuracy = extras.getDouble(EXTRA_ACCURACY).toFloat()
         val provider = extras.getString(EXTRA_PROVIDER)
         val time = extras.getLong(EXTRA_TIME)
+        val onlyReplaying = extras.getBoolean(EXTRA_ONLY_REPLAYING)
+
+        if (onlyReplaying) {
+            Radar.logger.d("Starting onlyReplaying job")
+
+            // call the apiclient track with onlyReplaying true
+            val location = Location(provider).apply {
+                this.latitude = 0.0
+                this.longitude = 0.0
+                this.accuracy = 0.0f
+                this.time = 0
+            }
+            // get an api client instance to call track
+            Radar.trackReplayOnly(location)
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                this.jobFinished(params, false)
+            }, 10000)
+
+
+            return true
+        }
 
         val sourceStr = extras.getString(EXTRA_SOURCE) ?: return false
 
