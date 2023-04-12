@@ -370,6 +370,18 @@ internal class RadarApiClient(
         if (replaying || onlyReplaying) {
             val replaysList = mutableListOf<JSONObject>()
             for (replay in replays) {
+                var replayParams = replay.replayParams
+                // if replayParams replayed isn't set to true, check if updatedAtMS is within 10s of now
+                // if it isn't, set replayed to true, remove updatedAtMsDiff
+                if (!replayParams.optBoolean("replayed")) {
+                    val updatedAtMs = replayParams.optLong("updatedAtMs")
+                    if (nowMS - updatedAtMs > 10000) {
+                        replayParams.putOpt("replayed", true)
+                        replayParams.remove("updatedAtMsDiff")
+                    }
+                }
+
+                 
                 replaysList.add(replay.replayParams)
             }
             if (!onlyReplaying) {
@@ -383,9 +395,9 @@ internal class RadarApiClient(
         }
 
         if (offline) {
-           params.putOpt("replayed", true)
+            //    params.putOpt("replayed", true)
            params.putOpt("updatedAtMs", nowMS)
-           params.remove("updatedAtMsDiff")
+            //    params.remove("updatedAtMsDiff")
            Radar.addReplay(params)
            return
         }
@@ -393,12 +405,12 @@ internal class RadarApiClient(
         apiHelper.request(context, "POST", path, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
+                    if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && !onlyReplaying) {
                         params.putOpt("replayed", true)
                         params.putOpt("updatedAtMs", nowMS)
                         params.remove("updatedAtMsDiff")
                         Radar.addReplay(params)
-                    } else if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
+                    } else if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION) && !onlyReplaying) {
                         RadarState.setLastFailedStoppedLocation(context, location)
                     }
 
