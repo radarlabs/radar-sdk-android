@@ -751,6 +751,8 @@ object Radar {
         }
         this.logger.i("trackReplayOnly()", RadarLogType.SDK_CALL)
 
+        locationManager.trackReplayOnly(location)
+
         apiClient.track(location, false, false, RadarLocationSource.UNKNOWN, false, null, false, null, null, null, false, true)
 
     }
