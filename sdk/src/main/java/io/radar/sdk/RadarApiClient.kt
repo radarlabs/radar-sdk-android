@@ -293,7 +293,7 @@ internal class RadarApiClient(
         var requestParams = params
         val nowMS = System.currentTimeMillis()
 
-        val replaying = replayCount > 0 && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL
+        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0 && !verified
         if (replaying) {
             val replaysList = mutableListOf<JSONObject>()
             for (replay in replays) {
