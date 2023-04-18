@@ -477,14 +477,7 @@ object Radar {
             this.apiClient = RadarApiClient(this.context, logger)
         }
 
-        val application = this.context as? Application
-        if (application != null) {
-            radarActivityLifecycleCallbacks = RadarActivityLifecycleCallbacks(fraud)
-            application.registerActivityLifecycleCallbacks(radarActivityLifecycleCallbacks)
-        }
-    
-        val foregrounded = radarActivityLifecycleCallbacks?.isAppInForeground() ?: false
-        if (foregrounded) {
+        if (RadarActivityLifecycleCallbacks.foreground) {
             this.logger.d("App is foregrounded")
             RadarSettings.updateSessionId(this.context)
         } else {

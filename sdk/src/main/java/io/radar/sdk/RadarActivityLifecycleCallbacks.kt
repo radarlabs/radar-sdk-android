@@ -111,8 +111,4 @@ internal class RadarActivityLifecycleCallbacks(
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         updatePermissionsDenied(activity)
     }
-
-    fun isAppInForeground(): Boolean {
-        return foreground
-    }
 }
