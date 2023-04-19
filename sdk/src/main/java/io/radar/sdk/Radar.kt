@@ -417,8 +417,6 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
-    private var radarActivityLifecycleCallbacks: RadarActivityLifecycleCallbacks? = null
-
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
