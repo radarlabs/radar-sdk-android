@@ -506,6 +506,9 @@ object Radar {
             this.logger.d("Using Huawei location services")
         }
 
+        val application = this.context as? Application
+        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
+
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(config: RadarConfig) {
