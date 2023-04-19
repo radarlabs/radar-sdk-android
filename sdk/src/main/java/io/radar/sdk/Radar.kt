@@ -14,6 +14,7 @@ import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
 import java.util.*
+import io.radar.sdk.RadarActivityLifecycleCallbacks
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -474,7 +475,12 @@ object Radar {
             this.apiClient = RadarApiClient(this.context, logger)
         }
 
-        RadarSettings.updateSessionId(this.context)
+        if (RadarActivityLifecycleCallbacks.foreground) {
+            this.logger.d("App is foregrounded")
+            RadarSettings.updateSessionId(this.context)
+        } else {
+            this.logger.d("App is backgrounded, not updating session ID")
+        }
 
         if (!this::batteryManager.isInitialized) {
             this.batteryManager = RadarBatteryManager(this.context)
