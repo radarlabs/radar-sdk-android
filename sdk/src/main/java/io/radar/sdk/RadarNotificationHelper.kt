@@ -5,6 +5,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.os.Build
+import android.app.PendingIntent
+import android.content.Intent
 import androidx.core.app.NotificationCompat
 import io.radar.sdk.model.RadarEvent
 
@@ -37,6 +39,8 @@ class RadarNotificationHelper {
                     notificationText = event.trip?.metadata?.optString("radar:arrivalNotificationText")
                 }
 
+                Radar.logger.d("showing notification for event ${event._id} with text $notificationText")
+
                 if (notificationText != null) {
                     val id = event._id
 
@@ -45,10 +49,13 @@ class RadarNotificationHelper {
 
                     val importance = NotificationManager.IMPORTANCE_HIGH
                     val channel = NotificationChannel(CHANNEL_NAME, CHANNEL_NAME, importance)
+                    channel.enableVibration(true)
                     notificationManager?.createNotificationChannel(channel)
+
 
                     val notification = NotificationCompat.Builder(context, CHANNEL_ID)
                         .setSmallIcon(context.applicationContext.applicationInfo.icon)
+                        .setAutoCancel(true)
                         .setContentText(notificationText)
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                         .build()
