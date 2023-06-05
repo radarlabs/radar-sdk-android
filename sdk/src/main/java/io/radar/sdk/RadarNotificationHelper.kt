@@ -39,7 +39,7 @@ class RadarNotificationHelper {
                     notificationText = event.trip?.metadata?.optString("radar:arrivalNotificationText")
                 }
 
-                Radar.logger.d("showing notification for event ${event._id} with text $notificationText")
+                Radar.logger.d("showing notification for event ${event._id} with text ${notificationText}")
 
                 if (notificationText != null) {
                     val id = event._id
@@ -52,14 +52,14 @@ class RadarNotificationHelper {
                     channel.enableVibration(true)
                     notificationManager?.createNotificationChannel(channel)
 
-
-                    val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+                    val notification = NotificationCompat.Builder(context, CHANNEL_NAME)
                         .setSmallIcon(context.applicationContext.applicationInfo.icon)
                         .setAutoCancel(true)
                         .setContentText(notificationText)
                         .setStyle(NotificationCompat.BigTextStyle().bigText(notificationText))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                         .build()
+
                     notificationManager?.notify(id, NOTIFICATION_ID, notification)
                 }
             }
