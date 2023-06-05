@@ -57,6 +57,7 @@ class RadarNotificationHelper {
                         .setSmallIcon(context.applicationContext.applicationInfo.icon)
                         .setAutoCancel(true)
                         .setContentText(notificationText)
+                        .setStyle(NotificationCompat.BigTextStyle().bigText(notificationText))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                         .build()
                     notificationManager?.notify(id, NOTIFICATION_ID, notification)
