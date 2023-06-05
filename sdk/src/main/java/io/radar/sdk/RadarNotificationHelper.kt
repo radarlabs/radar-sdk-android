@@ -14,7 +14,6 @@ class RadarNotificationHelper {
 
     internal companion object {
         private const val CHANNEL_NAME = "Location"
-        private const val CHANNEL_ID = "RadarNotificationHelper"
         private const val NOTIFICATION_ID = 20160525 // Radar's birthday!
 
         internal fun showNotifications(context: Context, events: Array<RadarEvent>) {
@@ -41,7 +40,7 @@ class RadarNotificationHelper {
 
                 Radar.logger.d("showing notification for event ${event._id} with text ${notificationText}")
 
-                if (notificationText != null) {
+                if (notificationText != null && notificationText.isNotEmpty()) {
                     val id = event._id
 
                     val notificationManager =
