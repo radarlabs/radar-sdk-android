@@ -10,7 +10,7 @@ apply plugin: "org.jetbrains.dokka"
 apply plugin: 'io.radar.mvnpublish'
 
 ext {
-    radarVersion = '3.8.4-beta.5'
+    radarVersion = '3.8.4-beta.6'
 }
 
 String buildNumber = ".${System.currentTimeMillis()}"

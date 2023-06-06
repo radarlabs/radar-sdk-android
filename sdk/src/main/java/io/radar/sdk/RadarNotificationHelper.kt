@@ -38,8 +38,6 @@ class RadarNotificationHelper {
                     notificationText = event.trip?.metadata?.optString("radar:arrivalNotificationText")
                 }
 
-                Radar.logger.d("showing notification for event ${event._id} with text ${notificationText}")
-
                 if (notificationText != null && notificationText.isNotEmpty()) {
                     val id = event._id
 
