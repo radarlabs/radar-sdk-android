@@ -89,7 +89,7 @@ class RadarJobScheduler : JobService() {
 
             val componentName = ComponentName(context, RadarJobScheduler::class.java)
             val extras = PersistableBundle().apply {
-                putBoolean(EXTRA_ONLY_REPLAYING, true)
+                putString(EXTRA_ONLY_REPLAYING, "true") // "true
             }
 
             val settings = RadarSettings.getFeatureSettings(context)
@@ -175,7 +175,7 @@ class RadarJobScheduler : JobService() {
         val accuracy = extras.getDouble(EXTRA_ACCURACY).toFloat()
         val provider = extras.getString(EXTRA_PROVIDER)
         val time = extras.getLong(EXTRA_TIME)
-        val onlyReplaying = extras.getBoolean(EXTRA_ONLY_REPLAYING)
+        val onlyReplaying = extras.getString(EXTRA_ONLY_REPLAYING) == "true"
 
         if (onlyReplaying) {
             Radar.logger.d("Starting onlyReplaying job")
