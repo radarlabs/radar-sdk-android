@@ -304,19 +304,15 @@ internal class RadarLocationManager(
                 transitionExit = true
             )
 
-            val surroundingGeofences = this.createSurroundingGeofences(geofence)
-
-            val geofences: List<RadarAbstractGeofence> = listOf(geofence) + surroundingGeofences
-            val geofencesArray = geofences.toTypedArray()
+            val geofences = arrayOf(geofence)
 
             val request = RadarAbstractLocationClient.RadarAbstractGeofenceRequest(
                 initialTriggerExit = true
             )
 
             logger.d("Adding stopped bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier")
-            logger.d("Adding ${surroundingGeofences.size} surrounding geofences")
 
-            locationClient.addGeofences(geofencesArray, request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context)) { success ->
+            locationClient.addGeofences(geofences, request, RadarLocationReceiver.getBubbleGeofencePendingIntent(context)) { success ->
                 if (success) {
                     logger.d("Successfully added stopped bubble geofence")
                 } else {
@@ -337,19 +333,16 @@ internal class RadarLocationManager(
                 dwellDuration = options.stopDuration * 1000 + 10000
             )
 
-            val surroundingGeofences = this.createSurroundingGeofences(geofence)
-
             val geofenceRequest = RadarAbstractLocationClient.RadarAbstractGeofenceRequest(
                 initialTriggerExit = true,
                 initialTriggerDwell = true
             )
 
-            val geofences: List<RadarAbstractGeofence> = listOf(geofence) + surroundingGeofences
-            val geofencesArray = geofences.toTypedArray()
+            val geofences = arrayOf(geofence)
 
             logger.d("Adding moving bubble geofence | latitude = ${location.latitude}; longitude = ${location.longitude}; radius = $radius; identifier = $identifier")
 
-            locationClient.addGeofences(geofencesArray, geofenceRequest, RadarLocationReceiver.getBubbleGeofencePendingIntent(context)) { success ->
+            locationClient.addGeofences(geofences, geofenceRequest, RadarLocationReceiver.getBubbleGeofencePendingIntent(context)) { success ->
                 if (success) {
                     logger.d("Successfully added moving bubble geofence")
                 } else {
@@ -357,36 +350,6 @@ internal class RadarLocationManager(
                 }
             }
         }
-    }
-
-    private fun createSurroundingGeofences(bubbleGeofence: RadarAbstractGeofence, numGeofences: Int = 6): List<RadarAbstractGeofence> {
-        val surroundingGeofences = mutableListOf<RadarAbstractGeofence>()
-        val angleStep = 2 * PI / numGeofences
-        val distanceFromCenter = 1.66 * bubbleGeofence.radius
-
-        val metersPerDegreeLatitude = 111111.0
-        val metersPerDegreeLongitude = 111111.0 * cos(Math.toRadians(bubbleGeofence.latitude))
-    
-        for (i in 0 until numGeofences) {
-            val angle = i * angleStep
-            val offsetX = distanceFromCenter * cos(angle) / metersPerDegreeLongitude
-            val offsetY = distanceFromCenter * sin(angle) / metersPerDegreeLatitude
-            val latitude = bubbleGeofence.latitude + offsetX
-            val longitude = bubbleGeofence.longitude + offsetY
-            val requestId = "surrounding_geofence_${i + 1}"
-    
-            surroundingGeofences.add(
-                RadarAbstractGeofence(
-                    requestId = requestId,
-                    latitude = latitude,
-                    longitude = longitude,
-                    radius = bubbleGeofence.radius,
-                    transitionEnter = true,
-                )
-            )
-        }
-
-        return surroundingGeofences
     }
 
     private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
