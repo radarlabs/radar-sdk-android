@@ -172,7 +172,7 @@ internal class RadarHuaweiLocationClient(
         }
     }
 
-    override fun getLocationFromLocationIntent(intent: Intent): Location? {
+    override fun getLocationsFromLocationIntent(intent: Intent): List<Location>? {
         if (intent == null) {
             return null
         }
@@ -183,7 +183,7 @@ internal class RadarHuaweiLocationClient(
             return null
         }
 
-        return result.lastLocation
+        return result.locations
     }
 
     private fun priorityForDesiredAccuracy(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy) =

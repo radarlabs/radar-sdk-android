@@ -62,8 +62,8 @@ internal abstract class RadarAbstractLocationClient() {
         intent: Intent
     ): Radar.RadarLocationSource?
 
-    abstract fun getLocationFromLocationIntent(
+    abstract fun getLocationsFromLocationIntent(
         intent: Intent
-    ): Location?
+    ): List<Location>?
 
 }
