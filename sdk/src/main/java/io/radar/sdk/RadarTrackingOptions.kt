@@ -377,7 +377,7 @@ data class RadarTrackingOptions(
             desiredMovingUpdateInterval = 150,
             fastestMovingUpdateInterval = 30,
             desiredSyncInterval = 20,
-            desiredAccuracy = RadarTrackingOptionsDesiredAccuracy.HIGH,
+            desiredAccuracy = RadarTrackingOptionsDesiredAccuracy.MEDIUM,
             stopDuration = 140,
             stopDistance = 70,
             startTrackingAfter = null,
