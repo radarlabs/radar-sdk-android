@@ -330,9 +330,7 @@ internal class RadarApiClient(
         }
 
         if (offline) {
-            //    params.putOpt("replayed", true)
            params.putOpt("updatedAtMs", nowMS)
-            //    params.remove("updatedAtMsDiff")
            Radar.addReplay(params)
            return
         }

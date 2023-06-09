@@ -180,14 +180,13 @@ class RadarJobScheduler : JobService() {
         if (onlyReplaying) {
             Radar.logger.d("Starting onlyReplaying job")
 
-            // call the apiclient track with onlyReplaying true
+            // call the apiclient track with onlyReplaying true & the following dummy location
             val location = Location(provider).apply {
                 this.latitude = 0.0
                 this.longitude = 0.0
                 this.accuracy = 0.0f
                 this.time = 0
             }
-            // get an api client instance to call track
             Radar.trackReplayOnly(location)
 
             Handler(Looper.getMainLooper()).postDelayed({
