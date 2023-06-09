@@ -25,7 +25,6 @@ internal class RadarMockLocationProvider() : RadarAbstractLocationClient() {
     }
 
     override fun getLocationsFromLocationIntent(intent: Intent): List<Location>? {
-        // return a list that has mockLocation in it
         return listOf(mockLocation!!)
     }
 
