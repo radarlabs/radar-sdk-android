@@ -11,81 +11,74 @@ import kotlin.random.Random
 
 @RunWith(JUnit4::class)
 class JobMapperTest {
-
-    private lateinit var jobMapper: JobMapper
-
-    @Before
-    fun setUp() {
-        jobMapper = JobMapper()
-    }
-
     @Test
     fun testGetJobId() {
         // Precondition
-        assertEquals(JobMapper.DEFAULT_JOB_ID, jobMapper.getJobId(0))
+        assertEquals(JobMapper.DEFAULT_JOB_ID, JobMapper.getJobId(0))
         val n = 10
         // Initialize the size
-        jobMapper.getJobId(n)
+        JobMapper.getJobId(n)
 
         // Increment the initial job
-        jobMapper.incAndGet(JobMapper.DEFAULT_JOB_ID)
+        JobMapper.incAndGet(JobMapper.DEFAULT_JOB_ID)
 
         // Shows thread-safety
         val latch = CountDownLatch(n)
         for (i in 0 until n) {
             Thread().run {
-                jobMapper.incAndGet(JobMapper.DEFAULT_JOB_ID + i)
+                JobMapper.incAndGet(JobMapper.DEFAULT_JOB_ID + i)
                 n.dec()
             }
         }
         latch.await(10, TimeUnit.SECONDS)
 
         // This shows that the first Job ID has one additional count, so it is the one that will be overridden
-        assertEquals(2, jobMapper.get(JobMapper.DEFAULT_JOB_ID))
+        assertEquals(2, JobMapper.get(JobMapper.DEFAULT_JOB_ID))
         for (i in 1 until n) {
-            assertEquals(1, jobMapper.get(JobMapper.DEFAULT_JOB_ID + i))
+            assertEquals(1, JobMapper.get(JobMapper.DEFAULT_JOB_ID + i))
         }
 
         // Shows the override behavior
-        assertEquals(JobMapper.DEFAULT_JOB_ID, jobMapper.getJobId(n))
+        assertEquals(JobMapper.DEFAULT_JOB_ID, JobMapper.getJobId(n))
     }
 
     @Test
     fun testAdjustSize() {
-        assertEquals(0, jobMapper.size)
+        JobMapper.adjustSize(0)
+        assertEquals(0, JobMapper.size)
         for (i in 0..10) {
-            jobMapper.incAndGet(jobMapper.getJobId(i))
+            JobMapper.incAndGet(JobMapper.getJobId(i))
         }
-        assertEquals(10, jobMapper.size)
-        jobMapper.getJobId(5)
-        assertEquals(5, jobMapper.size)
+        assertEquals(10, JobMapper.size)
+        JobMapper.getJobId(5)
+        assertEquals(5, JobMapper.size)
     }
 
     @Test
     fun testGet() {
         val n = Random.nextInt(10)
-        val jobId = jobMapper.getJobId(n)
-        assertEquals(0, jobMapper.get(jobId))
+        val jobId = JobMapper.getJobId(n)
+        assertEquals(0, JobMapper.get(jobId))
     }
 
     @Test
     fun testIncAndGet() {
         val n = Random.nextInt(10)
-        val jobId = jobMapper.getJobId(n)
-        assertEquals(1, jobMapper.incAndGet(jobId))
-        assertEquals(2, jobMapper.incAndGet(jobId))
+        val jobId = JobMapper.getJobId(n)
+        assertEquals(1, JobMapper.incAndGet(jobId))
+        assertEquals(2, JobMapper.incAndGet(jobId))
     }
 
     @Test
     fun testClear() {
         val n = Random.nextInt(10) + 2
-        val jobId = jobMapper.getJobId(n)
+        val jobId = JobMapper.getJobId(n)
         for (i in 0 until n) {
-            jobMapper.incAndGet(jobId)
+            JobMapper.incAndGet(jobId)
         }
-        assertEquals(n + 1, jobMapper.incAndGet(jobId))
-        jobMapper.clear(jobId)
-        assertEquals(0, jobMapper.get(jobId))
+        assertEquals(n + 1, JobMapper.incAndGet(jobId))
+        JobMapper.clear(jobId)
+        assertEquals(0, JobMapper.get(jobId))
 
     }
 }
