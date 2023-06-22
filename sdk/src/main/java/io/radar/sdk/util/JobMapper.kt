@@ -7,16 +7,9 @@ import java.util.concurrent.ConcurrentHashMap
  * Thread-safe storage for use with [io.radar.sdk.RadarJobScheduler], for storing and accessing Job IDs and their
  * associated counters, which are used for logging and debugging.
  */
-internal class JobMapper {
+internal object JobMapper {
 
-    companion object {
-        /**
-         * Default Job ID (Radar's birthday!)
-         */
-        @VisibleForTesting
-        const val DEFAULT_JOB_ID = 20160525
-    }
-
+    const val DEFAULT_JOB_ID = 20160525
     private val counter: MutableMap<Int, Int> = ConcurrentHashMap()
     var size: Int = 0
         private set

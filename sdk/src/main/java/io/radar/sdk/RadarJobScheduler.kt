@@ -15,6 +15,7 @@ import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.stringForSource
 import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.util.JobMapper
 import java.util.concurrent.atomic.AtomicInteger
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -57,7 +58,8 @@ class RadarJobScheduler : JobService() {
             val sourceStr = stringForSource(source)
 
             val settings = RadarSettings.getFeatureSettings(context)
-            val jobId = BASE_JOB_ID_LOCATIONS + (numActiveLocationJobs.incrementAndGet() % settings.maxConcurrentJobs)
+            val maxConcurrentJobs = 20
+            val jobId = JobMapper.getJobId(maxConcurrentJobs)
 
             val jobInfo = JobInfo.Builder(jobId, componentName)
                 .setExtras(extras)
@@ -71,7 +73,7 @@ class RadarJobScheduler : JobService() {
             val jobScheduler = context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
             val result = jobScheduler.schedule(jobInfo)
             if (result == JobScheduler.RESULT_SUCCESS) {
-                Radar.logger.d("Scheduling location job | source = $sourceStr; location = $location")
+                Radar.logger.d("Scheduling location job | jobId = $jobId source = $sourceStr; location = $location")
             } else {
                 Radar.logger.d("Failed to schedule location job | source = $sourceStr; location = $location")
             }
@@ -94,9 +96,10 @@ class RadarJobScheduler : JobService() {
             }
 
             val sourceStr = stringForSource(source)
-
+            
             val settings = RadarSettings.getFeatureSettings(context)
-            val jobId = BASE_JOB_ID_BEACONS + (numActiveBeaconJobs.incrementAndGet() % settings.maxConcurrentJobs)
+            val maxConcurrentJobs = 20
+            val jobId = JobMapper.getJobId(maxConcurrentJobs)
 
             val jobInfo = JobInfo.Builder(jobId, componentName)
                 .setExtras(extras)
@@ -110,7 +113,7 @@ class RadarJobScheduler : JobService() {
             val jobScheduler = context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
             val result = jobScheduler.schedule(jobInfo)
             if (result == JobScheduler.RESULT_SUCCESS) {
-                Radar.logger.d("Scheduling beacons job | source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
+                Radar.logger.d("Scheduling beacons job | id = $jobId source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
             } else {
                 Radar.logger.d("Failed to schedule beacons job | source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
             }
@@ -145,7 +148,8 @@ class RadarJobScheduler : JobService() {
                 this.jobFinished(params, false)
             }, 10000)
 
-            numActiveBeaconJobs.set(0)
+            JobMapper.clear(params.jobId)
+
 
             return true
         } else {
@@ -181,7 +185,7 @@ class RadarJobScheduler : JobService() {
                 this.jobFinished(params, false)
             }, 10000)
 
-            numActiveLocationJobs.set(0)
+            JobMapper.clear(params.jobId)
 
             return true
         }
