@@ -1135,6 +1135,18 @@ object Radar {
         return RadarSettings.getTracking(context)
     }
 
+    @JvmStatic
+    fun getHost(): String {
+
+        return RadarSettings.getHost(context)
+    }
+
+    @JvmStatic
+    fun getPublishableKey(): String? {
+
+        return RadarSettings.getPublishableKey(context)
+    }
+
     /**
      * Returns the current tracking options.
      *
