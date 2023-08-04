@@ -2106,7 +2106,7 @@ object Radar {
      * @param[near] A location for the search.
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
-     * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[countryCode] An optional country filter. A string, the unique 2-letter country code.
      * @param[callback] A callback.
      */
     @JvmStatic
@@ -2115,7 +2115,7 @@ object Radar {
         near: Location? = null,
         layers: Array<String>? = null,
         limit: Int? = null,
-        country: String? = null,
+        countryCode: String? = null,
         expandUnits: Boolean? = null,
         callback: RadarGeocodeCallback
     ) {
@@ -2125,7 +2125,7 @@ object Radar {
             return
         }
 
-        apiClient.autocomplete(query, near, layers, limit, country, expandUnits, object : RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.autocomplete(query, near, layers, limit, countryCode, expandUnits, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2143,7 +2143,7 @@ object Radar {
      * @param[near] A location for the search.
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
-     * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[countryCode] An optional country filter. A string, the unique 2-letter country code.
      * @param[block] A block callback.
      */
 
@@ -2152,7 +2152,7 @@ object Radar {
         near: Location? = null,
         layers: Array<String>? = null,
         limit: Int? = null,
-        country: String? = null,
+        countryCode: String? = null,
         expandUnits: Boolean? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
@@ -2161,7 +2161,7 @@ object Radar {
             near,
             layers,
             limit,
-            country,
+            countryCode,
             expandUnits,
             object : RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
@@ -3144,5 +3144,74 @@ object Radar {
             logBuffer.write(level, message, type)
         }
     }
+}
 
+/**
+ * Autocompletes partial addresses and place names, sorted by relevance.
+ *
+ * @see [](https://radar.com/documentation/api#autocomplete)
+ *
+ * @param[query] The partial address or place name to autocomplete.
+ * @param[near] A location for the search.
+ * @param[layers] Optional layer filters.
+ * @param[limit] The max number of addresses to return. A number between 1 and 100.
+ * @param[country] An optional country filter. A string, the unique 2-letter country code.
+ * @param[callback] A callback.
+ */
+
+fun Radar.autocomplete(
+    query: String,
+    near: Location? = null,
+    layers: Array<String>? = null,
+    limit: Int? = null,
+    country: String? = null,
+    expandUnits: Boolean? = null,
+    callback: Radar.RadarGeocodeCallback
+) {
+    Radar.autocomplete(
+        query,
+        near,
+        layers,
+        limit,
+        countryCode = country,
+        expandUnits,
+        callback
+        )
+}
+
+/**
+ * Autocompletes partial addresses and place names, sorted by relevance.
+ *
+ * @see [](https://radar.com/documentation/api#autocomplete)
+ *
+ * @param[query] The partial address or place name to autocomplete.
+ * @param[near] A location for the search.
+ * @param[layers] Optional layer filters.
+ * @param[limit] The max number of addresses to return. A number between 1 and 100.
+ * @param[country] An optional country filter. A string, the unique 2-letter country code.
+ * @param[block] A block callback.
+ */
+
+fun Radar.autocomplete(
+    query: String,
+    near: Location? = null,
+    layers: Array<String>? = null,
+    limit: Int? = null,
+    country: String? = null,
+    expandUnits: Boolean? = null,
+    block: (status: Radar.RadarStatus, addresses: Array<RadarAddress>?) -> Unit
+) {
+    Radar.autocomplete(
+        query,
+        near,
+        layers,
+        limit,
+        countryCode = country,
+        expandUnits,
+        object : Radar.RadarGeocodeCallback {
+            override fun onComplete(status: Radar.RadarStatus, addresses: Array<RadarAddress>?) {
+                block(status, addresses)
+            }
+        }
+    )
 }
