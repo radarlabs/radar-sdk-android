@@ -3147,6 +3147,7 @@ object Radar {
 }
 
 /**
+ * WARNING: this interface is deprecated! Please refer to the new interface implemented within the Radar object
  * Autocompletes partial addresses and place names, sorted by relevance.
  *
  * @see [](https://radar.com/documentation/api#autocomplete)
@@ -3180,6 +3181,7 @@ fun Radar.autocomplete(
 }
 
 /**
+ * WARNING: this interface is deprecated! Please refer to the new interface implemented within the Radar object
  * Autocompletes partial addresses and place names, sorted by relevance.
  *
  * @see [](https://radar.com/documentation/api#autocomplete)
