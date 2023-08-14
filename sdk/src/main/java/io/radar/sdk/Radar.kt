@@ -505,6 +505,9 @@ object Radar {
         }
 
         val application = this.context as? Application
+        if (fraud) {
+            RadarSettings.setSharing(this.context, false)
+        }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
 
         val usage = "initialize"
