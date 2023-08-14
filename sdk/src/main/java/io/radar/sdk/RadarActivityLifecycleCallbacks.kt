@@ -6,6 +6,7 @@ import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -70,7 +71,8 @@ internal class RadarActivityLifecycleCallbacks(
             val touchView = object: View(activity.applicationContext) {
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     try {
-                        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN) {
+                        val inputDevice = InputDevice.getDevice(event.deviceId)
+                        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN || inputDevice.isVirtual) {
                             RadarSettings.setSharing(activity.applicationContext, true)
                         }
                     }  catch (e: Exception) {
