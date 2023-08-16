@@ -28,7 +28,8 @@ internal class RadarApiClient(
             events: Array<RadarEvent>? = null,
             user: RadarUser? = null,
             nearbyGeofences: Array<RadarGeofence>? = null,
-            config: RadarConfig? = null
+            config: RadarConfig? = null,
+            token: String? = null
         )
     }
 
@@ -170,7 +171,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, callback: RadarTrackApiCallback? = null) {
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -272,6 +273,7 @@ internal class RadarApiClient(
                 params.putOpt("integrityToken", integrityToken)
                 params.putOpt("integrityException", integrityException)
                 params.putOpt("sharing", RadarUtils.isScreenSharing(context))
+                params.putOpt("encrypted", encrypted)
             }
             params.putOpt("appId", context.packageName)
         } catch (e: JSONException) {
@@ -341,6 +343,13 @@ internal class RadarApiClient(
                 }
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
                     RadarGeofence.fromJson(nearbyGeofencesArr)
+                }
+                val token = res.optString("token")
+
+                if (encrypted == true) {
+                    callback?.onComplete(status, res, null, null, null, null, token)
+
+                    return
                 }
 
                 if (user != null) {
