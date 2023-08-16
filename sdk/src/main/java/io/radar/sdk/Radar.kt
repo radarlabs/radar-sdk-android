@@ -974,7 +974,7 @@ object Radar {
     }
 
     /**
-     * Tracks the user's location with device integrity information for location verification use cases.
+     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Decrypt the JWT server-side using your private key.
      *
      * Note that you must configure SSL pinning before calling this method.
      *
