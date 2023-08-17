@@ -460,7 +460,7 @@ object Radar {
         }
 
         if (!this::replayBuffer.isInitialized) {
-            this.replayBuffer = RadarSimpleReplayBuffer()
+            this.replayBuffer = RadarSimpleReplayBuffer(this.context)
         }
 
         if (!this::logger.isInitialized) {
@@ -515,6 +515,11 @@ object Radar {
             override fun onComplete(config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config.meta)
                 RadarSettings.setFeatureSettings(context, config.featureSettings)
+                val options = Radar.getTrackingOptions()
+        
+                if (options.replay.toRadarString() == "all") {
+                    replayBuffer.loadFromSharedPreferences()
+                }
             }
         })
 
@@ -2960,6 +2965,7 @@ object Radar {
     @JvmStatic
     internal fun addReplay(replayParams: JSONObject) {
         replayBuffer.write(replayParams)
+
     }
 
     @JvmStatic
