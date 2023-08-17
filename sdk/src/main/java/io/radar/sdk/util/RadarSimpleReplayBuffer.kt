@@ -4,18 +4,17 @@ import io.radar.sdk.Radar
 import io.radar.sdk.model.RadarReplay
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 // TODO: determine if we need the above and below
 import java.util.concurrent.LinkedBlockingDeque
 import org.json.JSONObject
+import org.json.JSONArray
 
 /**
  * A buffer for replay events.
  */
 
 internal class RadarSimpleReplayBuffer(private val context: Context) : RadarReplayBuffer {
-    init {
-        loadFromSharedPreferences()
-    }
 
     private companion object {
         const val MAXIMUM_CAPACITY = 120
@@ -55,7 +54,7 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
         getSharedPreferences(context).edit { putString(KEY_REPLAYS, replaysAsJsonArray.toString()) }
     }
 
-    private fun loadFromSharedPreferences() {
+    override fun loadFromSharedPreferences() {
         val replaysAsString = getSharedPreferences(context).getString(KEY_REPLAYS, null)
         replaysAsString?.let {
             val replaysJsonArray = JSONArray(it)

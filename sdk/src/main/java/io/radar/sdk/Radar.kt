@@ -518,7 +518,7 @@ object Radar {
                 val options = Radar.getTrackingOptions()
         
                 if (options.replay.toRadarString() == "all") {
-                    replayBuffer.loadFromSharedPreferences()
+                    Radar.loadReplayBufferFromSharedPreferences()
                 }
             }
         })
@@ -2966,6 +2966,15 @@ object Radar {
     internal fun addReplay(replayParams: JSONObject) {
         replayBuffer.write(replayParams)
 
+    }
+
+    @JvmStatic
+    internal fun loadReplayBufferFromSharedPreferences() {
+        if (!initialized) {
+            return
+         }
+        
+         replayBuffer.loadFromSharedPreferences()
     }
 
     @JvmStatic
