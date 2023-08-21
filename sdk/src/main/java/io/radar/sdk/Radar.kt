@@ -516,8 +516,9 @@ object Radar {
                 locationManager.updateTrackingFromMeta(config.meta)
                 RadarSettings.setFeatureSettings(context, config.featureSettings)
                 val options = Radar.getTrackingOptions()
-        
-                if (options.replay.toRadarString() == "all") {
+                val isReplaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL
+
+                if (isReplaying) {
                     Radar.loadReplayBufferFromSharedPreferences()
                 }
             }
@@ -2975,6 +2976,13 @@ object Radar {
          }
         
          replayBuffer.loadFromSharedPreferences()
+
+        //  check the length of replays now
+        val replays = getReplays()
+        val replayCount = replays.size 
+        // log the length
+        logger.i("loadReplayBufferFromSharedPreferences() replayCount = $replayCount", RadarLogType.SDK_CALL)
+        
     }
 
     @JvmStatic
