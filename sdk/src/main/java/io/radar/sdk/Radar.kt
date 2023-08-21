@@ -14,7 +14,6 @@ import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
 import java.util.*
-import io.radar.sdk.RadarActivityLifecycleCallbacks
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -85,12 +84,12 @@ object Radar {
     }
 
     /**
-     * Called when an encrypted track request succeeds, fails, or times out.
+     * Called when a track request with token callback succeeds, fails, or times out.
      */
-    interface RadarTrackEncryptedCallback {
+    interface RadarTrackTokenCallback {
 
         /**
-         * Called when an encrypted track request succeeds, fails, or times out. Receives the request status and, if successful, a JSON Web Token (JWT) containing an array of the events generated and the user. Decrypt the JWT server-side using your private key.
+         * Called when a track request with token callback succeeds, fails, or times out. Receives the request status and, if successful, a JSON Web Token (JWT) containing an array of the events generated and the user. Decrypt the JWT server-side using your private key.
          *
          * @param[status] RadarStatus The request status.
          * @param[token] String? If successful, a JSON Web Token (JWT).
@@ -994,7 +993,7 @@ object Radar {
     }
 
     /**
-     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Decrypt the JWT server-side using your private key.
+     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Verify the JWT server-side using your secret key.
      *
      * Note that you must configure SSL pinning before calling this method.
      *
@@ -1003,7 +1002,7 @@ object Radar {
      * @param[callback] An optional callback.
      */
     @JvmStatic
-    fun trackVerifiedEncrypted(callback: RadarTrackEncryptedCallback? = null) {
+    fun trackVerifiedToken(callback: RadarTrackTokenCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1051,7 +1050,7 @@ object Radar {
     }
 
     /**
-     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Decrypt the JWT server-side using your private key.
+     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Verify the JWT server-side using your secret key.
      *
      * Note that you must configure SSL pinning before calling this method.
      *
@@ -1060,8 +1059,8 @@ object Radar {
      * @param[block] A block callback.
      */
     @JvmStatic
-    fun trackVerifiedEncrypted(block: (status: RadarStatus, token: String?) -> Unit) {
-        trackVerifiedEncrypted(object : RadarTrackEncryptedCallback {
+    fun trackVerifiedToken(block: (status: RadarStatus, token: String?) -> Unit) {
+        trackVerifiedToken(object : RadarTrackTokenCallback {
             override fun onComplete(status: RadarStatus, token: String?) {
                 block(status, token)
             }
