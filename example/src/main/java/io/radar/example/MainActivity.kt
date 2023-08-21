@@ -1,6 +1,7 @@
 package io.radar.example
 
 import android.Manifest
+import android.location.Location
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -9,6 +10,10 @@ import android.widget.Button
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarTrackingOptions
+import io.radar.sdk.RadarTripOptions
+import org.json.JSONObject
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -19,7 +24,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "org_test_pk_5857c63d9c1565175db8b00750808a66a002acb8", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
 
         requestLocationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -52,12 +57,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun runDemo() {
-        Radar.trackVerifiedToken { status, token ->
-            Log.v("example", "Track verified token, part 1: ${token?.substring(startIndex = 0, endIndex = 3000)}")
-            Log.v("example", "Track verified token, part 2: ${token?.substring(startIndex = 3000)}")
-        }
-
-        /*
         Radar.getLocation { status, location, stopped ->
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
         }
@@ -216,8 +215,6 @@ class MainActivity : AppCompatActivity() {
         ) { status, event ->
             Log.v("example", "Conversion name = ${event?.conversionName}: status = $status; event = $event")
         }
-
-         */
     }
 
 }
