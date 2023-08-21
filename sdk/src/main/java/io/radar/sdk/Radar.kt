@@ -89,7 +89,7 @@ object Radar {
     interface RadarTrackTokenCallback {
 
         /**
-         * Called when a track request with token callback succeeds, fails, or times out. Receives the request status and, if successful, a JSON Web Token (JWT) containing an array of the events generated and the user. Decrypt the JWT server-side using your private key.
+         * Called when a track request with token callback succeeds, fails, or times out. Receives the request status and, if successful, a JSON Web Token (JWT) containing an array of the events generated and the user. Verify the JWT server-side using your secret key.
          *
          * @param[status] RadarStatus The request status.
          * @param[token] String? If successful, a JSON Web Token (JWT).
