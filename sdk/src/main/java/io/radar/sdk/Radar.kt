@@ -924,6 +924,8 @@ object Radar {
      * Note that you must configure SSL pinning before calling this method.
      *
      * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[callback] An optional callback.
      */
     @JvmStatic
     fun trackVerified(callback: RadarTrackCallback? = null) {
@@ -974,11 +976,31 @@ object Radar {
     }
 
     /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[block] A block callback.
+     */
+    @JvmStatic
+    fun trackVerified(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+        trackVerified(object : RadarTrackCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+                block(status, location, events, user)
+            }
+        })
+    }
+
+    /**
      * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Decrypt the JWT server-side using your private key.
      *
      * Note that you must configure SSL pinning before calling this method.
      *
      * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[callback] An optional callback.
      */
     @JvmStatic
     fun trackVerifiedEncrypted(callback: RadarTrackEncryptedCallback? = null) {
@@ -1029,17 +1051,19 @@ object Radar {
     }
 
     /**
-     * Tracks the user's location with device integrity information for location verification use cases.
+     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Decrypt the JWT server-side using your private key.
      *
      * Note that you must configure SSL pinning before calling this method.
      *
      * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[block] A block callback.
      */
     @JvmStatic
-    fun trackVerified(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        trackVerified(object : RadarTrackCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
-                block(status, location, events, user)
+    fun trackVerifiedEncrypted(block: (status: RadarStatus, token: String?) -> Unit) {
+        trackVerifiedEncrypted(object : RadarTrackEncryptedCallback {
+            override fun onComplete(status: RadarStatus, token: String?) {
+                block(status, token)
             }
         })
     }
