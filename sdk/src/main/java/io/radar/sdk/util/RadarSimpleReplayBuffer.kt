@@ -10,6 +10,9 @@ import java.util.concurrent.LinkedBlockingDeque
 import org.json.JSONObject
 import org.json.JSONArray
 
+// Logging stuff
+import io.radar.sdk.Radar.RadarLogType
+
 /**
  * A buffer for replay events.
  */
@@ -50,17 +53,19 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
     }
 
     private fun saveToSharedPreferences() {
+        // logger.d("📍 RadarReplayBuffer saveToSharedPreferences")
         val replaysAsJsonArray = JSONArray(buffer.map { it.toJson() })
         getSharedPreferences(context).edit { putString(KEY_REPLAYS, replaysAsJsonArray.toString()) }
     }
 
     override fun loadFromSharedPreferences() {
         val replaysAsString = getSharedPreferences(context).getString(KEY_REPLAYS, null)
-        replaysAsString?.let {
-            val replaysJsonArray = JSONArray(it)
-            for (i in 0 until replaysJsonArray.length()) {
-                val replayJson = replaysJsonArray.getJSONObject(i)
-                buffer.offer(RadarReplay(replayJson))
+        replaysAsString?.let { replays ->
+            val replaysAsJsonArray = JSONArray(replays)
+            for (i in 0 until replaysAsJsonArray.length()) {
+                val replayAsJsonObject = replaysAsJsonArray.getJSONObject(i)
+                val replay = RadarReplay.fromJson(replayAsJsonObject)
+                buffer.offer(replay)
             }
         }
     }
