@@ -47,6 +47,7 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
             override fun onFlush(success: Boolean) {
                 if (success) {
                     buffer.clear()
+                    saveToSharedPreferences()
                 }
             }
         }
