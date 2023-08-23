@@ -2972,10 +2972,7 @@ object Radar {
 
     @JvmStatic
     internal fun loadReplayBufferFromSharedPreferences() {
-        if (!initialized) {
-            return
-         }
-        
+
          replayBuffer.loadFromSharedPreferences()
 
         //  check the length of replays now
