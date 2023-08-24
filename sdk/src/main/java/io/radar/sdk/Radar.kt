@@ -510,18 +510,12 @@ object Radar {
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
 
-        // Radar.loadReplayBufferFromSharedPreferences()
+        Radar.loadReplayBufferFromSharedPreferences()
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: RadarStatus, config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(status, config.meta)
                 RadarSettings.setFeatureSettings(context, config.featureSettings)
-                val options = Radar.getTrackingOptions()
-                val isReplaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL
-
-                if (isReplaying) {
-                    Radar.loadReplayBufferFromSharedPreferences()
-                }
             }
         })
 
