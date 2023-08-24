@@ -44,6 +44,9 @@ internal class RadarActivityLifecycleCallbacks(
     }
 
     override fun onActivityResumed(activity: Activity) {
+        Log.d(TAG, "onActivityResumed")
+        Radar.flushReplays()
+
         if (count == 0) {
             try {
                 val updated = RadarSettings.updateSessionId(activity.applicationContext)

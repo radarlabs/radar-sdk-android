@@ -3044,6 +3044,37 @@ object Radar {
         }
     }
 
+    /**
+     * Flushes replays to the server.
+     */
+    @JvmStatic
+    internal fun flushReplays() {
+        if (!initialized) {
+            return
+        }
+
+        this.logger.d("Radar.flushReplays()")
+        // check if replays to flush
+        // check if already flushing
+
+        // get a copy of the replays so we can safely clear what was synced up
+        val replays = Radar.getReplays()
+        val replayCount = replays.size
+        this.logger.d("Radar.flushReplays replayCount = $replayCount")
+        if (replayCount == 0) {
+            return
+        }
+
+        apiClient.syncReplays(object : RadarApiClient.RadarLogCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                // flushable.onFlush(status == RadarStatus.SUCCESS)
+                if (status == RadarStatus.SUCCESS) {
+                    Radar.clearReplays() // - clear what was synced up
+                }
+            }
+        })
+    }
+
     @JvmStatic
     internal fun getReplays(): List<RadarReplay> {
         val flushable = replayBuffer.getFlushableReplaysStash()

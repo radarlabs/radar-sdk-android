@@ -171,6 +171,52 @@ internal class RadarApiClient(
         )
     }
 
+    internal fun syncReplays(callback: RadarLogCallback?) { // callback?
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+        val options = Radar.getTrackingOptions()
+
+        val replays = Radar.getReplays()
+        val replayCount = replays.size
+        val params = JSONObject()
+
+        // check if already syncing replays
+        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0
+        if (!replaying) {
+            return
+        }
+        // set isSyncingReplays to true
+
+        val replaysList = mutableListOf<JSONObject>()
+        for (replay in replays) {
+            replaysList.add(replay.replayParams)
+        }
+        replaysList.add(params)
+        params.putOpt("replays", JSONArray(replaysList))
+
+        val path = "v1/track/replay"
+        apiHelper.request(
+            context = context,
+            method = "POST",
+            path = path,
+            headers = headers(publishableKey),
+            params = params,
+            sleep = false,
+            callback = object : RadarApiHelper.RadarApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?) {
+
+                    // clear isSyncingReplays on success or failure
+                    // clear replay buffer on success
+                    callback?.onComplete(status, res)
+                }
+            },
+        )
+    }
+
     internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -295,19 +341,23 @@ internal class RadarApiClient(
         var requestParams = params
         val nowMS = System.currentTimeMillis()
 
-        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0 && !verified
-        if (replaying) {
-            val replaysList = mutableListOf<JSONObject>()
-            for (replay in replays) {
-                replaysList.add(replay.replayParams)
-            }
-            replaysList.add(params)
+        val replaying = false
+        
+        // before we track, check if replays need to sync
 
-            path = "v1/track/replay"
+        // val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0 && !verified
+        // if (replaying) {
+        //     val replaysList = mutableListOf<JSONObject>()
+        //     for (replay in replays) {
+        //         replaysList.add(replay.replayParams)
+        //     }
+        //     replaysList.add(params)
 
-            requestParams = JSONObject()
-            requestParams.putOpt("replays", JSONArray(replaysList))
-        }
+        //     path = "v1/track/replay"
+
+        //     requestParams = JSONObject()
+        //     requestParams.putOpt("replays", JSONArray(replaysList))
+        // }
 
         apiHelper.request(context, "POST", path, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
