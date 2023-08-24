@@ -80,7 +80,21 @@ object Radar {
             events: Array<RadarEvent>? = null,
             user: RadarUser? = null
         )
+    }
 
+    /**
+     * ,,,
+     */
+    interface RadarFlushReplaysCallback {
+
+        /**
+         * ...
+         *
+         * @param[status] RadarStatus The request status.
+         */
+        fun onComplete(
+            status: RadarStatus
+        )
     }
 
     /**
@@ -3049,13 +3063,14 @@ object Radar {
      * Flushes replays to the server.
      */
     @JvmStatic
-    internal fun flushReplays() {
+    internal fun flushReplays(callback: RadarFlushReplaysCallback? = null) {
         if (!initialized) {
             return
         }
 
         // check if already flushing
         if (flushingReplays) {
+            this.logger.i("Radar.flushReplays() already flushing!", RadarLogType.SDK_CALL)
             return // track callback?
         }
 
@@ -3063,7 +3078,7 @@ object Radar {
         // get a copy of the replays so we can safely clear what was synced up
         val replays = Radar.getReplays()
         val replayCount = replays.size
-        this.logger.i("Radar.flushReplays replayCount = $replayCount", RadarLogType.SDK_CALL)
+        this.logger.i("Radar.flushReplays() replayCount = $replayCount", RadarLogType.SDK_CALL)
         if (replayCount == 0) {
             return
         }
@@ -3075,14 +3090,17 @@ object Radar {
 //        if (!replaying) {
 //            return
 //        }
-
         apiClient.syncReplays(object : RadarApiClient.RadarLogCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 Radar.flushingReplays = false
                 if (status == RadarStatus.SUCCESS) {
-                    Radar.clearReplays() // TODO: clear what was synced up
-                    logger.d("apiClient.syncReplays() success. Radar.clearReplays()")
+                    logger.i("apiClient.syncReplays() success. Radar.clearReplays()", RadarLogType.SDK_CALL)
+                    Radar.clearReplays() // TODO: clear just what was synced up
                 }
+                handler.post {
+                    callback?.onComplete(status)
+                }
+                Radar.flushLogs()
             }
         })
     }

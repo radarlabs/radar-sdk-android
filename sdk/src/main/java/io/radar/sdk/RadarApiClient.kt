@@ -201,6 +201,10 @@ internal class RadarApiClient(
             sleep = false,
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                     if (status != RadarStatus.SUCCESS) {
+                        Radar.sendError(status)
+                     }
+
                     callback?.onComplete(status, res)
                 }
             },
@@ -331,12 +335,9 @@ internal class RadarApiClient(
         var requestParams = params
         val nowMS = System.currentTimeMillis()
 
-        val replaying = false
-        
         // before we track, check if replays need to sync
-
-        // val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0 && !verified
-        // if (replaying) {
+        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0 && !verified
+        if (replaying) {
         //     val replaysList = mutableListOf<JSONObject>()
         //     for (replay in replays) {
         //         replaysList.add(replay.replayParams)
@@ -347,7 +348,20 @@ internal class RadarApiClient(
 
         //     requestParams = JSONObject()
         //     requestParams.putOpt("replays", JSONArray(replaysList))
-        // }
+
+            // add current track to replay buffer and flush
+            logger.i("track api call diverting due to replaying, prev replayCount = $replayCount", Radar.RadarLogType.SDK_CALL)
+            params.putOpt("replayed", true) // this should only be true if the track replay doesn't succeed
+            params.putOpt("updatedAtMs", nowMS)
+            params.remove("updatedAtMsDiff")
+            Radar.addReplay(params)
+            Radar.flushReplays(object : Radar.RadarFlushReplaysCallback {
+                override fun onComplete(status: RadarStatus) {
+                    callback?.onComplete(status)
+                }
+            }) // pass through track callback for flush replay to handle
+            return
+        }
 
         // if replays in queue, maybe we should just add current req onto the buffer and return flushReplays (which will be a single point of entry to flush replays)
 
@@ -370,7 +384,7 @@ internal class RadarApiClient(
                     return
                 }
 
-                Radar.clearReplays()
+                // Radar.clearReplays()
                 RadarState.setLastFailedStoppedLocation(context, null)
                 Radar.flushLogs()
                 RadarSettings.updateLastTrackedTime(context)
@@ -444,7 +458,7 @@ internal class RadarApiClient(
                     return
                 }
 
-                Radar.sendError(status)
+                Radar.sendError(status) // this shouldn't be an error today for replays (user & events null)
 
                 callback?.onComplete(RadarStatus.ERROR_SERVER)
             }
