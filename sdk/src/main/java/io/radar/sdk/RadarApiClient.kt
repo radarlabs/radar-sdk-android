@@ -171,6 +171,7 @@ internal class RadarApiClient(
         )
     }
 
+    // TODO: take in replays as param, let caller pass in copy and clear after. this is just api call handler
     internal fun syncReplays(callback: RadarLogCallback?) { // callback?
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -184,18 +185,10 @@ internal class RadarApiClient(
         val replayCount = replays.size
         val params = JSONObject()
 
-        // check if already syncing replays
-        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0
-        if (!replaying) {
-            return
-        }
-        // set isSyncingReplays to true
-
         val replaysList = mutableListOf<JSONObject>()
         for (replay in replays) {
             replaysList.add(replay.replayParams)
         }
-        replaysList.add(params)
         params.putOpt("replays", JSONArray(replaysList))
 
         val path = "v1/track/replay"
@@ -208,9 +201,6 @@ internal class RadarApiClient(
             sleep = false,
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?) {
-
-                    // clear isSyncingReplays on success or failure
-                    // clear replay buffer on success
                     callback?.onComplete(status, res)
                 }
             },
@@ -358,6 +348,8 @@ internal class RadarApiClient(
         //     requestParams = JSONObject()
         //     requestParams.putOpt("replays", JSONArray(replaysList))
         // }
+
+        // if replays in queue, maybe we should just add current req onto the buffer and return flushReplays (which will be a single point of entry to flush replays)
 
         apiHelper.request(context, "POST", path, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {

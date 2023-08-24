@@ -423,6 +423,7 @@ object Radar {
     }
 
     internal var initialized = false
+    internal var flushingReplays = false
     private lateinit var context: Context
     private lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
@@ -3053,23 +3054,34 @@ object Radar {
             return
         }
 
-        this.logger.d("Radar.flushReplays()")
-        // check if replays to flush
         // check if already flushing
+        if (flushingReplays) {
+            return // track callback?
+        }
 
+        // check if replays to flush
         // get a copy of the replays so we can safely clear what was synced up
         val replays = Radar.getReplays()
         val replayCount = replays.size
-        this.logger.d("Radar.flushReplays replayCount = $replayCount")
+        this.logger.i("Radar.flushReplays replayCount = $replayCount", RadarLogType.SDK_CALL)
         if (replayCount == 0) {
             return
         }
+    
+        // set flushing flag
+        this.flushingReplays = true
+
+//        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0
+//        if (!replaying) {
+//            return
+//        }
 
         apiClient.syncReplays(object : RadarApiClient.RadarLogCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                // flushable.onFlush(status == RadarStatus.SUCCESS)
+                Radar.flushingReplays = false
                 if (status == RadarStatus.SUCCESS) {
-                    Radar.clearReplays() // - clear what was synced up
+                    Radar.clearReplays() // TODO: clear what was synced up
+                    logger.d("apiClient.syncReplays() success. Radar.clearReplays()")
                 }
             }
         })
