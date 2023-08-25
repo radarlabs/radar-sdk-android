@@ -510,7 +510,11 @@ object Radar {
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
 
-        Radar.loadReplayBufferFromSharedPreferences()
+
+        val featureSettings = RadarSettings.getFeatureSettings(this.context)
+        if (featureSettings.usePersistence) {
+            Radar.loadReplayBufferFromSharedPreferences()
+        }
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: RadarStatus, config: RadarConfig) {
