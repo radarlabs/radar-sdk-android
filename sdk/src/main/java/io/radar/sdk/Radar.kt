@@ -512,14 +512,18 @@ object Radar {
 
 
         val featureSettings = RadarSettings.getFeatureSettings(this.context)
+        this.logger.i("Feature settings: $featureSettings", RadarLogType.SDK_CALL)
         if (featureSettings.usePersistence) {
+            this.logger.i("Using persistence", RadarLogType.SDK_CALL)
             Radar.loadReplayBufferFromSharedPreferences()
+        } else {
+            this.logger.i("Not using persistence", RadarLogType.SDK_CALL)
         }
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: RadarStatus, config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(status, config.meta)
-                RadarSettings.setFeatureSettings(context, config.featureSettings)
+                RadarSettings.setFeatureSettings(context, config.meta.featureSettings)
             }
         })
 

@@ -22,14 +22,14 @@ internal data class RadarFeatureSettings(
             } else {
                 RadarFeatureSettings(
                     json.optInt(MAX_CONCURRENT_JOBS, DEFAULT_MAX_CONCURRENT_JOBS),
-                    json.optBoolean(SCHEDULER_REQUIRES_NETWORK)
-                    json.optBoolean(USE_PERSISTENCE, false)
+                    json.optBoolean(SCHEDULER_REQUIRES_NETWORK),
+                    json.optBoolean(USE_PERSISTENCE)
                 )
             }
         }
 
         fun default(): RadarFeatureSettings {
-            return RadarFeatureSettings(maxConcurrentJobs = DEFAULT_MAX_CONCURRENT_JOBS, schedulerRequiresNetwork = false, usePersistence = false)
+            return RadarFeatureSettings(DEFAULT_MAX_CONCURRENT_JOBS, false, false)
         }
     }
 
