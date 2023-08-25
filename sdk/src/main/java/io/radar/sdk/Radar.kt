@@ -3090,6 +3090,7 @@ object Radar {
     
         // set flushing flag
         this.flushingReplays = true
+        val nowMS = System.currentTimeMillis()
 
         apiClient.replay(replays, object : RadarApiClient.RadarLogCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
@@ -3102,7 +3103,8 @@ object Radar {
                     if (currentTrackParams != null) {
                         logger.e("apiClient.syncReplays() failed. adding current track to replay buffer")
                         currentTrackParams.putOpt("replayed", true)
-                        // TODO: handle timestamp
+                        currentTrackParams.putOpt("updatedAtMs", nowMS)
+                        currentTrackParams.remove("updatedAtMsDiff")
                         Radar.addReplay(currentTrackParams)
                     }
                 }
