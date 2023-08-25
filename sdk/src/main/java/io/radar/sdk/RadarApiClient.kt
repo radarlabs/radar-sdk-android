@@ -334,8 +334,7 @@ internal class RadarApiClient(
         // before we track, check if replays need to sync
         val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0 && !verified
         if (replaying) {
-            // add current track to replay buffer and flush
-            // TODO: current track params should only be marked replayed if replay flush fails
+            // send current update to /track/replay instead
             logger.i("track api call diverting due to replaying, prev replayCount = $replayCount", Radar.RadarLogType.SDK_CALL)
             Radar.flushReplays(
                 currentTrackParams = params,

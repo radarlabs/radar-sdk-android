@@ -1235,6 +1235,7 @@ object Radar {
         this.logger.i("stopTracking()", RadarLogType.SDK_CALL)
 
         locationManager.stopTracking()
+        // Radar.flushReplays()
     }
 
     /**
