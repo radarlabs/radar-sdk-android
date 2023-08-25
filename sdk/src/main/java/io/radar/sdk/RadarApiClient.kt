@@ -171,20 +171,16 @@ internal class RadarApiClient(
         )
     }
 
-    // TODO: take in replays as param, let caller pass in copy and clear after. this is just api call handler
-    internal fun syncReplays(callback: RadarLogCallback?) { // callback?
+    // api handler for /track/replay, just takes in a list of replays to send to API
+    internal fun replay(replays: List<RadarReplay>, callback: RadarLogCallback?) { // callback?
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
-        val options = Radar.getTrackingOptions()
 
-        val replays = Radar.getReplays()
-        val replayCount = replays.size
         val params = JSONObject()
-
         val replaysList = mutableListOf<JSONObject>()
         for (replay in replays) {
             replaysList.add(replay.replayParams)
@@ -338,28 +334,18 @@ internal class RadarApiClient(
         // before we track, check if replays need to sync
         val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0 && !verified
         if (replaying) {
-        //     val replaysList = mutableListOf<JSONObject>()
-        //     for (replay in replays) {
-        //         replaysList.add(replay.replayParams)
-        //     }
-        //     replaysList.add(params)
-
-        //     path = "v1/track/replay"
-
-        //     requestParams = JSONObject()
-        //     requestParams.putOpt("replays", JSONArray(replaysList))
-
             // add current track to replay buffer and flush
+            // TODO: current track params should only be marked replayed if replay flush fails
             logger.i("track api call diverting due to replaying, prev replayCount = $replayCount", Radar.RadarLogType.SDK_CALL)
-            params.putOpt("replayed", true) // this should only be true if the track replay doesn't succeed
-            params.putOpt("updatedAtMs", nowMS)
-            params.remove("updatedAtMsDiff")
-            Radar.addReplay(params)
-            Radar.flushReplays(object : Radar.RadarFlushReplaysCallback {
-                override fun onComplete(status: RadarStatus) {
-                    callback?.onComplete(status)
+            Radar.flushReplays(
+                currentTrackParams = params,
+                callback = object : Radar.RadarFlushReplaysCallback {
+                    override fun onComplete(status: RadarStatus) {
+                        // pass through flush replay onComplete for track callback
+                        callback?.onComplete(status)
+                    }
                 }
-            }) // pass through track callback for flush replay to handle
+            )
             return
         }
 
