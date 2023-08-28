@@ -231,8 +231,7 @@ internal class RadarLocationManager(
         }
     }
 
-    internal fun updateTrackingFromMeta(status: RadarStatus, meta: RadarMeta?) {
-        logger.d("Updating tracking from meta | status = $status; meta = $meta")
+    internal fun updateTrackingFromMeta(meta: RadarMeta?) {
         if (meta != null) {
             if (meta.remoteTrackingOptions != null) {
                 logger.d("Setting remote tracking options | trackingOptions = ${meta.remoteTrackingOptions}")
@@ -589,7 +588,7 @@ internal class RadarLocationManager(
                         locationManager.stopForegroundService()
                     }
 
-                    updateTrackingFromMeta(status, config?.meta)
+                    updateTrackingFromMeta(config?.meta)
                 }
             })
         }
