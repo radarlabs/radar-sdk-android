@@ -124,7 +124,7 @@ internal class RadarApiClient(
                 if (status == RadarStatus.SUCCESS) {
                     Radar.flushLogs()
                 }
-                callback?.onComplete(status, RadarConfig.fromJson(res))
+                callback?.onComplete(RadarConfig.fromJson(res))
             }
         }, false, true, verified)
     }
