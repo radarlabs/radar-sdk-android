@@ -33,7 +33,7 @@ internal class RadarApiClient(
     }
 
     interface RadarGetConfigApiCallback {
-        fun onComplete(status: RadarStatus, config: RadarConfig)
+        fun onComplete(config: RadarConfig)
     }
 
     interface RadarTripApiCallback {
