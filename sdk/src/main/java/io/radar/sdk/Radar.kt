@@ -14,7 +14,6 @@ import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
 import java.util.*
-import io.radar.sdk.RadarActivityLifecycleCallbacks
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -80,6 +79,24 @@ object Radar {
             location: Location? = null,
             events: Array<RadarEvent>? = null,
             user: RadarUser? = null
+        )
+
+    }
+
+    /**
+     * Called when a track request with token callback succeeds, fails, or times out.
+     */
+    interface RadarTrackTokenCallback {
+
+        /**
+         * Called when a track request with token callback succeeds, fails, or times out. Receives the request status and, if successful, a JSON Web Token (JWT) containing an array of the events generated and the user. Verify the JWT server-side using your secret key.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[token] String? If successful, a JSON Web Token (JWT).
+         */
+        fun onComplete(
+            status: RadarStatus,
+            token: String? = null
         )
 
     }
@@ -785,6 +802,7 @@ object Radar {
                             user: RadarUser?,
                             nearbyGeofences: Array<RadarGeofence>?,
                             config: RadarConfig?,
+                            token: String?
                         ) {
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
@@ -878,6 +896,7 @@ object Radar {
                 user: RadarUser?,
                 nearbyGeofences: Array<RadarGeofence>?,
                 config: RadarConfig?,
+                token: String?
             ) {
                 handler.post {
                     callback?.onComplete(status, location, events, user)
@@ -909,6 +928,8 @@ object Radar {
      * Note that you must configure SSL pinning before calling this method.
      *
      * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[callback] An optional callback.
      */
     @JvmStatic
     fun trackVerified(callback: RadarTrackCallback? = null) {
@@ -936,7 +957,7 @@ object Radar {
                         }
 
                         verificationManager.getIntegrityToken(config.googlePlayProjectNumber, config.nonce) { integrityToken, integrityException ->
-                            apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, object : RadarApiClient.RadarTrackApiCallback {
+                            apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, false, callback = object : RadarApiClient.RadarTrackApiCallback {
                                 override fun onComplete(
                                     status: RadarStatus,
                                     res: JSONObject?,
@@ -944,6 +965,7 @@ object Radar {
                                     user: RadarUser?,
                                     nearbyGeofences: Array<RadarGeofence>?,
                                     config: RadarConfig?,
+                                    token: String?
                                 ) {
                                     handler.post {
                                         callback?.onComplete(status, location, events, user)
@@ -963,12 +985,89 @@ object Radar {
      * Note that you must configure SSL pinning before calling this method.
      *
      * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[block] A block callback.
      */
     @JvmStatic
     fun trackVerified(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
         trackVerified(object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
+            }
+        })
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Verify the JWT server-side using your secret key.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun trackVerifiedToken(callback: RadarTrackTokenCallback? = null) {
+        if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        val usage = "verify"
+        apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(config: RadarConfig) {
+                locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
+                    override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                        if (status != RadarStatus.SUCCESS || location == null) {
+                            handler.post {
+                                callback?.onComplete(status)
+                            }
+
+                            return
+                        }
+
+                        verificationManager.getIntegrityToken(config.googlePlayProjectNumber, config.nonce) { integrityToken, integrityException ->
+                            apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, true, object : RadarApiClient.RadarTrackApiCallback {
+                                override fun onComplete(
+                                    status: RadarStatus,
+                                    res: JSONObject?,
+                                    events: Array<RadarEvent>?,
+                                    user: RadarUser?,
+                                    nearbyGeofences: Array<RadarGeofence>?,
+                                    config: RadarConfig?,
+                                    token: String?
+                                ) {
+                                    handler.post {
+                                        callback?.onComplete(status, token)
+                                    }
+                                }
+                            })
+                        }
+                    }
+                })
+            }
+        })
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Verify the JWT server-side using your secret key.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[block] A block callback.
+     */
+    @JvmStatic
+    fun trackVerifiedToken(block: (status: RadarStatus, token: String?) -> Unit) {
+        trackVerifiedToken(object : RadarTrackTokenCallback {
+            override fun onComplete(status: RadarStatus, token: String?) {
+                block(status, token)
             }
         })
     }
@@ -1064,6 +1163,7 @@ object Radar {
                                 user: RadarUser?,
                                 nearbyGeofences: Array<RadarGeofence>?,
                                 config: RadarConfig?,
+                                token: String?
                             ) {
                                 handler.post {
                                     callback?.onComplete(status, location, events, user)
@@ -1142,6 +1242,21 @@ object Radar {
 
         return RadarSettings.getTracking(context)
     }
+
+    /**
+     *  Returns a boolean indicating whether the local tracking options are over-ridden by remote tracking options.
+     *
+     * @return A boolean indicating whether the tracking option is being over-ridden by the remote tracking options.
+     */
+    @JvmStatic
+    fun isUsingRemoteTrackingOptions(): Boolean {
+        if (!initialized) {
+            return false
+        }
+
+        return RadarSettings.getRemoteTrackingOptions(context) != null
+    }
+
 
    /** 
     *  Returns a string of the radar host.

@@ -580,7 +580,8 @@ internal class RadarLocationManager(
                     events: Array<RadarEvent>?,
                     user: RadarUser?,
                     nearbyGeofences: Array<RadarGeofence>?,
-                    config: RadarConfig?
+                    config: RadarConfig?,
+                    token: String?
                 ) {
                     locationManager.replaceSyncedGeofences(nearbyGeofences)
 
