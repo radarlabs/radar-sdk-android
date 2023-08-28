@@ -7,12 +7,14 @@ import org.json.JSONObject
  */
 internal data class RadarFeatureSettings(
     val maxConcurrentJobs: Int,
-    val schedulerRequiresNetwork: Boolean
+    val schedulerRequiresNetwork: Boolean,
+    val extendFlushReplays: Boolean
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
         private const val DEFAULT_MAX_CONCURRENT_JOBS = 1
         private const val SCHEDULER_REQUIRES_NETWORK = "networkAny"
+        private const val EXTEND_FLUSH_REPLAYS = "extendFlushReplays"
 
         fun fromJson(json: JSONObject?): RadarFeatureSettings {
             return if (json == null) {
@@ -20,13 +22,18 @@ internal data class RadarFeatureSettings(
             } else {
                 RadarFeatureSettings(
                     json.optInt(MAX_CONCURRENT_JOBS, DEFAULT_MAX_CONCURRENT_JOBS),
-                    json.optBoolean(SCHEDULER_REQUIRES_NETWORK)
+                    json.optBoolean(SCHEDULER_REQUIRES_NETWORK),
+                    json.optBoolean(EXTEND_FLUSH_REPLAYS)
                 )
             }
         }
 
         fun default(): RadarFeatureSettings {
-            return RadarFeatureSettings(DEFAULT_MAX_CONCURRENT_JOBS, false)
+            return RadarFeatureSettings(
+                DEFAULT_MAX_CONCURRENT_JOBS,
+                false, // networkAny
+                false // extendFlushReplays
+            )
         }
     }
 
@@ -34,6 +41,7 @@ internal data class RadarFeatureSettings(
         return JSONObject().apply {
             putOpt(MAX_CONCURRENT_JOBS, maxConcurrentJobs)
             putOpt(SCHEDULER_REQUIRES_NETWORK, schedulerRequiresNetwork)
+            putOpt(EXTEND_FLUSH_REPLAYS, extendFlushReplays)
         }
     }
 }

@@ -45,6 +45,11 @@ internal class RadarActivityLifecycleCallbacks(
 
     override fun onActivityResumed(activity: Activity) {
         Log.d(TAG, "onActivityResumed")
+
+        // val settings = RadarSettings.getFeatureSettings(context)
+        // if (settings.extendFlushReplays) {
+        //     Radar.flushReplays()
+        // }
         Radar.flushReplays()
 
         if (count == 0) {
