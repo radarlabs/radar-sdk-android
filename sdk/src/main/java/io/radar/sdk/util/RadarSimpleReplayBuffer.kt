@@ -1,17 +1,14 @@
 package io.radar.sdk.util
 
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarSettings
 import io.radar.sdk.model.RadarReplay
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-// TODO: determine if we need the above and below
 import java.util.concurrent.LinkedBlockingDeque
 import org.json.JSONObject
 import org.json.JSONArray
-
-// Logging stuff
-import io.radar.sdk.Radar.RadarLogType
 
 /**
  * A buffer for replay events.
@@ -22,7 +19,7 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
     private companion object {
         const val MAXIMUM_CAPACITY = 120
         const val PREFERENCES_NAME = "RadarReplayBufferPreferences"
-        const val KEY_REPLAYS = "replays"
+        const val KEY_REPLAYS = "radar-replays"
     }
 
     private val buffer = LinkedBlockingDeque<RadarReplay>(MAXIMUM_CAPACITY)
@@ -32,7 +29,18 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
             buffer.removeFirst()
         }
         buffer.offer(RadarReplay(replayParams))
-        saveToSharedPreferences()
+        val featureSettings = RadarSettings.getFeatureSettings(context)
+        if (featureSettings.usePersistence) {
+            // If buffer length is above 50, remove every fifth replay from the persisted buffer 
+            if (buffer.size > 50) {
+                val prunedBuffer = buffer.filterIndexed { index, _ -> index % 5 != 0 }
+                val prunedReplaysAsJsonArray = JSONArray(prunedBuffer.map { it.toJson() })
+                getSharedPreferences(context).edit { putString(KEY_REPLAYS, prunedReplaysAsJsonArray.toString()) }
+            } else {
+                val replaysAsJsonArray = JSONArray(buffer.map { it.toJson() })
+                getSharedPreferences(context).edit { putString(KEY_REPLAYS, replaysAsJsonArray.toString()) }
+            }
+        }
     }
 
     override fun getFlushableReplaysStash(): Flushable<RadarReplay> {
@@ -47,16 +55,11 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
             override fun onFlush(success: Boolean) {
                 if (success) {
                     buffer.clear()
-                    saveToSharedPreferences()
+                    // clear the shared preferences
+                    getSharedPreferences(context).edit { remove(KEY_REPLAYS) }
                 }
             }
         }
-    }
-
-    private fun saveToSharedPreferences() {
-        // logger.d("📍 RadarReplayBuffer saveToSharedPreferences")
-        val replaysAsJsonArray = JSONArray(buffer.map { it.toJson() })
-        getSharedPreferences(context).edit { putString(KEY_REPLAYS, replaysAsJsonArray.toString()) }
     }
 
     override fun loadFromSharedPreferences() {

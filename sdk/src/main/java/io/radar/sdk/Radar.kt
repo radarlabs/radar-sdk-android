@@ -512,12 +512,8 @@ object Radar {
 
 
         val featureSettings = RadarSettings.getFeatureSettings(this.context)
-        this.logger.i("Feature settings: $featureSettings", RadarLogType.SDK_CALL)
         if (featureSettings.usePersistence) {
-            this.logger.i("Using persistence", RadarLogType.SDK_CALL)
             Radar.loadReplayBufferFromSharedPreferences()
-        } else {
-            this.logger.i("Not using persistence", RadarLogType.SDK_CALL)
         }
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
@@ -2969,20 +2965,15 @@ object Radar {
     @JvmStatic
     internal fun addReplay(replayParams: JSONObject) {
         replayBuffer.write(replayParams)
-
     }
 
     @JvmStatic
     internal fun loadReplayBufferFromSharedPreferences() {
-
-         replayBuffer.loadFromSharedPreferences()
-
-        //  check the length of replays now
+        replayBuffer.loadFromSharedPreferences()
         val replays = getReplays()
         val replayCount = replays.size 
-        // log the length
+        // TODO: revisit this log and log type
         logger.i("loadReplayBufferFromSharedPreferences() replayCount = $replayCount", RadarLogType.SDK_CALL)
-        
     }
 
     @JvmStatic
