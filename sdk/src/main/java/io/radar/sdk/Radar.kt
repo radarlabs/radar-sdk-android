@@ -3084,11 +3084,10 @@ object Radar {
         this.flushingReplays = true
 
         // get a copy of the replays so we can safely clear what was synced up
-        // if we have a current track update, add it to the local replay list
-        // val replays = Radar.getReplays().toMutableList()
         val replaysStash = replayBuffer.getFlushableReplaysStash()
         val replays = replaysStash.get().toMutableList()
 
+        // if we have a current track update, add it to the local replay list
         if (currentTrackParams != null) {
             replays.add(RadarReplay(currentTrackParams))
         }
@@ -3121,26 +3120,11 @@ object Radar {
         })
     }
 
-    // delete
-    // @JvmStatic
-    // internal fun getReplays(): List<RadarReplay> {
-    //     val flushable = replayBuffer.getFlushableReplaysStash()
-    //     // flushable.onFlush(false) // noop / can remove?
-    //     return flushable.get()
-    // }
-
     @JvmStatic
     internal fun hasReplays(): Boolean {
         val replayCount = replayBuffer.getSize()
         return replayCount > 0
     }
-
-    // delete
-    // @JvmStatic
-    // internal fun clearReplays() {
-    //     val flushable = replayBuffer.getFlushableReplaysStash()
-    //     flushable.onFlush(true)
-    // }
 
     @JvmStatic
     internal fun addReplay(replayParams: JSONObject) {

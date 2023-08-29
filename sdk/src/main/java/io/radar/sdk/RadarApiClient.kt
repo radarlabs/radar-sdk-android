@@ -347,8 +347,6 @@ internal class RadarApiClient(
             return
         }
 
-        // if replays in queue, maybe we should just add current req onto the buffer and return flushReplays (which will be a single point of entry to flush replays)
-
         apiHelper.request(context, "POST", path, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
