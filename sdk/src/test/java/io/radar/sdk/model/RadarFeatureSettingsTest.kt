@@ -17,6 +17,7 @@ class RadarFeatureSettingsTest {
 
     private var maxConcurrentJobs = -1
     private var requiresNetwork = false
+    private var usePersistence = true
     private var extendFlushReplays = false
     private lateinit var jsonString: String
 
@@ -28,6 +29,7 @@ class RadarFeatureSettingsTest {
         jsonString = """{
             "networkAny":$requiresNetwork,
             "maxConcurrentJobs":$maxConcurrentJobs,
+            "usePersistence":$usePersistence
             "extendFlushReplays":$extendFlushReplays
         }""".trimIndent()
     }
@@ -36,7 +38,7 @@ class RadarFeatureSettingsTest {
     fun testToJson() {
         assertEquals(
             jsonString.removeWhitespace(),
-            RadarFeatureSettings(maxConcurrentJobs, requiresNetwork, extendFlushReplays).toJson().toString().removeWhitespace()
+            RadarFeatureSettings(maxConcurrentJobs, requiresNetwork, usePersistence, extendFlushReplays).toJson().toString().removeWhitespace()
         )
     }
 
@@ -45,6 +47,7 @@ class RadarFeatureSettingsTest {
         val settings = RadarFeatureSettings.fromJson(JSONObject(jsonString))
         assertEquals(maxConcurrentJobs, settings.maxConcurrentJobs)
         assertEquals(requiresNetwork, settings.schedulerRequiresNetwork)
+        assertEquals(usePersistence, settings.usePersistence)
         assertEquals(extendFlushReplays, settings.extendFlushReplays)
     }
 
@@ -53,6 +56,7 @@ class RadarFeatureSettingsTest {
         val settings = RadarFeatureSettings.default()
         assertEquals(1, settings.maxConcurrentJobs)
         assertFalse(settings.schedulerRequiresNetwork)
+        assertFalse(settings.usePersistence)
         assertFalse(settings.extendFlushReplays)
     }
 

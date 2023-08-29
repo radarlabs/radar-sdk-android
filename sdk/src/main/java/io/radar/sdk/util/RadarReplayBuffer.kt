@@ -24,4 +24,6 @@ internal interface RadarReplayBuffer {
      * @return a [Flushable] containing all stored replays
      */
     fun getFlushableReplaysStash(): Flushable<RadarReplay>
+
+    fun loadFromSharedPreferences()
 }

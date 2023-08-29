@@ -10,6 +10,7 @@ import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import io.radar.sdk.Radar.RadarStatus
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
@@ -59,7 +60,7 @@ internal class RadarActivityLifecycleCallbacks(
                     Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
                         override fun onComplete(config: RadarConfig) {
                             Radar.locationManager.updateTrackingFromMeta(config.meta)
-                            RadarSettings.setFeatureSettings(activity.applicationContext, config.featureSettings)
+                            RadarSettings.setFeatureSettings(activity.applicationContext, config.meta.featureSettings)
                         }
                     })
                 }
