@@ -36,7 +36,8 @@ internal class RadarSimpleReplayBuffer : RadarReplayBuffer {
 
             override fun onFlush(success: Boolean) {
                 if (success) {
-                    buffer.clear()
+                    // buffer.clear()
+                    buffer.removeAll(replays) // only clear the replays from buffer that were successfully flushed
                 }
             }
         }

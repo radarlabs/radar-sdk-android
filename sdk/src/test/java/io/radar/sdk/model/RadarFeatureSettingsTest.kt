@@ -17,15 +17,18 @@ class RadarFeatureSettingsTest {
 
     private var maxConcurrentJobs = -1
     private var requiresNetwork = false
+    private var extendFlushReplays = false
     private lateinit var jsonString: String
 
     @Before
     fun setUp() {
         maxConcurrentJobs = Random.nextInt(11)
         requiresNetwork = Random.nextBoolean()
+        extendFlushReplays = Random.nextBoolean()
         jsonString = """{
             "networkAny":$requiresNetwork,
-            "maxConcurrentJobs":$maxConcurrentJobs
+            "maxConcurrentJobs":$maxConcurrentJobs,
+            "extendFlushReplays":$extendFlushReplays
         }""".trimIndent()
     }
 
@@ -33,7 +36,7 @@ class RadarFeatureSettingsTest {
     fun testToJson() {
         assertEquals(
             jsonString.removeWhitespace(),
-            RadarFeatureSettings(maxConcurrentJobs, requiresNetwork).toJson().toString().removeWhitespace()
+            RadarFeatureSettings(maxConcurrentJobs, requiresNetwork, extendFlushReplays).toJson().toString().removeWhitespace()
         )
     }
 
@@ -42,6 +45,7 @@ class RadarFeatureSettingsTest {
         val settings = RadarFeatureSettings.fromJson(JSONObject(jsonString))
         assertEquals(maxConcurrentJobs, settings.maxConcurrentJobs)
         assertEquals(requiresNetwork, settings.schedulerRequiresNetwork)
+        assertEquals(extendFlushReplays, settings.extendFlushReplays)
     }
 
     @Test
@@ -49,6 +53,7 @@ class RadarFeatureSettingsTest {
         val settings = RadarFeatureSettings.default()
         assertEquals(1, settings.maxConcurrentJobs)
         assertFalse(settings.schedulerRequiresNetwork)
+        assertFalse(settings.extendFlushReplays)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")

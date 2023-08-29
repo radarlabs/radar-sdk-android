@@ -3118,7 +3118,7 @@ object Radar {
     @JvmStatic
     internal fun getReplays(): List<RadarReplay> {
         val flushable = replayBuffer.getFlushableReplaysStash()
-        flushable.onFlush(false)
+        // flushable.onFlush(false) // noop / can remove?
         return flushable.get()
     }
 
