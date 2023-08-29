@@ -326,16 +326,15 @@ internal class RadarApiClient(
             this.getConfig(usage)
         }
 
-        val replays = Radar.getReplays()
-        val replayCount = replays.size
+        val hasReplays = Radar.hasReplays()
         var requestParams = params
         val nowMS = System.currentTimeMillis()
 
         // before we track, check if replays need to sync
-        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0 && !verified
+        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && hasReplays && !verified
         if (replaying) {
             // send current update to /track/replay instead
-            logger.i("track api call diverting due to replaying, prev replayCount = $replayCount", Radar.RadarLogType.SDK_CALL)
+            logger.i("track api call diverting to flushReplays", Radar.RadarLogType.SDK_CALL)
             Radar.flushReplays(
                 currentTrackParams = params,
                 callback = object : Radar.RadarFlushReplaysCallback {
@@ -369,7 +368,6 @@ internal class RadarApiClient(
                     return
                 }
 
-                // Radar.clearReplays()
                 RadarState.setLastFailedStoppedLocation(context, null)
                 Radar.flushLogs()
                 RadarSettings.updateLastTrackedTime(context)

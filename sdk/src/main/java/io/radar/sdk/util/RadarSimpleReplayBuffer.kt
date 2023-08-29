@@ -18,6 +18,10 @@ internal class RadarSimpleReplayBuffer : RadarReplayBuffer {
 
     private val buffer = LinkedBlockingDeque<RadarReplay>(MAXIMUM_CAPACITY)
 
+    override fun getSize(): Int {
+        return buffer.size
+    } 
+
     override fun write(replayParams: JSONObject) {
         if (buffer.size >= MAXIMUM_CAPACITY) {
             buffer.removeFirst()
