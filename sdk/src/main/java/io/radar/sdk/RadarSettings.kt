@@ -252,12 +252,15 @@ internal object RadarSettings {
     }
 
     fun setFeatureSettings(context: Context, featureSettings: RadarFeatureSettings) {
-        getSharedPreferences(context).edit { putString(KEY_FEATURE_SETTINGS, featureSettings.toJson().toString()) }
+        val optionsJson = featureSettings.toJson().toString()
+
+        getSharedPreferences(context).edit { putString(KEY_FEATURE_SETTINGS, optionsJson) }
     }
 
     fun getFeatureSettings(context: Context): RadarFeatureSettings {
-        val optionsJson = getSharedPreferences(context).getString(KEY_FEATURE_SETTINGS, null)
-            ?: return RadarFeatureSettings.default()
+        val sharedPrefFeatureSettings = getSharedPreferences(context).getString(KEY_FEATURE_SETTINGS, null)
+        Radar.logger.d("getFeatureSettings | featureSettings = $sharedPrefFeatureSettings")
+        val optionsJson = sharedPrefFeatureSettings ?: return RadarFeatureSettings.default()
         return RadarFeatureSettings.fromJson(JSONObject(optionsJson))
     }
 

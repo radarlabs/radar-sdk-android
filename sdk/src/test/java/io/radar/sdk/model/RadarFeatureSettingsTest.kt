@@ -17,6 +17,7 @@ class RadarFeatureSettingsTest {
 
     private var maxConcurrentJobs = -1
     private var requiresNetwork = false
+    private var usePersistence = true
     private lateinit var jsonString: String
 
     @Before
@@ -25,7 +26,8 @@ class RadarFeatureSettingsTest {
         requiresNetwork = Random.nextBoolean()
         jsonString = """{
             "networkAny":$requiresNetwork,
-            "maxConcurrentJobs":$maxConcurrentJobs
+            "maxConcurrentJobs":$maxConcurrentJobs,
+            "usePersistence":$usePersistence
         }""".trimIndent()
     }
 
@@ -33,7 +35,7 @@ class RadarFeatureSettingsTest {
     fun testToJson() {
         assertEquals(
             jsonString.removeWhitespace(),
-            RadarFeatureSettings(maxConcurrentJobs, requiresNetwork).toJson().toString().removeWhitespace()
+            RadarFeatureSettings(maxConcurrentJobs, requiresNetwork, usePersistence).toJson().toString().removeWhitespace()
         )
     }
 
@@ -42,6 +44,7 @@ class RadarFeatureSettingsTest {
         val settings = RadarFeatureSettings.fromJson(JSONObject(jsonString))
         assertEquals(maxConcurrentJobs, settings.maxConcurrentJobs)
         assertEquals(requiresNetwork, settings.schedulerRequiresNetwork)
+        assertEquals(usePersistence, settings.usePersistence)
     }
 
     @Test
@@ -49,6 +52,7 @@ class RadarFeatureSettingsTest {
         val settings = RadarFeatureSettings.default()
         assertEquals(1, settings.maxConcurrentJobs)
         assertFalse(settings.schedulerRequiresNetwork)
+        assertFalse(settings.usePersistence)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")

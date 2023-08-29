@@ -477,7 +477,7 @@ object Radar {
         }
 
         if (!this::replayBuffer.isInitialized) {
-            this.replayBuffer = RadarSimpleReplayBuffer()
+            this.replayBuffer = RadarSimpleReplayBuffer(this.context)
         }
 
         if (!this::logger.isInitialized) {
@@ -527,11 +527,16 @@ object Radar {
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
 
+
+        val featureSettings = RadarSettings.getFeatureSettings(this.context)
+        if (featureSettings.usePersistence) {
+            Radar.loadReplayBufferFromSharedPreferences()
+        }
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(config: RadarConfig) {
-                locationManager.updateTrackingFromMeta(config.meta)
-                RadarSettings.setFeatureSettings(context, config.featureSettings)
+                locationManager.updateTrackingFromMeta(config?.meta)
+                RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
             }
         })
 
@@ -3075,6 +3080,15 @@ object Radar {
     @JvmStatic
     internal fun addReplay(replayParams: JSONObject) {
         replayBuffer.write(replayParams)
+    }
+
+    @JvmStatic
+    internal fun loadReplayBufferFromSharedPreferences() {
+        replayBuffer.loadFromSharedPreferences()
+        val replays = getReplays()
+        val replayCount = replays.size 
+        // TODO: revisit this log
+        logger.d("loaded replay buffer from shared preferences with $replayCount replays")
     }
 
     @JvmStatic

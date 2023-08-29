@@ -7,11 +7,13 @@ import org.json.JSONObject
  */
 internal data class RadarFeatureSettings(
     val maxConcurrentJobs: Int,
-    val schedulerRequiresNetwork: Boolean
+    val schedulerRequiresNetwork: Boolean,
+    val usePersistence: Boolean
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
         private const val DEFAULT_MAX_CONCURRENT_JOBS = 1
+        private const val USE_PERSISTENCE = "usePersistence"
         private const val SCHEDULER_REQUIRES_NETWORK = "networkAny"
 
         fun fromJson(json: JSONObject?): RadarFeatureSettings {
@@ -20,13 +22,14 @@ internal data class RadarFeatureSettings(
             } else {
                 RadarFeatureSettings(
                     json.optInt(MAX_CONCURRENT_JOBS, DEFAULT_MAX_CONCURRENT_JOBS),
-                    json.optBoolean(SCHEDULER_REQUIRES_NETWORK)
+                    json.optBoolean(SCHEDULER_REQUIRES_NETWORK),
+                    json.optBoolean(USE_PERSISTENCE)
                 )
             }
         }
 
         fun default(): RadarFeatureSettings {
-            return RadarFeatureSettings(DEFAULT_MAX_CONCURRENT_JOBS, false)
+            return RadarFeatureSettings(DEFAULT_MAX_CONCURRENT_JOBS, false, false)
         }
     }
 
@@ -34,6 +37,7 @@ internal data class RadarFeatureSettings(
         return JSONObject().apply {
             putOpt(MAX_CONCURRENT_JOBS, maxConcurrentJobs)
             putOpt(SCHEDULER_REQUIRES_NETWORK, schedulerRequiresNetwork)
+            putOpt(USE_PERSISTENCE, usePersistence)
         }
     }
 }

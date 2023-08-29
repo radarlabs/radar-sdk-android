@@ -240,8 +240,8 @@ internal class RadarLocationManager(
                 RadarSettings.removeRemoteTrackingOptions(context)
                 logger.d("Removed remote tracking options | trackingOptions = ${Radar.getTrackingOptions()}")
             }
-            updateTracking()
         }
+        updateTracking()
     }
 
     internal fun restartPreviousTrackingOptions() {
