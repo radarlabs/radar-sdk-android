@@ -3088,7 +3088,7 @@ object Radar {
         val replays = getReplays()
         val replayCount = replays.size 
         // TODO: revisit this log
-        logger.d("loadReplayBufferFromSharedPreferences() replayCount = $replayCount")
+        logger.d("loaded replay buffer from shared preferences with $replayCount replays")
     }
 
     @JvmStatic
