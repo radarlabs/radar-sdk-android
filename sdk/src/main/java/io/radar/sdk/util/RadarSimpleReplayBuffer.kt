@@ -62,7 +62,9 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
                     
                     // clear the shared preferences
                     // TODO: write buffer to shared prefs vs clearing
-                    getSharedPreferences(context).edit { remove(KEY_REPLAYS) }
+                    // getSharedPreferences(context).edit { remove(KEY_REPLAYS) }
+                    val replaysAsJsonArray = JSONArray(buffer.map { it.toJson() })
+                    getSharedPreferences(context).edit { putString(KEY_REPLAYS, replaysAsJsonArray.toString()) }
                 }
             }
         }
