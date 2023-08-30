@@ -29,7 +29,7 @@ class RadarFeatureSettingsTest {
         jsonString = """{
             "networkAny":$requiresNetwork,
             "maxConcurrentJobs":$maxConcurrentJobs,
-            "usePersistence":$usePersistence
+            "usePersistence":$usePersistence,
             "extendFlushReplays":$extendFlushReplays
         }""".trimIndent()
     }
