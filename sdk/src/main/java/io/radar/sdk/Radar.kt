@@ -3091,11 +3091,18 @@ object Radar {
         // check if already flushing
         if (flushingReplays) {
             this.logger.i("Radar.flushReplays() already flushing", RadarLogType.SDK_CALL)
-            return // track callback?
+            // retry if already flushing when track is called
+            if (currentTrackParams != null) {
+                this.logger.i("flushingReplays in flight, retrying", RadarLogType.SDK_CALL)
+                handler.postDelayed({
+                    flushReplays(currentTrackParams, callback)
+                }, 1000)
+            }
+            return
         }
 
         // check if any replays to flush
-        if (!hasReplays()) {
+        if (!hasReplays() && currentTrackParams == null) {
             this.logger.i("Radar.flushReplays() no replays to flush", RadarLogType.SDK_CALL) // temp
             return
         }
