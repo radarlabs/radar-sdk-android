@@ -89,6 +89,10 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null)
     }
 
+    internal interface RadarReplayApiCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null)
+    }
+
     private fun headers(publishableKey: String): Map<String, String> {
         return mapOf(
             "Authorization" to publishableKey,
@@ -172,7 +176,7 @@ internal class RadarApiClient(
     }
 
     // api handler for /track/replay, just takes in a list of replays to send to API
-    internal fun replay(replays: List<RadarReplay>, callback: RadarLogCallback?) { // callback?
+    internal fun replay(replays: List<RadarReplay>, callback: RadarReplayApiCallback?) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -337,8 +341,8 @@ internal class RadarApiClient(
             logger.i("track api call diverting to flushReplays", Radar.RadarLogType.SDK_CALL)
             Radar.flushReplays(
                 currentTrackParams = params,
-                callback = object : Radar.RadarFlushReplaysCallback {
-                    override fun onComplete(status: RadarStatus) {
+                callback = object : Radar.RadarTrackCallback {
+                    override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                         // pass through flush replay onComplete for track callback
                         callback?.onComplete(status)
                     }

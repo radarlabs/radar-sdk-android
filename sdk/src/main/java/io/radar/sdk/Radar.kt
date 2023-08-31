@@ -83,21 +83,6 @@ object Radar {
     }
 
     /**
-     * ,,,
-     */
-    interface RadarFlushReplaysCallback {
-
-        /**
-         * ...
-         *
-         * @param[status] RadarStatus The request status.
-         */
-        fun onComplete(
-            status: RadarStatus
-        )
-    }
-
-    /**
      * Called when a track request with token callback succeeds, fails, or times out.
      */
     interface RadarTrackTokenCallback {
@@ -3083,7 +3068,7 @@ object Radar {
      * Flushes replays to the server.
      */
     @JvmStatic
-    internal fun flushReplays(currentTrackParams: JSONObject? = null, callback: RadarFlushReplaysCallback? = null) {
+    internal fun flushReplays(currentTrackParams: JSONObject? = null, callback: RadarTrackCallback? = null) {
         if (!initialized) {
             return
         }
@@ -3123,7 +3108,7 @@ object Radar {
     
         val nowMS = System.currentTimeMillis()
 
-        apiClient.replay(replays, object : RadarApiClient.RadarLogCallback {
+        apiClient.replay(replays, object : RadarApiClient.RadarReplayApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status == RadarStatus.SUCCESS) {
                     logger.i("apiClient.syncReplays() success. Radar.clearReplays()", RadarLogType.SDK_CALL)
