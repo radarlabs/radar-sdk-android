@@ -422,7 +422,7 @@ object Radar {
     }
 
     internal var initialized = false
-    internal var flushingReplays = false
+    internal var isFlushingReplays = false
     private lateinit var context: Context
     private lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
@@ -3068,63 +3068,57 @@ object Radar {
      * Flushes replays to the server.
      */
     @JvmStatic
-    internal fun flushReplays(currentTrackParams: JSONObject? = null, callback: RadarTrackCallback? = null) {
+    internal fun flushReplays(replayParams: JSONObject? = null, callback: RadarTrackCallback? = null) {
         if (!initialized) {
             return
         }
 
-        // check if already flushing
-        if (flushingReplays) {
-            this.logger.i("Radar.flushReplays() already flushing", RadarLogType.SDK_CALL)
-            // retry if already flushing when track is called
-            if (currentTrackParams != null) {
-                this.logger.i("flushingReplays in flight, retrying", RadarLogType.SDK_CALL)
-                handler.postDelayed({
-                    flushReplays(currentTrackParams, callback)
-                }, 1000)
-            }
+        if (isFlushingReplays) {
+            this.logger.d("Already flushing replays")
+            callback?.onComplete(RadarStatus.ERROR_SERVER)
             return
         }
 
         // check if any replays to flush
-        if (!hasReplays() && currentTrackParams == null) {
-            this.logger.i("Radar.flushReplays() no replays to flush", RadarLogType.SDK_CALL) // temp
+        if (!hasReplays() && replayParams == null) {
+            this.logger.d("No replays to flush")
             return
         }
     
-        // set flushing flag
-        this.flushingReplays = true
+        this.isFlushingReplays = true
 
         // get a copy of the replays so we can safely clear what was synced up
         val replaysStash = replayBuffer.getFlushableReplaysStash()
         val replays = replaysStash.get().toMutableList()
 
         // if we have a current track update, add it to the local replay list
-        if (currentTrackParams != null) {
-            replays.add(RadarReplay(currentTrackParams))
+        if (replayParams != null) {
+            replays.add(RadarReplay(replayParams))
         }
+
         val replayCount = replays.size
-        this.logger.i("Radar.flushReplays() replayCount = $replayCount", RadarLogType.SDK_CALL)
-    
+        this.logger.d("Flushing $replayCount replays")
+
+        // set aside the current time in case we need to write it to that last replay
         val nowMS = System.currentTimeMillis()
 
         apiClient.replay(replays, object : RadarApiClient.RadarReplayApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status == RadarStatus.SUCCESS) {
-                    logger.i("apiClient.syncReplays() success. Radar.clearReplays()", RadarLogType.SDK_CALL)
+                    logger.d("Successfully flushed replays")
                     replaysStash.onFlush(true) // clear from buffer what was synced
                     Radar.flushLogs()
                 } else {
                     // replay failed, if we had a current track update, mark it as replayed and add to buffer
-                    if (currentTrackParams != null) {
-                        logger.e("apiClient.syncReplays() failed. adding current track to replay buffer")
-                        currentTrackParams.putOpt("replayed", true)
-                        currentTrackParams.putOpt("updatedAtMs", nowMS)
-                        currentTrackParams.remove("updatedAtMsDiff")
-                        Radar.addReplay(currentTrackParams)
+                    if (replayParams != null) {
+                        logger.d("Failed to flush replays, adding track update to buffer")
+                        replayParams.putOpt("replayed", true)
+                        replayParams.putOpt("updatedAtMs", nowMS)
+                        replayParams.remove("updatedAtMsDiff")
+                        Radar.addReplay(replayParams)
                     }
                 }
-                Radar.flushingReplays = false
+                Radar.isFlushingReplays = false
                 handler.post {
                     callback?.onComplete(status)
                 }

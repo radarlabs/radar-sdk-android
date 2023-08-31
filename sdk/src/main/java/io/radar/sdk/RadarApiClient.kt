@@ -208,6 +208,7 @@ internal class RadarApiClient(
                     callback?.onComplete(status, res)
                 }
             },
+            extendedTimeout = true,
         )
     }
 
@@ -337,10 +338,8 @@ internal class RadarApiClient(
         // before we track, check if replays need to sync
         val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && hasReplays && !verified
         if (replaying) {
-            // send current update to /track/replay instead
-            logger.i("track api call diverting to flushReplays", Radar.RadarLogType.SDK_CALL)
             Radar.flushReplays(
-                currentTrackParams = params,
+                replayParams = params,
                 callback = object : Radar.RadarTrackCallback {
                     override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                         // pass through flush replay onComplete for track callback
