@@ -24,6 +24,10 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
 
     private val buffer = LinkedBlockingDeque<RadarReplay>(MAXIMUM_CAPACITY)
 
+    override fun getSize(): Int {
+        return buffer.size
+    } 
+
     override fun write(replayParams: JSONObject) {
         if (buffer.size >= MAXIMUM_CAPACITY) {
             buffer.removeFirst()
@@ -54,9 +58,11 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
 
             override fun onFlush(success: Boolean) {
                 if (success) {
-                    buffer.clear()
+                    buffer.removeAll(replays) // only clear the replays from buffer that were successfully flushed
+                    
                     // clear the shared preferences
-                    getSharedPreferences(context).edit { remove(KEY_REPLAYS) }
+                    val replaysAsJsonArray = JSONArray(buffer.map { it.toJson() })
+                    getSharedPreferences(context).edit { putString(KEY_REPLAYS, replaysAsJsonArray.toString()) }
                 }
             }
         }
