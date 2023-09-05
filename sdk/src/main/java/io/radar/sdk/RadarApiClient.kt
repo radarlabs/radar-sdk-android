@@ -209,6 +209,8 @@ internal class RadarApiClient(
                 }
             },
             extendedTimeout = true,
+            stream = false,
+            logPayload = false,
         )
     }
 
