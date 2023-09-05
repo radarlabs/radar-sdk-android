@@ -78,6 +78,13 @@ internal object RadarSettings {
     internal fun updateSessionId(context: Context): Boolean {
         val timestampSeconds = System.currentTimeMillis() / 1000
         val sessionIdSeconds = getSharedPreferences(context).getLong(KEY_SESSION_ID, 0)
+
+        val settings = RadarSettings.getFeatureSettings(context)
+        if (settings.extendFlushReplays) {
+            Radar.logger.d("Flushing replays from updateSessionId")
+            Radar.flushReplays()
+        }
+
         if (timestampSeconds - sessionIdSeconds > 300) {
             getSharedPreferences(context).edit { putLong(KEY_SESSION_ID, timestampSeconds) }
 

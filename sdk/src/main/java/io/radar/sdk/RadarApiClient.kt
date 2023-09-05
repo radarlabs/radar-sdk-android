@@ -89,6 +89,10 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null)
     }
 
+    internal interface RadarReplayApiCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null)
+    }
+
     private fun headers(publishableKey: String): Map<String, String> {
         return mapOf(
             "Authorization" to publishableKey,
@@ -168,6 +172,45 @@ internal class RadarApiClient(
             // single log entry. Then each time after, this log entry would contain more and more logs, eventually
             // causing an out of memory exception.
             logPayload = false
+        )
+    }
+
+    // api handler for /track/replay, just takes in a list of replays to send to API
+    internal fun replay(replays: List<RadarReplay>, callback: RadarReplayApiCallback?) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val params = JSONObject()
+        val replaysList = mutableListOf<JSONObject>()
+        for (replay in replays) {
+            replaysList.add(replay.replayParams)
+        }
+        params.putOpt("replays", JSONArray(replaysList))
+
+        val path = "v1/track/replay"
+        apiHelper.request(
+            context = context,
+            method = "POST",
+            path = path,
+            headers = headers(publishableKey),
+            params = params,
+            sleep = false,
+            callback = object : RadarApiHelper.RadarApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                     if (status != RadarStatus.SUCCESS) {
+                        Radar.sendError(status)
+                     }
+
+                    callback?.onComplete(status, res)
+                }
+            },
+            extendedTimeout = true,
+            stream = false,
+            logPayload = false,
         )
     }
 
@@ -290,23 +333,23 @@ internal class RadarApiClient(
             this.getConfig(usage)
         }
 
-        val replays = Radar.getReplays()
-        val replayCount = replays.size
+        val hasReplays = Radar.hasReplays()
         var requestParams = params
         val nowMS = System.currentTimeMillis()
 
-        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0 && !verified
+        // before we track, check if replays need to sync
+        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && hasReplays && !verified
         if (replaying) {
-            val replaysList = mutableListOf<JSONObject>()
-            for (replay in replays) {
-                replaysList.add(replay.replayParams)
-            }
-            replaysList.add(params)
-
-            path = "v1/track/replay"
-
-            requestParams = JSONObject()
-            requestParams.putOpt("replays", JSONArray(replaysList))
+            Radar.flushReplays(
+                replayParams = params,
+                callback = object : Radar.RadarTrackCallback {
+                    override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+                        // pass through flush replay onComplete for track callback
+                        callback?.onComplete(status)
+                    }
+                }
+            )
+            return
         }
 
         apiHelper.request(context, "POST", path, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
@@ -328,7 +371,6 @@ internal class RadarApiClient(
                     return
                 }
 
-                Radar.clearReplays()
                 RadarState.setLastFailedStoppedLocation(context, null)
                 Radar.flushLogs()
                 RadarSettings.updateLastTrackedTime(context)

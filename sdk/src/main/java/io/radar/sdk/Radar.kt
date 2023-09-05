@@ -80,7 +80,6 @@ object Radar {
             events: Array<RadarEvent>? = null,
             user: RadarUser? = null
         )
-
     }
 
     /**
@@ -423,6 +422,7 @@ object Radar {
     }
 
     internal var initialized = false
+    internal var isFlushingReplays = false
     private lateinit var context: Context
     private lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
@@ -3064,17 +3064,72 @@ object Radar {
         }
     }
 
+    /**
+     * Flushes replays to the server.
+     */
     @JvmStatic
-    internal fun getReplays(): List<RadarReplay> {
-        val flushable = replayBuffer.getFlushableReplaysStash()
-        flushable.onFlush(false)
-        return flushable.get()
+    internal fun flushReplays(replayParams: JSONObject? = null, callback: RadarTrackCallback? = null) {
+        if (!initialized) {
+            return
+        }
+
+        if (isFlushingReplays) {
+            this.logger.d("Already flushing replays")
+            callback?.onComplete(RadarStatus.ERROR_SERVER)
+            return
+        }
+
+        // check if any replays to flush
+        if (!hasReplays() && replayParams == null) {
+            this.logger.d("No replays to flush")
+            return
+        }
+    
+        this.isFlushingReplays = true
+
+        // get a copy of the replays so we can safely clear what was synced up
+        val replaysStash = replayBuffer.getFlushableReplaysStash()
+        val replays = replaysStash.get().toMutableList()
+
+        // if we have a current track update, add it to the local replay list
+        if (replayParams != null) {
+            replays.add(RadarReplay(replayParams))
+        }
+
+        val replayCount = replays.size
+        this.logger.d("Flushing $replayCount replays")
+
+        // set aside the current time in case we need to write it to that last replay
+        val nowMS = System.currentTimeMillis()
+
+        apiClient.replay(replays, object : RadarApiClient.RadarReplayApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status == RadarStatus.SUCCESS) {
+                    logger.d("Successfully flushed replays")
+                    replaysStash.onFlush(true) // clear from buffer what was synced
+                    Radar.flushLogs()
+                } else {
+                    // replay failed, if we had a current track update, mark it as replayed and add to buffer
+                    if (replayParams != null) {
+                        logger.d("Failed to flush replays, adding track update to buffer")
+                        replayParams.putOpt("replayed", true)
+                        replayParams.putOpt("updatedAtMs", nowMS)
+                        replayParams.remove("updatedAtMsDiff")
+                        Radar.addReplay(replayParams)
+                    }
+                }
+                Radar.isFlushingReplays = false
+                handler.post {
+                    callback?.onComplete(status)
+                }
+            }
+        })
     }
 
     @JvmStatic
-    internal fun clearReplays() {
-        val flushable = replayBuffer.getFlushableReplaysStash()
-        flushable.onFlush(true)
+    internal fun hasReplays(): Boolean {
+        val replayCount = replayBuffer.getSize()
+        return replayCount > 0
     }
 
     @JvmStatic
@@ -3085,8 +3140,7 @@ object Radar {
     @JvmStatic
     internal fun loadReplayBufferFromSharedPreferences() {
         replayBuffer.loadFromSharedPreferences()
-        val replays = getReplays()
-        val replayCount = replays.size 
+        val replayCount = replayBuffer.getSize()
         // TODO: revisit this log
         logger.d("loaded replay buffer from shared preferences with $replayCount replays")
     }

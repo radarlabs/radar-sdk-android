@@ -116,6 +116,10 @@ internal class RadarLocationManager(
         this.started = false
         RadarSettings.setTracking(context, false)
         this.updateTracking()
+        val settings = RadarSettings.getFeatureSettings(context)
+        if (settings.extendFlushReplays) {
+            Radar.flushReplays()
+        }
     }
 
     private fun startLocationUpdates(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, interval: Int, fastestInterval: Int) {
