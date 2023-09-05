@@ -72,7 +72,7 @@ internal class RadarActivityLifecycleCallbacks(
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     try {
                         val inputDevice = InputDevice.getDevice(event.deviceId)
-                        logger.d("Intercepted touch | inputDevice = ${inputDevice}; inputDevice.virtual = ${inputDevice.isVirtual}; event: $event")
+                        logger.d("Intercepted touch | inputDevice = ${inputDevice}; inputDevice.isVirtual = ${inputDevice.isVirtual}; event: $event")
                         if (event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN || inputDevice.isVirtual) {
                             RadarSettings.setSharing(activity.applicationContext, true)
                         }
