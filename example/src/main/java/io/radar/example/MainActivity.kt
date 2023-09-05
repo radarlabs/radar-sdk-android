@@ -24,8 +24,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "org_test_pk_5857c63d9c1565175db8b00750808a66a002acb8", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
-        Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
 
         requestLocationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
@@ -58,11 +57,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun runDemo() {
-        Radar.trackVerified { status, location, events, user ->
-            Log.v("example", "Track verified: status = ${status}; location = $location; events = $events; user = $user")
-        }
-
-        /*
         Radar.getLocation { status, location, stopped ->
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
         }
@@ -221,8 +215,6 @@ class MainActivity : AppCompatActivity() {
         ) { status, event ->
             Log.v("example", "Conversion name = ${event?.conversionName}: status = $status; event = $event")
         }
-
-         */
     }
 
 }
