@@ -523,9 +523,10 @@ object Radar {
 
         val application = this.context as? Application
         if (fraud) {
+            this.logger.d("Intercepting touches")
             RadarSettings.setSharing(this.context, false)
         }
-        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
+        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(logger, fraud))
 
 
         val featureSettings = RadarSettings.getFeatureSettings(this.context)
