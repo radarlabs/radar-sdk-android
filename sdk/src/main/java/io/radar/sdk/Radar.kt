@@ -525,7 +525,7 @@ object Radar {
         if (fraud) {
             RadarSettings.setSharing(this.context, false)
         }
-        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
+        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(this.logger, fraud))
 
 
         val featureSettings = RadarSettings.getFeatureSettings(this.context)

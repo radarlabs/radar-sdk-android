@@ -5,12 +5,10 @@ import android.app.Activity
 import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import io.radar.sdk.Radar.RadarStatus
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
@@ -18,6 +16,7 @@ import kotlin.math.max
 
 
 internal class RadarActivityLifecycleCallbacks(
+    private val logger: RadarLogger,
     private val fraud: Boolean = false
 ) : Application.ActivityLifecycleCallbacks {
     private var count = 0
@@ -25,8 +24,6 @@ internal class RadarActivityLifecycleCallbacks(
     companion object {
         var foreground: Boolean = false
             private set
-
-        private const val TAG = "RadarActivityLifecycle"
     }
 
     private fun updatePermissionsDenied(activity: Activity) {
@@ -40,7 +37,7 @@ internal class RadarActivityLifecycleCallbacks(
                 RadarSettings.setPermissionsDenied(activity.applicationContext, true)
             }
         } catch (e: Exception) {
-            Log.e(TAG, e.message, e)
+            logger.e("Error updating permissions status", Radar.RadarLogType.SDK_EXCEPTION, e)
         }
     }
 
@@ -58,11 +55,13 @@ internal class RadarActivityLifecycleCallbacks(
                     })
                 }
             } catch (e: Exception) {
-                Log.e(TAG, e.message, e)
+                logger.e("Error updating session ID", Radar.RadarLogType.SDK_EXCEPTION, e)
             }
         }
         count++
         foreground = count > 0
+
+        logger.d("Activity resumed | count = $count; foreground = $foreground")
 
         Radar.logOpenedAppConversion()
 
@@ -73,13 +72,12 @@ internal class RadarActivityLifecycleCallbacks(
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     try {
                         val inputDevice = InputDevice.getDevice(event.deviceId)
-                        Log.v(TAG, "inputDevice: $inputDevice")
-                        Log.v(TAG, "event: $event")
+                        logger.d("Intercepted touch | inputDevice = ${inputDevice}; inputDevice.virtual = ${inputDevice.isVirtual}; event: $event")
                         if (event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN || inputDevice.isVirtual) {
                             RadarSettings.setSharing(activity.applicationContext, true)
                         }
                     }  catch (e: Exception) {
-                        Log.e(TAG, e.message, e)
+                        logger.e("Error intercepting touch", Radar.RadarLogType.SDK_EXCEPTION, e)
                     }
                     return super.dispatchTouchEvent(event)
                 }
@@ -94,26 +92,38 @@ internal class RadarActivityLifecycleCallbacks(
         count = max(count - 1, 0)
         foreground = count > 0
 
+        logger.d("Activity paused | count = $count; foreground = $foreground")
+
         updatePermissionsDenied(activity)
     }
 
     override fun onActivityStarted(activity: Activity) {
+        logger.d("Activity started")
+
         updatePermissionsDenied(activity)
     }
 
     override fun onActivityStopped(activity: Activity) {
+        logger.d("Activity stopped")
+
         updatePermissionsDenied(activity)
     }
 
     override fun onActivityDestroyed(activity: Activity) {
+        logger.d("Activity destroyed")
+
         updatePermissionsDenied(activity)
     }
 
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
+        logger.d("Activity save instance state")
+
         updatePermissionsDenied(activity)
     }
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+        logger.d("Activity created")
+
         updatePermissionsDenied(activity)
     }
 }
