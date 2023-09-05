@@ -444,7 +444,7 @@ internal class RadarApiClient(
                     return
                 }
 
-                Radar.sendError(status) // this shouldn't be an error today for replays (user & events null)
+                Radar.sendError(status)
 
                 callback?.onComplete(RadarStatus.ERROR_SERVER)
             }
