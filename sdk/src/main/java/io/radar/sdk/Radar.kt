@@ -532,6 +532,7 @@ object Radar {
                         StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
                             .setCloudProjectNumber(config.googlePlayProjectNumber)
                             .build())
+
                         .addOnCompleteListener { response ->
                             val endTime = System.currentTimeMillis()
                             val executionTime = endTime - startTime
@@ -960,16 +961,20 @@ object Radar {
                             return
                         }
 
-                        /* TODO(Travis): Hash a set of values that are important to us to pass to getIntegrityToken */
-                        val requestObjectToHash = mapOf(
-                            "longitude" to location.longitude,
-                            "latitude" to location.latitude,
-                        )
-                        val jsonString = requestObjectToHash.toString();
-                        val hashedValue = hashSHA256(jsonString)
-                        Log.v("example", "travis hashed value for requestHash ${hashedValue}")
+                        if (config.nonce == null) {
+                            // TODO(travis): What to do here?
+                            handler.post {
+                                callback?.onComplete(RadarStatus.ERROR_NETWORK)
+                            }
 
-                        verificationManager.getIntegrityToken(Radar.standardIntegrityTokenProvider, config.googlePlayProjectNumber, config.nonce) { integrityToken, integrityException ->
+                            return
+                        }
+
+                        val stringToHash = verificationManager.getRequestHash(location, config.nonce);
+                        val requestHash = hashSHA256(stringToHash);
+                        Log.v("example", "travis hashed value for requestHash ${requestHash} string to Hash: ${stringToHash}")
+
+                        verificationManager.getIntegrityToken(Radar.standardIntegrityTokenProvider, config.googlePlayProjectNumber, requestHash) { integrityToken, integrityException ->
                             apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, object : RadarApiClient.RadarTrackApiCallback {
                                 override fun onComplete(
                                     status: RadarStatus,

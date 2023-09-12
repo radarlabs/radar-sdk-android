@@ -1,6 +1,8 @@
 package io.radar.sdk
 
 import android.content.Context
+import android.location.Location
+import android.os.Build
 import android.util.Log
 import com.google.android.play.core.integrity.StandardIntegrityManager
 import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityToken
@@ -12,8 +14,23 @@ internal class RadarVerificationManager(
     private val logger: RadarLogger,
 ) {
 
+    fun getRequestHash(location: Location, nonce: String): String {
+        val stringBuffer = StringBuilder()
+        // build a string of installId, latitude, longitude, mocked, nonce, sharing
+        stringBuffer.append(RadarSettings.getInstallId(this.context))
+        stringBuffer.append(location.latitude)
+        stringBuffer.append(location.longitude)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            //Note(travis): throw an error if SDK isn't JELLY_BEAN_MR2?
+            //by now we can be sure that the SDK is high enough, but IDE generates error
+            stringBuffer.append(location.isFromMockProvider)
+        }
+        stringBuffer.append(nonce)
+        stringBuffer.append(RadarUtils.isScreenSharing(this.context))
+        return stringBuffer.toString();
+    }
 
-    fun getIntegrityToken(integrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider, googleCloudProjectNumber: Long?, nonce: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
+    fun getIntegrityToken(integrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider, googleCloudProjectNumber: Long?, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
         logger.d("Requesting integrity token")
 
         if (googleCloudProjectNumber == null) {
@@ -26,8 +43,8 @@ internal class RadarVerificationManager(
             return
         }
 
-        if (nonce == null) {
-            val integrityException = "Missing nonce"
+        if (requestHash == null) {
+            val integrityException = "Missing request hash"
 
             logger.d(integrityException)
 
@@ -36,8 +53,6 @@ internal class RadarVerificationManager(
             return
         }
 
-        // TODO: construct the request hash
-        val requestHash = nonce;
         val startTime = System.currentTimeMillis()
         val integrityTokenResponse: Task<StandardIntegrityToken> = integrityTokenProvider.request(
             StandardIntegrityTokenRequest.builder()
