@@ -3045,6 +3045,18 @@ object Radar {
     }
 
     /**
+     *Gets the log level for debug logs.
+     */
+    @JvmStatic
+    fun getLogLevel(): RadarLogLevel? {
+        if (!initialized) {
+            return null
+        }
+
+        return RadarSettings.getLogLevel(context)
+    }
+
+    /**
      * Flushes debug logs to the server.
      */
     @JvmStatic
