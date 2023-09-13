@@ -3046,6 +3046,7 @@ object Radar {
 
     /**
      *Gets the log level for debug logs.
+     *
      */
     @JvmStatic
     fun getLogLevel(): RadarLogLevel? {
