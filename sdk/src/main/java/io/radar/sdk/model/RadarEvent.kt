@@ -97,6 +97,12 @@ class RadarEvent(
     val location: Location,
 
     /**
+     * Whether the event was from a replayed location.
+     */
+     */
+    val replayed: Boolean,
+
+    /**
      * The metadata of the event. Present on conversions only.
      */
     val metadata: JSONObject?
@@ -203,6 +209,7 @@ class RadarEvent(
         private const val FIELD_LOCATION = "location"
         private const val FIELD_COORDINATES = "coordinates"
         private const val FIELD_LOCATION_ACCURACY = "locationAccuracy"
+        private const val FIELD_REPLAYED = "replayed"
         private const val FIELD_METADATA = "metadata"
 
         @JvmStatic
@@ -275,11 +282,13 @@ class RadarEvent(
                 time = createdAt.time
             }
 
+            val replayed = obj.optBoolean(FIELD_REPLAYED)
+
             val metadata = obj.optJSONObject(FIELD_METADATA)
 
             val event = RadarEvent(
                 id, createdAt, actualCreatedAt, live, type, conversionName, geofence, place, region, beacon, trip,
-                alternatePlaces, verifiedPlace, verification, confidence, duration, location, metadata
+                alternatePlaces, verifiedPlace, verification, confidence, duration, location, replayed, metadata
             )
 
             return event
@@ -361,6 +370,7 @@ class RadarEvent(
         coordinatesArr.put(this.location.latitude)
         locationObj.putOpt("coordinates", coordinatesArr)
         obj.putOpt(FIELD_LOCATION, locationObj)
+        obj.putOpt(FIELD_REPLAYED, this.replayed)
         obj.putOpt(FIELD_METADATA, metadata)
 
         return obj
