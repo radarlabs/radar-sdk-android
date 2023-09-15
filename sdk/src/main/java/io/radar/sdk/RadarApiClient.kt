@@ -205,7 +205,7 @@ internal class RadarApiClient(
                         Radar.sendError(status)
                      }
 
-                     val events = res?.optJSONArray("events")?.let { eventsArr ->
+                    val events = res?.optJSONArray("events")?.let { eventsArr ->
                         RadarEvent.fromJson(eventsArr)
                     }
                     val user = res?.optJSONObject("user")?.let { userObj ->
