@@ -521,8 +521,7 @@ object Radar {
                 RadarSettings.setFeatureSettings(context, config.featureSettings)
 
                 if (config.googlePlayProjectNumber != null) {
-                    // Create an instance of a standard integrity manager.
-                    IntegrityManagerFactory.createStandard(context)
+                    // Create an instance of a standard integrity manager
                     val standardIntegrityManager = IntegrityManagerFactory.createStandard(context)
                     standardIntegrityManager.prepareIntegrityToken(
                         StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
@@ -954,9 +953,8 @@ object Radar {
                         }
 
                         if (config.nonce == null) {
-                            // TODO(travis): What to do here?
                             handler.post {
-                                callback?.onComplete(RadarStatus.ERROR_NETWORK)
+                                callback?.onComplete(RadarStatus.ERROR_UNKNOWN)
                             }
 
                             return
