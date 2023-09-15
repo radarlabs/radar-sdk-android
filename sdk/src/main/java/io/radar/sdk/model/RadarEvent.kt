@@ -99,7 +99,6 @@ class RadarEvent(
     /**
      * Whether the event was from a replayed location.
      */
-     */
     val replayed: Boolean,
 
     /**
