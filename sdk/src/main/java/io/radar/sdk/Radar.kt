@@ -3091,16 +3091,17 @@ object Radar {
         val replaysStash = replayBuffer.getFlushableReplaysStash()
         val replays = replaysStash.get().toMutableList()
 
-        // if we have a current track update, add it to the local replay list
+        // if we have a current track update, mark it as replayed and add to local list
         if (replayParams != null) {
+            replayParams.putOpt("replayed", true)
+            replayParams.putOpt("updatedAtMs", System.currentTimeMillis())
+            replayParams.remove("updatedAtMsDiff")
+
             replays.add(RadarReplay(replayParams))
         }
 
         val replayCount = replays.size
         this.logger.d("Flushing $replayCount replays")
-
-        // set aside the current time in case we need to write it to that last replay
-        val nowMS = System.currentTimeMillis()
 
         apiClient.replay(replays, object : RadarApiClient.RadarReplayApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
@@ -3109,12 +3110,8 @@ object Radar {
                     replaysStash.onFlush(true) // clear from buffer what was synced
                     Radar.flushLogs()
                 } else {
-                    // replay failed, if we had a current track update, mark it as replayed and add to buffer
                     if (replayParams != null) {
                         logger.d("Failed to flush replays, adding track update to buffer")
-                        replayParams.putOpt("replayed", true)
-                        replayParams.putOpt("updatedAtMs", nowMS)
-                        replayParams.remove("updatedAtMsDiff")
                         Radar.addReplay(replayParams)
                     }
                 }
