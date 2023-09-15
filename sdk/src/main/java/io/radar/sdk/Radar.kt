@@ -6,7 +6,6 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
-import android.util.Log
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import com.google.android.play.core.integrity.StandardIntegrityManager
 import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityTokenProvider
@@ -522,28 +521,21 @@ object Radar {
                 RadarSettings.setFeatureSettings(context, config.featureSettings)
 
                 if (config.googlePlayProjectNumber != null) {
-
-                    // TODO: determine if we need to warm up the provider
-                    // Create an instance of a manager.
-                    var startTime = System.currentTimeMillis();
+                    // Create an instance of a standard integrity manager.
                     IntegrityManagerFactory.createStandard(context)
                     val standardIntegrityManager = IntegrityManagerFactory.createStandard(context)
                     standardIntegrityManager.prepareIntegrityToken(
                         StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
                             .setCloudProjectNumber(config.googlePlayProjectNumber)
-                            .build())
-
-                        .addOnCompleteListener { response ->
-                            val endTime = System.currentTimeMillis()
-                            val executionTime = endTime - startTime
-                            Log.v("travis", "Execution time: $executionTime milliseconds to get standardIntegrityTokenProvider")
-
-                            if (response.isSuccessful) {
-                                Radar.standardIntegrityTokenProvider = response.getResult()
-                                Log.v("travis", "successful warm up ${Radar.standardIntegrityTokenProvider}")
-                            } else {
-                                Log.v("travis", "bad warm up")
-                            }
+                            .build()
+                    )
+                        .addOnSuccessListener { response ->
+                            Radar.standardIntegrityTokenProvider = response
+                            logger.d("successful warm up of the integrity token provider")
+                        }
+                        .addOnFailureListener { exception ->
+                            val warmupException = exception?.message
+                            logger.d("Error warming up integrity token provider | warmupException = $warmupException")
                         }
                 }
             }
@@ -971,10 +963,9 @@ object Radar {
                         }
 
                         val stringToHash = verificationManager.getRequestHash(location, config.nonce);
-                        val requestHash = hashSHA256(stringToHash);
-                        Log.v("example", "travis hashed value for requestHash ${requestHash} string to Hash: ${stringToHash}")
+                        val requestHash = hashSHA256(stringToHash)
 
-                        verificationManager.getIntegrityToken(Radar.standardIntegrityTokenProvider, config.googlePlayProjectNumber, requestHash) { integrityToken, integrityException ->
+                        verificationManager.getIntegrityToken(Radar.standardIntegrityTokenProvider, requestHash) { integrityToken, integrityException ->
                             apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, object : RadarApiClient.RadarTrackApiCallback {
                                 override fun onComplete(
                                     status: RadarStatus,

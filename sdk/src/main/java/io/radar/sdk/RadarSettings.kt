@@ -273,8 +273,7 @@ internal object RadarSettings {
     }
 
     internal fun getHost(context: Context): String {
-        //return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
-        return "https://travis-radar.ngrok.io"
+        return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
     }
 
     internal fun setPermissionsDenied(context: Context, denied: Boolean) {
@@ -295,8 +294,7 @@ internal object RadarSettings {
     }
 
     internal fun getVerifiedHost(context: Context): String {
-        //return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api-verified.radar.io"
-        return "https://travis-radar.ngrok.io"
+        return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api-verified.radar.io"
     }
 
     internal fun getUserDebug(context: Context): Boolean {

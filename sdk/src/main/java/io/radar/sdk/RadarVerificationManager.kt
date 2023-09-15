@@ -30,18 +30,8 @@ internal class RadarVerificationManager(
         return stringBuffer.toString();
     }
 
-    fun getIntegrityToken(integrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider, googleCloudProjectNumber: Long?, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
+    fun getIntegrityToken(integrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
         logger.d("Requesting integrity token")
-
-        if (googleCloudProjectNumber == null) {
-            val integrityException = "Missing Google Cloud project number"
-
-            logger.d(integrityException)
-
-            block(null, integrityException)
-
-            return
-        }
 
         if (requestHash == null) {
             val integrityException = "Missing request hash"
@@ -53,7 +43,6 @@ internal class RadarVerificationManager(
             return
         }
 
-        val startTime = System.currentTimeMillis()
         val integrityTokenResponse: Task<StandardIntegrityToken> = integrityTokenProvider.request(
             StandardIntegrityTokenRequest.builder()
                 .setRequestHash(requestHash)
@@ -64,10 +53,6 @@ internal class RadarVerificationManager(
                 val integrityToken = response.token()
 
                 logger.d("Successfully requested integrity token | integrityToken = $integrityToken")
-
-                val endTime = System.currentTimeMillis()
-                val executionTime = endTime - startTime
-                Log.v("travis", "Execution time: $executionTime milliseconds to request integrity token")
 
                 block(integrityToken, null)
             }
