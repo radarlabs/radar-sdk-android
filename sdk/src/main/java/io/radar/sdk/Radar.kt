@@ -990,7 +990,7 @@ object Radar {
                         val stringToHash = verificationManager.getRequestHash(location, config.nonce);
                         val requestHash = hashSHA256(stringToHash)
 
-                        verificationManager.getIntegrityToken(config.googlePlayProjectNumber, config.nonce) { integrityToken, integrityException ->
+                        verificationManager.getIntegrityToken(Radar.standardIntegrityTokenProvider, requestHash) { integrityToken, integrityException ->
                             apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, false, callback = object : RadarApiClient.RadarTrackApiCallback {
                                 override fun onComplete(
                                     status: RadarStatus,
@@ -1065,7 +1065,18 @@ object Radar {
                             return
                         }
 
-                        verificationManager.getIntegrityToken(config.googlePlayProjectNumber, config.nonce) { integrityToken, integrityException ->
+                        if (config.nonce == null) {
+                            handler.post {
+                                callback?.onComplete(RadarStatus.ERROR_UNKNOWN)
+                            }
+
+                            return
+                        }
+
+                        val stringToHash = verificationManager.getRequestHash(location, config.nonce);
+                        val requestHash = hashSHA256(stringToHash)
+
+                        verificationManager.getIntegrityToken(Radar.standardIntegrityTokenProvider, requestHash) { integrityToken, integrityException ->
                             apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, true, object : RadarApiClient.RadarTrackApiCallback {
                                 override fun onComplete(
                                     status: RadarStatus,
