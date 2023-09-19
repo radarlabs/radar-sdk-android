@@ -85,6 +85,23 @@ object Radar {
             events: Array<RadarEvent>? = null,
             user: RadarUser? = null
         )
+    }
+
+    /**
+     * Called when a track request with token callback succeeds, fails, or times out.
+     */
+    interface RadarTrackTokenCallback {
+
+        /**
+         * Called when a track request with token callback succeeds, fails, or times out. Receives the request status and, if successful, a JSON Web Token (JWT) containing an array of the events generated and the user. Verify the JWT server-side using your secret key.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[token] String? If successful, a JSON Web Token (JWT).
+         */
+        fun onComplete(
+            status: RadarStatus,
+            token: String? = null
+        )
 
     }
 
@@ -410,6 +427,7 @@ object Radar {
     }
 
     internal var initialized = false
+    internal var isFlushingReplays = false
     private lateinit var context: Context
     private lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
@@ -464,7 +482,7 @@ object Radar {
         }
 
         if (!this::replayBuffer.isInitialized) {
-            this.replayBuffer = RadarSimpleReplayBuffer()
+            this.replayBuffer = RadarSimpleReplayBuffer(this.context)
         }
 
         if (!this::logger.isInitialized) {
@@ -514,11 +532,16 @@ object Radar {
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
 
+
+        val featureSettings = RadarSettings.getFeatureSettings(this.context)
+        if (featureSettings.usePersistence) {
+            Radar.loadReplayBufferFromSharedPreferences()
+        }
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(config: RadarConfig) {
-                locationManager.updateTrackingFromMeta(config.meta)
-                RadarSettings.setFeatureSettings(context, config.featureSettings)
+                locationManager.updateTrackingFromMeta(config?.meta)
+                RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
 
                 if (config.googlePlayProjectNumber != null) {
                     // Create an instance of a standard integrity manager
@@ -802,6 +825,7 @@ object Radar {
                             user: RadarUser?,
                             nearbyGeofences: Array<RadarGeofence>?,
                             config: RadarConfig?,
+                            token: String?
                         ) {
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
@@ -895,6 +919,7 @@ object Radar {
                 user: RadarUser?,
                 nearbyGeofences: Array<RadarGeofence>?,
                 config: RadarConfig?,
+                token: String?
             ) {
                 handler.post {
                     callback?.onComplete(status, location, events, user)
@@ -926,6 +951,8 @@ object Radar {
      * Note that you must configure SSL pinning before calling this method.
      *
      * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[callback] An optional callback.
      */
     @JvmStatic
     fun trackVerified(callback: RadarTrackCallback? = null) {
@@ -963,8 +990,8 @@ object Radar {
                         val stringToHash = verificationManager.getRequestHash(location, config.nonce);
                         val requestHash = hashSHA256(stringToHash)
 
-                        verificationManager.getIntegrityToken(Radar.standardIntegrityTokenProvider, requestHash) { integrityToken, integrityException ->
-                            apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, object : RadarApiClient.RadarTrackApiCallback {
+                        verificationManager.getIntegrityToken(config.googlePlayProjectNumber, config.nonce) { integrityToken, integrityException ->
+                            apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, false, callback = object : RadarApiClient.RadarTrackApiCallback {
                                 override fun onComplete(
                                     status: RadarStatus,
                                     res: JSONObject?,
@@ -972,6 +999,7 @@ object Radar {
                                     user: RadarUser?,
                                     nearbyGeofences: Array<RadarGeofence>?,
                                     config: RadarConfig?,
+                                    token: String?
                                 ) {
                                     handler.post {
                                         callback?.onComplete(status, location, events, user)
@@ -991,12 +1019,89 @@ object Radar {
      * Note that you must configure SSL pinning before calling this method.
      *
      * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[block] A block callback.
      */
     @JvmStatic
     fun trackVerified(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
         trackVerified(object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
+            }
+        })
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Verify the JWT server-side using your secret key.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun trackVerifiedToken(callback: RadarTrackTokenCallback? = null) {
+        if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        val usage = "verify"
+        apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(config: RadarConfig) {
+                locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
+                    override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                        if (status != RadarStatus.SUCCESS || location == null) {
+                            handler.post {
+                                callback?.onComplete(status)
+                            }
+
+                            return
+                        }
+
+                        verificationManager.getIntegrityToken(config.googlePlayProjectNumber, config.nonce) { integrityToken, integrityException ->
+                            apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, true, object : RadarApiClient.RadarTrackApiCallback {
+                                override fun onComplete(
+                                    status: RadarStatus,
+                                    res: JSONObject?,
+                                    events: Array<RadarEvent>?,
+                                    user: RadarUser?,
+                                    nearbyGeofences: Array<RadarGeofence>?,
+                                    config: RadarConfig?,
+                                    token: String?
+                                ) {
+                                    handler.post {
+                                        callback?.onComplete(status, token)
+                                    }
+                                }
+                            })
+                        }
+                    }
+                })
+            }
+        })
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Verify the JWT server-side using your secret key.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[block] A block callback.
+     */
+    @JvmStatic
+    fun trackVerifiedToken(block: (status: RadarStatus, token: String?) -> Unit) {
+        trackVerifiedToken(object : RadarTrackTokenCallback {
+            override fun onComplete(status: RadarStatus, token: String?) {
+                block(status, token)
             }
         })
     }
@@ -1092,6 +1197,7 @@ object Radar {
                                 user: RadarUser?,
                                 nearbyGeofences: Array<RadarGeofence>?,
                                 config: RadarConfig?,
+                                token: String?
                             ) {
                                 handler.post {
                                     callback?.onComplete(status, location, events, user)
@@ -1170,6 +1276,21 @@ object Radar {
 
         return RadarSettings.getTracking(context)
     }
+
+    /**
+     *  Returns a boolean indicating whether the local tracking options are over-ridden by remote tracking options.
+     *
+     * @return A boolean indicating whether the tracking option is being over-ridden by the remote tracking options.
+     */
+    @JvmStatic
+    fun isUsingRemoteTrackingOptions(): Boolean {
+        if (!initialized) {
+            return false
+        }
+
+        return RadarSettings.getRemoteTrackingOptions(context) != null
+    }
+
 
    /** 
     *  Returns a string of the radar host.
@@ -2977,22 +3098,82 @@ object Radar {
         }
     }
 
+    /**
+     * Flushes replays to the server.
+     */
     @JvmStatic
-    internal fun getReplays(): List<RadarReplay> {
-        val flushable = replayBuffer.getFlushableReplaysStash()
-        flushable.onFlush(false)
-        return flushable.get()
+    internal fun flushReplays(replayParams: JSONObject? = null, callback: RadarTrackCallback? = null) {
+        if (!initialized) {
+            return
+        }
+
+        if (isFlushingReplays) {
+            this.logger.d("Already flushing replays")
+            callback?.onComplete(RadarStatus.ERROR_SERVER)
+            return
+        }
+
+        // check if any replays to flush
+        if (!hasReplays() && replayParams == null) {
+            this.logger.d("No replays to flush")
+            return
+        }
+    
+        this.isFlushingReplays = true
+
+        // get a copy of the replays so we can safely clear what was synced up
+        val replaysStash = replayBuffer.getFlushableReplaysStash()
+        val replays = replaysStash.get().toMutableList()
+
+        // if we have a current track update, mark it as replayed and add to local list
+        if (replayParams != null) {
+            replayParams.putOpt("replayed", true)
+            replayParams.putOpt("updatedAtMs", System.currentTimeMillis())
+            replayParams.remove("updatedAtMsDiff")
+
+            replays.add(RadarReplay(replayParams))
+        }
+
+        val replayCount = replays.size
+        this.logger.d("Flushing $replayCount replays")
+
+        apiClient.replay(replays, object : RadarApiClient.RadarReplayApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status == RadarStatus.SUCCESS) {
+                    logger.d("Successfully flushed replays")
+                    replaysStash.onFlush(true) // clear from buffer what was synced
+                    Radar.flushLogs()
+                } else {
+                    if (replayParams != null) {
+                        logger.d("Failed to flush replays, adding track update to buffer")
+                        Radar.addReplay(replayParams)
+                    }
+                }
+                Radar.isFlushingReplays = false
+                handler.post {
+                    callback?.onComplete(status)
+                }
+            }
+        })
     }
 
     @JvmStatic
-    internal fun clearReplays() {
-        val flushable = replayBuffer.getFlushableReplaysStash()
-        flushable.onFlush(true)
+    internal fun hasReplays(): Boolean {
+        val replayCount = replayBuffer.getSize()
+        return replayCount > 0
     }
 
     @JvmStatic
     internal fun addReplay(replayParams: JSONObject) {
         replayBuffer.write(replayParams)
+    }
+
+    @JvmStatic
+    internal fun loadReplayBufferFromSharedPreferences() {
+        replayBuffer.loadFromSharedPreferences()
+        val replayCount = replayBuffer.getSize()
+        // TODO: revisit this log
+        logger.d("loaded replay buffer from shared preferences with $replayCount replays")
     }
 
     @JvmStatic
@@ -3150,7 +3331,7 @@ object Radar {
         RadarNotificationHelper.showNotifications(context, events)
 
         for (event in events) {
-            logger.i("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; link = https://radar.com/dashboard/events/${event._id}")
+            logger.i("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; replayed = ${event.replayed}; link = https://radar.com/dashboard/events/${event._id}")
         }
     }
 

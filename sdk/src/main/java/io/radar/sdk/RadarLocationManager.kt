@@ -116,6 +116,10 @@ internal class RadarLocationManager(
         this.started = false
         RadarSettings.setTracking(context, false)
         this.updateTracking()
+        val settings = RadarSettings.getFeatureSettings(context)
+        if (settings.extendFlushReplays) {
+            Radar.flushReplays()
+        }
     }
 
     private fun startLocationUpdates(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, interval: Int, fastestInterval: Int) {
@@ -240,8 +244,8 @@ internal class RadarLocationManager(
                 RadarSettings.removeRemoteTrackingOptions(context)
                 logger.d("Removed remote tracking options | trackingOptions = ${Radar.getTrackingOptions()}")
             }
-            updateTracking()
         }
+        updateTracking()
     }
 
     internal fun restartPreviousTrackingOptions() {
@@ -580,7 +584,8 @@ internal class RadarLocationManager(
                     events: Array<RadarEvent>?,
                     user: RadarUser?,
                     nearbyGeofences: Array<RadarGeofence>?,
-                    config: RadarConfig?
+                    config: RadarConfig?,
+                    token: String?
                 ) {
                     locationManager.replaceSyncedGeofences(nearbyGeofences)
 

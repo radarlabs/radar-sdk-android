@@ -78,6 +78,13 @@ internal object RadarSettings {
     internal fun updateSessionId(context: Context): Boolean {
         val timestampSeconds = System.currentTimeMillis() / 1000
         val sessionIdSeconds = getSharedPreferences(context).getLong(KEY_SESSION_ID, 0)
+
+        val settings = RadarSettings.getFeatureSettings(context)
+        if (settings.extendFlushReplays) {
+            Radar.logger.d("Flushing replays from updateSessionId")
+            Radar.flushReplays()
+        }
+
         if (timestampSeconds - sessionIdSeconds > 300) {
             getSharedPreferences(context).edit { putLong(KEY_SESSION_ID, timestampSeconds) }
 
@@ -252,12 +259,15 @@ internal object RadarSettings {
     }
 
     fun setFeatureSettings(context: Context, featureSettings: RadarFeatureSettings) {
-        getSharedPreferences(context).edit { putString(KEY_FEATURE_SETTINGS, featureSettings.toJson().toString()) }
+        val optionsJson = featureSettings.toJson().toString()
+
+        getSharedPreferences(context).edit { putString(KEY_FEATURE_SETTINGS, optionsJson) }
     }
 
     fun getFeatureSettings(context: Context): RadarFeatureSettings {
-        val optionsJson = getSharedPreferences(context).getString(KEY_FEATURE_SETTINGS, null)
-            ?: return RadarFeatureSettings.default()
+        val sharedPrefFeatureSettings = getSharedPreferences(context).getString(KEY_FEATURE_SETTINGS, null)
+        Radar.logger.d("getFeatureSettings | featureSettings = $sharedPrefFeatureSettings")
+        val optionsJson = sharedPrefFeatureSettings ?: return RadarFeatureSettings.default()
         return RadarFeatureSettings.fromJson(JSONObject(optionsJson))
     }
 

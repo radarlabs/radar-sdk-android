@@ -28,7 +28,8 @@ internal class RadarApiClient(
             events: Array<RadarEvent>? = null,
             user: RadarUser? = null,
             nearbyGeofences: Array<RadarGeofence>? = null,
-            config: RadarConfig? = null
+            config: RadarConfig? = null,
+            token: String? = null
         )
     }
 
@@ -85,6 +86,10 @@ internal class RadarApiClient(
     }
 
     internal interface RadarLogCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null)
+    }
+
+    internal interface RadarReplayApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null)
     }
 
@@ -170,7 +175,57 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, callback: RadarTrackApiCallback? = null) {
+    // api handler for /track/replay, just takes in a list of replays to send to API
+    internal fun replay(replays: List<RadarReplay>, callback: RadarReplayApiCallback?) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val params = JSONObject()
+        val replaysList = mutableListOf<JSONObject>()
+        for (replay in replays) {
+            replaysList.add(replay.replayParams)
+        }
+        params.putOpt("replays", JSONArray(replaysList))
+
+        val path = "v1/track/replay"
+        apiHelper.request(
+            context = context,
+            method = "POST",
+            path = path,
+            headers = headers(publishableKey),
+            params = params,
+            sleep = false,
+            callback = object : RadarApiHelper.RadarApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                     if (status != RadarStatus.SUCCESS) {
+                        Radar.sendError(status)
+                     }
+
+                    val events = res?.optJSONArray("events")?.let { eventsArr ->
+                        RadarEvent.fromJson(eventsArr)
+                    }
+                    val user = res?.optJSONObject("user")?.let { userObj ->
+                        RadarUser.fromJson(userObj)
+                    }
+
+                     if (events != null && events.isNotEmpty()) {
+                        Radar.sendEvents(events, user)
+                    }
+
+                    callback?.onComplete(status, res)
+                }
+            },
+            extendedTimeout = true,
+            stream = false,
+            logPayload = false,
+        )
+    }
+
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -272,6 +327,7 @@ internal class RadarApiClient(
                 params.putOpt("integrityToken", integrityToken)
                 params.putOpt("integrityException", integrityException)
                 params.putOpt("sharing", RadarUtils.isScreenSharing(context))
+                params.putOpt("encrypted", encrypted)
             }
             params.putOpt("appId", context.packageName)
         } catch (e: JSONException) {
@@ -288,23 +344,23 @@ internal class RadarApiClient(
             this.getConfig(usage)
         }
 
-        val replays = Radar.getReplays()
-        val replayCount = replays.size
+        val hasReplays = Radar.hasReplays()
         var requestParams = params
         val nowMS = System.currentTimeMillis()
 
-        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && replayCount > 0 && !verified
+        // before we track, check if replays need to sync
+        val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && hasReplays && !verified
         if (replaying) {
-            val replaysList = mutableListOf<JSONObject>()
-            for (replay in replays) {
-                replaysList.add(replay.replayParams)
-            }
-            replaysList.add(params)
-
-            path = "v1/track/replay"
-
-            requestParams = JSONObject()
-            requestParams.putOpt("replays", JSONArray(replaysList))
+            Radar.flushReplays(
+                replayParams = params,
+                callback = object : Radar.RadarTrackCallback {
+                    override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+                        // pass through flush replay onComplete for track callback
+                        callback?.onComplete(status)
+                    }
+                }
+            )
+            return
         }
 
         apiHelper.request(context, "POST", path, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
@@ -326,7 +382,6 @@ internal class RadarApiClient(
                     return
                 }
 
-                Radar.clearReplays()
                 RadarState.setLastFailedStoppedLocation(context, null)
                 Radar.flushLogs()
                 RadarSettings.updateLastTrackedTime(context)
@@ -341,6 +396,13 @@ internal class RadarApiClient(
                 }
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
                     RadarGeofence.fromJson(nearbyGeofencesArr)
+                }
+                val token = res.optString("token")
+
+                if (encrypted == true) {
+                    callback?.onComplete(status, res, null, null, null, null, token)
+
+                    return
                 }
 
                 if (user != null) {
