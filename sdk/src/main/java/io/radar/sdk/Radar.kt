@@ -18,7 +18,6 @@ import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
 import java.util.*
 import io.radar.sdk.RadarActivityLifecycleCallbacks
-import io.radar.sdk.RadarUtils.hashSHA256
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -542,24 +541,7 @@ object Radar {
             override fun onComplete(config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config?.meta)
                 RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
-
-                if (config.googlePlayProjectNumber != null) {
-                    // Create an instance of a standard integrity manager
-                    val standardIntegrityManager = IntegrityManagerFactory.createStandard(context)
-                    standardIntegrityManager.prepareIntegrityToken(
-                        StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
-                            .setCloudProjectNumber(config.googlePlayProjectNumber)
-                            .build()
-                    )
-                        .addOnSuccessListener { response ->
-                            Radar.standardIntegrityTokenProvider = response
-                            logger.d("successful warm up of the integrity token provider")
-                        }
-                        .addOnFailureListener { exception ->
-                            val warmupException = exception?.message
-                            logger.d("Error warming up integrity token provider | warmupException = $warmupException")
-                        }
-                }
+                warmupStandardIntegrityTokenProvider(config)
             }
         })
 
@@ -980,6 +962,7 @@ object Radar {
                         }
 
                         if (config.nonce == null) {
+                            logger.e("Error missing nonce for trackVerified", RadarLogType.SDK_ERROR)
                             handler.post {
                                 callback?.onComplete(RadarStatus.ERROR_UNKNOWN)
                             }
@@ -987,8 +970,7 @@ object Radar {
                             return
                         }
 
-                        val stringToHash = verificationManager.getRequestHash(location, config.nonce);
-                        val requestHash = hashSHA256(stringToHash)
+                        val requestHash = verificationManager.getRequestHash(location, config.nonce);
 
                         verificationManager.getIntegrityToken(Radar.standardIntegrityTokenProvider, requestHash) { integrityToken, integrityException ->
                             apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, false, callback = object : RadarApiClient.RadarTrackApiCallback {
@@ -1066,6 +1048,7 @@ object Radar {
                         }
 
                         if (config.nonce == null) {
+                            logger.e("Error missing nonce for trackVerified", RadarLogType.SDK_ERROR)
                             handler.post {
                                 callback?.onComplete(RadarStatus.ERROR_UNKNOWN)
                             }
@@ -1073,8 +1056,7 @@ object Radar {
                             return
                         }
 
-                        val stringToHash = verificationManager.getRequestHash(location, config.nonce);
-                        val requestHash = hashSHA256(stringToHash)
+                        val requestHash = verificationManager.getRequestHash(location, config.nonce);
 
                         verificationManager.getIntegrityToken(Radar.standardIntegrityTokenProvider, requestHash) { integrityToken, integrityException ->
                             apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, true, object : RadarApiClient.RadarTrackApiCallback {
@@ -3072,6 +3054,29 @@ object Radar {
                     logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
                 }
             })
+        }
+    }
+
+    internal fun warmupStandardIntegrityTokenProvider(config: RadarConfig) {
+        if (config.googlePlayProjectNumber == null) {
+            logger.e("warmupStandardIntegrityTokenProvider: googlePlayProjectNumber is null!");
+            return;
+        } else {
+            // Create an instance of a standard integrity manager
+            val standardIntegrityManager = IntegrityManagerFactory.createStandard(context)
+            standardIntegrityManager.prepareIntegrityToken(
+                StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
+                    .setCloudProjectNumber(config.googlePlayProjectNumber)
+                    .build()
+            )
+                .addOnSuccessListener { tokenProvider ->
+                    Radar.standardIntegrityTokenProvider = tokenProvider
+                    logger.d("successful warm up of the integrity token provider")
+                }
+                .addOnFailureListener { exception ->
+                    val warmupException = exception?.message
+                    logger.e("Error warming up integrity token provider | warmupException = $warmupException", RadarLogType.SDK_ERROR)
+                }
         }
     }
 

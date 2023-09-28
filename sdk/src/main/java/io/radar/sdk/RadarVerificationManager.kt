@@ -8,6 +8,7 @@ import com.google.android.play.core.integrity.StandardIntegrityManager
 import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityToken
 import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityTokenRequest
 import com.google.android.gms.tasks.Task;
+import io.radar.sdk.RadarUtils.hashSHA256
 
 internal class RadarVerificationManager(
     private val context: Context,
@@ -27,7 +28,7 @@ internal class RadarVerificationManager(
         }
         stringBuffer.append(nonce)
         stringBuffer.append(RadarUtils.isScreenSharing(this.context))
-        return stringBuffer.toString();
+        return hashSHA256(stringBuffer.toString());
     }
 
     fun getIntegrityToken(integrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
@@ -42,7 +43,7 @@ internal class RadarVerificationManager(
 
             return
         }
-
+        
         val integrityTokenResponse: Task<StandardIntegrityToken> = integrityTokenProvider.request(
             StandardIntegrityTokenRequest.builder()
                 .setRequestHash(requestHash)
