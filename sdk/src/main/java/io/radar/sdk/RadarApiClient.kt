@@ -267,7 +267,7 @@ internal class RadarApiClient(
             if (location.hasBearing() && !location.bearing.isNaN()) {
                 params.putOpt("course", location.bearing)
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
                 if (location.hasVerticalAccuracy() && !location.verticalAccuracyMeters.isNaN()) {
                     params.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
                 }
@@ -277,7 +277,7 @@ internal class RadarApiClient(
                 if (location.hasBearingAccuracy() && !location.bearingAccuracyDegrees.isNaN()) {
                     params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
                 }
-            }
+
             if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
                 params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
@@ -792,11 +792,10 @@ internal class RadarApiClient(
                     var lastBeaconUUIDs: Array<String>? = null
                     var lastBeaconUIDs: Array<String>? = null
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         lastBeacons = RadarState.getLastBeacons(context)
                         lastBeaconUUIDs = RadarState.getLastBeaconUUIDs(context)
                         lastBeaconUIDs = RadarState.getLastBeaconUIDs(context)
-                    }
+
 
                     callback.onComplete(status, res, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
 
@@ -819,11 +818,11 @@ internal class RadarApiClient(
                     }.filter { uid -> uid.isNotEmpty() }.toTypedArray()
                 }
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
                     RadarState.setLastBeacons(context, beacons)
                     RadarState.setLastBeaconUUIDs(context, uuids)
                     RadarState.setLastBeaconUIDs(context, uids)
-                }
+
 
                 callback.onComplete(RadarStatus.SUCCESS, res, beacons, uuids, uids)
             }

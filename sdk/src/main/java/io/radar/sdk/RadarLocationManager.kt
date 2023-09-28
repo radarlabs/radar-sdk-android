@@ -140,7 +140,6 @@ internal class RadarLocationManager(
     }
 
     internal fun handleBeacons(beacons: Array<RadarBeacon>?, source: RadarLocationSource) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             logger.d("Handling beacons")
 
             Radar.beaconManager.handleBeacons(beacons, source)
@@ -152,7 +151,7 @@ internal class RadarLocationManager(
             }
 
             this.handleLocation(lastLocation, source)
-        }
+
     }
 
     internal fun handleBootCompleted() {
@@ -229,9 +228,9 @@ internal class RadarLocationManager(
             }
             this.stopLocationUpdates()
             this.removeAllGeofences()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
                 Radar.beaconManager.stopMonitoringBeacons()
-            }
+
         }
     }
 
@@ -642,7 +641,6 @@ internal class RadarLocationManager(
     }
 
     private fun startForegroundService(foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
                 if (RadarForegroundService.started) {
                     logger.d("Already started foreground service")
@@ -662,11 +660,11 @@ internal class RadarLocationManager(
             } catch (e: Exception) {
                 logger.e("Error starting foreground service with intent", RadarLogType.SDK_EXCEPTION, e)
             }
-        }
+
     }
 
     private fun stopForegroundService() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
             try {
                 val intent = Intent(context, RadarForegroundService::class.java)
                 intent.action = "stop"
@@ -676,7 +674,7 @@ internal class RadarLocationManager(
             } catch (e: Exception) {
                 logger.e("Error stopping foreground service with intent", RadarLogType.SDK_EXCEPTION, e)
             }
-        }
+
     }
 
 }

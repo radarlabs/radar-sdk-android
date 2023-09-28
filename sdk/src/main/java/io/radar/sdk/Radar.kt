@@ -502,11 +502,10 @@ object Radar {
         if (!this::batteryManager.isInitialized) {
             this.batteryManager = RadarBatteryManager(this.context)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (!this::beaconManager.isInitialized) {
                 this.beaconManager = RadarBeaconManager(this.context, logger)
             }
-        }
+
         if (!this::locationManager.isInitialized) {
             this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager, provider)
             RadarSettings.setLocationServicesProvider(this.context, provider)
@@ -535,8 +534,12 @@ object Radar {
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(config: RadarConfig) {
-                locationManager.updateTrackingFromMeta(config?.meta)
-                RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
+                if (config.meta !== null) {
+                    locationManager.updateTrackingFromMeta(config?.meta)
+                    if (config.meta.featureSettings !== null) {
+                        RadarSettings.setFeatureSettings(context, config.meta.featureSettings)
+                    }
+                }
             }
         })
 
@@ -811,7 +814,7 @@ object Radar {
                     })
                 }
 
-                if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (beacons) {
                     apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                         override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
                              if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
@@ -3252,11 +3255,11 @@ object Radar {
         obj.put("altitude", location.altitude)
         obj.put("speed", location.speed)
         obj.put("course", location.bearing)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
             obj.put("verticalAccuracy", location.verticalAccuracyMeters)
             obj.put("speedAccuracy", location.speedAccuracyMetersPerSecond)
             obj.put("courseAccuracy", location.bearingAccuracyDegrees)
-        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             obj.put("mocked", location.isFromMockProvider)
         }

@@ -134,7 +134,6 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 }
             }
             ACTION_BEACON -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     val bleCallbackType = intent.getIntExtra(BluetoothLeScanner.EXTRA_CALLBACK_TYPE, -1)
                     if (bleCallbackType != -1) {
                         val source = if (bleCallbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) Radar.RadarLocationSource.BEACON_EXIT else Radar.RadarLocationSource.BEACON_ENTER
@@ -146,7 +145,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
                             Radar.logger.e("Error scheduling beacons job", Radar.RadarLogType.SDK_EXCEPTION, e)
                         }
                     }
-                }
+
             }
             Intent.ACTION_BOOT_COMPLETED -> {
                 Radar.handleBootCompleted(context)

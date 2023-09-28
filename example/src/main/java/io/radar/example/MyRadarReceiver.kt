@@ -24,7 +24,6 @@ class MyRadarReceiver : RadarReceiver() {
 
             val channelId = "example"
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val name = channelId
                 val importance = NotificationManager.IMPORTANCE_HIGH
                 val channel = NotificationChannel("example", name, importance).apply {
@@ -32,7 +31,7 @@ class MyRadarReceiver : RadarReceiver() {
                 }
                 val notificationManager: NotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.createNotificationChannel(channel)
-            }
+
 
             val builder = NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(R.drawable.ic_notification)
