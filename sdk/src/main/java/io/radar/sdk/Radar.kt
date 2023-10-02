@@ -804,7 +804,10 @@ object Radar {
                             config: RadarConfig?,
                             token: String?
                         ) {
-                            locationManager.updateTrackingFromMeta(config?.meta)
+                            if (status == RadarStatus.SUCCESS ){
+                                locationManager.updateTrackingFromMeta(config?.meta)
+                            }
+
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
                             }
@@ -900,7 +903,9 @@ object Radar {
                 config: RadarConfig?,
                 token: String?
             ) {
-                locationManager.updateTrackingFromMeta(config?.meta)
+                if (status == RadarStatus.SUCCESS ){
+                    locationManager.updateTrackingFromMeta(config?.meta)
+                }
                 handler.post {
                     callback?.onComplete(status, location, events, user)
                 }
@@ -970,6 +975,9 @@ object Radar {
                                     config: RadarConfig?,
                                     token: String?
                                 ) {
+                                    if (status == RadarStatus.SUCCESS ){
+                                        locationManager.updateTrackingFromMeta(config?.meta)
+                                    }
                                     handler.post {
                                         callback?.onComplete(status, location, events, user)
                                     }
@@ -1045,6 +1053,9 @@ object Radar {
                                     config: RadarConfig?,
                                     token: String?
                                 ) {
+                                    if (status == RadarStatus.SUCCESS ){
+                                        locationManager.updateTrackingFromMeta(config?.meta)
+                                    }
                                     handler.post {
                                         callback?.onComplete(status, token)
                                     }
