@@ -35,6 +35,7 @@ internal object RadarSettings {
     private const val KEY_VERIFIED_HOST = "verified_host"
     private const val KEY_LAST_APP_OPEN_TIME = "last_app_open_time"
     private const val KEY_SHARING = "sharing"
+    private const val KEY_FRAUD = "fraud"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -332,4 +333,11 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putBoolean(KEY_SHARING, sharing) }
     }
 
+    internal fun getFraudEnabled(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_FRAUD, false)
+    }
+
+    internal fun setFraudEnabled(context: Context, enabled: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_FRAUD, enabled) }
+    }
 }

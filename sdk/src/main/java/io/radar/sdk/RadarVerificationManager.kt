@@ -4,12 +4,14 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import com.google.android.play.core.integrity.StandardIntegrityManager
 import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityToken
 import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityTokenRequest
 import com.google.android.gms.tasks.Task;
 import io.radar.sdk.RadarUtils.hashSHA256
 
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarVerificationManager(
     private val context: Context,
     private val logger: RadarLogger,
@@ -21,11 +23,7 @@ internal class RadarVerificationManager(
         stringBuffer.append(RadarSettings.getInstallId(this.context))
         stringBuffer.append(location.latitude)
         stringBuffer.append(location.longitude)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            //Note(travis): throw an error if SDK isn't JELLY_BEAN_MR2?
-            //by now we can be sure that the SDK is high enough, but IDE generates error
-            stringBuffer.append(location.isFromMockProvider)
-        }
+        stringBuffer.append(location.isFromMockProvider)
         stringBuffer.append(nonce)
         stringBuffer.append(RadarUtils.isScreenSharing(this.context))
         return hashSHA256(stringBuffer.toString());

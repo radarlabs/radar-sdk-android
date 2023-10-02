@@ -6,6 +6,7 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
+import androidx.annotation.RequiresApi
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import com.google.android.play.core.integrity.StandardIntegrityManager
 import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityTokenProvider
@@ -517,6 +518,8 @@ object Radar {
             this.locationManager.updateTracking()
         }
 
+        RadarSettings.setFraudEnabled(this.context, fraud)
+
         this.logger.i("Initializing", RadarLogType.SDK_CALL)
 
         if (provider == RadarLocationServicesProvider.GOOGLE) {
@@ -541,7 +544,9 @@ object Radar {
             override fun onComplete(config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config?.meta)
                 RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
-                warmupStandardIntegrityTokenProvider(config)
+                if (fraud) {
+                    warmupStandardIntegrityTokenProvider(config)
+                }
             }
         })
 
@@ -936,6 +941,7 @@ object Radar {
      *
      * @param[callback] An optional callback.
      */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerified(callback: RadarTrackCallback? = null) {
         if (!initialized) {
@@ -962,10 +968,7 @@ object Radar {
                         }
 
                         if (config.nonce == null) {
-                            logger.e("Error missing nonce for trackVerified", RadarLogType.SDK_ERROR)
-                            handler.post {
-                                callback?.onComplete(RadarStatus.ERROR_UNKNOWN)
-                            }
+                            logger.d("Error missing nonce for trackVerified", RadarLogType.SDK_ERROR)
 
                             return
                         }
@@ -1004,6 +1007,7 @@ object Radar {
      *
      * @param[block] A block callback.
      */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerified(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
         trackVerified(object : RadarTrackCallback {
@@ -1022,6 +1026,7 @@ object Radar {
      *
      * @param[callback] An optional callback.
      */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerifiedToken(callback: RadarTrackTokenCallback? = null) {
         if (!initialized) {
@@ -1048,10 +1053,7 @@ object Radar {
                         }
 
                         if (config.nonce == null) {
-                            logger.e("Error missing nonce for trackVerified", RadarLogType.SDK_ERROR)
-                            handler.post {
-                                callback?.onComplete(RadarStatus.ERROR_UNKNOWN)
-                            }
+                            logger.d("Error missing nonce for trackVerified", RadarLogType.SDK_ERROR)
 
                             return
                         }
@@ -1090,6 +1092,7 @@ object Radar {
      *
      * @param[block] A block callback.
      */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerifiedToken(block: (status: RadarStatus, token: String?) -> Unit) {
         trackVerifiedToken(object : RadarTrackTokenCallback {
@@ -3059,7 +3062,7 @@ object Radar {
 
     internal fun warmupStandardIntegrityTokenProvider(config: RadarConfig) {
         if (config.googlePlayProjectNumber == null) {
-            logger.e("warmupStandardIntegrityTokenProvider: googlePlayProjectNumber is null!");
+            logger.e("Error warming up integrity token provider: Google Play project number is null");
             return;
         } else {
             // Create an instance of a standard integrity manager
@@ -3075,7 +3078,7 @@ object Radar {
                 }
                 .addOnFailureListener { exception ->
                     val warmupException = exception?.message
-                    logger.e("Error warming up integrity token provider | warmupException = $warmupException", RadarLogType.SDK_ERROR)
+                    logger.e("Error warming up integrity token provider | warmupException = $warmupException", RadarLogType.SDK_ERROR, exception)
                 }
         }
     }
