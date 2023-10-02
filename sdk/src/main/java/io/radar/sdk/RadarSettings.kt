@@ -35,6 +35,8 @@ internal object RadarSettings {
     private const val KEY_VERIFIED_HOST = "verified_host"
     private const val KEY_LAST_APP_OPEN_TIME = "last_app_open_time"
     private const val KEY_SHARING = "sharing"
+    private const val KEY_NONCES = "nonces"
+    private const val KEY_GOOGLE_PLAY_PROJECT_NUMBER = "google_play_project_number"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -48,6 +50,62 @@ internal object RadarSettings {
 
     internal fun getPublishableKey(context: Context): String? {
         return getSharedPreferences(context).getString(KEY_PUBLISHABLE_KEY, null)
+    }
+
+    internal fun addNonce(context: Context, nonce: String) {
+        var noncesStr = getSharedPreferences(context).getString(KEY_NONCES, null)
+        val nonces = if (noncesStr.isNullOrEmpty()) mutableListOf<String>() else noncesStr.split(',').toMutableList()
+        // set an expiry for this nonce for 5 minutes
+        val expiration = System.currentTimeMillis() + 5 * 60 * 1000
+        val nonceWithExp = nonce + "#" + expiration
+        nonces.add(nonceWithExp)
+        noncesStr = nonces.joinToString(",")
+        getSharedPreferences(context).edit { putString(KEY_NONCES, noncesStr) }
+    }
+
+    internal fun getNonce(context: Context): String? {
+        var noncesStr = getSharedPreferences(context).getString(KEY_NONCES, "")
+        if (noncesStr == null) {
+            return null;
+        }
+        val nonces = noncesStr.split(',').toMutableList()
+        val currentTime = System.currentTimeMillis()
+        // iterate over the nonces backwards, so we can remove some
+        var result:String? = null;
+        for (i in nonces.size - 1 downTo 0) {
+            val nonceWithExp = nonces[i];
+            val regex = Regex("""^(.+?)#(\d+)$""")
+            val matchResult = regex.find(nonceWithExp)
+            if (matchResult == null) {
+                // invalid nonceWithExp
+                nonces.removeAt(i)
+                continue
+            }
+            val nonce = matchResult.groupValues[1]
+            val expiration = matchResult.groupValues[2].toLong()
+            if (expiration < currentTime) {
+                // expired, remove it
+                nonces.removeAt(i)
+                continue
+            }
+            if (result == null) {
+                // we found a valid nonce, remove it
+                // keep looping to remove expired nonces
+                result = nonce
+                nonces.removeAt(i)
+            }
+        }
+        val noncesString = if (nonces.size > 0) nonces.joinToString(",") else null;
+        getSharedPreferences(context).edit { putString(KEY_NONCES, noncesString) }
+        return result
+    }
+
+    internal fun getGooglePlayProjectNumber(context: Context): Long {
+        return getSharedPreferences(context).getLong(KEY_GOOGLE_PLAY_PROJECT_NUMBER, 0)
+    }
+
+    internal fun setGooglePlayProjectNumber(context: Context, googlePlayProjectNumber: Long) {
+        getSharedPreferences(context).edit { putLong(KEY_GOOGLE_PLAY_PROJECT_NUMBER, googlePlayProjectNumber) }
     }
 
     internal fun setPublishableKey(context: Context, publishableKey: String?) {

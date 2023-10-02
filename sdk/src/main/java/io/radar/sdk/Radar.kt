@@ -537,6 +537,12 @@ object Radar {
             override fun onComplete(config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config?.meta)
                 RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
+                if (config?.googlePlayProjectNumber != null) {
+                    RadarSettings.setGooglePlayProjectNumber(
+                        context,
+                        config?.googlePlayProjectNumber
+                    )
+                }
             }
         })
 
@@ -943,40 +949,32 @@ object Radar {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
+        val googlePlayProjectNumber = RadarSettings.getGooglePlayProjectNumber(this.context)
+        if (googlePlayProjectNumber == 0L) {
+            // TODO(Travis): improve this
+            callback?.onComplete(RadarStatus.ERROR_UNKNOWN)
+            return
+        }
+
         val usage = "verify"
-        apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(config: RadarConfig) {
-                locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
-                    override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
-                        if (status != RadarStatus.SUCCESS || location == null) {
-                            handler.post {
-                                callback?.onComplete(status)
-                            }
-
-                            return
-                        }
-
-                        verificationManager.getIntegrityToken(config.googlePlayProjectNumber, config.nonce) { integrityToken, integrityException ->
-                            apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, false, callback = object : RadarApiClient.RadarTrackApiCallback {
-                                override fun onComplete(
-                                    status: RadarStatus,
-                                    res: JSONObject?,
-                                    events: Array<RadarEvent>?,
-                                    user: RadarUser?,
-                                    nearbyGeofences: Array<RadarGeofence>?,
-                                    config: RadarConfig?,
-                                    token: String?
-                                ) {
-                                    handler.post {
-                                        callback?.onComplete(status, location, events, user)
-                                    }
-                                }
-                            })
-                        }
+        val nonce = RadarSettings.getNonce(this.context)
+        val context = this.context
+        if (nonce == null) {
+            apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
+                override fun onComplete(config: RadarConfig) {
+                    val nonce = RadarSettings.getNonce(context)
+                    // TODO(Travis): improve this
+                    // calling getConfig should have populated a nonce
+                    if (nonce == null) {
+                        callback?.onComplete(RadarStatus.ERROR_UNKNOWN)
+                        return
                     }
-                })
-            }
-        })
+                    trackVerifyInternal(googlePlayProjectNumber, nonce, callback)
+                }
+            })
+        } else {
+            trackVerifyInternal(googlePlayProjectNumber, nonce, callback)
+        }
     }
 
     /**
@@ -2982,6 +2980,39 @@ object Radar {
                 event: RadarEvent?
             ) {
                 block(status, event)
+            }
+        })
+    }
+
+    @JvmStatic
+    internal fun trackVerifyInternal(googlePlayProjectNumber: Long, nonce: String, callback: RadarTrackCallback? = null) {
+        locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
+            override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                if (status != RadarStatus.SUCCESS || location == null) {
+                    handler.post {
+                        callback?.onComplete(status)
+                    }
+
+                    return
+                }
+
+                verificationManager.getIntegrityToken(googlePlayProjectNumber, nonce) { integrityToken, integrityException ->
+                    apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, false, callback = object : RadarApiClient.RadarTrackApiCallback {
+                        override fun onComplete(
+                            status: RadarStatus,
+                            res: JSONObject?,
+                            events: Array<RadarEvent>?,
+                            user: RadarUser?,
+                            nearbyGeofences: Array<RadarGeofence>?,
+                            config: RadarConfig?,
+                            token: String?
+                        ) {
+                            handler.post {
+                                callback?.onComplete(status, location, events, user)
+                            }
+                        }
+                    })
+                }
             }
         })
     }

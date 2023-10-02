@@ -115,7 +115,7 @@ internal class RadarApiClient(
         queryParams.append("&id=${RadarSettings.getId(context)}")
         queryParams.append("&locationAuthorization=${RadarUtils.getLocationAuthorization(context)}")
         queryParams.append("&locationAccuracyAuthorization=${RadarUtils.getLocationAccuracyAuthorization(context)}")
-        queryParams.append("&verified=$verified")
+        queryParams.append("&verified=true")
         if (usage != null) {
             queryParams.append("&usage=${usage}")
         }
@@ -128,7 +128,11 @@ internal class RadarApiClient(
                 if (status == RadarStatus.SUCCESS) {
                     Radar.flushLogs()
                 }
-                callback?.onComplete(RadarConfig.fromJson(res))
+                val config = RadarConfig.fromJson(res)
+                if (config.nonce != null) {
+                    RadarSettings.addNonce(context, config.nonce)
+                }
+                callback?.onComplete(config)
             }
         }, false, true, verified)
     }
