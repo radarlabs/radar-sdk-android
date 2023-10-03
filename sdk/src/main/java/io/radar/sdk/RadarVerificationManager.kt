@@ -3,7 +3,6 @@ package io.radar.sdk
 import android.content.Context
 import android.location.Location
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import com.google.android.play.core.integrity.StandardIntegrityManager
 import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityToken
@@ -11,7 +10,6 @@ import com.google.android.play.core.integrity.StandardIntegrityManager.StandardI
 import com.google.android.gms.tasks.Task;
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import io.radar.sdk.RadarUtils.hashSHA256
-import io.radar.sdk.model.RadarConfig
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarVerificationManager(
@@ -33,16 +31,7 @@ internal class RadarVerificationManager(
         return hashSHA256(stringBuffer.toString());
     }
 
-    internal fun warmupStandardIntegrityTokenProvider(googlePlayProjectNumber: Long?, requestHash: String?,  block: (integrityToken: String?, integrityException: String?) -> Unit) {
-        if (googlePlayProjectNumber == null) {
-            val integrityException = "Google Play project number is null"
-
-            logger.d("Error warming up integrity token provider: Google Play project number is null");
-
-            block(null, integrityException)
-
-            return;
-        }
+    internal fun warmupStandardIntegrityTokenProvider(googlePlayProjectNumber: Long, requestHash: String?,  block: (integrityToken: String?, integrityException: String?) -> Unit) {
 
         // Create an instance of a standard integrity manager
         val standardIntegrityManager = IntegrityManagerFactory.createStandard(this.context)
@@ -54,7 +43,7 @@ internal class RadarVerificationManager(
             .addOnSuccessListener { tokenProvider ->
                 this.standardIntegrityTokenProvider = tokenProvider
                 Radar.logger.d("successful warm up of the integrity token provider")
-                _getIntegrityToken(requestHash, block)
+                this.fetchTokenFromGoogle(requestHash, block)
 
             }
             .addOnFailureListener { exception ->
@@ -76,15 +65,25 @@ internal class RadarVerificationManager(
             return
         }
 
+        if (googlePlayProjectNumber == null) {
+            val integrityException = "Google Play project number is null"
+
+            logger.d("Error warming up integrity token provider: Google Play project number is null");
+
+            block(null, integrityException)
+
+            return;
+        }
+
         if (!this::standardIntegrityTokenProvider.isInitialized) {
-            warmupStandardIntegrityTokenProvider(googlePlayProjectNumber, requestHash, block)
+            this.warmupStandardIntegrityTokenProvider(googlePlayProjectNumber, requestHash, block)
 
             return
         }
-        _getIntegrityToken(requestHash, block)
+        this.fetchTokenFromGoogle(requestHash, block)
     }
 
-    internal fun _getIntegrityToken(requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
+    internal fun fetchTokenFromGoogle(requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
         logger.d("Requesting integrity token")
 
         val integrityTokenResponse: Task<StandardIntegrityToken> = this.standardIntegrityTokenProvider.request(
