@@ -52,9 +52,6 @@ internal class RadarActivityLifecycleCallbacks(
                     val usage = "resume"
                     Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
                         override fun onComplete(config: RadarConfig) {
-                            if (RadarSettings.getFraudEnabled(activity.applicationContext)) {
-                                Radar.warmupStandardIntegrityTokenProvider(config)
-                            }
                             Radar.locationManager.updateTrackingFromMeta(config.meta)
                             RadarSettings.setFeatureSettings(activity.applicationContext, config.meta.featureSettings)
                         }

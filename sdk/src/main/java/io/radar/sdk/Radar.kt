@@ -7,9 +7,6 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
-import com.google.android.play.core.integrity.IntegrityManagerFactory
-import com.google.android.play.core.integrity.StandardIntegrityManager
-import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityTokenProvider
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.util.RadarLogBuffer
@@ -18,7 +15,6 @@ import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
 import java.util.*
-import io.radar.sdk.RadarActivityLifecycleCallbacks
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -439,7 +435,7 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
-    private lateinit var standardIntegrityTokenProvider: StandardIntegrityTokenProvider
+
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
      *
@@ -518,8 +514,6 @@ object Radar {
             this.locationManager.updateTracking()
         }
 
-        RadarSettings.setFraudEnabled(this.context, fraud)
-
         this.logger.i("Initializing", RadarLogType.SDK_CALL)
 
         if (provider == RadarLocationServicesProvider.GOOGLE) {
@@ -544,9 +538,6 @@ object Radar {
             override fun onComplete(config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config?.meta)
                 RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
-                if (fraud) {
-                    warmupStandardIntegrityTokenProvider(config)
-                }
             }
         })
 
@@ -975,7 +966,7 @@ object Radar {
 
                         val requestHash = verificationManager.getRequestHash(location, config.nonce);
 
-                        verificationManager.getIntegrityToken(Radar.standardIntegrityTokenProvider, requestHash) { integrityToken, integrityException ->
+                        verificationManager.getIntegrityToken(config.googlePlayProjectNumber, requestHash) { integrityToken, integrityException ->
                             apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, false, callback = object : RadarApiClient.RadarTrackApiCallback {
                                 override fun onComplete(
                                     status: RadarStatus,
@@ -1060,7 +1051,7 @@ object Radar {
 
                         val requestHash = verificationManager.getRequestHash(location, config.nonce);
 
-                        verificationManager.getIntegrityToken(Radar.standardIntegrityTokenProvider, requestHash) { integrityToken, integrityException ->
+                        verificationManager.getIntegrityToken(config.googlePlayProjectNumber, requestHash) { integrityToken, integrityException ->
                             apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, true, object : RadarApiClient.RadarTrackApiCallback {
                                 override fun onComplete(
                                     status: RadarStatus,
@@ -3057,29 +3048,6 @@ object Radar {
                     logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
                 }
             })
-        }
-    }
-
-    internal fun warmupStandardIntegrityTokenProvider(config: RadarConfig) {
-        if (config.googlePlayProjectNumber == null) {
-            logger.e("Error warming up integrity token provider: Google Play project number is null");
-            return;
-        } else {
-            // Create an instance of a standard integrity manager
-            val standardIntegrityManager = IntegrityManagerFactory.createStandard(context)
-            standardIntegrityManager.prepareIntegrityToken(
-                StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
-                    .setCloudProjectNumber(config.googlePlayProjectNumber)
-                    .build()
-            )
-                .addOnSuccessListener { tokenProvider ->
-                    Radar.standardIntegrityTokenProvider = tokenProvider
-                    logger.d("successful warm up of the integrity token provider")
-                }
-                .addOnFailureListener { exception ->
-                    val warmupException = exception?.message
-                    logger.e("Error warming up integrity token provider | warmupException = $warmupException", RadarLogType.SDK_ERROR, exception)
-                }
         }
     }
 
