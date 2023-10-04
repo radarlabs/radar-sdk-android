@@ -102,6 +102,8 @@ internal class RadarApiClient(
             "X-Radar-Device-Model" to RadarUtils.deviceModel,
             "X-Radar-Device-OS" to RadarUtils.deviceOS,
             "X-Radar-Device-Type" to RadarUtils.deviceType,
+            "cf-ipcountry" to "CA",
+            "cf-region-code" to "MB",
             "X-Radar-SDK-Version" to RadarUtils.sdkVersion
         )
     }
