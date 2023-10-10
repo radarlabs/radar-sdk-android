@@ -3269,7 +3269,7 @@ object Radar {
      * @return The current `sdkVersion`.
     */
     @JvmStatic
-    fun sdkVersion() : String?{
+    fun sdkVersion() : String{
 
         return RadarUtils.sdkVersion
 
