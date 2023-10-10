@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
 
         val receiver = MyRadarReceiver()
         Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
-
+        Radar.sdkVersion()?.let { Log.i("version", it) }
         requestLocationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { isGrantedMap ->

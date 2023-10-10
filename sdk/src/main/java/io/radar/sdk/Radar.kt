@@ -3263,6 +3263,19 @@ object Radar {
         return obj
     }
 
+    /**
+     * Gets the version number of the Radar SDK, such as "3.5.1" or "3.5.1-beta.2".
+     *
+     * @return The current `sdkVersion`.
+    */
+    @JvmStatic
+    fun sdkVersion() : String?{
+
+        return RadarUtils.sdkVersion
+
+    }
+
+
     internal fun handleLocation(context: Context, location: Location, source: RadarLocationSource) {
         if (!initialized) {
             initialize(context)
