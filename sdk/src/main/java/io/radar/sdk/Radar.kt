@@ -807,7 +807,6 @@ object Radar {
                             if (status == RadarStatus.SUCCESS ){
                                 locationManager.updateTrackingFromMeta(config?.meta)
                             }
-
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
                             }
