@@ -810,7 +810,6 @@ object Radar {
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
                             }
-
                         }
                     })
                 }
