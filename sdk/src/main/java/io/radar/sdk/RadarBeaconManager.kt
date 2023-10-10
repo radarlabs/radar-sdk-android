@@ -570,28 +570,42 @@ internal class RadarBeaconManager(
 
         this.beacons = arrayOf()
         this.started = false
-
-        this.nearbyBeacons.clear()
     }
 
-    internal fun handleBeacons(beacons: Array<RadarBeacon>?, source: Radar.RadarLocationSource) {
+    internal fun handleBeacons(beacons: Array<RadarBeacon>?, source: Radar.RadarLocationSource, callback: RadarBeaconCallback?) {
         if (beacons.isNullOrEmpty()) {
             logger.d("No beacons to handle")
 
             return
         }
 
+        var changed = false
         beacons.forEach { beacon ->
             if (source == Radar.RadarLocationSource.BEACON_EXIT) {
-                logger.d("Handling beacon exit | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+                logger.d("Handling beacon exit from monitoring | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
-                nearbyBeacons.remove(beacon)
+                if (this.nearbyBeacons.contains(beacon)) {
+                    this.nearbyBeacons.remove(beacon)
+                    changed = true
+                }
             } else {
-                logger.d("Handling beacon entry | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+                logger.d("Handling beacon entry from monitoring, source = $source  beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
-                nearbyBeacons.add(beacon)
+                if (!this.nearbyBeacons.contains(beacon)) {
+                    this.nearbyBeacons.add(beacon)
+                    changed = true
+                }
             }
         }
+
+        if (changed) {
+            logger.d("Beacons changed, calling callback")
+
+            callback?.onComplete(RadarStatus.SUCCESS, this.nearbyBeacons.toTypedArray())
+        } else {
+            logger.d("Beacons unchanged, not calling callback")
+        }
+        
     }
 
     internal fun handleScanResult(callbackType: Int, result: ScanResult?, ranging: Boolean = true) {
@@ -602,11 +616,11 @@ internal class RadarBeaconManager(
                 logger.d("Ranged beacon | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
                 if (callbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) {
-                    logger.d("Handling beacon exit | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+                    logger.d("Handling beacon exit from ranging | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
                     nearbyBeacons.remove(beacon)
                 } else {
-                    logger.d("Handling beacon entry | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
+                    logger.d("Handling beacon entry from ranging | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
                     nearbyBeacons.add(beacon)
                 }
@@ -616,9 +630,9 @@ internal class RadarBeaconManager(
         }
 
         if (this.nearbyBeacons.size == this.beacons.size && ranging) {
-            logger.d("Finished ranging")
+            logger.d("Nearby beacons count equals beacons count, previously we stopped ranging here")
 
-            this.stopRanging()
+            // this.stopRanging()
         }
     }
 

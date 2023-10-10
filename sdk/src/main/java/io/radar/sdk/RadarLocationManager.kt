@@ -143,15 +143,31 @@ internal class RadarLocationManager(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             logger.d("Handling beacons")
 
-            Radar.beaconManager.handleBeacons(beacons, source)
+            // define a callback to handle nearbyBeacons when ranging is complete
+            val callback = object : Radar.RadarBeaconCallback {
+                override fun onComplete(status: RadarStatus, nearbyBeacons: Array<RadarBeacon>?) {
+                    if (status != RadarStatus.SUCCESS || nearbyBeacons == null) {
+                        logger.d("Error ranging beacons")
 
-            val lastLocation = RadarState.getLastLocation(context)
+                        return
+                    }
 
-            if (lastLocation == null) {
-                logger.d("Not handling beacons, no last location")
+                    logger.d("Event from source $source with beacon count ${nearbyBeacons.size}")
+
+
+                    val lastLocation = RadarState.getLastLocation(context)
+
+                    if (lastLocation == null) {
+                        logger.d("Not handling location from $source because  no last location")
+                    }
+
+                    Radar.locationManager.handleLocation(lastLocation, source)
+                }
             }
 
-            this.handleLocation(lastLocation, source)
+
+            Radar.beaconManager.handleBeacons(beacons, source, callback)
+
         }
     }
 

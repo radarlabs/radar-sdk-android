@@ -774,6 +774,8 @@ internal class RadarApiClient(
             callback.onComplete(RadarStatus.SUCCESS, null, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
 
             return
+        } else {
+            logger.d("Not using cached search beacons response")
         }
 
         val queryParams = StringBuilder()
