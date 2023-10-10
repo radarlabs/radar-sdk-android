@@ -18,6 +18,7 @@ internal class RadarVerificationManager(
 ) {
 
     private lateinit var standardIntegrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider
+    private var lastWarmUpTimestampSeconds = 0L;
 
     fun getRequestHash(location: Location): String {
         val stringBuffer = StringBuilder()
@@ -42,6 +43,7 @@ internal class RadarVerificationManager(
             .addOnSuccessListener { tokenProvider ->
                 this.standardIntegrityTokenProvider = tokenProvider
                 Radar.logger.d("successful warm up of the integrity token provider")
+                this.lastWarmUpTimestampSeconds = System.currentTimeMillis() / 1000
                 this.fetchTokenFromGoogle(requestHash, block)
 
             }
@@ -74,7 +76,11 @@ internal class RadarVerificationManager(
             return;
         }
 
-        if (!this::standardIntegrityTokenProvider.isInitialized) {
+        val nowSeconds = System.currentTimeMillis() / 1000
+        val warmUpProvider = !this::standardIntegrityTokenProvider.isInitialized
+                || this.lastWarmUpTimestampSeconds == 0L
+                || (nowSeconds - this.lastWarmUpTimestampSeconds) > 3600 * 12; // 12 hours
+        if (warmUpProvider) {
             this.warmupProviderAndFetchTokenFromGoogle(googlePlayProjectNumber, requestHash, block)
 
             return
