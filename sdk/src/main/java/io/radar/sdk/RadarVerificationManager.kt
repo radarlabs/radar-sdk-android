@@ -20,6 +20,10 @@ internal class RadarVerificationManager(
     private lateinit var standardIntegrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider
     private var lastWarmUpTimestampSeconds = 0L;
 
+    internal companion object {
+        private const val WARM_UP_WINDOW_SECONDS = 3600 * 12; // 12 hours
+    }
+
     fun getRequestHash(location: Location): String {
         val stringBuffer = StringBuilder()
         // build a string of installId, latitude, longitude, mocked, nonce, sharing
@@ -79,7 +83,7 @@ internal class RadarVerificationManager(
         val nowSeconds = System.currentTimeMillis() / 1000
         val warmUpProvider = !this::standardIntegrityTokenProvider.isInitialized
                 || this.lastWarmUpTimestampSeconds == 0L
-                || (nowSeconds - this.lastWarmUpTimestampSeconds) > 3600 * 12; // 12 hours
+                || (nowSeconds - this.lastWarmUpTimestampSeconds) > WARM_UP_WINDOW_SECONDS;
         if (warmUpProvider) {
             this.warmupProviderAndFetchTokenFromGoogle(googlePlayProjectNumber, requestHash, block)
 
