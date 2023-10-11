@@ -624,6 +624,7 @@ internal class RadarLocationManager(
 
                         Radar.beaconManager.rangeBeaconUUIDs(uuids, uids, true, object : Radar.RadarBeaconCallback {
                             override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                                logger.d("Ranging beacon uuids in send location onComplete | status = $status; beacons = ${beacons?.size}")
                                 if (status != RadarStatus.SUCCESS || beacons == null) {
                                     callTrackApi(null)
 
@@ -638,6 +639,7 @@ internal class RadarLocationManager(
 
                         Radar.beaconManager.rangeBeacons(beacons, true, object : Radar.RadarBeaconCallback {
                             override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                                logger.d("Ranging beacons in send location onComplete | status = $status; beacons = ${beacons?.size}")
                                 if (status != RadarStatus.SUCCESS || beacons == null) {
                                     callTrackApi(null)
 

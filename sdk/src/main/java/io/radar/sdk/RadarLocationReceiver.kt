@@ -136,6 +136,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
             ACTION_BEACON -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     val bleCallbackType = intent.getIntExtra(BluetoothLeScanner.EXTRA_CALLBACK_TYPE, -1)
+                    Radar.logger.d("Received beacon broadcast | bleCallbackType = $bleCallbackType")
                     if (bleCallbackType != -1) {
                         val source = if (bleCallbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) Radar.RadarLocationSource.BEACON_EXIT else Radar.RadarLocationSource.BEACON_ENTER
                         val scanResults: ArrayList<ScanResult>? = intent.getParcelableArrayListExtra(BluetoothLeScanner.EXTRA_LIST_SCAN_RESULT)
