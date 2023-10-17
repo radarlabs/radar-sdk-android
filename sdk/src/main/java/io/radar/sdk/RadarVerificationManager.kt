@@ -26,7 +26,6 @@ internal class RadarVerificationManager(
 
     fun getRequestHash(location: Location): String {
         val stringBuffer = StringBuilder()
-        // build a string of installId, latitude, longitude, mocked, nonce, sharing
         stringBuffer.append(RadarSettings.getInstallId(this.context))
         stringBuffer.append(location.latitude)
         stringBuffer.append(location.longitude)
@@ -37,7 +36,6 @@ internal class RadarVerificationManager(
 
     internal fun warmupProviderAndFetchTokenFromGoogle(googlePlayProjectNumber: Long, requestHash: String?,  block: (integrityToken: String?, integrityException: String?) -> Unit) {
 
-        // Create an instance of a standard integrity manager
         val standardIntegrityManager = IntegrityManagerFactory.createStandard(this.context)
         standardIntegrityManager.prepareIntegrityToken(
             StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
