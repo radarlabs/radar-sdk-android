@@ -426,6 +426,7 @@ object Radar {
     private lateinit var context: Context
     internal lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
+    private var verifiedReceiver: RadarVerifiedReceiver? = null
     internal lateinit var logger: RadarLogger
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
@@ -1301,6 +1302,22 @@ object Radar {
         }
 
         this.receiver = receiver
+    }
+
+    /**
+     * Sets a receiver for client-side delivery of verified location tokens.
+     *
+     * @see [](https://radar.com/documentation/sdk/fraud)
+     *
+     * @param[verifiedReceiver] A delegate for client-side delivery of of verified location tokens. If `null`, the previous receiver will be cleared.
+     */
+    @JvmStatic
+    fun setVerifiedReceiver(verifiedReceiver: RadarVerifiedReceiver?) {
+        if (!initialized) {
+            return
+        }
+
+        this.verifiedReceiver = verifiedReceiver
     }
 
     /**
@@ -3312,6 +3329,12 @@ object Radar {
         if (isTestKey()) {
             logBuffer.write(level, message, type)
         }
+    }
+
+    internal fun sendToken(token: String) {
+        verifiedReceiver?.onTokenUpdated(context, token)
+
+        logger.i("📍️ Radar token updated | token = $token")
     }
 
 }
