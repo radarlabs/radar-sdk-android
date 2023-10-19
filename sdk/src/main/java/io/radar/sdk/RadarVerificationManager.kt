@@ -2,7 +2,12 @@ package io.radar.sdk
 
 import android.content.Context
 import android.location.Location
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Build
+import android.os.Handler
 import androidx.annotation.RequiresApi
 import com.google.android.play.core.integrity.StandardIntegrityManager
 import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityToken
@@ -10,6 +15,11 @@ import com.google.android.play.core.integrity.StandardIntegrityManager.StandardI
 import com.google.android.gms.tasks.Task;
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import io.radar.sdk.RadarUtils.hashSHA256
+import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarUser
+import org.json.JSONObject
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarVerificationManager(
@@ -18,10 +28,134 @@ internal class RadarVerificationManager(
 ) {
 
     private lateinit var standardIntegrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider
-    private var lastWarmUpTimestampSeconds = 0L;
+    private var lastWarmUpTimestampSeconds = 0L
+    private val handler = Handler(this.context.mainLooper)
 
     internal companion object {
         private const val WARM_UP_WINDOW_SECONDS = 3600 * 12; // 12 hours
+    }
+
+    fun trackVerified(callback: Radar.RadarTrackCallback? = null) {
+        val verificationManager = this
+
+        val googlePlayProjectNumber = RadarSettings.getGooglePlayProjectNumber(this.context);
+
+        Radar.locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, Radar.RadarLocationSource.FOREGROUND_LOCATION, object :
+            Radar.RadarLocationCallback {
+            override fun onComplete(status: Radar.RadarStatus, location: Location?, stopped: Boolean) {
+                if (status != Radar.RadarStatus.SUCCESS || location == null) {
+                    Radar.handler.post {
+                        callback?.onComplete(status)
+                    }
+
+                    return
+                }
+
+                val requestHash = verificationManager.getRequestHash(location);
+
+                verificationManager.getIntegrityToken(googlePlayProjectNumber, requestHash) { integrityToken, integrityException ->
+                    Radar.apiClient.track(location, RadarState.getStopped(verificationManager.context), RadarActivityLifecycleCallbacks.foreground, Radar.RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, false, callback = object : RadarApiClient.RadarTrackApiCallback {
+                        override fun onComplete(
+                            status: Radar.RadarStatus,
+                            res: JSONObject?,
+                            events: Array<RadarEvent>?,
+                            user: RadarUser?,
+                            nearbyGeofences: Array<RadarGeofence>?,
+                            config: RadarConfig?,
+                            token: String?
+                        ) {
+                            if (status == Radar.RadarStatus.SUCCESS) {
+                                Radar.locationManager.updateTrackingFromMeta(config?.meta)
+                            }
+                            Radar.handler.post {
+                                callback?.onComplete(status, location, events, user)
+                            }
+                        }
+                    })
+                }
+            }
+        })
+    }
+
+    fun trackVerifiedToken(callback: Radar.RadarTrackTokenCallback? = null) {
+        val verificationManager = this
+
+        val googlePlayProjectNumber = RadarSettings.getGooglePlayProjectNumber(this.context);
+
+        Radar.locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, Radar.RadarLocationSource.FOREGROUND_LOCATION, object :
+            Radar.RadarLocationCallback {
+            override fun onComplete(status: Radar.RadarStatus, location: Location?, stopped: Boolean) {
+                if (status != Radar.RadarStatus.SUCCESS || location == null) {
+                    Radar.handler.post {
+                        callback?.onComplete(status)
+                    }
+
+                    return
+                }
+
+                val requestHash = verificationManager.getRequestHash(location);
+
+                verificationManager.getIntegrityToken(googlePlayProjectNumber, requestHash) { integrityToken, integrityException ->
+                    Radar.apiClient.track(location, RadarState.getStopped(verificationManager.context), RadarActivityLifecycleCallbacks.foreground, Radar.RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, true, object : RadarApiClient.RadarTrackApiCallback {
+                        override fun onComplete(
+                            status: Radar.RadarStatus,
+                            res: JSONObject?,
+                            events: Array<RadarEvent>?,
+                            user: RadarUser?,
+                            nearbyGeofences: Array<RadarGeofence>?,
+                            config: RadarConfig?,
+                            token: String?
+                        ) {
+                            if (status == Radar.RadarStatus.SUCCESS) {
+                                Radar.locationManager.updateTrackingFromMeta(config?.meta)
+                            }
+                            Radar.handler.post {
+                                callback?.onComplete(status, token)
+                            }
+                        }
+                    })
+                }
+            }
+        })
+    }
+
+    fun startTrackingVerified(token: Boolean) {
+        val verificationManager = this
+
+        val connectivityManager = this.context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val request = NetworkRequest.Builder().build()
+
+        connectivityManager.registerNetworkCallback(request, object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+
+                verificationManager.logger.d("Network connected")
+
+                if (token) {
+                    verificationManager.trackVerifiedToken()
+                } else {
+                    verificationManager.trackVerified()
+                }
+            }
+
+            override fun onUnavailable() {
+                super.onUnavailable()
+
+                verificationManager.logger.d("Network disconnected")
+            }
+        })
+
+        handler.post(object : Runnable {
+            override fun run() {
+                if (token) {
+                    verificationManager.trackVerifiedToken()
+                } else {
+                    verificationManager.trackVerified()
+                }
+
+                handler.postDelayed(this, 30000)
+            }
+        })
     }
 
     fun getRequestHash(location: Location): String {
