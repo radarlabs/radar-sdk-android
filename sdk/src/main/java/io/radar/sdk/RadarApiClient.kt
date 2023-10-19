@@ -405,7 +405,7 @@ internal class RadarApiClient(
                 if (encrypted == true) {
                     callback?.onComplete(status, res, null, null, null, null, token)
 
-                    if (token != nil) {
+                    if (token != null) {
                         Radar.sendToken(token)
                     }
 
