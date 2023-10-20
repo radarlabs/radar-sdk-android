@@ -11,6 +11,7 @@ import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.core.hardware.display.DisplayManagerCompat
+import java.security.MessageDigest
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -149,6 +150,19 @@ internal object RadarUtils {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
         dateFormat.timeZone = TimeZone.getTimeZone("UTC")
         return dateFormat.format(date)
+    }
+
+    fun hashSHA256(input: String): String {
+        val bytes = MessageDigest.getInstance("SHA-256").digest(input.toByteArray())
+        val hexString = StringBuilder(2 * bytes.size)
+        for (byte in bytes) {
+            val hex = Integer.toHexString(0xFF and byte.toInt())
+            if (hex.length == 1) {
+                hexString.append('0')
+            }
+            hexString.append(hex)
+        }
+        return hexString.toString()
     }
 
 }
