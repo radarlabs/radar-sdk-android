@@ -57,7 +57,7 @@ class RadarForegroundService : Service() {
         val text = extras?.getString("text") ?: "Location tracking started"
         var icon = extras?.getInt("icon") ?: 0
         var iconString = extras?.getString("iconString") ?: this.applicationInfo.icon.toString()
-        val smallIcon = resources.getIdentifier(iconString, "drawable", applicationContext.packageName) 
+        var smallIcon = resources.getIdentifier(iconString, "drawable", applicationContext.packageName) 
         if (icon != 0){
            smallIcon = resources.getIdentifier(icon.toString(), "drawable", applicationContext.packageName)  
         }
