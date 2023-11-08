@@ -536,6 +536,7 @@ class RadarTest {
             "Text",
             "Title",
             1337,
+            "",
             true
         ))
 
