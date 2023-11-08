@@ -265,6 +265,11 @@ data class RadarTrackingOptions(
         val icon: Int? = null,
 
         /**
+         * Determines the notification icon, like `R.drawable.ic_your_icon`. Optional, defaults to `applicationContext.applicationInfo.icon`.
+         */
+        val iconString: String? = null,
+
+        /**
          * Determines when to show the notification. Use `false` to show the notification always, use `true` to show the notification only during location updates. Optional, defaults to `false`.
          */
         val updatesOnly: Boolean = false,
@@ -295,6 +300,7 @@ data class RadarTrackingOptions(
             internal const val KEY_FOREGROUND_SERVICE_TEXT = "text"
             internal const val KEY_FOREGROUND_SERVICE_TITLE = "title"
             internal const val KEY_FOREGROUND_SERVICE_ICON = "icon"
+            internal const val KEY_FOREGROUND_SERVICE_ICON_STRING = "iconString"
             internal const val KEY_FOREGROUND_SERVICE_UPDATES_ONLY = "updatesOnly"
             internal const val KEY_FOREGROUND_SERVICE_ACTIVITY = "activity"
             internal const val KEY_FOREGROUND_SERVICE_IMPORTANCE = "importance"
@@ -310,13 +316,14 @@ data class RadarTrackingOptions(
                 val text = if (obj.isNull(KEY_FOREGROUND_SERVICE_TEXT)) null else obj.optString(KEY_FOREGROUND_SERVICE_TEXT)
                 val title = if (obj.isNull(KEY_FOREGROUND_SERVICE_TITLE)) null else obj.optString(KEY_FOREGROUND_SERVICE_TITLE)
                 val icon = if (obj.isNull(KEY_FOREGROUND_SERVICE_ICON)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ICON)
+                val iconString = if (obj.isNull(KEY_FOREGROUND_SERVICE_ICON_STRING)) null else obj.optString(KEY_FOREGROUND_SERVICE_ICON_STRING)
                 val updatesOnly: Boolean = obj.optBoolean(KEY_FOREGROUND_SERVICE_UPDATES_ONLY)
                 val activity = if (obj.isNull(KEY_FOREGROUND_SERVICE_ACTIVITY)) null else obj.optString(KEY_FOREGROUND_SERVICE_ACTIVITY)
                 val importance = if (obj.isNull(KEY_FOREGROUND_SERVICE_IMPORTANCE)) null else obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
                 val id = if (obj.isNull(KEY_FOREGROUND_SERVICE_ID)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ID)
                 val channelName = if (obj.isNull(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)) null else obj.optString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)
 
-                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id, channelName)
+                return RadarTrackingOptionsForegroundService(text, title, icon, iconString, updatesOnly, activity, importance, id, channelName)
             }
         }
 
