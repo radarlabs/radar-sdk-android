@@ -333,6 +333,7 @@ data class RadarTrackingOptions(
             obj.put(KEY_FOREGROUND_SERVICE_TEXT, text)
             obj.put(KEY_FOREGROUND_SERVICE_TITLE, title)
             obj.put(KEY_FOREGROUND_SERVICE_ICON, icon)
+            obj.put(KEY_FOREGROUND_SERVICE_ICON_STRING, iconString) 
             obj.put(KEY_FOREGROUND_SERVICE_ACTIVITY, activity)
             obj.put(KEY_FOREGROUND_SERVICE_UPDATES_ONLY, updatesOnly)
             obj.put(KEY_FOREGROUND_SERVICE_IMPORTANCE, importance)
