@@ -535,7 +535,7 @@ class RadarTest {
         Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
             "Text",
             "Title",
-            123,
+            1337,
             true
         ))
 
