@@ -265,11 +265,6 @@ data class RadarTrackingOptions(
         val icon: Int? = null,
 
         /**
-         * Determines the notification icon, like `R.drawable.ic_your_icon`. Optional, defaults to `applicationContext.applicationInfo.icon`.
-         */
-        val iconString: String? = null,
-
-        /**
          * Determines when to show the notification. Use `false` to show the notification always, use `true` to show the notification only during location updates. Optional, defaults to `false`.
          */
         val updatesOnly: Boolean = false,
@@ -293,7 +288,12 @@ data class RadarTrackingOptions(
          * Determines the user-facing channel name, which can be viewed in notification settings for the application.
          * Optional, defaults to `"Location Services"`.
          */
-        val channelName: String? = null
+        val channelName: String? = null,
+
+        /**
+         * Determines the notification icon, like `R.drawable.ic_your_icon`. Optional, defaults to `applicationContext.applicationInfo.icon`.
+         */
+        val iconString: String? = null,
     ) {
 
         companion object {
@@ -323,7 +323,7 @@ data class RadarTrackingOptions(
                 val id = if (obj.isNull(KEY_FOREGROUND_SERVICE_ID)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ID)
                 val channelName = if (obj.isNull(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)) null else obj.optString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)
 
-                return RadarTrackingOptionsForegroundService(text, title, icon, iconString, updatesOnly, activity, importance, id, channelName)
+                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id, channelName, iconString)
             }
         }
 
