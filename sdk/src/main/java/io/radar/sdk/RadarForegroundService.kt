@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.app.*
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -57,6 +58,7 @@ class RadarForegroundService : Service() {
         val text = extras?.getString("text") ?: "Location tracking started"
         var icon = extras?.getInt("icon") ?: 0
         var iconString = extras?.getString("iconString") ?: this.applicationInfo.icon.toString()
+        var iconColor = extras?.getString("iconColor") ?: ""
         var smallIcon = resources.getIdentifier(iconString, "drawable", applicationContext.packageName) 
         if (icon != 0){
            smallIcon = resources.getIdentifier(icon.toString(), "drawable", applicationContext.packageName)  
@@ -71,6 +73,9 @@ class RadarForegroundService : Service() {
             .setSmallIcon(smallIcon)
         if (title != null && title.isNotEmpty()) {
             builder = builder.setContentTitle(title as CharSequence?)
+        }
+        if (iconColor.isNotEmpty()) {
+            builder.setColor(Color.parseColor(iconColor))
         }
         try {
             extras?.getString("activity")?.let {

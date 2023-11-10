@@ -533,10 +533,12 @@ class RadarTest {
         Radar.stopTracking()
 
         Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-            "Text",
-            "Title",
-            1337,
-            true
+            text="Text",
+            title = "Title",
+            icon = 1337,
+            iconString = "test",
+            updatesOnly = true,
+            iconColor = "#FF0000"
         ))
 
         val options = RadarTrackingOptions.EFFICIENT
