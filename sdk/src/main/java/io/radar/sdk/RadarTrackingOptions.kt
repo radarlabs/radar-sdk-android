@@ -294,6 +294,8 @@ data class RadarTrackingOptions(
          * Determines the notification icon, like `R.drawable.ic_your_icon`. Optional, defaults to `applicationContext.applicationInfo.icon`.
          */
         val iconString: String? = null,
+
+        val iconColor: String? = null,
     ) {
 
         companion object {
@@ -301,6 +303,7 @@ data class RadarTrackingOptions(
             internal const val KEY_FOREGROUND_SERVICE_TITLE = "title"
             internal const val KEY_FOREGROUND_SERVICE_ICON = "icon"
             internal const val KEY_FOREGROUND_SERVICE_ICON_STRING = "iconString"
+            internal const val KEY_FOREGROUND_SERVICE_ICON_COLOR = "iconColor"
             internal const val KEY_FOREGROUND_SERVICE_UPDATES_ONLY = "updatesOnly"
             internal const val KEY_FOREGROUND_SERVICE_ACTIVITY = "activity"
             internal const val KEY_FOREGROUND_SERVICE_IMPORTANCE = "importance"
@@ -317,13 +320,14 @@ data class RadarTrackingOptions(
                 val title = if (obj.isNull(KEY_FOREGROUND_SERVICE_TITLE)) null else obj.optString(KEY_FOREGROUND_SERVICE_TITLE)
                 val icon = if (obj.isNull(KEY_FOREGROUND_SERVICE_ICON)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ICON)
                 val iconString = if (obj.isNull(KEY_FOREGROUND_SERVICE_ICON_STRING)) null else obj.optString(KEY_FOREGROUND_SERVICE_ICON_STRING)
+                val iconColor = if (obj.isNull(KEY_FOREGROUND_SERVICE_ICON_COLOR)) null else obj.optString(KEY_FOREGROUND_SERVICE_ICON_COLOR)
                 val updatesOnly: Boolean = obj.optBoolean(KEY_FOREGROUND_SERVICE_UPDATES_ONLY)
                 val activity = if (obj.isNull(KEY_FOREGROUND_SERVICE_ACTIVITY)) null else obj.optString(KEY_FOREGROUND_SERVICE_ACTIVITY)
                 val importance = if (obj.isNull(KEY_FOREGROUND_SERVICE_IMPORTANCE)) null else obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
                 val id = if (obj.isNull(KEY_FOREGROUND_SERVICE_ID)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ID)
                 val channelName = if (obj.isNull(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)) null else obj.optString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)
 
-                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id, channelName, iconString)
+                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id, channelName, iconString, iconColor)
             }
         }
 
@@ -333,7 +337,8 @@ data class RadarTrackingOptions(
             obj.put(KEY_FOREGROUND_SERVICE_TEXT, text)
             obj.put(KEY_FOREGROUND_SERVICE_TITLE, title)
             obj.put(KEY_FOREGROUND_SERVICE_ICON, icon)
-            obj.put(KEY_FOREGROUND_SERVICE_ICON_STRING, iconString) 
+            obj.put(KEY_FOREGROUND_SERVICE_ICON_STRING, iconString)
+            obj.put(KEY_FOREGROUND_SERVICE_ICON_COLOR, iconColor)
             obj.put(KEY_FOREGROUND_SERVICE_ACTIVITY, activity)
             obj.put(KEY_FOREGROUND_SERVICE_UPDATES_ONLY, updatesOnly)
             obj.put(KEY_FOREGROUND_SERVICE_IMPORTANCE, importance)
