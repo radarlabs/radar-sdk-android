@@ -295,6 +295,9 @@ data class RadarTrackingOptions(
          */
         val iconString: String? = null,
 
+        /**
+         * Determines the color notification icon. Optional.
+         */
         val iconColor: String? = null,
     ) {
 
@@ -326,7 +329,6 @@ data class RadarTrackingOptions(
                 val importance = if (obj.isNull(KEY_FOREGROUND_SERVICE_IMPORTANCE)) null else obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
                 val id = if (obj.isNull(KEY_FOREGROUND_SERVICE_ID)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ID)
                 val channelName = if (obj.isNull(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)) null else obj.optString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)
-
                 return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id, channelName, iconString, iconColor)
             }
         }

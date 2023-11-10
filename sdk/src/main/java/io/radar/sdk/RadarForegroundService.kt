@@ -59,10 +59,9 @@ class RadarForegroundService : Service() {
         var icon = extras?.getInt("icon") ?: 0
         var iconString = extras?.getString("iconString") ?: this.applicationInfo.icon.toString()
         var iconColor = extras?.getString("iconColor") ?: ""
-
-        var smallIcon = resources.getIdentifier(iconString, "drawable", applicationContext.packageName)
+        var smallIcon = resources.getIdentifier(iconString, "drawable", applicationContext.packageName) 
         if (icon != 0){
-            smallIcon = resources.getIdentifier(icon.toString(), "drawable", applicationContext.packageName)
+           smallIcon = resources.getIdentifier(icon.toString(), "drawable", applicationContext.packageName)  
         }
         val channelName = extras?.getString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME) ?: "Location Services"
         val channel = NotificationChannel("RadarSDK", channelName, importance)
