@@ -312,6 +312,58 @@ class RadarTest {
     }
 
     @Test
+    fun test_Radar_setNotificationsOptions(){
+        val notificationsOptions = RadarNotificationsOptions(
+            "foo",
+            "red",
+            "bar",
+            "blue",
+            "hello",
+            "white" )
+        Radar.setNotificationsOptions(notificationsOptions)
+        assertEquals(notificationsOptions,RadarSettings.getNotificationOptions(context))
+
+    }
+
+
+    @Test
+    fun test_Radar_notificationSettingDefaults(){
+        Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+            text="Text",
+            title = "Title",
+            icon = 1337,
+            updatesOnly = true,
+        ))
+        Radar.setNotificationsOptions(RadarNotificationsOptions(
+            "foo",
+            "red",
+            "bar",
+            "blue",
+            "hello",
+            "white" ))
+        assertEquals("bar",RadarSettings.getForegroundService(context).iconString)
+        assertEquals("blue",RadarSettings.getForegroundService(context).iconColor)
+        Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+            text="Text",
+            title = "Title",
+            icon = 1337,
+            updatesOnly = true,
+        ))
+        assertEquals("bar",RadarSettings.getForegroundService(context).iconString)
+        assertEquals("blue",RadarSettings.getForegroundService(context).iconColor)
+        Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+            text="Text",
+            title = "Title",
+            iconString = "test",
+            iconColor = "red",
+            icon = 1337,
+            updatesOnly = true,
+        ))
+        assertEquals("test",RadarSettings.getForegroundService(context).iconString)
+        assertEquals("red",RadarSettings.getForegroundService(context).iconColor)
+    }
+
+    @Test
     fun test_Radar_setMetadata_null() {
         Radar.setMetadata(null)
         assertNull(Radar.getMetadata())

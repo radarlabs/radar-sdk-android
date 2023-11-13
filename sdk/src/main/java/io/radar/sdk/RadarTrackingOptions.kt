@@ -293,12 +293,12 @@ data class RadarTrackingOptions(
         /**
          * Determines the notification icon, like `R.drawable.ic_your_icon`. Optional, defaults to `applicationContext.applicationInfo.icon`.
          */
-        val iconString: String? = null,
+        var iconString: String? = null,
 
         /**
          * Determines the color notification icon. Optional.
          */
-        val iconColor: String? = null,
+        var iconColor: String? = null,
     ) {
 
         companion object {
