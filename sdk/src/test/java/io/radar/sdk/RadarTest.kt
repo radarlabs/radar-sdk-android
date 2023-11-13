@@ -344,7 +344,7 @@ class RadarTest {
             "white"))
         assertEquals("bar", RadarSettings.getForegroundService(context).iconString)
         assertEquals("blue", RadarSettings.getForegroundService(context).iconColor)
-        // We do not clear existing values of iconString and iconColor with null values
+        // We do not clear existing values of iconString and iconColor with null values.
         Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
             text = "Text",
             title = "Title",
