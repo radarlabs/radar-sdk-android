@@ -9,6 +9,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import io.radar.sdk.model.RadarEvent
+import android.graphics.Color
 
 class RadarNotificationHelper {
 
@@ -49,15 +50,24 @@ class RadarNotificationHelper {
                     channel.enableVibration(true)
                     notificationManager?.createNotificationChannel(channel)
 
-                    val notification = NotificationCompat.Builder(context, CHANNEL_NAME)
-                        .setSmallIcon(context.applicationContext.applicationInfo.icon)
+                    val foregroundServiceOptions = RadarSettings.getForegroundService(context);
+
+                    var iconString = foregroundServiceOptions.iconString?: context.applicationContext.applicationInfo.icon.toString()
+                    var smallIcon = context.applicationContext.resources.getIdentifier(iconString, "drawable", context.applicationContext.packageName)
+
+                    val builder = NotificationCompat.Builder(context, CHANNEL_NAME)
+                        .setSmallIcon(smallIcon)
                         .setAutoCancel(true)
                         .setContentText(notificationText)
                         .setStyle(NotificationCompat.BigTextStyle().bigText(notificationText))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                        .build()
 
-                    notificationManager?.notify(id, NOTIFICATION_ID, notification)
+                    var iconColor = foregroundServiceOptions.iconColor?: ""
+                    if (iconColor.isNotEmpty()) {
+                        builder.setColor(Color.parseColor(iconColor))
+                    }
+                    
+                    notificationManager?.notify(id, NOTIFICATION_ID, builder.build())
                 }
             }
         }
