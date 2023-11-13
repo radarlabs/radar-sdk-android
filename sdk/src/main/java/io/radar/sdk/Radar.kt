@@ -1343,12 +1343,12 @@ object Radar {
      * @param[options] Notifications options
      */
     @JvmStatic
-    fun setNotificationsOptions(options: RadarNotificationsOptions) {
+    fun setNotificationOptions(options: RadarNotificationOptions) {
         if (!initialized) {
             return
         }
 
-        RadarSettings.setNotificationsOptions(context, options)
+        RadarSettings.setNotificationOptions(context, options)
     }
 
 

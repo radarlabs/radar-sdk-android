@@ -8,7 +8,7 @@ import java.util.Date
  *
  * @see [](https://radar.com/documentation/sdk/android)
  */
-data class RadarNotificationsOptions(
+data class RadarNotificationOptions(
     /**
      * Determines the name of the asset to be used for notifications. Optional, defaults to app icon.  
      */
@@ -53,7 +53,7 @@ data class RadarNotificationsOptions(
       
 
         @JvmStatic
-        fun fromJson(obj: JSONObject): RadarNotificationsOptions {
+        fun fromJson(obj: JSONObject): RadarNotificationOptions {
             val iconString = if (obj.isNull(KEY_ICON_STRING)) null else obj.optString(KEY_ICON_STRING)
             val iconColor = if (obj.isNull(KEY_ICON_COLOR)) null else obj.optString(KEY_ICON_COLOR)
             val foregroundServiceIconString = if (obj.isNull(KEY_FOREGROUNDSERVICE_ICON_STRING)) null else obj.optString(KEY_FOREGROUNDSERVICE_ICON_STRING)
@@ -61,7 +61,7 @@ data class RadarNotificationsOptions(
             val eventIconString = if (obj.isNull(KEY_EVENT_ICON_STRING)) null else obj.optString(KEY_EVENT_ICON_STRING)
             val eventIconColor = if (obj.isNull(KEY_EVENT_ICON_COLOR)) null else obj.optString(KEY_EVENT_ICON_COLOR)
 
-            return RadarNotificationsOptions(iconString,iconColor,foregroundServiceIconString,foregroundServiceIconColor,eventIconString,eventIconColor)
+            return RadarNotificationOptions(iconString,iconColor,foregroundServiceIconString,foregroundServiceIconColor,eventIconString,eventIconColor)
         }
     }
 

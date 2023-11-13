@@ -313,15 +313,15 @@ class RadarTest {
 
     @Test
     fun test_Radar_setNotificationsOptions(){
-        val notificationsOptions = RadarNotificationsOptions(
+        val notificationOptions = RadarNotificationOptions(
             "foo",
             "red",
             "bar",
             "blue",
             "hello",
-            "white" )
-        Radar.setNotificationsOptions(notificationsOptions)
-        assertEquals(notificationsOptions,RadarSettings.getNotificationOptions(context))
+            "white")
+        Radar.setNotificationOptions(notificationOptions)
+        assertEquals(notificationOptions, RadarSettings.getNotificationOptions(context))
 
     }
 
@@ -329,40 +329,40 @@ class RadarTest {
     @Test
     fun test_Radar_notificationSettingDefaults(){
         Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-            text="Text",
+            text = "Text",
             title = "Title",
             icon = 1337,
             updatesOnly = true,
         ))
         // Radar.setNotificationOptions has side effects on foregroundServiceOptions. 
-        Radar.setNotificationsOptions(RadarNotificationsOptions(
+        Radar.setNotificationOptions(RadarNotificationOptions(
             "foo",
             "red",
             "bar",
             "blue",
             "hello",
-            "white" ))
-        assertEquals("bar",RadarSettings.getForegroundService(context).iconString)
-        assertEquals("blue",RadarSettings.getForegroundService(context).iconColor)
+            "white"))
+        assertEquals("bar", RadarSettings.getForegroundService(context).iconString)
+        assertEquals("blue", RadarSettings.getForegroundService(context).iconColor)
         // We do not clear existing values of iconString and iconColor with null values
         Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-            text="Text",
+            text = "Text",
             title = "Title",
             icon = 1337,
             updatesOnly = true,
         ))
-        assertEquals("bar",RadarSettings.getForegroundService(context).iconString)
-        assertEquals("blue",RadarSettings.getForegroundService(context).iconColor)
+        assertEquals("bar", RadarSettings.getForegroundService(context).iconString)
+        assertEquals("blue", RadarSettings.getForegroundService(context).iconColor)
         Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-            text="Text",
+            text = "Text",
             title = "Title",
             iconString = "test",
             iconColor = "red",
             icon = 1337,
             updatesOnly = true,
         ))
-        assertEquals("test",RadarSettings.getForegroundService(context).iconString)
-        assertEquals("red",RadarSettings.getForegroundService(context).iconColor)
+        assertEquals("test", RadarSettings.getForegroundService(context).iconString)
+        assertEquals("red", RadarSettings.getForegroundService(context).iconColor)
     }
 
     @Test
