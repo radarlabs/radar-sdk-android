@@ -334,6 +334,7 @@ class RadarTest {
             icon = 1337,
             updatesOnly = true,
         ))
+        // Radar.setNotificationOptions has side effects on foregroundServiceOptions. 
         Radar.setNotificationsOptions(RadarNotificationsOptions(
             "foo",
             "red",
@@ -343,6 +344,7 @@ class RadarTest {
             "white" ))
         assertEquals("bar",RadarSettings.getForegroundService(context).iconString)
         assertEquals("blue",RadarSettings.getForegroundService(context).iconColor)
+        // We do not clear existing values of iconString and iconColor with null values
         Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
             text="Text",
             title = "Title",

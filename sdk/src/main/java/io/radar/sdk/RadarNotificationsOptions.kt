@@ -22,22 +22,22 @@ data class RadarNotificationsOptions(
     /**
      * Determines the name of the asset to be used for forgroundService notifications. Optional, defaults to iconString.
      */
-    var foregroundServiceIconString: String? = null,
+    val foregroundServiceIconString: String? = null,
 
     /**
      * Determines the name of the asset to be used for forgroundService notifications. Optional, defaults to iconString.
      */
-    var foregroundServiceIconColor: String? = null,
+    val foregroundServiceIconColor: String? = null,
 
     /**
      * Determines the name of the asset to be used for event notifications. Optional, defaults to iconString.
      */
-    var eventIconString:String? = null,
+    val eventIconString:String? = null,
 
     /**
      * Determines the name of the asset to be used for event notifications. Optional, defaults to iconString.
      */
-    var eventIconColor: String? = null,
+    val eventIconColor: String? = null,
 
    
 ) {

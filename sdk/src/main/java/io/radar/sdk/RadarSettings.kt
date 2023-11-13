@@ -26,7 +26,7 @@ internal object RadarSettings {
     private const val KEY_PREVIOUS_TRACKING_OPTIONS = "previous_tracking_options"
     private const val KEY_REMOTE_TRACKING_OPTIONS = "remote_tracking_options"
     private const val KEY_FOREGROUND_SERVICE = "foreground_service"
-    private const val KEY_NOTIFICATION_OPTIONS = "notificationOptions"
+    private const val KEY_NOTIFICATION_OPTIONS = "notification_options"
     private const val KEY_FEATURE_SETTINGS = "feature_settings"
     private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
