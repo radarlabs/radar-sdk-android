@@ -269,7 +269,7 @@ internal object RadarSettings {
         context: Context,
         foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService
     ) {
-        // Previous values of iconColor and iconString are preserved if those fields are not specified.
+        // Previous values of iconColor and iconString are preserved if new fields are null.
         val previousValue = getForegroundService(context)
         if(foregroundService.iconString == null) {
            foregroundService.iconString = previousValue.iconString 
