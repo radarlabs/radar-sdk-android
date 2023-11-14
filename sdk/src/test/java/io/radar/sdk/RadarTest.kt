@@ -312,7 +312,7 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_setNotificationsOptions(){
+    fun test_Radar_setNotificationsOptions() {
         val notificationOptions = RadarNotificationOptions(
             "foo",
             "red",
@@ -322,12 +322,11 @@ class RadarTest {
             "white")
         Radar.setNotificationOptions(notificationOptions)
         assertEquals(notificationOptions, RadarSettings.getNotificationOptions(context))
-
     }
 
 
     @Test
-    fun test_Radar_notificationSettingDefaults(){
+    fun test_Radar_notificationSettingDefaults() {
         Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
             text = "Text",
             title = "Title",

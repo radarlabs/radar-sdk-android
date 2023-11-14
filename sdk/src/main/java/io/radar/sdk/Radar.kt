@@ -1336,7 +1336,7 @@ object Radar {
     }
 
     /**
-     * Settings for the all notification.
+     * Settings for the all notifications.
      *
      * @see [](https://radar.com/documentation/sdk)
      *

@@ -38,16 +38,14 @@ data class RadarNotificationOptions(
      * Determines the name of the asset to be used for event notifications. Optional, defaults to iconString.
      */
     val eventIconColor: String? = null,
-
-   
 ) {
 
     companion object {
 
-        internal const val KEY_ICON_STRING= "iconString"
-        internal const val KEY_ICON_COLOR= "iconColor"
-        internal const val KEY_FOREGROUNDSERVICE_ICON_STRING= "foregroundServiceIconString"
-        internal const val KEY_FOREGROUNDSERVICE_ICON_COLOR= "foregroundServiceIconColor"
+        internal const val KEY_ICON_STRING = "iconString"
+        internal const val KEY_ICON_COLOR = "iconColor"
+        internal const val KEY_FOREGROUNDSERVICE_ICON_STRING = "foregroundServiceIconString"
+        internal const val KEY_FOREGROUNDSERVICE_ICON_COLOR = "foregroundServiceIconColor"
         internal const val KEY_EVENT_ICON_STRING = "eventIconString"
         internal const val KEY_EVENT_ICON_COLOR = "eventIconColor"
       
@@ -61,7 +59,7 @@ data class RadarNotificationOptions(
             val eventIconString = if (obj.isNull(KEY_EVENT_ICON_STRING)) null else obj.optString(KEY_EVENT_ICON_STRING)
             val eventIconColor = if (obj.isNull(KEY_EVENT_ICON_COLOR)) null else obj.optString(KEY_EVENT_ICON_COLOR)
 
-            return RadarNotificationOptions(iconString,iconColor,foregroundServiceIconString,foregroundServiceIconColor,eventIconString,eventIconColor)
+            return RadarNotificationOptions(iconString, iconColor, foregroundServiceIconString, foregroundServiceIconColor, eventIconString, eventIconColor)
         }
     }
 
@@ -76,19 +74,19 @@ data class RadarNotificationOptions(
         return obj
     }
 
-    fun getForegroundServiceIcon():String?{
+    fun getForegroundServiceIcon(): String? {
         return foregroundServiceIconString ?: iconString
     }
 
-    fun getForegroundServiceColor():String?{
+    fun getForegroundServiceColor(): String? {
         return foregroundServiceIconColor ?: iconColor
     }
 
-    fun getEventIcon():String?{
+    fun getEventIcon(): String? {
         return eventIconString ?: iconString
     }
 
-    fun getEventColor():String?{
+    fun getEventColor(): String? {
         return eventIconColor ?: iconColor
     }
 
