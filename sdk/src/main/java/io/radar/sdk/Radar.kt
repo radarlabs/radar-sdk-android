@@ -1336,6 +1336,23 @@ object Radar {
     }
 
     /**
+     * Settings for the all notifications.
+     *
+     * @see [](https://radar.com/documentation/sdk)
+     *
+     * @param[options] Notifications options
+     */
+    @JvmStatic
+    fun setNotificationOptions(options: RadarNotificationOptions) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setNotificationOptions(context, options)
+    }
+
+
+    /**
      * Sets a receiver for client-side delivery of events, location updates, and debug logs.
      *
      * @see [](https://radar.com/documentation/sdk/android#listening-for-events-with-a-receiver)

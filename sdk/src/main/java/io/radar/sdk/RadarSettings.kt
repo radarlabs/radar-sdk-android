@@ -26,6 +26,7 @@ internal object RadarSettings {
     private const val KEY_PREVIOUS_TRACKING_OPTIONS = "previous_tracking_options"
     private const val KEY_REMOTE_TRACKING_OPTIONS = "remote_tracking_options"
     private const val KEY_FOREGROUND_SERVICE = "foreground_service"
+    private const val KEY_NOTIFICATION_OPTIONS = "notification_options"
     private const val KEY_FEATURE_SETTINGS = "feature_settings"
     private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
@@ -226,6 +227,31 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { remove(KEY_REMOTE_TRACKING_OPTIONS) }
     }
 
+    internal fun setNotificationOptions(context:Context,notificationOptions:RadarNotificationOptions){
+        val notificationOptionsJson = notificationOptions.toJson().toString()
+        getSharedPreferences(context).edit { putString(KEY_NOTIFICATION_OPTIONS, notificationOptionsJson) }
+        // Update foregroundServiceOptions as well.
+        var previousValue = getForegroundService(context)
+        setForegroundService(context,RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+            previousValue.text,
+            previousValue.title,
+            previousValue.icon,
+            previousValue.updatesOnly,
+            previousValue.activity,
+            previousValue.importance,
+            previousValue.id,
+            previousValue.channelName,
+            notificationOptions.getForegroundServiceIcon()?:previousValue.iconString,
+            notificationOptions.getForegroundServiceColor()?:previousValue.iconColor
+        ))
+    }
+
+    internal fun getNotificationOptions(context: Context):RadarNotificationOptions?{
+        val optionsJson = getSharedPreferences(context).getString(KEY_NOTIFICATION_OPTIONS, null) ?: return null
+        val optionsObj = JSONObject(optionsJson)
+        return RadarNotificationOptions.fromJson(optionsObj)
+    }
+
     internal fun getForegroundService(context: Context): RadarTrackingOptions.RadarTrackingOptionsForegroundService {
         val foregroundJson = getSharedPreferences(context).getString(KEY_FOREGROUND_SERVICE, null)
         var foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService? = null
@@ -243,6 +269,14 @@ internal object RadarSettings {
         context: Context,
         foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService
     ) {
+        // Previous values of iconColor and iconString are preserved if new fields are null.
+        val previousValue = getForegroundService(context)
+        if (foregroundService.iconString == null) {
+           foregroundService.iconString = previousValue.iconString 
+        }
+        if (foregroundService.iconColor == null) {
+           foregroundService.iconColor = previousValue.iconColor 
+        }
         val foregroundJson = foregroundService.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_FOREGROUND_SERVICE, foregroundJson) }
     }
