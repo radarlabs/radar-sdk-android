@@ -1,11 +1,13 @@
 package io.radar.sdk
 
 import android.annotation.SuppressLint
+import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
+import android.util.Log
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
@@ -14,6 +16,7 @@ import io.radar.sdk.util.RadarReplayBuffer
 import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
+import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -546,6 +549,20 @@ object Radar {
                 }
             }
         })
+
+        val activityManager = this.context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.getDefault())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val crashLists = activityManager.getHistoricalProcessExitReasons(null, 0, 10)
+            if(crashLists.isNotEmpty()) {
+                for (crashInfo in crashLists) {
+                    if (crashInfo.reason == 10) {
+                        this.logger.i("User last force quit at ${dateFormat.format(Date(crashInfo.timestamp))}")
+                        break
+                    }
+                }
+            }
+        }
 
         this.initialized = true
 
