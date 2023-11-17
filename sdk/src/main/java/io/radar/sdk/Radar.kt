@@ -3,6 +3,7 @@ package io.radar.sdk
 import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.app.Application
+import android.app.ApplicationExitInfo
 import android.content.Context
 import android.location.Location
 import android.os.Build
@@ -555,7 +556,7 @@ object Radar {
             val crashLists = activityManager.getHistoricalProcessExitReasons(null, 0, 10)
             if (crashLists.isNotEmpty()) {
                 for (crashInfo in crashLists) {
-                    if (crashInfo.reason == 10) {
+                    if (crashInfo.reason == ApplicationExitInfo.REASON_USER_REQUESTED) {
                         this.logger.i("User last force quit at ${dateFormat.format(Date(crashInfo.timestamp))}")
                         break
                     }
