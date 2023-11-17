@@ -7,7 +7,6 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
-import android.util.Log
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
@@ -551,10 +550,10 @@ object Radar {
         })
 
         val activityManager = this.context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.getDefault())
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             val crashLists = activityManager.getHistoricalProcessExitReasons(null, 0, 10)
-            if(crashLists.isNotEmpty()) {
+            if (crashLists.isNotEmpty()) {
                 for (crashInfo in crashLists) {
                     if (crashInfo.reason == 10) {
                         this.logger.i("User last force quit at ${dateFormat.format(Date(crashInfo.timestamp))}")
