@@ -838,7 +838,7 @@ internal class RadarApiClient(
         near: Location? = null,
         layers: Array<String>? = null,
         limit: Int? = null,
-        country: String? = null,
+        countryCode: String? = null,
         expandUnits: Boolean? = null,
         callback: RadarGeocodeApiCallback
     ) {
@@ -858,8 +858,8 @@ internal class RadarApiClient(
             queryParams.append("&layers=${layers.joinToString(separator = ",")}")
         }
         queryParams.append("&limit=${limit}")
-        if (country != null) {
-            queryParams.append("&country=${country}")
+        if (countryCode != null) {
+            queryParams.append("&countryCode=${countryCode}")
         }
         if (expandUnits != null) {
             queryParams.append("&expandUnits=${expandUnits}")

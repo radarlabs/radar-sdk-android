@@ -1140,7 +1140,7 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_autocomplete_success() {
+    fun test_Radar_autocomplete_success_1() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete.json")
@@ -1154,6 +1154,87 @@ class RadarTest {
         var callbackAddresses: Array<RadarAddress>? = null
 
         Radar.autocomplete("brooklyn roasting", near, null, 10, null) { status, addresses ->
+            callbackStatus = status
+            callbackAddresses = addresses
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertAddressesOk(callbackAddresses)
+    }
+
+    @Test
+    fun test_Radar_autocomplete_success_2() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete.json")
+
+        val near = Location("RadarSDK")
+        near.latitude = 40.78382
+        near.longitude = -73.97536
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackAddresses: Array<RadarAddress>? = null
+
+        Radar.autocomplete("brooklyn roasting", country="UK", expandUnits = true) { status, addresses ->
+            callbackStatus = status
+            callbackAddresses = addresses
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertAddressesOk(callbackAddresses)
+    }
+
+    @Test
+    fun test_Radar_autocomplete_success_3() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete.json")
+
+        val near = Location("RadarSDK")
+        near.latitude = 40.78382
+        near.longitude = -73.97536
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackAddresses: Array<RadarAddress>? = null
+
+        Radar.autocomplete("brooklyn roasting", near, null, 10, "US",true) { status, addresses ->
+            callbackStatus = status
+            callbackAddresses = addresses
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertAddressesOk(callbackAddresses)
+    }
+
+    @Test
+    fun test_Radar_autocomplete_success_4() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete.json")
+
+        val near = Location("RadarSDK")
+        near.latitude = 40.78382
+        near.longitude = -73.97536
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackAddresses: Array<RadarAddress>? = null
+
+        Radar.autocomplete("brooklyn roasting", near, null, 10, countryCode = "US",true) { status, addresses ->
             callbackStatus = status
             callbackAddresses = addresses
             latch.countDown()
