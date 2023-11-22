@@ -552,11 +552,19 @@ object Radar {
 
         val activityManager = this.context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        //not the cleanest directly calling shared prefs here but using radarsetting also feels hackish. Looking for feedback.
+        val sharedPreferences = this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
+        val previousTimestamp = sharedPreferences.getLong("last_timestamp", 0)
+        val currentTimestamp = System.currentTimeMillis()
+        with(sharedPreferences.edit()) {
+            putLong("last_timestamp", currentTimestamp)
+            apply()
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ) {
             val crashLists = activityManager.getHistoricalProcessExitReasons(null, 0, 10)
             if (crashLists.isNotEmpty()) {
                 for (crashInfo in crashLists) {
-                    if (crashInfo.reason == ApplicationExitInfo.REASON_USER_REQUESTED) {
+                    if (crashInfo.reason == ApplicationExitInfo.REASON_USER_REQUESTED && crashInfo.timestamp > previousTimestamp) {
                         this.logger.i("User last force quit at ${dateFormat.format(Date(crashInfo.timestamp))}")
                         break
                     }
