@@ -2,8 +2,11 @@ package io.radar.sdk.util
 
 import io.radar.sdk.Radar
 import io.radar.sdk.model.RadarLog
+import android.content.Context
 
 internal interface RadarLogBuffer {
+
+    abstract val context: Context
 
     /**
      * Write a log to the buffer

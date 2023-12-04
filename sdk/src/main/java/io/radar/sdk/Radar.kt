@@ -1,9 +1,7 @@
 package io.radar.sdk
 
 import android.annotation.SuppressLint
-import android.app.ActivityManager
 import android.app.Application
-import android.app.ApplicationExitInfo
 import android.content.Context
 import android.location.Location
 import android.os.Build
@@ -16,7 +14,6 @@ import io.radar.sdk.util.RadarReplayBuffer
 import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
-import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -463,6 +460,7 @@ object Radar {
      * @param[provider] The location services provider.
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
+
     @JvmStatic
     fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false) {
         if (context == null) {
@@ -477,7 +475,7 @@ object Radar {
         }
 
         if (!this::logBuffer.isInitialized) {
-            this.logBuffer = RadarSimpleLogBuffer()
+            this.logBuffer = RadarSimpleLogBuffer(this.context)
         }
 
         if (!this::replayBuffer.isInitialized) {
@@ -550,26 +548,8 @@ object Radar {
             }
         })
 
-        val activityManager = this.context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        //not the cleanest directly calling shared prefs here but using radarsetting also feels hackish. Looking for feedback.
-        val sharedPreferences = this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
-        val previousTimestamp = sharedPreferences.getLong("last_timestamp", 0)
-        val currentTimestamp = System.currentTimeMillis()
-        with(sharedPreferences.edit()) {
-            putLong("last_timestamp", currentTimestamp)
-            apply()
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ) {
-            val crashLists = activityManager.getHistoricalProcessExitReasons(null, 0, 10)
-            if (crashLists.isNotEmpty()) {
-                for (crashInfo in crashLists) {
-                    if (crashInfo.reason == ApplicationExitInfo.REASON_USER_REQUESTED && crashInfo.timestamp > previousTimestamp) {
-                        this.logger.i("User last force quit at ${dateFormat.format(Date(crashInfo.timestamp))}")
-                        break
-                    }
-                }
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            this.logger.logPastTermination()
         }
 
         this.initialized = true
@@ -3105,6 +3085,11 @@ object Radar {
         }
 
         RadarSettings.setLogLevel(context, level)
+    }
+
+    @JvmStatic
+    fun logEnteringBackground(){
+        this.logger.logEnteringBackground()
     }
 
     /**
