@@ -32,7 +32,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
     private val list = LinkedBlockingDeque<RadarLog>(MAXIMUM_MEMORY_CAPACITY)
 
     override fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType?) {
-        if (!list.offer(RadarLog(level, message, type)) || list.size > MAXIMUM_MEMORY_CAPACITY) {
+        if (!list.offer(RadarLog(level, message, type))) {
             persist()
             list.put(RadarLog(level, message, type))
         }
@@ -78,7 +78,6 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
                             purgeOldestLogs(purgedLogs)
                         }
                     }
-
                     writeLogsToDisk(purgedLogs)
                 }
             }

@@ -2,7 +2,6 @@ package io.radar.sdk
 
 import android.app.ActivityManager
 import java.text.SimpleDateFormat
-
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -61,7 +60,7 @@ internal class RadarLogger(
 
     @RequiresApi(Build.VERSION_CODES.R)
     fun logPastTermination(){
-         val activityManager = this.context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val activityManager = this.context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         //Not the cleanest directly calling shared prefs here but using radarsetting also feels hackish. Looking for feedback.
         val sharedPreferences = this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -72,21 +71,18 @@ internal class RadarLogger(
             apply()
         }
         val batteryLevel = this.getBatteryLevel()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ) {
-            val crashLists = activityManager.getHistoricalProcessExitReasons(null, 0, 10)
-            if (crashLists.isNotEmpty()) {
-                for (crashInfo in crashLists) {
-                    
-                    if (crashInfo.timestamp > previousTimestamp) {
-                        this.i("App terminated | with reason: ${crashInfo.getDescription()} | at ${dateFormat.format(Date(crashInfo.timestamp))} | with ${batteryLevel * 100}% battery")
-                        break
-                    }
+        
+        val crashLists = activityManager.getHistoricalProcessExitReasons(null, 0, 10)
+        if (crashLists.isNotEmpty()) {
+            for (crashInfo in crashLists) {                
+                if (crashInfo.timestamp > previousTimestamp) {
+                    this.i("App terminated | with reason: ${crashInfo.getDescription()} | at ${dateFormat.format(Date(crashInfo.timestamp))} | with ${batteryLevel * 100}% battery")
+                    break
                 }
             }
-        }
+        } 
     }
 
-    //TODO:replace with radarBatterManager
     fun getBatteryLevel(): Float {
         val batteryStatus: Intent? = IntentFilter(Intent.ACTION_BATTERY_CHANGED).let { ifilter ->
             this.context.registerReceiver(null, ifilter)
@@ -97,13 +93,13 @@ internal class RadarLogger(
         return batteryPct
     }
 
-    fun logEnteringBackground(){
+    fun logEnteringBackground() {
         val batteryLevel = this.getBatteryLevel()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         this.i("App entering background | at ${dateFormat.format(Date())} | with ${batteryLevel * 100}% battery")
     }
 
-     fun logResignActive(){
+     fun logResignActive() {
         val batteryLevel = this.getBatteryLevel()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         this.i("App resigning active | at ${dateFormat.format(Date())} | with ${batteryLevel * 100}% battery")
