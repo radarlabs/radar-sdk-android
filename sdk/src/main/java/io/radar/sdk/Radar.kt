@@ -3087,11 +3087,17 @@ object Radar {
         RadarSettings.setLogLevel(context, level)
     }
 
+    /**
+     Log application resigning active.
+    */
     @JvmStatic
     fun logResignActive() {
         this.logger.logResignActive()
     }
 
+    /**
+    Log application entering background and flush logs in memory buffer into persistent buffer.
+    */
      @JvmStatic
     fun logEnteringBackground() {
         this.logger.logEnteringBackground()

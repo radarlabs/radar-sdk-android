@@ -24,6 +24,8 @@ internal interface RadarLogBuffer {
      */
     fun getFlushableLogsStash(): Flushable<RadarLog>
 
-
+    /**
+     * Persist the logs to disk
+     */
     fun persist()
 }
