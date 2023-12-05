@@ -1,8 +1,9 @@
 package io.radar.sdk.util
 
+import android.content.Context
 import io.radar.sdk.Radar
 import io.radar.sdk.model.RadarLog
-import android.content.Context
+import java.util.Date
 
 internal interface RadarLogBuffer {
 
@@ -14,7 +15,7 @@ internal interface RadarLogBuffer {
      * @param[level] log level
      * @param[message] log message
      */
-    fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType?)
+    fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType?, createdAt: Date = Date())
 
     /**
      * Creates a stash of the logs currently in the buffer and returns them as a [Flushable] so that a successful

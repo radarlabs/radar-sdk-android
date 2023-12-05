@@ -3394,10 +3394,10 @@ object Radar {
         logger.e("📍️ Radar error received | status = $status", RadarLogType.SDK_ERROR)
     }
 
-    internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?) {
+    internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?, createdAt: Date = Date()) {
         receiver?.onLog(context, message)
         if (isTestKey()) {
-            logBuffer.write(level, message, type)
+            logBuffer.write(level, message, type, createdAt)
         }
     }
 

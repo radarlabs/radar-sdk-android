@@ -5,6 +5,7 @@ import io.radar.sdk.model.RadarLog
 import java.util.concurrent.LinkedBlockingDeque
 import android.content.Context
 import org.json.JSONArray
+import java.util.Date
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -31,10 +32,10 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
 
     private val list = LinkedBlockingDeque<RadarLog>(MAXIMUM_MEMORY_CAPACITY)
 
-    override fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType?) {
-        if (!list.offer(RadarLog(level, message, type))) {
+    override fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType?, createdAt: Date) {
+        if (!list.offer(RadarLog(level, message, type, createdAt))) {
             persist()
-            list.put(RadarLog(level, message, type))
+            list.put(RadarLog(level, message, type, createdAt))
         }
     }
 

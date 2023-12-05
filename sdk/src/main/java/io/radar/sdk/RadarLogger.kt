@@ -76,7 +76,7 @@ internal class RadarLogger(
         if (crashLists.isNotEmpty()) {
             for (crashInfo in crashLists) {                
                 if (crashInfo.timestamp > previousTimestamp) {
-                    this.i("App terminated | with reason: ${crashInfo.getDescription()} | at ${dateFormat.format(Date(crashInfo.timestamp))} | with ${batteryLevel * 100}% battery")
+                    Radar.sendLog(RadarLogLevel.INFO, "App terminated | with reason: ${crashInfo.getDescription()} | at ${dateFormat.format(Date(crashInfo.timestamp))} | with ${batteryLevel * 100}% battery", null, Date(crashInfo.timestamp))
                     break
                 }
             }
