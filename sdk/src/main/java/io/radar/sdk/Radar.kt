@@ -3088,8 +3088,14 @@ object Radar {
     }
 
     @JvmStatic
-    fun logEnteringBackground(){
+    fun logResignActive() {
+        this.logger.logResignActive()
+    }
+
+     @JvmStatic
+    fun logEnteringBackground() {
         this.logger.logEnteringBackground()
+        this.logBuffer.persist()
     }
 
     /**

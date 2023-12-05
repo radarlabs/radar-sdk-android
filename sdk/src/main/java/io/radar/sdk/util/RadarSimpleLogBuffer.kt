@@ -4,57 +4,58 @@ import io.radar.sdk.Radar
 import io.radar.sdk.model.RadarLog
 import java.util.concurrent.LinkedBlockingDeque
 import android.content.Context
+import org.json.JSONArray
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 /**
- * Basic Log Buffer implementation that is backed by a field.
+ * Log Buffer implementation that persist.
  */
 internal class
-RadarSimpleLogBuffer(override val context: Context) : RadarLogBuffer{
+RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
 
     private companion object {
-        const val MAXIMUM_CAPACITY = 1000
+
+        const val MAXIMUM_MEMORY_CAPACITY = 200
+
+        const val MAXIMUM_CAPACITY = 500
         const val HALF_CAPACITY = MAXIMUM_CAPACITY / 2
-        const val radarFileSystem = RadarFileSystem(context)
         const val logFilePath = "radarLogs.txt"
     }
 
-    /**
-     * Concurrency-safe list of logs with a maximum capacity of 1000
-     */
-    private val list = LinkedBlockingDeque<RadarLog>(MAXIMUM_CAPACITY)
+    private val scheduler = Executors.newScheduledThreadPool(1)
+
+    init {
+        scheduler.scheduleAtFixedRate({ persist() }, 30, 30, TimeUnit.SECONDS)
+    }
+
+    private val list = LinkedBlockingDeque<RadarLog>(MAXIMUM_MEMORY_CAPACITY)
 
     override fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType?) {
-        //push into queue
-        if (!list.offer(RadarLog(level, message, type))) {
-            //instead of purge, flush into mem
-            purgeOldestLogs()
+        if (!list.offer(RadarLog(level, message, type)) || list.size > MAXIMUM_MEMORY_CAPACITY) {
+            persist()
             list.put(RadarLog(level, message, type))
         }
     }
 
-    // flush into mem
-    // get logs from disk into memory
-    // add logs from memory
-    // if its too long purge
-    // put back into disk
 
-    private fun flush() {
-        val logs = getLogsFromDisk()
-        //CHECK IF THIS IS THE RIGHT ORDERING
-        logs.addAll(list)
-        if (logs.size > MAXIMUM_CAPACITY) {
-            purgeOldestLogs()
+    override fun persist() {
+        if(list.size >0) {
+            val logs = getLogsFromDisk()
+
+            if (logs.size+list.size > MAXIMUM_CAPACITY) {
+                purgeOldestLogs(logs)
+            }
+            list.drainTo(logs)
+            writeLogsToDisk(logs)
         }
-        writeLogsToDisk(logs)
     }
 
 
     override fun getFlushableLogsStash(): Flushable<RadarLog> {
-        //get logs from disk into memory
-
-
-        val logs = mutableListOf<RadarLog>(getLogsFromDisk())
-        list.drainTo(logs)
+        persist()
+        val logs = mutableListOf<RadarLog>()
+        getLogsFromDisk().drainTo(logs)
         return object : Flushable<RadarLog> {
 
             override fun get(): List<RadarLog> {
@@ -64,19 +65,21 @@ RadarSimpleLogBuffer(override val context: Context) : RadarLogBuffer{
             override fun onFlush(success: Boolean) {
                 // if success, clear the logs from disk
                 if (success) {
-                    radarFileSystem.delete(logFilePath)
+                    RadarFileSystem(context).deleteFileAtPath(logFilePath)
                 }
                 // if not success, push the logs back into list and purge
                 // put back into disk
                 if (!success) {
-                    // Reverse order to ensure the logs will purge correctly (oldest logs purged first)
+                    //Reverse order to ensure the logs will purge correctly (oldest logs purged first)
+                    val purgedLogs = LinkedBlockingDeque<RadarLog>()
                     logs.reverse()
                     logs.forEach {
-                        if (!list.offerFirst(it)) {
-                            purgeOldestLogs()
+                        if (!purgedLogs.offerFirst(it)) {
+                            purgeOldestLogs(purgedLogs)
                         }
                     }
-                    writeLogsToDisk(logs)
+
+                    writeLogsToDisk(purgedLogs)
                 }
             }
 
@@ -86,17 +89,17 @@ RadarSimpleLogBuffer(override val context: Context) : RadarLogBuffer{
     /**
      * Clears oldest logs and adds a "purged" log line
      */
-    private fun purgeOldestLogs() {
-        val logs = mutableListOf<RadarLog>()
-        list.drainTo(logs, HALF_CAPACITY)
-        write(Radar.RadarLogLevel.DEBUG, "----- purged oldest logs -----", null)
+    private fun purgeOldestLogs(logs: LinkedBlockingDeque<RadarLog>) {
+        val logsToDiscard = mutableListOf<RadarLog>()
+        logs.drainTo(logsToDiscard, HALF_CAPACITY)
+        logs.put(RadarLog(Radar.RadarLogLevel.DEBUG, "----- purged oldest logs -----", null))
     }
 
     /**
      * Gets logs from disk
      */
     private fun getLogsFromDisk(): LinkedBlockingDeque<RadarLog> {
-        val json = radarFileSystem.read(logFilePath)
+        val json = RadarFileSystem(context).readFileAtPath(logFilePath)
         val logs = LinkedBlockingDeque<RadarLog>()
         if (json == ""){
             return logs
@@ -113,11 +116,11 @@ RadarSimpleLogBuffer(override val context: Context) : RadarLogBuffer{
     /**
     * Writes logs to disk
     */
-    private fun writeLogsToDisk(logs: LinkedBlockingDeque<RadarLog>) {
+    private fun writeLogsToDisk(logs: Collection<RadarLog>) {
         val jsonArray = JSONArray()
         for (log in logs) {
             jsonArray.put(log.toJson())
         }
-        radarFileSystem.write(logFilePath, jsonArray.toString())
+        RadarFileSystem(context).writeData(logFilePath, jsonArray.toString())
     }
 }

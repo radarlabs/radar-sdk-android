@@ -22,9 +22,11 @@ internal data class RadarLog(
 
         @JvmStatic
         fun fromJson(json: JSONObject): RadarLog {
+            val levelString = json.optString(LEVEL)
+            val typeString = json.optString(TYPE)
             return RadarLog(
-                level = Radar.RadarLogLevel.valueOf(json.optString(LEVEL)),
-                type = Radar.RadarLogType.valueOf(json.optString(TYPE)),
+                level = if (levelString.isNotBlank()) Radar.RadarLogLevel.valueOf(levelString) else Radar.RadarLogLevel.INFO,
+                type = if (typeString.isNotBlank() && typeString!="NONE") Radar.RadarLogType.valueOf(typeString) else null,
                 message = json.optString(MESSAGE),
                 createdAt = Date(json.optLong(CREATED_AT))
             )

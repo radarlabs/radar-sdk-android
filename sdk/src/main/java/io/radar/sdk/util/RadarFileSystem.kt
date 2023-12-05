@@ -2,6 +2,7 @@ package io.radar.sdk.util
 import android.content.Context
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.io.FileOutputStream
 
 class RadarFileSystem(private val context: Context) {
@@ -21,6 +22,8 @@ class RadarFileSystem(private val context: Context) {
             fileInputStream = context.openFileInput(filePath)
             val inputStreamReader = fileInputStream.reader()
             return inputStreamReader.readText()
+        } catch (e: FileNotFoundException) {
+            return ""
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
