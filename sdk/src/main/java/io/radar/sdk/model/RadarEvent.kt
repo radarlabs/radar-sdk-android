@@ -166,15 +166,15 @@ class RadarEvent(
     /**
      * The confidence levels for events.
      */
-    enum class RadarEventConfidence {
+    enum class RadarEventConfidence(val value: Int)  {
         /** Unknown confidence */
-        NONE,
+        NONE(0),
         /** Low confidence */
-        LOW,
+        LOW(1),
         /** Medium confidence */
-        MEDIUM,
+        MEDIUM(2),
         /** High confidence */
-        HIGH
+        HIGH(3)
     }
 
     /**
@@ -356,7 +356,7 @@ class RadarEvent(
         obj.putOpt(FIELD_TYPE, stringForType(this.type))
         obj.putOpt(FIELD_GEOFENCE, this.geofence?.toJson())
         obj.putOpt(FIELD_PLACE, this.place?.toJson())
-        obj.putOpt(FIELD_CONFIDENCE, this.confidence)
+        obj.putOpt(FIELD_CONFIDENCE, this.confidence.value)
         obj.putOpt(FIELD_DURATION, this.duration)
         obj.putOpt(FIELD_REGION, this.region?.toJson())
         obj.putOpt(FIELD_BEACON, this.beacon?.toJson())
