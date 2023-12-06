@@ -356,7 +356,7 @@ class RadarEvent(
         obj.putOpt(FIELD_TYPE, stringForType(this.type))
         obj.putOpt(FIELD_GEOFENCE, this.geofence?.toJson())
         obj.putOpt(FIELD_PLACE, this.place?.toJson())
-        obj.putOpt(FIELD_CONFIDENCE, this.confidence.value)
+        obj.putOpt(FIELD_CONFIDENCE, this.confidence?.value)
         obj.putOpt(FIELD_DURATION, this.duration)
         obj.putOpt(FIELD_REGION, this.region?.toJson())
         obj.putOpt(FIELD_BEACON, this.beacon?.toJson())
