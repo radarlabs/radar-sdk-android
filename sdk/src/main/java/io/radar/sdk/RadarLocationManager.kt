@@ -530,7 +530,7 @@ internal class RadarLocationManager(
                 return
             }
 
-            if (lastSyncInterval < options.desiredSyncInterval) {
+            if (lastSyncInterval < options.desiredSyncInterval + 0.1) {
                 logger.d("Skipping sync: desired sync interval | desiredSyncInterval = ${options.desiredSyncInterval}; lastSyncInterval = $lastSyncInterval")
 
                 return
