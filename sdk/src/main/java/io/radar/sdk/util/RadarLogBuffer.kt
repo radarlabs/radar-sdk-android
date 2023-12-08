@@ -28,5 +28,5 @@ internal interface RadarLogBuffer {
     /**
      * Persist the logs to disk
      */
-    fun persist()
+    fun persistLogs()
 }

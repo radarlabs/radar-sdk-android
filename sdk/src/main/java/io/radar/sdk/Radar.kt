@@ -3099,9 +3099,9 @@ object Radar {
     Log application entering background and flush logs in memory buffer into persistent buffer.
     */
      @JvmStatic
-    fun logEnteringBackground() {
-        this.logger.logEnteringBackground()
-        this.logBuffer.persist()
+    fun logEnterBackground() {
+        this.logger.logEnterBackground()
+        this.logBuffer.persistLogs()
     }
 
     /**

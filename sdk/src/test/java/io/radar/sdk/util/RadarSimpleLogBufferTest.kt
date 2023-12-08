@@ -89,8 +89,9 @@ class RadarSimpleLogBufferTest {
             assertEquals(logs[index + 250].second, radarLog.message)
             assertEquals(logs[index + 250].first, radarLog.level)
         }
-        assertEquals("----- purged oldest logs -----", contents[250].message)
-        assertEquals(message, contents[251].message)
+        assertEquals(message, contents[250].message)
+        assertEquals("----- purged oldest logs -----", contents[251].message)
+
 
         // Test behavior of successful log flush
         message = UUID.randomUUID().toString()
