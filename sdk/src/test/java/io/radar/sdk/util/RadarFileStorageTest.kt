@@ -29,12 +29,12 @@ class RadarFileStorageTest {
 
     @Test
     fun testAllFilesInDirectory(){
-        radarFileStorage.writeData("testDir","578", "testing text1")
-        radarFileStorage.writeData("testDir","456", "testing text2")
+        radarFileStorage.writeData("testDir", "578", "testing text1")
+        radarFileStorage.writeData("testDir", "456", "testing text2")
         val files = radarFileStorage.allFilesInDirectory("testDir")
         assertNotNull(files)
-        assertEquals(files?.size,2)
-        assertEquals(files?.get(0)?.name ?:"" ,"456")
+        assertEquals(files?.size, 2)
+        assertEquals(files?.get(0)?.name ?: "" , "456")
 
     }
 

@@ -49,7 +49,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
 
 
     override fun persistLogs() {
-        if(list.size >0) {
+        if(list.size > 0) {
             writeLogsToDisk(list)
             list.clear()
         }
@@ -140,11 +140,10 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
     * Writes logs to disk
     */
     private fun writeLogsToDisk(logs: Collection<RadarLog>) {
-        
         for (log in logs) {
             val counterString = String.format("%04d", counter++)
             val fileName = "${log.createdAt.time / 1000}${counterString}"
-            RadarFileStorage(context).writeData(logFileDir,fileName, log.toJson().toString())
+            RadarFileStorage(context).writeData(logFileDir, fileName, log.toJson().toString())
         }
     }
 }
