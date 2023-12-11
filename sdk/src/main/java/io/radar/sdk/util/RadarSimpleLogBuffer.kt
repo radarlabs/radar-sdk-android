@@ -4,6 +4,7 @@ import io.radar.sdk.Radar
 import io.radar.sdk.model.RadarLog
 import java.util.concurrent.LinkedBlockingDeque
 import android.content.Context
+import io.radar.sdk.RadarSettings
 import org.json.JSONObject
 import java.io.File
 import java.lang.Integer.min
@@ -39,36 +40,51 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
     }
 
     private val list = LinkedBlockingDeque<RadarLog>(MAXIMUM_MEMORY_CAPACITY)
+    private val oldList = LinkedBlockingDeque<RadarLog>(MAXIMUM_CAPACITY)
 
     override fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType?, createdAt: Date) {
-        if (!list.offer(RadarLog(level, message, type, createdAt))) {
-            persistLogs()
-            list.put(RadarLog(level, message, type, createdAt))
+        if (!oldList.offer(RadarLog(level, message, type))) {
+            oldPurgeOldestLogs()
+            oldList.put(RadarLog(level, message, type))
         }
+        if (RadarSettings.getFeatureSettings(this.context).useLogPersistence) {
+            if (!list.offer(RadarLog(level, message, type, createdAt))) {
+                persistLogs()
+                list.put(RadarLog(level, message, type, createdAt))
+            }
+        }        
     }
 
 
     override fun persistLogs() {
-        if(list.size > 0) {
-            writeLogsToDisk(list)
-            list.clear()
-        }
-        val files = RadarFileStorage(context).allFilesInDirectory(logFileDir)
+        if (RadarSettings.getFeatureSettings(this.context).useLogPersistence) {
+            if(list.size > 0) {
+                writeLogsToDisk(list)
+                list.clear()
+            }
+            val files = RadarFileStorage(context).allFilesInDirectory(logFileDir)
 
-        if ((files?.size ?: 0) > MAXIMUM_CAPACITY) {
-            purgeOldestLogs()
+            if ((files?.size ?: 0) > MAXIMUM_CAPACITY) {
+                purgeOldestLogs()
+            }
         }
     }
 
 
     override fun getFlushableLogsStash(): Flushable<RadarLog> {
+       
         persistLogs()
         val logs = mutableListOf<RadarLog>()
         getLogsFromDisk().drainTo(logs)
+        val oldLogs = mutableListOf<RadarLog>()
+        oldList.drainTo(oldLogs)
         return object : Flushable<RadarLog> {
 
             override fun get(): List<RadarLog> {
-                return logs
+                if (RadarSettings.getFeatureSettings(context).useLogPersistence) {
+                    return logs
+                }
+                return oldLogs
             }
 
             override fun onFlush(success: Boolean) {
@@ -85,11 +101,31 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
                 // if not success, push the logs back into list and purge
                 // put back into disk
                 if (!success) {
-                    purgeOldestLogs()
+                    oldLogs.reverse()
+                    oldLogs.forEach {
+                        if (!oldList.offerFirst(it)) {
+                            oldPurgeOldestLogs()
+                        }
+                    }
+                    if ( RadarSettings.getFeatureSettings(context).useLogPersistence) {
+                        purgeOldestLogs()
+                    }
                 }
             }
 
         }
+        
+    }
+
+
+
+    private fun oldPurgeOldestLogs() {
+        val oldLogs = mutableListOf<RadarLog>()
+        oldList.drainTo(oldLogs, HALF_CAPACITY)
+       if (!RadarSettings.getFeatureSettings(context).useLogPersistence) {
+            write(Radar.RadarLogLevel.DEBUG, "----- purged oldest logs -----", null)
+        } 
+        
     }
 
     /**
@@ -112,7 +148,6 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
             }
             files = RadarFileStorage(context).allFilesInDirectory(logFileDir)
         }
-
     }
 
     /**

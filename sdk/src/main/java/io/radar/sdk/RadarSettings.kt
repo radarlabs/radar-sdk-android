@@ -301,7 +301,8 @@ internal object RadarSettings {
 
     fun getFeatureSettings(context: Context): RadarFeatureSettings {
         val sharedPrefFeatureSettings = getSharedPreferences(context).getString(KEY_FEATURE_SETTINGS, null)
-        Radar.logger.d("getFeatureSettings | featureSettings = $sharedPrefFeatureSettings")
+        //suppress for now?
+        //Radar.logger.d("getFeatureSettings | featureSettings = $sharedPrefFeatureSettings")
         val optionsJson = sharedPrefFeatureSettings ?: return RadarFeatureSettings.default()
         return RadarFeatureSettings.fromJson(JSONObject(optionsJson))
     }

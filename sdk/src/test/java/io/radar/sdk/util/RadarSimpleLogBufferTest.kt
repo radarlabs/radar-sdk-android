@@ -5,7 +5,9 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarSettings
 import io.radar.sdk.matchers.RangeMatcher.Companion.isBetween
+import io.radar.sdk.model.RadarFeatureSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThat
 import org.junit.Assert.assertTrue
@@ -23,6 +25,8 @@ class RadarSimpleLogBufferTest {
 
         // Create the log buffer
         val context: Context = ApplicationProvider.getApplicationContext()
+        RadarSettings.setFeatureSettings(context,
+            RadarFeatureSettings(10, false, false, false, true) )
         val logBuffer = RadarSimpleLogBuffer(context)
 
         // Preconditions
