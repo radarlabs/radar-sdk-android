@@ -31,8 +31,8 @@ class RadarFeatureSettingsTest {
             "networkAny":$requiresNetwork,
             "maxConcurrentJobs":$maxConcurrentJobs,
             "usePersistence":$usePersistence,
-            "extendFlushReplays":$extendFlushReplays,
-            "useLogPersistence":$useLogPersistence
+            "useLogPersistence":$useLogPersistence,
+            "extendFlushReplays":$extendFlushReplays
         }""".trimIndent()
     }
 
