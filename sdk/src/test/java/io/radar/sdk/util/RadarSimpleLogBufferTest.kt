@@ -5,9 +5,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.Radar
-import io.radar.sdk.RadarSettings
 import io.radar.sdk.matchers.RangeMatcher.Companion.isBetween
-import io.radar.sdk.model.RadarFeatureSettings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThat
 import org.junit.Assert.assertTrue
@@ -25,10 +23,8 @@ class RadarSimpleLogBufferTest {
 
         // Create the log buffer
         val context: Context = ApplicationProvider.getApplicationContext()
-        Radar.initialize(context,"")
         val logBuffer = RadarSimpleLogBuffer(context)
-        RadarSettings.setFeatureSettings(context,
-            RadarFeatureSettings(10, false, false, false, true) )
+        logBuffer.setFeatureFlag(true)
 
 
         // Preconditions
@@ -95,8 +91,8 @@ class RadarSimpleLogBufferTest {
             assertEquals(logs[index + 250].second, radarLog.message)
             assertEquals(logs[index + 250].first, radarLog.level)
         }
-        assertEquals(message, contents[251].message)
-        assertEquals("----- purged oldest logs -----", contents[250].message)
+        assertEquals(message, contents[250].message)
+        assertEquals("----- purged oldest logs -----", contents[251].message)
 
 
         // Test behavior of successful log flush
