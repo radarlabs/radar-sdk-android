@@ -29,4 +29,6 @@ internal interface RadarLogBuffer {
      * Persist the logs to disk
      */
     fun persistLogs()
+
+    fun setFeatureFlag(featureFlag: Boolean)
 }

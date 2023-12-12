@@ -26,9 +26,10 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
         const val HALF_CAPACITY = MAXIMUM_CAPACITY / 2
         const val logFileDir = "radar_logs"
         var counter = 0
-    }
 
-    var featureFlag = false
+    }
+    private var featureFlag = false
+
 
     private val scheduler = Executors.newScheduledThreadPool(1)
 
@@ -43,6 +44,10 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
 
     private val list = LinkedBlockingDeque<RadarLog>(MAXIMUM_MEMORY_CAPACITY)
     private val oldList = LinkedBlockingDeque<RadarLog>(MAXIMUM_CAPACITY)
+
+    override fun setFeatureFlag(featureFlag: Boolean){
+       this.featureFlag = featureFlag
+    }
 
     override fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType?, createdAt: Date) {
         if (!oldList.offer(RadarLog(level, message, type))) {

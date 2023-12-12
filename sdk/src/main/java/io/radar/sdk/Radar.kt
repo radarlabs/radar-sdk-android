@@ -3402,7 +3402,7 @@ object Radar {
     }
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {
-        this.logBuffer.featureFlag = enabled
+        this.logBuffer.setFeatureFlag(enabled)
     }
 
 }
