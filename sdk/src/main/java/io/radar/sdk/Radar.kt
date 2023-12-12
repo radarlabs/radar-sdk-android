@@ -3092,6 +3092,9 @@ object Radar {
     */
     @JvmStatic
     fun logResignActive() {
+        if (!initialized) {
+            return
+        }
         this.logger.logResignActive()
     }
 
@@ -3100,6 +3103,9 @@ object Radar {
     */
      @JvmStatic
     fun logEnterBackground() {
+        if (!initialized) {
+            return
+        }
         this.logger.logEnterBackground()
         this.logBuffer.persistLogs()
     }
