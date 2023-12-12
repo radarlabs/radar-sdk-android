@@ -26,8 +26,9 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
         const val HALF_CAPACITY = MAXIMUM_CAPACITY / 2
         const val logFileDir = "radar_logs"
         var counter = 0
-
     }
+
+    var featureFlag = false
 
     private val scheduler = Executors.newScheduledThreadPool(1)
 
@@ -37,6 +38,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
         if (!file.exists()) {
             file.mkdir()
         }
+        featureFlag = RadarSettings.getFeatureSettings(context).useLogPersistence
     }
 
     private val list = LinkedBlockingDeque<RadarLog>(MAXIMUM_MEMORY_CAPACITY)
@@ -47,7 +49,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
             oldPurgeOldestLogs()
             oldList.put(RadarLog(level, message, type))
         }
-        if (RadarSettings.getFeatureSettings(this.context).useLogPersistence) {
+        if (featureFlag) {
             if (!list.offer(RadarLog(level, message, type, createdAt))) {
                 persistLogs()
                 list.put(RadarLog(level, message, type, createdAt))
@@ -57,7 +59,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
 
 
     override fun persistLogs() {
-        if (RadarSettings.getFeatureSettings(this.context).useLogPersistence) {
+        if (featureFlag) {
             if(list.size > 0) {
                 writeLogsToDisk(list)
                 list.clear()
@@ -81,7 +83,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
         return object : Flushable<RadarLog> {
 
             override fun get(): List<RadarLog> {
-                if (RadarSettings.getFeatureSettings(context).useLogPersistence) {
+                if (featureFlag) {
                     return logs
                 }
                 return oldLogs
@@ -107,7 +109,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
                             oldPurgeOldestLogs()
                         }
                     }
-                    if ( RadarSettings.getFeatureSettings(context).useLogPersistence) {
+                    if (featureFlag) {
                         purgeOldestLogs()
                     }
                 }
@@ -122,7 +124,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
     private fun oldPurgeOldestLogs() {
         val oldLogs = mutableListOf<RadarLog>()
         oldList.drainTo(oldLogs, HALF_CAPACITY)
-       if (!RadarSettings.getFeatureSettings(context).useLogPersistence) {
+       if (!featureFlag) {
             write(Radar.RadarLogLevel.DEBUG, "----- purged oldest logs -----", null)
         } 
         

@@ -294,6 +294,7 @@ internal object RadarSettings {
     }
 
     fun setFeatureSettings(context: Context, featureSettings: RadarFeatureSettings) {
+        Radar.setLogPersistenceFeatureFlag(featureSettings.useLogPersistence)
         val optionsJson = featureSettings.toJson().toString()
 
         getSharedPreferences(context).edit { putString(KEY_FEATURE_SETTINGS, optionsJson) }
