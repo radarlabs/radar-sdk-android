@@ -25,9 +25,11 @@ class RadarSimpleLogBufferTest {
 
         // Create the log buffer
         val context: Context = ApplicationProvider.getApplicationContext()
+        Radar.initialize(context,"")
+        val logBuffer = RadarSimpleLogBuffer(context)
         RadarSettings.setFeatureSettings(context,
             RadarFeatureSettings(10, false, false, false, true) )
-        val logBuffer = RadarSimpleLogBuffer(context)
+
 
         // Preconditions
         var flushable = logBuffer.getFlushableLogsStash()
@@ -93,8 +95,8 @@ class RadarSimpleLogBufferTest {
             assertEquals(logs[index + 250].second, radarLog.message)
             assertEquals(logs[index + 250].first, radarLog.level)
         }
-        assertEquals(message, contents[250].message)
-        assertEquals("----- purged oldest logs -----", contents[251].message)
+        assertEquals(message, contents[251].message)
+        assertEquals("----- purged oldest logs -----", contents[250].message)
 
 
         // Test behavior of successful log flush
