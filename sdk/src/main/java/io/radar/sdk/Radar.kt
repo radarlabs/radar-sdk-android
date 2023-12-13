@@ -960,7 +960,7 @@ object Radar {
         val googlePlayProjectNumber = RadarSettings.getGooglePlayProjectNumber(this.context);
 
         if (googlePlayProjectNumber == 0.toLong()) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback?.onComplete(RadarStatus.ERROR_SERVER)
             return
         }
 
