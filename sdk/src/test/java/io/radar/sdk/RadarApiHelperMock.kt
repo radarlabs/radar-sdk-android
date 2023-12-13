@@ -19,6 +19,9 @@ internal class RadarApiHelperMock : RadarApiHelper() {
      */
     internal var mockResponses: MutableMap<String, JSONObject> = mutableMapOf()
 
+    var retryCounter = 0
+
+
     override fun request(
         context: Context,
         method: String,
@@ -32,6 +35,27 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         logPayload: Boolean,
         verified: Boolean
     ) {
+        // Use params to test for retry and backoff
+        if (params != null && params.has("retry")) {
+            
+            val retry = params.get("retry")
+            if (retry is Int) {
+                   
+                retryCounter++
+                if (retryCounter < retry) {
+                    callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
+                    return
+                } else {
+                    val successJson = JSONObject()
+                    successJson.put("successOn", retryCounter)
+                    callback?.onComplete(Radar.RadarStatus.SUCCESS,successJson)
+                    retryCounter = 0
+                    return
+                }
+                    
+            }
+
+        }
         // Use the entry in the mockResponses map, if any.
         if (mockResponses.containsKey(path)) {
             callback?.onComplete(mockStatus, mockResponses[path])
