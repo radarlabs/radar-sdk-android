@@ -15,18 +15,18 @@ internal class RadarAPIRetryWrapper(private var radarAPIHelper: RadarApiHelper) 
 
 
     internal fun requestWithRetry(context: Context,
-                                       method: String,
-                                       path: String,
-                                       headers: Map<String, String>?,
-                                       params: JSONObject?,
-                                       sleep: Boolean,
-                                       callback: RadarApiHelper.RadarApiCallback? = null,
-                                       extendedTimeout: Boolean = false,
-                                       stream: Boolean = false,
-                                       logPayload: Boolean = true,
-                                       verified: Boolean = false,
-                                       retriedLeft: Int = maxRetries) {
-        val retriesLeftSanitized = minOf(retriedLeft, maxRetries)
+                                  method: String,
+                                  path: String,
+                                  headers: Map<String, String>?,
+                                  params: JSONObject?,
+                                  sleep: Boolean,
+                                  callback: RadarApiHelper.RadarApiCallback? = null,
+                                  extendedTimeout: Boolean = false,
+                                  stream: Boolean = false,
+                                  logPayload: Boolean = true,
+                                  verified: Boolean = false,
+                                  retriesLeft: Int = maxRetries) {
+        val retriesLeftSanitized = minOf(retriesLeft, maxRetries)
         if (retriesLeftSanitized == 0) {
             handler.post {
                 callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
@@ -41,7 +41,7 @@ internal class RadarAPIRetryWrapper(private var radarAPIHelper: RadarApiHelper) 
                     }
                 } else {
                     // Calculate retry duration with jitter.
-                    val retryDuration = (timeout * timeoutBase.pow((maxRetries - retriedLeft + 1).toDouble()) + Random.nextInt(1000)).toLong()
+                    val retryDuration = (timeout * timeoutBase.pow((maxRetries - retriesLeft + 1).toDouble()) + Random.nextInt(1000)).toLong()
                     Thread.sleep(retryDuration)
                     requestWithRetry(context, method, path, headers, params, sleep, callback, extendedTimeout, stream, logPayload, verified, retriesLeftSanitized - 1)
                 }
