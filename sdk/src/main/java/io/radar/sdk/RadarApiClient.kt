@@ -19,7 +19,7 @@ internal class RadarApiClient(
     private val context: Context,
     private var logger: RadarLogger,
     internal var apiHelper: RadarApiHelper = RadarApiHelper(logger),
-    internal var apiRetryWrapper: RadarAPIRetryWrapper = RadarAPIRetryWrapper(apiHelper)
+    private var apiRetryWrapper: RadarAPIRetryWrapper = RadarAPIRetryWrapper(apiHelper)
 ) {
 
     interface RadarTrackApiCallback {
