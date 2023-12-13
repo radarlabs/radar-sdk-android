@@ -959,6 +959,11 @@ object Radar {
 
         val googlePlayProjectNumber = RadarSettings.getGooglePlayProjectNumber(this.context);
 
+        if (googlePlayProjectNumber == 0.toLong()) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            return
+        }
+
         locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
                 if (status != RadarStatus.SUCCESS || location == null) {
