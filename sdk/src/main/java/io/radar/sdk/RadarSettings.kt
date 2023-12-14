@@ -307,7 +307,7 @@ internal object RadarSettings {
         try{
             Radar.logger.d("getFeatureSettings | featureSettings = $sharedPrefFeatureSettings")
         } catch (e: Exception){
-            //do nothing for now
+            // Do nothing for now
         }
         val optionsJson = sharedPrefFeatureSettings ?: return RadarFeatureSettings.default()
         return RadarFeatureSettings.fromJson(JSONObject(optionsJson))
