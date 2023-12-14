@@ -460,7 +460,6 @@ object Radar {
      * @param[provider] The location services provider.
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
-
     @JvmStatic
     fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false) {
         if (context == null) {
