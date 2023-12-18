@@ -16,6 +16,20 @@ import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
 import io.radar.sdk.model.*
 import org.json.JSONObject
 import java.util.*
+import kotlin.math.abs
+
+
+enum class RampingOption {
+    RampingOptionNoChange,
+    RampingOptionRampUp,
+    RampingOptionRampDown
+}
+
+// define the StateChange object/class which has a date and a bool
+data class StateChange(
+    val timestamp: Date,
+    val rampedUp: Boolean
+)
 
 @SuppressLint("MissingPermission")
 internal class RadarLocationManager(
@@ -34,11 +48,14 @@ internal class RadarLocationManager(
     private var startedInterval = 0
     private var startedFastestInterval = 0
     private val callbacks = ArrayList<RadarLocationCallback>()
+    private var stateChanges: MutableList<StateChange> = ArrayList()
+
 
     internal companion object {
         private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
         private const val BUBBLE_STOPPED_GEOFENCE_REQUEST_ID = "radar_stopped"
         private const val SYNCED_GEOFENCES_REQUEST_ID_PREFIX = "radar_sync"
+        private const val kRampUpGeofenceIdentifierPrefix = "radar_ramp_up"
     }
 
     private fun addCallback(callback: RadarLocationCallback?) {
@@ -166,9 +183,11 @@ internal class RadarLocationManager(
         }
     }
 
-    internal fun updateTracking(location: Location? = null) {
+    internal fun updateTracking(location: Location? = null, ramping: RampingOption = RampingOption.RampingOptionNoChange) {
         var tracking = RadarSettings.getTracking(context)
-        val options = Radar.getTrackingOptions()
+        var options = Radar.getTrackingOptions()
+        val wasRamped = RadarSettings.getRampedUp(context)
+        val onTrip = RadarSettings.getTripOptions(context) != null
 
         logger.d("Updating tracking | options = $options; location = $location")
 
@@ -186,6 +205,39 @@ internal class RadarLocationManager(
         }
 
         if (tracking) {
+            if (ramping == RampingOption.RampingOptionRampUp && !wasRamped) {
+                if (!onTrip) {
+                    RadarSettings.setPreviousTrackingOptions(context, options)
+                }
+
+                val rampUpRadius = options.rampUpRadius
+                val originalReplayOption = options.replay
+                
+                options = RadarTrackingOptions.RAMPED_UP
+                options.replay = originalReplayOption
+                options.rampUpRadius = rampUpRadius
+
+                RadarSettings.setTrackingOptions(context, options)
+                RadarSettings.setRampedUp(context, true)
+               
+                // call location manager changeTrackingState
+            } else if (ramping == RampingOption.RampingOptionRampDown && wasRamped) {
+                val previousTrackingOptions = RadarSettings.getPreviousTrackingOptions(context)
+                if (onTrip) {
+                    options = RadarTrackingOptions.CONTINUOUS
+                } else if (previousTrackingOptions != null) {
+                    options = previousTrackingOptions
+                    RadarSettings.removePreviousTrackingOptions(context)
+                } else {
+                    logger.d("Tried to ramp down but no previous tracking options")
+                }
+
+                RadarSettings.setTrackingOptions(context, options)
+                RadarSettings.setRampedUp(context, false)
+                // call location manager changeTrackingState
+
+
+            }
             if (options.foregroundServiceEnabled) {
                 val foregroundService = RadarSettings.getForegroundService(context)
                 if (!foregroundService.updatesOnly) {
@@ -247,6 +299,61 @@ internal class RadarLocationManager(
         }
         updateTracking()
     }
+
+    internal fun trackStateChange(rampedUp: Boolean) {
+        val now = Date()
+        val stateChange = StateChange(now, rampedUp)
+        stateChanges.add(stateChange)
+    }
+
+    internal fun calculateRampedUpTimesAndCleanup(): Map<String, Double> {
+        val now = Date()
+        val oneHourAgo = Date(now.time - 3600 * 1000) // 1 hour in milliseconds
+        val twelveHoursAgo = Date(now.time - 12 * 3600 * 1000) // 12 hours in milliseconds
+    
+        var totalRampedUpTimeOneHour = 0.0
+        var totalRampedUpTimeTwelveHours = 0.0
+        var lastRampedUpStartOneHour: Date? = null
+        var lastRampedUpStartTwelveHours: Date? = null
+        val validChanges = mutableListOf<StateChange>() // Assuming StateChange is a data class
+    
+        for (change in stateChanges) { // Assuming stateChanges is an iterable property
+            if (change.timestamp.before(twelveHoursAgo)) {
+                continue // Skip changes older than twelve hours
+            }
+    
+            validChanges.add(change)
+    
+            if (change.rampedUp) {
+                lastRampedUpStartTwelveHours = change.timestamp
+            } else if (lastRampedUpStartTwelveHours != null) {
+                totalRampedUpTimeTwelveHours += abs(change.timestamp.time - lastRampedUpStartTwelveHours.time) / 1000.0
+                lastRampedUpStartTwelveHours = null
+            }
+    
+            if (!change.timestamp.before(oneHourAgo)) {
+                if (change.rampedUp) {
+                    lastRampedUpStartOneHour = change.timestamp
+                } else if (lastRampedUpStartOneHour != null) {
+                    totalRampedUpTimeOneHour += abs(change.timestamp.time - lastRampedUpStartOneHour.time) / 1000.0
+                    lastRampedUpStartOneHour = null
+                }
+            }
+        }
+    
+        lastRampedUpStartTwelveHours?.let {
+            totalRampedUpTimeTwelveHours += abs(now.time - it.time) / 1000.0
+        }
+        lastRampedUpStartOneHour?.let {
+            totalRampedUpTimeOneHour += abs(now.time - it.time) / 1000.0
+        }
+    
+        stateChanges = validChanges
+    
+        return mapOf("OneHour" to totalRampedUpTimeOneHour, "TwelveHours" to totalRampedUpTimeTwelveHours)
+    }
+    
+    
 
     internal fun restartPreviousTrackingOptions() {
         val previousTrackingOptions = RadarSettings.getPreviousTrackingOptions(context)
@@ -348,6 +455,10 @@ internal class RadarLocationManager(
             return
         }
 
+        val currentLocation = RadarState.getLastLocation(context)
+
+        var withinRampUpRadius = false
+
         val geofences = mutableListOf<RadarAbstractLocationClient.RadarAbstractGeofence>()
         radarGeofences.forEachIndexed { i, radarGeofence ->
             var center: RadarCoordinate? = null
@@ -360,8 +471,45 @@ internal class RadarLocationManager(
                 radius = radarGeofence.geometry.radius
             }
             if (center != null) {
+                var rampUpRadius = 0.0
+                var identifier = "${SYNCED_GEOFENCES_REQUEST_ID_PREFIX}_${i}"
+                if (options.rampUpRadius > 0) {
+                    rampUpRadius = options.rampUpRadius.toDouble()
+                }
+    
+                radarGeofence.metadata?.let { metadata ->
+                    val rampUpRadiusValue = metadata["radar:rampUpRadius"]
+                    if (rampUpRadiusValue is String) {  // Check if the value is a String
+                        val rampUpRadiusDouble = rampUpRadiusValue.toDoubleOrNull()
+                        if (rampUpRadiusDouble != null && rampUpRadiusDouble > 0) {
+                            rampUpRadius = rampUpRadiusDouble
+                        }
+                    }
+                }
+    
+                val tripOptions = RadarSettings.getTripOptions(context)
+                if (tripOptions != null && 
+                    tripOptions.destinationGeofenceTag == radarGeofence.tag &&
+                    tripOptions.destinationGeofenceExternalId == radarGeofence.externalId &&
+                    tripOptions.rampUpRadius > 0) {
+                        rampUpRadius = tripOptions.rampUpRadius.toDouble()
+                }
+    
+                if (rampUpRadius > 0) {
+                    val distance = center.distanceTo(RadarCoordinate(currentLocation?.latitude ?: 0.0, currentLocation?.longitude ?: 0.0))
+
+                    logger.d("distance from geofence center to current location: $distance")
+    
+                    if (distance <= rampUpRadius) {
+                        logger.d("distance from geofence center to current location is less than rampUpRadius, setting withinRampUpRadius to YES")
+                        withinRampUpRadius = true
+                    } else {
+                        radius = rampUpRadius
+                        identifier = "${kRampUpGeofenceIdentifierPrefix}_${i}"
+                        logger.d("radius is rampUpRadius: $radius")
+                    }
+                }    
                 try {
-                    val identifier = "${SYNCED_GEOFENCES_REQUEST_ID_PREFIX}_${i}"
                     val geofence = RadarAbstractLocationClient.RadarAbstractGeofence(
                         requestId = identifier,
                         latitude = center.latitude,
@@ -386,6 +534,38 @@ internal class RadarLocationManager(
 
             return
         }
+
+        val rampedUpTimes = calculateRampedUpTimesAndCleanup()
+        val totalRampedUpTimeOneHour = rampedUpTimes["OneHour"] ?: 0.0
+        val totalRampedUpTimeTwelveHours = rampedUpTimes["TwelveHours"] ?: 0.0
+    
+        val exceededRampUpTimeLimit = totalRampedUpTimeOneHour > 1200 || totalRampedUpTimeTwelveHours > 7200
+        val rampedUp = RadarSettings.getRampedUp(context)
+    
+        when {
+            withinRampUpRadius && !rampedUp && !exceededRampUpTimeLimit -> {
+                logger.d("Ramping up")
+                updateTracking(currentLocation, ramping = RampingOption.RampingOptionRampUp)
+            }
+            withinRampUpRadius && !rampedUp && exceededRampUpTimeLimit -> {
+                logger.d("Exceeded ramp up time limit, not ramping up")
+            }
+            withinRampUpRadius && rampedUp && !exceededRampUpTimeLimit -> {
+                logger.d("Already ramped up")
+            }
+            withinRampUpRadius && rampedUp && exceededRampUpTimeLimit -> {
+                logger.d("Exceeded ramp up time limit, ramping down")
+                updateTracking(currentLocation, ramping = RampingOption.RampingOptionRampDown)
+            }
+            !withinRampUpRadius && rampedUp -> {
+                logger.d("Ramping down")
+                updateTracking(currentLocation,ramping = RampingOption.RampingOptionRampDown)
+            }
+            !withinRampUpRadius && !rampedUp -> {
+                logger.d("Already ramped down")
+            }
+        }
+    
 
         val request = RadarAbstractLocationClient.RadarAbstractGeofenceRequest()
 

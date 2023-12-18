@@ -22,6 +22,7 @@ internal object RadarSettings {
     private const val KEY_ANONYMOUS = "anonymous"
     private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
     private const val KEY_TRACKING = "background_tracking"
+    private const val KEY_RAMPED_UP = "ramped_up"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
     private const val KEY_PREVIOUS_TRACKING_OPTIONS = "previous_tracking_options"
     private const val KEY_REMOTE_TRACKING_OPTIONS = "remote_tracking_options"
@@ -157,6 +158,14 @@ internal object RadarSettings {
 
     internal fun setTracking(context: Context, tracking: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_TRACKING, tracking) }
+    }
+
+    internal fun getRampedUp(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_RAMPED_UP, false)
+    }
+
+    internal fun setRampedUp(context: Context, rampedUp: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_RAMPED_UP, rampedUp) }
     }
 
     internal fun getTrackingOptions(context: Context): RadarTrackingOptions {

@@ -111,7 +111,12 @@ data class RadarTrackingOptions(
     /**
      * Determines whether to monitor beacons.
      */
-    var beacons: Boolean
+    var beacons: Boolean,
+
+    /**
+     * Determines the radius of a ramp-up geofence for each synced geofence
+     */
+    var rampUpRadius: Int
 ) {
 
     /**
@@ -377,7 +382,8 @@ data class RadarTrackingOptions(
             syncGeofences = true,
             syncGeofencesLimit = 0,
             foregroundServiceEnabled = true,
-            beacons = false
+            beacons = false,
+            rampUpRadius = 0
         )
 
         /**
@@ -406,7 +412,8 @@ data class RadarTrackingOptions(
             syncGeofences = true,
             syncGeofencesLimit = 10,
             foregroundServiceEnabled = false,
-            beacons = false
+            beacons = false,
+            rampUpRadius = 0,
         )
 
         /**
@@ -435,7 +442,33 @@ data class RadarTrackingOptions(
             syncGeofences = true,
             syncGeofencesLimit = 10,
             foregroundServiceEnabled = false,
-            beacons = false
+            beacons = false,
+            rampUpRadius = 200
+        )
+
+        @JvmField
+        val RAMPED_UP = RadarTrackingOptions(
+            desiredStoppedUpdateInterval = 10,
+            fastestStoppedUpdateInterval = 10,
+            desiredMovingUpdateInterval = 10,
+            fastestMovingUpdateInterval = 10,
+            desiredSyncInterval = 10,
+            desiredAccuracy = RadarTrackingOptionsDesiredAccuracy.HIGH,
+            stopDuration = 140,
+            stopDistance = 70,
+            startTrackingAfter = null,
+            stopTrackingAfter = null,
+            replay = RadarTrackingOptionsReplay.NONE,
+            sync = RadarTrackingOptionsSync.ALL,
+            useStoppedGeofence = false,
+            stoppedGeofenceRadius = 0,
+            useMovingGeofence = false,
+            movingGeofenceRadius = 0,
+            syncGeofences = true,
+            syncGeofencesLimit = 0,
+            foregroundServiceEnabled = true,
+            beacons = false,
+            rampUpRadius = 100
         )
 
         internal const val KEY_DESIRED_STOPPED_UPDATE_INTERVAL = "desiredStoppedUpdateInterval"
@@ -458,6 +491,7 @@ data class RadarTrackingOptions(
         internal const val KEY_SYNC_GEOFENCES_LIMIT = "syncGeofencesLimit"
         internal const val KEY_FOREGROUND_SERVICE_ENABLED = "foregroundServiceEnabled"
         internal const val KEY_BEACONS = "beacons"
+        internal const val KEY_RAMP_UP_RADIUS = "rampUpRadius"
 
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTrackingOptions {
@@ -517,7 +551,8 @@ data class RadarTrackingOptions(
                 syncGeofences = obj.optBoolean(KEY_SYNC_GEOFENCES),
                 syncGeofencesLimit = obj.optInt(KEY_SYNC_GEOFENCES_LIMIT, 10),
                 foregroundServiceEnabled = obj.optBoolean(KEY_FOREGROUND_SERVICE_ENABLED, false),
-                beacons = obj.optBoolean(KEY_BEACONS)
+                beacons = obj.optBoolean(KEY_BEACONS),
+                rampUpRadius = obj.optInt(KEY_RAMP_UP_RADIUS, 0)
             )
         }
     }
@@ -544,6 +579,8 @@ data class RadarTrackingOptions(
         obj.put(KEY_SYNC_GEOFENCES_LIMIT, syncGeofencesLimit)
         obj.put(KEY_FOREGROUND_SERVICE_ENABLED, foregroundServiceEnabled)
         obj.put(KEY_BEACONS, beacons)
+        obj.put(KEY_RAMP_UP_RADIUS, rampUpRadius)
+
         return obj
     }
 

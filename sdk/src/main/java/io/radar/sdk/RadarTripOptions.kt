@@ -39,7 +39,9 @@ data class RadarTripOptions(
      */
     var scheduledArrivalAt: Date? = null,
 
-    var approachingThreshold: Int = 0
+    var approachingThreshold: Int = 0,
+
+    var rampUpRadius: Int = 0
 ) {
 
     companion object {
@@ -51,6 +53,7 @@ data class RadarTripOptions(
         internal const val KEY_MODE = "mode"
         internal const val KEY_SCHEDULED_ARRIVAL_AT = "scheduledArrivalAt"
         internal const val KEY_APPROACHING_THRESHOLD = "approachingThreshold"
+        internal const val KEY_RAMP_UP_RADIUS = "rampUpRadius"
 
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTripOptions {
@@ -76,7 +79,8 @@ data class RadarTripOptions(
                         RadarUtils.isoStringToDate(obj.optString(KEY_SCHEDULED_ARRIVAL_AT))
                     }
                 } else null,
-                approachingThreshold = obj.optInt(KEY_APPROACHING_THRESHOLD)
+                approachingThreshold = obj.optInt(KEY_APPROACHING_THRESHOLD),
+                rampUpRadius = obj.optInt(KEY_RAMP_UP_RADIUS)
             )
         }
 
@@ -96,6 +100,9 @@ data class RadarTripOptions(
         }
         if (approachingThreshold > 0) {
             obj.put(KEY_APPROACHING_THRESHOLD, approachingThreshold)
+        }
+        if (rampUpRadius > 0) {
+            obj.put(KEY_RAMP_UP_RADIUS, rampUpRadius)
         }
         return obj
     }
@@ -117,7 +124,8 @@ data class RadarTripOptions(
                 this.destinationGeofenceExternalId == other.destinationGeofenceExternalId &&
                 this.mode == other.mode &&
                 this.scheduledArrivalAt?.time == other.scheduledArrivalAt?.time &&
-                this.approachingThreshold == other.approachingThreshold
+                this.approachingThreshold == other.approachingThreshold &&
+                this.rampUpRadius == other.rampUpRadius
     }
 
 }

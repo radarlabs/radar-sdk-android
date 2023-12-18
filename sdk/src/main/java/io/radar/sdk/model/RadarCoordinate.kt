@@ -2,6 +2,8 @@ package io.radar.sdk.model
 
 import org.json.JSONArray
 import org.json.JSONObject
+import android.location.Location
+
 
 /**
  * Represents a location coordinate.
@@ -38,6 +40,20 @@ class RadarCoordinate(
                 fromJson(arr.optJSONObject(index))
             }.filterNotNull().toTypedArray()
         }
+    }
+
+
+    private fun toLocation(): Location {
+        val location = Location("") // Provider string is not necessary
+        location.latitude = this.latitude
+        location.longitude = this.longitude
+        return location
+    }
+
+    fun distanceTo(other: RadarCoordinate): Float {
+        val location1 = this.toLocation()
+        val location2 = other.toLocation()
+        return location1.distanceTo(location2)
     }
 
     fun toJson(): JSONObject {
