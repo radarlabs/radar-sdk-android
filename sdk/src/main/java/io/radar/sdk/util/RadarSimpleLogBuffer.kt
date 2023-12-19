@@ -102,7 +102,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
 
             override fun onFlush(success: Boolean) {
                 // clear the logs from disk
-                if (success) {
+                if (success && persistentLogFeatureFlag) {
                     val files = RadarFileStorage(context).allFilesInDirectory(logFileDir, comparator)
                     if (!files.isNullOrEmpty()) {
                         for (file in files) {
@@ -110,10 +110,9 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
                         }
                     }
                 }
-
                 // if not success, push the logs back into list and purge
                 // put back into disk
-                if (!success) {
+                else {
 
                     if (persistentLogFeatureFlag) {
                         purgeOldestLogs()
