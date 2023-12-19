@@ -6,6 +6,7 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
+import android.util.Log
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
@@ -3407,7 +3408,7 @@ object Radar {
     }
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {
-        this.logBuffer.setFeatureFlag(enabled)
+        this.logBuffer.setPersistentLogFeatureFlag(enabled)
     }
 
 }

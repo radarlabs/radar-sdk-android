@@ -30,5 +30,5 @@ internal interface RadarLogBuffer {
      */
     fun persistLogs()
 
-    fun setFeatureFlag(featureFlag: Boolean)
+    fun setPersistentLogFeatureFlag(persistentLogFeatureFlag: Boolean)
 }

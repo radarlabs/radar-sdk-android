@@ -24,7 +24,7 @@ class RadarSimpleLogBufferTest {
         // Create the log buffer
         val context: Context = ApplicationProvider.getApplicationContext()
         val logBuffer = RadarSimpleLogBuffer(context)
-        logBuffer.setFeatureFlag(true)
+        logBuffer.setPersistentLogFeatureFlag(true)
 
 
         // Preconditions

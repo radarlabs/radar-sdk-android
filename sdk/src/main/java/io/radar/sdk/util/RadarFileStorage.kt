@@ -6,36 +6,25 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 
 class RadarFileStorage(private val context: Context) {
-    fun writeData(subDir: String = "",  filename: String, content: String) {
+    fun writeData(subDir: String = "./",  filename: String, content: String) {
         var fileOutputStream: FileOutputStream
         try {
-            if(subDir.isNotEmpty()) {
-                val directory = File(context.filesDir, subDir)
-                directory.mkdirs()
-                val file = File(directory, filename)
-                fileOutputStream = FileOutputStream(file)
-                fileOutputStream.use { it.write(content.toByteArray()) }
-            }
-            else {
-                fileOutputStream = context.openFileOutput(filename, Context.MODE_PRIVATE)
-                fileOutputStream.write(content.toByteArray())
-            } 
+            val directory = File(context.filesDir, subDir)
+            directory.mkdirs()
+            val file = File(directory, filename)
+            fileOutputStream = FileOutputStream(file)
+            fileOutputStream.use { it.write(content.toByteArray()) }
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    fun readFileAtPath(subDir: String = "", filePath: String): String {
+    fun readFileAtPath(subDir: String = "./", filePath: String): String {
         var fileInputStream: FileInputStream? = null
         try {
-            if (subDir.isNotEmpty()) {
-                val directory = File(context.filesDir, subDir)
-                val file = File(directory, filePath)
-                fileInputStream = FileInputStream(file)
-            }
-            else{
-                fileInputStream = context.openFileInput(filePath)
-            }
+            val directory = File(context.filesDir, subDir)
+            val file = File(directory, filePath)
+            fileInputStream = FileInputStream(file)
             val inputStreamReader = fileInputStream?.reader()
             return inputStreamReader?.readText() ?: ""
         } catch (e: FileNotFoundException) {
@@ -59,15 +48,27 @@ class RadarFileStorage(private val context: Context) {
         return false
     }
 
-    fun allFilesInDirectory(directoryPath: String): Array<File>? {
+    // fun allFilesInDirectory(directoryPath: String): Array<File>? {
+    //     try {
+    //         val directory = File(context.filesDir,directoryPath)
+    //         var files = directory.listFiles()
+    //         files?.sortWith(Comparator { file1, file2 ->
+    //             val number1 = file1.name.toLongOrNull() ?: 0L
+    //             val number2 = file2.name.toLongOrNull() ?: 0L
+    //             number1.compareTo(number2)
+    //         })
+    //         return files
+    //     } catch (e: Exception) {
+    //         e.printStackTrace()
+    //     }
+    //     return null
+    // }
+
+    fun allFilesInDirectory(directoryPath: String, comparator: Comparator<File>): Array<File>? {
         try {
-            val directory = File(context.filesDir,directoryPath)
+            val directory = File(context.filesDir, directoryPath)
             var files = directory.listFiles()
-            files?.sortWith(Comparator { file1, file2 ->
-                val number1 = file1.name.toLongOrNull() ?: 0L
-                val number2 = file2.name.toLongOrNull() ?: 0L
-                number1.compareTo(number2)
-            })
+            files?.sortWith(comparator)
             return files
         } catch (e: Exception) {
             e.printStackTrace()
