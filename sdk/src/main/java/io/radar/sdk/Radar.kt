@@ -960,7 +960,8 @@ object Radar {
         val googlePlayProjectNumber = RadarSettings.getGooglePlayProjectNumber(this.context);
 
         if (googlePlayProjectNumber == 0.toLong()) {
-            callback?.onComplete(RadarStatus.ERROR_SERVER)
+            this.logger.e("Missing Google Play Services project number", RadarLogType.SDK_ERROR)
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
             return
         }
 
