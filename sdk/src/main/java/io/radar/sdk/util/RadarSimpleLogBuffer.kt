@@ -62,9 +62,9 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
                 }
             }
         } else {
-            if (!list.offer(RadarLog(level, message, type))) {
+            if (!list.offer(RadarLog(level, message, type, createdAt))) {
                 oldPurgeOldestLogs()
-                list.put(RadarLog(level, message, type))
+                list.put(RadarLog(level, message, type, createdAt))
             }
         }
     }
