@@ -48,22 +48,6 @@ class RadarFileStorage(private val context: Context) {
         return false
     }
 
-    // fun allFilesInDirectory(directoryPath: String): Array<File>? {
-    //     try {
-    //         val directory = File(context.filesDir,directoryPath)
-    //         var files = directory.listFiles()
-    //         files?.sortWith(Comparator { file1, file2 ->
-    //             val number1 = file1.name.toLongOrNull() ?: 0L
-    //             val number2 = file2.name.toLongOrNull() ?: 0L
-    //             number1.compareTo(number2)
-    //         })
-    //         return files
-    //     } catch (e: Exception) {
-    //         e.printStackTrace()
-    //     }
-    //     return null
-    // }
-
     fun allFilesInDirectory(directoryPath: String, comparator: Comparator<File>): Array<File>? {
         try {
             val directory = File(context.filesDir, directoryPath)

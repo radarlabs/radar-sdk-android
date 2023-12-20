@@ -62,7 +62,6 @@ internal class RadarLogger(
     fun logPastTermination(){
         val activityManager = this.context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        //Not the cleanest directly calling shared prefs here but using radarsetting also feels hackish. Looking for feedback.
         val sharedPreferences = this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
         val previousTimestamp = sharedPreferences.getLong("last_timestamp", 0)
         val currentTimestamp = System.currentTimeMillis()
