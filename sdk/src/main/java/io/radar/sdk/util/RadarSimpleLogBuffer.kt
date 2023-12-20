@@ -102,10 +102,10 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
                 // clear the logs from disk
                 if (success && persistentLogFeatureFlag) {
                     val files = RadarFileStorage(context).allFilesInDirectory(logFileDir, comparator)
-                    if (!files.isNullOrEmpty()) {
-                        for (file in files) {
-                            file.delete()
-                        }
+                    // we do not delete all files to handle case where files are written to disk when
+                    // network call is in flight.
+                    for (i in 0 until min(logs.size,files?.size ?:0)){
+                        files?.get(i)?.delete()
                     }
                 }
                 // if not success, push the logs back into list and purge
