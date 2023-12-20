@@ -76,11 +76,9 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
                 writeLogsToDisk(list)
                 list.clear()
             }
-            val files = RadarFileStorage(context).allFilesInDirectory(logFileDir, comparator)
 
-            if ((files?.size ?: 0) > MAXIMUM_CAPACITY) {
-                purgeOldestLogs()
-            }
+            purgeOldestLogs()
+            
         }
     }
 
@@ -113,7 +111,6 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
                 // if not success, push the logs back into list and purge
                 // put back into disk
                 else {
-
                     if (persistentLogFeatureFlag) {
                         purgeOldestLogs()
                     } else {
