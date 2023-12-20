@@ -6,10 +6,10 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 
 class RadarFileStorage(private val context: Context) {
-    fun writeData(subDir: String = "./",  filename: String, content: String) {
+    fun writeData(subDir: String = "",  filename: String, content: String) {
         var fileOutputStream: FileOutputStream
         try {
-            val directory = File(context.filesDir, subDir)
+            val directory = if (subDir.isNotEmpty()) File(context.filesDir, subDir) else context.filesDir
             directory.mkdirs()
             val file = File(directory, filename)
             fileOutputStream = FileOutputStream(file)
@@ -19,10 +19,10 @@ class RadarFileStorage(private val context: Context) {
         }
     }
 
-    fun readFileAtPath(subDir: String = "./", filePath: String): String {
+    fun readFileAtPath(subDir: String = "", filePath: String): String {
         var fileInputStream: FileInputStream? = null
         try {
-            val directory = File(context.filesDir, subDir)
+            val directory = if (subDir.isNotEmpty()) File(context.filesDir, subDir) else context.filesDir
             val file = File(directory, filePath)
             fileInputStream = FileInputStream(file)
             val inputStreamReader = fileInputStream?.reader()
