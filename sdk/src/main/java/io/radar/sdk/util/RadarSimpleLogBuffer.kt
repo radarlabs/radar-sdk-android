@@ -89,6 +89,10 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
         val logs = mutableListOf<RadarLog>()
         if(persistentLogFeatureFlag){
             getLogsFromDisk().drainTo(logs)
+            val files = RadarFileStorage(context).allFilesInDirectory(logFileDir, comparator)
+            for (i in 0 until min(logs.size,files?.size ?:0)){
+                files?.get(i)?.delete()
+            }
         } else {
             list.drainTo(logs)
         }
@@ -100,18 +104,9 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
 
             override fun onFlush(success: Boolean) {
                 // clear the logs from disk
-                if (success && persistentLogFeatureFlag) {
-                    val files = RadarFileStorage(context).allFilesInDirectory(logFileDir, comparator)
-                    // we do not delete all files to handle case where files are written to disk when
-                    // network call is in flight.
-                    for (i in 0 until min(logs.size,files?.size ?:0)){
-                        files?.get(i)?.delete()
-                    }
-                }
-                // if not success, push the logs back into list and purge
-                // put back into disk
-                else {
-                    if (persistentLogFeatureFlag) {
+                if (!success) {
+                   if (persistentLogFeatureFlag) {
+                        writeLogsToDisk(logs)
                         purgeOldestLogs()
                     } else {
                         logs.reverse()
