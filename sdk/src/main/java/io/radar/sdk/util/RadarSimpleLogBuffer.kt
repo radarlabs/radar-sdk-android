@@ -42,7 +42,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
         if (!file.exists()) {
             file.mkdir()
         }
-        timer.scheduleAtFixedRate({ persistLogs() }, 20, 20, TimeUnit.SECONDS)
+        timer.scheduleAtFixedRate({ persistLogs() }, 2, 2, TimeUnit.SECONDS)
     }
 
     override fun setPersistentLogFeatureFlag(persistentLogFeatureFlag: Boolean){
@@ -73,7 +73,6 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
         if (persistentLogFeatureFlag) {
             if (logBuffer.size > 0) {
                 writeToFileStorage(logBuffer)
-                purgeOldestLogs()
                 logBuffer.clear()
             }
         }
@@ -140,6 +139,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
         val logs = mutableListOf<RadarLog>()
         if (persistentLogFeatureFlag) {
             persistLogs()
+            purgeOldestLogs()
             readFromFileStorage().drainTo(logs)
             val files = getLogFilesInTimeOrder()
             for (i in 0 until min(logs.size,files?.size ?:0)){
