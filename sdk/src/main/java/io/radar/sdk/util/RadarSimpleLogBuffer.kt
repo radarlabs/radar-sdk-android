@@ -140,8 +140,8 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
 
 
     override fun getFlushableLogs(): Flushable<RadarLog> {
+        val logs = mutableListOf<RadarLog>()
         synchronized(lock) {
-            val logs = mutableListOf<RadarLog>()
             if (persistentLogFeatureFlag) {
                 persistLogs()
                 purgeOldestLogs()
