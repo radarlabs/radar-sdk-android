@@ -6,6 +6,7 @@ import java.util.concurrent.LinkedBlockingDeque
 import android.content.Context
 import io.radar.sdk.RadarSettings
 import org.json.JSONObject
+import org.json.JSONException
 import java.io.File
 import java.lang.Integer.min
 import java.util.Date
@@ -88,6 +89,15 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
         return RadarFileStorage(context).sortedFilesInDirectory(logFileDir, compareTimeStamps)
     }
 
+    private fun isValidJson(json: String): Boolean {
+        return try {
+            JSONObject(json)
+            true
+        } catch (ex: JSONException) {
+            false
+        }
+    }
+
     /**
      * Gets logs from disk.
      */
@@ -101,6 +111,10 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
 
         for (file in files) {
             val jsonString = RadarFileStorage(context).readFileAtPath(logFileDir, file.name)
+            if (jsonString.isNullOrEmpty() || !isValidJson(jsonString)) {
+                file.delete()
+                continue
+            }
             val log = RadarLog.fromJson(JSONObject(jsonString))
             if (log != null) {
                 logs.add(log)
