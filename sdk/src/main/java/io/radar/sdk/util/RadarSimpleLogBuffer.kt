@@ -140,18 +140,19 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
 
 
     override fun getFlushableLogs(): Flushable<RadarLog> {
-
-        val logs = mutableListOf<RadarLog>()
-        if (persistentLogFeatureFlag) {
-            persistLogs()
-            purgeOldestLogs()
-            readFromFileStorage().drainTo(logs)
-            val files = getLogFilesInTimeOrder()
-            for (i in 0 until min(logs.size,files?.size ?:0)){
-                files?.get(i)?.delete()
+        synchronized(lock) {
+            val logs = mutableListOf<RadarLog>()
+            if (persistentLogFeatureFlag) {
+                persistLogs()
+                purgeOldestLogs()
+                readFromFileStorage().drainTo(logs)
+                val files = getLogFilesInTimeOrder()
+                for (i in 0 until min(logs.size,files?.size ?:0)){
+                    files?.get(i)?.delete()
+                }
+            } else {
+                logBuffer.drainTo(logs)
             }
-        } else {
-            logBuffer.drainTo(logs)
         }
         return object : Flushable<RadarLog> {
 
