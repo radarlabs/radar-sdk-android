@@ -31,6 +31,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
     }
     private var persistentLogFeatureFlag = false
 
+    private val lock = Any()
 
     private val timer = Executors.newScheduledThreadPool(1)
 
@@ -55,25 +56,29 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
         message: String,
         createdAt: Date
     ) {
-        val radarLog = RadarLog(level, message, type, createdAt)
-        logBuffer.put(radarLog)
-        if (persistentLogFeatureFlag) {
-            if (logBuffer.size > MAX_MEMORY_BUFFER_SIZE) {
-                persistLogs()
-            }
-        } else {
-            if (logBuffer.size > MAX_PERSISTED_BUFFER_SIZE) {
-                purgeOldestLogs()
+        synchronized(lock) {
+             val radarLog = RadarLog(level, message, type, createdAt)
+            logBuffer.put(radarLog)
+            if (persistentLogFeatureFlag) {
+                if (logBuffer.size > MAX_MEMORY_BUFFER_SIZE) {
+                    persistLogs()
+                }
+            } else {
+                if (logBuffer.size > MAX_PERSISTED_BUFFER_SIZE) {
+                    purgeOldestLogs()
+                }
             }
         }
     }
 
 
     override fun persistLogs() {
-        if (persistentLogFeatureFlag) {
-            if (logBuffer.size > 0) {
-                writeToFileStorage(logBuffer)
-                logBuffer.clear()
+        synchronized(lock) {
+            if (persistentLogFeatureFlag) {
+                if (logBuffer.size > 0) {
+                    writeToFileStorage(logBuffer)
+                    logBuffer.clear()
+                }
             }
         }
     }
