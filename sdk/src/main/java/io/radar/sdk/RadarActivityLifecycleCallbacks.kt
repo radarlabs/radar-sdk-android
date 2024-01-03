@@ -93,6 +93,7 @@ internal class RadarActivityLifecycleCallbacks(
         foreground = count > 0
 
         updatePermissionsDenied(activity)
+        Radar.logResignActive()
     }
 
     override fun onActivityStarted(activity: Activity) {
@@ -101,6 +102,7 @@ internal class RadarActivityLifecycleCallbacks(
 
     override fun onActivityStopped(activity: Activity) {
         updatePermissionsDenied(activity)
+        Radar.logEnterBackground()
     }
 
     override fun onActivityDestroyed(activity: Activity) {
@@ -114,4 +116,5 @@ internal class RadarActivityLifecycleCallbacks(
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         updatePermissionsDenied(activity)
     }
+
 }
