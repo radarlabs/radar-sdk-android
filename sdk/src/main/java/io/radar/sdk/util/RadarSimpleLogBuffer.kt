@@ -33,7 +33,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
 
     private val timer = Executors.newScheduledThreadPool(1)
 
-    private val inMemoryLogBuffer = LinkedBlockingDeque<RadarLog>()
+    private val logBuffer = LinkedBlockingDeque<RadarLog>()
 
     init {
         persistentLogFeatureFlag = RadarSettings.getFeatureSettings(context).useLogPersistence
@@ -55,13 +55,13 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
         createdAt: Date
     ) {
         val radarLog = RadarLog(level, message, type, createdAt)
-        inMemoryLogBuffer.put(radarLog)
+        logBuffer.put(radarLog)
         if (persistentLogFeatureFlag) {
-            if (inMemoryLogBuffer.size > MAX_MEMORY_BUFFER_SIZE) {
+            if (logBuffer.size > MAX_MEMORY_BUFFER_SIZE) {
                 persistLogs()
             }
         } else {
-            if (inMemoryLogBuffer.size > MAX_PERSISTED_BUFFER_SIZE) {
+            if (logBuffer.size > MAX_PERSISTED_BUFFER_SIZE) {
                 purgeOldestLogs()
             }
         }
@@ -70,10 +70,10 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
 
     override fun persistLogs() {
         if (persistentLogFeatureFlag) {
-            if (inMemoryLogBuffer.size > 0) {
-                writeToFileStorage(inMemoryLogBuffer)
+            if (logBuffer.size > 0) {
+                writeToFileStorage(logBuffer)
                 purgeOldestLogs()
-                inMemoryLogBuffer.clear()
+                logBuffer.clear()
             }
         }
     }
@@ -121,7 +121,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
     }
 
 
-    override fun flushableLogs(): Flushable<RadarLog> {
+    override fun getFlushableLogs(): Flushable<RadarLog> {
 
         val logs = mutableListOf<RadarLog>()
         if (persistentLogFeatureFlag) {
@@ -132,7 +132,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
                 files?.get(i)?.delete()
             }
         } else {
-            inMemoryLogBuffer.drainTo(logs)
+            logBuffer.drainTo(logs)
         }
         return object : Flushable<RadarLog> {
 
@@ -149,7 +149,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
                    } else {
                        logs.reverse()
                        logs.forEach {
-                           if (!inMemoryLogBuffer.offerFirst(it)) {
+                           if (!logBuffer.offerFirst(it)) {
                                purgeOldestLogs()
                            }
                        }
@@ -183,7 +183,7 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
             }
         } else {
             val oldLogs = mutableListOf<RadarLog>()
-            inMemoryLogBuffer.drainTo(oldLogs, PURGE_AMOUNT)
+            logBuffer.drainTo(oldLogs, PURGE_AMOUNT)
             write(Radar.RadarLogLevel.DEBUG, null, KEY_PURGED_LOG_LINE)
         }
     }

@@ -28,7 +28,7 @@ class RadarSimpleLogBufferTest {
 
 
         // Preconditions
-        var flushable = logBuffer.flushableLogs()
+        var flushable = logBuffer.getFlushableLogs()
         assertTrue(flushable.get().isEmpty())
 
         // Log max number of logs before purging
@@ -44,7 +44,7 @@ class RadarSimpleLogBufferTest {
         val afterLog = Date()
 
         // Verify the log contents
-        flushable = logBuffer.flushableLogs()
+        flushable = logBuffer.getFlushableLogs()
         var contents = flushable.get()
         assertEquals(250, contents.size)
         contents.forEachIndexed { index, radarLog ->
@@ -55,7 +55,7 @@ class RadarSimpleLogBufferTest {
         // Put logs back
         flushable.onFlush(false)
         // Verify the order was preserved
-        flushable = logBuffer.flushableLogs()
+        flushable = logBuffer.getFlushableLogs()
         contents = flushable.get()
         assertEquals(250, logs.size)
         assertEquals(250, contents.size)
@@ -74,7 +74,7 @@ class RadarSimpleLogBufferTest {
             logs += level to message
         }
 
-        flushable = logBuffer.flushableLogs()
+        flushable = logBuffer.getFlushableLogs()
         contents = flushable.get()
         assertEquals(500, logs.size)
         assertEquals(500, contents.size)
@@ -83,7 +83,7 @@ class RadarSimpleLogBufferTest {
         val level = Radar.RadarLogLevel.DEBUG
         var message = UUID.randomUUID().toString()
         logBuffer.write(level, null, message)
-        flushable = logBuffer.flushableLogs()
+        flushable = logBuffer.getFlushableLogs()
         contents = flushable.get()
         // There should be 252 logs remaining - the extras are from the purge message and the log that was being written.
         assertEquals(252, contents.size)
@@ -99,7 +99,7 @@ class RadarSimpleLogBufferTest {
         message = UUID.randomUUID().toString()
         logBuffer.write(Radar.RadarLogLevel.DEBUG, Radar.RadarLogType.SDK_CALL, message)
         flushable.onFlush(true)
-        flushable = logBuffer.flushableLogs()
+        flushable = logBuffer.getFlushableLogs()
         contents = flushable.get()
         assertEquals(1, contents.size)
         assertEquals(message, contents[0].message)

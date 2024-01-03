@@ -28,7 +28,7 @@ internal interface RadarLogBuffer {
      *
      * @return a [Flushable] containing all stored logs
      */
-    fun flushableLogs(): Flushable<RadarLog>
+    fun getFlushableLogs(): Flushable<RadarLog>
 
     /**
      * Persist the logs to disk

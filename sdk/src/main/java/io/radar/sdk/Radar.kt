@@ -3124,7 +3124,7 @@ object Radar {
             return
         }
 
-        val flushable = logBuffer.flushableLogs()
+        val flushable = logBuffer.getFlushableLogs()
         val logs = flushable.get()
         if (logs.isNotEmpty()) {
             apiClient.log(logs, object : RadarApiClient.RadarLogCallback {
