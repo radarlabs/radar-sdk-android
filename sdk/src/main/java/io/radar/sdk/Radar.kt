@@ -3096,22 +3096,22 @@ object Radar {
      Log application resigning active.
     */
     @JvmStatic
-    fun logResignActive() {
+    fun logResigningActive() {
         if (!initialized) {
             return
         }
-        this.logger.logResignActive()
+        this.logger.logResigningActive()
     }
 
     /**
     Log application entering background and flush logs in memory buffer into persistent buffer.
     */
      @JvmStatic
-    fun logEnterBackground() {
+    fun logBackgrounding() {
         if (!initialized) {
             return
         }
-        this.logger.logEnterBackground()
+        this.logger.logBackgrounding()
         this.logBuffer.persistLogs()
     }
 

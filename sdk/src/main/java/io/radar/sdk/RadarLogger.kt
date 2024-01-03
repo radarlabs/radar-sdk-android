@@ -92,13 +92,13 @@ internal class RadarLogger(
         return batteryPct
     }
 
-    fun logEnterBackground() {
+    fun logBackgrounding() {
         val batteryLevel = this.getBatteryLevel()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         this.i("App entering background | at ${dateFormat.format(Date())} | with ${batteryLevel * 100}% battery")
     }
 
-     fun logResignActive() {
+     fun logResigningActive() {
         val batteryLevel = this.getBatteryLevel()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         this.i("App resigning active | at ${dateFormat.format(Date())} | with ${batteryLevel * 100}% battery")

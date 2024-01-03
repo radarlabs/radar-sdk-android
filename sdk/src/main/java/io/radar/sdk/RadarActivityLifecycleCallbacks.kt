@@ -10,7 +10,6 @@ import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import io.radar.sdk.Radar.RadarStatus
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
@@ -93,7 +92,7 @@ internal class RadarActivityLifecycleCallbacks(
         foreground = count > 0
 
         updatePermissionsDenied(activity)
-        Radar.logResignActive()
+        Radar.logResigningActive()
     }
 
     override fun onActivityStarted(activity: Activity) {
@@ -102,7 +101,7 @@ internal class RadarActivityLifecycleCallbacks(
 
     override fun onActivityStopped(activity: Activity) {
         updatePermissionsDenied(activity)
-        Radar.logEnterBackground()
+        Radar.logBackgrounding()
     }
 
     override fun onActivityDestroyed(activity: Activity) {
