@@ -45,7 +45,7 @@ class RadarFileStorageTest {
             val number2 = file2.name.toLongOrNull() ?: 0L
             number1.compareTo(number2)
         }
-        val files = radarFileStorage.allFilesInDirectory("testDir", comparator)
+        val files = radarFileStorage.sortedFilesInDirectory("testDir", comparator)
         assertNotNull(files)
         assertEquals(files?.size, 2)
         assertEquals(files?.get(0)?.name ?: "" , "456")

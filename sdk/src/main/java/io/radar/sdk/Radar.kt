@@ -3124,7 +3124,7 @@ object Radar {
             return
         }
 
-        val flushable = logBuffer.getFlushableLogsStash()
+        val flushable = logBuffer.flushableLogs()
         val logs = flushable.get()
         if (logs.isNotEmpty()) {
             apiClient.log(logs, object : RadarApiClient.RadarLogCallback {
@@ -3408,7 +3408,7 @@ object Radar {
     internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?, createdAt: Date = Date()) {
         receiver?.onLog(context, message)
         if (isTestKey()) {
-            logBuffer.write(level, message, type, createdAt)
+            logBuffer.write(level, type, message, createdAt)
         }
     }
 

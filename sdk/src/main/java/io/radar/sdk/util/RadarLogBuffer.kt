@@ -15,7 +15,12 @@ internal interface RadarLogBuffer {
      * @param[level] log level
      * @param[message] log message
      */
-    fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType?, createdAt: Date = Date())
+    fun write(
+        level: Radar.RadarLogLevel,
+        type: Radar.RadarLogType?,
+        message: String,
+        createdAt: Date = Date()
+    )
 
     /**
      * Creates a stash of the logs currently in the buffer and returns them as a [Flushable] so that a successful
@@ -23,7 +28,7 @@ internal interface RadarLogBuffer {
      *
      * @return a [Flushable] containing all stored logs
      */
-    fun getFlushableLogsStash(): Flushable<RadarLog>
+    fun flushableLogs(): Flushable<RadarLog>
 
     /**
      * Persist the logs to disk

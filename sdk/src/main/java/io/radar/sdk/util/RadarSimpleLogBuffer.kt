@@ -13,58 +13,56 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /**
- * Log Buffer implementation that persist.
+ * Log Buffer implementation that is backed by an in-memory buffer and files on disk.
  */
 internal class
-RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
+RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
 
     private companion object {
 
-        const val MAXIMUM_MEMORY_CAPACITY = 200
-
-        const val MAXIMUM_CAPACITY = 500
-        const val HALF_CAPACITY = MAXIMUM_CAPACITY / 2
+        const val MAX_MEMORY_BUFFER_SIZE = 200
+        const val MAX_PERSISTED_BUFFER_SIZE = 500
+        const val PURGE_AMOUNT = 250
         const val logFileDir = "radar_logs"
         var fileCounter = 0
+        const val KEY_PURGED_LOG_LINE = "----- purged oldest logs -----"
 
     }
     private var persistentLogFeatureFlag = false
 
 
-    private val scheduler = Executors.newScheduledThreadPool(1)
+    private val timer = Executors.newScheduledThreadPool(1)
+
+    private val inMemoryLogBuffer = LinkedBlockingDeque<RadarLog>()
 
     init {
-        scheduler.scheduleAtFixedRate({ persistLogs() }, 30, 30, TimeUnit.SECONDS)
+        persistentLogFeatureFlag = RadarSettings.getFeatureSettings(context).useLogPersistence
         val file = File(context.filesDir, logFileDir)
         if (!file.exists()) {
             file.mkdir()
         }
-        persistentLogFeatureFlag = RadarSettings.getFeatureSettings(context).useLogPersistence
+        timer.scheduleAtFixedRate({ persistLogs() }, 20, 20, TimeUnit.SECONDS)
     }
-
-    private val list = LinkedBlockingDeque<RadarLog>(MAXIMUM_CAPACITY)
 
     override fun setPersistentLogFeatureFlag(persistentLogFeatureFlag: Boolean){
        this.persistentLogFeatureFlag = persistentLogFeatureFlag
     }
 
-    override fun write(level: Radar.RadarLogLevel, message: String, type: Radar.RadarLogType?, createdAt: Date) {
+    override fun write(
+        level: Radar.RadarLogLevel,
+        type: Radar.RadarLogType?,
+        message: String,
+        createdAt: Date
+    ) {
+        val radarLog = RadarLog(level, message, type, createdAt)
+        inMemoryLogBuffer.put(radarLog)
         if (persistentLogFeatureFlag) {
-            if (!list.offer(RadarLog(level, message, type, createdAt))) {
+            if (inMemoryLogBuffer.size > MAX_MEMORY_BUFFER_SIZE) {
                 persistLogs()
-                list.put(RadarLog(level, message, type, createdAt))
-            // The size of the buffer is larger than the max allowed number of logs that should be
-            // allowed on the buffer in the new implementation to not mess with the old implementation.
-            // TODO: Remove once throttling is done.
-            } else {
-                if (list.size > MAXIMUM_MEMORY_CAPACITY) {
-                    persistLogs()
-                }
             }
         } else {
-            if (!list.offer(RadarLog(level, message, type, createdAt))) {
-                oldPurgeOldestLogs()
-                list.put(RadarLog(level, message, type, createdAt))
+            if (inMemoryLogBuffer.size > MAX_PERSISTED_BUFFER_SIZE) {
+                purgeOldestLogs()
             }
         }
     }
@@ -72,29 +70,69 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
 
     override fun persistLogs() {
         if (persistentLogFeatureFlag) {
-            if(list.size > 0) {
-                writeLogsToDisk(list)
-                list.clear()
+            if (inMemoryLogBuffer.size > 0) {
+                writeToFileStorage(inMemoryLogBuffer)
+                purgeOldestLogs()
+                inMemoryLogBuffer.clear()
             }
+        }
+    }
 
-            purgeOldestLogs()
-            
+    private fun getLogFilesInTimeOrder(): Array<File>? {
+        val compareTimeStamps = Comparator<File> { file1, file2 ->
+            val number1 = file1.name.replace("_","").toLongOrNull() ?: 0L
+            val number2 = file2.name.replace("_","").toLongOrNull() ?: 0L
+            number1.compareTo(number2)
+        }
+
+        return RadarFileStorage(context).sortedFilesInDirectory(logFileDir, compareTimeStamps)
+    }
+
+    /**
+     * Gets logs from disk.
+     */
+    private fun readFromFileStorage(): LinkedBlockingDeque<RadarLog> {
+
+        val files = getLogFilesInTimeOrder()
+        val logs = LinkedBlockingDeque<RadarLog>()
+        if (files.isNullOrEmpty()) {
+            return logs
+        }
+
+        for (file in files) {
+            val jsonString = RadarFileStorage(context).readFileAtPath(logFileDir, file.name)
+            val log = RadarLog.fromJson(JSONObject(jsonString))
+            if (log != null) {
+                logs.add(log)
+            }
+        }
+        return logs
+    }
+
+    /**
+     * Writes logs to disk.
+     */
+    private fun writeToFileStorage(logs: Collection<RadarLog>) {
+        for (log in logs) {
+            val counterString = String.format("%04d", fileCounter++)
+            val fileName = "${log.createdAt.time / 1000}_${counterString}"
+            RadarFileStorage(context).writeData(logFileDir, fileName, log.toJson().toString())
         }
     }
 
 
-    override fun getFlushableLogsStash(): Flushable<RadarLog> {
-       
-        persistLogs()
+    override fun flushableLogs(): Flushable<RadarLog> {
+
         val logs = mutableListOf<RadarLog>()
-        if(persistentLogFeatureFlag){
-            getLogsFromDisk().drainTo(logs)
-            val files = RadarFileStorage(context).allFilesInDirectory(logFileDir, comparator)
+        if (persistentLogFeatureFlag) {
+            persistLogs()
+            readFromFileStorage().drainTo(logs)
+            val files = getLogFilesInTimeOrder()
             for (i in 0 until min(logs.size,files?.size ?:0)){
                 files?.get(i)?.delete()
             }
         } else {
-            list.drainTo(logs)
+            inMemoryLogBuffer.drainTo(logs)
         }
         return object : Flushable<RadarLog> {
 
@@ -106,90 +144,48 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer{
                 // clear the logs from disk
                 if (!success) {
                    if (persistentLogFeatureFlag) {
-                        writeLogsToDisk(logs)
+                        writeToFileStorage(logs)
                         purgeOldestLogs()
-                    } else {
-                        logs.reverse()
-                        logs.forEach {
-                            if (!list.offerFirst(it)) {
-                                oldPurgeOldestLogs()
-                            }
-                        }
-                    }
+                   } else {
+                       logs.reverse()
+                       logs.forEach {
+                           if (!inMemoryLogBuffer.offerFirst(it)) {
+                               purgeOldestLogs()
+                           }
+                       }
+                   }
                 }
             }
-
         }
-        
     }
 
-
-
-    private fun oldPurgeOldestLogs() {
-        val oldLogs = mutableListOf<RadarLog>()
-        list.drainTo(oldLogs, HALF_CAPACITY)
-       if (!persistentLogFeatureFlag) {
-           write(Radar.RadarLogLevel.DEBUG, "----- purged oldest logs -----", null)
-       }
-    }
 
     /**
-     * Clears oldest logs and adds a "purged" log line
+     * Clears oldest logs and adds a "purged" log line.
      */
     private fun purgeOldestLogs() {
-        var files = RadarFileStorage(context).allFilesInDirectory(logFileDir, comparator)
-        if (files.isNullOrEmpty()) {
-            return 
-        }
-        var printedPurgedLogs = false
-        while(files?.size ?: 0 > MAXIMUM_CAPACITY){
-            val numberToPurge = min(HALF_CAPACITY,files?.size ?: 0)
-            for(i in 0 until numberToPurge){
-                files?.get(i)?.delete()
+        if (persistentLogFeatureFlag) {
+            var files = getLogFilesInTimeOrder()
+            if (files.isNullOrEmpty()) {
+                return
             }
-            if(!printedPurgedLogs){
-                writeLogsToDisk(listOf(RadarLog(Radar.RadarLogLevel.DEBUG, "----- purged oldest logs -----", null)))
-                printedPurgedLogs = true
+            var printedPurgedLogs = false
+            while (files?.size ?: 0 > MAX_PERSISTED_BUFFER_SIZE) {
+                val numberToPurge = min(PURGE_AMOUNT,files?.size ?: 0)
+                for (i in 0 until numberToPurge) {
+                    files?.get(i)?.delete()
+                }
+                if (!printedPurgedLogs) {
+                    writeToFileStorage(listOf(RadarLog(Radar.RadarLogLevel.DEBUG, KEY_PURGED_LOG_LINE, null)))
+                    printedPurgedLogs = true
+                }
+                files = getLogFilesInTimeOrder()
             }
-            files = RadarFileStorage(context).allFilesInDirectory(logFileDir, comparator)
+        } else {
+            val oldLogs = mutableListOf<RadarLog>()
+            inMemoryLogBuffer.drainTo(oldLogs, PURGE_AMOUNT)
+            write(Radar.RadarLogLevel.DEBUG, null, KEY_PURGED_LOG_LINE)
         }
     }
 
-    /**
-     * Gets logs from disk
-     */
-    private fun getLogsFromDisk(): LinkedBlockingDeque<RadarLog> {
-
-        val files = RadarFileStorage(context).allFilesInDirectory(logFileDir, comparator)
-        val logs = LinkedBlockingDeque<RadarLog>()
-        if (files.isNullOrEmpty()) {
-            return logs
-        }
-
-        for (file in files) {
-            val jsonString = RadarFileStorage(context).readFileAtPath(logFileDir, file.name)
-            val log = RadarLog.fromJson(JSONObject(jsonString))
-            if(log != null){
-                logs.add(log)
-            }
-        }
-        return logs
-    }
-
-    /**
-    * Writes logs to disk
-    */
-    private fun writeLogsToDisk(logs: Collection<RadarLog>) {
-        for (log in logs) {
-            val counterString = String.format("%04d", fileCounter++)
-            val fileName = "${log.createdAt.time / 1000}_${counterString}"
-            RadarFileStorage(context).writeData(logFileDir, fileName, log.toJson().toString())
-        }
-    }
-
-    private val comparator = Comparator<File> { file1, file2 ->
-            val number1 = file1.name.replace("_","").toLongOrNull() ?: 0L
-            val number2 = file2.name.replace("_","").toLongOrNull() ?: 0L
-            number1.compareTo(number2)
-        }
 }

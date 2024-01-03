@@ -48,7 +48,7 @@ class RadarFileStorage(private val context: Context) {
         return false
     }
 
-    fun allFilesInDirectory(directoryPath: String, comparator: Comparator<File>): Array<File>? {
+    fun sortedFilesInDirectory(directoryPath: String, comparator: Comparator<File>): Array<File>? {
         try {
             val directory = File(context.filesDir, directoryPath)
             var files = directory.listFiles()
