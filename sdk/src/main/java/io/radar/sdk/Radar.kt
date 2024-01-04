@@ -474,7 +474,7 @@ object Radar {
         }
 
         if (!this::logBuffer.isInitialized) {
-            this.logBuffer = RadarSimpleLogBuffer()
+            this.logBuffer = RadarSimpleLogBuffer(this.context)
         }
 
         if (!this::replayBuffer.isInitialized) {
@@ -546,6 +546,10 @@ object Radar {
                 }
             }
         })
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            this.logger.logPastTermination()
+        }
 
         this.initialized = true
 
@@ -3089,6 +3093,29 @@ object Radar {
     }
 
     /**
+     Log application resigning active.
+    */
+    @JvmStatic
+    fun logResigningActive() {
+        if (!initialized) {
+            return
+        }
+        this.logger.logResigningActive()
+    }
+
+    /**
+    Log application entering background and flush logs in memory buffer into persistent buffer.
+    */
+     @JvmStatic
+    fun logBackgrounding() {
+        if (!initialized) {
+            return
+        }
+        this.logger.logBackgrounding()
+        this.logBuffer.persistLogs()
+    }
+
+    /**
      * Flushes debug logs to the server.
      */
     @JvmStatic
@@ -3097,7 +3124,7 @@ object Radar {
             return
         }
 
-        val flushable = logBuffer.getFlushableLogsStash()
+        val flushable = logBuffer.getFlushableLogs()
         val logs = flushable.get()
         if (logs.isNotEmpty()) {
             apiClient.log(logs, object : RadarApiClient.RadarLogCallback {
@@ -3378,11 +3405,15 @@ object Radar {
         logger.e("📍️ Radar error received | status = $status", RadarLogType.SDK_ERROR)
     }
 
-    internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?) {
+    internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?, createdAt: Date = Date()) {
         receiver?.onLog(context, message)
         if (isTestKey()) {
-            logBuffer.write(level, message, type)
+            logBuffer.write(level, type, message, createdAt)
         }
+    }
+
+    internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {
+        this.logBuffer.setPersistentLogFeatureFlag(enabled)
     }
 
 }

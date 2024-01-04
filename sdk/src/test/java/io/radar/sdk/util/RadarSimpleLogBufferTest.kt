@@ -1,6 +1,8 @@
 package io.radar.sdk.util
 
+import android.content.Context
 import android.os.Build
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.Radar
 import io.radar.sdk.matchers.RangeMatcher.Companion.isBetween
@@ -20,28 +22,31 @@ class RadarSimpleLogBufferTest {
     fun testLifecycle() {
 
         // Create the log buffer
-        val logBuffer = RadarSimpleLogBuffer()
+        val context: Context = ApplicationProvider.getApplicationContext()
+        val logBuffer = RadarSimpleLogBuffer(context)
+        logBuffer.setPersistentLogFeatureFlag(true)
+
 
         // Preconditions
-        var flushable = logBuffer.getFlushableLogsStash()
+        var flushable = logBuffer.getFlushableLogs()
         assertTrue(flushable.get().isEmpty())
 
         // Log max number of logs before purging
         val beforeLog = Date()
         val logs = mutableListOf<Pair<Radar.RadarLogLevel, String>>()
-        repeat(500) {
+        repeat(250) {
             val level = Radar.RadarLogLevel.fromInt(it % 5)
             val message = "$it"
-            logBuffer.write(level, message, null)
+            logBuffer.write(level, null, message)
             logs += level to message
         }
-        assertEquals(500, logs.size)
+        assertEquals(250, logs.size)
         val afterLog = Date()
 
         // Verify the log contents
-        flushable = logBuffer.getFlushableLogsStash()
+        flushable = logBuffer.getFlushableLogs()
         var contents = flushable.get()
-        assertEquals(500, contents.size)
+        assertEquals(250, contents.size)
         contents.forEachIndexed { index, radarLog ->
             assertEquals(logs[index].second, radarLog.message)
             assertEquals(logs[index].first, radarLog.level)
@@ -50,49 +55,51 @@ class RadarSimpleLogBufferTest {
         // Put logs back
         flushable.onFlush(false)
         // Verify the order was preserved
-        flushable = logBuffer.getFlushableLogsStash()
+        flushable = logBuffer.getFlushableLogs()
         contents = flushable.get()
-        assertEquals(500, logs.size)
-        assertEquals(500, contents.size)
+        assertEquals(250, logs.size)
+        assertEquals(250, contents.size)
         contents.forEachIndexed { index, radarLog ->
             assertEquals(logs[index].second, radarLog.message)
             assertEquals(logs[index].first, radarLog.level)
         }
-
-        // Log 600 more, then put flushed logs back. This will trigger a purge. The most-recent files from the flushable
+        flushable.onFlush(false)
+        // Log 250 more, then put flushed logs back. This will trigger a purge. The most-recent files from the flushable
         // contents should return to the log buffer.
-        repeat(500) {
+        repeat(250) {
             val level = Radar.RadarLogLevel.fromInt(it % 5)
-            val message = "$it"
-            logBuffer.write(level, message, null)
+            val newVal = it+250
+            val message = "$newVal"
+            logBuffer.write(level, null, message)
             logs += level to message
         }
-        flushable.onFlush(false)
-        flushable = logBuffer.getFlushableLogsStash()
+
+        flushable = logBuffer.getFlushableLogs()
         contents = flushable.get()
-        assertEquals(1000, logs.size)
-        assertEquals(1000, contents.size)
+        assertEquals(500, logs.size)
+        assertEquals(500, contents.size)
         flushable.onFlush(false)
         // One more log will cause a purge
         val level = Radar.RadarLogLevel.DEBUG
         var message = UUID.randomUUID().toString()
-        logBuffer.write(level, message, null)
-        flushable = logBuffer.getFlushableLogsStash()
+        logBuffer.write(level, null, message)
+        flushable = logBuffer.getFlushableLogs()
         contents = flushable.get()
-        // There should be 502 logs remaining - the extras are from the purge message and the log that was being written.
-        assertEquals(502, contents.size)
-        contents.take(500).forEachIndexed { index, radarLog ->
-            assertEquals(logs[index + 500].second, radarLog.message)
-            assertEquals(logs[index + 500].first, radarLog.level)
+        // There should be 252 logs remaining - the extras are from the purge message and the log that was being written.
+        assertEquals(252, contents.size)
+        contents.take(250).forEachIndexed { index, radarLog ->
+            assertEquals(logs[index + 250].second, radarLog.message)
+            assertEquals(logs[index + 250].first, radarLog.level)
         }
-        assertEquals("----- purged oldest logs -----", contents[500].message)
-        assertEquals(message, contents[501].message)
+        assertEquals(message, contents[250].message)
+        assertEquals("----- purged oldest logs -----", contents[251].message)
+
 
         // Test behavior of successful log flush
         message = UUID.randomUUID().toString()
-        logBuffer.write(Radar.RadarLogLevel.DEBUG, message, Radar.RadarLogType.SDK_CALL)
+        logBuffer.write(Radar.RadarLogLevel.DEBUG, Radar.RadarLogType.SDK_CALL, message)
         flushable.onFlush(true)
-        flushable = logBuffer.getFlushableLogsStash()
+        flushable = logBuffer.getFlushableLogs()
         contents = flushable.get()
         assertEquals(1, contents.size)
         assertEquals(message, contents[0].message)

@@ -294,6 +294,7 @@ internal object RadarSettings {
     }
 
     fun setFeatureSettings(context: Context, featureSettings: RadarFeatureSettings) {
+        Radar.setLogPersistenceFeatureFlag(featureSettings.useLogPersistence)
         val optionsJson = featureSettings.toJson().toString()
 
         getSharedPreferences(context).edit { putString(KEY_FEATURE_SETTINGS, optionsJson) }
@@ -301,7 +302,13 @@ internal object RadarSettings {
 
     fun getFeatureSettings(context: Context): RadarFeatureSettings {
         val sharedPrefFeatureSettings = getSharedPreferences(context).getString(KEY_FEATURE_SETTINGS, null)
-        Radar.logger.d("getFeatureSettings | featureSettings = $sharedPrefFeatureSettings")
+        // The log buffer singleton is initialized before the logger, but requires calling this method
+        // to obtain its feature flag. Thus we cannot call the logger yet as its not yet initialized.
+        try {
+            Radar.logger.d("getFeatureSettings | featureSettings = $sharedPrefFeatureSettings")
+        } catch (e: Exception) {
+            // Do nothing for now
+        }
         val optionsJson = sharedPrefFeatureSettings ?: return RadarFeatureSettings.default()
         return RadarFeatureSettings.fromJson(JSONObject(optionsJson))
     }
