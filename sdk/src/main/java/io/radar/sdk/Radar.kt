@@ -2278,6 +2278,8 @@ object Radar {
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
      * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[expandUnits] (Deprecated) Whether to expand units.
+     * @param[mailable] Whether to only include mailable addresses.
      * @param[callback] A callback.
      */
     @JvmStatic
@@ -2287,6 +2289,7 @@ object Radar {
         layers: Array<String>? = null,
         limit: Int? = null,
         country: String? = null,
+        expandUnits: Boolean? = null,
         mailable: Boolean? = null,
         callback: RadarGeocodeCallback
     ) {
@@ -2315,6 +2318,8 @@ object Radar {
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
      * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[expandUnits] (Deprecated) Whether to expand units.
+     * @param[mailable] Whether to only include mailable addresses
      * @param[block] A block callback.
      */
 
@@ -2324,6 +2329,7 @@ object Radar {
         layers: Array<String>? = null,
         limit: Int? = null,
         country: String? = null,
+        expandUnits: Boolean? = null,
         mailable: Boolean? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
@@ -2333,6 +2339,7 @@ object Radar {
             layers,
             limit,
             country,
+            expandUnits,
             mailable,
             object : RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
