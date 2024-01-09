@@ -2278,7 +2278,7 @@ object Radar {
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
      * @param[country] An optional country filter. A string, the unique 2-letter country code.
-     * @param[expandUnits] (Deprecated) Whether to expand units.
+     * @param[expandUnits] (Deprecated) This is always true, regardless of the value passed here.
      * @param[mailable] Whether to only include mailable addresses.
      * @param[callback] A callback.
      */
@@ -2318,7 +2318,7 @@ object Radar {
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
      * @param[country] An optional country filter. A string, the unique 2-letter country code.
-     * @param[expandUnits] (Deprecated) Whether to expand units.
+     * @param[expandUnits] (Deprecated) This is always true, regardless of the value passed here.
      * @param[mailable] Whether to only include mailable addresses
      * @param[block] A block callback.
      */
