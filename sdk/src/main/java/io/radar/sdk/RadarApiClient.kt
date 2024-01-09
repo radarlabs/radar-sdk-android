@@ -839,7 +839,7 @@ internal class RadarApiClient(
         layers: Array<String>? = null,
         limit: Int? = null,
         country: String? = null,
-        expandUnits: Boolean? = null,
+        mailable: Boolean? = null,
         callback: RadarGeocodeApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -861,8 +861,8 @@ internal class RadarApiClient(
         if (country != null) {
             queryParams.append("&country=${country}")
         }
-        if (expandUnits != null) {
-            queryParams.append("&expandUnits=${expandUnits}")
+        if (mailable != null) {
+            queryParams.append("&mailable=${mailable}")
         }
 
         val path = "v1/search/autocomplete?${queryParams}"

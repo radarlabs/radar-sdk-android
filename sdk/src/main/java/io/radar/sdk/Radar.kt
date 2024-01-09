@@ -2287,7 +2287,7 @@ object Radar {
         layers: Array<String>? = null,
         limit: Int? = null,
         country: String? = null,
-        expandUnits: Boolean? = null,
+        mailable: Boolean? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2296,7 +2296,7 @@ object Radar {
             return
         }
 
-        apiClient.autocomplete(query, near, layers, limit, country, expandUnits, object : RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.autocomplete(query, near, layers, limit, country, mailable, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2324,7 +2324,7 @@ object Radar {
         layers: Array<String>? = null,
         limit: Int? = null,
         country: String? = null,
-        expandUnits: Boolean? = null,
+        mailable: Boolean? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         autocomplete(
@@ -2333,7 +2333,7 @@ object Radar {
             layers,
             limit,
             country,
-            expandUnits,
+            mailable,
             object : RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
