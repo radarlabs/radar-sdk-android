@@ -1,5 +1,8 @@
 # Migration guides
 
+## 3.8.x to 3.9.0
+- The `Radar.autocomplete(query, near, layers, limit, country, expandUnits, callback)` method is now `Radar.autocomplete(query, near, layers, limit, country, expandUnits, mailable, callback)`.
+
 ## 3.6.x to 3.7.0
 - Custom events have been renamed to conversions.
   - `Radar.sendEvent(customType, metadata, callback)` is now `Radar.logConversion(name, metadata, callback)`.
