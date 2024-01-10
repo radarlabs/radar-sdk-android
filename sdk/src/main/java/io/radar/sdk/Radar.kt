@@ -2278,6 +2278,8 @@ object Radar {
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
      * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[expandUnits] (Deprecated) This is always true, regardless of the value passed here.
+     * @param[mailable] Whether to only include mailable addresses.
      * @param[callback] A callback.
      */
     @JvmStatic
@@ -2288,6 +2290,7 @@ object Radar {
         limit: Int? = null,
         country: String? = null,
         expandUnits: Boolean? = null,
+        mailable: Boolean? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2296,7 +2299,7 @@ object Radar {
             return
         }
 
-        apiClient.autocomplete(query, near, layers, limit, country, expandUnits, object : RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.autocomplete(query, near, layers, limit, country, mailable, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2315,6 +2318,8 @@ object Radar {
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
      * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[expandUnits] (Deprecated) This is always true, regardless of the value passed here.
+     * @param[mailable] Whether to only include mailable addresses
      * @param[block] A block callback.
      */
 
@@ -2325,6 +2330,7 @@ object Radar {
         limit: Int? = null,
         country: String? = null,
         expandUnits: Boolean? = null,
+        mailable: Boolean? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         autocomplete(
@@ -2334,6 +2340,7 @@ object Radar {
             limit,
             country,
             expandUnits,
+            mailable,
             object : RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
