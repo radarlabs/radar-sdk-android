@@ -2,6 +2,7 @@
 
 ## 3.8.x to 3.9.0
 - The `Radar.autocomplete(query, near, layers, limit, country, expandUnits, callback)` method is now `Radar.autocomplete(query, near, layers, limit, country, expandUnits, mailable, callback)`.
+  - `expandUnits` has been deprecated and will always be true regardless of value passed in.
 
 ## 3.6.x to 3.7.0
 - Custom events have been renamed to conversions.
