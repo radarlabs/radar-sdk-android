@@ -6,6 +6,8 @@ import android.location.Location
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
 import io.radar.sdk.model.RadarBeacon
 
 internal object RadarState {
@@ -39,7 +41,19 @@ internal object RadarState {
     private const val KEY_LAST_BEACON_UIDS = "last_beacon_uids"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
-        return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
+       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+           val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+
+            return EncryptedSharedPreferences.create(
+                "PreferencesFilename",
+                masterKeyAlias,
+                context,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } else {
+            return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
+        }
     }
 
     internal fun getLastLocation(context: Context): Location? {
