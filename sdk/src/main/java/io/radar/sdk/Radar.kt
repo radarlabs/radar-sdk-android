@@ -952,12 +952,13 @@ object Radar {
 
             return
         }
+        this.logger.i("trackVerified()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        this.verificationManager.trackVerified(callback)
+        this.verificationManager.trackVerified(false, callback)
     }
 
     /**
@@ -996,12 +997,13 @@ object Radar {
 
             return
         }
+        this.logger.i("trackVerifiedToken()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        this.verificationManager.trackVerifiedToken(callback)
+        this.verificationManager.trackVerifiedToken(false, callback)
     }
 
     /**
@@ -1030,20 +1032,23 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
-     * @param[block] A block callback.
+     * @param[token] A boolean indicating whether to return a JSON Web Token (JWT). If `true`, tokens are delivered to your `RadarVerifiedReceiver`. If `false`, location updates are delivered to your `RadarReceiver`.
+     * @param[interval] The interval in seconds between each location update.
+     * @param[beacons] A boolean indicating whether to range beacons.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun startTrackingVerified(token: Boolean) {
+    fun startTrackingVerified(token: Boolean, interval: Int, beacons: Boolean) {
         if (!initialized) {
             return
         }
+        this.logger.i("startTrackingVerified()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        this.verificationManager.startTrackingVerified(token)
+        this.verificationManager.startTrackingVerified(token, interval, beacons)
     }
 
     /**
