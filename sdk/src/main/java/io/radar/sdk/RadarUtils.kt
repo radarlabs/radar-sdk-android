@@ -15,6 +15,7 @@ import java.security.MessageDigest
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.abs
 
 internal object RadarUtils {
 
@@ -90,10 +91,16 @@ internal object RadarUtils {
     }
 
     internal fun valid(location: Location): Boolean {
-        val latitudeValid = location.latitude != 0.0 && location.latitude > -90.0 && location.latitude < 90.0
-        val longitudeValid = location.longitude != 0.0 && location.longitude > -180.0 && location.longitude < 180.0
+        val latitudeValid = !isWithinDegreeEpsilon(location.latitude, 0.0) && location.latitude > -90.0 && location.latitude < 90.0
+        val longitudeValid = !isWithinDegreeEpsilon(location.longitude, 0.0) && location.longitude > -180.0 && location.longitude < 180.0
         val accuracyValid = location.accuracy > 0f
         return latitudeValid && longitudeValid && accuracyValid
+    }
+
+    private const val DEGREE_EPSILON = 0.00000001
+
+    private fun isWithinDegreeEpsilon(firstValue: Double, secondValue: Double): Boolean {
+        return abs(firstValue - secondValue) < DEGREE_EPSILON;
     }
 
     // based on https://github.com/flutter/plugins/tree/master/packages/device_info/device_info
