@@ -59,6 +59,9 @@ class RadarGeofence(
         private const val TYPE_POLYGON = "polygon"
         private const val TYPE_ISOCHRONE = "isochrone"
 
+        private const val TYPE_GEOMETRY_CIRCLE = "Circle"
+        private const val TYPE_GEOMETRY_POLYGON = "Polygon"
+
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarGeofence? {
             if (obj == null) {
@@ -132,6 +135,19 @@ class RadarGeofence(
             }
             return arr
         }
+
+        @JvmStatic
+        private fun toJson(coordinates: Array<RadarCoordinate> ?): JSONArray? {
+            if (coordinates == null) {
+                return null
+            }
+
+            val arr = JSONArray()
+            coordinates.forEach { coordinate ->
+                arr.put(arrayOf(coordinate.longitude, coordinate.latitude))
+            }
+            return arr
+        }
     }
 
     fun toJson(): JSONObject {
@@ -146,10 +162,17 @@ class RadarGeofence(
                 is RadarCircleGeometry -> {
                     obj.putOpt(FIELD_GEOMETRY_CENTER, geometry.center.toJson())
                     obj.putOpt(FIELD_GEOMETRY_RADIUS, geometry.radius)
+                    obj.putOpt(FIELD_TYPE, TYPE_GEOMETRY_CIRCLE)
                 }
                 is RadarPolygonGeometry -> {
                     obj.putOpt(FIELD_GEOMETRY_CENTER, geometry.center.toJson())
                     obj.putOpt(FIELD_GEOMETRY_RADIUS, geometry.radius)
+                    /* Nest coordinate array; Per GeoJSON spec: for type "Polygon", the
+                     "coordinates" member must be an array of LinearRing coordinate arrays. */
+                    val geometryCoordinates = JSONArray()
+                    geometryCoordinates.put(toJson(geometry.coordinates))
+                    obj.putOpt(FIELD_COORDINATES, geometryCoordinates)
+                    obj.putOpt(FIELD_TYPE, TYPE_GEOMETRY_POLYGON)
                 }
             }
         }
