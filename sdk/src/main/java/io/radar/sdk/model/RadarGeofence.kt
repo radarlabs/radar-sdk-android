@@ -144,7 +144,10 @@ class RadarGeofence(
 
             val arr = JSONArray()
             coordinates.forEach { coordinate ->
-                arr.put(arrayOf(coordinate.longitude, coordinate.latitude))
+                val coordinateArr = JSONArray()
+                coordinateArr.put(coordinate.longitude)
+                coordinateArr.put(coordinate.latitude)
+                arr.put(coordinateArr)
             }
             return arr
         }
