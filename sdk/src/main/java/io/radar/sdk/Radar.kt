@@ -474,7 +474,7 @@ object Radar {
         }
 
         if (!this::logBuffer.isInitialized) {
-            this.logBuffer = RadarSimpleLogBuffer()
+            this.logBuffer = RadarSimpleLogBuffer(this.context)
         }
 
         if (!this::replayBuffer.isInitialized) {
@@ -546,6 +546,10 @@ object Radar {
                 }
             }
         })
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            this.logger.logPastTermination()
+        }
 
         this.initialized = true
 
@@ -1292,6 +1296,23 @@ object Radar {
 
         RadarSettings.setForegroundService(context, options)
     }
+
+    /**
+     * Settings for the all notifications.
+     *
+     * @see [](https://radar.com/documentation/sdk)
+     *
+     * @param[options] Notifications options
+     */
+    @JvmStatic
+    fun setNotificationOptions(options: RadarNotificationOptions) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setNotificationOptions(context, options)
+    }
+
 
     /**
      * Sets a receiver for client-side delivery of events, location updates, and debug logs.
@@ -2225,6 +2246,8 @@ object Radar {
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
      * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[expandUnits] (Deprecated) This is always true, regardless of the value passed here.
+     * @param[mailable] Whether to only include mailable addresses.
      * @param[callback] A callback.
      */
     @JvmStatic
@@ -2235,6 +2258,7 @@ object Radar {
         limit: Int? = null,
         country: String? = null,
         expandUnits: Boolean? = null,
+        mailable: Boolean? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2243,7 +2267,7 @@ object Radar {
             return
         }
 
-        apiClient.autocomplete(query, near, layers, limit, country, expandUnits, object : RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.autocomplete(query, near, layers, limit, country, mailable, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2262,6 +2286,8 @@ object Radar {
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
      * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[expandUnits] (Deprecated) This is always true, regardless of the value passed here.
+     * @param[mailable] Whether to only include mailable addresses
      * @param[block] A block callback.
      */
 
@@ -2272,6 +2298,7 @@ object Radar {
         limit: Int? = null,
         country: String? = null,
         expandUnits: Boolean? = null,
+        mailable: Boolean? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         autocomplete(
@@ -2281,6 +2308,7 @@ object Radar {
             limit,
             country,
             expandUnits,
+            mailable,
             object : RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
@@ -3040,6 +3068,29 @@ object Radar {
     }
 
     /**
+     Log application resigning active.
+    */
+    @JvmStatic
+    fun logResigningActive() {
+        if (!initialized) {
+            return
+        }
+        this.logger.logResigningActive()
+    }
+
+    /**
+    Log application entering background and flush logs in memory buffer into persistent buffer.
+    */
+     @JvmStatic
+    fun logBackgrounding() {
+        if (!initialized) {
+            return
+        }
+        this.logger.logBackgrounding()
+        this.logBuffer.persistLogs()
+    }
+
+    /**
      * Flushes debug logs to the server.
      */
     @JvmStatic
@@ -3048,7 +3099,7 @@ object Radar {
             return
         }
 
-        val flushable = logBuffer.getFlushableLogsStash()
+        val flushable = logBuffer.getFlushableLogs()
         val logs = flushable.get()
         if (logs.isNotEmpty()) {
             apiClient.log(logs, object : RadarApiClient.RadarLogCallback {
@@ -3329,10 +3380,10 @@ object Radar {
         logger.e("📍️ Radar error received | status = $status", RadarLogType.SDK_ERROR)
     }
 
-    internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?) {
+    internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?, createdAt: Date = Date()) {
         receiver?.onLog(context, message)
         if (isTestKey()) {
-            logBuffer.write(level, message, type)
+            logBuffer.write(level, type, message, createdAt)
         }
     }
 
@@ -3340,6 +3391,10 @@ object Radar {
         verifiedReceiver?.onTokenUpdated(context, token)
 
         logger.i("📍️ Radar token updated | token = $token")
+    }
+    
+    internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {
+        this.logBuffer.setPersistentLogFeatureFlag(enabled)
     }
 
 }

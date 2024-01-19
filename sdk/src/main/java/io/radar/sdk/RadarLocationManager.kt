@@ -530,8 +530,10 @@ internal class RadarLocationManager(
                 return
             }
 
-            if (lastSyncInterval < options.desiredSyncInterval) {
-                logger.d("Skipping sync: desired sync interval | desiredSyncInterval = ${options.desiredSyncInterval}; lastSyncInterval = $lastSyncInterval")
+            // We add the 0.1 second buffer to account for the fact that the timer may fire slightly before the desired interval
+            val lastSyncIntervalWithBuffer = lastSyncInterval + 0.1
+            if (lastSyncIntervalWithBuffer < options.desiredSyncInterval) {
+                logger.d("Skipping sync: desired sync interval | desiredSyncInterval = ${options.desiredSyncInterval}; lastSyncInterval = ${lastSyncIntervalWithBuffer}")
 
                 return
             }
@@ -654,6 +656,8 @@ internal class RadarLocationManager(
                         .putExtra("title", foregroundService.title)
                         .putExtra("text", foregroundService.text)
                         .putExtra("icon", foregroundService.icon)
+                        .putExtra("iconString", foregroundService.iconString)
+                        .putExtra("iconColor", foregroundService.iconColor)
                         .putExtra("activity", foregroundService.activity)
                     logger.d("Starting foreground service with intent | intent = $intent")
                     context.applicationContext.startForegroundService(intent)

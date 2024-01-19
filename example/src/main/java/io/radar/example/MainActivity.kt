@@ -119,6 +119,28 @@ class MainActivity : AppCompatActivity() {
             origin,
             arrayOf("locality"),
             10,
+            "US",
+            true,
+        ) { status, addresses ->
+            Log.v("example", "Autocomplete: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
+        }
+
+        Radar.autocomplete(
+            "brooklyn",
+            origin,
+            arrayOf("locality"),
+            10,
+            "US",
+            mailable = true
+        ) { status, addresses ->
+            Log.v("example", "Autocomplete: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
+        }
+
+        Radar.autocomplete(
+            "brooklyn",
+            origin,
+            arrayOf("locality"),
+            10,
             "US"
         ) { status, addresses ->
             Log.v("example", "Autocomplete: status = $status; address = ${addresses?.get(0)?.formattedAddress}")

@@ -306,8 +306,20 @@ internal class RadarVerificationManager(
 
             block(null, integrityException)
 
+            return;
+        }
+
+        val nowSeconds = System.currentTimeMillis() / 1000
+        val warmUpProvider = !this::standardIntegrityTokenProvider.isInitialized
+                || this.lastWarmUpTimestampSeconds == 0L
+                || (nowSeconds - this.lastWarmUpTimestampSeconds) > WARM_UP_WINDOW_SECONDS;
+        if (warmUpProvider) {
+            this.warmupProviderAndFetchTokenFromGoogle(googlePlayProjectNumber, requestHash, block)
+
             return
         }
+        this.fetchTokenFromGoogle(requestHash, block)
+    }
 
         val nowSeconds = System.currentTimeMillis() / 1000
         val warmUpProvider = !this::standardIntegrityTokenProvider.isInitialized
@@ -341,7 +353,7 @@ internal class RadarVerificationManager(
                 val integrityException = exception.message
 
                 logger.d("Error requesting integrity token | integrityException = $integrityException")
-
+                
                 block(null, integrityException)
             }
     }
