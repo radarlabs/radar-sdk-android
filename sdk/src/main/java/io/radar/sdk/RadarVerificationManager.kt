@@ -223,9 +223,9 @@ internal class RadarVerificationManager(
                 verificationManager.logger.d("Network connected")
 
                 if (token) {
-                    verificationManager.trackVerifiedToken()
+                    verificationManager.trackVerifiedToken(beacons)
                 } else {
-                    verificationManager.trackVerified()
+                    verificationManager.trackVerified(beacons)
                 }
             }
 
@@ -235,9 +235,9 @@ internal class RadarVerificationManager(
                 verificationManager.logger.d("Network lost")
 
                 if (token) {
-                    verificationManager.trackVerifiedToken()
+                    verificationManager.trackVerifiedToken(beacons)
                 } else {
-                    verificationManager.trackVerified()
+                    verificationManager.trackVerified(beacons)
                 }
             }
         })

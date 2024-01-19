@@ -942,11 +942,12 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
+     * @param[beacons] A boolean indicating whether to range beacons.
      * @param[callback] An optional callback.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerified(callback: RadarTrackCallback? = null) {
+    fun trackVerified(beacons: Boolean = false, callback: RadarTrackCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -958,7 +959,7 @@ object Radar {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        this.verificationManager.trackVerified(false, callback)
+        this.verificationManager.trackVerified(beacons, callback)
     }
 
     /**
@@ -968,12 +969,13 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
+     * @param[beacons] A boolean indicating whether to range beacons.
      * @param[block] A block callback.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerified(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        trackVerified(object : RadarTrackCallback {
+    fun trackVerified(beacons: Boolean = false, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+        trackVerified(beacons, object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
             }
@@ -987,11 +989,12 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
+     * @param[beacons] A boolean indicating whether to range beacons.
      * @param[callback] An optional callback.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerifiedToken(callback: RadarTrackTokenCallback? = null) {
+    fun trackVerifiedToken(beacons: Boolean = false, callback: RadarTrackTokenCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1003,7 +1006,7 @@ object Radar {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        this.verificationManager.trackVerifiedToken(false, callback)
+        this.verificationManager.trackVerifiedToken(beacons, callback)
     }
 
     /**
@@ -1013,12 +1016,13 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
+     * @param[beacons] A boolean indicating whether to range beacons.
      * @param[block] A block callback.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerifiedToken(block: (status: RadarStatus, token: String?) -> Unit) {
-        trackVerifiedToken(object : RadarTrackTokenCallback {
+    fun trackVerifiedToken(beacons: Boolean = false, block: (status: RadarStatus, token: String?) -> Unit) {
+        trackVerifiedToken(beacons, object : RadarTrackTokenCallback {
             override fun onComplete(status: RadarStatus, token: String?) {
                 block(status, token)
             }
