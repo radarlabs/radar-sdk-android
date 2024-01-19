@@ -341,7 +341,7 @@ internal class RadarVerificationManager(
                 val integrityException = exception.message
 
                 logger.d("Error requesting integrity token | integrityException = $integrityException")
-
+                
                 block(null, integrityException)
             }
     }
