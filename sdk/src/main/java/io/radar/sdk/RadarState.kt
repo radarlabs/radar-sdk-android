@@ -44,56 +44,60 @@ internal object RadarState {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun getEncryptedSharedPreferences(context: Context): SharedPreferences {
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-//            val masterKeyAlias = MasterKey.Builder(context)
-//            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-//                .build()
-//
-//            return EncryptedSharedPreferences.create(
-//                context,
-//                "PreferencesFilename",
-//                masterKeyAlias,
-//                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-//                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-//            )
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                EncryptedSharedPreferences.create(
-                    "RadarState",
-                    MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
-                    context,
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-                )
-            } else {
-                context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
-            }
-//        } else {
-//            return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
-//        }
+
+        return EncryptedSharedPreferences.create(
+            "RadarState",
+            MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+            context,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+
     }
 
     // TODO: migration: pseudo code, attempt to check encoded version, if they do not have it, fall back to
     // non encrypted version, before returning default. "eventual migration" just like in Segment.
 
     private fun getFloat(context: Context, key: String, default: Float): Float {
-        return getEncryptedSharedPreferences(context).getFloat(key, getSharedPreferences(context).getFloat(key, default))
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getEncryptedSharedPreferences(context).getFloat(key, getSharedPreferences(context).getFloat(key, default))
+        } else {
+            getSharedPreferences(context).getFloat(key, default)
+        }
     }
 
     private fun getLong(context: Context, key: String, default: Long): Long {
-        return getEncryptedSharedPreferences(context).getLong(key, getSharedPreferences(context).getLong(key, default))
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getEncryptedSharedPreferences(context).getLong(key, getSharedPreferences(context).getLong(key, default))
+        } else {
+            getSharedPreferences(context).getLong(key, default)
+        }
     }
 
     private fun getString(context: Context, key: String, default: String?): String? {
-        return getEncryptedSharedPreferences(context).getString(key, getSharedPreferences(context).getString(key, default))
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getEncryptedSharedPreferences(context).getString(key, getSharedPreferences(context).getString(key, default))
+        } else {
+            getSharedPreferences(context).getString(key, default)
+        }
     }
 
     private fun getStringSet(context: Context, key: String, default: Set<String>?): Set<String>? {
-        return getEncryptedSharedPreferences(context).getStringSet(key, getSharedPreferences(context).getStringSet(key, default))
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getEncryptedSharedPreferences(context).getStringSet(key, getSharedPreferences(context).getStringSet(key, default))
+        } else {
+            getSharedPreferences(context).getStringSet(key, default)
+        }
     }
 
     private fun getBoolean(context: Context, key: String, default: Boolean): Boolean {
-        return getEncryptedSharedPreferences(context).getBoolean(key, getSharedPreferences(context).getBoolean(key, default))
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getEncryptedSharedPreferences(context).getBoolean(key, getSharedPreferences(context).getBoolean(key, default))
+        } else {
+            getSharedPreferences(context).getBoolean(key, default)
+        }
     }
 
     internal fun getLastLocation(context: Context): Location? {
