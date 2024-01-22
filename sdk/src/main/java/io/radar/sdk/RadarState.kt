@@ -46,11 +46,20 @@ internal object RadarState {
 
     private fun getEncryptedSharedPreferences(context: Context): SharedPreferences {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
-
+//            val masterKeyAlias = MasterKey.Builder(context)
+//            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+//                .build()
+//
+//            return EncryptedSharedPreferences.create(
+//                context,
+//                "PreferencesFilename",
+//                masterKeyAlias,
+//                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+//                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+//            )
             return EncryptedSharedPreferences.create(
-                "PreferencesFilename",
-                masterKeyAlias,
+                "RadarState",
+                MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
                 context,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
@@ -77,6 +86,10 @@ internal object RadarState {
 
     private fun getStringSet(context: Context, key: String, default: Set<String>?): Set<String>? {
         return getEncryptedSharedPreferences(context).getStringSet(key, getSharedPreferences(context).getStringSet(key, default))
+    }
+
+    private fun getBoolean(context: Context, key: String, default: Boolean): Boolean {
+        return getEncryptedSharedPreferences(context).getBoolean(key, getSharedPreferences(context).getBoolean(key, default))
     }
 
     internal fun getLastLocation(context: Context): Location? {
@@ -162,7 +175,7 @@ internal object RadarState {
     }
 
     internal fun getStopped(context: Context): Boolean {
-        return getBoolean(KEY_STOPPED, false)
+        return getBoolean(context, KEY_STOPPED, false)
     }
 
     internal fun setStopped(context: Context, stopped: Boolean) {
@@ -178,7 +191,7 @@ internal object RadarState {
     }
 
     internal fun getCanExit(context: Context): Boolean {
-        return getBoolean(KEY_CAN_EXIT, true)
+        return getBoolean(context, KEY_CAN_EXIT, true)
     }
 
     internal fun setCanExit(context: Context, canExit: Boolean) {
@@ -227,7 +240,7 @@ internal object RadarState {
     }
 
     internal fun getGeofenceIds(context: Context): MutableSet<String>? {
-        return getStringSet(KEY_GEOFENCE_IDS, null)
+        return getStringSet(context, KEY_GEOFENCE_IDS, null)?.toMutableSet()
     }
 
     internal fun setGeofenceIds(context: Context, geofenceIds: Set<String>?) {
@@ -243,7 +256,7 @@ internal object RadarState {
     }
 
     internal fun getRegionIds(context: Context): MutableSet<String>? {
-        return getStringSet(KEY_REGION_IDS, null)
+        return getStringSet(context, KEY_REGION_IDS, null)?.toMutableSet()
     }
 
     internal fun setRegionIds(context: Context, regionIds: Set<String>?) {
@@ -251,7 +264,7 @@ internal object RadarState {
     }
 
     internal fun getBeaconIds(context: Context): MutableSet<String>? {
-        return getStringSet(context, KEY_BEACON_IDS, null)
+        return getStringSet(context, KEY_BEACON_IDS, null)?.toMutableSet()
     }
 
     internal fun setBeaconIds(context: Context, beaconIds: Set<String>?) {
