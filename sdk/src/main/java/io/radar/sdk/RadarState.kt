@@ -45,7 +45,7 @@ internal object RadarState {
     }
 
     private fun getEncryptedSharedPreferences(context: Context): SharedPreferences {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 //            val masterKeyAlias = MasterKey.Builder(context)
 //            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
 //                .build()
@@ -57,16 +57,20 @@ internal object RadarState {
 //                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
 //                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
 //            )
-            return EncryptedSharedPreferences.create(
-                "RadarState",
-                MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
-                context,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
-        } else {
-            return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
-        }
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                EncryptedSharedPreferences.create(
+                    "RadarState",
+                    MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+                    context,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                )
+            } else {
+                context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
+            }
+//        } else {
+//            return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
+//        }
     }
 
     // TODO: migration: pseudo code, attempt to check encoded version, if they do not have it, fall back to
