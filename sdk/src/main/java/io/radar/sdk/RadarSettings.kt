@@ -324,6 +324,10 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, logLevelInt) }
     }
 
+    internal fun setHost(context: Context, host: String) {
+        getSharedPreferences(context).edit { putString(KEY_HOST, host) }
+    }
+
     internal fun getHost(context: Context): String {
         return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
     }

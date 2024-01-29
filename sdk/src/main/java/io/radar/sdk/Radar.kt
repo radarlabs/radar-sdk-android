@@ -443,10 +443,11 @@ object Radar {
      *
      * @param[context] The context.
      * @param[publishableKey] Your publishable API key.
+     * @param[hostname] Your Radar API hostname.
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null) {
-        initialize(context, publishableKey, null)
+    fun initialize(context: Context?, publishableKey: String? = null, hostname: String? = null) {
+        initialize(context, publishableKey, null, hostname = hostname)
     }
 
     /**
@@ -459,9 +460,10 @@ object Radar {
      * @param[receiver] An optional receiver for the client-side delivery of events.
      * @param[provider] The location services provider.
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
+     * @param[hostname] Your Radar API hostname.
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false) {
+    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false, hostname: String? = null) {
         if (context == null) {
             return
         }
@@ -487,6 +489,10 @@ object Radar {
 
         if (publishableKey != null) {
             RadarSettings.setPublishableKey(this.context, publishableKey)
+        }
+
+        if (hostname != null) {
+            RadarSettings.setHost(this.context, hostname);
         }
 
         if (!this::apiClient.isInitialized) {
