@@ -634,7 +634,7 @@ internal class RadarLocationManager(
                             }
                         })
                    } else {
-                       callTrackApi(null)
+                       callTrackApi(arrayOf())
                    }
                 }
             }, cache)

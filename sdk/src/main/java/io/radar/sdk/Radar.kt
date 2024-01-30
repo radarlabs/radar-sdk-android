@@ -857,7 +857,7 @@ object Radar {
                                     }
                                 })
                             } else {
-                                callTrackApi(null)
+                                callTrackApi(arrayOf());
                             }
                         }
                     }, false)
