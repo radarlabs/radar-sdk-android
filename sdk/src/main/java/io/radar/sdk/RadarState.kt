@@ -99,7 +99,7 @@ internal object RadarState {
 
     internal fun setLastLocation(context: Context, location: Location?) {
         if (location == null || !RadarUtils.valid(location)) {
-            getSharedPreferences(context).edit {
+            getEncryptedSharedPreferences(context).edit {
                 remove(KEY_LAST_LOCATION_LATITUDE)
                 remove(KEY_LAST_LOCATION_LONGITUDE)
                 remove(KEY_LAST_LOCATION_ACCURACY)
@@ -110,7 +110,7 @@ internal object RadarState {
             return
         }
 
-        getSharedPreferences(context).edit {
+        getEncryptedSharedPreferences(context).edit {
             putFloat(KEY_LAST_LOCATION_LATITUDE, location.latitude.toFloat())
             putFloat(KEY_LAST_LOCATION_LONGITUDE, location.longitude.toFloat())
             putFloat(KEY_LAST_LOCATION_ACCURACY, location.accuracy)
@@ -143,7 +143,7 @@ internal object RadarState {
             return
         }
 
-        getSharedPreferences(context).edit {
+        getEncryptedSharedPreferences(context).edit {
             putFloat(KEY_LAST_MOVED_LOCATION_LATITUDE, location.latitude.toFloat())
             putFloat(KEY_LAST_MOVED_LOCATION_LONGITUDE, location.longitude.toFloat())
             putFloat(KEY_LAST_MOVED_LOCATION_ACCURACY, location.accuracy)
@@ -157,7 +157,7 @@ internal object RadarState {
     }
 
     internal fun setLastMovedAt(context: Context, lastMovedAt: Long) {
-        getSharedPreferences(context).edit { putLong(KEY_LAST_MOVED_AT, lastMovedAt) }
+        getEncryptedSharedPreferences(context).edit { putLong(KEY_LAST_MOVED_AT, lastMovedAt) }
     }
 
     internal fun getStopped(context: Context): Boolean {
@@ -165,11 +165,11 @@ internal object RadarState {
     }
 
     internal fun setStopped(context: Context, stopped: Boolean) {
-        getSharedPreferences(context).edit { putBoolean(KEY_STOPPED, stopped) }
+        getEncryptedSharedPreferences(context).edit { putBoolean(KEY_STOPPED, stopped) }
     }
 
     internal fun updateLastSentAt(context: Context) {
-        getSharedPreferences(context).edit { putLong(KEY_LAST_SENT_AT,  System.currentTimeMillis()) }
+        getEncryptedSharedPreferences(context).edit { putLong(KEY_LAST_SENT_AT,  System.currentTimeMillis()) }
     }
 
     internal fun getLastSentAt(context: Context): Long {
@@ -181,7 +181,7 @@ internal object RadarState {
     }
 
     internal fun setCanExit(context: Context, canExit: Boolean) {
-        getSharedPreferences(context).edit { putBoolean(KEY_CAN_EXIT, canExit) }
+        getEncryptedSharedPreferences(context).edit { putBoolean(KEY_CAN_EXIT, canExit) }
     }
 
     internal fun getLastFailedStoppedLocation(context: Context): Location? {
@@ -205,7 +205,7 @@ internal object RadarState {
 
     internal fun setLastFailedStoppedLocation(context: Context, location: Location?) {
         if (location == null || !RadarUtils.valid(location)) {
-            getSharedPreferences(context).edit {
+            getEncryptedSharedPreferences(context).edit {
                 remove(KEY_LAST_FAILED_STOPPED_LOCATION_LATITUDE)
                 remove(KEY_LAST_FAILED_STOPPED_LOCATION_LONGITUDE)
                 remove(KEY_LAST_FAILED_STOPPED_LOCATION_ACCURACY)
@@ -216,7 +216,7 @@ internal object RadarState {
             return
         }
 
-        getSharedPreferences(context).edit {
+        getEncryptedSharedPreferences(context).edit {
             putFloat(KEY_LAST_FAILED_STOPPED_LOCATION_LATITUDE, location.latitude.toFloat())
             putFloat(KEY_LAST_FAILED_STOPPED_LOCATION_LONGITUDE, location.longitude.toFloat())
             putFloat(KEY_LAST_FAILED_STOPPED_LOCATION_ACCURACY, location.accuracy)
@@ -230,7 +230,7 @@ internal object RadarState {
     }
 
     internal fun setGeofenceIds(context: Context, geofenceIds: Set<String>?) {
-        getSharedPreferences(context).edit { putStringSet(KEY_GEOFENCE_IDS, geofenceIds) }
+        getEncryptedSharedPreferences(context).edit { putStringSet(KEY_GEOFENCE_IDS, geofenceIds) }
     }
 
     internal fun getPlaceId(context: Context): String? {
@@ -238,7 +238,7 @@ internal object RadarState {
     }
 
     internal fun setPlaceId(context: Context, placeId: String?) {
-        getSharedPreferences(context).edit { putString(KEY_PLACE_ID, placeId) }
+        getEncryptedSharedPreferences(context).edit { putString(KEY_PLACE_ID, placeId) }
     }
 
     internal fun getRegionIds(context: Context): MutableSet<String>? {
@@ -246,7 +246,7 @@ internal object RadarState {
     }
 
     internal fun setRegionIds(context: Context, regionIds: Set<String>?) {
-        getSharedPreferences(context).edit { putStringSet(KEY_REGION_IDS, regionIds) }
+        getEncryptedSharedPreferences(context).edit { putStringSet(KEY_REGION_IDS, regionIds) }
     }
 
     internal fun getBeaconIds(context: Context): MutableSet<String>? {
@@ -254,7 +254,7 @@ internal object RadarState {
     }
 
     internal fun setBeaconIds(context: Context, beaconIds: Set<String>?) {
-        getSharedPreferences(context).edit { putStringSet(KEY_BEACON_IDS, beaconIds) }
+        getEncryptedSharedPreferences(context).edit { putStringSet(KEY_BEACON_IDS, beaconIds) }
     }
 
     internal fun getLastBeacons(context: Context): Array<RadarBeacon>? {
@@ -264,7 +264,7 @@ internal object RadarState {
 
     internal fun setLastBeacons(context: Context, beacons: Array<RadarBeacon>?) {
         val set = RadarBeaconUtils.stringSetForBeacons(beacons)
-        getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACONS, set) }
+        getEncryptedSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACONS, set) }
     }
 
     internal fun getLastBeaconUUIDs(context: Context): Array<String>? {
@@ -272,7 +272,7 @@ internal object RadarState {
     }
 
     internal fun setLastBeaconUUIDs(context: Context, uuids: Array<String>?) {
-        getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UUIDS, uuids?.toSet()) }
+        getEncryptedSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UUIDS, uuids?.toSet()) }
     }
 
     internal fun getLastBeaconUIDs(context: Context): Array<String>? {
@@ -280,7 +280,7 @@ internal object RadarState {
     }
 
     internal fun setLastBeaconUIDs(context: Context, uids: Array<String>?) {
-        getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
+        getEncryptedSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
     }
 
 }
