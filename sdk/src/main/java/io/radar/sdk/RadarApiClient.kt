@@ -1,12 +1,12 @@
 package io.radar.sdk
-
 import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.SystemClock
-import io.radar.sdk.Radar.RadarAddressVerificationStatus
+import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
+import io.radar.sdk.Radar.RadarAddressVerificationStatus
 import io.radar.sdk.Radar.locationManager
 import io.radar.sdk.model.*
 import org.json.JSONArray
