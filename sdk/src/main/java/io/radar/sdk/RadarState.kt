@@ -3,8 +3,6 @@ package io.radar.sdk
 import android.content.Context
 import android.content.SharedPreferences
 import android.location.Location
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
@@ -44,7 +42,6 @@ internal object RadarState {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun getEncryptedSharedPreferences(context: Context): SharedPreferences {
 
         return EncryptedSharedPreferences.create(
@@ -61,43 +58,24 @@ internal object RadarState {
     // non encrypted version, before returning default. "eventual migration" just like in Segment.
 
     private fun getFloat(context: Context, key: String, default: Float): Float {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getEncryptedSharedPreferences(context).getFloat(key, getSharedPreferences(context).getFloat(key, default))
-        } else {
-            getSharedPreferences(context).getFloat(key, default)
-        }
+        return getEncryptedSharedPreferences(context).getFloat(key, getSharedPreferences(context).getFloat(key, default))
     }
 
     private fun getLong(context: Context, key: String, default: Long): Long {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getEncryptedSharedPreferences(context).getLong(key, getSharedPreferences(context).getLong(key, default))
-        } else {
-            getSharedPreferences(context).getLong(key, default)
-        }
+        return getEncryptedSharedPreferences(context).getLong(key, getSharedPreferences(context).getLong(key, default))
     }
 
     private fun getString(context: Context, key: String, default: String?): String? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getEncryptedSharedPreferences(context).getString(key, getSharedPreferences(context).getString(key, default))
-        } else {
-            getSharedPreferences(context).getString(key, default)
-        }
+        return getEncryptedSharedPreferences(context).getString(key, getSharedPreferences(context).getString(key, default))
+
     }
 
     private fun getStringSet(context: Context, key: String, default: Set<String>?): Set<String>? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getEncryptedSharedPreferences(context).getStringSet(key, getSharedPreferences(context).getStringSet(key, default))
-        } else {
-            getSharedPreferences(context).getStringSet(key, default)
-        }
+        return getEncryptedSharedPreferences(context).getStringSet(key, getSharedPreferences(context).getStringSet(key, default))
     }
 
     private fun getBoolean(context: Context, key: String, default: Boolean): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            getEncryptedSharedPreferences(context).getBoolean(key, getSharedPreferences(context).getBoolean(key, default))
-        } else {
-            getSharedPreferences(context).getBoolean(key, default)
-        }
+        return getEncryptedSharedPreferences(context).getBoolean(key, getSharedPreferences(context).getBoolean(key, default))
     }
 
     internal fun getLastLocation(context: Context): Location? {
@@ -279,34 +257,28 @@ internal object RadarState {
         getSharedPreferences(context).edit { putStringSet(KEY_BEACON_IDS, beaconIds) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun getLastBeacons(context: Context): Array<RadarBeacon>? {
         val set = getStringSet(context, KEY_LAST_BEACONS, null)
         return RadarBeaconUtils.beaconsForStringSet(set)
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeacons(context: Context, beacons: Array<RadarBeacon>?) {
         val set = RadarBeaconUtils.stringSetForBeacons(beacons)
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACONS, set) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun getLastBeaconUUIDs(context: Context): Array<String>? {
         return getStringSet(context, KEY_LAST_BEACON_UUIDS, null)?.toTypedArray()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeaconUUIDs(context: Context, uuids: Array<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UUIDS, uuids?.toSet()) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun getLastBeaconUIDs(context: Context): Array<String>? {
         return getStringSet(context, KEY_LAST_BEACON_UIDS, null)?.toTypedArray()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeaconUIDs(context: Context, uids: Array<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
     }
