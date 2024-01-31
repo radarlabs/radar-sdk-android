@@ -117,9 +117,6 @@ internal object RadarUtils {
     }
 
     internal fun isScreenSharing(context: Context): Boolean {
-        if (Build.VERSION.SDK_INT < 17) {
-            return false
-        }
         val displayManager = DisplayManagerCompat.getInstance(context)
         val multipleDisplays = displayManager.displays.size > 1
 

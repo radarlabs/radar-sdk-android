@@ -66,14 +66,14 @@ internal class RadarBatteryManager(
     }
 
     private fun isDeviceIdleMode(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && powerManager != null) {
+        if (powerManager != null) {
             return powerManager.isDeviceIdleMode
         }
         return false
     }
 
     private fun isIgnoringBatteryOptimizations(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && powerManager != null) {
+        if (powerManager != null) {
             return powerManager.isIgnoringBatteryOptimizations(context.packageName)
         }
         return false
