@@ -11,7 +11,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import io.radar.sdk.RadarUtils.hashSHA256
 
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarVerificationManager(
     private val context: Context,
     private val logger: RadarLogger,

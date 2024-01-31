@@ -17,7 +17,6 @@ import io.radar.sdk.Radar.stringForSource
 import io.radar.sdk.model.RadarBeacon
 import java.util.concurrent.atomic.AtomicInteger
 
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class RadarJobScheduler : JobService() {
 
     internal companion object {
