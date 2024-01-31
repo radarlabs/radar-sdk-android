@@ -8,24 +8,11 @@ import io.radar.sdk.Radar.RadarAddressVerificationStatus
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.Radar.locationManager
-import io.radar.sdk.model.RadarAddress
-import io.radar.sdk.model.RadarBeacon
-import io.radar.sdk.model.RadarConfig
-import io.radar.sdk.model.RadarContext
-import io.radar.sdk.model.RadarEvent
-import io.radar.sdk.model.RadarEvent.RadarEventVerification
-import io.radar.sdk.model.RadarGeofence
-import io.radar.sdk.model.RadarLog
-import io.radar.sdk.model.RadarPlace
-import io.radar.sdk.model.RadarReplay
-import io.radar.sdk.model.RadarRouteMatrix
-import io.radar.sdk.model.RadarRoutes
-import io.radar.sdk.model.RadarTrip
-import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.*
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.EnumSet
+import java.util.*
 
 internal class RadarApiClient(
     private val context: Context,
