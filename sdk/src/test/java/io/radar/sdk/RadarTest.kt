@@ -1,20 +1,19 @@
 package io.radar.sdk
 
+import FakeAndroidKeyStore
 import android.content.Context
 import android.location.Location
-import android.net.Uri
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.model.*
 import org.json.JSONObject
-import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
-import java.net.URL
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -271,6 +270,8 @@ class RadarTest {
 
         Radar.locationManager.locationClient = locationClientMock
         Radar.locationManager.permissionsHelper = permissionsHelperMock
+        FakeAndroidKeyStore.setup
+
     }
 
     @Test
