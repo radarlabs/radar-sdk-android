@@ -156,7 +156,7 @@ internal class RadarVerificationManager(
                                                     }
                                                 })
                                         } else {
-                                            callTrackApi(null)
+                                            callTrackApi(arrayOf())
                                         }
                                     }
                                 },
@@ -289,7 +289,7 @@ internal class RadarVerificationManager(
                                                     }
                                                 })
                                         } else {
-                                            callTrackApi(null)
+                                            callTrackApi(arrayOf())
                                         }
                                     }
                                 },
