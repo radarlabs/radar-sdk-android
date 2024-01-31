@@ -26,17 +26,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        val verifiedReceiver = object : RadarVerifiedReceiver() {
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+        Radar.sdkVersion()?.let { Log.i("version", it) }
 
+        val verifiedReceiver = object : RadarVerifiedReceiver() {
             override fun onTokenUpdated(context: Context, token: String) {
                 Log.i("example", "Token updated to $token")
             }
-
         }
-        Radar.initialize(this, "org_test_pk_5857c63d9c1565175db8b00750808a66a002acb8", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
         Radar.setVerifiedReceiver(verifiedReceiver)
-        Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
-        Radar.sdkVersion().let { Log.i("example", it) }
+
         requestLocationPermissionLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { isGrantedMap ->
@@ -68,9 +67,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun runDemo() {
-        Radar.startTrackingVerified(true, 60, false)
-
-        /*
         Radar.getLocation { status, location, stopped ->
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
         }
@@ -251,7 +247,6 @@ class MainActivity : AppCompatActivity() {
         ) { status, event ->
             Log.v("example", "Conversion name = ${event?.conversionName}: status = $status; event = $event")
         }
-         */
     }
 
 }
