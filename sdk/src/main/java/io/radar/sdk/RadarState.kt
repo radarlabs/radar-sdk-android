@@ -54,9 +54,6 @@ internal object RadarState {
 
     }
 
-    // TODO: migration: pseudo code, attempt to check encoded version, if they do not have it, fall back to
-    // non encrypted version, before returning default. "eventual migration" just like in Segment.
-
     private fun getFloat(context: Context, key: String, default: Float): Float {
         return getEncryptedSharedPreferences(context).getFloat(key, getSharedPreferences(context).getFloat(key, default))
     }
