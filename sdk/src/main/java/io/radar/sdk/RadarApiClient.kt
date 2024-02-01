@@ -1,5 +1,4 @@
 package io.radar.sdk
-
 import android.content.Context
 import android.location.Location
 import android.os.Build
@@ -281,7 +280,7 @@ internal class RadarApiClient(
                     params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
                 }
             }
-            if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            if (!foreground) {
                 val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
                 params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
             }
@@ -298,10 +297,8 @@ internal class RadarApiClient(
             params.putOpt("country", RadarUtils.country)
             params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
             params.putOpt("source", Radar.stringForSource(source))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                val mocked = location.isFromMockProvider
-                params.putOpt("mocked", mocked)
-            }
+            val mocked = location.isFromMockProvider
+            params.putOpt("mocked", mocked)
             if (tripOptions != null) {
                 val tripOptionsObj = JSONObject()
                 tripOptionsObj.putOpt("version", "2")

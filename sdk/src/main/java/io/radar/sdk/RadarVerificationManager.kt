@@ -22,7 +22,6 @@ import io.radar.sdk.model.RadarGeofence
 import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
 
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarVerificationManager(
     private val context: Context,
     private val logger: RadarLogger,

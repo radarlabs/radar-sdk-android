@@ -6,7 +6,6 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.Handler
-import androidx.annotation.RequiresApi
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.util.RadarLogBuffer
@@ -949,7 +948,6 @@ object Radar {
      * @param[beacons] A boolean indicating whether to range beacons.
      * @param[callback] An optional callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerified(beacons: Boolean = false, callback: RadarTrackCallback? = null) {
         if (!initialized) {
@@ -976,7 +974,6 @@ object Radar {
      * @param[beacons] A boolean indicating whether to range beacons.
      * @param[block] A block callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerified(beacons: Boolean = false, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
         trackVerified(beacons, object : RadarTrackCallback {
@@ -996,7 +993,6 @@ object Radar {
      * @param[beacons] A boolean indicating whether to range beacons.
      * @param[callback] An optional callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerifiedToken(beacons: Boolean = false, callback: RadarTrackTokenCallback? = null) {
         if (!initialized) {
@@ -1023,7 +1019,6 @@ object Radar {
      * @param[beacons] A boolean indicating whether to range beacons.
      * @param[block] A block callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerifiedToken(beacons: Boolean = false, block: (status: RadarStatus, token: String?) -> Unit) {
         trackVerifiedToken(beacons, object : RadarTrackTokenCallback {
@@ -3307,9 +3302,7 @@ object Radar {
             obj.put("speedAccuracy", location.speedAccuracyMetersPerSecond)
             obj.put("courseAccuracy", location.bearingAccuracyDegrees)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            obj.put("mocked", location.isFromMockProvider)
-        }
+        obj.put("mocked", location.isFromMockProvider)
         return obj
     }
 

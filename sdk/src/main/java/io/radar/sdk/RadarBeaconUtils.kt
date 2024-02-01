@@ -11,7 +11,6 @@ import org.json.JSONObject
 import java.nio.ByteBuffer
 import java.util.*
 
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal object RadarBeaconUtils {
 
     private const val IBEACON_MANUFACTURER_ID = 76

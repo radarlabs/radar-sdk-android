@@ -3,9 +3,9 @@ package io.radar.sdk
 import android.content.Context
 import android.content.SharedPreferences
 import android.location.Location
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.core.content.edit
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
 import io.radar.sdk.model.RadarBeacon
 
 internal object RadarState {
@@ -42,12 +42,45 @@ internal object RadarState {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
     }
 
+    private fun getEncryptedSharedPreferences(context: Context): SharedPreferences {
+
+        return EncryptedSharedPreferences.create(
+            "RadarState",
+            MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC),
+            context,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+
+    }
+
+    private fun getFloat(context: Context, key: String, default: Float): Float {
+        return getEncryptedSharedPreferences(context).getFloat(key, getSharedPreferences(context).getFloat(key, default))
+    }
+
+    private fun getLong(context: Context, key: String, default: Long): Long {
+        return getEncryptedSharedPreferences(context).getLong(key, getSharedPreferences(context).getLong(key, default))
+    }
+
+    private fun getString(context: Context, key: String, default: String?): String? {
+        return getEncryptedSharedPreferences(context).getString(key, getSharedPreferences(context).getString(key, default))
+
+    }
+
+    private fun getStringSet(context: Context, key: String, default: Set<String>?): Set<String>? {
+        return getEncryptedSharedPreferences(context).getStringSet(key, getSharedPreferences(context).getStringSet(key, default))
+    }
+
+    private fun getBoolean(context: Context, key: String, default: Boolean): Boolean {
+        return getEncryptedSharedPreferences(context).getBoolean(key, getSharedPreferences(context).getBoolean(key, default))
+    }
+
     internal fun getLastLocation(context: Context): Location? {
-        val lastLocationLatitude = getSharedPreferences(context).getFloat(KEY_LAST_LOCATION_LATITUDE, 0f)
-        val lastLocationLongitude = getSharedPreferences(context).getFloat(KEY_LAST_LOCATION_LONGITUDE, 0f)
-        val lastLocationAccuracy = getSharedPreferences(context).getFloat(KEY_LAST_LOCATION_ACCURACY, 0f)
-        val lastLocationProvider = getSharedPreferences(context).getString(KEY_LAST_LOCATION_PROVIDER, "RadarSDK")
-        val lastLocationTime = getSharedPreferences(context).getLong(KEY_LAST_LOCATION_TIME, 0L)
+        val lastLocationLatitude = getFloat(context, KEY_LAST_LOCATION_LATITUDE, 0f)
+        val lastLocationLongitude = getFloat(context, KEY_LAST_LOCATION_LONGITUDE, 0f)
+        val lastLocationAccuracy = getFloat(context, KEY_LAST_LOCATION_ACCURACY, 0f)
+        val lastLocationProvider = getString(context, KEY_LAST_LOCATION_PROVIDER, "RadarSDK")
+        val lastLocationTime = getLong(context, KEY_LAST_LOCATION_TIME, 0L)
         val location = Location(lastLocationProvider)
         location.latitude = lastLocationLatitude.toDouble()
         location.longitude = lastLocationLongitude.toDouble()
@@ -63,7 +96,7 @@ internal object RadarState {
 
     internal fun setLastLocation(context: Context, location: Location?) {
         if (location == null || !RadarUtils.valid(location)) {
-            getSharedPreferences(context).edit {
+            getEncryptedSharedPreferences(context).edit {
                 remove(KEY_LAST_LOCATION_LATITUDE)
                 remove(KEY_LAST_LOCATION_LONGITUDE)
                 remove(KEY_LAST_LOCATION_ACCURACY)
@@ -74,7 +107,7 @@ internal object RadarState {
             return
         }
 
-        getSharedPreferences(context).edit {
+        getEncryptedSharedPreferences(context).edit {
             putFloat(KEY_LAST_LOCATION_LATITUDE, location.latitude.toFloat())
             putFloat(KEY_LAST_LOCATION_LONGITUDE, location.longitude.toFloat())
             putFloat(KEY_LAST_LOCATION_ACCURACY, location.accuracy)
@@ -84,11 +117,11 @@ internal object RadarState {
     }
 
     internal fun getLastMovedLocation(context: Context): Location? {
-        val lastMovedLocationLatitude = getSharedPreferences(context).getFloat(KEY_LAST_MOVED_LOCATION_LATITUDE, 0f)
-        val lastMovedLocationLongitude = getSharedPreferences(context).getFloat(KEY_LAST_MOVED_LOCATION_LONGITUDE, 0f)
-        val lastMovedLocationAccuracy = getSharedPreferences(context).getFloat(KEY_LAST_MOVED_LOCATION_ACCURACY, 0f)
-        val lastMovedLocationProvider = getSharedPreferences(context).getString(KEY_LAST_MOVED_LOCATION_PROVIDER, "RadarSDK")
-        val lastMovedLocationTime = getSharedPreferences(context).getLong(KEY_LAST_MOVED_LOCATION_TIME, 0L)
+        val lastMovedLocationLatitude = getFloat(context, KEY_LAST_MOVED_LOCATION_LATITUDE, 0f)
+        val lastMovedLocationLongitude = getFloat(context, KEY_LAST_MOVED_LOCATION_LONGITUDE, 0f)
+        val lastMovedLocationAccuracy = getFloat(context, KEY_LAST_MOVED_LOCATION_ACCURACY, 0f)
+        val lastMovedLocationProvider = getString(context, KEY_LAST_MOVED_LOCATION_PROVIDER, "RadarSDK")
+        val lastMovedLocationTime = getLong(context, KEY_LAST_MOVED_LOCATION_TIME, 0L)
         val location = Location(lastMovedLocationProvider)
         location.latitude = lastMovedLocationLatitude.toDouble()
         location.longitude = lastMovedLocationLongitude.toDouble()
@@ -107,7 +140,7 @@ internal object RadarState {
             return
         }
 
-        getSharedPreferences(context).edit {
+        getEncryptedSharedPreferences(context).edit {
             putFloat(KEY_LAST_MOVED_LOCATION_LATITUDE, location.latitude.toFloat())
             putFloat(KEY_LAST_MOVED_LOCATION_LONGITUDE, location.longitude.toFloat())
             putFloat(KEY_LAST_MOVED_LOCATION_ACCURACY, location.accuracy)
@@ -117,43 +150,43 @@ internal object RadarState {
     }
 
     internal fun getLastMovedAt(context: Context): Long {
-        return getSharedPreferences(context).getLong(KEY_LAST_MOVED_AT, 0L)
+        return getLong(context, KEY_LAST_MOVED_AT, 0L)
     }
 
     internal fun setLastMovedAt(context: Context, lastMovedAt: Long) {
-        getSharedPreferences(context).edit { putLong(KEY_LAST_MOVED_AT, lastMovedAt) }
+        getEncryptedSharedPreferences(context).edit { putLong(KEY_LAST_MOVED_AT, lastMovedAt) }
     }
 
     internal fun getStopped(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_STOPPED, false)
+        return getBoolean(context, KEY_STOPPED, false)
     }
 
     internal fun setStopped(context: Context, stopped: Boolean) {
-        getSharedPreferences(context).edit { putBoolean(KEY_STOPPED, stopped) }
+        getEncryptedSharedPreferences(context).edit { putBoolean(KEY_STOPPED, stopped) }
     }
 
     internal fun updateLastSentAt(context: Context) {
-        getSharedPreferences(context).edit { putLong(KEY_LAST_SENT_AT,  System.currentTimeMillis()) }
+        getEncryptedSharedPreferences(context).edit { putLong(KEY_LAST_SENT_AT,  System.currentTimeMillis()) }
     }
 
     internal fun getLastSentAt(context: Context): Long {
-        return getSharedPreferences(context).getLong(KEY_LAST_SENT_AT, 0L)
+        return getLong(context, KEY_LAST_SENT_AT, 0L)
     }
 
     internal fun getCanExit(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_CAN_EXIT, true)
+        return getBoolean(context, KEY_CAN_EXIT, true)
     }
 
     internal fun setCanExit(context: Context, canExit: Boolean) {
-        getSharedPreferences(context).edit { putBoolean(KEY_CAN_EXIT, canExit) }
+        getEncryptedSharedPreferences(context).edit { putBoolean(KEY_CAN_EXIT, canExit) }
     }
 
     internal fun getLastFailedStoppedLocation(context: Context): Location? {
-        val lastFailedStoppedLocationLatitude = getSharedPreferences(context).getFloat(KEY_LAST_FAILED_STOPPED_LOCATION_LATITUDE, 0f)
-        val lastFailedStoppedLocationLongitude = getSharedPreferences(context).getFloat(KEY_LAST_FAILED_STOPPED_LOCATION_LONGITUDE, 0f)
-        val lastFailedStoppedLocationAccuracy = getSharedPreferences(context).getFloat(KEY_LAST_FAILED_STOPPED_LOCATION_ACCURACY, 0f)
-        val lastFailedStoppedLocationProvider = getSharedPreferences(context).getString(KEY_LAST_FAILED_STOPPED_LOCATION_PROVIDER, "RadarSDK")
-        val lastFailedStoppedLocationTime = getSharedPreferences(context).getLong(KEY_LAST_FAILED_STOPPED_LOCATION_TIME, 0L)
+        val lastFailedStoppedLocationLatitude = getFloat(context, KEY_LAST_FAILED_STOPPED_LOCATION_LATITUDE, 0f)
+        val lastFailedStoppedLocationLongitude = getFloat(context, KEY_LAST_FAILED_STOPPED_LOCATION_LONGITUDE, 0f)
+        val lastFailedStoppedLocationAccuracy = getFloat(context, KEY_LAST_FAILED_STOPPED_LOCATION_ACCURACY, 0f)
+        val lastFailedStoppedLocationProvider = getString(context, KEY_LAST_FAILED_STOPPED_LOCATION_PROVIDER, "RadarSDK")
+        val lastFailedStoppedLocationTime = getLong(context, KEY_LAST_FAILED_STOPPED_LOCATION_TIME, 0L)
         val location = Location(lastFailedStoppedLocationProvider)
         location.latitude = lastFailedStoppedLocationLatitude.toDouble()
         location.longitude = lastFailedStoppedLocationLongitude.toDouble()
@@ -169,7 +202,7 @@ internal object RadarState {
 
     internal fun setLastFailedStoppedLocation(context: Context, location: Location?) {
         if (location == null || !RadarUtils.valid(location)) {
-            getSharedPreferences(context).edit {
+            getEncryptedSharedPreferences(context).edit {
                 remove(KEY_LAST_FAILED_STOPPED_LOCATION_LATITUDE)
                 remove(KEY_LAST_FAILED_STOPPED_LOCATION_LONGITUDE)
                 remove(KEY_LAST_FAILED_STOPPED_LOCATION_ACCURACY)
@@ -180,7 +213,7 @@ internal object RadarState {
             return
         }
 
-        getSharedPreferences(context).edit {
+        getEncryptedSharedPreferences(context).edit {
             putFloat(KEY_LAST_FAILED_STOPPED_LOCATION_LATITUDE, location.latitude.toFloat())
             putFloat(KEY_LAST_FAILED_STOPPED_LOCATION_LONGITUDE, location.longitude.toFloat())
             putFloat(KEY_LAST_FAILED_STOPPED_LOCATION_ACCURACY, location.accuracy)
@@ -190,67 +223,61 @@ internal object RadarState {
     }
 
     internal fun getGeofenceIds(context: Context): MutableSet<String>? {
-        return getSharedPreferences(context).getStringSet(KEY_GEOFENCE_IDS, null)
+        return getStringSet(context, KEY_GEOFENCE_IDS, null)?.toMutableSet()
     }
 
     internal fun setGeofenceIds(context: Context, geofenceIds: Set<String>?) {
-        getSharedPreferences(context).edit { putStringSet(KEY_GEOFENCE_IDS, geofenceIds) }
+        getEncryptedSharedPreferences(context).edit { putStringSet(KEY_GEOFENCE_IDS, geofenceIds) }
     }
 
     internal fun getPlaceId(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_PLACE_ID, null)
+        return getString(context, KEY_PLACE_ID, null)
     }
 
     internal fun setPlaceId(context: Context, placeId: String?) {
-        getSharedPreferences(context).edit { putString(KEY_PLACE_ID, placeId) }
+        getEncryptedSharedPreferences(context).edit { putString(KEY_PLACE_ID, placeId) }
     }
 
     internal fun getRegionIds(context: Context): MutableSet<String>? {
-        return getSharedPreferences(context).getStringSet(KEY_REGION_IDS, null)
+        return getStringSet(context, KEY_REGION_IDS, null)?.toMutableSet()
     }
 
     internal fun setRegionIds(context: Context, regionIds: Set<String>?) {
-        getSharedPreferences(context).edit { putStringSet(KEY_REGION_IDS, regionIds) }
+        getEncryptedSharedPreferences(context).edit { putStringSet(KEY_REGION_IDS, regionIds) }
     }
 
     internal fun getBeaconIds(context: Context): MutableSet<String>? {
-        return getSharedPreferences(context).getStringSet(KEY_BEACON_IDS, null)
+        return getStringSet(context, KEY_BEACON_IDS, null)?.toMutableSet()
     }
 
     internal fun setBeaconIds(context: Context, beaconIds: Set<String>?) {
-        getSharedPreferences(context).edit { putStringSet(KEY_BEACON_IDS, beaconIds) }
+        getEncryptedSharedPreferences(context).edit { putStringSet(KEY_BEACON_IDS, beaconIds) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun getLastBeacons(context: Context): Array<RadarBeacon>? {
-        val set = getSharedPreferences(context).getStringSet(KEY_LAST_BEACONS, null)
+        val set = getStringSet(context, KEY_LAST_BEACONS, null)
         return RadarBeaconUtils.beaconsForStringSet(set)
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeacons(context: Context, beacons: Array<RadarBeacon>?) {
         val set = RadarBeaconUtils.stringSetForBeacons(beacons)
-        getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACONS, set) }
+        getEncryptedSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACONS, set) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun getLastBeaconUUIDs(context: Context): Array<String>? {
-        return getSharedPreferences(context).getStringSet(KEY_LAST_BEACON_UUIDS, null)?.toTypedArray()
+        return getStringSet(context, KEY_LAST_BEACON_UUIDS, null)?.toTypedArray()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeaconUUIDs(context: Context, uuids: Array<String>?) {
-        getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UUIDS, uuids?.toSet()) }
+        getEncryptedSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UUIDS, uuids?.toSet()) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun getLastBeaconUIDs(context: Context): Array<String>? {
-        return getSharedPreferences(context).getStringSet(KEY_LAST_BEACON_UIDS, null)?.toTypedArray()
+        return getStringSet(context, KEY_LAST_BEACON_UIDS, null)?.toTypedArray()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeaconUIDs(context: Context, uids: Array<String>?) {
-        getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
+        getEncryptedSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
     }
 
 }

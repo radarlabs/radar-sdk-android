@@ -55,10 +55,7 @@ internal class RadarBatteryManager(
     fun getAppStandbyBucket(): Int? = usageStatsManager?.appStandbyBucket
 
     private fun isPowerSaveMode(): Boolean? {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return powerManager?.isPowerSaveMode
-        }
-        return null
+        return powerManager?.isPowerSaveMode
     }
 
     private fun getLocationPowerSaveMode(): Int {
@@ -69,14 +66,14 @@ internal class RadarBatteryManager(
     }
 
     private fun isDeviceIdleMode(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && powerManager != null) {
+        if (powerManager != null) {
             return powerManager.isDeviceIdleMode
         }
         return false
     }
 
     private fun isIgnoringBatteryOptimizations(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && powerManager != null) {
+        if (powerManager != null) {
             return powerManager.isIgnoringBatteryOptimizations(context.packageName)
         }
         return false

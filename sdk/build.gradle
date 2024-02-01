@@ -10,7 +10,7 @@ apply plugin: "org.jetbrains.dokka"
 apply plugin: 'io.radar.mvnpublish'
 
 ext {
-    radarVersion = '3.9.3'
+    radarVersion = '3.9.3-beta.1'
 }
 
 String buildNumber = ".${System.currentTimeMillis()}"
@@ -39,7 +39,7 @@ android {
         jvmTarget = "1.8"
     }
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 23
         targetSdkVersion 31
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
         multiDexEnabled = true
@@ -62,6 +62,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation 'androidx.security:security-crypto:1.0.0'
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "androidx.appcompat:appcompat:1.4.0"
