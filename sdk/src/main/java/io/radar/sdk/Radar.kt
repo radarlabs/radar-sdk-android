@@ -399,7 +399,6 @@ object Radar {
         METRIC
     }
 
-
     /**
      * The verification status of an address.
      */
@@ -424,8 +423,9 @@ object Radar {
     internal var initialized = false
     internal var isFlushingReplays = false
     private lateinit var context: Context
-    private lateinit var handler: Handler
+    internal lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
+    private var verifiedReceiver: RadarVerifiedReceiver? = null
     internal lateinit var logger: RadarLogger
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
@@ -856,7 +856,7 @@ object Radar {
                                     }
                                 })
                             } else {
-                                callTrackApi(null)
+                                callTrackApi(arrayOf());
                             }
                         }
                     }, false)
@@ -945,62 +945,23 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
+     * @param[beacons] A boolean indicating whether to range beacons.
      * @param[callback] An optional callback.
      */
     @JvmStatic
-    fun trackVerified(callback: RadarTrackCallback? = null) {
+    fun trackVerified(beacons: Boolean = false, callback: RadarTrackCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("trackVerified()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        val googlePlayProjectNumber = RadarSettings.getGooglePlayProjectNumber(this.context);
-
-        if (googlePlayProjectNumber == 0.toLong()) {
-            this.logger.e("Missing Google Play Services project number", RadarLogType.SDK_ERROR)
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
-            return
-        }
-
-        locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
-                if (status != RadarStatus.SUCCESS || location == null) {
-                    handler.post {
-                        callback?.onComplete(status)
-                    }
-
-                    return
-                }
-
-                val requestHash = verificationManager.getRequestHash(location);
-
-                verificationManager.getIntegrityToken(googlePlayProjectNumber, requestHash) { integrityToken, integrityException ->
-                    apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, false, callback = object : RadarApiClient.RadarTrackApiCallback {
-                        override fun onComplete(
-                            status: RadarStatus,
-                            res: JSONObject?,
-                            events: Array<RadarEvent>?,
-                            user: RadarUser?,
-                            nearbyGeofences: Array<RadarGeofence>?,
-                            config: RadarConfig?,
-                            token: String?
-                        ) {
-                            if (status == RadarStatus.SUCCESS ){
-                                locationManager.updateTrackingFromMeta(config?.meta)
-                            }                          
-                            handler.post {
-                                callback?.onComplete(status, location, events, user)
-                            }
-                        }
-                    })
-                }
-            }
-        })
+        this.verificationManager.trackVerified(beacons, callback)
     }
 
     /**
@@ -1010,11 +971,12 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
+     * @param[beacons] A boolean indicating whether to range beacons.
      * @param[block] A block callback.
      */
     @JvmStatic
-    fun trackVerified(block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        trackVerified(object : RadarTrackCallback {
+    fun trackVerified(beacons: Boolean = false, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
+        trackVerified(beacons, object : RadarTrackCallback {
             override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                 block(status, location, events, user)
             }
@@ -1028,56 +990,23 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
+     * @param[beacons] A boolean indicating whether to range beacons.
      * @param[callback] An optional callback.
      */
     @JvmStatic
-    fun trackVerifiedToken(callback: RadarTrackTokenCallback? = null) {
+    fun trackVerifiedToken(beacons: Boolean = false, callback: RadarTrackTokenCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
+        this.logger.i("trackVerifiedToken()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        val googlePlayProjectNumber = RadarSettings.getGooglePlayProjectNumber(this.context);
-
-        locationManager.getLocation(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
-                if (status != RadarStatus.SUCCESS || location == null) {
-                    handler.post {
-                        callback?.onComplete(status)
-                    }
-
-                    return
-                }
-
-                val requestHash = verificationManager.getRequestHash(location);
-
-                verificationManager.getIntegrityToken(googlePlayProjectNumber, requestHash) { integrityToken, integrityException ->
-                    apiClient.track(location, RadarState.getStopped(context), RadarActivityLifecycleCallbacks.foreground, RadarLocationSource.FOREGROUND_LOCATION, false, null, true, integrityToken, integrityException, true, object : RadarApiClient.RadarTrackApiCallback {
-                        override fun onComplete(
-                            status: RadarStatus,
-                            res: JSONObject?,
-                            events: Array<RadarEvent>?,
-                            user: RadarUser?,
-                            nearbyGeofences: Array<RadarGeofence>?,
-                            config: RadarConfig?,
-                            token: String?
-                        ) {
-                            if (status == RadarStatus.SUCCESS ){
-                                locationManager.updateTrackingFromMeta(config?.meta)
-                            }
-                            handler.post {
-                                callback?.onComplete(status, token)
-                            }
-                        }
-                    })
-                }
-            }
-        })
+        this.verificationManager.trackVerifiedToken(beacons, callback)
     }
 
     /**
@@ -1087,15 +1016,42 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
+     * @param[beacons] A boolean indicating whether to range beacons.
      * @param[block] A block callback.
      */
     @JvmStatic
-    fun trackVerifiedToken(block: (status: RadarStatus, token: String?) -> Unit) {
-        trackVerifiedToken(object : RadarTrackTokenCallback {
+    fun trackVerifiedToken(beacons: Boolean = false, block: (status: RadarStatus, token: String?) -> Unit) {
+        trackVerifiedToken(beacons, object : RadarTrackTokenCallback {
             override fun onComplete(status: RadarStatus, token: String?) {
                 block(status, token)
             }
         })
+    }
+
+    /**
+     * Starts tracking the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[token] A boolean indicating whether to return a JSON Web Token (JWT). If `true`, tokens are delivered to your `RadarVerifiedReceiver`. If `false`, location updates are delivered to your `RadarReceiver`.
+     * @param[interval] The interval in seconds between each location update.
+     * @param[beacons] A boolean indicating whether to range beacons.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun startTrackingVerified(token: Boolean, interval: Int, beacons: Boolean) {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("startTrackingVerified()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.startTrackingVerified(token, interval, beacons)
     }
 
     /**
@@ -1371,6 +1327,22 @@ object Radar {
         }
 
         this.receiver = receiver
+    }
+
+    /**
+     * Sets a receiver for client-side delivery of verified location tokens.
+     *
+     * @see [](https://radar.com/documentation/sdk/fraud)
+     *
+     * @param[verifiedReceiver] A delegate for client-side delivery of of verified location tokens. If `null`, the previous receiver will be cleared.
+     */
+    @JvmStatic
+    fun setVerifiedReceiver(verifiedReceiver: RadarVerifiedReceiver?) {
+        if (!initialized) {
+            return
+        }
+
+        this.verifiedReceiver = verifiedReceiver
     }
 
     /**
@@ -3410,6 +3382,12 @@ object Radar {
         if (isTestKey()) {
             logBuffer.write(level, type, message, createdAt)
         }
+    }
+
+    internal fun sendToken(token: String) {
+        verifiedReceiver?.onTokenUpdated(context, token)
+
+        logger.i("📍️ Radar token updated | token = $token")
     }
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {
