@@ -421,6 +421,18 @@ object Radar {
         HUAWEI
     }
 
+    /**
+     * The Radar API host regions.
+     */
+    enum class RadarHostRegion {
+        /** https://api.na.radar.com */
+        NORTH_AMERICA,
+        /** https://api.eu.radar.com */
+        EUROPE,
+        /** https://api.radar.io */
+        GLOBAL
+    }
+
     internal var initialized = false
     internal var isFlushingReplays = false
     private lateinit var context: Context
@@ -443,10 +455,11 @@ object Radar {
      *
      * @param[context] The context.
      * @param[publishableKey] Your publishable API key.
+     * @param[region] Your Radar API host region.
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null) {
-        initialize(context, publishableKey, null)
+    fun initialize(context: Context?, publishableKey: String? = null, region: RadarHostRegion = RadarHostRegion.GLOBAL) {
+        initialize(context, publishableKey, null, region = region)
     }
 
     /**
@@ -459,9 +472,10 @@ object Radar {
      * @param[receiver] An optional receiver for the client-side delivery of events.
      * @param[provider] The location services provider.
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
+     * @param[region] Your Radar API host region.
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false) {
+    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false, region: RadarHostRegion = RadarHostRegion.GLOBAL) {
         if (context == null) {
             return
         }
@@ -488,6 +502,8 @@ object Radar {
         if (publishableKey != null) {
             RadarSettings.setPublishableKey(this.context, publishableKey)
         }
+
+        RadarSettings.setHostRegion(this.context, region);
 
         if (!this::apiClient.isInitialized) {
             this.apiClient = RadarApiClient(this.context, logger)
