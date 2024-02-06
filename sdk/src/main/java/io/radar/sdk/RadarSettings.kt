@@ -44,6 +44,11 @@ internal object RadarSettings {
     private const val KEY_OLD_OFFLINE_MODE = "offline_mode"
     private const val KEY_USER_DEBUG = "user_debug"
 
+    private const val RADAR_HOST_GLOBAL = "https://api.radar.io"
+    private const val RADAR_HOST_NORTH_AMERICA = "https://api.na.radar.com"
+    private const val RADAR_HOST_EUROPE = "https://api.eu.radar.com"
+
+
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
     }
@@ -324,12 +329,17 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, logLevelInt) }
     }
 
-    internal fun setHost(context: Context, host: String) {
-        getSharedPreferences(context).edit { putString(KEY_HOST, host) }
+    internal fun setHostRegion(context: Context, region: Radar.RadarHostRegion) {
+        val hostString = when(region) {
+            Radar.RadarHostRegion.NORTH_AMERICA -> RADAR_HOST_NORTH_AMERICA
+            Radar.RadarHostRegion.EUROPE -> RADAR_HOST_EUROPE
+            Radar.RadarHostRegion.GLOBAL -> RADAR_HOST_GLOBAL
+        }
+        getSharedPreferences(context).edit { putString(KEY_HOST, hostString) }
     }
 
     internal fun getHost(context: Context): String {
-        return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
+        return getSharedPreferences(context).getString(KEY_HOST, null) ?: RADAR_HOST_GLOBAL
     }
 
     internal fun setPermissionsDenied(context: Context, denied: Boolean) {
