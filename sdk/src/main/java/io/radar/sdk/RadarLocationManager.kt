@@ -530,8 +530,10 @@ internal class RadarLocationManager(
                 return
             }
 
-            if (lastSyncInterval < options.desiredSyncInterval) {
-                logger.d("Skipping sync: desired sync interval | desiredSyncInterval = ${options.desiredSyncInterval}; lastSyncInterval = $lastSyncInterval")
+            // We add the 0.1 second buffer to account for the fact that the timer may fire slightly before the desired interval
+            val lastSyncIntervalWithBuffer = lastSyncInterval + 0.1
+            if (lastSyncIntervalWithBuffer < options.desiredSyncInterval) {
+                logger.d("Skipping sync: desired sync interval | desiredSyncInterval = ${options.desiredSyncInterval}; lastSyncInterval = ${lastSyncIntervalWithBuffer}")
 
                 return
             }
@@ -632,7 +634,7 @@ internal class RadarLocationManager(
                             }
                         })
                    } else {
-                       callTrackApi(null)
+                       callTrackApi(arrayOf())
                    }
                 }
             }, cache)
