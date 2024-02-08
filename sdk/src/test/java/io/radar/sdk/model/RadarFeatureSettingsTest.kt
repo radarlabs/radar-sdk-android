@@ -20,6 +20,7 @@ class RadarFeatureSettingsTest {
     private var usePersistence = true
     private var extendFlushReplays = false
     private var useLogPersistence = true
+    private var useRadarModifiedBeacon = false
     private lateinit var jsonString: String
 
     @Before
@@ -31,6 +32,7 @@ class RadarFeatureSettingsTest {
             "networkAny":$requiresNetwork,
             "maxConcurrentJobs":$maxConcurrentJobs,
             "usePersistence":$usePersistence,
+            "useRadarModifiedBeacon":$useRadarModifiedBeacon,
             "useLogPersistence":$useLogPersistence,
             "extendFlushReplays":$extendFlushReplays
         }""".trimIndent()
@@ -40,7 +42,14 @@ class RadarFeatureSettingsTest {
     fun testToJson() {
         assertEquals(
             jsonString.removeWhitespace(),
-            RadarFeatureSettings(maxConcurrentJobs, requiresNetwork, usePersistence, extendFlushReplays, useLogPersistence).toJson().toString().removeWhitespace()
+            RadarFeatureSettings(
+                maxConcurrentJobs,
+                requiresNetwork,
+                usePersistence,
+                extendFlushReplays,
+                useLogPersistence,
+                useRadarModifiedBeacon
+            ).toJson().toString().removeWhitespace()
         )
     }
 
@@ -52,6 +61,7 @@ class RadarFeatureSettingsTest {
         assertEquals(usePersistence, settings.usePersistence)
         assertEquals(extendFlushReplays, settings.extendFlushReplays)
         assertEquals(useLogPersistence, settings.useLogPersistence)
+        assertEquals(useRadarModifiedBeacon, settings.useRadarModifiedBeacon)
     }
 
     @Test
@@ -62,6 +72,7 @@ class RadarFeatureSettingsTest {
         assertFalse(settings.usePersistence)
         assertFalse(settings.extendFlushReplays)
         assertFalse(settings.useLogPersistence)
+        assertFalse(settings.useRadarModifiedBeacon)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")
