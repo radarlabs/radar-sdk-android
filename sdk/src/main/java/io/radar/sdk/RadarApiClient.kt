@@ -94,7 +94,7 @@ internal class RadarApiClient(
     }
 
     private fun headers(publishableKey: String): Map<String, String> {
-        return mapOf(
+        val headers = mutableMapOf(
             "Authorization" to publishableKey,
             "Content-Type" to "application/json",
             "X-Radar-Config" to "true",
@@ -104,6 +104,13 @@ internal class RadarApiClient(
             "X-Radar-Device-Type" to RadarUtils.deviceType,
             "X-Radar-SDK-Version" to RadarUtils.sdkVersion
         )
+        if (RadarSettings.isXPlatform(context)) {
+            headers["X-Radar-X-Platform-SDK-Type"] = RadarSettings.getXPlatformSDKType(context)
+            headers["X-Radar-X-Platform-SDK-Version"] = RadarSettings.getXPlatformSDKVersion(context)
+        } else {
+            headers["X-Radar-X-Platform-SDK-Type"] = "Native"
+        }
+        return headers
     }
 
     internal fun getConfig(usage: String? = null, verified: Boolean = false, callback: RadarGetConfigApiCallback? = null) {
@@ -298,6 +305,12 @@ internal class RadarApiClient(
             params.putOpt("country", RadarUtils.country)
             params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
             params.putOpt("source", Radar.stringForSource(source))
+            if (RadarSettings.isXPlatform(context)) {
+                params.putOpt("xPlatformType", RadarSettings.getXPlatformSDKType(context))
+                params.putOpt("xPlatformSDKVersion", RadarSettings.getXPlatformSDKVersion(context))
+            } else {
+                params.putOpt("xPlatformType", "Native")
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 val mocked = location.isFromMockProvider
                 params.putOpt("mocked", mocked)
