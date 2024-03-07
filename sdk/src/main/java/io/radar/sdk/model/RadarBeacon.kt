@@ -165,6 +165,8 @@ class RadarBeacon (
         obj.putOpt(FIELD_TYPE, stringForType(this.type))
         obj.putOpt(FIELD_ID, this._id)
         obj.putOpt(FIELD_DESCRIPTION, this.description)
+        obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
+        obj.putOpt(FIELD_TAG, this.tag)
         if (this.type == RadarBeaconType.EDDYSTONE) {
             obj.putOpt(FIELD_UID, this.uuid.lowercase())
             obj.putOpt(FIELD_INSTANCE, this.major)
