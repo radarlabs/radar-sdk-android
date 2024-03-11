@@ -51,7 +51,12 @@ data class RadarFraud(
     /**
      * A boolean indicating whether the user is screen sharing. May be `false` if Fraud is not enabled.
      */
-    val sharing: Boolean
+    val sharing: Boolean,
+
+    /**
+     * A boolean indicating whether the user's location is not accurate enough. May be `false` if Fraud is not enabled.
+     */
+    val inaccurate: Boolean
 ) {
     companion object {
         private const val PASSED = "passed"
@@ -62,6 +67,7 @@ data class RadarFraud(
         private const val COMPROMISED = "compromised"
         private const val JUMPED = "jumped"
         private const val SHARING = "sharing"
+        private const val INACCURATE = "inaccurate"
 
         @JvmStatic
         fun fromJson(json: JSONObject?): RadarFraud {
@@ -73,7 +79,8 @@ data class RadarFraud(
                 mocked = json?.optBoolean(MOCKED, false) ?: false,
                 compromised = json?.optBoolean(COMPROMISED, false) ?: false,
                 jumped = json?.optBoolean(JUMPED, false) ?: false,
-                sharing = json?.optBoolean(SHARING, false) ?: false
+                sharing = json?.optBoolean(SHARING, false) ?: false,
+                inaccurate = json?.optBoolean(INACCURATE, false) ?: false
             )
         }
     }
@@ -88,6 +95,7 @@ data class RadarFraud(
             putOpt(COMPROMISED, compromised)
             putOpt(JUMPED, jumped)
             putOpt(SHARING, sharing)
+            putOpt(INACCURATE, inaccurate)
         }
     }
 }

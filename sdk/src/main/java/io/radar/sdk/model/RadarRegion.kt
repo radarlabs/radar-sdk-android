@@ -35,9 +35,29 @@ class RadarRegion(
     val flag: String?,
 
     /**
-     * A boolean indicating whether the region is allowed. May be `false` if Fraud is not enabled.
+     * A boolean indicating whether the jurisdiction is allowed. May be `false` if Fraud is not enabled.
      */
-    val allowed: Boolean = false
+    val allowed: Boolean = false,
+
+    /**
+     * A boolean indicating whether all jurisdiction checks for the region have passed. May be `false` if Fraud is not enabled.
+     */
+    val passed: Boolean = false,
+
+    /**
+     * A boolean indicating whether the user is in an exclusion zone for the jurisdiction. May be `false` if Fraud is not enabled.
+     */
+    val inExclusionZone: Boolean = false,
+
+    /**
+     * A boolean indicating whether the user is too close to the border for the jurisdiction. May be `false` if Fraud is not enabled.
+     */
+    val inBufferZone: Boolean = false,
+
+    /**
+     * The distance in meters to the border of the jurisdiction. May be `false` if Fraud is not enabled.
+     */
+    val distanceToBorder: Double,
 ) {
 
     internal companion object {
@@ -47,6 +67,10 @@ class RadarRegion(
         private const val FIELD_CODE = "code"
         private const val FIELD_FLAG = "flag"
         private const val FIELD_ALLOWED = "allowed"
+        private const val FIELD_PASSED = "passed"
+        private const val FIELD_IN_EXCLUSION_ZONE = "inExclusionZone"
+        private const val FIELD_IN_BUFFER_ZONE = "inBufferZone"
+        private const val FIELD_DISTANCE_TO_BORDER = "distanceToBorder"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarRegion? {
@@ -60,8 +84,12 @@ class RadarRegion(
             val type = obj.optString(FIELD_TYPE) ?: ""
             val flag = obj.optString(FIELD_FLAG) ?: null
             val allowed = obj.optBoolean(FIELD_ALLOWED)
+            val passed = obj.optBoolean(FIELD_PASSED)
+            val inExclusionZone = obj.optBoolean(FIELD_IN_EXCLUSION_ZONE)
+            val inBufferZone = obj.optBoolean(FIELD_IN_BUFFER_ZONE)
+            val distanceToBorder = obj.optDouble(FIELD_DISTANCE_TO_BORDER)
 
-            return RadarRegion(id, name, code, type, flag, allowed)
+            return RadarRegion(id, name, code, type, flag, allowed, passed, inExclusionZone, inBufferZone, distanceToBorder)
         }
 
         @JvmStatic
@@ -84,6 +112,10 @@ class RadarRegion(
         obj.putOpt(FIELD_TYPE, this.type)
         obj.putOpt(FIELD_FLAG, this.flag)
         obj.putOpt(FIELD_ALLOWED, this.allowed)
+        obj.putOpt(FIELD_PASSED, this.passed)
+        obj.putOpt(FIELD_IN_EXCLUSION_ZONE, this.inExclusionZone)
+        obj.putOpt(FIELD_IN_BUFFER_ZONE, this.inBufferZone)
+        obj.putOpt(FIELD_DISTANCE_TO_BORDER, this.distanceToBorder)
         return obj
     }
 
