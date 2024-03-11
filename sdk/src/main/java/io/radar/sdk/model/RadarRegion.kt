@@ -55,7 +55,7 @@ class RadarRegion(
     val inBufferZone: Boolean = false,
 
     /**
-     * The distance in meters to the border of the jurisdiction. May be `false` if Fraud is not enabled.
+     * The distance in meters to the border of the jurisdiction. May be 0 if Fraud is not enabled.
      */
     val distanceToBorder: Double,
 ) {
