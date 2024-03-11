@@ -163,6 +163,8 @@ class RadarEvent(
         USER_APPROACHING_TRIP_DESTINATION,
         /** `user.arrived_at_trip_destination` */
         USER_ARRIVED_AT_TRIP_DESTINATION,
+        /** user.arrived_at_wrong_trip_destination */
+        USER_ARRIVED_AT_WRONG_TRIP_DESTINATION,
         /** `user.failed_fraud` */
         USER_FAILED_FRAUD,
     }
@@ -249,6 +251,7 @@ class RadarEvent(
                 "user.stopped_trip" -> USER_STOPPED_TRIP
                 "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
                 "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
+                "user.arrived_at_wrong_trip_destination" -> USER_ARRIVED_AT_WRONG_TRIP_DESTINATION
                 "user.failed_fraud" -> USER_FAILED_FRAUD
                 else -> CONVERSION
             }
@@ -349,6 +352,7 @@ class RadarEvent(
                 USER_STOPPED_TRIP -> "user.stopped_trip"
                 USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
                 USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
+                USER_ARRIVED_AT_WRONG_TRIP_DESTINATION -> "user.arrived_at_wrong_trip_destination"
                 USER_FAILED_FRAUD -> "user.failed_fraud"
                 else -> null
             }
