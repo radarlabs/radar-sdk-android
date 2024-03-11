@@ -161,8 +161,8 @@ class RadarEvent(
         USER_APPROACHING_TRIP_DESTINATION,
         /** `user.arrived_at_trip_destination` */
         USER_ARRIVED_AT_TRIP_DESTINATION,
-        /** user.entered_wrong_destination */
-        USER_ENTERED_WRONG_DESTINATION
+        /** user.arrived_at_wrong_trip_destination */
+        USER_ARRIVED_AT_WRONG_TRIP_DESTINATION
     }
 
     /**
@@ -246,7 +246,7 @@ class RadarEvent(
                 "user.stopped_trip" -> USER_STOPPED_TRIP
                 "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
                 "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
-                "user.entered_wrong_destination" -> USER_ENTERED_WRONG_DESTINATION
+                "user.arrived_at_wrong_trip_destination" -> USER_ARRIVED_AT_WRONG_TRIP_DESTINATION
                 else -> CONVERSION
             }
             var conversionName: String? = null
@@ -345,7 +345,7 @@ class RadarEvent(
                 USER_STOPPED_TRIP -> "user.stopped_trip"
                 USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
                 USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
-                USER_ENTERED_WRONG_DESTINATION -> "user.entered_wrong_destination"
+                USER_ARRIVED_AT_WRONG_TRIP_DESTINATION -> "user.arrived_at_wrong_trip_destination"
                 else -> null
             }
         }
