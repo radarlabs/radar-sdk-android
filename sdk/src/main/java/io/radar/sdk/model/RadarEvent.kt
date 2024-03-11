@@ -67,6 +67,11 @@ class RadarEvent(
     val trip: RadarTrip?,
 
     /**
+     * The fraud checks for which the event was generated. May be `null` for non-fraud events.
+     */
+    val fraud: RadarFraud?,
+
+    /**
      * For place entry events, alternate place candidates. May be `null` for non-place events.
      */
     val alternatePlaces: Array<RadarPlace>?,
@@ -114,10 +119,7 @@ class RadarEvent(
         // These strings should match the values (and order) of the server's event constants.
         /** Unknown */
         UNKNOWN,
-        /**
-         * A conversion type, created by calling `Radar.sendEvent()`. The conversion type will be assigned
-         * to the `conversionType` property
-         */
+        /** A conversion event, logged with Radar.logConversion() */
         CONVERSION,
         /** `user.entered_geofence` */
         USER_ENTERED_GEOFENCE,
@@ -161,6 +163,8 @@ class RadarEvent(
         USER_APPROACHING_TRIP_DESTINATION,
         /** `user.arrived_at_trip_destination` */
         USER_ARRIVED_AT_TRIP_DESTINATION,
+        /** `user.failed_fraud` */
+        USER_FAILED_FRAUD,
     }
 
     /**
@@ -200,6 +204,7 @@ class RadarEvent(
         private const val FIELD_REGION = "region"
         private const val FIELD_BEACON = "beacon"
         private const val FIELD_TRIP = "trip"
+        private const val FIELD_FRAUD = "fraud"
         private const val FIELD_ALTERNATE_PLACES = "alternatePlaces"
         private const val FIELD_VERIFIED_PLACE = "verifiedPlace"
         private const val FIELD_VERIFICATION = "verification"
@@ -244,6 +249,7 @@ class RadarEvent(
                 "user.stopped_trip" -> USER_STOPPED_TRIP
                 "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
                 "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
+                "user.failed_fraud" -> USER_FAILED_FRAUD
                 else -> CONVERSION
             }
             var conversionName: String? = null
@@ -256,6 +262,7 @@ class RadarEvent(
             val region = RadarRegion.fromJson(obj.optJSONObject(FIELD_REGION))
             val beacon = RadarBeacon.fromJson(obj.optJSONObject(FIELD_BEACON))
             val trip = RadarTrip.fromJson(obj.optJSONObject(FIELD_TRIP))
+            val fraud = RadarTrip.fromJson(obj.optJSONObject(FIELD_FRAUD))
             val alternatePlaces = RadarPlace.fromJson(obj.optJSONArray(FIELD_ALTERNATE_PLACES))
             val verifiedPlace = RadarPlace.fromJson(obj.optJSONObject(FIELD_VERIFIED_PLACE))
             val verification = when (obj.optInt(FIELD_VERIFICATION)) {
@@ -286,7 +293,7 @@ class RadarEvent(
             val metadata = obj.optJSONObject(FIELD_METADATA)
 
             val event = RadarEvent(
-                id, createdAt, actualCreatedAt, live, type, conversionName, geofence, place, region, beacon, trip,
+                id, createdAt, actualCreatedAt, live, type, conversionName, geofence, place, region, beacon, trip, fraud,
                 alternatePlaces, verifiedPlace, verification, confidence, duration, location, replayed, metadata
             )
 
@@ -342,6 +349,7 @@ class RadarEvent(
                 USER_STOPPED_TRIP -> "user.stopped_trip"
                 USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
                 USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
+                USER_FAILED_FRAUD -> "user.failed_fraud"
                 else -> null
             }
         }
@@ -361,6 +369,7 @@ class RadarEvent(
         obj.putOpt(FIELD_REGION, this.region?.toJson())
         obj.putOpt(FIELD_BEACON, this.beacon?.toJson())
         obj.putOpt(FIELD_TRIP, this.trip?.toJson())
+        obj.putOpt(FIELD_FRAUD, this.fraud?.toJson())
         obj.putOpt(FIELD_ALTERNATE_PLACES, RadarPlace.toJson(this.alternatePlaces))
         val locationObj = JSONObject()
         locationObj.putOpt("type", "Point")
