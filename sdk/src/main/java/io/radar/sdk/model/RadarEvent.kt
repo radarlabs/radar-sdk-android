@@ -262,7 +262,7 @@ class RadarEvent(
             val region = RadarRegion.fromJson(obj.optJSONObject(FIELD_REGION))
             val beacon = RadarBeacon.fromJson(obj.optJSONObject(FIELD_BEACON))
             val trip = RadarTrip.fromJson(obj.optJSONObject(FIELD_TRIP))
-            val fraud = RadarTrip.fromJson(obj.optJSONObject(FIELD_FRAUD))
+            val fraud = RadarFraud.fromJson(obj.optJSONObject(FIELD_FRAUD))
             val alternatePlaces = RadarPlace.fromJson(obj.optJSONArray(FIELD_ALTERNATE_PLACES))
             val verifiedPlace = RadarPlace.fromJson(obj.optJSONObject(FIELD_VERIFIED_PLACE))
             val verification = when (obj.optInt(FIELD_VERIFICATION)) {
