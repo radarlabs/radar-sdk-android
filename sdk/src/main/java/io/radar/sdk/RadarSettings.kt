@@ -36,7 +36,6 @@ internal object RadarSettings {
     private const val KEY_VERIFIED_HOST = "verified_host"
     private const val KEY_LAST_APP_OPEN_TIME = "last_app_open_time"
     private const val KEY_SHARING = "sharing"
-    private const val KEY_GOOGLE_PLAY_PROJECT_NUMBER = "google_play_project_number"
     private const val KEY_X_PLATFORM_SDK_TYPE = "x_platform_sdk_type"
     private const val KEY_X_PLATFORM_SDK_VERSION = "x_platform_sdk_version"
 
