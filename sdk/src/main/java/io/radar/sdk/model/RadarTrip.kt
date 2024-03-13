@@ -58,7 +58,18 @@ class RadarTrip(
     /**
      * The status of the trip.
      */
-    val status: RadarTripStatus
+    val status: RadarTripStatus,
+
+    /**
+     * The flag indicating if a trip is delayed.
+     */
+    val delayed: Boolean?,
+
+    /**
+     * The delay in minutes for the scheduled arrival time for the trip.
+     */
+    val scheduledArrivalTimeDelay: Int?
+
 ) {
 
     enum class RadarTripStatus {
@@ -91,6 +102,9 @@ class RadarTrip(
         private const val FIELD_DISTANCE = "distance"
         private const val FIELD_DURATION = "duration"
         private const val FIELD_STATUS = "status"
+        private const val FIELD_DELAY = "delay"
+        private const val FIELD_DELAYED = "delayed"
+        private const val FIELD_SCHEDULED_ARRIVAL_TIME_DELAY = "scheduledArrivalTimeDelay"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarTrip? {
@@ -133,6 +147,8 @@ class RadarTrip(
                 "canceled" -> RadarTripStatus.CANCELED
                 else -> RadarTripStatus.UNKNOWN
             }
+            val delayed = obj.optJSONObject(FIELD_DELAY)?.optBoolean(FIELD_DELAYED)
+            val scheduledArrivalTimeDelay = obj.optJSONObject(FIELD_FIELD_DELAYETA)?.optInt(FIELD_SCHEDULED_ARRIVAL_TIME_DELAY)
 
             return RadarTrip(
                 id,
@@ -144,7 +160,9 @@ class RadarTrip(
                 mode,
                 etaDistance,
                 etaDuration,
-                status
+                status,
+                delayed,
+                scheduledArrivalTimeDelay
             )
         }
 
@@ -174,6 +192,10 @@ class RadarTrip(
         etaObj.putOpt(FIELD_DURATION, this.etaDuration)
         obj.putOpt(FIELD_ETA, etaObj)
         obj.putOpt(FIELD_STATUS, Radar.stringForTripStatus(status))
+        val delayObj = JSONObject()
+        delayObj.putOpt(FIELD_DELAYED, this.delayed)
+        delayObj.putOpt(FIELD_SCHEDULED_ARRIVAL_TIME_DELAY, this.scheduledArrivalTimeDelay)
+        obj.putOpt(FIELD_DELAY, delayObj)
         return obj
     }
 
