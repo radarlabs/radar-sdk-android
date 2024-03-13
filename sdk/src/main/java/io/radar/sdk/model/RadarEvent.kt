@@ -167,6 +167,8 @@ class RadarEvent(
         USER_ARRIVED_AT_WRONG_TRIP_DESTINATION,
         /** `user.failed_fraud` */
         USER_FAILED_FRAUD,
+        /** `user.delayed_during_trip` */
+        USER_DELAYED_DURING_TRIP
     }
 
     /**
@@ -253,6 +255,7 @@ class RadarEvent(
                 "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
                 "user.arrived_at_wrong_trip_destination" -> USER_ARRIVED_AT_WRONG_TRIP_DESTINATION
                 "user.failed_fraud" -> USER_FAILED_FRAUD
+                "user.delayed_during_trip" -> USER_DELAYED_DURING_TRIP
                 else -> CONVERSION
             }
             var conversionName: String? = null
@@ -354,6 +357,7 @@ class RadarEvent(
                 USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
                 USER_ARRIVED_AT_WRONG_TRIP_DESTINATION -> "user.arrived_at_wrong_trip_destination"
                 USER_FAILED_FRAUD -> "user.failed_fraud"
+                USER_DELAYED_DURING_TRIP -> "user.delayed_during_trip"
                 else -> null
             }
         }
