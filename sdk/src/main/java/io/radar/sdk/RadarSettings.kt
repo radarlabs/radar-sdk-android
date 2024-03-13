@@ -376,14 +376,6 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putBoolean(KEY_SHARING, sharing) }
     }
 
-    internal fun getGooglePlayProjectNumber(context: Context): Long {
-        return getSharedPreferences(context).getLong(KEY_GOOGLE_PLAY_PROJECT_NUMBER, 0)
-    }
-
-    internal fun setGooglePlayProjectNumber(context: Context, googlePlayProjectNumber: Long) {
-        getSharedPreferences(context).edit { putLong(KEY_GOOGLE_PLAY_PROJECT_NUMBER, googlePlayProjectNumber) }
-    }
-
     internal fun isXPlatform(context: Context): Boolean {
         return getSharedPreferences(context).contains(KEY_X_PLATFORM_SDK_TYPE) &&
                 getSharedPreferences(context).contains(KEY_X_PLATFORM_SDK_VERSION)
