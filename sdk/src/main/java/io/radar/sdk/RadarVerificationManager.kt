@@ -41,7 +41,7 @@ internal class RadarVerificationManager(
         val verificationManager = this
 
         val usage = "trackVerified"
-        Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
+        Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
                 val googlePlayProjectNumber = config.googlePlayProjectNumber
 
@@ -207,7 +207,7 @@ internal class RadarVerificationManager(
         val verificationManager = this
 
         val usage = "trackVerifiedToken"
-        Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
+        Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
                 val googlePlayProjectNumber = config.googlePlayProjectNumber
 
