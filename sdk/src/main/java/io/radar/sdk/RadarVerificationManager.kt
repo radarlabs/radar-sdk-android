@@ -40,267 +40,307 @@ internal class RadarVerificationManager(
     fun trackVerified(beacons: Boolean = false, callback: Radar.RadarTrackCallback? = null) {
         val verificationManager = this
 
-        val googlePlayProjectNumber = RadarSettings.getGooglePlayProjectNumber(this.context)
+        val usage = "trackVerified"
+        Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
+                val googlePlayProjectNumber = config.googlePlayProjectNumber
 
-        Radar.locationManager.getLocation(
-            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
-            Radar.RadarLocationSource.FOREGROUND_LOCATION,
-            object :
-                Radar.RadarLocationCallback {
-                override fun onComplete(
-                    status: Radar.RadarStatus,
-                    location: Location?,
-                    stopped: Boolean
-                ) {
-                    if (status != Radar.RadarStatus.SUCCESS || location == null) {
-                        Radar.handler.post {
-                            callback?.onComplete(status)
-                        }
-
-                        return
+                if (status != Radar.RadarStatus.SUCCESS) {
+                    Radar.handler.post {
+                        callback?.onComplete(status)
                     }
 
-                    val requestHash = verificationManager.getRequestHash(location)
-
-                    verificationManager.getIntegrityToken(
-                        googlePlayProjectNumber,
-                        requestHash
-                    ) { integrityToken, integrityException ->
-                        val callTrackApi = { beacons: Array<RadarBeacon>? ->
-                            Radar.apiClient.track(
-                                location,
-                                RadarState.getStopped(verificationManager.context),
-                                RadarActivityLifecycleCallbacks.foreground,
-                                Radar.RadarLocationSource.FOREGROUND_LOCATION,
-                                false,
-                                beacons,
-                                true,
-                                integrityToken,
-                                integrityException,
-                                false,
-                                callback = object : RadarApiClient.RadarTrackApiCallback {
-                                    override fun onComplete(
-                                        status: Radar.RadarStatus,
-                                        res: JSONObject?,
-                                        events: Array<RadarEvent>?,
-                                        user: RadarUser?,
-                                        nearbyGeofences: Array<RadarGeofence>?,
-                                        config: RadarConfig?,
-                                        token: String?
-                                    ) {
-                                        if (status == Radar.RadarStatus.SUCCESS) {
-                                            Radar.locationManager.updateTrackingFromMeta(config?.meta)
-                                        }
-                                        Radar.handler.post {
-                                            callback?.onComplete(status, location, events, user)
-                                        }
-                                    }
-                                })
-                        }
-
-                        if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            Radar.apiClient.searchBeacons(
-                                location,
-                                1000,
-                                10,
-                                object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                                    override fun onComplete(
-                                        status: Radar.RadarStatus,
-                                        res: JSONObject?,
-                                        beacons: Array<RadarBeacon>?,
-                                        uuids: Array<String>?,
-                                        uids: Array<String>?
-                                    ) {
-                                        if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                            Radar.beaconManager.startMonitoringBeaconUUIDs(
-                                                uuids,
-                                                uids
-                                            )
-
-                                            Radar.beaconManager.rangeBeaconUUIDs(
-                                                uuids,
-                                                uids,
-                                                false,
-                                                object : Radar.RadarBeaconCallback {
-                                                    override fun onComplete(
-                                                        status: Radar.RadarStatus,
-                                                        beacons: Array<RadarBeacon>?
-                                                    ) {
-                                                        if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
-                                                            callTrackApi(null)
-
-                                                            return
-                                                        }
-
-                                                        callTrackApi(beacons)
-                                                    }
-                                                })
-                                        } else if (beacons != null) {
-                                            Radar.beaconManager.startMonitoringBeacons(beacons)
-
-                                            Radar.beaconManager.rangeBeacons(
-                                                beacons,
-                                                false,
-                                                object : Radar.RadarBeaconCallback {
-                                                    override fun onComplete(
-                                                        status: Radar.RadarStatus,
-                                                        beacons: Array<RadarBeacon>?
-                                                    ) {
-                                                        if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
-                                                            callTrackApi(null)
-
-                                                            return
-                                                        }
-
-                                                        callTrackApi(beacons)
-                                                    }
-                                                })
-                                        } else {
-                                            callTrackApi(arrayOf())
-                                        }
-                                    }
-                                },
-                                false
-                            )
-                        } else {
-                            callTrackApi(null)
-                        }
-                    }
+                    return
                 }
-            })
+
+                Radar.locationManager.getLocation(
+                    RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
+                    Radar.RadarLocationSource.FOREGROUND_LOCATION,
+                    object :
+                        Radar.RadarLocationCallback {
+                        override fun onComplete(
+                            status: Radar.RadarStatus,
+                            location: Location?,
+                            stopped: Boolean
+                        ) {
+                            if (status != Radar.RadarStatus.SUCCESS || location == null) {
+                                Radar.handler.post {
+                                    callback?.onComplete(status)
+                                }
+
+                                return
+                            }
+
+                            val requestHash = verificationManager.getRequestHash(location)
+
+                            verificationManager.getIntegrityToken(
+                                googlePlayProjectNumber,
+                                requestHash
+                            ) { integrityToken, integrityException ->
+                                val callTrackApi = { beacons: Array<RadarBeacon>? ->
+                                    Radar.apiClient.track(
+                                        location,
+                                        RadarState.getStopped(verificationManager.context),
+                                        RadarActivityLifecycleCallbacks.foreground,
+                                        Radar.RadarLocationSource.FOREGROUND_LOCATION,
+                                        false,
+                                        beacons,
+                                        true,
+                                        integrityToken,
+                                        integrityException,
+                                        false,
+                                        callback = object : RadarApiClient.RadarTrackApiCallback {
+                                            override fun onComplete(
+                                                status: Radar.RadarStatus,
+                                                res: JSONObject?,
+                                                events: Array<RadarEvent>?,
+                                                user: RadarUser?,
+                                                nearbyGeofences: Array<RadarGeofence>?,
+                                                config: RadarConfig?,
+                                                token: String?
+                                            ) {
+                                                if (status == Radar.RadarStatus.SUCCESS) {
+                                                    Radar.locationManager.updateTrackingFromMeta(
+                                                        config?.meta
+                                                    )
+                                                }
+                                                Radar.handler.post {
+                                                    callback?.onComplete(
+                                                        status,
+                                                        location,
+                                                        events,
+                                                        user
+                                                    )
+                                                }
+                                            }
+                                        })
+                                }
+
+                                if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    Radar.apiClient.searchBeacons(
+                                        location,
+                                        1000,
+                                        10,
+                                        object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                                            override fun onComplete(
+                                                status: Radar.RadarStatus,
+                                                res: JSONObject?,
+                                                beacons: Array<RadarBeacon>?,
+                                                uuids: Array<String>?,
+                                                uids: Array<String>?
+                                            ) {
+                                                if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                                                    Radar.beaconManager.startMonitoringBeaconUUIDs(
+                                                        uuids,
+                                                        uids
+                                                    )
+
+                                                    Radar.beaconManager.rangeBeaconUUIDs(
+                                                        uuids,
+                                                        uids,
+                                                        false,
+                                                        object : Radar.RadarBeaconCallback {
+                                                            override fun onComplete(
+                                                                status: Radar.RadarStatus,
+                                                                beacons: Array<RadarBeacon>?
+                                                            ) {
+                                                                if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
+                                                                    callTrackApi(null)
+
+                                                                    return
+                                                                }
+
+                                                                callTrackApi(beacons)
+                                                            }
+                                                        })
+                                                } else if (beacons != null) {
+                                                    Radar.beaconManager.startMonitoringBeacons(
+                                                        beacons
+                                                    )
+
+                                                    Radar.beaconManager.rangeBeacons(
+                                                        beacons,
+                                                        false,
+                                                        object : Radar.RadarBeaconCallback {
+                                                            override fun onComplete(
+                                                                status: Radar.RadarStatus,
+                                                                beacons: Array<RadarBeacon>?
+                                                            ) {
+                                                                if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
+                                                                    callTrackApi(null)
+
+                                                                    return
+                                                                }
+
+                                                                callTrackApi(beacons)
+                                                            }
+                                                        })
+                                                } else {
+                                                    callTrackApi(arrayOf())
+                                                }
+                                            }
+                                        },
+                                        false
+                                    )
+                                } else {
+                                    callTrackApi(null)
+                                }
+                            }
+                        }
+                    })
+            }
+        })
     }
 
     fun trackVerifiedToken(beacons: Boolean = false, callback: Radar.RadarTrackTokenCallback? = null) {
         val verificationManager = this
 
-        val googlePlayProjectNumber = RadarSettings.getGooglePlayProjectNumber(this.context)
+        val usage = "trackVerifiedToken"
+        Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
+                val googlePlayProjectNumber = config.googlePlayProjectNumber
 
-        Radar.locationManager.getLocation(
-            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH,
-            Radar.RadarLocationSource.FOREGROUND_LOCATION,
-            object :
-                Radar.RadarLocationCallback {
-                override fun onComplete(
-                    status: Radar.RadarStatus,
-                    location: Location?,
-                    stopped: Boolean
-                ) {
-                    if (status != Radar.RadarStatus.SUCCESS || location == null) {
-                        Radar.handler.post {
-                            callback?.onComplete(status)
-                        }
-
-                        return
+                if (status != Radar.RadarStatus.SUCCESS) {
+                    Radar.handler.post {
+                        callback?.onComplete(status)
                     }
 
-                    val requestHash = verificationManager.getRequestHash(location)
+                    return
 
-                    verificationManager.getIntegrityToken(
-                        googlePlayProjectNumber,
-                        requestHash
-                    ) { integrityToken, integrityException ->
-                        val callTrackApi = { beacons: Array<RadarBeacon>? ->
-                            Radar.apiClient.track(
-                                location,
-                                RadarState.getStopped(verificationManager.context),
-                                RadarActivityLifecycleCallbacks.foreground,
-                                Radar.RadarLocationSource.FOREGROUND_LOCATION,
-                                false,
-                                beacons,
-                                true,
-                                integrityToken,
-                                integrityException,
-                                true,
-                                object : RadarApiClient.RadarTrackApiCallback {
-                                    override fun onComplete(
-                                        status: Radar.RadarStatus,
-                                        res: JSONObject?,
-                                        events: Array<RadarEvent>?,
-                                        user: RadarUser?,
-                                        nearbyGeofences: Array<RadarGeofence>?,
-                                        config: RadarConfig?,
-                                        token: String?
-                                    ) {
-                                        if (status == Radar.RadarStatus.SUCCESS) {
-                                            Radar.locationManager.updateTrackingFromMeta(config?.meta)
-                                        }
-                                        Radar.handler.post {
-                                            callback?.onComplete(status, token)
-                                        }
-                                    }
-                                })
-                        }
-
-                        if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            Radar.apiClient.searchBeacons(
-                                location,
-                                1000,
-                                10,
-                                object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                                    override fun onComplete(
-                                        status: Radar.RadarStatus,
-                                        res: JSONObject?,
-                                        beacons: Array<RadarBeacon>?,
-                                        uuids: Array<String>?,
-                                        uids: Array<String>?
-                                    ) {
-                                        if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                            Radar.beaconManager.startMonitoringBeaconUUIDs(
-                                                uuids,
-                                                uids
-                                            )
-
-                                            Radar.beaconManager.rangeBeaconUUIDs(
-                                                uuids,
-                                                uids,
-                                                false,
-                                                object : Radar.RadarBeaconCallback {
-                                                    override fun onComplete(
-                                                        status: Radar.RadarStatus,
-                                                        beacons: Array<RadarBeacon>?
-                                                    ) {
-                                                        if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
-                                                            callTrackApi(null)
-
-                                                            return
-                                                        }
-
-                                                        callTrackApi(beacons)
-                                                    }
-                                                })
-                                        } else if (beacons != null) {
-                                            Radar.beaconManager.startMonitoringBeacons(beacons)
-
-                                            Radar.beaconManager.rangeBeacons(
-                                                beacons,
-                                                false,
-                                                object : Radar.RadarBeaconCallback {
-                                                    override fun onComplete(
-                                                        status: Radar.RadarStatus,
-                                                        beacons: Array<RadarBeacon>?
-                                                    ) {
-                                                        if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
-                                                            callTrackApi(null)
-
-                                                            return
-                                                        }
-
-                                                        callTrackApi(beacons)
-                                                    }
-                                                })
-                                        } else {
-                                            callTrackApi(arrayOf())
-                                        }
-                                    }
-                                },
-                                false
-                            )
-                        } else {
-                            callTrackApi(null)
-                        }
-                    }
                 }
-            })
+
+                Radar.locationManager.getLocation(
+                    RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH,
+                    Radar.RadarLocationSource.FOREGROUND_LOCATION,
+                    object :
+                        Radar.RadarLocationCallback {
+                        override fun onComplete(
+                            status: Radar.RadarStatus,
+                            location: Location?,
+                            stopped: Boolean
+                        ) {
+                            if (status != Radar.RadarStatus.SUCCESS || location == null) {
+                                Radar.handler.post {
+                                    callback?.onComplete(status)
+                                }
+
+                                return
+                            }
+
+                            val requestHash = verificationManager.getRequestHash(location)
+
+                            verificationManager.getIntegrityToken(
+                                googlePlayProjectNumber,
+                                requestHash
+                            ) { integrityToken, integrityException ->
+                                val callTrackApi = { beacons: Array<RadarBeacon>? ->
+                                    Radar.apiClient.track(
+                                        location,
+                                        RadarState.getStopped(verificationManager.context),
+                                        RadarActivityLifecycleCallbacks.foreground,
+                                        Radar.RadarLocationSource.FOREGROUND_LOCATION,
+                                        false,
+                                        beacons,
+                                        true,
+                                        integrityToken,
+                                        integrityException,
+                                        true,
+                                        object : RadarApiClient.RadarTrackApiCallback {
+                                            override fun onComplete(
+                                                status: Radar.RadarStatus,
+                                                res: JSONObject?,
+                                                events: Array<RadarEvent>?,
+                                                user: RadarUser?,
+                                                nearbyGeofences: Array<RadarGeofence>?,
+                                                config: RadarConfig?,
+                                                token: String?
+                                            ) {
+                                                if (status == Radar.RadarStatus.SUCCESS) {
+                                                    Radar.locationManager.updateTrackingFromMeta(
+                                                        config?.meta
+                                                    )
+                                                }
+                                                Radar.handler.post {
+                                                    callback?.onComplete(status, token)
+                                                }
+                                            }
+                                        })
+                                }
+
+                                if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    Radar.apiClient.searchBeacons(
+                                        location,
+                                        1000,
+                                        10,
+                                        object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                                            override fun onComplete(
+                                                status: Radar.RadarStatus,
+                                                res: JSONObject?,
+                                                beacons: Array<RadarBeacon>?,
+                                                uuids: Array<String>?,
+                                                uids: Array<String>?
+                                            ) {
+                                                if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                                                    Radar.beaconManager.startMonitoringBeaconUUIDs(
+                                                        uuids,
+                                                        uids
+                                                    )
+
+                                                    Radar.beaconManager.rangeBeaconUUIDs(
+                                                        uuids,
+                                                        uids,
+                                                        false,
+                                                        object : Radar.RadarBeaconCallback {
+                                                            override fun onComplete(
+                                                                status: Radar.RadarStatus,
+                                                                beacons: Array<RadarBeacon>?
+                                                            ) {
+                                                                if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
+                                                                    callTrackApi(null)
+
+                                                                    return
+                                                                }
+
+                                                                callTrackApi(beacons)
+                                                            }
+                                                        })
+                                                } else if (beacons != null) {
+                                                    Radar.beaconManager.startMonitoringBeacons(
+                                                        beacons
+                                                    )
+
+                                                    Radar.beaconManager.rangeBeacons(
+                                                        beacons,
+                                                        false,
+                                                        object : Radar.RadarBeaconCallback {
+                                                            override fun onComplete(
+                                                                status: Radar.RadarStatus,
+                                                                beacons: Array<RadarBeacon>?
+                                                            ) {
+                                                                if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
+                                                                    callTrackApi(null)
+
+                                                                    return
+                                                                }
+
+                                                                callTrackApi(beacons)
+                                                            }
+                                                        })
+                                                } else {
+                                                    callTrackApi(arrayOf())
+                                                }
+                                            }
+                                        },
+                                        false
+                                    )
+                                } else {
+                                    callTrackApi(null)
+                                }
+                            }
+                        }
+                    })
+            }
+        })
     }
 
     fun startTrackingVerified(token: Boolean, interval: Int, beacons: Boolean) {

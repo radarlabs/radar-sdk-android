@@ -36,7 +36,6 @@ internal object RadarSettings {
     private const val KEY_VERIFIED_HOST = "verified_host"
     private const val KEY_LAST_APP_OPEN_TIME = "last_app_open_time"
     private const val KEY_SHARING = "sharing"
-    private const val KEY_GOOGLE_PLAY_PROJECT_NUMBER = "google_play_project_number"
     private const val KEY_X_PLATFORM_SDK_TYPE = "x_platform_sdk_type"
     private const val KEY_X_PLATFORM_SDK_VERSION = "x_platform_sdk_version"
 
@@ -374,14 +373,6 @@ internal object RadarSettings {
 
     internal fun setSharing(context: Context, sharing: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_SHARING, sharing) }
-    }
-
-    internal fun getGooglePlayProjectNumber(context: Context): Long {
-        return getSharedPreferences(context).getLong(KEY_GOOGLE_PLAY_PROJECT_NUMBER, 0)
-    }
-
-    internal fun setGooglePlayProjectNumber(context: Context, googlePlayProjectNumber: Long) {
-        getSharedPreferences(context).edit { putLong(KEY_GOOGLE_PLAY_PROJECT_NUMBER, googlePlayProjectNumber) }
     }
 
     internal fun isXPlatform(context: Context): Boolean {

@@ -34,7 +34,7 @@ internal class RadarApiClient(
     }
 
     interface RadarGetConfigApiCallback {
-        fun onComplete(config: RadarConfig)
+        fun onComplete(status: RadarStatus, config: RadarConfig)
     }
 
     interface RadarTripApiCallback {
@@ -138,7 +138,7 @@ internal class RadarApiClient(
                 if (status == RadarStatus.SUCCESS) {
                     Radar.flushLogs()
                 }
-                callback?.onComplete(RadarConfig.fromJson(res))
+                callback?.onComplete(status, RadarConfig.fromJson(res))
             }
         }, false, true, verified)
     }
