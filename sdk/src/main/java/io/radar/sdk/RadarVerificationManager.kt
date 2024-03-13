@@ -51,7 +51,6 @@ internal class RadarVerificationManager(
                     }
 
                     return
-
                 }
 
                 Radar.locationManager.getLocation(
