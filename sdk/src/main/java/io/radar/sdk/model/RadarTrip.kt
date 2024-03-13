@@ -148,7 +148,7 @@ class RadarTrip(
                 else -> RadarTripStatus.UNKNOWN
             }
             val delayed = obj.optJSONObject(FIELD_DELAY)?.optBoolean(FIELD_DELAYED)
-            val scheduledArrivalTimeDelay = obj.optJSONObject(FIELD_FIELD_DELAY)?.optInt(FIELD_SCHEDULED_ARRIVAL_TIME_DELAY)
+            val scheduledArrivalTimeDelay = obj.optJSONObject(FIELD_DELAY)?.optInt(FIELD_SCHEDULED_ARRIVAL_TIME_DELAY)
 
             return RadarTrip(
                 id,
