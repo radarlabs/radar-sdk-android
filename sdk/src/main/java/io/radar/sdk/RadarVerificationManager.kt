@@ -54,16 +54,6 @@ internal class RadarVerificationManager(
 
                 }
 
-                if (googlePlayProjectNumber == null) {
-                    Radar.logger.e("Error fetching Google Play project number")
-
-                    Radar.handler.post {
-                        callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
-                    }
-
-                    return
-                }
-
                 Radar.locationManager.getLocation(
                     RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
                     Radar.RadarLocationSource.FOREGROUND_LOCATION,
@@ -218,16 +208,6 @@ internal class RadarVerificationManager(
 
                     return
 
-                }
-
-                if (googlePlayProjectNumber == null) {
-                    Radar.logger.e("Error fetching Google Play project number")
-
-                    Radar.handler.post {
-                        callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
-                    }
-
-                    return
                 }
 
                 Radar.locationManager.getLocation(
