@@ -105,7 +105,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
         Radar.logger.d("Received broadcast | action = ${intent.action}")
 
         when (intent.action) {
-            ACTION_BUBBLE_GEOFENCE, ACTION_SYNCED_GEOFENCES -> {
+            ACTION_BUBBLE_GEOFENCE -> {
                 val location = Radar.locationManager.getLocationFromGeofenceIntent(intent)
                 val source = Radar.locationManager.getSourceFromGeofenceIntent(intent)
 
@@ -118,6 +118,16 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 } else {
                     Radar.handleLocation(context, location, source)
                 }
+            }
+            ACTION_SYNCED_GEOFENCES -> {
+                val location = Radar.locationManager.getLocationFromGeofenceIntent(intent)
+                val source = Radar.locationManager.getSourceFromGeofenceIntent(intent)
+
+                if (location == null || source == null) {
+                    return
+                }
+
+                Radar.handleLocation(context, location, source)
             }
             ACTION_LOCATION -> {
                 val location = Radar.locationManager.getLocationFromLocationIntent(intent)
