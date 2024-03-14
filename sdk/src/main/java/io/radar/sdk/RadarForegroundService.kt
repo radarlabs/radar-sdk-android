@@ -94,7 +94,11 @@ class RadarForegroundService : Service() {
             logger.e("Error setting foreground service content intent", RadarLogType.SDK_EXCEPTION, e)
         }
         val notification = builder.build()
-        startForeground(id, notification)
+        if( getApplicationContext().getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE ){
+            startForeground(id, notification, FOREGROUND_SERVICE_TYPE_LOCATION )
+        }else{
+            startForeground(id, notification )
+        }
     }
 
     override fun onBind(intent: Intent): IBinder? {

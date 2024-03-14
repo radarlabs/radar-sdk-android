@@ -39,7 +39,7 @@ android {
         jvmTarget = "1.8"
     }
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 23
         targetSdkVersion 31
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
         multiDexEnabled = true
