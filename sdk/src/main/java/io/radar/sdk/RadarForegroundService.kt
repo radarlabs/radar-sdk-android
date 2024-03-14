@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.app.*
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -94,7 +95,11 @@ class RadarForegroundService : Service() {
             logger.e("Error setting foreground service content intent", RadarLogType.SDK_EXCEPTION, e)
         }
         val notification = builder.build()
-        startForeground(id, notification)
+        if (Build.VERSION.SDK_INT >= 29) {
+            startForeground(id, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+        } else {
+            startForeground(id, notification)
+        }
     }
 
     override fun onBind(intent: Intent): IBinder? {
