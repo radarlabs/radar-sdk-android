@@ -5,6 +5,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.os.Handler
+import android.os.Looper
 import android.os.Build
 import io.radar.sdk.Radar.RadarLocationCallback
 import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
@@ -191,10 +193,7 @@ internal class RadarLocationManager(
                 if (!foregroundService.updatesOnly) {
                     this.startForegroundService(foregroundService)
                 }
-            } else if (RadarForegroundService.started) {
-                this.stopForegroundService()
             }
-
             val stopped = RadarState.getStopped(context)
             if (stopped) {
                 if (options.desiredStoppedUpdateInterval == 0) {
@@ -222,6 +221,11 @@ internal class RadarLocationManager(
                 } else {
                     this.removeBubbleGeofences()
                 }
+            }
+            if (!options.foregroundServiceEnabled && RadarForegroundService.started) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    this.stopForegroundService()
+                }, 5000)
             }
         } else {
             if (RadarForegroundService.started) {
