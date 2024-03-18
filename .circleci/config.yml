@@ -3,7 +3,7 @@ jobs:
   build_and_test:
     working_directory: ~/sdk
     docker:
-      - image: cimg/android:2024.01.1
+      - image: cimg/android:2023.07
     steps:
       - checkout
       - run:
