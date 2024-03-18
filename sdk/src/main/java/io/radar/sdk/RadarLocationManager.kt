@@ -191,7 +191,7 @@ internal class RadarLocationManager(
                 if (!foregroundService.updatesOnly) {
                     this.startForegroundService(foregroundService)
                 }
-            } else if (RadarForegroundService.started) {
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && RadarForegroundService.started) {
                 this.stopForegroundService()
             }
 
@@ -224,7 +224,7 @@ internal class RadarLocationManager(
                 }
             }
         } else {
-            if (RadarForegroundService.started) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && RadarForegroundService.started) {
                 this.stopForegroundService()
             }
             this.stopLocationUpdates()
