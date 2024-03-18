@@ -112,6 +112,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 if (location == null || source == null) {
                     return
                 }
+		Radar.handleLocation(context, location, source)
             }
             ACTION_LOCATION -> {
                 val location = Radar.locationManager.getLocationFromLocationIntent(intent)
