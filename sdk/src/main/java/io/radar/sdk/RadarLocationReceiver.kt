@@ -112,12 +112,6 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 if (location == null || source == null) {
                     return
                 }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !RadarForegroundService.started) {
-                    RadarJobScheduler.scheduleJob(context, location, source)
-                } else {
-                    Radar.handleLocation(context, location, source)
-                }
             }
             ACTION_LOCATION -> {
                 val location = Radar.locationManager.getLocationFromLocationIntent(intent)

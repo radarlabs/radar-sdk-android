@@ -5,6 +5,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.os.Handler
+import android.os.Looper
 import android.os.Build
 import io.radar.sdk.Radar.RadarLocationCallback
 import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
@@ -191,10 +193,7 @@ internal class RadarLocationManager(
                 if (!foregroundService.updatesOnly) {
                     this.startForegroundService(foregroundService)
                 }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && RadarForegroundService.started) {
-                this.stopForegroundService()
             }
-
             val stopped = RadarState.getStopped(context)
             if (stopped) {
                 if (options.desiredStoppedUpdateInterval == 0) {
@@ -217,11 +216,18 @@ internal class RadarLocationManager(
                     this.startLocationUpdates(options.desiredAccuracy, options.desiredMovingUpdateInterval, options.fastestMovingUpdateInterval)
                 }
 
-                if (options.useMovingGeofence && location != null) {
-                    this.replaceBubbleGeofence(location, false)
+                if (options.useMovingGeofence) {
+                    if (location != null) {
+                        this.replaceBubbleGeofence(location, false)
+                    } 
                 } else {
                     this.removeBubbleGeofences()
                 }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !options.foregroundServiceEnabled && RadarForegroundService.started) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    this.stopForegroundService()
+                }, 5000)
             }
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && RadarForegroundService.started) {
@@ -271,11 +277,7 @@ internal class RadarLocationManager(
         return locationClient.getLocationFromLocationIntent(intent)
     }
 
-    private fun replaceBubbleGeofence(location: Location?, stopped: Boolean) {
-        if (location == null) {
-            return
-        }
-
+    private fun replaceBubbleGeofence(location: Location, stopped: Boolean) {
         this.removeBubbleGeofences()
 
         val options = Radar.getTrackingOptions()
