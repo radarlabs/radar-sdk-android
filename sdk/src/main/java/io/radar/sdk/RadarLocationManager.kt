@@ -400,14 +400,24 @@ internal class RadarLocationManager(
         }
     }
 
-    private fun removeBubbleGeofences() {
-        locationClient.removeGeofences(RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
-        logger.d("Removed bubble geofences")
+    private fun removeBubbleGeofences(block: (success: Boolean) -> Unit) {
+        locationClient.removeGeofences(RadarLocationReceiver.getBubbleGeofencePendingIntent(context)) { success ->
+            if (success) {
+                logger.d("Removed bubble geofences")
+            } else {
+                logger.d("Error removing bubble geofences")
+            }
+        }
     }
 
-    private fun removeSyncedGeofences() {
-        locationClient.removeGeofences(RadarLocationReceiver.getSyncedGeofencesPendingIntent(context))
-        logger.d("Removed synced geofences")
+    private fun removeSyncedGeofences(block: (success: Boolean) -> Unit) {
+        locationClient.removeGeofences(RadarLocationReceiver.getSyncedGeofencesPendingIntent(context)) { success ->
+            if (success) {
+                logger.d("Removed synced geofences")
+            } else {
+                logger.d("Error removing synced geofences")
+            }
+        }
     }
 
     private fun removeAllGeofences() {
