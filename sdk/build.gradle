@@ -70,7 +70,7 @@ dependencies {
     compileOnly "com.huawei.hms:location:6.4.0.300"
     compileOnly "com.google.android.play:integrity:1.2.0"
     testImplementation "androidx.test.ext:junit:1.1.5"
-    testImplementation "org.robolectric:robolectric:4.5.1"
+    testImplementation "org.robolectric:robolectric:4.10"
     testImplementation 'org.json:json:20211205'
     testImplementation "com.google.android.play:integrity:1.2.0"
 }
