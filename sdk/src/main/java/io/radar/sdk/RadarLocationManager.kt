@@ -224,13 +224,13 @@ internal class RadarLocationManager(
                     this.removeBubbleGeofences()
                 }
             }
-            if (!options.foregroundServiceEnabled && RadarForegroundService.started) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !options.foregroundServiceEnabled && RadarForegroundService.started) {
                 Handler(Looper.getMainLooper()).postDelayed({
                     this.stopForegroundService()
                 }, 5000)
             }
         } else {
-            if (RadarForegroundService.started) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && RadarForegroundService.started) {
                 this.stopForegroundService()
             }
             this.stopLocationUpdates()
