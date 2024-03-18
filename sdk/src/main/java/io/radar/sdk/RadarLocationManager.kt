@@ -217,7 +217,9 @@ internal class RadarLocationManager(
                 }
 
                 if (options.useMovingGeofence) {
-                    this.replaceBubbleGeofence(location, false)
+                    if (location != null) {
+                        this.replaceBubbleGeofence(location, false)
+                    } 
                 } else {
                     this.removeBubbleGeofences()
                 }
@@ -275,11 +277,7 @@ internal class RadarLocationManager(
         return locationClient.getLocationFromLocationIntent(intent)
     }
 
-    private fun replaceBubbleGeofence(location: Location?, stopped: Boolean) {
-        if (location == null) {
-            return
-        }
-
+    private fun replaceBubbleGeofence(location: Location, stopped: Boolean) {
         this.removeBubbleGeofences()
 
         val options = Radar.getTrackingOptions()
