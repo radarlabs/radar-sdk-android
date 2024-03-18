@@ -41,7 +41,7 @@ internal class RadarMockLocationProvider() : RadarAbstractLocationClient() {
 
     }
 
-    override fun removeGeofences(pendingIntent: PendingIntent) {
+    override fun removeGeofences(pendingIntent: PendingIntent, block: ((success: Boolean) -> Unit)?) {
 
     }
 
