@@ -136,14 +136,14 @@ internal class RadarHuaweiLocationClient(
 
     override fun removeGeofences(
         pendingIntent: PendingIntent,
-        block: (success: Boolean) -> Unit
+        block: ((success: Boolean) -> Unit)?
     ) {
         geofenceService.deleteGeofenceList(pendingIntent).run {
             addOnSuccessListener {
-                block(true)
+                block?.invoke(true)
             }
             addOnFailureListener {
-                block(false)
+                block?.invoke(false)
             }
         }
     }

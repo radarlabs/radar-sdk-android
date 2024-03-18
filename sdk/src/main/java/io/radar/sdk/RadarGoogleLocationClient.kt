@@ -126,14 +126,14 @@ internal class RadarGoogleLocationClient(
 
     override fun removeGeofences(
         pendingIntent: PendingIntent,
-        block: (success: Boolean) -> Unit
+        block: ((success: Boolean) -> Unit)?
     ) {
         geofencingClient.removeGeofences(pendingIntent).run {
             addOnSuccessListener {
-                block(true)
+                block?.invoke(true)
             }
             addOnFailureListener {
-                block(false)
+                block?.invoke(false)
             }
         }
     }
