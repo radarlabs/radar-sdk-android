@@ -216,7 +216,7 @@ internal class RadarLocationManager(
                     this.startLocationUpdates(options.desiredAccuracy, options.desiredMovingUpdateInterval, options.fastestMovingUpdateInterval)
                 }
 
-                if (options.useMovingGeofence && location != null) {
+                if (options.useMovingGeofence) {
                     this.replaceBubbleGeofence(location, false)
                 } else {
                     this.removeBubbleGeofences()
