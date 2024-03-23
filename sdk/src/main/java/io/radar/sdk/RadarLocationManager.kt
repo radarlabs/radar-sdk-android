@@ -5,6 +5,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.os.Handler
+import android.os.Looper
 import android.os.Build
 import io.radar.sdk.Radar.RadarLocationCallback
 import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
@@ -191,10 +193,7 @@ internal class RadarLocationManager(
                 if (!foregroundService.updatesOnly) {
                     this.startForegroundService(foregroundService)
                 }
-            } else if (RadarForegroundService.started) {
-                this.stopForegroundService()
             }
-
             val stopped = RadarState.getStopped(context)
             if (stopped) {
                 if (options.desiredStoppedUpdateInterval == 0) {
@@ -217,14 +216,21 @@ internal class RadarLocationManager(
                     this.startLocationUpdates(options.desiredAccuracy, options.desiredMovingUpdateInterval, options.fastestMovingUpdateInterval)
                 }
 
-                if (options.useMovingGeofence && location != null) {
-                    this.replaceBubbleGeofence(location, false)
+                if (options.useMovingGeofence) {
+                    if (location != null) {
+                        this.replaceBubbleGeofence(location, false)
+                    } 
                 } else {
                     this.removeBubbleGeofences()
                 }
             }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !options.foregroundServiceEnabled && RadarForegroundService.started) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    this.stopForegroundService()
+                }, 5000)
+            }
         } else {
-            if (RadarForegroundService.started) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && RadarForegroundService.started) {
                 this.stopForegroundService()
             }
             this.stopLocationUpdates()
@@ -271,13 +277,13 @@ internal class RadarLocationManager(
         return locationClient.getLocationFromLocationIntent(intent)
     }
 
-    private fun replaceBubbleGeofence(location: Location?, stopped: Boolean) {
-        if (location == null) {
-            return
+    private fun replaceBubbleGeofence(location: Location, stopped: Boolean) {
+        this.removeBubbleGeofences() { success ->
+	  this.addBubbleGeofence(location, stopped)
         }
+    }
 
-        this.removeBubbleGeofences()
-
+    private fun addBubbleGeofence(location: Location, stopped: Boolean) {
         val options = Radar.getTrackingOptions()
 
         if (stopped && options.useStoppedGeofence) {
@@ -341,8 +347,12 @@ internal class RadarLocationManager(
     }
 
     private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
-        this.removeSyncedGeofences()
+        this.removeSyncedGeofences() { success ->
+            this.addSyncedGeofences(radarGeofences)
+        }
+    }
 
+    private fun addSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
         val options = Radar.getTrackingOptions()
         if (!options.syncGeofences || radarGeofences == null) {
             return
@@ -398,14 +408,28 @@ internal class RadarLocationManager(
         }
     }
 
-    private fun removeBubbleGeofences() {
-        locationClient.removeGeofences(RadarLocationReceiver.getBubbleGeofencePendingIntent(context))
-        logger.d("Removed bubble geofences")
+    private fun removeBubbleGeofences(block: ((success: Boolean) -> Unit)? = null) {
+        locationClient.removeGeofences(RadarLocationReceiver.getBubbleGeofencePendingIntent(context)) { success ->
+            if (success) {
+                logger.d("Removed bubble geofences")
+                block?.invoke(true)
+            } else {
+                logger.d("Error removing bubble geofences")
+                block?.invoke(false)
+            }
+        }
     }
 
-    private fun removeSyncedGeofences() {
-        locationClient.removeGeofences(RadarLocationReceiver.getSyncedGeofencesPendingIntent(context))
-        logger.d("Removed synced geofences")
+    private fun removeSyncedGeofences(block: ((success: Boolean) -> Unit)? = null) {
+        locationClient.removeGeofences(RadarLocationReceiver.getSyncedGeofencesPendingIntent(context)) { success ->
+            if (success) {
+                logger.d("Removed synced geofences")
+                block?.invoke(true)
+            } else {
+                logger.d("Error removing synced geofences")
+                block?.invoke(false)
+            }
+        }
     }
 
     private fun removeAllGeofences() {

@@ -1,5 +1,6 @@
 package io.radar.sdk
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -17,6 +18,7 @@ class RadarNotificationHelper {
         private const val CHANNEL_NAME = "Location"
         private const val NOTIFICATION_ID = 20160525 // Radar's birthday!
 
+        @SuppressLint("DiscouragedApi")
         internal fun showNotifications(context: Context, events: Array<RadarEvent>) {
             if (Build.VERSION.SDK_INT < 26) {
                 return
