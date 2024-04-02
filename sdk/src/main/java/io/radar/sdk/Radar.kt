@@ -1967,7 +1967,7 @@ object Radar {
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
-        includeGeometry: Boolean?,
+        includeGeometry: Boolean? = true,
         callback: RadarSearchGeofencesCallback
     ) {
         if (!initialized) {
@@ -2015,7 +2015,7 @@ object Radar {
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
-        includeGeometry: Boolean?,
+        includeGeometry: Boolean? = true,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
         searchGeofences(
@@ -2051,7 +2051,7 @@ object Radar {
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
-        includeGeometry: Boolean?,
+        includeGeometry: Boolean? = true,
         callback: RadarSearchGeofencesCallback
     ) {
         if (!initialized) {
@@ -2088,7 +2088,7 @@ object Radar {
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
-        includeGeometry: Boolean?,
+        includeGeometry: Boolean? = true,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
         searchGeofences(
