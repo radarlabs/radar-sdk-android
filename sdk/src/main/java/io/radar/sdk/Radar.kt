@@ -1963,7 +1963,7 @@ object Radar {
      */
     @JvmStatic
     fun searchGeofences(
-        radius: Int,
+        radius: Int?,
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
@@ -2011,7 +2011,7 @@ object Radar {
         * @param[includeGeometry] A boolean indicating whether to include geometry in the response.
      */
     fun searchGeofences(
-        radius: Int,
+        radius: Int?,
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
