@@ -1959,6 +1959,7 @@ object Radar {
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
+     * @param[includeGeometry] A boolean indicating whether to include geometry in the response.
      */
     @JvmStatic
     fun searchGeofences(
@@ -1966,6 +1967,7 @@ object Radar {
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
+        includeGeometry: Boolean?,
         callback: RadarSearchGeofencesCallback
     ) {
         if (!initialized) {
@@ -1985,7 +1987,7 @@ object Radar {
                     return
                 }
 
-                apiClient.searchGeofences(location, radius, tags, metadata, limit, object : RadarApiClient.RadarSearchGeofencesApiCallback {
+                apiClient.searchGeofences(location, radius, tags, metadata, limit, includeGeometry, object : RadarApiClient.RadarSearchGeofencesApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) {
                         handler.post {
                             callback.onComplete(status, location, geofences)
@@ -2006,12 +2008,14 @@ object Radar {
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
+        * @param[includeGeometry] A boolean indicating whether to include geometry in the response.
      */
     fun searchGeofences(
         radius: Int,
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
+        includeGeometry: Boolean?,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
         searchGeofences(
@@ -2019,6 +2023,7 @@ object Radar {
             tags,
             metadata,
             limit,
+            includeGeometry,
             object : RadarSearchGeofencesCallback {
                 override fun onComplete(status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) {
                     block(status, location, geofences)
