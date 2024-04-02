@@ -2008,7 +2008,7 @@ object Radar {
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
-        * @param[includeGeometry] A boolean indicating whether to include geometry in the response.
+     * @param[includeGeometry] A boolean indicating whether to include geometry in the response.
      */
     fun searchGeofences(
         radius: Int?,
@@ -2047,10 +2047,11 @@ object Radar {
     @JvmStatic
     fun searchGeofences(
         near: Location,
-        radius: Int,
+        radius: Int?,
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
+        includeGeometry: Boolean?,
         callback: RadarSearchGeofencesCallback
     ) {
         if (!initialized) {
@@ -2060,7 +2061,7 @@ object Radar {
         }
         this.logger.i("searchGeofences()", RadarLogType.SDK_CALL)
 
-        apiClient.searchGeofences(near, radius, tags, metadata, limit, object : RadarApiClient.RadarSearchGeofencesApiCallback {
+        apiClient.searchGeofences(near, radius, tags, metadata, limit, includeGeometry, object : RadarApiClient.RadarSearchGeofencesApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) {
                 handler.post {
                     callback.onComplete(status, near, geofences)
@@ -2083,10 +2084,11 @@ object Radar {
      */
     fun searchGeofences(
         near: Location,
-        radius: Int,
+        radius: Int?,
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
+        includeGeometry: Boolean?,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
         searchGeofences(
@@ -2095,6 +2097,7 @@ object Radar {
             tags,
             metadata,
             limit,
+            includeGeometry,
             object : RadarSearchGeofencesCallback {
                 override fun onComplete(status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) {
                     block(status, location, geofences)
