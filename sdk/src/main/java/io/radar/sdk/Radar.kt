@@ -775,20 +775,6 @@ object Radar {
         trackOnce(desiredAccuracy, false, block)
     }
 
-    // a function that calls the apiClient.track with the following params:             RadarApiClient.track(location, false, false, Radar.RadarLocationSource.MANUAL, false, true, null, null, null, null, null, true) 
-    // and then calls the callback with the following params:             callback.onComplete(status, location, events, user)
-    @JvmStatic
-    fun trackReplayOnly(location: Location) {
-        if (!initialized) {
-            return
-        }
-        this.logger.i("trackReplayOnly()", RadarLogType.SDK_CALL)
-
-        locationManager.trackReplayOnly(location)
-
-        apiClient.track(location, false, false, RadarLocationSource.UNKNOWN, false, null, false, null, null, null, false, true)
-
-    }
 
     /**
      * Tracks the user's location once with the desired accuracy and optionally ranges beacons in the foreground.
@@ -1158,7 +1144,7 @@ object Radar {
                         }
                         val stopped = (i == 0) || (i == coordinates.size - 1)
 
-                        apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, callback = object : RadarApiClient.RadarTrackApiCallback {
+                        apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, false, callback = object : RadarApiClient.RadarTrackApiCallback {
                             override fun onComplete(
                                 status: RadarStatus,
                                 res: JSONObject?,

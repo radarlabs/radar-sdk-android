@@ -123,21 +123,16 @@ class RadarLocationReceiver : BroadcastReceiver() {
                     return
                 }
 
-                for (location in locations) {
+                locations.forEachIndexed { index, location ->
                     if (location == null) {
-                        continue
-                    }
+                        return@forEachIndexed
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
-                        Radar.handleLocation(context, location, source, true)
-                        RadarJobScheduler.scheduleJob(context, true)
+                    }
+                    if (index == locations.size - 1) {
+                        Radar.handleLocation(context, location, source, false)
                     } else {
-                        Radar.handleLocation(context, location, source)
+                        Radar.handleLocation(context, location, source, true)
                     }
-                }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !RadarForegroundService.started) {
-                    RadarJobScheduler.scheduleJob(context, true)
                 }
             }
             ACTION_BEACON -> {

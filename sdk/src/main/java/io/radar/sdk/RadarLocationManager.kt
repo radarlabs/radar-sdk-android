@@ -553,7 +553,7 @@ internal class RadarLocationManager(
             return
         }
         if (offline) {
-            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, null, callback = null, offline = true)
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, null, false, callback = null, offline = true)
             return
         } 
 
@@ -615,7 +615,7 @@ internal class RadarLocationManager(
         val locationManager = this
 
         val callTrackApi = { beacons: Array<RadarBeacon>? ->
-            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, callback = object : RadarTrackApiCallback {
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, false, callback = object : RadarTrackApiCallback {
                 override fun onComplete(
                     status: RadarStatus,
                     res: JSONObject?,
@@ -677,30 +677,6 @@ internal class RadarLocationManager(
         } else {
             callTrackApi(null)
         }
-    }
-
-    fun trackReplayOnly(location: Location) {
-        // TODO: kill the location when we dry up the apiClient.track logic
-        val options = Radar.getTrackingOptions()
-        val now = System.currentTimeMillis()
-        val lastSentAt = RadarState.getLastSentAt(context)
-        val lastSyncInterval = (now - lastSentAt) / 1000L
-
-        if (lastSyncInterval < options.desiredSyncInterval) {
-            logger.d("Skipping sync: desired sync interval | desiredSyncInterval = ${options.desiredSyncInterval}; lastSyncInterval = $lastSyncInterval")
-
-            return
-        }
-
-        if (lastSyncInterval < 1) {
-            logger.d("Skipping sync: rate limit | lastSyncInterval = $lastSyncInterval")
-
-            return
-        }
-
-        RadarState.updateLastSentAt(context)
-
-        this.apiClient.track(location, false, false, RadarLocationSource.UNKNOWN, false, null, false, null, null, null, false, true)
     }
 
     private fun startForegroundService(foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService) {

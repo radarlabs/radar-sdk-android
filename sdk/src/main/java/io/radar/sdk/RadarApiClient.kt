@@ -235,7 +235,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, callback: RadarTrackApiCallback? = null, offline: Boolean = false, onlyReplaying: Boolean = false) {
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, callback: RadarTrackApiCallback? = null, offline: Boolean = false) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -347,11 +347,9 @@ internal class RadarApiClient(
             }
             params.putOpt("appId", context.packageName)
         } catch (e: JSONException) {
-            if (!onlyReplaying) {
-                callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
-                return
-            }
+            return
         }
 
         var path = "v1/track"
@@ -366,55 +364,35 @@ internal class RadarApiClient(
         var requestParams = params
         val nowMS = System.currentTimeMillis()
 
-        val replaying = hasReplays && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && !verified
-
-        if (onlyReplaying && hasReplays) {
-            callback?.onComplete(RadarStatus.ERROR_ABORTED)
-
+        if (offline) {
+            params.putOpt("updatedAtMs", nowMS)
+            Radar.addReplay(params)
             return
-        }
-        if (replaying || onlyReplaying) {
-            val replaysList = mutableListOf<JSONObject>()
-            for (replay in replays) {
-                var replayParams = replay.replayParams
-                // if replayParams replayed isn't set to true, check if updatedAtMS is within 10s of now
-                // if it isn't, set replayed to true, remove updatedAtMsDiff
-                if (!replayParams.optBoolean("replayed")) {
-                    val updatedAtMs = replayParams.optLong("updatedAtMs")
-                    if (nowMS - updatedAtMs > 10000) {
-                        replayParams.putOpt("replayed", true)
-                        replayParams.remove("updatedAtMsDiff")
+         }
+
+        val replaying = hasReplays && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && !verified
+        if (replaying) {
+            Radar.flushReplays(
+                replayParams = params,
+                callback = object : Radar.RadarTrackCallback {
+                    override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
+                        // pass through flush replay onComplete for track callback
+                        callback?.onComplete(status)
                     }
                 }
-
-                 
-                replaysList.add(replay.replayParams)
-            }
-            if (!onlyReplaying) {
-            replaysList.add(params)
-            }
-
-            path = "v1/track/replay"
-
-            requestParams = JSONObject()
-            requestParams.putOpt("replays", JSONArray(replaysList))
-        }
-
-        if (offline) {
-           params.putOpt("updatedAtMs", nowMS)
-           Radar.addReplay(params)
-           return
+            )
+            return
         }
 
         apiHelper.request(context, "POST", path, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && !onlyReplaying) {
+                    if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
                         params.putOpt("replayed", true)
                         params.putOpt("updatedAtMs", nowMS)
                         params.remove("updatedAtMsDiff")
                         Radar.addReplay(params)
-                    } else if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION) && !onlyReplaying) {
+                    } else if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
                         RadarState.setLastFailedStoppedLocation(context, location)
                     }
 
