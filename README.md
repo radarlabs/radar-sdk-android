@@ -21,7 +21,7 @@ See migration guides in `MIGRATION.md`.
 
 See an example app in `example/`.
 
-To run the example app, clone this repository, add your publishable API key in `MainActivity.swift`, and build the app.
+To run the example app, clone this repository, add your publishable API key in `MainActivity.kt`, and build the app.
 
 ## Support
 
