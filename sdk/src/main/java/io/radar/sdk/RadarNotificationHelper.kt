@@ -55,6 +55,7 @@ class RadarNotificationHelper {
                     val notificationOptions = RadarSettings.getNotificationOptions(context);
 
                     val iconString = notificationOptions?.getEventIcon()?: context.applicationContext.applicationInfo.icon.toString()
+                    @SuppressLint("DiscouragedApi")
                     val smallIcon = context.applicationContext.resources.getIdentifier(iconString, "drawable", context.applicationContext.packageName)
 
                     val builder = NotificationCompat.Builder(context, CHANNEL_NAME)

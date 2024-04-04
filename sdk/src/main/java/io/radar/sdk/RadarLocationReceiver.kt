@@ -116,17 +116,23 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 Radar.handleLocation(context, location, source)
             }
             ACTION_LOCATION -> {
-                val location = Radar.locationManager.getLocationFromLocationIntent(intent)
+                val locations = Radar.locationManager.getLocationsFromLocationIntent(intent)
                 val source = Radar.RadarLocationSource.BACKGROUND_LOCATION
 
-                if (location == null) {
+                if (locations == null) {
                     return
                 }
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !RadarForegroundService.started) {
-                    RadarJobScheduler.scheduleJob(context, location, source)
-                } else {
-                    Radar.handleLocation(context, location, source)
+                locations.forEachIndexed { index, location ->
+                    if (location == null) {
+                        return@forEachIndexed
+
+                    }
+                    if (index == locations.size - 1) {
+                        Radar.handleLocation(context, location, source, false)
+                    } else {
+                        Radar.handleLocation(context, location, source, true)
+                    }
                 }
             }
             ACTION_BEACON -> {

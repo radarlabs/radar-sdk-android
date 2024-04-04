@@ -24,6 +24,10 @@ internal class RadarMockLocationProvider() : RadarAbstractLocationClient() {
 
     }
 
+    override fun getLocationsFromLocationIntent(intent: Intent): List<Location>? {
+        return listOf(mockLocation!!)
+    }
+
     override fun removeLocationUpdates(pendingIntent: PendingIntent) {
 
     }
@@ -52,9 +56,4 @@ internal class RadarMockLocationProvider() : RadarAbstractLocationClient() {
     override fun getSourceFromGeofenceIntent(intent: Intent): Radar.RadarLocationSource {
         return Radar.RadarLocationSource.GEOFENCE_ENTER
     }
-
-    override fun getLocationFromLocationIntent(intent: Intent): Location {
-        return mockLocation!!
-    }
-
 }

@@ -38,6 +38,7 @@ class RadarForegroundService : Service() {
                 }
             } else if (intent.action == "stop") {
                 try {
+                    logger.d("Stopping foreground service")
                     stopForeground(true)
                     stopSelf()
                 } catch (e: Exception) {
@@ -50,6 +51,12 @@ class RadarForegroundService : Service() {
     }
 
     @SuppressLint("DiscouragedApi")
+    override fun onDestroy() {
+        super.onDestroy()
+        started = false
+        logger.d("Foreground service destroyed")
+    }
+
     private fun startForegroundService(extras: Bundle?) {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.deleteNotificationChannel("RadarSDK")
@@ -62,8 +69,10 @@ class RadarForegroundService : Service() {
         var icon = extras?.getInt("icon") ?: 0
         var iconString = extras?.getString("iconString") ?: this.applicationInfo.icon.toString()
         var iconColor = extras?.getString("iconColor") ?: ""
+        @SuppressLint("DiscouragedApi")
         var smallIcon = resources.getIdentifier(iconString, "drawable", applicationContext.packageName) 
         if (icon != 0){
+            @SuppressLint("DiscouragedApi")
            smallIcon = resources.getIdentifier(icon.toString(), "drawable", applicationContext.packageName)  
         }
         val channelName = extras?.getString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME) ?: "Location Services"

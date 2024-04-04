@@ -18,6 +18,12 @@ import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
 import io.radar.sdk.model.*
 import org.json.JSONObject
 import java.util.*
+import io.radar.sdk.RadarAbstractLocationClient.RadarAbstractGeofence
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
+
+
 
 @SuppressLint("MissingPermission")
 internal class RadarLocationManager(
@@ -273,8 +279,8 @@ internal class RadarLocationManager(
         return locationClient.getSourceFromGeofenceIntent(intent)
     }
 
-    internal fun getLocationFromLocationIntent(intent: Intent): Location? {
-        return locationClient.getLocationFromLocationIntent(intent)
+    internal fun getLocationsFromLocationIntent(intent: Intent): List<Location>? {
+        return locationClient.getLocationsFromLocationIntent(intent)
     }
 
     private fun replaceBubbleGeofence(location: Location, stopped: Boolean) {
@@ -437,7 +443,7 @@ internal class RadarLocationManager(
         this.removeSyncedGeofences()
     }
 
-    fun handleLocation(location: Location?, source: RadarLocationSource) {
+    fun handleLocation(location: Location?, source: RadarLocationSource, offline: Boolean = false) {
         if (Radar.isTestKey()) {
             val latency = if (location == null) -1 else Date().time - location.time
             val standbyBucket = batteryManager.getAppStandbyBucket()
@@ -542,9 +548,19 @@ internal class RadarLocationManager(
             logger.d("Replaying location | location = $location; stopped = $stopped")
         }
 
+
+        if (source == RadarLocationSource.FOREGROUND_LOCATION) {
+            return
+        }
+        if (offline) {
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, null, false, callback = null, offline = true)
+            return
+        } 
+
         val lastSentAt = RadarState.getLastSentAt(context)
+        // if offline, ensure we send location
         val ignoreSync =
-            lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed
+            lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed || offline 
         val now = System.currentTimeMillis()
         val lastSyncInterval = (now - lastSentAt) / 1000L
         if (!ignoreSync) {
@@ -583,10 +599,6 @@ internal class RadarLocationManager(
         }
         RadarState.updateLastSentAt(context)
 
-        if (source == RadarLocationSource.FOREGROUND_LOCATION) {
-            return
-        }
-
         this.sendLocation(sendLocation, stopped, source, replayed)
     }
 
@@ -603,7 +615,7 @@ internal class RadarLocationManager(
         val locationManager = this
 
         val callTrackApi = { beacons: Array<RadarBeacon>? ->
-            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, callback = object : RadarTrackApiCallback {
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, false, callback = object : RadarTrackApiCallback {
                 override fun onComplete(
                     status: RadarStatus,
                     res: JSONObject?,

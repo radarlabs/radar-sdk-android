@@ -51,6 +51,7 @@ internal class RadarGoogleLocationClient(
             this.priority = priority
             this.interval = interval * 1000L
             this.fastestInterval = fastestInterval * 1000L
+            this.maxWaitTime = interval * 1000L
         }
 
         locationClient.requestLocationUpdates(locationRequest, pendingIntent)
@@ -178,18 +179,19 @@ internal class RadarGoogleLocationClient(
         }
     }
 
-    override fun getLocationFromLocationIntent(intent: Intent): Location? {
+    override fun getLocationsFromLocationIntent(intent: Intent): List<Location>? {
         if (intent == null) {
             return null
         }
 
         val result = LocationResult.extractResult(intent)
+        logger.d("Received location intent with result: $result")
 
         if (result == null) {
             return null
         }
 
-        return result.lastLocation
+        return result.locations
     }
 
 }
