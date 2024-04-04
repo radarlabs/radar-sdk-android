@@ -366,9 +366,9 @@ internal class RadarApiClient(
         var requestParams = params
         val nowMS = System.currentTimeMillis()
 
-        val replaying = replayCount > 0 && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && !verified
+        val replaying = hasReplays && options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && !verified
 
-        if (onlyReplaying && replayCount == 0) {
+        if (onlyReplaying && hasReplays) {
             callback?.onComplete(RadarStatus.ERROR_ABORTED)
 
             return
