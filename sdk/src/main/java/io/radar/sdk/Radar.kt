@@ -1954,12 +1954,12 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#search-geofences)
      *
-     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.com/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[includeGeometry] A optional boolean indicating whether to include geometry in the response.
      * @param[callback] A callback.
-     * @param[includeGeometry] A boolean indicating whether to include geometry in the response.
      */
     @JvmStatic
     fun searchGeofences(
@@ -2003,19 +2003,19 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#search-geofences)
      *
-     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.com/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[includeGeometry] A optional boolean indicating whether to include geometry in the response.
      * @param[block] A block callback.
-     * @param[includeGeometry] A boolean indicating whether to include geometry in the response.
      */
     fun searchGeofences(
         radius: Int?,
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
-        includeGeometry: Boolean? = true,
+        includeGeometry: Boolean? = false,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
         searchGeofences(
@@ -2038,10 +2038,11 @@ object Radar {
      * @see [](https://radar.com/documentation/api#search-geofences)
      *
      * @param[near] The location to search.
-     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.com/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[includeGeometry] A optional boolean indicating whether to include geometry in the response.
      * @param[callback] A callback.
      */
     @JvmStatic
@@ -2051,7 +2052,7 @@ object Radar {
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
-        includeGeometry: Boolean? = true,
+        includeGeometry: Boolean? = false,
         callback: RadarSearchGeofencesCallback
     ) {
         if (!initialized) {
@@ -2076,10 +2077,11 @@ object Radar {
      * @see [](https://radar.com/documentation/api#search-geofences)
      *
      * @param[near] The location to search.
-     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000.
      * @param[tags] An array of tags to filter. See [](https://radar.com/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[includeGeometry] A optional boolean indicating whether to include geometry in the response.
      * @param[block] A block callback.
      */
     fun searchGeofences(
