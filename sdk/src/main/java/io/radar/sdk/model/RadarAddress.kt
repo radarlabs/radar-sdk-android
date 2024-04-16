@@ -113,6 +113,11 @@ class RadarAddress(
     val layer: String?,
 
     /**
+     * The distance to the center of the search anchor in meters
+     */
+    val distance: Long?,
+
+    /**
      * The metadata of the address.
      */
     val metadata: JSONObject?,
@@ -155,6 +160,7 @@ class RadarAddress(
         private const val FIELD_PLACE_LABEL = "placeLabel"
         private const val FIELD_UNIT = "unit"
         private const val FIELD_PLUS4 = "plus4"
+        private const val FIELD_DISTANCE = "distance"
         private const val FIELD_LAYER = "layer"
         private const val FIELD_METADATA = "metadata"
         private const val FIELD_CONFIDENCE = "confidence"
@@ -185,6 +191,7 @@ class RadarAddress(
             val placeLabel = obj.optString(FIELD_PLACE_LABEL) ?: null
             val unit = obj.optString(FIELD_UNIT) ?: null
             val plus4 = obj.optString(FIELD_PLUS4) ?: null
+            val distance = obj.optLong(FIELD_DISTANCE) ?: null
             val layer = obj.optString(FIELD_LAYER) ?: null
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
             val confidence = when(obj.optString(FIELD_CONFIDENCE)) {
@@ -215,6 +222,7 @@ class RadarAddress(
                 placeLabel,
                 unit,
                 plus4,
+                distance,
                 layer,
                 metadata,
                 confidence
@@ -279,6 +287,7 @@ class RadarAddress(
         obj.putOpt(FIELD_PLACE_LABEL, this.placeLabel)
         obj.putOpt(FIELD_UNIT, this.unit)
         obj.putOpt(FIELD_PLUS4, this.plus4)
+        obj.putOpt(FIELD_DISTANCE, this.distance)
         obj.putOpt(FIELD_LAYER, this.layer)
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_CONFIDENCE, stringForConfidence(this.confidence))
