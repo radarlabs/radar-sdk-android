@@ -103,7 +103,7 @@ internal class RadarApiClient(
             "X-Radar-Device-OS" to RadarUtils.deviceOS,
             "X-Radar-Device-Type" to RadarUtils.deviceType,
             "X-Radar-SDK-Version" to RadarUtils.sdkVersion,
-            "Origin" to context.packageName
+            "X-Radar-Mobile-Origin" to context.packageName
         )
         if (RadarSettings.isXPlatform(context)) {
             headers["X-Radar-X-Platform-SDK-Type"] = RadarSettings.getXPlatformSDKType(context)
