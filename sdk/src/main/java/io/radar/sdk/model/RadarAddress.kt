@@ -110,7 +110,7 @@ class RadarAddress(
     /**
      * The distance to the search anchor in meters
      */
-    val distance: Long?,
+    val distance: Int?,
 
     /**
      * The layer of the address
@@ -191,7 +191,7 @@ class RadarAddress(
             val placeLabel = obj.optString(FIELD_PLACE_LABEL) ?: null
             val unit = obj.optString(FIELD_UNIT) ?: null
             val plus4 = obj.optString(FIELD_PLUS4) ?: null
-            val distance = obj.optLong(FIELD_DISTANCE) ?: null
+            val distance = obj.optInt(FIELD_DISTANCE)
             val layer = obj.optString(FIELD_LAYER) ?: null
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
             val confidence = when(obj.optString(FIELD_CONFIDENCE)) {
