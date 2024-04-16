@@ -108,14 +108,14 @@ class RadarAddress(
     val plus4: String?,
 
     /**
+     * The distance to the search anchor in meters
+     */
+    val distance: Long?,
+
+    /**
      * The layer of the address
      */
     val layer: String?,
-
-    /**
-     * The distance to the center of the search anchor in meters
-     */
-    val distance: Long?,
 
     /**
      * The metadata of the address.
