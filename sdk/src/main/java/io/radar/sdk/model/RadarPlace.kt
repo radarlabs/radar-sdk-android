@@ -43,7 +43,12 @@ class RadarPlace(
     /**
      * The metadata for the place, if part of a group. For details of metadata fields see [](https://radar.io/documentation/places/groups).
      */
-    val metadata: JSONObject?
+    val metadata: JSONObject?,
+
+    /**
+     * The address of the place.
+     */
+     val address:RadarAddress?,
 ) {
 
     internal companion object {
@@ -55,6 +60,7 @@ class RadarPlace(
         private const val FIELD_COORDINATES = "coordinates"
         private const val FIELD_GROUP = "group"
         private const val FIELD_METADATA = "metadata"
+        private const val FIELD_ADDRESS = "address"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarPlace? {
@@ -78,6 +84,7 @@ class RadarPlace(
             )
             val group: String? = obj.optString(FIELD_GROUP) ?: null
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
+            val address: RadarAddress? = RadarAddress.fromJson(obj.optJSONObject(FIELD_ADDRESS))
 
             return RadarPlace(
                 id,
@@ -86,7 +93,8 @@ class RadarPlace(
                 chain,
                 location,
                 group,
-                metadata
+                metadata,
+                address
             )
         }
 
@@ -126,6 +134,7 @@ class RadarPlace(
         obj.putOpt(FIELD_GROUP, this.group)
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_LOCATION, this.location.toJson())
+        obj.putOpt(FIELD_ADDRESS, this.address?.toJson())
         return obj
     }
 
