@@ -1,7 +1,6 @@
 package io.radar.sdk.model
 
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -46,9 +45,9 @@ class RadarPlace(
     val metadata: JSONObject?,
 
     /**
-     * The address of the place.
-     */
-     val address:RadarAddress?,
+    * The address of the place.
+    */
+    val address: RadarAddress?,
 ) {
 
     internal companion object {
@@ -84,8 +83,10 @@ class RadarPlace(
             )
             val group: String? = obj.optString(FIELD_GROUP) ?: null
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
-            val address: RadarAddress? = RadarAddress.fromJson(obj.optJSONObject(FIELD_ADDRESS))
-
+            val addressObj = obj.optJSONObject(FIELD_ADDRESS)
+            val address: RadarAddress? = obj.optJSONObject(FIELD_ADDRESS)?.let { addressObj ->
+                    RadarAddress.fromJson(addressObj)
+                }
             return RadarPlace(
                 id,
                 name,

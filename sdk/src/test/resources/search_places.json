@@ -20,7 +20,15 @@
             "apartment-condo-building"
          ],
          "_id": "59bb1dc10d8998dc02510033",
-         "name": "129 West 81st Street"
+         "name": "129 West 81st Street",
+         "address": {
+            "formattedAddress": "1 Floating Home San Francisco CA US 94107",
+            "street": "1 Floating Home",
+            "city": "San Francisco",
+            "state": "CA",
+            "country": "US",
+            "zip": "94107"
+         }
       },
       {
          "location": {
@@ -39,7 +47,15 @@
             "apartment-condo-building"
          ],
          "_id": "59bb1dc10d8998dc02510033",
-         "name": "129 West 81st Street"
+         "name": "129 West 81st Street",
+         "address": {
+            "formattedAddress": "1 Floating Home San Francisco CA US 94107",
+            "street": "1 Floating Home",
+            "city": "San Francisco",
+            "state": "CA",
+            "country": "US",
+            "zip": "94107"
+         }
       }
    ]
 }
