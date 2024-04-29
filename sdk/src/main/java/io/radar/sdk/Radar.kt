@@ -1954,7 +1954,7 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#search-geofences)
      *
-     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000. If `null`, the server defaults to using unlimited radius.
+     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000. If `null`, the server defaults to searching without a radius limit.
      * @param[tags] An array of tags to filter. See [](https://radar.com/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 1000. Defaults to 100.
@@ -2003,7 +2003,7 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#search-geofences)
      *
-     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000. If `null`, the server defaults to using unlimited radius.
+     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000. If `null`, the server defaults to searching without a radius limit.
      * @param[tags] An array of tags to filter. See [](https://radar.com/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 1000. Defaults to 100.
@@ -2038,7 +2038,7 @@ object Radar {
      * @see [](https://radar.com/documentation/api#search-geofences)
      *
      * @param[near] The location to search.
-     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000. If `null`, the server defaults to using unlimited radius.
+     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000. If `null`, the server defaults to searching without a radius limit.
      * @param[tags] An array of tags to filter. See [](https://radar.com/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 1000. Defaults to 100.
@@ -2077,7 +2077,7 @@ object Radar {
      * @see [](https://radar.com/documentation/api#search-geofences)
      *
      * @param[near] The location to search.
-     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000. If `null`, the server defaults to using unlimited radius.
+     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000. If `null`, the server defaults to searching without a radius limit.
      * @param[tags] An array of tags to filter. See [](https://radar.com/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
      * @param[limit] The max number of places to return. A number between 1 and 1000. Defaults to 100.
