@@ -435,6 +435,7 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
+    private lateinit var locationPermissionsManager: RadarLocationPermissionsManager
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -527,6 +528,8 @@ object Radar {
             RadarSettings.setSharing(this.context, false)
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
+        locationPermissionsManager = RadarLocationPermissionsManager(this.context)
+        application?.registerActivityLifecycleCallbacks(locationPermissionsManager)
 
 
         val featureSettings = RadarSettings.getFeatureSettings(this.context)
@@ -3061,6 +3064,13 @@ object Radar {
         }
     }
 
+    @JvmStatic
+    fun requestLocationPermissions(background: Boolean = false) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            locationPermissionsManager.requestLocationPermissions(background)
+        }
+    }
+
     /**
      * Sets the log level for debug logs.
      *
@@ -3399,6 +3409,12 @@ object Radar {
         verifiedReceiver?.onTokenUpdated(context, token)
 
         logger.i("📍️ Radar token updated | token = $token")
+    }
+
+    internal fun sendLocationPermissionsStatus(status: RadarLocationPermissionsStatus) {
+        receiver?.onLocationPermissionsStatusUpdated(context, status)
+
+        logger.i("📍️ Radar location permissions updated | status = $status")
     }
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {
