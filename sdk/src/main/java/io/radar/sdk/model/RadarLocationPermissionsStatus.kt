@@ -3,6 +3,7 @@ package io.radar.sdk.model
 import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
@@ -18,11 +19,11 @@ class RadarLocationPermissionsStatus {
         private const val DENIED_KEY = "denied"
 
         // maybe we cna dump this into radarsettings? we are really simply saving a bool. the rest of the object is derived at call time
-        fun getFromPreferences(context: Context, inLocationPopup: Boolean = false): RadarLocationPermissionsStatus? {
+        fun getFromPreferences(context: Context, activity: Activity ,inLocationPopup: Boolean = false): RadarLocationPermissionsStatus? {
             val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val foregroundPopupRequested = prefs.getBoolean(STATUS_KEY, false)
             val previouslyDeniedForeground = prefs.getBoolean(DENIED_KEY, false)
-            return fromForegroundPopupRequested(context, foregroundPopupRequested, previouslyDeniedForeground, inLocationPopup)
+            return fromForegroundPopupRequested(context, activity, foregroundPopupRequested, previouslyDeniedForeground, inLocationPopup)
         }
 
         fun saveToPreferences(context: Context, foregroundPopupRequested: Boolean) {
@@ -46,7 +47,19 @@ class RadarLocationPermissionsStatus {
         internal const val KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE = "shouldShowRequestPermissionRationale"
         internal const val KEY_PREVIOUSLY_DENIED_FOREGROUND = "previouslyDeniedForeground"
 
-        private fun fromForegroundPopupRequested(context: Context, foregroundPopupRequested: Boolean, previouslyDeniedForeground: Boolean, inLocationPopup:Boolean): RadarLocationPermissionsStatus {
+        fun getActivity(context: Context): Activity? {
+            var c = context
+
+            while (c is ContextWrapper) {
+                if (c is Activity) {
+                    return c
+                }
+                c = c.baseContext
+            }
+            return null
+        }
+
+        private fun fromForegroundPopupRequested(context: Context, activity: Activity, foregroundPopupRequested:Boolean, previouslyDeniedForeground: Boolean, inLocationPopup:Boolean): RadarLocationPermissionsStatus {
             val newStatus = RadarLocationPermissionsStatus()
             newStatus.foregroundPopupRequested = foregroundPopupRequested
             newStatus.foregroundPermissionResult = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -55,7 +68,10 @@ class RadarLocationPermissionsStatus {
             } else {
                 newStatus.backgroundPermissionResult = false
             }
-            newStatus.shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(context as Activity, Manifest.permission.ACCESS_FINE_LOCATION);
+
+                newStatus.shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+                    activity, Manifest.permission.ACCESS_FINE_LOCATION);
+       
             // if this is true, we know it is denied once
             if (newStatus.shouldShowRequestPermissionRationale && !previouslyDeniedForeground) {
                 saveDeniedOnce(context, true)
@@ -94,6 +110,9 @@ class RadarLocationPermissionsStatus {
             if (status.foregroundPermissionResult) {
                 return PermissionStatus.FOREGROUND_PERMISSIONS_GRANTED
             } else {
+                if (status.inLocationPopup) {
+                    return PermissionStatus.FOREGROUND_LOCATION_PENDING
+                }
                 if (status.shouldShowRequestPermissionRationale) {
                     return PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED_ONCE
                 } else {
@@ -101,9 +120,7 @@ class RadarLocationPermissionsStatus {
                         if (status.previouslyDeniedForeground) {
                             return PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED
                         }
-                        if (status.inLocationPopup) {
-                            return PermissionStatus.FOREGROUND_LOCATION_PENDING
-                        }
+                        
                     } else {
                         return PermissionStatus.NO_PERMISSIONS_GRANTED
                     }

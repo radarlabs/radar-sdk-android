@@ -13,7 +13,7 @@ import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarLocationPermissionsStatus
 import io.radar.sdk.model.RadarUser
 
-class MyRadarReceiver : RadarReceiver() {
+class MyRadarReceiver(private val onPermissionsUpdated: (Context, RadarLocationPermissionsStatus) -> Unit)  : RadarReceiver() {
 
     companion object {
 
@@ -53,27 +53,26 @@ class MyRadarReceiver : RadarReceiver() {
 
     override fun onLocationUpdated(context: Context, location: Location, user: RadarUser) {
         val body = "${if (user.stopped) "Stopped at" else "Moved to"} location (${location.latitude}, ${location.longitude}) with accuracy ${location.accuracy}"
-        notify(context, body)
+        // notify(context, body)
     }
 
     override fun onClientLocationUpdated(context: Context, location: Location, stopped: Boolean, source: Radar.RadarLocationSource) {
         val body = "${if (stopped) "Client stopped at" else "Client moved to"} location (${location.latitude}, ${location.longitude}) with accuracy ${location.accuracy} and source ${source}"
-        notify(context, body)
+        // notify(context, body)
     }
-
     override fun onError(context: Context, status: Radar.RadarStatus) {
-        notify(context, Utils.stringForRadarStatus(status))
+        // notify(context, Utils.stringForRadarStatus(status))
     }
 
     override fun onLog(context: Context, message: String) {
-        notify(context, message)
+        // notify(context, message)
     }
 
     override fun onLocationPermissionsStatusUpdated(
         context: Context,
         status: RadarLocationPermissionsStatus
     ) {
-        // need to implement
+        onPermissionsUpdated(context, status)
     }
 
 }

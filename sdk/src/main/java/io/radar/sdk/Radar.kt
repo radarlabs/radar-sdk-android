@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.location.Location
@@ -424,6 +425,7 @@ object Radar {
     internal var initialized = false
     internal var isFlushingReplays = false
     private lateinit var context: Context
+    private lateinit var activity: Activity
     internal lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
     private var verifiedReceiver: RadarVerifiedReceiver? = null
@@ -462,13 +464,16 @@ object Radar {
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false) {
+    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false, activity: Activity? = null) {
         if (context == null) {
             return
         }
 
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
+        // try to not break the interface later
+        this.activity = activity!!
+
 
         if (receiver != null) {
             this.receiver = receiver
@@ -528,7 +533,8 @@ object Radar {
             RadarSettings.setSharing(this.context, false)
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
-        locationPermissionsManager = RadarLocationPermissionsManager(this.context)
+
+        locationPermissionsManager = RadarLocationPermissionsManager(this.context, this.activity)
         application?.registerActivityLifecycleCallbacks(locationPermissionsManager)
 
 
@@ -3069,6 +3075,11 @@ object Radar {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             locationPermissionsManager.requestLocationPermissions(background)
         }
+    }
+
+    @JvmStatic
+    fun getLocationPermissions():RadarLocationPermissionsStatus {
+        return locationPermissionsManager.getPermissionsStatus()
     }
 
     /**

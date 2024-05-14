@@ -4,13 +4,15 @@ import android.Manifest
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.ContextWrapper
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import io.radar.sdk.model.RadarLocationPermissionsStatus
 
-class RadarLocationPermissionsManager(private val context: Context): Application.ActivityLifecycleCallbacks {
+class RadarLocationPermissionsManager(private val context: Context, private val activity: Activity): Application.ActivityLifecycleCallbacks {
     // tidy up later
     private val permissionsRequestCode = 52456
     private var requestingBackgroundPermissions = false
@@ -21,7 +23,7 @@ class RadarLocationPermissionsManager(private val context: Context): Application
         if (background) {
             requestingBackgroundPermissions = true
             ActivityCompat.requestPermissions(
-            context as Activity,
+            activity,
             arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
             permissionsRequestCode
         )
@@ -29,7 +31,7 @@ class RadarLocationPermissionsManager(private val context: Context): Application
             RadarLocationPermissionsStatus.saveToPreferences(context, true)
             requestingForegroundPermissions = true
             ActivityCompat.requestPermissions(
-                context as Activity,
+                activity,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 permissionsRequestCode
             )
@@ -37,12 +39,12 @@ class RadarLocationPermissionsManager(private val context: Context): Application
     }
 
     fun getPermissionsStatus(): RadarLocationPermissionsStatus {
-        return RadarLocationPermissionsStatus.getFromPreferences(context) ?: RadarLocationPermissionsStatus()
+        return RadarLocationPermissionsStatus.getFromPreferences(context, activity) ?: RadarLocationPermissionsStatus()
     }
 
     override fun onActivityPaused(activity: Activity) {
         if (requestingForegroundPermissions) {
-            RadarLocationPermissionsStatus.getFromPreferences(context,true)
+            RadarLocationPermissionsStatus.getFromPreferences(context,activity,true)
                 ?.let { Radar.sendLocationPermissionsStatus(it) }
         }
     }
@@ -69,7 +71,7 @@ class RadarLocationPermissionsManager(private val context: Context): Application
 
     override fun onActivityResumed(activity: Activity) {
         if (requestingBackgroundPermissions || requestingForegroundPermissions) {
-            RadarLocationPermissionsStatus.getFromPreferences(context)
+            RadarLocationPermissionsStatus.getFromPreferences(context,activity)
                 ?.let { Radar.sendLocationPermissionsStatus(it) }
         }
         requestingForegroundPermissions = false
