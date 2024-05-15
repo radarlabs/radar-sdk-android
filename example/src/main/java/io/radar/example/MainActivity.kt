@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -83,10 +84,10 @@ class MainActivity : AppCompatActivity() {
         val myButton = findViewById<Button>(R.id.myButton)
         when (state.status) {
             RadarLocationPermissionsStatus.PermissionStatus.NO_PERMISSIONS_GRANTED -> {
-                myButton.visibility = View.VISIBLE 
+                myButton.visibility = View.VISIBLE
                 titleTextView.text = "No Permissions"
                 descriptionTextView.text = "You have not granted any locations permissions. We need your location for this demo"
-                myButton.text = "Grant Permissions"
+                myButton.text = "Grant foreground Permissions"
                 myButton.setOnClickListener {
                     Radar.requestForegroundLocationPermissions()
                 }
@@ -100,8 +101,8 @@ class MainActivity : AppCompatActivity() {
             RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_GRANTED -> {
                 myButton.visibility = View.VISIBLE 
                 titleTextView.text = "Foreground Permissions Granted"
-                descriptionTextView.text = "You have granted foreground permissions."
-                myButton.text = "Check Background Permissions"
+                descriptionTextView.text = "You have granted foreground permissions. Please also grant background permissions."
+                myButton.text = "Grant Background Permissions"
                 myButton.setOnClickListener {
                     Radar.requestBackgroundLocationPermissions()
                 }
@@ -109,22 +110,22 @@ class MainActivity : AppCompatActivity() {
             RadarLocationPermissionsStatus.PermissionStatus.APPROXIMATE_PERMISSIONS_GRANTED -> {
                 myButton.visibility = View.VISIBLE 
                 titleTextView.text = "Foreground approximate Permissions Granted"
-                descriptionTextView.text = "You have granted approximate foreground permissions."
+                descriptionTextView.text = "You have granted approximate foreground permissions. That not enough for this demo. Please also grant background permissions."
                 myButton.text = "Check Background Permissions"
                 myButton.setOnClickListener {
                     Radar.requestBackgroundLocationPermissions()
                 }
             }
+
             RadarLocationPermissionsStatus.PermissionStatus.BACKGROUND_PERMISSIONS_GRANTED -> {
                 myButton.visibility = View.GONE 
                 titleTextView.text = "Background Permissions Granted"
                 descriptionTextView.text = "You have granted background permissions. We have all the permissions we need, thanks!"
-
             }
             RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED_ONCE -> {
                 myButton.visibility = View.VISIBLE 
                 titleTextView.text = "Rejected once"
-                descriptionTextView.text = "You have rejected foreground permission"
+                descriptionTextView.text = "You have rejected foreground permission, for now. But we would still like to ask again."
                 myButton.text = "Grant Permissions"
                 myButton.setOnClickListener {
                     Radar.requestForegroundLocationPermissions()
@@ -133,16 +134,16 @@ class MainActivity : AppCompatActivity() {
             RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED -> {
                 myButton.visibility = View.VISIBLE 
                 titleTextView.text = "Rejected Permissions"
-                descriptionTextView.text = "You have rejected foreground permission for good"
+                descriptionTextView.text = "You have rejected foreground permission for good, please activate it in the settings."
                 myButton.text = "Go to settings to change it"
                 myButton.setOnClickListener {
                     Radar.updateLocationPermissionsStatusOnActivityResume()
-                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                        val uri = Uri.fromParts("package", packageName, null)
-                        intent.data = uri
-                        startActivity(intent)
-                                    }
-                                }
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    val uri = Uri.fromParts("package", packageName, null)
+                    intent.data = uri
+                    startActivity(intent)
+                }
+            }
             else -> {
                 myButton.visibility = View.VISIBLE 
                 titleTextView.text = "Unknown Permissions Status"
