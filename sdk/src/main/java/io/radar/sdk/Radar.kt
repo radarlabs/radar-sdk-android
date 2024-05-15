@@ -3082,6 +3082,11 @@ object Radar {
         return locationPermissionsManager.getPermissionsStatus()
     }
 
+    @JvmStatic
+    fun updateLocationPermissionsStatusOnActivityResume(){
+        locationPermissionsManager.updateLocationPermissionsStatusOnActivityResume()
+    }
+
     /**
      * Sets the log level for debug logs.
      *

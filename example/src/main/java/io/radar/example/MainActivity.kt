@@ -1,7 +1,10 @@
 package io.radar.example
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
@@ -160,11 +163,15 @@ class MainActivity : AppCompatActivity() {
              RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED -> {
                  titleTextView.text = "Rejected Permissions"
                  descriptionTextView.text = "You have rejected foreground permission for good"
-                 myButton.text = "I do not do anything"
+                 myButton.text = "Go to settings to change it"
                  myButton.setOnClickListener {
-
-                 }
-             }
+                     Radar.updateLocationPermissionsStatusOnActivityResume()
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    val uri = Uri.fromParts("package", packageName, null)
+                    intent.data = uri
+                    startActivity(intent)
+                                }
+                            }
         else -> {
             titleTextView.text = "Unknown Permissions Status"
             descriptionTextView.text = "The permissions status is unknown."
