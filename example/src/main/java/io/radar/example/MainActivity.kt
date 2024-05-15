@@ -24,49 +24,12 @@ class MainActivity : AppCompatActivity() {
     //     }
     // }
 
-//    private val activityLifecycleCallbacks = object : Application.ActivityLifecycleCallbacks {
-//        override fun onActivityPaused(activity: Activity) {
-//            // for now assume its due to permissions popup, more robust implementation later
-//            val titleTextView = findViewById<TextView>(R.id.titleTextView)
-//            val descriptionTextView = findViewById<TextView>(R.id.descriptionTextView)
-//            val myButton = findViewById<Button>(R.id.myButton)
-//            titleTextView.text = "Pending Foreground Permissions"
-//            descriptionTextView.text = "Waiting for permissions."
-//            myButton.text = "I don't do anything"
-//            myButton.setOnClickListener {
-//                // Code to request permissions
-//            }
-//
-//        }
-//
-//        override fun onActivityStarted(activity: Activity) {}
-//
-//        override fun onActivityDestroyed(activity: Activity) {}
-//
-//        override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
-//
-//        override fun onActivityStopped(activity: Activity) {}
-//
-//        override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
-//
-//        override fun onActivityResumed(activity: Activity) {
-//             Handler(Looper.getMainLooper()).postDelayed({
-//        updateUI(radarLocationPermissionsManager)
-//    }, 1000)  // Delay of 1 second
-//        }
-//    }
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        
-        // var permissionsStatus = radarLocationPermissionsManager.getPermissionsStatus()
         setContentView(R.layout.location_perms)
-//
-//
-//        application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
+
 
         val receiver = MyRadarReceiver { context, status ->
             Log.i("example", "Permissions updated")
@@ -118,70 +81,78 @@ class MainActivity : AppCompatActivity() {
         val titleTextView = findViewById<TextView>(R.id.titleTextView)
         val descriptionTextView = findViewById<TextView>(R.id.descriptionTextView)
         val myButton = findViewById<Button>(R.id.myButton)
-         when (state.status) {
-        RadarLocationPermissionsStatus.PermissionStatus.NO_PERMISSIONS_GRANTED -> {
-            titleTextView.text = "No Permissions"
-            descriptionTextView.text = "You have not granted any permissions."
-            myButton.text = "Grant Permissions"
-            myButton.setOnClickListener {
-                Radar.requestLocationPermissions()
+        when (state.status) {
+            RadarLocationPermissionsStatus.PermissionStatus.NO_PERMISSIONS_GRANTED -> {
+                myButton.visibility = View.VISIBLE 
+                titleTextView.text = "No Permissions"
+                descriptionTextView.text = "You have not granted any locations permissions. We need your location for this demo"
+                myButton.text = "Grant Permissions"
+                myButton.setOnClickListener {
+                    Radar.requestForegroundLocationPermissions()
+                }
             }
-        }
-        RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_LOCATION_PENDING -> {
-            titleTextView.text = "Pending Foreground Permissions"
-            descriptionTextView.text = "Waiting for permissions."
-            myButton.text = "I don't do anything"
-            myButton.setOnClickListener {
-                // Code to request permissions
-            }
-        }
-        RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_GRANTED -> {
-            titleTextView.text = "Foreground Permissions Granted"
-            descriptionTextView.text = "You have granted foreground permissions."
-            myButton.text = "Check Background Permissions"
-            myButton.setOnClickListener {
-                Radar.requestLocationPermissions(true)
-            }
-        }
-        RadarLocationPermissionsStatus.PermissionStatus.BACKGROUND_PERMISSIONS_GRANTED -> {
-            titleTextView.text = "Background Permissions Granted"
-            descriptionTextView.text = "You have granted background permissions."
-            myButton.text = "Start Tracking"
-            myButton.setOnClickListener {
-                // Code to start tracking
-            }
-        }
-             RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED_ONCE -> {
-                 titleTextView.text = "Rejected once"
-                 descriptionTextView.text = "You have rejected foreground permission"
-                 myButton.text = "Grant Permissions"
-                 myButton.setOnClickListener {
-                     // Code to request permissions
-                     Radar.requestLocationPermissions()
-                 }
-             }
-             RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED -> {
-                 titleTextView.text = "Rejected Permissions"
-                 descriptionTextView.text = "You have rejected foreground permission for good"
-                 myButton.text = "Go to settings to change it"
-                 myButton.setOnClickListener {
-                     Radar.updateLocationPermissionsStatusOnActivityResume()
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    val uri = Uri.fromParts("package", packageName, null)
-                    intent.data = uri
-                    startActivity(intent)
-                                }
-                            }
-        else -> {
-            titleTextView.text = "Unknown Permissions Status"
-            descriptionTextView.text = "The permissions status is unknown."
-            myButton.text = "Check Permissions"
-            myButton.setOnClickListener {
-                // Code to check permissions
-            }
-        }
-    }
+            RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_LOCATION_PENDING -> {
+                myButton.visibility = View.GONE
+                titleTextView.text = "Pending Foreground Permissions"
+                descriptionTextView.text = "Waiting for permissions."
 
+            }
+            RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_GRANTED -> {
+                myButton.visibility = View.VISIBLE 
+                titleTextView.text = "Foreground Permissions Granted"
+                descriptionTextView.text = "You have granted foreground permissions."
+                myButton.text = "Check Background Permissions"
+                myButton.setOnClickListener {
+                    Radar.requestBackgroundLocationPermissions()
+                }
+            }
+            RadarLocationPermissionsStatus.PermissionStatus.APPROXIMATE_PERMISSIONS_GRANTED -> {
+                myButton.visibility = View.VISIBLE 
+                titleTextView.text = "Foreground approximate Permissions Granted"
+                descriptionTextView.text = "You have granted approximate foreground permissions."
+                myButton.text = "Check Background Permissions"
+                myButton.setOnClickListener {
+                    Radar.requestBackgroundLocationPermissions()
+                }
+            }
+            RadarLocationPermissionsStatus.PermissionStatus.BACKGROUND_PERMISSIONS_GRANTED -> {
+                myButton.visibility = View.GONE 
+                titleTextView.text = "Background Permissions Granted"
+                descriptionTextView.text = "You have granted background permissions. We have all the permissions we need, thanks!"
+
+            }
+            RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED_ONCE -> {
+                myButton.visibility = View.VISIBLE 
+                titleTextView.text = "Rejected once"
+                descriptionTextView.text = "You have rejected foreground permission"
+                myButton.text = "Grant Permissions"
+                myButton.setOnClickListener {
+                    Radar.requestForegroundLocationPermissions()
+                }
+            }
+            RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED -> {
+                myButton.visibility = View.VISIBLE 
+                titleTextView.text = "Rejected Permissions"
+                descriptionTextView.text = "You have rejected foreground permission for good"
+                myButton.text = "Go to settings to change it"
+                myButton.setOnClickListener {
+                    Radar.updateLocationPermissionsStatusOnActivityResume()
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                        val uri = Uri.fromParts("package", packageName, null)
+                        intent.data = uri
+                        startActivity(intent)
+                                    }
+                                }
+            else -> {
+                myButton.visibility = View.VISIBLE 
+                titleTextView.text = "Unknown Permissions Status"
+                descriptionTextView.text = "The permissions status is unknown."
+                myButton.text = "Check Permissions"
+                myButton.setOnClickListener {
+                    // Code to check permissions
+                }
+            }
+        }
     }
 
     // fun runDemo() {
@@ -368,169 +339,3 @@ class MainActivity : AppCompatActivity() {
     // }
 
 }
-
-
-//class RadarLocationPermissionsManager(private val context: Context): LifecycleObserver {
-//
-//    fun requestForegroundPermissions() {
-//        RadarLocationPermissionsStatus.saveToPreferences(context, true)
-//        // do we get a popup here that takes us out of active?
-//        ActivityCompat.requestPermissions(
-//            context as Activity,
-//            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-//            // change later to global var
-//            permissionsRequestCode
-//        )
-//    }
-//
-//    fun requestBackgroundPermissions() {
-//        // have a side channel thing here? the user leaves the app to go into the settings.
-//        ActivityCompat.requestPermissions(
-//            context as Activity,
-//            arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION),
-//            permissionsRequestCode
-//        )
-//    }
-//
-//    fun getPermissionsStatus(): RadarLocationPermissionsStatus {
-//        return RadarLocationPermissionsStatus.getFromPreferences(context) ?: RadarLocationPermissionsStatus()
-//    }
-//
-//    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-//    fun handleOnPause() {
-//
-//    }
-//
-//    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-//    fun handleOnResume() {
-//
-//    }
-//
-//    // intergrate with the radar sdk later
-//
-//}
-//
-//class RadarLocationPermissionsStatus() {
-//
-//    companion object {
-//        private const val PREFS_NAME = "RadarLocationPermissionsStatus"
-//        private const val STATUS_KEY = "status"
-//        private const val DENIED_KEY = "denied"
-//
-//        // maybe we cna dump this into radarsettings? we are really simply saving a bool. the rest of the object is derived at call time
-//        fun getFromPreferences(context: Context): RadarLocationPermissionsStatus? {
-//            val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-//            val foregroundPopupRequested = prefs.getBoolean(STATUS_KEY, false)
-//            val previouslyDeniedForeground = prefs.getBoolean(DENIED_KEY, false)
-//            return fromForegroundPopupRequested(context, foregroundPopupRequested, previouslyDeniedForeground)
-//        }
-//
-//        fun saveToPreferences(context: Context, foregroundPopupRequested: Boolean) {
-//            val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-//            val editor: SharedPreferences.Editor = prefs.edit()
-//            editor.putBoolean(STATUS_KEY, foregroundPopupRequested)
-//            editor.apply()
-//        }
-//
-//        fun saveDeniedOnce(context: Context, previouslyDeniedForeground: Boolean) {
-//            val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-//            val editor: SharedPreferences.Editor = prefs.edit()
-//            editor.putBoolean(DENIED_KEY, previouslyDeniedForeground)
-//            editor.apply()
-//        }
-//
-//        internal const val KEY_STATUS = "status"
-//        internal const val KEY_FOREGROUND_POPUP_REQUESTED = "foregroundPopupRequested"
-//        internal const val KEY_FOREGROUND_PERMISSIONS_RESULT = "foregroundPermissionResult"
-//        internal const val KEY_BACKGROUND_PERMISSIONS_RESULT = "backgroundPermissionResult"
-//        internal const val KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE = "shouldShowRequestPermissionRationale"
-//        internal const val KEY_PREVIOUSLY_DENIED_FOREGROUND = "previouslyDeniedForeground"
-//
-//        private fun fromForegroundPopupRequested(context: Context, foregroundPopupRequested: Boolean, previouslyDeniedForeground: Boolean): RadarLocationPermissionsStatus {
-//            val newStatus = RadarLocationPermissionsStatus()
-//            newStatus.foregroundPopupRequested = foregroundPopupRequested
-//            newStatus.foregroundPermissionResult = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-//            newStatus.backgroundPermissionResult = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
-//            newStatus.shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(context as Activity, Manifest.permission.ACCESS_FINE_LOCATION);
-//            // if this is true, we know it is denied once
-//            if (newStatus.shouldShowRequestPermissionRationale && !previouslyDeniedForeground) {
-//                saveDeniedOnce(context, true)
-//                newStatus.previouslyDeniedForeground = true
-//            } else {
-//                newStatus.previouslyDeniedForeground = previouslyDeniedForeground
-//            }
-//            // we map the different states to the status to be implemented
-//            newStatus.status = mapToStatus(newStatus.foregroundPopupRequested, newStatus.foregroundPermissionResult, newStatus.backgroundPermissionResult, newStatus.shouldShowRequestPermissionRationale, newStatus.previouslyDeniedForeground)
-//            // print all the states
-//            Log.d("RadarLocationPermissionsStatus", "Foreground Popup Requested: ${newStatus.foregroundPopupRequested}")
-//            Log.d("RadarLocationPermissionsStatus", "Foreground Permission Result: ${newStatus.foregroundPermissionResult}")
-//            Log.d("RadarLocationPermissionsStatus", "Background Permission Result: ${newStatus.backgroundPermissionResult}")
-//            Log.d("RadarLocationPermissionsStatus", "Should Show Request Permission Rationale: ${newStatus.shouldShowRequestPermissionRationale}")
-//            Log.d("RadarLocationPermissionsStatus", "Status: ${newStatus.status}")
-//            Log.d("RadarLocationPermissionsStatus", "Previously Denied Foreground: ${newStatus.previouslyDeniedForeground}")
-//            return newStatus
-//        }
-//
-//
-//        // some notes and states we need to map to
-//        // start -> f,f,f,f
-//        // after requested foreground (pending) -> t,f,f,f have an in-memory flag to denote in pop-up
-//        // after granted foreground -> t,t,f,f , triggered by app state
-//        // after denied foreground once -> t,f,f,t trigger with app state, handled not much differently than having not granted
-//        // after denied foreground -> t,f,f,f (edge, may not need to support)
-//        // after requested background -> t,t,t,* (trigger from app state)
-//
-//        private fun mapToStatus(foregroundPopupRequested: Boolean, foregroundPermissionResult: Boolean, backgroundPermissionResult: Boolean,shouldShowRequestPermissionRationale:Boolean, previouslyDeniedForeground: Boolean): PermissionStatus {
-//            if (backgroundPermissionResult) {
-//                return PermissionStatus.BACKGROUND_PERMISSIONS_GRANTED
-//            }
-//            if (foregroundPermissionResult) {
-//                return PermissionStatus.FOREGROUND_PERMISSIONS_GRANTED
-//            } else {
-//                if (shouldShowRequestPermissionRationale) {
-//                    return PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED_ONCE
-//                } else {
-//                    if (foregroundPopupRequested) {
-//                        if (previouslyDeniedForeground) {
-//                            return PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED
-//                        }
-//                        // to do: add a check for pop-up, if not it should be unhandled
-//                        return PermissionStatus.FOREGROUND_LOCATION_PENDING
-//                    } else {
-//                        return PermissionStatus.NO_PERMISSIONS_GRANTED
-//                    }
-//                }
-//            }
-//            return PermissionStatus.UNKNOWN
-//        }
-//
-//    }
-//
-//    fun toJson(): JSONObject {
-//        val jsonObject = JSONObject()
-//        jsonObject.put(KEY_STATUS, status.name)
-//        jsonObject.put(KEY_FOREGROUND_POPUP_REQUESTED, foregroundPopupRequested)
-//        jsonObject.put(KEY_FOREGROUND_PERMISSIONS_RESULT, foregroundPermissionResult)
-//        jsonObject.put(KEY_BACKGROUND_PERMISSIONS_RESULT, backgroundPermissionResult)
-//        jsonObject.put(KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, shouldShowRequestPermissionRationale)
-//        return jsonObject
-//    }
-//
-//    enum class PermissionStatus {
-//        NO_PERMISSIONS_GRANTED,
-//        FOREGROUND_PERMISSIONS_GRANTED,
-//        FOREGROUND_PERMISSIONS_REJECTED_ONCE,
-//        FOREGROUND_PERMISSIONS_REJECTED,
-//        FOREGROUND_LOCATION_PENDING,
-//        BACKGROUND_PERMISSIONS_GRANTED,
-//        UNKNOWN
-//    }
-//
-//    var status: PermissionStatus = PermissionStatus.UNKNOWN
-//    var foregroundPopupRequested: Boolean = false
-//    var foregroundPermissionResult: Boolean = false
-//    var backgroundPermissionResult: Boolean = false
-//    var shouldShowRequestPermissionRationale: Boolean = false
-//    var previouslyDeniedForeground: Boolean = false
-//
-//}
