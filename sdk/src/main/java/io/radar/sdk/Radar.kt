@@ -3072,15 +3072,14 @@ object Radar {
 
     @JvmStatic
     fun requestForegroundLocationPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            locationPermissionsManager.requestLocationPermissions(false)
-        }
+        locationPermissionsManager.requestForegroundLocationPermissions()
+        
     }
 
     @JvmStatic
     fun requestBackgroundLocationPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            locationPermissionsManager.requestLocationPermissions(true)
+            locationPermissionsManager.requestBackgroundLocationPermissions()
         }
     }
 

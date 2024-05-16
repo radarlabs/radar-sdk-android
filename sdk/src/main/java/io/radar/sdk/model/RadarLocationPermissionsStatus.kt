@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import org.json.JSONObject
 
@@ -17,22 +16,21 @@ class RadarLocationPermissionsStatus {
         private const val STATUS_KEY = "status"
         private const val DENIED_KEY = "denied"
 
-        // maybe we cna dump this into radarsettings? we are really simply saving a bool. the rest of the object is derived at call time
-        fun getFromPreferences(context: Context, activity: Activity ,inLocationPopup: Boolean = false): RadarLocationPermissionsStatus? {
+        fun getUpdatedStatus(context: Context, activity: Activity, inLocationPopup: Boolean = false): RadarLocationPermissionsStatus? {
             val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val foregroundPopupRequested = prefs.getBoolean(STATUS_KEY, false)
             val previouslyDeniedForeground = prefs.getBoolean(DENIED_KEY, false)
             return fromForegroundPopupRequested(context, activity, foregroundPopupRequested, previouslyDeniedForeground, inLocationPopup)
         }
 
-        fun saveToPreferences(context: Context, foregroundPopupRequested: Boolean) {
+        fun saveForegroundPopupRequested(context: Context, foregroundPopupRequested: Boolean) {
             val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val editor: SharedPreferences.Editor = prefs.edit()
             editor.putBoolean(STATUS_KEY, foregroundPopupRequested)
             editor.apply()
         }
 
-        fun saveDeniedOnce(context: Context, previouslyDeniedForeground: Boolean) {
+        private fun savePreviouslyDeniedForeground(context: Context, previouslyDeniedForeground: Boolean) {
             val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val editor: SharedPreferences.Editor = prefs.edit()
             editor.putBoolean(DENIED_KEY, previouslyDeniedForeground)
@@ -60,9 +58,9 @@ class RadarLocationPermissionsStatus {
             newStatus.shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
                     activity, Manifest.permission.ACCESS_FINE_LOCATION);
        
-            // if this is true, we know it is denied once
+            // if this is true, we know foreground permission was denied once and we should mark the flag
             if (newStatus.shouldShowRequestPermissionRationale && !previouslyDeniedForeground) {
-                saveDeniedOnce(context, true)
+                savePreviouslyDeniedForeground(context, true)
                 newStatus.previouslyDeniedForeground = true
             } else {
                 newStatus.previouslyDeniedForeground = previouslyDeniedForeground
@@ -70,32 +68,14 @@ class RadarLocationPermissionsStatus {
             newStatus.inLocationPopup = inLocationPopup
             // we map the different states to the status to be implemented
             newStatus.status = mapToStatus(newStatus)
-            // print all the states
-            Log.d("LocationPermissions", "Foreground Popup Requested: ${newStatus.foregroundPopupRequested}")
-            Log.d("LocationPermissions", "Foreground Permission Result: ${newStatus.foregroundPermissionResult}")
-            Log.d("LocationPermissions", "Background Permission Result: ${newStatus.backgroundPermissionResult}")
-            Log.d("LocationPermissions", "Should Show Request Permission Rationale: ${newStatus.shouldShowRequestPermissionRationale}")
-            Log.d("LocationPermissions", "Status: ${newStatus.status}")
-            Log.d("LocationPermissions", "Previously Denied Foreground: ${newStatus.previouslyDeniedForeground}")
             return newStatus
         }
 
-
-        // some notes and states we need to map to
-        // start -> f,f,f,f
-        // after requested foreground (pending) -> t,f,f,f have an in-memory flag to denote in pop-up
-        // after granted foreground -> t,t,f,f , triggered by app state
-        // after denied foreground once -> t,f,f,t trigger with app state, handled not much differently than having not granted
-        // after denied foreground -> t,f,f,f (edge, may not need to support)
-        // after requested background -> t,t,t,* (trigger from app state)
-
-        // this is messsy, we need to clean this up
         private fun mapToStatus(status: RadarLocationPermissionsStatus): PermissionStatus {
             
             if (status.backgroundPermissionResult) {
                 return PermissionStatus.BACKGROUND_PERMISSIONS_GRANTED
             }
-
             if (status.foregroundPermissionResult) {
                 return PermissionStatus.FOREGROUND_PERMISSIONS_GRANTED
             } else {
@@ -112,7 +92,6 @@ class RadarLocationPermissionsStatus {
                         if (status.previouslyDeniedForeground) {
                             return PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED
                         }
-                        
                     } else {
                         return PermissionStatus.NO_PERMISSIONS_GRANTED
                     }
