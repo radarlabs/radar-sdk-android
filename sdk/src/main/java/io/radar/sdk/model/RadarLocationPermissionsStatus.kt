@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import org.json.JSONObject
 
@@ -44,6 +45,7 @@ class RadarLocationPermissionsStatus {
         internal const val KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE = "shouldShowRequestPermissionRationale"
         internal const val KEY_PREVIOUSLY_DENIED_FOREGROUND = "previouslyDeniedForeground"
         internal const val KEY_APPROXIMATE_PERMISSIONS_REQUEST = "approximatePermissionsRequest"
+        internal const val KEY_BACKGROUND_PERMISSIONS_AVAILIBLE = "backgroundPermissionsAvailable"
 
         private fun fromForegroundPopupRequested(context: Context, activity: Activity, foregroundPopupRequested:Boolean, previouslyDeniedForeground: Boolean, inLocationPopup:Boolean): RadarLocationPermissionsStatus {
             val newStatus = RadarLocationPermissionsStatus()
@@ -57,6 +59,16 @@ class RadarLocationPermissionsStatus {
             }
             newStatus.shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
                     activity, Manifest.permission.ACCESS_FINE_LOCATION);
+
+            val shouldShowRequestPermissionRationaleBG = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ActivityCompat.shouldShowRequestPermissionRationale(
+                    activity, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            } else {
+                Log.d("devTest","we should not be here")
+                false
+            };
+
+            newStatus.shouldShowRequestPermissionRationaleBG = shouldShowRequestPermissionRationaleBG
        
             // if this is true, we know foreground permission was denied once and we should mark the flag
             if (newStatus.shouldShowRequestPermissionRationale && !previouslyDeniedForeground) {
@@ -75,6 +87,9 @@ class RadarLocationPermissionsStatus {
             
             if (status.backgroundPermissionResult) {
                 return PermissionStatus.BACKGROUND_PERMISSIONS_GRANTED
+            }
+            if (!status.shouldShowRequestPermissionRationaleBG) {
+                return PermissionStatus.BACKGROUND_PERMISSIONS_REJECTED
             }
             if (status.foregroundPermissionResult) {
                 return PermissionStatus.FOREGROUND_PERMISSIONS_GRANTED
@@ -111,6 +126,7 @@ class RadarLocationPermissionsStatus {
         jsonObject.put(KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, shouldShowRequestPermissionRationale)
         jsonObject.put(KEY_PREVIOUSLY_DENIED_FOREGROUND,previouslyDeniedForeground)
         jsonObject.put(KEY_APPROXIMATE_PERMISSIONS_REQUEST,approximatePermissionsResult)
+        jsonObject.put(KEY_BACKGROUND_PERMISSIONS_AVAILIBLE,shouldShowRequestPermissionRationaleBG)
         return jsonObject
     }
 
@@ -122,6 +138,7 @@ class RadarLocationPermissionsStatus {
         FOREGROUND_PERMISSIONS_REJECTED,
         FOREGROUND_LOCATION_PENDING,
         BACKGROUND_PERMISSIONS_GRANTED,
+        BACKGROUND_PERMISSIONS_REJECTED,
         UNKNOWN
     }
 
@@ -130,6 +147,7 @@ class RadarLocationPermissionsStatus {
     var foregroundPermissionResult: Boolean = false
     var backgroundPermissionResult: Boolean = false
     var shouldShowRequestPermissionRationale: Boolean = false
+    var shouldShowRequestPermissionRationaleBG: Boolean = false
     var previouslyDeniedForeground: Boolean = false
     var inLocationPopup: Boolean = false
     var approximatePermissionsResult: Boolean = false

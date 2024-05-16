@@ -133,10 +133,25 @@ class MainActivity : AppCompatActivity() {
             }
             RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED -> {
                 myButton.visibility = View.VISIBLE 
-                titleTextView.text = "Rejected Permissions"
+                titleTextView.text = "Rejected foreground Permissions"
                 descriptionTextView.text = "You have rejected foreground permission for good, please activate it in the settings."
                 myButton.text = "Go to settings to change it"
                 myButton.setOnClickListener {
+//                    Radar.requestForegroundLocationPermissions()
+                    Radar.updateLocationPermissionsStatusOnActivityResume()
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    val uri = Uri.fromParts("package", packageName, null)
+                    intent.data = uri
+                    startActivity(intent)
+                }
+            }
+            RadarLocationPermissionsStatus.PermissionStatus.BACKGROUND_PERMISSIONS_REJECTED -> {
+                myButton.visibility = View.VISIBLE
+                titleTextView.text = "Rejected background Permissions"
+                descriptionTextView.text = "You have rejected background permission for good, please activate it in the settings."
+                myButton.text = "Go to settings to change it"
+                myButton.setOnClickListener {
+//                    Radar.requestForegroundLocationPermissions()
                     Radar.updateLocationPermissionsStatusOnActivityResume()
                     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                     val uri = Uri.fromParts("package", packageName, null)

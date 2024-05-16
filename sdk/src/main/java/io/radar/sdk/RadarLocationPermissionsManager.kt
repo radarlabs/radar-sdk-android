@@ -6,6 +6,7 @@ import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,6 +17,8 @@ class RadarLocationPermissionsManager(private val context: Context, private val 
 
     private var requestingBackgroundPermissions = false
 
+    private var requestingForegroundPermissions = false
+
     private lateinit var requestLocationPermissionsLauncher: ActivityResultLauncher<String>
 
     init {
@@ -23,6 +26,10 @@ class RadarLocationPermissionsManager(private val context: Context, private val 
             requestLocationPermissionsLauncher = activity.registerForActivityResult(
                 ActivityResultContracts.RequestPermission()
             ) {
+                isGranted: Boolean ->
+                if (!isGranted) {
+                    Log.d("PermissionsManager", "Permission not granted")
+                }
                 RadarLocationPermissionsStatus.getUpdatedStatus(context, activity)
                     ?.let { Radar.sendLocationPermissionsStatus(it) }
             }
@@ -45,6 +52,7 @@ class RadarLocationPermissionsManager(private val context: Context, private val 
     fun requestForegroundLocationPermissions() {
         RadarLocationPermissionsStatus.saveForegroundPopupRequested(context, true)
         if (activity is ComponentActivity) {
+            // is there any garuntees this will launch?
             RadarLocationPermissionsStatus.getUpdatedStatus(context,activity,true)
                 ?.let { Radar.sendLocationPermissionsStatus(it) }
             requestLocationPermissionsLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -57,6 +65,7 @@ class RadarLocationPermissionsManager(private val context: Context, private val 
 
     override fun onActivityPaused(activity: Activity) {
         // do nothing
+        Log.d("PermissionsManager", "onActivityPaused")
     }
 
     override fun onActivityStopped(p0: Activity) {
@@ -80,6 +89,7 @@ class RadarLocationPermissionsManager(private val context: Context, private val 
     }
 
     override fun onActivityResumed(activity: Activity) {
+        Log.d("PermissionsManager", "onActivityResumed")
         if (requestingBackgroundPermissions ) {
             RadarLocationPermissionsStatus.getUpdatedStatus(context,activity)
                 ?.let { Radar.sendLocationPermissionsStatus(it) }
