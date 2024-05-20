@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import io.radar.sdk.model.RadarFeatureSettings
+import io.radar.sdk.model.RadarSdkConfiguration
 import org.json.JSONObject
 import java.text.DecimalFormat
 import java.util.*
@@ -312,6 +313,19 @@ internal object RadarSettings {
         }
         val optionsJson = sharedPrefFeatureSettings ?: return RadarFeatureSettings.default()
         return RadarFeatureSettings.fromJson(JSONObject(optionsJson))
+    }
+
+    fun setSdkConfiguration(context: Context, configuration: RadarSdkConfiguration) {
+        if (configuration.logLevel != null) {
+            getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, configuration.logLevel) }
+        }
+        
+        Radar.logger.d("setSdkConfiguration | log level = ${configuration.logLevel}")
+    }
+
+    fun getSdkConfiguration(context: Context): RadarSdkConfiguration {
+        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, 3)
+        return RadarSdkConfiguration(logLevelInt);
     }
 
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {

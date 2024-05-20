@@ -103,6 +103,11 @@ internal class RadarVerificationManager(
                                                     Radar.locationManager.updateTrackingFromMeta(
                                                         config?.meta
                                                     )
+                                                    if (config != null) {
+                                                        RadarSettings.setSdkConfiguration(
+                                                            context, config.meta.sdkConfiguration
+                                                        )
+                                                    }
                                                 }
                                                 Radar.handler.post {
                                                     callback?.onComplete(
@@ -259,6 +264,10 @@ internal class RadarVerificationManager(
                                                     Radar.locationManager.updateTrackingFromMeta(
                                                         config?.meta
                                                     )
+                                                    if (config != null) {
+                                                        RadarSettings.setSdkConfiguration(
+                                                            context, config.meta.sdkConfiguration)
+                                                    }
                                                 }
                                                 Radar.handler.post {
                                                     callback?.onComplete(status, token)

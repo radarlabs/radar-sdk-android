@@ -53,6 +53,7 @@ internal class RadarActivityLifecycleCallbacks(
                         override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
                             Radar.locationManager.updateTrackingFromMeta(config.meta)
                             RadarSettings.setFeatureSettings(activity.applicationContext, config.meta.featureSettings)
+                            RadarSettings.setSdkConfiguration(activity.applicationContext, config.meta.sdkConfiguration)
                         }
                     })
                 }
