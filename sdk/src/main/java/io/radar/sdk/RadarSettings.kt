@@ -319,8 +319,6 @@ internal object RadarSettings {
         if (configuration.logLevel != null) {
             getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, configuration.logLevel) }
         }
-        
-        Radar.logger.d("setSdkConfiguration | log level = ${configuration.logLevel}")
     }
 
     fun getSdkConfiguration(context: Context): RadarSdkConfiguration {
