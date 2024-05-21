@@ -177,6 +177,7 @@ class RadarBeacon (
         }
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_RSSI, this.rssi)
+        obj.putOpt(FIELD_GEOMETRY, JSONObject().putOpt(FIELD_COORDINATES, JSONArray().put(this.location?.longitude).put(this.location?.latitude)))
         return obj
     }
 
