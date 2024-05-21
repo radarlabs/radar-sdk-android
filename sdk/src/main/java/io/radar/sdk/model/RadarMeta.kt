@@ -18,9 +18,9 @@ internal data class RadarMeta(
             val rawFeatureSettings = meta?.optJSONObject(FEATURE_SETTINGS)
             val rawSdkConiguration = meta?.optJSONObject(SDK_CONFIGURATION)
             
-            val trackingOptions = null
+            var trackingOptions: RadarTrackingOptions? = null
             if (rawOptions != null) {
-                RadarTrackingOptions.fromJson(rawOptions)
+                trackingOptions = RadarTrackingOptions.fromJson(rawOptions)
             }
             return RadarMeta(
                 trackingOptions,  
