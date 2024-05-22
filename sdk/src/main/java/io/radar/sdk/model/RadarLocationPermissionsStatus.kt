@@ -83,36 +83,36 @@ class RadarLocationPermissionsStatus {
             return newStatus
         }
 
-        private fun mapToStatus(status: RadarLocationPermissionsStatus): PermissionStatus {
+        private fun mapToStatus(status: RadarLocationPermissionsStatus): LocationPermissionStatus {
             
             if (status.backgroundPermissionResult) {
-                return PermissionStatus.BACKGROUND_PERMISSIONS_GRANTED
+                return LocationPermissionStatus.BACKGROUND_PERMISSIONS_GRANTED
             }
             if (!status.shouldShowRequestPermissionRationaleBG) {
-                return PermissionStatus.BACKGROUND_PERMISSIONS_REJECTED
+                return LocationPermissionStatus.BACKGROUND_PERMISSIONS_REJECTED
             }
             if (status.foregroundPermissionResult) {
-                return PermissionStatus.FOREGROUND_PERMISSIONS_GRANTED
+                return LocationPermissionStatus.FOREGROUND_PERMISSIONS_GRANTED
             } else {
                 if (status.inLocationPopup) {
-                    return PermissionStatus.FOREGROUND_LOCATION_PENDING
+                    return LocationPermissionStatus.FOREGROUND_LOCATION_PENDING
                 }
                 if (status.approximatePermissionsResult){
-                    return PermissionStatus.APPROXIMATE_PERMISSIONS_GRANTED
+                    return LocationPermissionStatus.APPROXIMATE_PERMISSIONS_GRANTED
                 }
                 if (status.shouldShowRequestPermissionRationale) {
-                    return PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED_ONCE
+                    return LocationPermissionStatus.FOREGROUND_PERMISSIONS_REJECTED_ONCE
                 } else {
                     if (status.foregroundPopupRequested) {
                         if (status.previouslyDeniedForeground) {
-                            return PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED
+                            return LocationPermissionStatus.FOREGROUND_PERMISSIONS_REJECTED
                         }
                     } else {
-                        return PermissionStatus.NO_PERMISSIONS_GRANTED
+                        return LocationPermissionStatus.NO_PERMISSIONS_GRANTED
                     }
                 }
             }
-            return PermissionStatus.UNKNOWN
+            return LocationPermissionStatus.UNKNOWN
         }
 
     }
@@ -130,7 +130,7 @@ class RadarLocationPermissionsStatus {
         return jsonObject
     }
 
-    enum class PermissionStatus {
+    enum class LocationPermissionStatus {
         NO_PERMISSIONS_GRANTED,
         FOREGROUND_PERMISSIONS_GRANTED,
         APPROXIMATE_PERMISSIONS_GRANTED,
@@ -142,7 +142,7 @@ class RadarLocationPermissionsStatus {
         UNKNOWN
     }
 
-    var status: PermissionStatus = PermissionStatus.UNKNOWN
+    var status: LocationPermissionStatus = LocationPermissionStatus.UNKNOWN
     var foregroundPopupRequested: Boolean = false
     var foregroundPermissionResult: Boolean = false
     var backgroundPermissionResult: Boolean = false

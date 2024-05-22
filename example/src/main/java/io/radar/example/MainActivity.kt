@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
         val descriptionTextView = findViewById<TextView>(R.id.descriptionTextView)
         val myButton = findViewById<Button>(R.id.myButton)
         when (state.status) {
-            RadarLocationPermissionsStatus.PermissionStatus.NO_PERMISSIONS_GRANTED -> {
+            RadarLocationPermissionsStatus.LocationPermissionStatus.NO_PERMISSIONS_GRANTED -> {
                 myButton.visibility = View.VISIBLE
                 titleTextView.text = "No Permissions"
                 descriptionTextView.text = "You have not granted any locations permissions. We need your location for this demo"
@@ -92,13 +92,13 @@ class MainActivity : AppCompatActivity() {
                     Radar.requestForegroundLocationPermissions()
                 }
             }
-            RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_LOCATION_PENDING -> {
+            RadarLocationPermissionsStatus.LocationPermissionStatus.FOREGROUND_LOCATION_PENDING -> {
                 myButton.visibility = View.GONE
                 titleTextView.text = "Pending Foreground Permissions"
                 descriptionTextView.text = "Waiting for permissions."
 
             }
-            RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_GRANTED -> {
+            RadarLocationPermissionsStatus.LocationPermissionStatus.FOREGROUND_PERMISSIONS_GRANTED -> {
                 myButton.visibility = View.VISIBLE 
                 titleTextView.text = "Foreground Permissions Granted"
                 descriptionTextView.text = "You have granted foreground permissions. Please also grant background permissions."
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity() {
                     Radar.requestBackgroundLocationPermissions()
                 }
             }
-            RadarLocationPermissionsStatus.PermissionStatus.APPROXIMATE_PERMISSIONS_GRANTED -> {
+            RadarLocationPermissionsStatus.LocationPermissionStatus.APPROXIMATE_PERMISSIONS_GRANTED -> {
                 myButton.visibility = View.VISIBLE 
                 titleTextView.text = "Foreground approximate Permissions Granted"
                 descriptionTextView.text = "You have granted approximate foreground permissions. That not enough for this demo. Please also grant background permissions."
@@ -117,12 +117,12 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            RadarLocationPermissionsStatus.PermissionStatus.BACKGROUND_PERMISSIONS_GRANTED -> {
+            RadarLocationPermissionsStatus.LocationPermissionStatus.BACKGROUND_PERMISSIONS_GRANTED -> {
                 myButton.visibility = View.GONE 
                 titleTextView.text = "Background Permissions Granted"
                 descriptionTextView.text = "You have granted background permissions. We have all the permissions we need, thanks!"
             }
-            RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED_ONCE -> {
+            RadarLocationPermissionsStatus.LocationPermissionStatus.FOREGROUND_PERMISSIONS_REJECTED_ONCE -> {
                 myButton.visibility = View.VISIBLE 
                 titleTextView.text = "Rejected once"
                 descriptionTextView.text = "You have rejected foreground permission, for now. But we would still like to ask again."
@@ -131,7 +131,7 @@ class MainActivity : AppCompatActivity() {
                     Radar.requestForegroundLocationPermissions()
                 }
             }
-            RadarLocationPermissionsStatus.PermissionStatus.FOREGROUND_PERMISSIONS_REJECTED -> {
+            RadarLocationPermissionsStatus.LocationPermissionStatus.FOREGROUND_PERMISSIONS_REJECTED -> {
                 myButton.visibility = View.VISIBLE 
                 titleTextView.text = "Rejected foreground Permissions"
                 descriptionTextView.text = "You have rejected foreground permission for good, please activate it in the settings."
@@ -145,7 +145,7 @@ class MainActivity : AppCompatActivity() {
                     startActivity(intent)
                 }
             }
-            RadarLocationPermissionsStatus.PermissionStatus.BACKGROUND_PERMISSIONS_REJECTED -> {
+            RadarLocationPermissionsStatus.LocationPermissionStatus.BACKGROUND_PERMISSIONS_REJECTED -> {
                 myButton.visibility = View.VISIBLE
                 titleTextView.text = "Rejected background Permissions"
                 descriptionTextView.text = "You have rejected background permission for good, please activate it in the settings."
