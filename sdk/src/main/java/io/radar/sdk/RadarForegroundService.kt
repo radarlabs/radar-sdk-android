@@ -1,7 +1,9 @@
 package io.radar.sdk
 
+import android.annotation.SuppressLint
 import android.app.*
 import android.content.Intent
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -47,6 +49,7 @@ class RadarForegroundService : Service() {
         return START_STICKY
     }
 
+    @SuppressLint("DiscouragedApi")
     private fun startForegroundService(extras: Bundle?) {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.deleteNotificationChannel("RadarSDK")
@@ -94,7 +97,11 @@ class RadarForegroundService : Service() {
             logger.e("Error setting foreground service content intent", RadarLogType.SDK_EXCEPTION, e)
         }
         val notification = builder.build()
-        startForeground(id, notification)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(id, notification, FOREGROUND_SERVICE_TYPE_LOCATION);
+        } else {
+            startForeground(id, notification)
+        }
     }
 
     override fun onBind(intent: Intent): IBinder? {

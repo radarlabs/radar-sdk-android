@@ -125,9 +125,17 @@ internal class RadarGoogleLocationClient(
     }
 
     override fun removeGeofences(
-        pendingIntent: PendingIntent
+        pendingIntent: PendingIntent,
+        block: ((success: Boolean) -> Unit)?
     ) {
-        geofencingClient.removeGeofences(pendingIntent)
+        geofencingClient.removeGeofences(pendingIntent).run {
+            addOnSuccessListener {
+                block?.invoke(true)
+            }
+            addOnFailureListener {
+                block?.invoke(false)
+            }
+        }
     }
 
     private fun priorityForDesiredAccuracy(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy) =

@@ -50,7 +50,7 @@ internal class RadarActivityLifecycleCallbacks(
                 if (updated) {
                     val usage = "resume"
                     Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
-                        override fun onComplete(config: RadarConfig) {
+                        override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
                             Radar.locationManager.updateTrackingFromMeta(config.meta)
                             RadarSettings.setFeatureSettings(activity.applicationContext, config.meta.featureSettings)
                         }
@@ -72,7 +72,7 @@ internal class RadarActivityLifecycleCallbacks(
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     try {
                         val inputDevice = InputDevice.getDevice(event.deviceId)
-                        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN || inputDevice.isVirtual) {
+                        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN || inputDevice?.isVirtual == true) {
                             RadarSettings.setSharing(activity.applicationContext, true)
                         }
                     }  catch (e: Exception) {

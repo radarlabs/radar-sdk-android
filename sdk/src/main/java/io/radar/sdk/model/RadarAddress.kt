@@ -257,9 +257,18 @@ class RadarAddress(
     }
 
     fun toJson(): JSONObject {
+
+        var latitude = this.coordinate.latitude
+        var longitude = this.coordinate.longitude
+        //check that lat and long are valid double numbers
+        if (latitude.isNaN() || longitude.isNaN()) {
+            latitude = 0.0
+            longitude = 0.0
+        }
+
         val obj = JSONObject()
-        obj.putOpt(FIELD_LATITUDE, this.coordinate.latitude)
-        obj.putOpt(FIELD_LONGITUDE, this.coordinate.longitude)
+        obj.putOpt(FIELD_LATITUDE, latitude)
+        obj.putOpt(FIELD_LONGITUDE, longitude)
         obj.putOpt(FIELD_FORMATTED_ADDRESS, this.formattedAddress)
         obj.putOpt(FIELD_COUNTRY, this.country)
         obj.putOpt(FIELD_COUNTRY_CODE, this.countryCode)

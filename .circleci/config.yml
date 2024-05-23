@@ -3,7 +3,8 @@ jobs:
   build_and_test:
     working_directory: ~/sdk
     docker:
-      - image: circleci/android:api-30
+      - image: cimg/android:2023.07
+    resource_class: large
     steps:
       - checkout
       - run:

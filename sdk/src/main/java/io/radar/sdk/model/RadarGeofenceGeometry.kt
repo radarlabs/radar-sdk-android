@@ -27,7 +27,7 @@ class RadarPolygonGeometry(
     /**
      * The geometry of the polygon geofence. A closed ring of coordinates.
      */
-    val coordinates: Array<RadarCoordinate>,
+    val coordinates: Array<RadarCoordinate>? = null,
 
     /**
      * The calculated centroid of the polygon geofence.

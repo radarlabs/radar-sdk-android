@@ -34,7 +34,7 @@ internal class RadarApiClient(
     }
 
     interface RadarGetConfigApiCallback {
-        fun onComplete(config: RadarConfig)
+        fun onComplete(status: RadarStatus, config: RadarConfig)
     }
 
     interface RadarTripApiCallback {
@@ -94,7 +94,7 @@ internal class RadarApiClient(
     }
 
     private fun headers(publishableKey: String): Map<String, String> {
-        return mapOf(
+        val headers = mutableMapOf(
             "Authorization" to publishableKey,
             "Content-Type" to "application/json",
             "X-Radar-Config" to "true",
@@ -104,6 +104,13 @@ internal class RadarApiClient(
             "X-Radar-Device-Type" to RadarUtils.deviceType,
             "X-Radar-SDK-Version" to RadarUtils.sdkVersion
         )
+        if (RadarSettings.isXPlatform(context)) {
+            headers["X-Radar-X-Platform-SDK-Type"] = RadarSettings.getXPlatformSDKType(context)
+            headers["X-Radar-X-Platform-SDK-Version"] = RadarSettings.getXPlatformSDKVersion(context)
+        } else {
+            headers["X-Radar-X-Platform-SDK-Type"] = "Native"
+        }
+        return headers
     }
 
     internal fun getConfig(usage: String? = null, verified: Boolean = false, callback: RadarGetConfigApiCallback? = null) {
@@ -131,7 +138,7 @@ internal class RadarApiClient(
                 if (status == RadarStatus.SUCCESS) {
                     Radar.flushLogs()
                 }
-                callback?.onComplete(RadarConfig.fromJson(res))
+                callback?.onComplete(status, RadarConfig.fromJson(res))
             }
         }, false, true, verified)
     }
@@ -298,6 +305,12 @@ internal class RadarApiClient(
             params.putOpt("country", RadarUtils.country)
             params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
             params.putOpt("source", Radar.stringForSource(source))
+            if (RadarSettings.isXPlatform(context)) {
+                params.putOpt("xPlatformType", RadarSettings.getXPlatformSDKType(context))
+                params.putOpt("xPlatformSDKVersion", RadarSettings.getXPlatformSDKVersion(context))
+            } else {
+                params.putOpt("xPlatformType", "Native")
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 val mocked = location.isFromMockProvider
                 params.putOpt("mocked", mocked)
@@ -707,10 +720,11 @@ internal class RadarApiClient(
 
     internal fun searchGeofences(
         location: Location,
-        radius: Int,
+        radius: Int?,
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
+        includeGeometry: Boolean?,
         callback: RadarSearchGeofencesApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -722,7 +736,9 @@ internal class RadarApiClient(
 
         val queryParams = StringBuilder()
         queryParams.append("near=${location.latitude},${location.longitude}")
-        queryParams.append("&radius=${radius}")
+        if (radius != null) {
+            queryParams.append("&radius=${radius}")
+        }
         queryParams.append("&limit=${limit}")
         if (tags?.isNotEmpty() == true) {
             queryParams.append("&tags=${tags.joinToString(separator = ",")}")
@@ -730,6 +746,10 @@ internal class RadarApiClient(
         metadata?.keys()?.forEach { key ->
             val value = metadata.get(key)
             queryParams.append("&metadata[${key}]=${value}")
+        }
+
+        if (includeGeometry != null) {
+            queryParams.append("&includeGeometry=${includeGeometry}")
         }
 
         val path = "v1/search/geofences?${queryParams}"

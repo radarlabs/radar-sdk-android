@@ -88,9 +88,10 @@ class RadarGeofence(
                     )
                 }
                 TYPE_POLYGON, TYPE_ISOCHRONE -> {
-                    val geometryObj = obj.optJSONObject(FIELD_GEOMETRY)
-                    val coordinatesArr = geometryObj?.optJSONArray(FIELD_COORDINATES)
-                    coordinatesArr?.optJSONArray(0)?.let { coordinates ->
+                val geometryObj = obj.optJSONObject(FIELD_GEOMETRY)
+                val coordinatesArr = geometryObj?.optJSONArray(FIELD_COORDINATES)
+                if (coordinatesArr != null) {
+                    coordinatesArr.optJSONArray(0)?.let { coordinates ->
                         val polygonCoordinatesArr = Array(coordinates.length()) { index ->
                             coordinates.optJSONArray(index)?.let { coordinate ->
                                 RadarCoordinate(
@@ -105,6 +106,13 @@ class RadarGeofence(
                             radius
                         )
                     }
+                } else {
+                    RadarPolygonGeometry(
+                        null,
+                        center,
+                        radius
+                    )
+                }
                 }
                 else -> null
             } ?: RadarCircleGeometry(RadarCoordinate(0.0, 0.0), 0.0)
@@ -170,11 +178,13 @@ class RadarGeofence(
                 is RadarPolygonGeometry -> {
                     obj.putOpt(FIELD_GEOMETRY_CENTER, geometry.center.toJson())
                     obj.putOpt(FIELD_GEOMETRY_RADIUS, geometry.radius)
-                    /* Nest coordinate array; Per GeoJSON spec: for type "Polygon", the
-                     "coordinates" member must be an array of LinearRing coordinate arrays. */
-                    val geometryCoordinates = JSONArray()
-                    geometryCoordinates.put(toJson(geometry.coordinates))
-                    obj.putOpt(FIELD_COORDINATES, geometryCoordinates)
+                    if (geometry.coordinates != null) {
+                        /* Nest coordinate array; Per GeoJSON spec: for type "Polygon", the
+                        "coordinates" member must be an array of LinearRing coordinate arrays. */
+                        val geometryCoordinates = JSONArray()
+                        geometryCoordinates.put(toJson(geometry.coordinates))
+                        obj.putOpt(FIELD_COORDINATES, geometryCoordinates)
+                    }
                     obj.putOpt(FIELD_TYPE, TYPE_GEOMETRY_POLYGON)
                 }
             }

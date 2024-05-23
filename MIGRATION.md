@@ -1,5 +1,8 @@
 # Migration guides
 
+## 3.9.x to 3.10.x
+- The `fun searchGeofences( radius: Int, tags: Array<String>?, metadata: JSONObject?, limit: Int?, callback: RadarSearchGeofencesCallback)` method is now `fun searchGeofences( radius: Int?, tags: Array<String>?, metadata: JSONObject?, limit: Int?, includeGeometry, Boolean?, callback: RadarSearchGeofencesCallback)`  and `fun searchGeofences( near:Location, radius: Int, tags: Array<String>?, metadata: JSONObject?, limit: Int?, callback: RadarSearchGeofencesCallback)` is now `fun searchGeofences( near:Location, radius: Int?, tags: Array<String>?, metadata: JSONObject?, limit: Int?, includeGeometry, Boolean?, callback: RadarSearchGeofencesCallback)`. `radius` is now optional and `includeGeometry` needs to be set if you wish your returned geofence objects to include the full geometry of polygon geofences.
+
 ## 3.8.x to 3.9.0
 - The `Radar.autocomplete(query, near, layers, limit, country, expandUnits, callback)` method is now `Radar.autocomplete(query, near, layers, limit, country, expandUnits, mailable, callback)`.
   - `expandUnits` has been deprecated and will always be true regardless of value passed in.

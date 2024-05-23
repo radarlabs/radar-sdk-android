@@ -36,7 +36,8 @@ internal object RadarSettings {
     private const val KEY_VERIFIED_HOST = "verified_host"
     private const val KEY_LAST_APP_OPEN_TIME = "last_app_open_time"
     private const val KEY_SHARING = "sharing"
-    private const val KEY_GOOGLE_PLAY_PROJECT_NUMBER = "google_play_project_number"
+    private const val KEY_X_PLATFORM_SDK_TYPE = "x_platform_sdk_type"
+    private const val KEY_X_PLATFORM_SDK_VERSION = "x_platform_sdk_version"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -374,12 +375,17 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putBoolean(KEY_SHARING, sharing) }
     }
 
-    internal fun getGooglePlayProjectNumber(context: Context): Long {
-        return getSharedPreferences(context).getLong(KEY_GOOGLE_PLAY_PROJECT_NUMBER, 0)
+    internal fun isXPlatform(context: Context): Boolean {
+        return getSharedPreferences(context).contains(KEY_X_PLATFORM_SDK_TYPE) &&
+                getSharedPreferences(context).contains(KEY_X_PLATFORM_SDK_VERSION)
     }
 
-    internal fun setGooglePlayProjectNumber(context: Context, googlePlayProjectNumber: Long) {
-        getSharedPreferences(context).edit { putLong(KEY_GOOGLE_PLAY_PROJECT_NUMBER, googlePlayProjectNumber) }
+    internal fun getXPlatformSDKType(context: Context): String? {
+        return getSharedPreferences(context).getString(KEY_X_PLATFORM_SDK_TYPE, null);
+    }
+
+    internal fun getXPlatformSDKVersion(context: Context): String? {
+        return getSharedPreferences(context).getString(KEY_X_PLATFORM_SDK_VERSION, null);
     }
 
 }
