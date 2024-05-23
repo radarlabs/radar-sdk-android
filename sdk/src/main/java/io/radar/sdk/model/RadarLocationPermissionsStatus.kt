@@ -103,6 +103,7 @@ class RadarLocationPermissionsStatus {
                 if (status.shouldShowRequestPermissionRationale) {
                     return LocationPermissionStatus.FOREGROUND_PERMISSIONS_REJECTED_ONCE
                 } else {
+                    // do we need this? we should reason about it a little more.
                     if (status.foregroundPopupRequested) {
                         if (status.previouslyDeniedForeground) {
                             return LocationPermissionStatus.FOREGROUND_PERMISSIONS_REJECTED
