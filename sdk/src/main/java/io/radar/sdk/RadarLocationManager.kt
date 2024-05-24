@@ -620,9 +620,6 @@ internal class RadarLocationManager(
                     }
 
                     updateTrackingFromMeta(config?.meta)
-                    if (config != null) {
-                        RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
-                    }
                 }
             })
         }

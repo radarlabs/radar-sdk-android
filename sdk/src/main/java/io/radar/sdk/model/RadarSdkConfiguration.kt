@@ -1,28 +1,30 @@
 package io.radar.sdk.model
 
 import org.json.JSONObject
+import io.radar.sdk.Radar
 
 /**
  * Represents server-side configuration settings.
  */
-internal data class RadarSdkConfiguration(
-    val logLevel: Int?
+internal data class RadarSDKConfiguration(
+    val logLevel: Radar.RadarLogLevel?
 ) {
     companion object {
         private const val LOG_LEVEL = "logLevel"
 
-        fun fromJson(json: JSONObject?): RadarSdkConfiguration {
-            return if (json == null) {
-                default()
-            } else {
-                RadarSdkConfiguration(
-                    json.optInt(LOG_LEVEL),
-                )
+        fun fromJson(json: JSONObject?): RadarSDKConfiguration {
+            if (json == null) {
+                return default()
             }
+
+            val logLevelString = json.optString(LOG_LEVEL)?.uppercase()
+            return RadarSDKConfiguration(
+                if (logLevelString != null) Radar.RadarLogLevel.valueOf(logLevelString) else null,
+            )
         }
 
-        fun default(): RadarSdkConfiguration {
-            return RadarSdkConfiguration(
+        fun default(): RadarSDKConfiguration {
+            return RadarSDKConfiguration(
                 null
             )
         }

@@ -129,6 +129,8 @@ internal class RadarApiClient(
         if (usage != null) {
             queryParams.append("&usage=${usage}")
         }
+        val clientSDKConfiguration = RadarSettings.getSDKConfiguration(context)
+        queryParams.append("&clientSDKConfiguration=${clientSDKConfiguration.toString()}")
 
         val path = "v1/config?${queryParams}"
         val headers = headers(publishableKey)

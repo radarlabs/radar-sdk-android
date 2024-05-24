@@ -538,7 +538,7 @@ object Radar {
             override fun onComplete(status: RadarStatus, config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config?.meta)
                 RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
-                RadarSettings.setSdkConfiguration(context, config?.meta.sdkConfiguration)
+                RadarSettings.setSDKConfiguration(context, config?.meta.sdkConfiguration)
             }
         })
 
@@ -812,9 +812,6 @@ object Radar {
                         ) {
                             if (status == RadarStatus.SUCCESS ){
                                 locationManager.updateTrackingFromMeta(config?.meta)
-                                if (config != null) {
-                                    RadarSettings.setSdkConfiguration(Radar.context, config?.meta.sdkConfiguration)
-                                }
                             }
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
@@ -912,9 +909,6 @@ object Radar {
             ) {
                 if (status == RadarStatus.SUCCESS ){
                     locationManager.updateTrackingFromMeta(config?.meta)
-                    if (config != null) {
-                        RadarSettings.setSdkConfiguration(Radar.context, config?.meta.sdkConfiguration)
-                    }
                 }
                 handler.post {
                     callback?.onComplete(status, location, events, user)
