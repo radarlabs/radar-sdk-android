@@ -464,15 +464,15 @@ object Radar {
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false, activity: Activity? = null) {
+    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false) {
         if (context == null) {
             return
         }
 
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
-        // try to not break the interface later
-        this.activity = activity!!
+
+        this.activity = context as Activity
 
 
         if (receiver != null) {
@@ -3069,13 +3069,17 @@ object Radar {
             })
         }
     }
-
+    /**
+     * Requests foreground location permissions.
+     */
     @JvmStatic
     fun requestForegroundLocationPermissions() {
-        locationPermissionsManager.requestForegroundLocationPermissions()
-        
+        locationPermissionsManager.requestForegroundLocationPermissions()  
     }
 
+    /**
+     * Requests background location permissions.
+     */
     @JvmStatic
     fun requestBackgroundLocationPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -3083,14 +3087,20 @@ object Radar {
         }
     }
 
+    /**
+     * @return A RadarPermissionsStatus object with the current location permissions status.
+     */
     @JvmStatic
     fun getLocationPermissions():RadarLocationPermissionsStatus {
         return locationPermissionsManager.getPermissionsStatus()
     }
 
+    /**
+     * Directs the user to the app settings to enable location permissions.
+     */
     @JvmStatic
-    fun updateLocationPermissionsStatusOnActivityResume(){
-        locationPermissionsManager.updateLocationPermissionsStatusOnActivityResume()
+    fun openAppSettings() {
+        locationPermissionsManager.openAppSettings()
     }
 
     /**

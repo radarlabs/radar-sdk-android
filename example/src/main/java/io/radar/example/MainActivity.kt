@@ -1,10 +1,6 @@
 package io.radar.example
 
-import android.app.Activity
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.Button
@@ -36,7 +32,7 @@ class MainActivity : AppCompatActivity() {
             Log.i("example", "Permissions updated")
             updateUI(status)
         }
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, this as Activity)
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
         Radar.sdkVersion()?.let { Log.i("version", it) }
         updateUI(Radar.getLocationPermissions())
 
@@ -107,6 +103,15 @@ class MainActivity : AppCompatActivity() {
                     Radar.requestBackgroundLocationPermissions()
                 }
             }
+            RadarLocationPermissionsStatus.LocationPermissionStatus.BACKGROUND_PERMISSIONS_REJECTED_ONCE -> {
+                myButton.visibility = View.VISIBLE
+                titleTextView.text = "Background Permissions Rejected Once"
+                descriptionTextView.text = "You have rejected background permissions once. Please also grant background permissions."
+                myButton.text = "Grant Background Permissions"
+                myButton.setOnClickListener {
+                    Radar.requestBackgroundLocationPermissions()
+                }
+            }
             RadarLocationPermissionsStatus.LocationPermissionStatus.APPROXIMATE_PERMISSIONS_GRANTED -> {
                 myButton.visibility = View.VISIBLE 
                 titleTextView.text = "Foreground approximate Permissions Granted"
@@ -137,12 +142,13 @@ class MainActivity : AppCompatActivity() {
                 descriptionTextView.text = "You have rejected foreground permission for good, please activate it in the settings."
                 myButton.text = "Go to settings to change it"
                 myButton.setOnClickListener {
+                    Radar.openAppSettings()
 //                    Radar.requestForegroundLocationPermissions()
-                    Radar.updateLocationPermissionsStatusOnActivityResume()
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    val uri = Uri.fromParts("package", packageName, null)
-                    intent.data = uri
-                    startActivity(intent)
+                    //Radar.updateLocationPermissionsStatusOnActivityResume()
+//                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+//                    val uri = Uri.fromParts("package", packageName, null)
+//                    intent.data = uri
+//                    startActivity(intent)
                 }
             }
             RadarLocationPermissionsStatus.LocationPermissionStatus.BACKGROUND_PERMISSIONS_REJECTED -> {
@@ -151,12 +157,13 @@ class MainActivity : AppCompatActivity() {
                 descriptionTextView.text = "You have rejected background permission for good, please activate it in the settings."
                 myButton.text = "Go to settings to change it"
                 myButton.setOnClickListener {
+                    Radar.openAppSettings()
 //                    Radar.requestForegroundLocationPermissions()
-                    Radar.updateLocationPermissionsStatusOnActivityResume()
-                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-                    val uri = Uri.fromParts("package", packageName, null)
-                    intent.data = uri
-                    startActivity(intent)
+                    // Radar.updateLocationPermissionsStatusOnActivityResume()
+                    // val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    // val uri = Uri.fromParts("package", packageName, null)
+                    // intent.data = uri
+                    // startActivity(intent)
                 }
             }
             else -> {
