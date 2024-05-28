@@ -46,6 +46,7 @@ class RadarLocationPermissionsManager(private val context: Context, private val 
             }
         } 
     }
+
     @RequiresApi(Build.VERSION_CODES.Q)
     fun requestBackgroundLocationPermissions() {
         if (activity is ComponentActivity) {

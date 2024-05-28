@@ -79,7 +79,7 @@ class RadarLocationPermissionsStatus {
                 return LocationPermissionState.BACKGROUND_PERMISSIONS_GRANTED
             }
 
-            if (status.previouslyDeniedBackground) {
+            if (status.previouslyDeniedBackground && status.foregroundPermissionResult) {
                 return if (status.shouldShowRequestPermissionRationaleBG) {
                     LocationPermissionState.BACKGROUND_PERMISSIONS_REJECTED_ONCE
                 } else {
