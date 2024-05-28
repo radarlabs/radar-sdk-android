@@ -425,7 +425,7 @@ object Radar {
     internal var initialized = false
     internal var isFlushingReplays = false
     private lateinit var context: Context
-    private lateinit var activity: Activity
+    private var activity: Activity? = null
     internal lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
     private var verifiedReceiver: RadarVerifiedReceiver? = null
@@ -472,8 +472,9 @@ object Radar {
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
 
-        this.activity = context as Activity
-
+        if (context is Activity) {
+            this.activity = context
+        }
 
         if (receiver != null) {
             this.receiver = receiver

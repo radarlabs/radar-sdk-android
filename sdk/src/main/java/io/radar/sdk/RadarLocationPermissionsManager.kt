@@ -15,7 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.RadarLocationPermissionsStatus
 
-class RadarLocationPermissionsManager(private val context: Context, private val activity: Activity): Application.ActivityLifecycleCallbacks {
+class RadarLocationPermissionsManager(private val context: Context, private val activity: Activity?): Application.ActivityLifecycleCallbacks {
 
     private var danglingBackgroundPermissionsRequest = false
 
@@ -77,7 +77,10 @@ class RadarLocationPermissionsManager(private val context: Context, private val 
     }
 
     fun getPermissionsStatus(): RadarLocationPermissionsStatus {
-        return RadarLocationPermissionsStatus.getUpdatedStatus(context, activity) ?: RadarLocationPermissionsStatus()
+        if (activity is ComponentActivity) {
+            return RadarLocationPermissionsStatus.getUpdatedStatus(context, activity) ?: RadarLocationPermissionsStatus()
+        }
+        return RadarLocationPermissionsStatus()
     }
 
     override fun onActivityPaused(activity: Activity) {
