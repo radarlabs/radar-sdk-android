@@ -437,7 +437,7 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
-    private lateinit var locationPermissionsManager: RadarLocationPermissionsManager
+    private lateinit var locationPermissionsManager: RadarLocationPermissionManager
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -535,7 +535,7 @@ object Radar {
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
 
-        locationPermissionsManager = RadarLocationPermissionsManager(this.context, this.activity)
+        locationPermissionsManager = RadarLocationPermissionManager(this.context, this.activity)
         application?.registerActivityLifecycleCallbacks(locationPermissionsManager)
 
 
@@ -3074,17 +3074,17 @@ object Radar {
      * Requests foreground location permissions.
      */
     @JvmStatic
-    fun requestForegroundLocationPermissions() {
-        locationPermissionsManager.requestForegroundLocationPermissions()  
+    fun requestForegroundLocationPermission() {
+        locationPermissionsManager.requestForegroundLocationPermission()
     }
 
     /**
      * Requests background location permissions.
      */
     @JvmStatic
-    fun requestBackgroundLocationPermissions() {
+    fun requestBackgroundLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            locationPermissionsManager.requestBackgroundLocationPermissions()
+            locationPermissionsManager.requestBackgroundLocationPermission()
         }
     }
 
@@ -3092,8 +3092,8 @@ object Radar {
      * @return A RadarPermissionsStatus object with the current location permissions status.
      */
     @JvmStatic
-    fun getLocationPermissionsStatus():RadarLocationPermissionsStatus {
-        return locationPermissionsManager.getLocationPermissionsStatus()
+    fun getLocationPermissionStatus():RadarLocationPermissionStatus {
+        return locationPermissionsManager.getLocationPermissionStatus()
     }
 
     /**
@@ -3444,7 +3444,7 @@ object Radar {
         logger.i("📍️ Radar token updated | token = $token")
     }
 
-    internal fun sendLocationPermissionsStatus(status: RadarLocationPermissionsStatus) {
+    internal fun sendLocationPermissionStatus(status: RadarLocationPermissionStatus) {
         receiver?.onLocationPermissionsStatusUpdated(context, status)
 
         logger.i("📍️ Radar location permissions updated | status = $status")

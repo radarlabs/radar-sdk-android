@@ -13,58 +13,58 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import io.radar.sdk.model.RadarLocationPermissionsStatus
+import io.radar.sdk.model.RadarLocationPermissionStatus
 
-class RadarLocationPermissionsManager(private val context: Context, private val activity: Activity?): Application.ActivityLifecycleCallbacks {
+class RadarLocationPermissionManager(private val context: Context, private val activity: Activity?): Application.ActivityLifecycleCallbacks {
 
-    private var danglingBackgroundPermissionsRequest = false
+    private var danglingBackgroundPermissionRequest = false
 
-    private lateinit var requestForegroundLocationPermissionsLauncher: ActivityResultLauncher<String>
+    private lateinit var requestForegroundLocationPermissionLauncher: ActivityResultLauncher<String>
 
-    private lateinit var requestBackgroundLocationPermissionsLauncher: ActivityResultLauncher<String>
+    private lateinit var requestBackgroundLocationPermissionLauncher: ActivityResultLauncher<String>
 
     init {
         if (activity is ComponentActivity) {
-            requestForegroundLocationPermissionsLauncher = activity.registerForActivityResult(
+            requestForegroundLocationPermissionLauncher = activity.registerForActivityResult(
                 ActivityResultContracts.RequestPermission()
             ) { isGranted: Boolean ->
                 if (!isGranted) {
-                    RadarLocationPermissionsStatus.savePreviouslyDeniedForeground(context,true)
+                    RadarLocationPermissionStatus.savePreviouslyDeniedForeground(context,true)
                 }
-                Radar.sendLocationPermissionsStatus(RadarLocationPermissionsStatus.initWithStatus(context, activity))
+                Radar.sendLocationPermissionStatus(RadarLocationPermissionStatus.initWithStatus(context, activity))
                 // TODO: sync the user's permissions status here
             }
 
-            requestBackgroundLocationPermissionsLauncher = activity.registerForActivityResult(
+            requestBackgroundLocationPermissionLauncher = activity.registerForActivityResult(
                 ActivityResultContracts.RequestPermission()
             ) { isGranted: Boolean ->
                 if (!isGranted) {
-                    RadarLocationPermissionsStatus.savePreviouslyDeniedBackground(context, true)
+                    RadarLocationPermissionStatus.savePreviouslyDeniedBackground(context, true)
                 }
-                Radar.sendLocationPermissionsStatus(RadarLocationPermissionsStatus.initWithStatus(context, activity))
+                Radar.sendLocationPermissionStatus(RadarLocationPermissionStatus.initWithStatus(context, activity))
                 // TODO: sync the user's permissions status here
             }
         } 
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
-    fun requestBackgroundLocationPermissions() {
+    fun requestBackgroundLocationPermission() {
         if (activity is ComponentActivity) {
-            requestBackgroundLocationPermissionsLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            requestBackgroundLocationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
             // TODO: sync the user's location permissions action with the their permissions status here
         }
     }
 
-    fun requestForegroundLocationPermissions() {
+    fun requestForegroundLocationPermission() {
         if (activity is ComponentActivity) {
-            Radar.sendLocationPermissionsStatus(RadarLocationPermissionsStatus.initWithStatus(context,activity,true))
-            requestForegroundLocationPermissionsLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            Radar.sendLocationPermissionStatus(RadarLocationPermissionStatus.initWithStatus(context,activity,true))
+            requestForegroundLocationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             // TODO: sync the user's location permissions action with the their permissions status here
         }
     }
 
     fun openAppSettings() {
-        danglingBackgroundPermissionsRequest = true
+        danglingBackgroundPermissionRequest = true
         val intent = Intent().apply {
             action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
             val uri = Uri.fromParts("package", context.packageName, null)
@@ -74,11 +74,11 @@ class RadarLocationPermissionsManager(private val context: Context, private val 
         context.startActivity(intent)
     }
 
-    fun getLocationPermissionsStatus(): RadarLocationPermissionsStatus {
+    fun getLocationPermissionStatus(): RadarLocationPermissionStatus {
         if (activity is ComponentActivity) {
-            return RadarLocationPermissionsStatus.initWithStatus(context, activity)
+            return RadarLocationPermissionStatus.initWithStatus(context, activity)
         }
-        return RadarLocationPermissionsStatus()
+        return RadarLocationPermissionStatus()
     }
 
     override fun onActivityPaused(activity: Activity) {
@@ -106,11 +106,11 @@ class RadarLocationPermissionsManager(private val context: Context, private val 
     }
 
     override fun onActivityResumed(activity: Activity) {
-        if (danglingBackgroundPermissionsRequest) {
-            Radar.sendLocationPermissionsStatus(RadarLocationPermissionsStatus.initWithStatus(context,activity))
+        if (danglingBackgroundPermissionRequest) {
+            Radar.sendLocationPermissionStatus(RadarLocationPermissionStatus.initWithStatus(context,activity))
             // TODO: sync the user's location permissions action with the their permissions status here
         }
-        danglingBackgroundPermissionsRequest = false
+        danglingBackgroundPermissionRequest = false
     }
 
 }

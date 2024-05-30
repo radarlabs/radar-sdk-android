@@ -9,25 +9,25 @@ import android.os.Build
 import androidx.core.app.ActivityCompat
 import org.json.JSONObject
 
-class RadarLocationPermissionsStatus {
+class RadarLocationPermissionStatus {
 
     companion object {
-        private const val PREFS_NAME = "RadarLocationPermissionsStatus"
+        private const val PREFS_NAME = "RadarLocationPermissionStatus"
 
         internal const val KEY_STATUS = "status"
-        internal const val KEY_FOREGROUND_PERMISSIONS_RESULT = "foregroundPermissionResult"
-        internal const val KEY_BACKGROUND_PERMISSIONS_RESULT = "backgroundPermissionResult"
+        internal const val KEY_FOREGROUND_PERMISSION_RESULT = "foregroundPermissionResult"
+        internal const val KEY_BACKGROUND_PERMISSION_RESULT = "backgroundPermissionResult"
         internal const val KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE_FG = "shouldShowRequestPermissionRationale"
         internal const val KEY_PREVIOUSLY_DENIED_FOREGROUND = "previouslyDeniedForeground"
         internal const val KEY_PREVIOUSLY_DENIED_BACKGROUND = "previouslyDeniedBackground"
-        internal const val KEY_APPROXIMATE_PERMISSIONS_REQUEST = "approximatePermissionsRequest"
-        internal const val KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE_BG = "backgroundPermissionsAvailable"
+        internal const val KEY_APPROXIMATE_PERMISSION_REQUEST = "approximatePermissionRequest"
+        internal const val KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE_BG = "backgroundPermissionAvailable"
 
-        fun initWithStatus(context: Context, activity: Activity, inLocationPopup: Boolean = false): RadarLocationPermissionsStatus {
+        fun initWithStatus(context: Context, activity: Activity, inLocationPopup: Boolean = false): RadarLocationPermissionStatus {
 
-            val newStatus = RadarLocationPermissionsStatus()
+            val newStatus = RadarLocationPermissionStatus()
             newStatus.foregroundPermissionResult = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-            newStatus.approximatePermissionsResult = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            newStatus.approximatePermissionResult = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 newStatus.backgroundPermissionResult = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
             } else {
@@ -47,7 +47,7 @@ class RadarLocationPermissionsStatus {
             if (newStatus.foregroundPermissionResult){
                 savePreviouslyDeniedForeground(context,false)
             }
-            newStatus.previouslyDeniedForeground = prefs.getBoolean(KEY_FOREGROUND_PERMISSIONS_RESULT, false)
+            newStatus.previouslyDeniedForeground = prefs.getBoolean(KEY_FOREGROUND_PERMISSION_RESULT, false)
             if (newStatus.backgroundPermissionResult) {
                 savePreviouslyDeniedBackground(context,false)
             }
@@ -62,7 +62,7 @@ class RadarLocationPermissionsStatus {
         fun savePreviouslyDeniedForeground(context: Context, previouslyDeniedForeground: Boolean) {
             val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val editor: SharedPreferences.Editor = prefs.edit()
-            editor.putBoolean(KEY_FOREGROUND_PERMISSIONS_RESULT, previouslyDeniedForeground)
+            editor.putBoolean(KEY_FOREGROUND_PERMISSION_RESULT, previouslyDeniedForeground)
             editor.apply()
         }
 
@@ -73,36 +73,36 @@ class RadarLocationPermissionsStatus {
             editor.apply()
         }
 
-        private fun locationPermissionStateForLocationManagerStatus(status: RadarLocationPermissionsStatus): LocationPermissionState {
+        private fun locationPermissionStateForLocationManagerStatus(status: RadarLocationPermissionStatus): LocationPermissionState {
             
             if (status.backgroundPermissionResult) {
-                return LocationPermissionState.BACKGROUND_PERMISSIONS_GRANTED
+                return LocationPermissionState.BACKGROUND_PERMISSION_GRANTED
             }
 
             if (status.previouslyDeniedBackground && status.foregroundPermissionResult) {
                 return if (status.shouldShowRequestPermissionRationaleBG) {
-                    LocationPermissionState.BACKGROUND_PERMISSIONS_REJECTED_ONCE
+                    LocationPermissionState.BACKGROUND_PERMISSION_REJECTED_ONCE
                 } else {
-                    LocationPermissionState.BACKGROUND_PERMISSIONS_REJECTED
+                    LocationPermissionState.BACKGROUND_PERMISSION_REJECTED
                 }
             }
 
             if (status.foregroundPermissionResult) {
-                return LocationPermissionState.FOREGROUND_PERMISSIONS_GRANTED
+                return LocationPermissionState.FOREGROUND_PERMISSION_GRANTED
             } else {
                 if (status.inLocationPopup) {
-                    return LocationPermissionState.FOREGROUND_LOCATION_PENDING
+                    return LocationPermissionState.FOREGROUND_PERMISSION_PENDING
                 }
-                if (status.approximatePermissionsResult){
-                    return LocationPermissionState.APPROXIMATE_PERMISSIONS_GRANTED
+                if (status.approximatePermissionResult){
+                    return LocationPermissionState.APPROXIMATE_PERMISSION_GRANTED
                 }
                 return if (status.shouldShowRequestPermissionRationaleFG) {
-                    LocationPermissionState.FOREGROUND_PERMISSIONS_REJECTED_ONCE
+                    LocationPermissionState.FOREGROUND_PERMISSION_REJECTED_ONCE
                 } else {
                     if (status.previouslyDeniedForeground) {
-                        LocationPermissionState.FOREGROUND_PERMISSIONS_REJECTED
+                        LocationPermissionState.FOREGROUND_PERMISSION_REJECTED
                     } else {
-                        LocationPermissionState.NO_PERMISSIONS_GRANTED
+                        LocationPermissionState.NO_PERMISSION_GRANTED
                     }
                 }
             }
@@ -112,26 +112,26 @@ class RadarLocationPermissionsStatus {
     fun toJson(): JSONObject {
         val jsonObject = JSONObject()
         jsonObject.put(KEY_STATUS, status.name)
-        jsonObject.put(KEY_FOREGROUND_PERMISSIONS_RESULT, foregroundPermissionResult)
-        jsonObject.put(KEY_BACKGROUND_PERMISSIONS_RESULT, backgroundPermissionResult)
+        jsonObject.put(KEY_FOREGROUND_PERMISSION_RESULT, foregroundPermissionResult)
+        jsonObject.put(KEY_BACKGROUND_PERMISSION_RESULT, backgroundPermissionResult)
         jsonObject.put(KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE_FG, shouldShowRequestPermissionRationaleFG)
         jsonObject.put(KEY_PREVIOUSLY_DENIED_FOREGROUND,previouslyDeniedForeground)
-        jsonObject.put(KEY_APPROXIMATE_PERMISSIONS_REQUEST,approximatePermissionsResult)
+        jsonObject.put(KEY_APPROXIMATE_PERMISSION_REQUEST,approximatePermissionResult)
         jsonObject.put(KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE_BG,shouldShowRequestPermissionRationaleBG)
         jsonObject.put(KEY_PREVIOUSLY_DENIED_BACKGROUND,previouslyDeniedBackground)
         return jsonObject
     }
 
     enum class LocationPermissionState {
-        NO_PERMISSIONS_GRANTED,
-        FOREGROUND_PERMISSIONS_GRANTED,
-        APPROXIMATE_PERMISSIONS_GRANTED,
-        FOREGROUND_PERMISSIONS_REJECTED_ONCE,
-        FOREGROUND_PERMISSIONS_REJECTED,
-        FOREGROUND_LOCATION_PENDING,
-        BACKGROUND_PERMISSIONS_GRANTED,
-        BACKGROUND_PERMISSIONS_REJECTED,
-        BACKGROUND_PERMISSIONS_REJECTED_ONCE,
+        NO_PERMISSION_GRANTED,
+        FOREGROUND_PERMISSION_GRANTED,
+        APPROXIMATE_PERMISSION_GRANTED,
+        FOREGROUND_PERMISSION_REJECTED_ONCE,
+        FOREGROUND_PERMISSION_REJECTED,
+        FOREGROUND_PERMISSION_PENDING,
+        BACKGROUND_PERMISSION_GRANTED,
+        BACKGROUND_PERMISSION_REJECTED,
+        BACKGROUND_PERMISSION_REJECTED_ONCE,
         UNKNOWN
     }
 
@@ -142,6 +142,6 @@ class RadarLocationPermissionsStatus {
     var shouldShowRequestPermissionRationaleBG: Boolean = false
     var previouslyDeniedForeground: Boolean = false
     var inLocationPopup: Boolean = false
-    var approximatePermissionsResult: Boolean = false
+    var approximatePermissionResult: Boolean = false
     var previouslyDeniedBackground: Boolean = false
 }

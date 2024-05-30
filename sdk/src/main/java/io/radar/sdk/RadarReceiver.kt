@@ -4,7 +4,7 @@ import android.content.Context
 import android.location.Location
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarEvent
-import io.radar.sdk.model.RadarLocationPermissionsStatus
+import io.radar.sdk.model.RadarLocationPermissionStatus
 import io.radar.sdk.model.RadarUser
 
 /**
@@ -63,6 +63,6 @@ abstract class RadarReceiver {
      * @param[context] The context.
      * @param[status] The location permissions status.
      */
-    abstract fun onLocationPermissionsStatusUpdated(context: Context, status: RadarLocationPermissionsStatus)
+    abstract fun onLocationPermissionsStatusUpdated(context: Context, status: RadarLocationPermissionStatus)
 
 }

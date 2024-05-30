@@ -10,10 +10,10 @@ import androidx.core.app.NotificationManagerCompat
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarReceiver
 import io.radar.sdk.model.RadarEvent
-import io.radar.sdk.model.RadarLocationPermissionsStatus
+import io.radar.sdk.model.RadarLocationPermissionStatus
 import io.radar.sdk.model.RadarUser
 
-class MyRadarReceiver(private val onPermissionsUpdated: (Context, RadarLocationPermissionsStatus) -> Unit)  : RadarReceiver() {
+class MyRadarReceiver(private val onPermissionsUpdated: (Context, RadarLocationPermissionStatus) -> Unit)  : RadarReceiver() {
 
     companion object {
 
@@ -70,7 +70,7 @@ class MyRadarReceiver(private val onPermissionsUpdated: (Context, RadarLocationP
 
     override fun onLocationPermissionsStatusUpdated(
         context: Context,
-        status: RadarLocationPermissionsStatus
+        status: RadarLocationPermissionStatus
     ) {
         onPermissionsUpdated(context, status)
     }
