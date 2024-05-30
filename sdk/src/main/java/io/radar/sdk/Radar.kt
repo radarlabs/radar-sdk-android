@@ -437,7 +437,7 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
-    private lateinit var locationPermissionsManager: RadarLocationPermissionManager
+    private lateinit var locationPermissionManager: RadarLocationPermissionManager
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -535,8 +535,8 @@ object Radar {
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
 
-        locationPermissionsManager = RadarLocationPermissionManager(this.context, this.activity)
-        application?.registerActivityLifecycleCallbacks(locationPermissionsManager)
+        locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
+        application?.registerActivityLifecycleCallbacks(locationPermissionManager)
 
 
         val featureSettings = RadarSettings.getFeatureSettings(this.context)
@@ -3075,7 +3075,7 @@ object Radar {
      */
     @JvmStatic
     fun requestForegroundLocationPermission() {
-        locationPermissionsManager.requestForegroundLocationPermission()
+        locationPermissionManager.requestForegroundLocationPermission()
     }
 
     /**
@@ -3084,7 +3084,7 @@ object Radar {
     @JvmStatic
     fun requestBackgroundLocationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            locationPermissionsManager.requestBackgroundLocationPermission()
+            locationPermissionManager.requestBackgroundLocationPermission()
         }
     }
 
@@ -3093,7 +3093,7 @@ object Radar {
      */
     @JvmStatic
     fun getLocationPermissionStatus():RadarLocationPermissionStatus {
-        return locationPermissionsManager.getLocationPermissionStatus()
+        return locationPermissionManager.getLocationPermissionStatus()
     }
 
     /**
@@ -3101,7 +3101,7 @@ object Radar {
      */
     @JvmStatic
     fun openAppSettings() {
-        locationPermissionsManager.openAppSettings()
+        locationPermissionManager.openAppSettings()
     }
 
     /**
