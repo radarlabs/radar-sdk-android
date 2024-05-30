@@ -68,7 +68,7 @@ class MyRadarReceiver(private val onPermissionsUpdated: (Context, RadarLocationP
         // notify(context, message)
     }
 
-    override fun onLocationPermissionsStatusUpdated(
+    override fun onLocationPermissionStatusUpdated(
         context: Context,
         status: RadarLocationPermissionStatus
     ) {

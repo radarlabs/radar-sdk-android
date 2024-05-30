@@ -3445,7 +3445,7 @@ object Radar {
     }
 
     internal fun sendLocationPermissionStatus(status: RadarLocationPermissionStatus) {
-        receiver?.onLocationPermissionsStatusUpdated(context, status)
+        receiver?.onLocationPermissionStatusUpdated(context, status)
 
         logger.i("📍️ Radar location permissions updated | status = $status")
     }

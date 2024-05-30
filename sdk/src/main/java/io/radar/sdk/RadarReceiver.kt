@@ -63,6 +63,6 @@ abstract class RadarReceiver {
      * @param[context] The context.
      * @param[status] The location permissions status.
      */
-    abstract fun onLocationPermissionsStatusUpdated(context: Context, status: RadarLocationPermissionStatus)
+    abstract fun onLocationPermissionStatusUpdated(context: Context, status: RadarLocationPermissionStatus)
 
 }
