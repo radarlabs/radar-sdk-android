@@ -459,9 +459,16 @@ object Radar {
      * @param[receiver] An optional receiver for the client-side delivery of events.
      * @param[provider] The location services provider.
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
+     * @param[userId] The userId to set.
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false) {
+    fun initialize(
+        context: Context?, 
+        publishableKey: String? = null, 
+        receiver: RadarReceiver? = null, 
+        provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, 
+        fraud: Boolean = false, 
+        userId: String? = null) {
         if (context == null) {
             return
         }
@@ -541,6 +548,10 @@ object Radar {
                 RadarSettings.setSDKConfiguration(context, config?.meta.sdkConfiguration)
             }
         })
+
+        if (userId != null) {
+            RadarSettings.setUserId(context, userId);
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             this.logger.logPastTermination()
