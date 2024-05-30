@@ -22,6 +22,7 @@ class RadarLocationPermissionStatus {
         internal const val KEY_PREVIOUSLY_DENIED_BACKGROUND = "previouslyDeniedBackground"
         internal const val KEY_APPROXIMATE_PERMISSION_REQUEST = "approximatePermissionRequest"
         internal const val KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE_BG = "backgroundPermissionAvailable"
+        internal const val KEY_IN_LOCATION_POPUP = "inLocationPopup"
 
         fun initWithStatus(context: Context, activity: Activity, inLocationPopup: Boolean = false): RadarLocationPermissionStatus {
 
@@ -119,6 +120,7 @@ class RadarLocationPermissionStatus {
         jsonObject.put(KEY_APPROXIMATE_PERMISSION_REQUEST,approximatePermissionResult)
         jsonObject.put(KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE_BG,shouldShowRequestPermissionRationaleBG)
         jsonObject.put(KEY_PREVIOUSLY_DENIED_BACKGROUND,previouslyDeniedBackground)
+        jsonObject.put(KEY_IN_LOCATION_POPUP,inLocationPopup)
         return jsonObject
     }
 
