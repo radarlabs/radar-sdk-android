@@ -116,6 +116,10 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
         }
 
+        Radar.reverseGeocode(arrayOf("place", "locality")) { status, addresses ->
+            Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
+        }
+
         Radar.ipGeocode { status, address, proxy ->
             Log.v("example", "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}; proxy = $proxy")
         }
