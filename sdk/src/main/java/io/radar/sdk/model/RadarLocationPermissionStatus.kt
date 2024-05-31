@@ -108,6 +108,21 @@ class RadarLocationPermissionStatus {
                 }
             }
         }
+
+        fun stringForLocationPermissionState(state: LocationPermissionState): String {
+            return when (state) {
+                LocationPermissionState.NO_PERMISSION_GRANTED -> "NO_PERMISSION_GRANTED"
+                LocationPermissionState.FOREGROUND_PERMISSION_GRANTED -> "FOREGROUND_PERMISSION_GRANTED"
+                LocationPermissionState.APPROXIMATE_PERMISSION_GRANTED -> "APPROXIMATE_PERMISSION_GRANTED"
+                LocationPermissionState.FOREGROUND_PERMISSION_REJECTED_ONCE -> "FOREGROUND_PERMISSION_REJECTED_ONCE"
+                LocationPermissionState.FOREGROUND_PERMISSION_REJECTED -> "FOREGROUND_PERMISSION_REJECTED"
+                LocationPermissionState.FOREGROUND_PERMISSION_PENDING -> "FOREGROUND_PERMISSION_PENDING"
+                LocationPermissionState.BACKGROUND_PERMISSION_GRANTED -> "BACKGROUND_PERMISSION_GRANTED"
+                LocationPermissionState.BACKGROUND_PERMISSION_REJECTED -> "BACKGROUND_PERMISSION_REJECTED"
+                LocationPermissionState.BACKGROUND_PERMISSION_REJECTED_ONCE -> "BACKGROUND_PERMISSION_REJECTED_ONCE"
+                LocationPermissionState.UNKNOWN -> "UNKNOWN"
+            }
+        }
     }
 
     fun toJson(): JSONObject {
