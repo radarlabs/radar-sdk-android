@@ -10,10 +10,10 @@ import androidx.core.app.NotificationManagerCompat
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarReceiver
 import io.radar.sdk.model.RadarEvent
-import io.radar.sdk.model.RadarLocationPermissionStatus
 import io.radar.sdk.model.RadarUser
+import kotlin.random.Random
 
-class MyRadarReceiver(private val onPermissionsUpdated: (Context, RadarLocationPermissionStatus) -> Unit)  : RadarReceiver() {
+class MyRadarReceiver : RadarReceiver() {
 
     companion object {
 
@@ -53,19 +53,20 @@ class MyRadarReceiver(private val onPermissionsUpdated: (Context, RadarLocationP
 
     override fun onLocationUpdated(context: Context, location: Location, user: RadarUser) {
         val body = "${if (user.stopped) "Stopped at" else "Moved to"} location (${location.latitude}, ${location.longitude}) with accuracy ${location.accuracy}"
-        // notify(context, body)
+        notify(context, body)
     }
 
     override fun onClientLocationUpdated(context: Context, location: Location, stopped: Boolean, source: Radar.RadarLocationSource) {
         val body = "${if (stopped) "Client stopped at" else "Client moved to"} location (${location.latitude}, ${location.longitude}) with accuracy ${location.accuracy} and source ${source}"
-        // notify(context, body)
+        notify(context, body)
     }
+
     override fun onError(context: Context, status: Radar.RadarStatus) {
-        // notify(context, Utils.stringForRadarStatus(status))
+        notify(context, Utils.stringForRadarStatus(status))
     }
 
     override fun onLog(context: Context, message: String) {
-        // notify(context, message)
+        notify(context, message)
     }
 
     override fun onLocationPermissionStatusUpdated(
