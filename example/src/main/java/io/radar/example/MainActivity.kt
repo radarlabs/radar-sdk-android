@@ -120,6 +120,18 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
         }
 
+        val reverseGeocodeLocation = Location("example")
+        reverseGeocodeLocation.latitude = 40.70390
+        reverseGeocodeLocation.longitude = -73.98670
+
+        Radar.reverseGeocode(reverseGeocodeLocation) { status, addresses ->
+            Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
+        }
+
+        Radar.reverseGeocode(reverseGeocodeLocation, arrayOf("locality", "state")) { status, addresses ->
+            Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
+        }
+
         Radar.ipGeocode { status, address, proxy ->
             Log.v("example", "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}; proxy = $proxy")
         }
