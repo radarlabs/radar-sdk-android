@@ -3089,7 +3089,7 @@ object Radar {
     }
 
     /**
-     * @return A RadarPermissionsStatus object with the current location permissions status.
+     * @return A RadarPermissionStatus object with the current location permissions status.
      */
     @JvmStatic
     fun getLocationPermissionStatus():RadarLocationPermissionStatus {
