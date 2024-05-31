@@ -2391,11 +2391,15 @@ object Radar {
      * @see [](https://radar.com/documentation/api#forward-geocode)
      *
      * @param[query] The address to geocode.
+     * @param[layers] Optional layer filters.
+     * @param[countries] Optional country filters. A string array of unique 2-letter country codes.
      * @param[callback] A callback.
      */
     @JvmStatic
     fun geocode(
         query: String,
+        layers: Array<String>? = null,
+        countries: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2405,7 +2409,7 @@ object Radar {
         }
         this.logger.i("geocode()", RadarLogType.SDK_CALL)
 
-        apiClient.geocode(query, object: RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.geocode(query, layers, countries, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2420,14 +2424,20 @@ object Radar {
      * @see [](https://radar.com/documentation/api#forward-geocode)
      *
      * @param[query] The address to geocode.
+     * @param[layers] Optional layer filters.
+     * @param[countries] Optional country filters. A string array of unique 2-letter country codes.
      * @param[block] A block callback.
      */
     fun geocode(
         query: String,
+        layers: Array<String>? = null,
+        countries: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         geocode(
             query,
+            layers,
+            countries,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
@@ -2441,10 +2451,12 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
+     * @param[layers] Optional layer filters.
      * @param[callback] A callback.
      */
     @JvmStatic
     fun reverseGeocode(
+        layers: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2464,7 +2476,7 @@ object Radar {
                     return
                 }
 
-                apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
+                apiClient.reverseGeocode(location, layers, object: RadarApiClient.RadarGeocodeApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                         handler.post {
                             callback.onComplete(status, addresses)
@@ -2480,12 +2492,15 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
+     * @param[layers] Optional layer filters.
      * @param[block] A block callback.
      */
     fun reverseGeocode(
+        layers: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         reverseGeocode(
+            layers,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
@@ -2500,11 +2515,13 @@ object Radar {
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
      * @param[location] The location to reverse geocode.
+     * @param[layers] Optional layer filters.
      * @param[callback] A callback.
      */
     @JvmStatic
     fun reverseGeocode(
         location: Location,
+        layers: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2514,7 +2531,7 @@ object Radar {
         }
         this.logger.i("reverseGeocode()", RadarLogType.SDK_CALL)
 
-        apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.reverseGeocode(location, layers, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2529,14 +2546,17 @@ object Radar {
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
      * @param[location] The location to geocode.
+     * @param[layers] Optional 
      * @param[block] A block callback.
      */
     fun reverseGeocode(
         location: Location,
+        layers: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         reverseGeocode(
             location,
+            layers,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
