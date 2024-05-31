@@ -2396,6 +2396,8 @@ object Radar {
     @JvmStatic
     fun geocode(
         query: String,
+        layers: Array<String>? = null,
+        country: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2405,7 +2407,7 @@ object Radar {
         }
         this.logger.i("geocode()", RadarLogType.SDK_CALL)
 
-        apiClient.geocode(query, object: RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.geocode(query, layers, country, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2424,10 +2426,14 @@ object Radar {
      */
     fun geocode(
         query: String,
+        layers: Array<String>? = null,
+        country: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         geocode(
             query,
+            layers,
+            country,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
@@ -2445,6 +2451,7 @@ object Radar {
      */
     @JvmStatic
     fun reverseGeocode(
+        layers: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2464,7 +2471,7 @@ object Radar {
                     return
                 }
 
-                apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
+                apiClient.reverseGeocode(location, layers, object: RadarApiClient.RadarGeocodeApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                         handler.post {
                             callback.onComplete(status, addresses)
@@ -2483,9 +2490,11 @@ object Radar {
      * @param[block] A block callback.
      */
     fun reverseGeocode(
+        layers: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         reverseGeocode(
+            layers,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
@@ -2505,6 +2514,7 @@ object Radar {
     @JvmStatic
     fun reverseGeocode(
         location: Location,
+        layers: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2514,7 +2524,7 @@ object Radar {
         }
         this.logger.i("reverseGeocode()", RadarLogType.SDK_CALL)
 
-        apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.reverseGeocode(location, layers, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2533,10 +2543,12 @@ object Radar {
      */
     fun reverseGeocode(
         location: Location,
+        layers: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         reverseGeocode(
             location,
+            layers,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)

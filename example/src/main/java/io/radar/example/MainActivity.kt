@@ -108,6 +108,10 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Geocode: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
         }
 
+        Radar.geocode("20 jay street brooklyn", arrayOf("place","locality"), arrayOf("US","CA")) { status, addresses ->
+            Log.v("example", "Geocode: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
+        }
+
         Radar.reverseGeocode { status, addresses ->
             Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
         }
