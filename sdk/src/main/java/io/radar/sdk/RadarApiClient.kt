@@ -974,7 +974,7 @@ internal class RadarApiClient(
     internal fun geocode(
         query: String,
         layers: Array<String>? = null,
-        country: Array<String>? = null,
+        countries: Array<String>? = null,
         callback: RadarGeocodeApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -987,10 +987,10 @@ internal class RadarApiClient(
         val queryParams = StringBuilder()
         queryParams.append("query=${query}")
         if (layers?.isNotEmpty() == true) {
-            queryParams.append("layers=${layers.joinToString(separator = ",")}")
+            queryParams.append("&layers=${layers.joinToString(separator = ",")}")
         }
-        if (country?.isNotEmpty() == true) {
-            queryParams.append("country=${country.joinToString(separator = ",")}")
+        if (countries?.isNotEmpty() == true) {
+            queryParams.append("&country=${countries.joinToString(separator = ",")}")
         }
 
         val path = "v1/geocode/forward?${queryParams}"
@@ -1034,7 +1034,7 @@ internal class RadarApiClient(
         queryParams.append("coordinates=${location.latitude},${location.longitude}")
 
         if (layers?.isNotEmpty() == true) {
-            queryParams.append("layers=${layers.joinToString(separator = ",")}")
+            queryParams.append("&layers=${layers.joinToString(separator = ",")}")
         }
 
         val path = "v1/geocode/reverse?${queryParams}"

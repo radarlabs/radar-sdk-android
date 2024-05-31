@@ -2397,7 +2397,7 @@ object Radar {
     fun geocode(
         query: String,
         layers: Array<String>? = null,
-        country: Array<String>? = null,
+        countries: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2407,7 +2407,7 @@ object Radar {
         }
         this.logger.i("geocode()", RadarLogType.SDK_CALL)
 
-        apiClient.geocode(query, layers, country, object: RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.geocode(query, layers, countries, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2427,13 +2427,13 @@ object Radar {
     fun geocode(
         query: String,
         layers: Array<String>? = null,
-        country: Array<String>? = null,
+        countries: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         geocode(
             query,
             layers,
-            country,
+            countries,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
