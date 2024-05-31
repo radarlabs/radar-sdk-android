@@ -69,6 +69,10 @@ internal class RadarBeaconManager(
     }
 
     fun startMonitoringBeacons(beacons: Array<RadarBeacon>) {
+        if (RadarSettings.getFeatureSettings(context).useRadarModifiedBeacon) {
+            return
+        }
+
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
 
@@ -145,6 +149,10 @@ internal class RadarBeaconManager(
     }
 
     fun startMonitoringBeaconUUIDs(beaconUUIDs: Array<String>?, beaconUIDs: Array<String>?) {
+        if (RadarSettings.getFeatureSettings(context).useRadarModifiedBeacon) {
+            return
+        }
+
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
 
@@ -248,6 +256,10 @@ internal class RadarBeaconManager(
     }
 
     fun stopMonitoringBeacons() {
+        if (RadarSettings.getFeatureSettings(context).useRadarModifiedBeacon) {
+            return
+        }
+
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             return
         }
