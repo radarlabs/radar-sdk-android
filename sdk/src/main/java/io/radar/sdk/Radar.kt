@@ -2391,6 +2391,8 @@ object Radar {
      * @see [](https://radar.com/documentation/api#forward-geocode)
      *
      * @param[query] The address to geocode.
+     * @param[layers] Optional layer filters.
+     * @param[countries] Optional country filters. A string array of unique 2-letter country codes.
      * @param[callback] A callback.
      */
     @JvmStatic
@@ -2422,6 +2424,8 @@ object Radar {
      * @see [](https://radar.com/documentation/api#forward-geocode)
      *
      * @param[query] The address to geocode.
+     * @param[layers] Optional layer filters.
+     * @param[countries] Optional country filters. A string array of unique 2-letter country codes.
      * @param[block] A block callback.
      */
     fun geocode(
@@ -2447,6 +2451,7 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
+     * @param[layers] Optional layer filters.
      * @param[callback] A callback.
      */
     @JvmStatic
@@ -2487,6 +2492,7 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
+     * @param[layers] Optional layer filters.
      * @param[block] A block callback.
      */
     fun reverseGeocode(
@@ -2509,6 +2515,7 @@ object Radar {
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
      * @param[location] The location to reverse geocode.
+     * @param[layers] Optional layer filters.
      * @param[callback] A callback.
      */
     @JvmStatic
@@ -2539,6 +2546,7 @@ object Radar {
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
      * @param[location] The location to geocode.
+     * @param[layers] Optional 
      * @param[block] A block callback.
      */
     fun reverseGeocode(
