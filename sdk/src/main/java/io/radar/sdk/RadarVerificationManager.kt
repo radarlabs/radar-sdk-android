@@ -51,6 +51,7 @@ internal class RadarVerificationManager(
 
     fun trackVerified(beacons: Boolean = false, callback: Radar.RadarTrackVerifiedCallback? = null) {
         val verificationManager = this
+        val lastTokenBeacons = beacons
 
         val usage = "trackVerified"
         Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
@@ -115,6 +116,11 @@ internal class RadarVerificationManager(
                                                     Radar.locationManager.updateTrackingFromMeta(
                                                         config?.meta
                                                     )
+                                                }
+                                                if (token != null) {
+                                                    verificationManager.lastToken = token
+                                                    verificationManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
+                                                    verificationManager.lastTokenBeacons = lastTokenBeacons
                                                 }
                                                 Radar.handler.post {
                                                     callback?.onComplete(
