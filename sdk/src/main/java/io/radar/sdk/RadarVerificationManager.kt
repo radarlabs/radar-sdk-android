@@ -245,15 +245,17 @@ internal class RadarVerificationManager(
 
                     verificationManager.scheduled = true
 
-                    handler.postDelayed({
-                        if (verificationManager.started) {
-                            verificationManager.logger.d("Token request interval fired")
+                    handler.postDelayed(object : Runnable {
+                        override fun run() {
+                            if (verificationManager.started) {
+                                verificationManager.logger.d("Token request interval fired")
 
-                            trackVerified()
+                                trackVerified()
 
-                            verificationManager.scheduled = false
+                                verificationManager.scheduled = false
+                            }
                         }
-                    }, minInterval.toLong())
+                    }, minInterval * 1000L)
                 }
             })
         }
