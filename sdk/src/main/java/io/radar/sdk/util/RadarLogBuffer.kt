@@ -9,12 +9,6 @@ internal interface RadarLogBuffer {
 
     abstract val context: Context
 
-    /**
-     * Write a log to the buffer
-     *
-     * @param[level] log level
-     * @param[message] log message
-     */
     fun write(
         level: Radar.RadarLogLevel,
         type: Radar.RadarLogType?,
@@ -22,12 +16,6 @@ internal interface RadarLogBuffer {
         createdAt: Date = Date()
     )
 
-    /**
-     * Creates a stash of the logs currently in the buffer and returns them as a [Flushable] so that a successful
-     * callback can cleanup this log buffer by deleting old log files.
-     *
-     * @return a [Flushable] containing all stored logs
-     */
     fun getFlushableLogs(): Flushable<RadarLog>
 
     /**

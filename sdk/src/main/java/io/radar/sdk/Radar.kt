@@ -1459,8 +1459,6 @@ object Radar {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, options)
 
-                    // store previous tracking options for post-trip
-                    // if tracking was false, previousTrackingOptions will be null
                     val isTracking = Radar.isTracking()
                     if (isTracking) {
                         val previousTrackingOptions = RadarSettings.getTrackingOptions(context)
@@ -1469,9 +1467,8 @@ object Radar {
                         RadarSettings.removePreviousTrackingOptions(context)
                     }
 
-                    // if trackingOptions provided, startTracking
                     if (trackingOptions != null) {
-                        Radar.startTracking(trackingOptions);
+                        Radar.startTracking(trackingOptions)
                     }
 
                     // flush location update to generate events
@@ -3272,8 +3269,7 @@ object Radar {
     internal fun loadReplayBufferFromSharedPreferences() {
         replayBuffer.loadFromSharedPreferences()
         val replayCount = replayBuffer.getSize()
-        // TODO: revisit this log
-        logger.d("loaded replay buffer from shared preferences with $replayCount replays")
+        logger.d("Loaded replays | replayCount = $replayCount")
     }
 
     @JvmStatic

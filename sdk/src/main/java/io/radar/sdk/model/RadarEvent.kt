@@ -116,7 +116,6 @@ class RadarEvent(
      * The types for events.
      */
     enum class RadarEventType {
-        // These strings should match the values (and order) of the server's event constants.
         /** Unknown */
         UNKNOWN,
         /** A conversion event, logged with Radar.logConversion() */
@@ -329,7 +328,6 @@ class RadarEvent(
         @JvmStatic
         fun stringForType(type: RadarEventType): String? {
             return when (type) {
-                // These strings should match the values (and order) of the server's event constants.
                 USER_ENTERED_GEOFENCE -> "user.entered_geofence"
                 USER_EXITED_GEOFENCE -> "user.exited_geofence"
                 USER_DWELLED_IN_GEOFENCE -> "user.dwelled_in_geofence"

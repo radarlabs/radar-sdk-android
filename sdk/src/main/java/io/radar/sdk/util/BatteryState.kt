@@ -3,9 +3,6 @@ package io.radar.sdk.util
 import android.os.PowerManager
 import io.radar.sdk.RadarBatteryManager
 
-/**
- * Contains information about the battery state
- */
 internal data class BatteryState(
     val isCharging: Boolean,
     val percent: Float,
@@ -15,12 +12,6 @@ internal data class BatteryState(
     val isDeviceIdleMode: Boolean
 ) {
 
-    /**
-     * The performance state. This uses Android's [PowerManager] to gather information
-     * about the current optimization settings that could affect the SDK's performance, and returns
-     * a simplified status which identifies whether or not battery optimizations may be affecting
-     * the SDK's responsiveness.
-     */
     val performanceState: PerformanceState
 
     init {
@@ -31,20 +22,16 @@ internal data class BatteryState(
                 isDeviceIdleMode -> {
                     performanceState = if (isAffectedByPowerSaver) {
                         if (isLocationAffectedByPowerSaver) {
-                            // Idle, with power saver and location throttled
                             PerformanceState.LOWEST
                         } else {
-                            // Idle with Power Saver
                             PerformanceState.LOW
                         }
                     } else {
-                        // Idle Only
                         PerformanceState.IDLE
                     }
                 }
                 isAffectedByPowerSaver -> {
                     performanceState = if (isLocationAffectedByPowerSaver) {
-                        // Optimized And Location Throttled
                         PerformanceState.LOCATIONS_LOW_PERFORMANCE
                     } else {
                         PerformanceState.OPTIMIZED
@@ -59,10 +46,6 @@ internal data class BatteryState(
         }
     }
 
-    /**
-     * Get the string value for the current location power saving mode
-     * @see [PowerManager.getLocationPowerSaveMode]
-     */
     fun getPowerLocationPowerSaveModeString() : String {
         return when(locationPowerSaveMode) {
             0 -> "LOCATION_MODE_NO_CHANGE"
@@ -75,39 +58,11 @@ internal data class BatteryState(
     }
 
     internal enum class PerformanceState {
-
-        /**
-         * No performance optimizations are in affect, or the app is exempt
-         */
         OK,
-
-        /**
-         * Performance Mode is optimized. Location settings for performance mode are either
-         * fully allowed, or device does not support more granular performance settings.
-         */
         OPTIMIZED,
-
-        /**
-         * Performance Mode is optimized, and location polling is affected by it.
-         */
         LOCATIONS_LOW_PERFORMANCE,
-
-        /**
-         * Device is in an Idle state, and performance mode is not optimized.
-         */
         IDLE,
-
-        /**
-         * Device is Idle and performance is optimized. Location settings for performance mode are either
-         * fully allowed, or device does not support more granular performance settings.
-         */
         LOW,
-
-        /**
-         * Device is idle, performance is optimized, and location polling is affected by the performance
-         * optimization.
-         */
         LOWEST
-
     }
 }

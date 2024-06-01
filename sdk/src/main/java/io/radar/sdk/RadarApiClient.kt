@@ -177,15 +177,10 @@ internal class RadarApiClient(
             },
             extendedTimeout = false,
             stream = true,
-            // Do not log the saved log events. If the logs themselves were logged it would create a redundancy and
-            // eventually lead to a crash when creating a downstream log request, since these will log to memory as a
-            // single log entry. Then each time after, this log entry would contain more and more logs, eventually
-            // causing an out of memory exception.
-            logPayload = false
+            logPayload = false // avoid logging the logging call
         )
     }
 
-    // api handler for /track/replay, just takes in a list of replays to send to API
     internal fun replay(replays: List<RadarReplay>, callback: RadarReplayApiCallback?) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
