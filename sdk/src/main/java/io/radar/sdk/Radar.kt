@@ -90,7 +90,7 @@ object Radar {
     interface RadarTrackVerifiedCallback {
 
         /**
-         * Called when an track verified request succeeds, fails, or times out. Receives the request status and, if successful, the user's verified location. Verify the token server-side using your secret key.
+         * Called when a track verified request succeeds, fails, or times out. Receives the request status and, if successful, the user's verified location. Verify the token server-side using your secret key.
          *
          * @param[status] RadarStatus The request status.
          * @param[token] RadarVerifiedLocationToken? If successful, the user's verified location.
