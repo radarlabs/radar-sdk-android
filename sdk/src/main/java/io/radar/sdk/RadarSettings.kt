@@ -303,7 +303,7 @@ internal object RadarSettings {
     fun getFeatureSettings(context: Context): RadarFeatureSettings {
         val sharedPrefFeatureSettings = getSharedPreferences(context).getString(KEY_FEATURE_SETTINGS, null)
         try {
-            Radar.logger.d("getFeatureSettings | featureSettings = $sharedPrefFeatureSettings")
+            Radar.logger.d("Getting feature settings | featureSettings = $sharedPrefFeatureSettings")
         } catch (e: Exception) {
 
         }
