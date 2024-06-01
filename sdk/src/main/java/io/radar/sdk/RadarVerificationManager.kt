@@ -268,38 +268,40 @@ internal class RadarVerificationManager(
             .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
             .build()
 
+        val handleNetworkChange = {
+            val ips = verificationManager.getIPs()
+            var changed = false
+
+            if (verificationManager.lastIPs == null) {
+                verificationManager.logger.d("First time getting IPs")
+                changed = false
+            } else if (ips == "error") {
+                verificationManager.logger.d("Error getting IPs")
+                changed = true
+            } else if (ips != verificationManager.lastIPs) {
+                verificationManager.logger.d("IPs changed | ips = $ips; lastIPs = ${verificationManager.lastIPs}")
+                changed = true
+            } else {
+                verificationManager.logger.d("IPs unchanged")
+            }
+            verificationManager.lastIPs = ips
+
+            if (changed) {
+                trackVerified()
+            }
+        }
+
         networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
-
-                val ips = verificationManager.getIPs()
-                var changed = false
-
                 verificationManager.logger.d("Network connected | ips = $ips")
-
-                if (verificationManager.lastIPs == null) {
-                    verificationManager.logger.d("First time getting IPs")
-                    changed = false
-                } else if (ips == "error") {
-                    verificationManager.logger.d("Error getting IPs")
-                    changed = true
-                } else if (ips != verificationManager.lastIPs) {
-                    verificationManager.logger.d("IPs changed | ips = $ips; lastIPs = ${verificationManager.lastIPs}")
-                    changed = true
-                } else {
-                    verificationManager.logger.d("IPs unchanged")
-                }
-                verificationManager.lastIPs = ips
-
-                if (changed) {
-                    trackVerified()
-                }
+                handleNetworkChange()
             }
 
             override fun onLost(network: Network) {
                 super.onLost(network)
-
                 verificationManager.logger.d("Network lost")
+                handleNetworkChange()
             }
         }
 
