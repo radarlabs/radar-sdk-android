@@ -294,7 +294,7 @@ internal class RadarVerificationManager(
         networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
-                verificationManager.logger.d("Network connected | ips = $ips")
+                verificationManager.logger.d("Network connected")
                 handleNetworkChange()
             }
 
