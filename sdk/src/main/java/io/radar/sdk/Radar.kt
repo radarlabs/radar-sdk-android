@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.location.Location
@@ -424,6 +425,7 @@ object Radar {
     internal var initialized = false
     internal var isFlushingReplays = false
     private lateinit var context: Context
+    private var activity: Activity? = null
     internal lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
     private var verifiedReceiver: RadarVerifiedReceiver? = null
@@ -435,6 +437,7 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
+    private lateinit var locationPermissionManager: RadarLocationPermissionManager
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -468,6 +471,10 @@ object Radar {
 
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
+
+        if (context is Activity) {
+            this.activity = context
+        }
 
         if (receiver != null) {
             this.receiver = receiver
@@ -527,6 +534,9 @@ object Radar {
             RadarSettings.setSharing(this.context, false)
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
+
+        locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
+        application?.registerActivityLifecycleCallbacks(locationPermissionManager)
 
 
         val featureSettings = RadarSettings.getFeatureSettings(this.context)
@@ -1971,18 +1981,20 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#search-geofences)
      *
-     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000. If `null`, the server defaults to searching without a radius limit.
      * @param[tags] An array of tags to filter. See [](https://radar.com/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
-     * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[limit] The max number of places to return. A number between 1 and 1000. Defaults to 100.
+     * @param[includeGeometry] Include geofence geometries in the response. Recommended to be set to false unless you specifically need the geometries. To retrieve more than 100 results, `includeGeometry` must be set to `false`.
      * @param[callback] A callback.
      */
     @JvmStatic
     fun searchGeofences(
-        radius: Int,
+        radius: Int?,
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
+        includeGeometry: Boolean? = false,
         callback: RadarSearchGeofencesCallback
     ) {
         if (!initialized) {
@@ -2002,7 +2014,7 @@ object Radar {
                     return
                 }
 
-                apiClient.searchGeofences(location, radius, tags, metadata, limit, object : RadarApiClient.RadarSearchGeofencesApiCallback {
+                apiClient.searchGeofences(location, radius, tags, metadata, limit, includeGeometry, object : RadarApiClient.RadarSearchGeofencesApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) {
                         handler.post {
                             callback.onComplete(status, location, geofences)
@@ -2018,17 +2030,19 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#search-geofences)
      *
-     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000. If `null`, the server defaults to searching without a radius limit.
      * @param[tags] An array of tags to filter. See [](https://radar.com/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
-     * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[limit] The max number of places to return. A number between 1 and 1000. Defaults to 100.
+     * @param[includeGeometry] Include geofence geometries in the response. Recommended to be set to false unless you specifically need the geometries. To retrieve more than 100 results, `includeGeometry` must be set to `false`.
      * @param[block] A block callback.
      */
     fun searchGeofences(
-        radius: Int,
+        radius: Int?,
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
+        includeGeometry: Boolean? = false,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
         searchGeofences(
@@ -2036,6 +2050,7 @@ object Radar {
             tags,
             metadata,
             limit,
+            includeGeometry,
             object : RadarSearchGeofencesCallback {
                 override fun onComplete(status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) {
                     block(status, location, geofences)
@@ -2050,19 +2065,21 @@ object Radar {
      * @see [](https://radar.com/documentation/api#search-geofences)
      *
      * @param[near] The location to search.
-     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000. If `null`, the server defaults to searching without a radius limit.
      * @param[tags] An array of tags to filter. See [](https://radar.com/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
-     * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[limit] The max number of places to return. A number between 1 and 1000. Defaults to 100.
+     * @param[includeGeometry] Include geofence geometries in the response. Recommended to be set to false unless you specifically need the geometries. To retrieve more than 100 results, `includeGeometry` must be set to `false`.
      * @param[callback] A callback.
      */
     @JvmStatic
     fun searchGeofences(
         near: Location,
-        radius: Int,
+        radius: Int?,
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
+        includeGeometry: Boolean? = false,
         callback: RadarSearchGeofencesCallback
     ) {
         if (!initialized) {
@@ -2072,7 +2089,7 @@ object Radar {
         }
         this.logger.i("searchGeofences()", RadarLogType.SDK_CALL)
 
-        apiClient.searchGeofences(near, radius, tags, metadata, limit, object : RadarApiClient.RadarSearchGeofencesApiCallback {
+        apiClient.searchGeofences(near, radius, tags, metadata, limit, includeGeometry, object : RadarApiClient.RadarSearchGeofencesApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) {
                 handler.post {
                     callback.onComplete(status, near, geofences)
@@ -2087,18 +2104,20 @@ object Radar {
      * @see [](https://radar.com/documentation/api#search-geofences)
      *
      * @param[near] The location to search.
-     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
+     * @param[radius] The optional radius to search, in meters. A number between 100 and 10000. If `null`, the server defaults to searching without a radius limit.
      * @param[tags] An array of tags to filter. See [](https://radar.com/documentation/geofences)
      * @param[metadata] A dictionary of metadata to filter. See [](https://radar.com/documentation/geofences)
-     * @param[limit] The max number of places to return. A number between 1 and 100.
+     * @param[limit] The max number of places to return. A number between 1 and 1000. Defaults to 100.
+     * @param[includeGeometry] Include geofence geometries in the response. Recommended to be set to false unless you specifically need the geometries. To retrieve more than 100 results, `includeGeometry` must be set to `false`.
      * @param[block] A block callback.
      */
     fun searchGeofences(
         near: Location,
-        radius: Int,
+        radius: Int?,
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
+        includeGeometry: Boolean? = false,
         block: (status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
         searchGeofences(
@@ -2107,6 +2126,7 @@ object Radar {
             tags,
             metadata,
             limit,
+            includeGeometry,
             object : RadarSearchGeofencesCallback {
                 override fun onComplete(status: RadarStatus, location: Location?, geofences: Array<RadarGeofence>?) {
                     block(status, location, geofences)
@@ -2398,11 +2418,15 @@ object Radar {
      * @see [](https://radar.com/documentation/api#forward-geocode)
      *
      * @param[query] The address to geocode.
+     * @param[layers] Optional layer filters.
+     * @param[countries] Optional country filters. A string array of unique 2-letter country codes.
      * @param[callback] A callback.
      */
     @JvmStatic
     fun geocode(
         query: String,
+        layers: Array<String>? = null,
+        countries: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2412,7 +2436,7 @@ object Radar {
         }
         this.logger.i("geocode()", RadarLogType.SDK_CALL)
 
-        apiClient.geocode(query, object: RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.geocode(query, layers, countries, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2427,14 +2451,20 @@ object Radar {
      * @see [](https://radar.com/documentation/api#forward-geocode)
      *
      * @param[query] The address to geocode.
+     * @param[layers] Optional layer filters.
+     * @param[countries] Optional country filters. A string array of unique 2-letter country codes.
      * @param[block] A block callback.
      */
     fun geocode(
         query: String,
+        layers: Array<String>? = null,
+        countries: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         geocode(
             query,
+            layers,
+            countries,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
@@ -2448,10 +2478,12 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
+     * @param[layers] Optional layer filters.
      * @param[callback] A callback.
      */
     @JvmStatic
     fun reverseGeocode(
+        layers: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2471,7 +2503,7 @@ object Radar {
                     return
                 }
 
-                apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
+                apiClient.reverseGeocode(location, layers, object: RadarApiClient.RadarGeocodeApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                         handler.post {
                             callback.onComplete(status, addresses)
@@ -2487,12 +2519,15 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
+     * @param[layers] Optional layer filters.
      * @param[block] A block callback.
      */
     fun reverseGeocode(
+        layers: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         reverseGeocode(
+            layers,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
@@ -2507,11 +2542,13 @@ object Radar {
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
      * @param[location] The location to reverse geocode.
+     * @param[layers] Optional layer filters.
      * @param[callback] A callback.
      */
     @JvmStatic
     fun reverseGeocode(
         location: Location,
+        layers: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2521,7 +2558,7 @@ object Radar {
         }
         this.logger.i("reverseGeocode()", RadarLogType.SDK_CALL)
 
-        apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.reverseGeocode(location, layers, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2536,14 +2573,17 @@ object Radar {
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
      * @param[location] The location to geocode.
+     * @param[layers] Optional 
      * @param[block] A block callback.
      */
     fun reverseGeocode(
         location: Location,
+        layers: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         reverseGeocode(
             location,
+            layers,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
@@ -3067,6 +3107,39 @@ object Radar {
             })
         }
     }
+    /**
+     * Requests foreground location permissions.
+     */
+    @JvmStatic
+    fun requestForegroundLocationPermission() {
+        locationPermissionManager.requestForegroundLocationPermission()
+    }
+
+    /**
+     * Requests background location permissions.
+     */
+    @JvmStatic
+    fun requestBackgroundLocationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            locationPermissionManager.requestBackgroundLocationPermission()
+        }
+    }
+
+    /**
+     * @return A RadarPermissionStatus object with the current location permissions status.
+     */
+    @JvmStatic
+    fun getLocationPermissionStatus():RadarLocationPermissionStatus {
+        return locationPermissionManager.getLocationPermissionStatus()
+    }
+
+    /**
+     * Directs the user to the app settings to enable location permissions.
+     */
+    @JvmStatic
+    fun openAppSettings() {
+        locationPermissionManager.openAppSettings()
+    }
 
     /**
      * Sets the log level for debug logs.
@@ -3406,6 +3479,12 @@ object Radar {
         verifiedReceiver?.onTokenUpdated(context, token)
 
         logger.i("📍️ Radar token updated | passed = ${token.passed}; expiresAt = ${token.expiresAt}; expiresIn = ${token.expiresIn}; token = ${token.token}")
+    }
+
+    internal fun sendLocationPermissionStatus(status: RadarLocationPermissionStatus) {
+        receiver?.onLocationPermissionStatusUpdated(context, status)
+
+        logger.i("📍️ Radar location permission updated | status = $status")
     }
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {

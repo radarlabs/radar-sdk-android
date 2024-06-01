@@ -51,7 +51,8 @@ internal abstract class RadarAbstractLocationClient() {
     )
 
     abstract fun removeGeofences(
-        pendingIntent: PendingIntent
+        pendingIntent: PendingIntent,
+        block: ((success: Boolean) -> Unit)?
     )
 
     abstract fun getLocationFromGeofenceIntent(

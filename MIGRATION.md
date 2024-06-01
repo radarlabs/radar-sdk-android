@@ -1,4 +1,9 @@
 # Migration guides
+## 3.11.x to 3.12.x
+-`RadarReceiver` interface has been changed to include `onLocationPermissionStatusUpdated` method.
+
+## 3.9.x to 3.10.x
+- The `fun searchGeofences( radius: Int, tags: Array<String>?, metadata: JSONObject?, limit: Int?, callback: RadarSearchGeofencesCallback)` method is now `fun searchGeofences( radius: Int?, tags: Array<String>?, metadata: JSONObject?, limit: Int?, includeGeometry, Boolean?, callback: RadarSearchGeofencesCallback)`  and `fun searchGeofences( near:Location, radius: Int, tags: Array<String>?, metadata: JSONObject?, limit: Int?, callback: RadarSearchGeofencesCallback)` is now `fun searchGeofences( near:Location, radius: Int?, tags: Array<String>?, metadata: JSONObject?, limit: Int?, includeGeometry, Boolean?, callback: RadarSearchGeofencesCallback)`. `radius` is now optional and `includeGeometry` needs to be set if you wish your returned geofence objects to include the full geometry of polygon geofences.
 
 ## 3.12.x to 3.13.x
 -  The `Radar.trackVerified()` method now returns `token: RadarVerifiedLocationToken`, which includes `user`, `events`, `token,`, `expiresAt`, `expiresIn`, and `passed`. The `Radar.trackVerifiedToken()` method has been removed, since `Radar.trackVerified()` now returns a signed JWT.

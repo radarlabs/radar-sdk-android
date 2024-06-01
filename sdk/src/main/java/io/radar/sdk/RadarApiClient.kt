@@ -714,10 +714,11 @@ internal class RadarApiClient(
 
     internal fun searchGeofences(
         location: Location,
-        radius: Int,
+        radius: Int?,
         tags: Array<String>?,
         metadata: JSONObject?,
         limit: Int?,
+        includeGeometry: Boolean?,
         callback: RadarSearchGeofencesApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -729,7 +730,9 @@ internal class RadarApiClient(
 
         val queryParams = StringBuilder()
         queryParams.append("near=${location.latitude},${location.longitude}")
-        queryParams.append("&radius=${radius}")
+        if (radius != null) {
+            queryParams.append("&radius=${radius}")
+        }
         queryParams.append("&limit=${limit}")
         if (tags?.isNotEmpty() == true) {
             queryParams.append("&tags=${tags.joinToString(separator = ",")}")
@@ -737,6 +740,10 @@ internal class RadarApiClient(
         metadata?.keys()?.forEach { key ->
             val value = metadata.get(key)
             queryParams.append("&metadata[${key}]=${value}")
+        }
+
+        if (includeGeometry != null) {
+            queryParams.append("&includeGeometry=${includeGeometry}")
         }
 
         val path = "v1/search/geofences?${queryParams}"
@@ -960,6 +967,8 @@ internal class RadarApiClient(
 
     internal fun geocode(
         query: String,
+        layers: Array<String>? = null,
+        countries: Array<String>? = null,
         callback: RadarGeocodeApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -971,6 +980,12 @@ internal class RadarApiClient(
 
         val queryParams = StringBuilder()
         queryParams.append("query=${query}")
+        if (layers?.isNotEmpty() == true) {
+            queryParams.append("&layers=${layers.joinToString(separator = ",")}")
+        }
+        if (countries?.isNotEmpty() == true) {
+            queryParams.append("&country=${countries.joinToString(separator = ",")}")
+        }
 
         val path = "v1/geocode/forward?${queryParams}"
         val headers = headers(publishableKey)
@@ -999,6 +1014,7 @@ internal class RadarApiClient(
 
     internal fun reverseGeocode(
         location: Location,
+        layers: Array<String>? = null,
         callback: RadarGeocodeApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -1010,6 +1026,10 @@ internal class RadarApiClient(
 
         val queryParams = StringBuilder()
         queryParams.append("coordinates=${location.latitude},${location.longitude}")
+
+        if (layers?.isNotEmpty() == true) {
+            queryParams.append("&layers=${layers.joinToString(separator = ",")}")
+        }
 
         val path = "v1/geocode/reverse?${queryParams}"
         val headers = headers(publishableKey)

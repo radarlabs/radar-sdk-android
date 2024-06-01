@@ -115,7 +115,9 @@ class RadarRegion(
         obj.putOpt(FIELD_PASSED, this.passed)
         obj.putOpt(FIELD_IN_EXCLUSION_ZONE, this.inExclusionZone)
         obj.putOpt(FIELD_IN_BUFFER_ZONE, this.inBufferZone)
-        obj.putOpt(FIELD_DISTANCE_TO_BORDER, this.distanceToBorder)
+        if (!this.distanceToBorder.isNaN()) {
+            obj.putOpt(FIELD_DISTANCE_TO_BORDER, this.distanceToBorder)
+        }
         return obj
     }
 
