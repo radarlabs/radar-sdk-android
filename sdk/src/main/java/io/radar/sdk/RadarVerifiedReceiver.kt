@@ -4,14 +4,14 @@ import android.content.Context
 import io.radar.sdk.model.RadarVerifiedLocationToken
 
 /**
- * A delegate for client-side delivery of verified location tokens. For more information, see [](https://radar.com/documentation/fraud).
+ * A receiver for client-side delivery of verified location tokens. For more information, see [](https://radar.com/documentation/fraud).
  *
  * @see [](https://radar.com/documentation/fraud)
  */
 abstract class RadarVerifiedReceiver {
 
     /**
-     * Tells the delegate that the current user's verified location was updated. Verify the token server-side using your secret key.
+     * Tells the receiver that the current user's verified location was updated. Verify the token server-side using your secret key.
      *
      * @param[token] The token.
      */
