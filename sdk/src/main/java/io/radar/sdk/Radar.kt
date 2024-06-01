@@ -84,19 +84,19 @@ object Radar {
     }
 
     /**
-     * Called when a track request with token callback succeeds, fails, or times out.
+     * Called when a track verified request succeeds, fails, or times out.
      */
-    interface RadarTrackTokenCallback {
+    interface RadarTrackVerifiedCallback {
 
         /**
-         * Called when a track request with token callback succeeds, fails, or times out. Receives the request status and, if successful, a JSON Web Token (JWT) containing an array of the events generated and the user. Verify the JWT server-side using your secret key.
+         * Called when an track verified request succeeds, fails, or times out. Receives the request status and, if successful, the user's verified location. Verify the token server-side using your secret key.
          *
          * @param[status] RadarStatus The request status.
-         * @param[token] String? If successful, a JSON Web Token (JWT).
+         * @param[token] RadarVerifiedLocationToken? If successful, the user's verified location.
          */
         fun onComplete(
             status: RadarStatus,
-            token: String? = null
+            token: RadarVerifiedLocationToken? = null
         )
 
     }
@@ -945,7 +945,7 @@ object Radar {
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerified(beacons: Boolean = false, callback: RadarTrackCallback? = null) {
+    fun trackVerified(beacons: Boolean = false, callback: RadarTrackVerifiedCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -972,56 +972,9 @@ object Radar {
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerified(beacons: Boolean = false, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        trackVerified(beacons, object : RadarTrackCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
-                block(status, location, events, user)
-            }
-        })
-    }
-
-    /**
-     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Verify the JWT server-side using your secret key.
-     *
-     * Note that you must configure SSL pinning before calling this method.
-     *
-     * @see [](https://radar.com/documentation/fraud)
-     *
-     * @param[beacons] A boolean indicating whether to range beacons.
-     * @param[callback] An optional callback.
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @JvmStatic
-    fun trackVerifiedToken(beacons: Boolean = false, callback: RadarTrackTokenCallback? = null) {
-        if (!initialized) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
-            return
-        }
-        this.logger.i("trackVerifiedToken()", RadarLogType.SDK_CALL)
-
-        if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
-        }
-
-        this.verificationManager.trackVerifiedToken(beacons, callback)
-    }
-
-    /**
-     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Verify the JWT server-side using your secret key.
-     *
-     * Note that you must configure SSL pinning before calling this method.
-     *
-     * @see [](https://radar.com/documentation/fraud)
-     *
-     * @param[beacons] A boolean indicating whether to range beacons.
-     * @param[block] A block callback.
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @JvmStatic
-    fun trackVerifiedToken(beacons: Boolean = false, block: (status: RadarStatus, token: String?) -> Unit) {
-        trackVerifiedToken(beacons, object : RadarTrackTokenCallback {
-            override fun onComplete(status: RadarStatus, token: String?) {
+    fun trackVerified(beacons: Boolean = false, block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
+        trackVerified(beacons, object : RadarTrackVerifiedCallback {
+            override fun onComplete(status: RadarStatus, token: RadarVerifiedLocationToken?) {
                 block(status, token)
             }
         })
@@ -1034,13 +987,12 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
-     * @param[token] A boolean indicating whether to return a JSON Web Token (JWT). If `true`, tokens are delivered to your `RadarVerifiedReceiver`. If `false`, location updates are delivered to your `RadarReceiver`.
      * @param[interval] The interval in seconds between each location update.
      * @param[beacons] A boolean indicating whether to range beacons.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun startTrackingVerified(token: Boolean, interval: Int, beacons: Boolean) {
+    fun startTrackingVerified(interval: Int, beacons: Boolean) {
         if (!initialized) {
             return
         }
@@ -1050,7 +1002,72 @@ object Radar {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        this.verificationManager.startTrackingVerified(token, interval, beacons)
+        this.verificationManager.startTrackingVerified(interval, beacons)
+    }
+
+    /**
+     * Stops tracking the user's location with device integrity information for location verification use cases.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun stopTrackingVerified() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("stopTrackingVerified()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.stopTrackingVerified()
+    }
+
+    /**
+     * Returns the user's last verified location token if still valid, or requests a fresh token if not.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[callback] An optional callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun getVerifiedLocationToken(callback: RadarTrackVerifiedCallback? = null) {
+        if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+        this.logger.i("getVerifiedLocationToken()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.getVerifiedLocationToken(callback)
+    }
+
+    /**
+     * Returns the user's last verified location token if still valid, or requests a fresh token if not.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[block] A block callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun getVerifiedLocationToken(block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
+        getVerifiedLocationToken(object : RadarTrackVerifiedCallback {
+            override fun onComplete(status: RadarStatus, token: RadarVerifiedLocationToken?) {
+                block(status, token)
+            }
+        })
     }
 
     /**
@@ -3385,10 +3402,10 @@ object Radar {
         }
     }
 
-    internal fun sendToken(token: String) {
+    internal fun sendToken(token: RadarVerifiedLocationToken) {
         verifiedReceiver?.onTokenUpdated(context, token)
 
-        logger.i("📍️ Radar token updated | token = $token")
+        logger.i("📍️ Radar token updated | passed = ${token.passed}; expiresAt = ${token.expiresAt}; expiresIn = ${token.expiresIn}; token = ${token.token}")
     }
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {

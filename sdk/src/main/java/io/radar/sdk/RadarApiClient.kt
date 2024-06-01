@@ -29,7 +29,7 @@ internal class RadarApiClient(
             user: RadarUser? = null,
             nearbyGeofences: Array<RadarGeofence>? = null,
             config: RadarConfig? = null,
-            token: String? = null
+            token: RadarVerifiedLocationToken? = null
         )
     }
 
@@ -413,17 +413,7 @@ internal class RadarApiClient(
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
                     RadarGeofence.fromJson(nearbyGeofencesArr)
                 }
-                val token = res.optString("token")
-
-                if (encrypted == true) {
-                    callback?.onComplete(status, res, null, null, null, null, token)
-
-                    if (token != null) {
-                        Radar.sendToken(token)
-                    }
-
-                    return
-                }
+                val token = RadarVerifiedLocationToken.fromJson(res)
 
                 if (user != null) {
                     val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
@@ -454,7 +444,7 @@ internal class RadarApiClient(
                     RadarSettings.setId(context, user._id)
 
                     if (user.trip == null) {
-                        // if user was on a trip that ended server side, restore previous tracking options
+                        // if user was on a trip that ended server-side, restore previous tracking options
                         val tripOptions = RadarSettings.getTripOptions(context)
                         if (tripOptions != null) {
                             locationManager.restartPreviousTrackingOptions()
@@ -470,7 +460,11 @@ internal class RadarApiClient(
                         Radar.sendEvents(events, user)
                     }
 
-                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config)
+                    if (token != null) {
+                        Radar.sendToken(token)
+                    }
+
+                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config, token)
 
                     return
                 }
