@@ -228,11 +228,11 @@ internal class RadarVerificationManager(
 
                         // if expiresIn is shorter than interval, override interval
                         minInterval = minOf(it.expiresIn, interval)
+                    }
 
-                        // re-request early to maximize the likelihood that a cached token is available
-                        if (minInterval > 20) {
-                            minInterval -= 10
-                        }
+                    // re-request early to maximize the likelihood that a cached token is available
+                    if (minInterval > 20) {
+                        minInterval -= 10
                     }
 
                     if (verificationManager.scheduled) {
