@@ -611,7 +611,7 @@ internal class RadarLocationManager(
                     user: RadarUser?,
                     nearbyGeofences: Array<RadarGeofence>?,
                     config: RadarConfig?,
-                    token: String?
+                    token: RadarVerifiedLocationToken?
                 ) {
                     locationManager.replaceSyncedGeofences(nearbyGeofences)
 
