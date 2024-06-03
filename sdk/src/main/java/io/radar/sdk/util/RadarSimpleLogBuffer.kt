@@ -13,11 +13,7 @@ import java.util.Date
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-/**
- * Log Buffer implementation that is backed by an in-memory buffer and files on disk.
- */
-internal class
-RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
+internal class RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
 
     private companion object {
 
@@ -127,9 +123,6 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
         return logs
     }
 
-    /**
-     * Writes logs to disk.
-     */
     private fun writeToFileStorage(logs: Collection<RadarLog>) {
         for (log in logs) {
             val counterString = String.format("%04d", fileCounter++)
@@ -137,7 +130,6 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
             RadarFileStorage(context).writeData(logFileDir, fileName, log.toJson().toString())
         }
     }
-
 
     override fun getFlushableLogs(): Flushable<RadarLog> {
         val logs = mutableListOf<RadarLog>()
@@ -179,10 +171,6 @@ RadarSimpleLogBuffer(override val context: Context): RadarLogBuffer {
         }
     }
 
-
-    /**
-     * Clears oldest logs and adds a "purged" log line.
-     */
     private fun purgeOldestLogs() {
         if (persistentLogFeatureFlag) {
             var files = getLogFilesInTimeOrder()

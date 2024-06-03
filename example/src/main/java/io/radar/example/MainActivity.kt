@@ -14,6 +14,7 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.RadarVerifiedReceiver
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
 import java.util.EnumSet
 
@@ -30,8 +31,8 @@ class MainActivity : AppCompatActivity() {
         Radar.sdkVersion()?.let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
-            override fun onTokenUpdated(context: Context, token: String) {
-                Log.i("example", "Token updated to $token")
+            override fun onTokenUpdated(context: Context, token: RadarVerifiedLocationToken) {
+
             }
         }
         Radar.setVerifiedReceiver(verifiedReceiver)

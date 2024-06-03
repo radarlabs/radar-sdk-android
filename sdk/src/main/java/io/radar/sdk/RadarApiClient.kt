@@ -29,7 +29,7 @@ internal class RadarApiClient(
             user: RadarUser? = null,
             nearbyGeofences: Array<RadarGeofence>? = null,
             config: RadarConfig? = null,
-            token: String? = null
+            token: RadarVerifiedLocationToken? = null
         )
     }
 
@@ -177,15 +177,10 @@ internal class RadarApiClient(
             },
             extendedTimeout = false,
             stream = true,
-            // Do not log the saved log events. If the logs themselves were logged it would create a redundancy and
-            // eventually lead to a crash when creating a downstream log request, since these will log to memory as a
-            // single log entry. Then each time after, this log entry would contain more and more logs, eventually
-            // causing an out of memory exception.
-            logPayload = false
+            logPayload = false // avoid logging the logging call
         )
     }
 
-    // api handler for /track/replay, just takes in a list of replays to send to API
     internal fun replay(replays: List<RadarReplay>, callback: RadarReplayApiCallback?) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -413,17 +408,7 @@ internal class RadarApiClient(
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
                     RadarGeofence.fromJson(nearbyGeofencesArr)
                 }
-                val token = res.optString("token")
-
-                if (encrypted == true) {
-                    callback?.onComplete(status, res, null, null, null, null, token)
-
-                    if (token != null) {
-                        Radar.sendToken(token)
-                    }
-
-                    return
-                }
+                val token = RadarVerifiedLocationToken.fromJson(res)
 
                 if (user != null) {
                     val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
@@ -454,7 +439,7 @@ internal class RadarApiClient(
                     RadarSettings.setId(context, user._id)
 
                     if (user.trip == null) {
-                        // if user was on a trip that ended server side, restore previous tracking options
+                        // if user was on a trip that ended server-side, restore previous tracking options
                         val tripOptions = RadarSettings.getTripOptions(context)
                         if (tripOptions != null) {
                             locationManager.restartPreviousTrackingOptions()
@@ -470,7 +455,11 @@ internal class RadarApiClient(
                         Radar.sendEvents(events, user)
                     }
 
-                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config)
+                    if (token != null) {
+                        Radar.sendToken(token)
+                    }
+
+                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config, token)
 
                     return
                 }

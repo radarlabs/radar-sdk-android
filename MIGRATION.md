@@ -1,15 +1,45 @@
 # Migration guides
+
+## 3.12.x to 3.13.x
+-  The `Radar.trackVerified()` method now returns `token: RadarVerifiedLocationToken`, which includes `user`, `events`, `token,`, `expiresAt`, `expiresIn`, and `passed`. The `Radar.trackVerifiedToken()` method has been removed, since `Radar.trackVerified()` now returns a signed JWT.
+
+```kotlin
+// 3.13.x
+Radar.trackVerified { (status, token) in
+  if (token?.passed == true) {
+    // allow access to feature, send token to server for validation
+  } else {
+    // deny access to feature, show error message
+  }
+}
+
+// 3.12.x
+Radar.trackVerified { status, location, events, user ->
+  if (user?.fraud?.passed == true &&
+    user.country?.allowed == true &&
+    user.state?.allowed == true) {
+    // allow access to feature
+  } else {
+    // deny access to feature, show error message
+  }
+}
+
+Radar.trackVerifiedToken { status, token ->
+  // send token to server for validation
+}
+```
+
 ## 3.11.x to 3.12.x
--`RadarReceiver` interface has been changed to include `onLocationPermissionStatusUpdated` method.
+- The `RadarReceiver` interface has been changed to add a `onLocationPermissionStatusUpdated()` method.
 
 ## 3.9.x to 3.10.x
-- The `fun searchGeofences( radius: Int, tags: Array<String>?, metadata: JSONObject?, limit: Int?, callback: RadarSearchGeofencesCallback)` method is now `fun searchGeofences( radius: Int?, tags: Array<String>?, metadata: JSONObject?, limit: Int?, includeGeometry, Boolean?, callback: RadarSearchGeofencesCallback)`  and `fun searchGeofences( near:Location, radius: Int, tags: Array<String>?, metadata: JSONObject?, limit: Int?, callback: RadarSearchGeofencesCallback)` is now `fun searchGeofences( near:Location, radius: Int?, tags: Array<String>?, metadata: JSONObject?, limit: Int?, includeGeometry, Boolean?, callback: RadarSearchGeofencesCallback)`. `radius` is now optional and `includeGeometry` needs to be set if you wish your returned geofence objects to include the full geometry of polygon geofences.
+- The `Radar.searchGeofences()` methods have been changed. Use `includeGeometry` to include full geometry of the geofence. Radius is now optional.
 
-## 3.8.x to 3.9.0
+## 3.8.x to 3.9.x
 - The `Radar.autocomplete(query, near, layers, limit, country, expandUnits, callback)` method is now `Radar.autocomplete(query, near, layers, limit, country, expandUnits, mailable, callback)`.
   - `expandUnits` has been deprecated and will always be true regardless of value passed in.
 
-## 3.6.x to 3.7.0
+## 3.6.x to 3.7.x
 - Custom events have been renamed to conversions.
   - `Radar.sendEvent(customType, metadata, callback)` is now `Radar.logConversion(name, metadata, callback)`.
   - `Radar.logConversion(name, revenue, metadata, callback)` has been added.
