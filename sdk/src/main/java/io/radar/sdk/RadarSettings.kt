@@ -3,12 +3,12 @@ package io.radar.sdk
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarFeatureSettings
 import io.radar.sdk.model.RadarSdkConfiguration
 import org.json.JSONObject
 import java.text.DecimalFormat
 import java.util.*
-
 
 internal object RadarSettings {
 
@@ -315,6 +315,14 @@ internal object RadarSettings {
         return RadarFeatureSettings.fromJson(JSONObject(optionsJson))
     }
 
+    internal fun updateSdkConfigurationFromServer(context: Context) {
+        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
+                RadarSettings.setSdkConfiguration(context, config?.meta.sdkConfiguration)
+            }
+        })
+    }
+
     fun setSdkConfiguration(context: Context, configuration: RadarSdkConfiguration) {
         Radar.logger.d("set SDK Configuration | sdkConfiguration = $configuration")
         if (configuration.logLevel != null) {
@@ -336,6 +344,7 @@ internal object RadarSettings {
     internal fun setLogLevel(context: Context, level: Radar.RadarLogLevel) {
         val logLevelInt = level.value
         getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, logLevelInt) }
+        updateSdkConfigurationFromServer(context);
     }
 
     internal fun getHost(context: Context): String {

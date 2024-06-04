@@ -67,6 +67,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun runDemo() {
+        Radar.setLogLevel(Radar.RadarLogLevel.DEBUG);
+
         Radar.getLocation { status, location, stopped ->
             Log.v("example", "Location: status = ${status}; location = $location; stopped = $stopped")
         }
