@@ -29,6 +29,7 @@ internal object RadarSettings {
     private const val KEY_FOREGROUND_SERVICE = "foreground_service"
     private const val KEY_NOTIFICATION_OPTIONS = "notification_options"
     private const val KEY_FEATURE_SETTINGS = "feature_settings"
+    private const val KEY_CLIENT_SDK_CONFIGURATION = "client_sdk_configuration"
     private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
     private const val KEY_HOST = "host"
@@ -315,24 +316,21 @@ internal object RadarSettings {
         return RadarFeatureSettings.fromJson(JSONObject(optionsJson))
     }
 
-    internal fun updateSdkConfigurationFromServer(context: Context) {
-        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
-                RadarSettings.setSdkConfiguration(context, config?.meta.sdkConfiguration)
-            }
-        })
-    }
-
     fun setSdkConfiguration(context: Context, configuration: RadarSdkConfiguration) {
-        Radar.logger.d("set SDK Configuration | sdkConfiguration = $configuration")
+        Radar.logger.e("set SDK Configuration | sdkConfiguration = $configuration")
         if (configuration.logLevel != null) {
             getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, configuration.logLevel.value) }
         }
     }
 
-    fun getSdkConfiguration(context: Context): RadarSdkConfiguration {
-        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, 3)
-        return RadarSdkConfiguration(Radar.RadarLogLevel.fromInt(logLevelInt));
+    fun getClientSdkConfiguration(context: Context): JSONObject {
+        val sharedPrefClientSdkConfig = getSharedPreferences(context).getString(KEY_CLIENT_SDK_CONFIGURATION, null);
+
+        return if (sharedPrefClientSdkConfig != null) {
+            JSONObject(sharedPrefClientSdkConfig)
+        } else {
+            JSONObject()
+        }
     }
 
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {
@@ -342,9 +340,11 @@ internal object RadarSettings {
     }
 
     internal fun setLogLevel(context: Context, level: Radar.RadarLogLevel) {
-        val logLevelInt = level.value
-        getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, logLevelInt) }
-        updateSdkConfigurationFromServer(context);
+        val sdkConfiguration = getClientSdkConfiguration(context)
+        sdkConfiguration.put("logLevel", level.toString().lowercase())
+        getSharedPreferences(context).edit { putString(KEY_CLIENT_SDK_CONFIGURATION, sdkConfiguration.toString()) }
+
+        RadarSdkConfiguration.updateSdkConfigurationFromServer(context)
     }
 
     internal fun getHost(context: Context): String {
