@@ -1549,11 +1549,31 @@ class RadarTest {
 
     @Test
     fun test_Radar_setSdkConfiguration() {
-        RadarSdkConfiguration sdkConfiguration;
-        sdkConfiguration.logLevel = Radar.RadarLogLevel.WARNING;
+        var sdkConfiguration = RadarSdkConfiguration(Radar.RadarLogLevel.WARNING);
 
-        RadarSettings.setSdkConfiguration()
+        RadarSettings.setSdkConfiguration(context, sdkConfiguration)
 
+        assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.WARNING)
+
+        sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+
+        assertEquals(sdkConfiguration, Radar.RadarLogLevel.WARNING)
     }
 
+    @Test
+    fun test_Radar_updateSdkConfigurationFromServer() {
+        val latch = CountDownLatch(1)
+
+        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
+                RadarSettings.setSdkConfiguration(context, config?.meta.sdkConfiguration)
+
+                latch.countDown()
+            }
+        })
+        
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+        assertEquals()
+    }
 }

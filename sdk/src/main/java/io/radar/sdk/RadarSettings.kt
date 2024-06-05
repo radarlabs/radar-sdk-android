@@ -318,7 +318,6 @@ internal object RadarSettings {
     internal fun updateSdkConfigurationFromServer(context: Context) {
         Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
-                Radar.logger.d("update sdk config from server")
                 RadarSettings.setSdkConfiguration(context, config?.meta.sdkConfiguration)
             }
         })
