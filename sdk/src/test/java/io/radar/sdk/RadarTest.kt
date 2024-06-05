@@ -1571,7 +1571,7 @@ class RadarTest {
             override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
                 RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
 
-                assertEquals(RadarSettings.logLevel, Radar.RadarLogLevel.INFO)
+                assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
 
                 latch.countDown()
             }
