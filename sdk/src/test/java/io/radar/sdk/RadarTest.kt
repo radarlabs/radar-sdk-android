@@ -1549,7 +1549,7 @@ class RadarTest {
 
     @Test
     fun test_Radar_setSdkConfiguration() {
-        var sdkConfiguration = RadarSdkConfiguration(Radar.RadarLogLevel.WARNING);
+        var sdkConfiguration = RadarSdkConfiguration(Radar.RadarLogLevel.WARNING)
 
         RadarSettings.setSdkConfiguration(context, sdkConfiguration)
 
@@ -1568,12 +1568,13 @@ class RadarTest {
             override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
                 RadarSettings.setSdkConfiguration(context, config?.meta.sdkConfiguration)
 
+                assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
+
                 latch.countDown()
             }
         })
         
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
-        assertEquals()
     }
 }
