@@ -32,7 +32,7 @@ internal data class RadarSdkConfiguration(
 
     fun toJson(): JSONObject {
         return JSONObject().apply {
-            putOpt(LOG_LEVEL, logLevel)
+            putOpt(LOG_LEVEL, logLevel.toString().lowercase())
         }
     }
 }

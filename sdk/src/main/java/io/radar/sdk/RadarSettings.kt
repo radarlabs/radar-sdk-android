@@ -318,6 +318,7 @@ internal object RadarSettings {
     internal fun updateSdkConfigurationFromServer(context: Context) {
         Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
+                Radar.logger.d("update sdk config from server")
                 RadarSettings.setSdkConfiguration(context, config?.meta.sdkConfiguration)
             }
         })
@@ -326,7 +327,7 @@ internal object RadarSettings {
     fun setSdkConfiguration(context: Context, configuration: RadarSdkConfiguration) {
         Radar.logger.d("set SDK Configuration | sdkConfiguration = $configuration")
         if (configuration.logLevel != null) {
-            setLogLevel(context, configuration.logLevel);
+            getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, configuration.logLevel.value) }
         }
     }
 

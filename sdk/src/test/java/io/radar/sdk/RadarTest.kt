@@ -1547,4 +1547,13 @@ class RadarTest {
         return tripOptions
     }
 
+    @Test
+    fun test_Radar_setSdkConfiguration() {
+        RadarSdkConfiguration sdkConfiguration;
+        sdkConfiguration.logLevel = Radar.RadarLogLevel.WARNING;
+
+        RadarSettings.setSdkConfiguration()
+
+    }
+
 }
