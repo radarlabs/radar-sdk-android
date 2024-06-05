@@ -1557,18 +1557,21 @@ class RadarTest {
 
         sdkConfiguration = RadarSettings.getSdkConfiguration(context)
 
-        assertEquals(sdkConfiguration, Radar.RadarLogLevel.WARNING)
+        assertEquals(sdkConfiguration.logLevel, Radar.RadarLogLevel.WARNING)
     }
 
     @Test
     fun test_Radar_updateSdkConfigurationFromServer() {
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/get_config_response.json")
+
         val latch = CountDownLatch(1)
 
         Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
-                RadarSettings.setSdkConfiguration(context, config?.meta.sdkConfiguration)
+                RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
 
-                assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
+                assertEquals(RadarSettings.logLevel, Radar.RadarLogLevel.INFO)
 
                 latch.countDown()
             }
