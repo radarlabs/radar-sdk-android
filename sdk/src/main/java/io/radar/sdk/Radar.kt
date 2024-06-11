@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.location.Location
@@ -84,19 +85,19 @@ object Radar {
     }
 
     /**
-     * Called when a track request with token callback succeeds, fails, or times out.
+     * Called when a track verified request succeeds, fails, or times out.
      */
-    interface RadarTrackTokenCallback {
+    interface RadarTrackVerifiedCallback {
 
         /**
-         * Called when a track request with token callback succeeds, fails, or times out. Receives the request status and, if successful, a JSON Web Token (JWT) containing an array of the events generated and the user. Verify the JWT server-side using your secret key.
+         * Called when a track verified request succeeds, fails, or times out. Receives the request status and, if successful, the user's verified location. Verify the token server-side using your secret key.
          *
          * @param[status] RadarStatus The request status.
-         * @param[token] String? If successful, a JSON Web Token (JWT).
+         * @param[token] RadarVerifiedLocationToken? If successful, the user's verified location.
          */
         fun onComplete(
             status: RadarStatus,
-            token: String? = null
+            token: RadarVerifiedLocationToken? = null
         )
 
     }
@@ -424,6 +425,7 @@ object Radar {
     internal var initialized = false
     internal var isFlushingReplays = false
     private lateinit var context: Context
+    private var activity: Activity? = null
     internal lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
     private var verifiedReceiver: RadarVerifiedReceiver? = null
@@ -435,6 +437,7 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
+    private lateinit var locationPermissionManager: RadarLocationPermissionManager
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -468,6 +471,10 @@ object Radar {
 
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
+
+        if (context is Activity) {
+            this.activity = context
+        }
 
         if (receiver != null) {
             this.receiver = receiver
@@ -527,6 +534,9 @@ object Radar {
             RadarSettings.setSharing(this.context, false)
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
+
+        locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
+        application?.registerActivityLifecycleCallbacks(locationPermissionManager)
 
 
         val featureSettings = RadarSettings.getFeatureSettings(this.context)
@@ -808,7 +818,7 @@ object Radar {
                             user: RadarUser?,
                             nearbyGeofences: Array<RadarGeofence>?,
                             config: RadarConfig?,
-                            token: String?
+                            token: RadarVerifiedLocationToken?
                         ) {
                             if (status == RadarStatus.SUCCESS ){
                                 locationManager.updateTrackingFromMeta(config?.meta)
@@ -905,7 +915,7 @@ object Radar {
                 user: RadarUser?,
                 nearbyGeofences: Array<RadarGeofence>?,
                 config: RadarConfig?,
-                token: String?
+                token: RadarVerifiedLocationToken?
             ) {
                 if (status == RadarStatus.SUCCESS ){
                     locationManager.updateTrackingFromMeta(config?.meta)
@@ -946,7 +956,7 @@ object Radar {
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerified(beacons: Boolean = false, callback: RadarTrackCallback? = null) {
+    fun trackVerified(beacons: Boolean = false, callback: RadarTrackVerifiedCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -973,56 +983,9 @@ object Radar {
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerified(beacons: Boolean = false, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        trackVerified(beacons, object : RadarTrackCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
-                block(status, location, events, user)
-            }
-        })
-    }
-
-    /**
-     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Verify the JWT server-side using your secret key.
-     *
-     * Note that you must configure SSL pinning before calling this method.
-     *
-     * @see [](https://radar.com/documentation/fraud)
-     *
-     * @param[beacons] A boolean indicating whether to range beacons.
-     * @param[callback] An optional callback.
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @JvmStatic
-    fun trackVerifiedToken(beacons: Boolean = false, callback: RadarTrackTokenCallback? = null) {
-        if (!initialized) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
-            return
-        }
-        this.logger.i("trackVerifiedToken()", RadarLogType.SDK_CALL)
-
-        if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
-        }
-
-        this.verificationManager.trackVerifiedToken(beacons, callback)
-    }
-
-    /**
-     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Verify the JWT server-side using your secret key.
-     *
-     * Note that you must configure SSL pinning before calling this method.
-     *
-     * @see [](https://radar.com/documentation/fraud)
-     *
-     * @param[beacons] A boolean indicating whether to range beacons.
-     * @param[block] A block callback.
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @JvmStatic
-    fun trackVerifiedToken(beacons: Boolean = false, block: (status: RadarStatus, token: String?) -> Unit) {
-        trackVerifiedToken(beacons, object : RadarTrackTokenCallback {
-            override fun onComplete(status: RadarStatus, token: String?) {
+    fun trackVerified(beacons: Boolean = false, block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
+        trackVerified(beacons, object : RadarTrackVerifiedCallback {
+            override fun onComplete(status: RadarStatus, token: RadarVerifiedLocationToken?) {
                 block(status, token)
             }
         })
@@ -1035,13 +998,12 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
-     * @param[token] A boolean indicating whether to return a JSON Web Token (JWT). If `true`, tokens are delivered to your `RadarVerifiedReceiver`. If `false`, location updates are delivered to your `RadarReceiver`.
      * @param[interval] The interval in seconds between each location update.
      * @param[beacons] A boolean indicating whether to range beacons.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun startTrackingVerified(token: Boolean, interval: Int, beacons: Boolean) {
+    fun startTrackingVerified(interval: Int, beacons: Boolean) {
         if (!initialized) {
             return
         }
@@ -1051,7 +1013,72 @@ object Radar {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        this.verificationManager.startTrackingVerified(token, interval, beacons)
+        this.verificationManager.startTrackingVerified(interval, beacons)
+    }
+
+    /**
+     * Stops tracking the user's location with device integrity information for location verification use cases.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun stopTrackingVerified() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("stopTrackingVerified()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.stopTrackingVerified()
+    }
+
+    /**
+     * Returns the user's last verified location token if still valid, or requests a fresh token if not.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[callback] An optional callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun getVerifiedLocationToken(callback: RadarTrackVerifiedCallback? = null) {
+        if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+        this.logger.i("getVerifiedLocationToken()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.getVerifiedLocationToken(callback)
+    }
+
+    /**
+     * Returns the user's last verified location token if still valid, or requests a fresh token if not.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[block] A block callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun getVerifiedLocationToken(block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
+        getVerifiedLocationToken(object : RadarTrackVerifiedCallback {
+            override fun onComplete(status: RadarStatus, token: RadarVerifiedLocationToken?) {
+                block(status, token)
+            }
+        })
     }
 
     /**
@@ -1145,7 +1172,7 @@ object Radar {
                                 user: RadarUser?,
                                 nearbyGeofences: Array<RadarGeofence>?,
                                 config: RadarConfig?,
-                                token: String?
+                                token: RadarVerifiedLocationToken?
                             ) {
                                 handler.post {
                                     callback?.onComplete(status, location, events, user)
@@ -1433,8 +1460,6 @@ object Radar {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, options)
 
-                    // store previous tracking options for post-trip
-                    // if tracking was false, previousTrackingOptions will be null
                     val isTracking = Radar.isTracking()
                     if (isTracking) {
                         val previousTrackingOptions = RadarSettings.getTrackingOptions(context)
@@ -1443,9 +1468,8 @@ object Radar {
                         RadarSettings.removePreviousTrackingOptions(context)
                     }
 
-                    // if trackingOptions provided, startTracking
                     if (trackingOptions != null) {
-                        Radar.startTracking(trackingOptions);
+                        Radar.startTracking(trackingOptions)
                     }
 
                     // flush location update to generate events
@@ -2392,11 +2416,15 @@ object Radar {
      * @see [](https://radar.com/documentation/api#forward-geocode)
      *
      * @param[query] The address to geocode.
+     * @param[layers] Optional layer filters.
+     * @param[countries] Optional country filters. A string array of unique 2-letter country codes.
      * @param[callback] A callback.
      */
     @JvmStatic
     fun geocode(
         query: String,
+        layers: Array<String>? = null,
+        countries: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2406,7 +2434,7 @@ object Radar {
         }
         this.logger.i("geocode()", RadarLogType.SDK_CALL)
 
-        apiClient.geocode(query, object: RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.geocode(query, layers, countries, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2421,14 +2449,20 @@ object Radar {
      * @see [](https://radar.com/documentation/api#forward-geocode)
      *
      * @param[query] The address to geocode.
+     * @param[layers] Optional layer filters.
+     * @param[countries] Optional country filters. A string array of unique 2-letter country codes.
      * @param[block] A block callback.
      */
     fun geocode(
         query: String,
+        layers: Array<String>? = null,
+        countries: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         geocode(
             query,
+            layers,
+            countries,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
@@ -2442,10 +2476,12 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
+     * @param[layers] Optional layer filters.
      * @param[callback] A callback.
      */
     @JvmStatic
     fun reverseGeocode(
+        layers: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2465,7 +2501,7 @@ object Radar {
                     return
                 }
 
-                apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
+                apiClient.reverseGeocode(location, layers, object: RadarApiClient.RadarGeocodeApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                         handler.post {
                             callback.onComplete(status, addresses)
@@ -2481,12 +2517,15 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
+     * @param[layers] Optional layer filters.
      * @param[block] A block callback.
      */
     fun reverseGeocode(
+        layers: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         reverseGeocode(
+            layers,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
@@ -2501,11 +2540,13 @@ object Radar {
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
      * @param[location] The location to reverse geocode.
+     * @param[layers] Optional layer filters.
      * @param[callback] A callback.
      */
     @JvmStatic
     fun reverseGeocode(
         location: Location,
+        layers: Array<String>? = null,
         callback: RadarGeocodeCallback
     ) {
         if (!initialized) {
@@ -2515,7 +2556,7 @@ object Radar {
         }
         this.logger.i("reverseGeocode()", RadarLogType.SDK_CALL)
 
-        apiClient.reverseGeocode(location, object: RadarApiClient.RadarGeocodeApiCallback {
+        apiClient.reverseGeocode(location, layers, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                 handler.post {
                     callback.onComplete(status, addresses)
@@ -2530,14 +2571,17 @@ object Radar {
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
      * @param[location] The location to geocode.
+     * @param[layers] Optional 
      * @param[block] A block callback.
      */
     fun reverseGeocode(
         location: Location,
+        layers: Array<String>? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
         reverseGeocode(
             location,
+            layers,
             object: RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
@@ -3061,6 +3105,39 @@ object Radar {
             })
         }
     }
+    /**
+     * Requests foreground location permissions.
+     */
+    @JvmStatic
+    fun requestForegroundLocationPermission() {
+        locationPermissionManager.requestForegroundLocationPermission()
+    }
+
+    /**
+     * Requests background location permissions.
+     */
+    @JvmStatic
+    fun requestBackgroundLocationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            locationPermissionManager.requestBackgroundLocationPermission()
+        }
+    }
+
+    /**
+     * @return A RadarPermissionStatus object with the current location permissions status.
+     */
+    @JvmStatic
+    fun getLocationPermissionStatus():RadarLocationPermissionStatus {
+        return locationPermissionManager.getLocationPermissionStatus()
+    }
+
+    /**
+     * Directs the user to the app settings to enable location permissions.
+     */
+    @JvmStatic
+    fun openAppSettings() {
+        locationPermissionManager.openAppSettings()
+    }
 
     /**
      * Sets the log level for debug logs.
@@ -3193,8 +3270,7 @@ object Radar {
     internal fun loadReplayBufferFromSharedPreferences() {
         replayBuffer.loadFromSharedPreferences()
         val replayCount = replayBuffer.getSize()
-        // TODO: revisit this log
-        logger.d("loaded replay buffer from shared preferences with $replayCount replays")
+        logger.d("Loaded replays | replayCount = $replayCount")
     }
 
     @JvmStatic
@@ -3396,10 +3472,16 @@ object Radar {
         }
     }
 
-    internal fun sendToken(token: String) {
+    internal fun sendToken(token: RadarVerifiedLocationToken) {
         verifiedReceiver?.onTokenUpdated(context, token)
 
-        logger.i("📍️ Radar token updated | token = $token")
+        logger.i("📍️ Radar token updated | passed = ${token.passed}; expiresAt = ${token.expiresAt}; expiresIn = ${token.expiresIn}; token = ${token.token}")
+    }
+
+    internal fun sendLocationPermissionStatus(status: RadarLocationPermissionStatus) {
+        receiver?.onLocationPermissionStatusUpdated(context, status)
+
+        logger.i("📍️ Radar location permission updated | status = $status")
     }
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {

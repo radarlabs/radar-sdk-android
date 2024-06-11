@@ -14,7 +14,6 @@ import org.json.JSONObject
     companion object {
         private const val REPLAY_PARAMS = "replayParams"
 
-        // does this make sense?
         @JvmStatic
         fun fromJson(json: JSONObject): RadarReplay {
             return RadarReplay(
@@ -23,7 +22,6 @@ import org.json.JSONObject
         }
     }
 
-    // does this make sense as well?
     fun toJson(): JSONObject {
         return JSONObject().apply {
             putOpt(REPLAY_PARAMS, replayParams)

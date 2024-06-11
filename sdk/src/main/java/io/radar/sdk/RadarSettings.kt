@@ -86,7 +86,7 @@ internal object RadarSettings {
 
         val settings = RadarSettings.getFeatureSettings(context)
         if (settings.extendFlushReplays) {
-            Radar.logger.d("Flushing replays from updateSessionId")
+            Radar.logger.d("Flushing replays from updateSessionId()")
             Radar.flushReplays()
         }
 
@@ -233,7 +233,6 @@ internal object RadarSettings {
     internal fun setNotificationOptions(context:Context,notificationOptions:RadarNotificationOptions){
         val notificationOptionsJson = notificationOptions.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_NOTIFICATION_OPTIONS, notificationOptionsJson) }
-        // Update foregroundServiceOptions as well.
         var previousValue = getForegroundService(context)
         setForegroundService(context,RadarTrackingOptions.RadarTrackingOptionsForegroundService(
             previousValue.text,
@@ -272,7 +271,7 @@ internal object RadarSettings {
         context: Context,
         foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService
     ) {
-        // Previous values of iconColor and iconString are preserved if new fields are null.
+        // previous values of iconColor and iconString are preserved if new fields are null
         val previousValue = getForegroundService(context)
         if (foregroundService.iconString == null) {
            foregroundService.iconString = previousValue.iconString 
@@ -305,12 +304,10 @@ internal object RadarSettings {
 
     fun getFeatureSettings(context: Context): RadarFeatureSettings {
         val sharedPrefFeatureSettings = getSharedPreferences(context).getString(KEY_FEATURE_SETTINGS, null)
-        // The log buffer singleton is initialized before the logger, but requires calling this method
-        // to obtain its feature flag. Thus we cannot call the logger yet as its not yet initialized.
         try {
-            Radar.logger.d("getFeatureSettings | featureSettings = $sharedPrefFeatureSettings")
+            Radar.logger.d("Getting feature settings | featureSettings = $sharedPrefFeatureSettings")
         } catch (e: Exception) {
-            // Do nothing for now
+
         }
         val optionsJson = sharedPrefFeatureSettings ?: return RadarFeatureSettings.default()
         return RadarFeatureSettings.fromJson(JSONObject(optionsJson))

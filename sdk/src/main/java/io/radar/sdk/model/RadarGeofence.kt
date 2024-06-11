@@ -179,8 +179,6 @@ class RadarGeofence(
                     obj.putOpt(FIELD_GEOMETRY_CENTER, geometry.center.toJson())
                     obj.putOpt(FIELD_GEOMETRY_RADIUS, geometry.radius)
                     if (geometry.coordinates != null) {
-                        /* Nest coordinate array; Per GeoJSON spec: for type "Polygon", the
-                        "coordinates" member must be an array of LinearRing coordinate arrays. */
                         val geometryCoordinates = JSONArray()
                         geometryCoordinates.put(toJson(geometry.coordinates))
                         obj.putOpt(FIELD_COORDINATES, geometryCoordinates)
