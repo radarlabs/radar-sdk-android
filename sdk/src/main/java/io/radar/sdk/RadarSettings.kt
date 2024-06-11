@@ -344,6 +344,9 @@ internal object RadarSettings {
         sdkConfiguration.put("logLevel", level.toString().lowercase())
         getSharedPreferences(context).edit { putString(KEY_CLIENT_SDK_CONFIGURATION, sdkConfiguration.toString()) }
 
+        if (getLogLevel(context) == level) {
+            return;
+        }
         RadarSdkConfiguration.updateSdkConfigurationFromServer(context)
     }
 
