@@ -120,7 +120,9 @@ class RadarAddress(
     /**
      * The confidence level of the geocoding result.
      */
-    val confidence: RadarAddressConfidence
+    val confidence: RadarAddressConfidence,
+
+    val timezone: RadarTimezone?,
 ) {
 
     /**
@@ -158,6 +160,7 @@ class RadarAddress(
         private const val FIELD_LAYER = "layer"
         private const val FIELD_METADATA = "metadata"
         private const val FIELD_CONFIDENCE = "confidence"
+        private const val FIELD_TIMEZONE = "timezone"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarAddress? {
@@ -193,6 +196,7 @@ class RadarAddress(
                 "fallback" -> RadarAddressConfidence.FALLBACK
                 else -> RadarAddressConfidence.NONE
             }
+            val timezone = RadarTimezone.fromJson(obj.optJSONObject(FIELD_TIMEZONE))
 
             return RadarAddress(
                 coordinate,
@@ -217,7 +221,8 @@ class RadarAddress(
                 plus4,
                 layer,
                 metadata,
-                confidence
+                confidence,
+                timezone,
             )
         }
 
@@ -291,6 +296,7 @@ class RadarAddress(
         obj.putOpt(FIELD_LAYER, this.layer)
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_CONFIDENCE, stringForConfidence(this.confidence))
+        obj.putOpt(FIELD_TIMEZONE, this.timezone?.toJson())
         return obj
     }
 
