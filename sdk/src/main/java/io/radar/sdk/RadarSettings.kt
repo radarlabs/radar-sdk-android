@@ -338,7 +338,7 @@ internal object RadarSettings {
 
     internal fun setLogLevel(context: Context, level: Radar.RadarLogLevel) {
         val sdkConfiguration = getClientSdkConfiguration(context)
-        if (sdkConfiguration.getString("logLevel") == level.toString().lowercase()) {
+        if (sdkConfiguration.optString("logLevel") == level.toString().lowercase()) {
             return;
         }
         sdkConfiguration.put("logLevel", level.toString().lowercase())
