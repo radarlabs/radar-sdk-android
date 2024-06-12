@@ -22,7 +22,7 @@ internal data class RadarSdkConfiguration(
 
             val logLevelString = json.optString(LOG_LEVEL)
             return RadarSdkConfiguration(
-                if (logLevelString.isNullOrEmpty()) Radar.RadarLogLevel.valueOf(logLevelString.uppercase()) else Radar.RadarLogLevel.INFO,
+                if (!logLevelString.isNullOrEmpty()) Radar.RadarLogLevel.valueOf(logLevelString.uppercase()) else Radar.RadarLogLevel.INFO,
             )
         }
 

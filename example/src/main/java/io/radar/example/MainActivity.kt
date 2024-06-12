@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+        Radar.initialize(this, "prj_test_pk_ca1c535d59d979f05256cd964ec3c15f3016bb8e", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
         Radar.sdkVersion()?.let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
