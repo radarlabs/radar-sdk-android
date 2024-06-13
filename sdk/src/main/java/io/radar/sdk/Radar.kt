@@ -549,6 +549,13 @@ object Radar {
                 locationManager.updateTrackingFromMeta(config?.meta)
                 RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
                 RadarSettings.setSdkConfiguration(context, config?.meta.sdkConfiguration)
+
+                if (config?.meta.sdkConfiguration.startTrackingOnEnterForeground == true && !RadarSettings.getTracking(context)) {
+                    locationManager.startTracking(Radar.getTrackingOptions())
+                }
+                if (config?.meta.sdkConfiguration.trackOnceOnEnterForeground == true) {
+                    // TODO: add trackOnceOnEnterForeground behaviour
+                }
             }
         })
 
