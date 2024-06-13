@@ -22,8 +22,8 @@ internal class JobMapper {
         private set
 
     /**
-     * Get the next-available Job ID. This uses the given [maxConcurrentJobs] to adjust the number of available Job
-     * IDs, as needed. It returns the next empty Job ID (ie, where its counter is equal to zero). If no such Job ID
+     * Get the next available Job ID. This uses the given [maxConcurrentJobs] to adjust the number of available Job
+     * IDs, as needed. It returns the next empty Job ID (i.e., where its counter is equal to zero). If no such Job ID
      * is available, it clears the highest counter and returns the associated Job ID.
      */
     fun getJobId(maxConcurrentJobs: Int): Int {
@@ -41,7 +41,7 @@ internal class JobMapper {
             counter[key] = 0
             key
         } else {
-            // Overwrites the longest-scheduled-job
+            // overwrites the longest scheduled job
             val entry = counter.maxByOrNull { it.value }!!
             counter[entry.key] = 0
             entry.key
@@ -55,7 +55,7 @@ internal class JobMapper {
     @VisibleForTesting
     fun adjustSize(maxConcurrentJobs: Int) {
         if (size > maxConcurrentJobs) {
-            // Less jobs available
+            // less jobs available
             for (i in size until maxConcurrentJobs) {
                 counter.remove(DEFAULT_JOB_ID + i)
             }

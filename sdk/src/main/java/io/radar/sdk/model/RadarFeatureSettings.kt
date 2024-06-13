@@ -10,7 +10,8 @@ internal data class RadarFeatureSettings(
     val schedulerRequiresNetwork: Boolean,
     val usePersistence: Boolean,
     val extendFlushReplays: Boolean,
-    val useLogPersistence: Boolean
+    val useLogPersistence: Boolean,
+    val useRadarModifiedBeacon: Boolean
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -19,6 +20,7 @@ internal data class RadarFeatureSettings(
         private const val SCHEDULER_REQUIRES_NETWORK = "networkAny"
         private const val EXTEND_FLUSH_REPLAYS = "extendFlushReplays"
         private const val USE_LOG_PERSISTENCE = "useLogPersistence"
+        private const val USE_RADAR_MODIFIED_BEACON = "useRadarModifiedBeacon"
 
         fun fromJson(json: JSONObject?): RadarFeatureSettings {
             return if (json == null) {
@@ -29,7 +31,8 @@ internal data class RadarFeatureSettings(
                     json.optBoolean(SCHEDULER_REQUIRES_NETWORK),
                     json.optBoolean(USE_PERSISTENCE),
                     json.optBoolean(EXTEND_FLUSH_REPLAYS),
-                    json.optBoolean(USE_LOG_PERSISTENCE)
+                    json.optBoolean(USE_LOG_PERSISTENCE),
+                    json.optBoolean(USE_RADAR_MODIFIED_BEACON)
                 )
             }
         }
@@ -40,7 +43,8 @@ internal data class RadarFeatureSettings(
                 false, // networkAny
                 false, // usePersistence
                 false,  // extendFlushReplays
-                false  // useLogPersistence
+                false,  // useLogPersistence
+                false, // useRadarModifiedBeacon
             )
         }
     }
@@ -52,6 +56,7 @@ internal data class RadarFeatureSettings(
             putOpt(USE_PERSISTENCE, usePersistence)
             putOpt(EXTEND_FLUSH_REPLAYS, extendFlushReplays)
             putOpt(USE_LOG_PERSISTENCE, useLogPersistence)
+            putOpt(USE_RADAR_MODIFIED_BEACON, useRadarModifiedBeacon)
         }
     }
 }

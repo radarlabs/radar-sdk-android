@@ -5,4 +5,5 @@ internal interface Flushable<T> {
     fun get(): List<T>
 
     fun onFlush(success: Boolean)
+
 }

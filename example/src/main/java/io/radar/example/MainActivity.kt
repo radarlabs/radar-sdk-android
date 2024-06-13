@@ -4,18 +4,19 @@ import android.Manifest
 import android.content.Context
 import android.location.Location
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.RadarVerifiedReceiver
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
-import java.util.*
+import java.util.EnumSet
 
 class MainActivity : AppCompatActivity() {
 
@@ -30,8 +31,8 @@ class MainActivity : AppCompatActivity() {
         Radar.sdkVersion()?.let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
-            override fun onTokenUpdated(context: Context, token: String) {
-                Log.i("example", "Token updated to $token")
+            override fun onTokenUpdated(context: Context, token: RadarVerifiedLocationToken) {
+
             }
         }
         Radar.setVerifiedReceiver(verifiedReceiver)
@@ -108,7 +109,27 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Geocode: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
         }
 
+        Radar.geocode("20 jay street brooklyn", arrayOf("place","locality"), arrayOf("US", "CA")) { status, addresses ->
+            Log.v("example", "Geocode: status = $status; address = ${addresses?.get(0)?.formattedAddress}")
+        }
+
         Radar.reverseGeocode { status, addresses ->
+            Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
+        }
+
+        Radar.reverseGeocode(arrayOf("locality", "state")) { status, addresses ->
+            Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
+        }
+
+        val reverseGeocodeLocation = Location("example")
+        reverseGeocodeLocation.latitude = 40.70390
+        reverseGeocodeLocation.longitude = -73.98670
+
+        Radar.reverseGeocode(reverseGeocodeLocation) { status, addresses ->
+            Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
+        }
+
+        Radar.reverseGeocode(reverseGeocodeLocation, arrayOf("locality", "state")) { status, addresses ->
             Log.v("example", "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}")
         }
 
