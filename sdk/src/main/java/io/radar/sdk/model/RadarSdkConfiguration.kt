@@ -11,13 +11,11 @@ import io.radar.sdk.RadarSettings
  */
 internal data class RadarSdkConfiguration(
     val logLevel: Radar.RadarLogLevel?,
-    val startTrackingOnEnterForeground: Boolean?,
-    val trackOnceOnEnterForeground: Boolean?,
+    val startTrackingOnInitialize: Boolean?,
 ) {
     companion object {
         private const val LOG_LEVEL = "logLevel"
-        private const val START_TRACKING_ON_ENTER_FOREGROUND = "startTrackingOnEnterForeground"
-        private const val TRACK_ONCE_ON_ENTER_FOREGROUND = "trackOnceOnEnterForeground"
+        private const val START_TRACKING_ON_INITIALIZE = "startTrackingOnInitialize"
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             if (json == null) {
@@ -25,24 +23,14 @@ internal data class RadarSdkConfiguration(
             }
 
             val logLevelString = json.optString(LOG_LEVEL).uppercase()
-            val startTrackingOnEnterForeground = json.optBoolean(START_TRACKING_ON_ENTER_FOREGROUND)
-            val trackOnceOnEnterForeground = json.optBoolean(TRACK_ONCE_ON_ENTER_FOREGROUND)
+            val startTrackingOnInitialize = json.optBoolean(START_TRACKING_ON_INITIALIZE)
 
             return RadarSdkConfiguration(
                 if (logLevelString != null) Radar.RadarLogLevel.valueOf(logLevelString) else Radar.RadarLogLevel.INFO,
-                startTrackingOnEnterForeground,
-                trackOnceOnEnterForeground
+                startTrackingOnInitialize,
             )
         }
-
-        fun default(): RadarSdkConfiguration {
-            return RadarSdkConfiguration(
-                Radar.RadarLogLevel.INFO,
-                false,
-                false,
-            )
-        }
-
+        
         fun updateSdkConfigurationFromServer(context: Context) {
             Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
                 override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
@@ -55,8 +43,7 @@ internal data class RadarSdkConfiguration(
     fun toJson(): JSONObject {
         return JSONObject().apply {
             putOpt(LOG_LEVEL, logLevel.toString().lowercase())
-            putOpt(START_TRACKING_ON_ENTER_FOREGROUND, startTrackingOnEnterForeground)
-            putOpt(TRACK_ONCE_ON_ENTER_FOREGROUND, trackOnceOnEnterForeground)
+            putOpt(START_TRACKING_ON_INITIALIZE, startTrackingOnInitialize)
         }
     }
 }
