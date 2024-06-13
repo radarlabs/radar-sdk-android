@@ -481,7 +481,6 @@ object Radar {
             RadarSettings.setPublishableKey(this.context, publishableKey)
         }
 
-
         if (options.userId != null) {
             RadarSettings.setUserId(context, options.userId);
         }
@@ -532,12 +531,15 @@ object Radar {
         locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
         application?.registerActivityLifecycleCallbacks(locationPermissionManager)
 
+        requestForegroundLocationPermission()
+        requestBackgroundLocationPermission()
 
         val featureSettings = RadarSettings.getFeatureSettings(this.context)
         if (featureSettings.usePersistence) {
             Radar.loadReplayBufferFromSharedPreferences()
         }
         val usage = "initialize"
+
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: RadarStatus, config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config?.meta)

@@ -1,7 +1,8 @@
-package io.radar.sdk
+package io.radar.sdk.model
 
 import org.json.JSONObject
 import io.radar.sdk.Radar.RadarLocationServicesProvider
+import io.radar.sdk.RadarReceiver
 
 data class RadarInitializeOptions(
     /**
@@ -28,4 +29,11 @@ data class RadarInitializeOptions(
      * The location services provider.
      */
     var provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE,
+
+    /**
+     * Request foreground and/or background permissions.
+     * `foreground`: request foreground permission.
+     * `background`: request foreground and background permission.
+     */
+    var requestPermission: String? = null,
 )

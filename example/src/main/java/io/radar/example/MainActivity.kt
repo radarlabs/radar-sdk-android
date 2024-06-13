@@ -15,6 +15,7 @@ import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
+import io.radar.sdk.model.RadarInitializeOptions
 import org.json.JSONObject
 import java.util.EnumSet
 
@@ -27,7 +28,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+        Radar.initialize(this, "prj_test_pk_ca1c535d59d979f05256cd964ec3c15f3016bb8e", RadarInitializeOptions(
+            receiver = receiver,
+            provider = Radar.RadarLocationServicesProvider.GOOGLE,
+            fraud = true,
+            requestPermission = "foreground"
+        ))
         Radar.sdkVersion()?.let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
