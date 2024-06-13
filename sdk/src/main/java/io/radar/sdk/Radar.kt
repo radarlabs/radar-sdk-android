@@ -482,7 +482,7 @@ object Radar {
         }
 
 
-        if (options.userId != null) {
+        if (!options.userId.isNullOrEmpty()) {
             RadarSettings.setUserId(context, options.userId);
         }
 
