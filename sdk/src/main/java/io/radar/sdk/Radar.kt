@@ -481,6 +481,15 @@ object Radar {
             RadarSettings.setPublishableKey(this.context, publishableKey)
         }
 
+
+        if (options.userId != null) {
+            RadarSettings.setUserId(context, options.userId);
+        }
+
+        if (options.metadata != null) {
+            RadarSettings.setMetadata(context, options.metadata);
+        }
+
         if (!this::apiClient.isInitialized) {
             this.apiClient = RadarApiClient(this.context, logger)
         }
@@ -536,14 +545,6 @@ object Radar {
                 RadarSettings.setSDKConfiguration(context, config?.meta.sdkConfiguration)
             }
         })
-
-        if (options.userId != null) {
-            RadarSettings.setUserId(context, options.userId);
-        }
-
-        if (options.metadata != null) {
-            RadarSettings.setMetadata(context, options.metadata);
-        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             this.logger.logPastTermination()
