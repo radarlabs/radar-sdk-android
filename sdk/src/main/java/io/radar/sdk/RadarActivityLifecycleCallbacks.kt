@@ -55,10 +55,10 @@ internal class RadarActivityLifecycleCallbacks(
                             RadarSettings.setFeatureSettings(activity.applicationContext, config.meta.featureSettings)
                             RadarSettings.setSdkConfiguration(activity.applicationContext, config.meta.sdkConfiguration)
 
-                            if (config?.meta.sdkConfiguration.startTrackingOnEnterForeground == true && !RadarSettings.getTracking(context)) {
+                            if (config?.meta.sdkConfiguration.startTrackingOnEnterForeground && !RadarSettings.getTracking(context)) {
                                 locationManager.startTracking(Radar.getTrackingOptions())
                             }
-                            if (config?.meta.sdkConfiguration.trackOnceOnEnterForeground == true) {
+                            if (config?.meta.sdkConfiguration.trackOnceOnEnterForeground) {
                                 // TODO: add trackOnceOnEnterForeground behaviour
                             }
                         }
