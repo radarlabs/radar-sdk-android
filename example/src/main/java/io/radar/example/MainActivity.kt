@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 
         val receiver = MyRadarReceiver()
         Radar.initialize(this, "prj_test_pk_d9020be31f7cd2357d59a728008f469b1395ee4e", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
-        Radar.sdkVersion()?.let { Log.i("version", it) }
+        Radar.sdkVersion().let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
             override fun onTokenUpdated(context: Context, token: RadarVerifiedLocationToken) {
@@ -53,20 +53,21 @@ class MainActivity : AppCompatActivity() {
 
         val runDemoButton = findViewById<Button>(R.id.runDemoButton)
         runDemoButton.setOnClickListener {
-            val requiredPermissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                requiredPermissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    requiredPermissions.add(Manifest.permission.BLUETOOTH_SCAN)
-                    requiredPermissions.add(Manifest.permission.BLUETOOTH_CONNECT)
-                } else {
-                    requiredPermissions.add(Manifest.permission.BLUETOOTH_ADMIN)
-                }
-            }
-
-            requestLocationPermissionLauncher.launch(requiredPermissions.toTypedArray())
+            Radar.stopTracking()
+//            val requiredPermissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
+//
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//                requiredPermissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+//
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//                    requiredPermissions.add(Manifest.permission.BLUETOOTH_SCAN)
+//                    requiredPermissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+//                } else {
+//                    requiredPermissions.add(Manifest.permission.BLUETOOTH_ADMIN)
+//                }
+//            }
+//
+//            requestLocationPermissionLauncher.launch(requiredPermissions.toTypedArray())
         }
     }
 

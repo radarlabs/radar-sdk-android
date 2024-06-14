@@ -23,7 +23,7 @@ internal data class RadarMeta(
                 trackingOptions = RadarTrackingOptions.fromJson(rawOptions)
             }
             return RadarMeta(
-                trackingOptions,  
+                trackingOptions,
                 RadarFeatureSettings.fromJson(rawFeatureSettings),
                 RadarSdkConfiguration.fromJson(rawSdkConfiguration),
             )

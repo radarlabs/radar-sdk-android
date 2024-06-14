@@ -30,6 +30,7 @@ internal object RadarSettings {
     private const val KEY_NOTIFICATION_OPTIONS = "notification_options"
     private const val KEY_FEATURE_SETTINGS = "feature_settings"
     private const val KEY_CLIENT_SDK_CONFIGURATION = "client_sdk_configuration"
+    private const val KEY_SDK_CONFIGURATION = "sdk_configuration"
     private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
     private const val KEY_HOST = "host"
@@ -317,7 +318,15 @@ internal object RadarSettings {
         Radar.logger.d("set SDK Configuration | sdkConfiguration = $configuration")
         if (configuration != null) {
             getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, configuration.logLevel.value) }
+
+            val sdkConfigurationString = configuration.toJson().toString()
+            getSharedPreferences(context).edit { putString(KEY_SDK_CONFIGURATION, sdkConfigurationString) }
         }
+    }
+
+    fun getSdkConfiguration(context: Context): RadarSdkConfiguration? {
+        val sdkConfigurationString = getSharedPreferences(context).getString(KEY_SDK_CONFIGURATION, null)
+        return RadarSdkConfiguration.fromJson(sdkConfigurationString?.let { JSONObject(it) })
     }
 
     fun getClientSdkConfiguration(context: Context): JSONObject {
