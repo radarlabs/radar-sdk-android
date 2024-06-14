@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
         val runDemoButton = findViewById<Button>(R.id.runDemoButton)
         runDemoButton.setOnClickListener {
-            Radar.stopTracking()
+            Radar.requestForegroundLocationPermission()
 //            val requiredPermissions = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
 //
 //            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

@@ -47,6 +47,13 @@ class RadarLocationPermissionManager(private val context: Context, private val a
         } 
     }
 
+    override fun equals(other: Any?): Boolean {
+        // returns true if other is any instance of RadarLocationPermissionManager so that
+        // unregisterActivityLifecycleCallbacks(any new RadarLocationPermissionManager) will remove the older instance
+        // this way there is no duplicate locationPermissionManager in ActivityLifecycleCallbacks.
+        return (other is RadarLocationPermissionManager)
+    }
+
     @RequiresApi(Build.VERSION_CODES.Q)
     fun requestBackgroundLocationPermission() {
         if (activity is ComponentActivity) {

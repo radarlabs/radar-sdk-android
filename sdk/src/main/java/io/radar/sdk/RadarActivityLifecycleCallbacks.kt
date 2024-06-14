@@ -20,12 +20,20 @@ internal class RadarActivityLifecycleCallbacks(
     private val fraud: Boolean = false
 ) : Application.ActivityLifecycleCallbacks {
     private var count = 0
+    private var isFirstCreate = true
 
     companion object {
         var foreground: Boolean = false
             private set
 
         private const val TAG = "RadarActivityLifecycle"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        // returns true if other is any instance of RadarActivityLifecycleCallbacks so that
+        // unregisterActivityLifecycleCallbacks(any new RadarLocationPermissionManager) will remove the older instance
+        // this way there is no duplicate RadarActivityLifecycleCallbacks in ActivityLifecycleCallbacks.
+        return (other is RadarActivityLifecycleCallbacks)
     }
 
     private fun updatePermissionsDenied(activity: Activity) {
@@ -44,24 +52,45 @@ internal class RadarActivityLifecycleCallbacks(
     }
 
     override fun onActivityResumed(activity: Activity) {
-        if (count == 0) {
+        Log.w(TAG, "ON RESUME ${count} ${isFirstCreate}")
+        if (count == 0 && !isFirstCreate) {
             try {
                 val updated = RadarSettings.updateSessionId(activity.applicationContext)
                 if (updated) {
                     val usage = "resume"
                     Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
                         override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
-                            Radar.locationManager.updateTrackingFromMeta(config.meta)
-                            RadarSettings.setFeatureSettings(activity.applicationContext, config.meta.featureSettings)
-                            RadarSettings.setSdkConfiguration(activity.applicationContext, config.meta.sdkConfiguration)
+                            if (status == Radar.RadarStatus.SUCCESS) {
+                                Radar.locationManager.updateTrackingFromMeta(config.meta)
+                                RadarSettings.setFeatureSettings(activity.applicationContext, config.meta.featureSettings)
+                                RadarSettings.setSdkConfiguration(activity.applicationContext, config.meta.sdkConfiguration)
+                            }
+
+                            val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
+                            if (sdkConfiguration?.trackOnceOnResume == true) {
+                                Radar.trackOnce()
+                            }
                         }
                     })
+                } else {
+                    val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
+                    if (sdkConfiguration?.trackOnceOnResume == true) {
+                        Radar.trackOnce()
+                    }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, e.message, e)
             }
+
+//            if (Radar.initialized()) {
+//                val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
+//                if (sdkConfiguration?.trackOnceOnInitialize == true) {
+//                    Radar.trackOnce()
+//                }
+//            }
         }
         count++
+        isFirstCreate = false
         foreground = count > 0
 
         Radar.logOpenedAppConversion()
@@ -114,6 +143,7 @@ internal class RadarActivityLifecycleCallbacks(
     }
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+        Log.w(TAG, "ON CREATE ${count}")
         updatePermissionsDenied(activity)
     }
 }
