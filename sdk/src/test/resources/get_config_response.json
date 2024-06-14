@@ -9,7 +9,8 @@
             "radarLowPowerManagerDistanceFilter": 3000
         },
         "sdkConfiguration": {
-            "logLevel": "info"
+            "logLevel": "info",
+            "startTrackingOnInitialize": false
         }
     }
 }
