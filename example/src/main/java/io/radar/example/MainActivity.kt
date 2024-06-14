@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+        Radar.initialize(this, "prj_test_pk_d9020be31f7cd2357d59a728008f469b1395ee4e", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
         Radar.sdkVersion()?.let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
@@ -269,5 +269,4 @@ class MainActivity : AppCompatActivity() {
             Log.v("example", "Conversion name = ${event?.conversionName}: status = $status; event = $event")
         }
     }
-
 }

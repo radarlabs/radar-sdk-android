@@ -1547,4 +1547,35 @@ class RadarTest {
         return tripOptions
     }
 
+    @Test
+    fun test_Radar_setSdkConfiguration() {
+        val sdkConfiguration = RadarSdkConfiguration(Radar.RadarLogLevel.WARNING)
+
+        RadarSettings.setSdkConfiguration(context, sdkConfiguration)
+
+        assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.WARNING)
+
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/get_config_response.json")
+
+        val latch = CountDownLatch(1)
+
+        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
+                RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+
+                assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
+
+                latch.countDown()
+            }
+        })
+        
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
+        val clientSdkConfiguration = RadarSettings.getClientSdkConfiguration(context)
+        val logLevel = Radar.RadarLogLevel.valueOf(clientSdkConfiguration.get("logLevel").toString().uppercase())
+        assertEquals(logLevel, Radar.RadarLogLevel.DEBUG)
+    }
 }

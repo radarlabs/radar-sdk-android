@@ -548,6 +548,7 @@ object Radar {
             override fun onComplete(status: RadarStatus, config: RadarConfig) {
                 locationManager.updateTrackingFromMeta(config?.meta)
                 RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
+                RadarSettings.setSdkConfiguration(context, config?.meta.sdkConfiguration)
             }
         })
 
