@@ -10,8 +10,8 @@ import io.radar.sdk.RadarSettings
  * Represents server-side configuration settings.
  */
 internal data class RadarSdkConfiguration(
-    val logLevel: Radar.RadarLogLevel?,
-    val startTrackingOnInitialize: Boolean?,
+    val logLevel: Radar.RadarLogLevel,
+    val startTrackingOnInitialize: Boolean,
 ) {
     companion object {
         private const val LOG_LEVEL = "logLevel"
@@ -19,7 +19,7 @@ internal data class RadarSdkConfiguration(
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration? {
             if (json == null) {
-                return default()
+                return null
             }
 
             val logLevelString = json.optString(LOG_LEVEL)
@@ -31,12 +31,6 @@ internal data class RadarSdkConfiguration(
             )
         }
 
-        fun default(): RadarSdkConfiguration {
-            return RadarSdkConfiguration(
-                Radar.RadarLogLevel.INFO, false,
-            )
-        }
-        
         fun updateSdkConfigurationFromServer(context: Context) {
             Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
                 override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {

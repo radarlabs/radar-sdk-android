@@ -550,7 +550,7 @@ object Radar {
                 RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
                 RadarSettings.setSdkConfiguration(context, config?.meta.sdkConfiguration)
 
-                if (config?.meta.sdkConfiguration.startTrackingOnInitialize == true && !RadarSettings.getTracking(context)) {
+                if (config?.meta.sdkConfiguration?.startTrackingOnInitialize == true && !RadarSettings.getTracking(context)) {
                     Radar.startTracking(Radar.getTrackingOptions())
                 }
             }
