@@ -30,6 +30,12 @@ internal data class RadarSdkConfiguration(
                 startTrackingOnInitialize,
             )
         }
+
+        fun default(): RadarSdkConfiguration {
+            return RadarSdkConfiguration(
+                Radar.RadarLogLevel.INFO, false,
+            )
+        }
         
         fun updateSdkConfigurationFromServer(context: Context) {
             Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
