@@ -546,9 +546,11 @@ object Radar {
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: RadarStatus, config: RadarConfig) {
-                locationManager.updateTrackingFromMeta(config.meta)
-                RadarSettings.setFeatureSettings(context, config.meta.featureSettings)
-                RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                if (status == RadarStatus.SUCCESS) {
+                    locationManager.updateTrackingFromMeta(config.meta)
+                    RadarSettings.setFeatureSettings(context, config.meta.featureSettings)
+                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                }
 
                 val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
                 if (sdkConfiguration?.startTrackingOnInitialize == true && !RadarSettings.getTracking(context)) {
