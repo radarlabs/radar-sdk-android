@@ -17,7 +17,7 @@ internal data class RadarSdkConfiguration(
         private const val LOG_LEVEL = "logLevel"
         private const val START_TRACKING_ON_INITIALIZE = "startTrackingOnInitialize"
 
-        fun fromJson(json: JSONObject?): RadarSdkConfiguration {
+        fun fromJson(json: JSONObject?): RadarSdkConfiguration? {
             if (json == null) {
                 return default()
             }
