@@ -1547,4 +1547,41 @@ class RadarTest {
         return tripOptions
     }
 
+    @Test
+    fun test_Radar_setSdkConfiguration() {
+        val sdkConfiguration = RadarSdkConfiguration(Radar.RadarLogLevel.WARNING, true, false, true)
+
+        RadarSettings.setSdkConfiguration(context, sdkConfiguration)
+
+        assertEquals(Radar.RadarLogLevel.WARNING, RadarSettings.getLogLevel(context))
+
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/get_config_response.json")
+
+        val latch = CountDownLatch(1)
+
+        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
+                RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+
+                assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
+
+                latch.countDown()
+            }
+        })
+        
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
+        val clientSdkConfiguration = RadarSettings.getClientSdkConfiguration(context)
+        val logLevel = Radar.RadarLogLevel.valueOf(clientSdkConfiguration.get("logLevel").toString().uppercase())
+        assertEquals(Radar.RadarLogLevel.DEBUG, logLevel)
+
+        val savedSdkConfiguration = RadarSettings.getSdkConfiguration(context)
+        assertEquals(Radar.RadarLogLevel.INFO, savedSdkConfiguration?.logLevel)
+        assertEquals(false, savedSdkConfiguration?.startTrackingOnInitialize)
+        assertEquals(true, savedSdkConfiguration?.trackOnceOnInitialize)
+        assertEquals(false, savedSdkConfiguration?.trackOnceOnResume)
+    }
 }

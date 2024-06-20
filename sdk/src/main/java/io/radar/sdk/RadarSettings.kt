@@ -3,11 +3,12 @@ package io.radar.sdk
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarFeatureSettings
+import io.radar.sdk.model.RadarSdkConfiguration
 import org.json.JSONObject
 import java.text.DecimalFormat
 import java.util.*
-
 
 internal object RadarSettings {
 
@@ -28,6 +29,8 @@ internal object RadarSettings {
     private const val KEY_FOREGROUND_SERVICE = "foreground_service"
     private const val KEY_NOTIFICATION_OPTIONS = "notification_options"
     private const val KEY_FEATURE_SETTINGS = "feature_settings"
+    private const val KEY_CLIENT_SDK_CONFIGURATION = "client_sdk_configuration"
+    private const val KEY_SDK_CONFIGURATION = "sdk_configuration"
     private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
     private const val KEY_HOST = "host"
@@ -311,6 +314,31 @@ internal object RadarSettings {
         return RadarFeatureSettings.fromJson(JSONObject(optionsJson))
     }
 
+    fun setSdkConfiguration(context: Context, configuration: RadarSdkConfiguration?) {
+        Radar.logger.d("set SDK Configuration | sdkConfiguration = $configuration")
+        if (configuration != null) {
+            getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, configuration.logLevel.value) }
+
+            val sdkConfigurationString = configuration.toJson().toString()
+            getSharedPreferences(context).edit { putString(KEY_SDK_CONFIGURATION, sdkConfigurationString) }
+        }
+    }
+
+    fun getSdkConfiguration(context: Context): RadarSdkConfiguration? {
+        val sdkConfigurationString = getSharedPreferences(context).getString(KEY_SDK_CONFIGURATION, null)
+        return RadarSdkConfiguration.fromJson(sdkConfigurationString?.let { JSONObject(it) })
+    }
+
+    fun getClientSdkConfiguration(context: Context): JSONObject {
+        val sharedPrefClientSdkConfig = getSharedPreferences(context).getString(KEY_CLIENT_SDK_CONFIGURATION, null);
+
+        return if (sharedPrefClientSdkConfig != null) {
+            JSONObject(sharedPrefClientSdkConfig)
+        } else {
+            JSONObject()
+        }
+    }
+
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {
         val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, 3)
         val userDebug = getUserDebug(context)
@@ -318,8 +346,17 @@ internal object RadarSettings {
     }
 
     internal fun setLogLevel(context: Context, level: Radar.RadarLogLevel) {
-        val logLevelInt = level.value
-        getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, logLevelInt) }
+        val sdkConfiguration = getClientSdkConfiguration(context)
+        if (sdkConfiguration.optString("logLevel") == level.toString().lowercase()) {
+            return;
+        }
+        sdkConfiguration.put("logLevel", level.toString().lowercase())
+        getSharedPreferences(context).edit { putString(KEY_CLIENT_SDK_CONFIGURATION, sdkConfiguration.toString()) }
+
+        if (getLogLevel(context) == level) {
+            return;
+        }
+        RadarSdkConfiguration.updateSdkConfigurationFromServer(context)
     }
 
     internal fun getHost(context: Context): String {
