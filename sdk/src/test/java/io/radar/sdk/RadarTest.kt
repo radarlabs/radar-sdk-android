@@ -1549,11 +1549,11 @@ class RadarTest {
 
     @Test
     fun test_Radar_setSdkConfiguration() {
-        val sdkConfiguration = RadarSdkConfiguration(Radar.RadarLogLevel.WARNING, true)
+        val sdkConfiguration = RadarSdkConfiguration(Radar.RadarLogLevel.WARNING, true, false, true)
 
         RadarSettings.setSdkConfiguration(context, sdkConfiguration)
 
-        assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.WARNING)
+        assertEquals(Radar.RadarLogLevel.WARNING, RadarSettings.getLogLevel(context))
 
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/get_config_response.json")
@@ -1576,6 +1576,12 @@ class RadarTest {
         RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
         val clientSdkConfiguration = RadarSettings.getClientSdkConfiguration(context)
         val logLevel = Radar.RadarLogLevel.valueOf(clientSdkConfiguration.get("logLevel").toString().uppercase())
-        assertEquals(logLevel, Radar.RadarLogLevel.DEBUG)
+        assertEquals(Radar.RadarLogLevel.DEBUG, logLevel)
+
+        val savedSdkConfiguration = RadarSettings.getSdkConfiguration(context)
+        assertEquals(Radar.RadarLogLevel.INFO, savedSdkConfiguration?.logLevel)
+        assertEquals(false, savedSdkConfiguration?.startTrackingOnInitialize)
+        assertEquals(true, savedSdkConfiguration?.trackOnceOnInitialize)
+        assertEquals(false, savedSdkConfiguration?.trackOnceOnResume)
     }
 }

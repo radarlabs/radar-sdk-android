@@ -10,7 +10,9 @@
         },
         "sdkConfiguration": {
             "logLevel": "info",
-            "startTrackingOnInitialize": false
+            "startTrackingOnInitialize": false,
+            "trackOnceOnInitialize": true,
+            "trackOnceOnResume": false
         }
     }
 }
