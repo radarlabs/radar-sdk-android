@@ -122,6 +122,9 @@ class RadarAddress(
      */
     val confidence: RadarAddressConfidence,
 
+    /**
+     * The timezone information of the location.
+     */
     val timezone: RadarTimezone?,
 ) {
 
