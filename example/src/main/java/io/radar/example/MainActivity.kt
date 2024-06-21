@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         Radar.trackVerified(false) { status, token ->
-            Log.v("example", "Status: $status Token: ${token?.toJson()}")
+            Log.v("example", "TrackVerified: status = $status; token = ${token?.toJson()}")
         }
 
         // In the Radar dashboard settings (https://radar.com/dashboard/settings), add this to
