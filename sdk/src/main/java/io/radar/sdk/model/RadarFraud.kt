@@ -1,6 +1,8 @@
 package io.radar.sdk.model
 
+import io.radar.sdk.RadarUtils
 import org.json.JSONObject
+import java.util.Date
 
 /**
  * Represents fraud detection signals for location verification.
@@ -62,6 +64,36 @@ data class RadarFraud(
      * A boolean indicating whether the user has been manually blocked. May be `false` if Fraud is not enabled.
      */
     val blocked: Boolean,
+
+    /**
+     A timestamp indicating the last time that the user failed the mocked fraud check.
+    */
+    val lastMockedAt: Date?,
+
+    /**
+     A timestamp indicating the last time that the user failed the jumped fraud check.
+    */
+    val lastJumpedAt: Date?,
+
+    /**
+     A timestamp indicating the last time that the user failed the compromised fraud check.
+    */
+    val lastCompromisedAt: Date?,
+
+    /**
+     A timestamp indicating the last time that the user failed the inaccurate fraud check.
+    */
+    val lastInaccurateAt: Date?,
+
+    /**
+     A timestamp indicating the last time that the user failed the proxy fraud check.
+    */
+    val lastProxyAt: Date?,
+
+    /**
+     A timestamp indicating the last time that the user failed the sharing fraud check.
+    */
+    val lastSharingAt: Date?,
 ) {
     companion object {
         private const val PASSED = "passed"
@@ -74,6 +106,12 @@ data class RadarFraud(
         private const val SHARING = "sharing"
         private const val INACCURATE = "inaccurate"
         private const val BLOCKED = "blocked"
+        private const val LAST_MOCKED_AT = "lastMockedAt"
+        private const val LAST_JUMPED_AT = "lastJumpedAt"
+        private const val LAST_COMPROMISED_AT = "lastCompromisedAt"
+        private const val LAST_INACCURATE_AT = "lastInaccurateAt"
+        private const val LAST_PROXY_AT = "lastProxyAt"
+        private const val LAST_SHARING_AT = "lastSharingAt"
 
         @JvmStatic
         fun fromJson(json: JSONObject?): RadarFraud {
@@ -88,6 +126,12 @@ data class RadarFraud(
                 sharing = json?.optBoolean(SHARING, false) ?: false,
                 inaccurate = json?.optBoolean(INACCURATE, false) ?: false,
                 blocked = json?.optBoolean(BLOCKED, false) ?: false,
+                lastMockedAt = RadarUtils.isoStringToDate(json?.optString(LAST_MOCKED_AT)),
+                lastJumpedAt = RadarUtils.isoStringToDate(json?.optString(LAST_JUMPED_AT)),
+                lastCompromisedAt = RadarUtils.isoStringToDate(json?.optString(LAST_COMPROMISED_AT)),
+                lastInaccurateAt = RadarUtils.isoStringToDate(json?.optString(LAST_INACCURATE_AT)),
+                lastProxyAt = RadarUtils.isoStringToDate(json?.optString(LAST_PROXY_AT)),
+                lastSharingAt = RadarUtils.isoStringToDate(json?.optString(LAST_SHARING_AT)),
             )
         }
     }
@@ -104,6 +148,12 @@ data class RadarFraud(
             putOpt(SHARING, sharing)
             putOpt(INACCURATE, inaccurate)
             putOpt(BLOCKED, blocked)
+            putOpt(LAST_MOCKED_AT, RadarUtils.dateToISOString(lastMockedAt))
+            putOpt(LAST_JUMPED_AT, RadarUtils.dateToISOString(lastJumpedAt))
+            putOpt(LAST_COMPROMISED_AT, RadarUtils.dateToISOString(lastCompromisedAt))
+            putOpt(LAST_INACCURATE_AT, RadarUtils.dateToISOString(lastInaccurateAt))
+            putOpt(LAST_PROXY_AT, RadarUtils.dateToISOString(lastProxyAt))
+            putOpt(LAST_SHARING_AT, RadarUtils.dateToISOString(lastSharingAt))
         }
     }
 }
