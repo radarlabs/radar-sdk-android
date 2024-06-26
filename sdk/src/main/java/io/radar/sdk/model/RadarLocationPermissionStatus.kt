@@ -22,9 +22,9 @@ class RadarLocationPermissionStatus {
         internal const val KEY_PREVIOUSLY_DENIED_BACKGROUND = "previouslyDeniedBackground"
         internal const val KEY_APPROXIMATE_PERMISSION_REQUEST = "approximatePermissionRequest"
         internal const val KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE_BG = "backgroundPermissionAvailable"
-        internal const val KEY_IN_LOCATION_POPUP = "inLocationPopup"
+        internal const val KEY_IN_LOCATION_PROMPT = "inLocationPrompt"
 
-        fun initWithStatus(context: Context, activity: Activity, inLocationPopup: Boolean = false): RadarLocationPermissionStatus {
+        fun initWithStatus(context: Context, activity: Activity, inLocationPrompt: Boolean = false): RadarLocationPermissionStatus {
 
             val newStatus = RadarLocationPermissionStatus()
             newStatus.foregroundPermissionResult = ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -54,7 +54,7 @@ class RadarLocationPermissionStatus {
             }
             newStatus.previouslyDeniedBackground = prefs.getBoolean(KEY_PREVIOUSLY_DENIED_BACKGROUND, false)
 
-            newStatus.inLocationPopup = inLocationPopup
+            newStatus.inLocationPrompt = inLocationPrompt
             newStatus.status = locationPermissionStateForLocationManagerStatus(newStatus)
 
             return newStatus
@@ -91,7 +91,7 @@ class RadarLocationPermissionStatus {
             if (status.foregroundPermissionResult) {
                 return LocationPermissionState.FOREGROUND_PERMISSION_GRANTED
             } else {
-                if (status.inLocationPopup) {
+                if (status.inLocationPrompt) {
                     return LocationPermissionState.FOREGROUND_PERMISSION_PENDING
                 }
                 if (status.approximatePermissionResult){
@@ -135,7 +135,7 @@ class RadarLocationPermissionStatus {
         jsonObject.put(KEY_APPROXIMATE_PERMISSION_REQUEST,approximatePermissionResult)
         jsonObject.put(KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE_BG,shouldShowRequestPermissionRationaleBG)
         jsonObject.put(KEY_PREVIOUSLY_DENIED_BACKGROUND,previouslyDeniedBackground)
-        jsonObject.put(KEY_IN_LOCATION_POPUP,inLocationPopup)
+        jsonObject.put(KEY_IN_LOCATION_PROMPT,inLocationPrompt)
         return jsonObject
     }
 
@@ -158,7 +158,7 @@ class RadarLocationPermissionStatus {
     var shouldShowRequestPermissionRationaleFG: Boolean = false
     var shouldShowRequestPermissionRationaleBG: Boolean = false
     var previouslyDeniedForeground: Boolean = false
-    var inLocationPopup: Boolean = false
+    var inLocationPrompt: Boolean = false
     var approximatePermissionResult: Boolean = false
     var previouslyDeniedBackground: Boolean = false
 }
