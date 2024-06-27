@@ -14,7 +14,7 @@ class RadarLocationPermissionStatus {
     companion object {
         private const val PREFS_NAME = "RadarLocationPermissionStatus"
 
-        internal const val KEY_STATUS = "status"
+        internal const val KEY_LOCATION_PERMISSION_STATE = "locationPermissionState"
         internal const val KEY_FOREGROUND_PERMISSION_RESULT = "foregroundPermissionResult"
         internal const val KEY_BACKGROUND_PERMISSION_RESULT = "backgroundPermissionResult"
         internal const val KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE_FG = "shouldShowRequestPermissionRationale"
@@ -55,7 +55,7 @@ class RadarLocationPermissionStatus {
             newStatus.previouslyDeniedBackground = prefs.getBoolean(KEY_PREVIOUSLY_DENIED_BACKGROUND, false)
 
             newStatus.inLocationPrompt = inLocationPrompt
-            newStatus.status = locationPermissionStateForLocationManagerStatus(newStatus)
+            newStatus.locationPermissionState = locationPermissionStateForLocationManagerStatus(newStatus)
 
             return newStatus
         }
@@ -127,7 +127,7 @@ class RadarLocationPermissionStatus {
 
     fun toJson(): JSONObject {
         val jsonObject = JSONObject()
-        jsonObject.put(KEY_STATUS, status.name)
+        jsonObject.put(KEY_LOCATION_PERMISSION_STATE, locationPermissionState.name)
         jsonObject.put(KEY_FOREGROUND_PERMISSION_RESULT, foregroundPermissionResult)
         jsonObject.put(KEY_BACKGROUND_PERMISSION_RESULT, backgroundPermissionResult)
         jsonObject.put(KEY_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE_FG, shouldShowRequestPermissionRationaleFG)
@@ -152,7 +152,7 @@ class RadarLocationPermissionStatus {
         UNKNOWN
     }
 
-    var status: LocationPermissionState = LocationPermissionState.UNKNOWN
+    var locationPermissionState: LocationPermissionState = LocationPermissionState.UNKNOWN
     var foregroundPermissionResult: Boolean = false
     var backgroundPermissionResult: Boolean = false
     var shouldShowRequestPermissionRationaleFG: Boolean = false
