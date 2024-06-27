@@ -12,7 +12,6 @@ import io.radar.sdk.RadarReceiver
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarLocationPermissionStatus
-import kotlin.random.Random
 
 class MyRadarReceiver : RadarReceiver() {
 
@@ -74,7 +73,7 @@ class MyRadarReceiver : RadarReceiver() {
         context: Context,
         status: RadarLocationPermissionStatus
     ) {
-        val statusString = RadarLocationPermissionStatus.stringForLocationPermissionState(status.status)
+        val statusString = RadarLocationPermissionStatus.stringForLocationPermissionState(status.locationPermissionState)
         val body = "Location permission status updated: ${statusString}"
         notify(context, body)
     }
