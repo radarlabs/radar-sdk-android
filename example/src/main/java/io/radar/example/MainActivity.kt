@@ -77,6 +77,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        createButton("trackVerified") {
+            Radar.trackVerified(false) { status, token ->
+                Log.v("example", "TrackVerified: status = $status; token = ${token?.toJson()}")
+            }
+        }
+
         createButton("trackOnce") {
             Radar.trackOnce { status, location, events, user ->
                 Log.v(
