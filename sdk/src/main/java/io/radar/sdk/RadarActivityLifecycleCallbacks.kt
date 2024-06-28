@@ -29,13 +29,6 @@ internal class RadarActivityLifecycleCallbacks(
         private const val TAG = "RadarActivityLifecycle"
     }
 
-    override fun equals(other: Any?): Boolean {
-        // returns true if other is any instance of RadarActivityLifecycleCallbacks so that
-        // unregisterActivityLifecycleCallbacks(any new RadarLocationPermissionManager) will remove the older instance
-        // this way there is no duplicate RadarActivityLifecycleCallbacks in ActivityLifecycleCallbacks.
-        return (other is RadarActivityLifecycleCallbacks)
-    }
-
     private fun updatePermissionsDenied(activity: Activity) {
         try {
             if (ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED &&
@@ -81,13 +74,6 @@ internal class RadarActivityLifecycleCallbacks(
             } catch (e: Exception) {
                 Log.e(TAG, e.message, e)
             }
-
-//            if (Radar.initialized()) {
-//                val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
-//                if (sdkConfiguration?.trackOnceOnInitialize == true) {
-//                    Radar.trackOnce()
-//                }
-//            }
         }
         count++
         isFirstCreate = false
