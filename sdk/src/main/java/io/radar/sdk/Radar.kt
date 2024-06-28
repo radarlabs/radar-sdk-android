@@ -446,25 +446,10 @@ object Radar {
      *
      * @param[context] The context.
      * @param[publishableKey] Your publishable API key.
+     * @param[options] Additional initialization options.
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null) {
-        initialize(context, publishableKey, null)
-    }
-
-    /**
-     * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
-     *
-     * @see [](https://radar.com/documentation/sdk/android#initialize-sdk)
-     *
-     * @param[context] The context.
-     * @param[publishableKey] Your publishable API key.
-     * @param[receiver] An optional receiver for the client-side delivery of events.
-     * @param[provider] The location services provider.
-     * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
-     */
-    @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false) {
+    fun initialize(context: Context?, publishableKey: String? = null, options: RadarInitializeOptions = RadarInitializeOptions()) {
         if (context == null) {
             return
         }
@@ -496,6 +481,15 @@ object Radar {
             RadarSettings.setPublishableKey(this.context, publishableKey)
         }
 
+
+        if (!options.userId.isNullOrEmpty()) {
+            RadarSettings.setUserId(context, options.userId);
+        }
+
+        if (options.metadata != null) {
+            RadarSettings.setMetadata(context, options.metadata);
+        }
+
         if (!this::apiClient.isInitialized) {
             this.apiClient = RadarApiClient(this.context, logger)
         }
@@ -516,24 +510,24 @@ object Radar {
             }
         }
         if (!this::locationManager.isInitialized) {
-            this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager, provider)
-            RadarSettings.setLocationServicesProvider(this.context, provider)
+            this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager, options.provider)
+            RadarSettings.setLocationServicesProvider(this.context, options.provider)
             this.locationManager.updateTracking()
         }
 
         this.logger.i("Initializing", RadarLogType.SDK_CALL)
 
-        if (provider == RadarLocationServicesProvider.GOOGLE) {
+        if (options.provider == RadarLocationServicesProvider.GOOGLE) {
             this.logger.d("Using Google location services")
-        } else if (provider == RadarLocationServicesProvider.HUAWEI) {
+        } else if (options.provider == RadarLocationServicesProvider.HUAWEI) {
             this.logger.d("Using Huawei location services")
         }
 
         val application = this.context as? Application
-        if (fraud) {
+        if (options.fraud) {
             RadarSettings.setSharing(this.context, false)
         }
-        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
+        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(options.fraud))
 
         locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
         application?.registerActivityLifecycleCallbacks(locationPermissionManager)
@@ -567,6 +561,31 @@ object Radar {
         this.initialized = true
 
         logger.i("📍️ Radar initialized")
+    }
+
+    /**
+     * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
+     *
+     * @see [](https://radar.com/documentation/sdk/android#initialize-sdk)
+     *
+     * @param[context] The context.
+     * @param[publishableKey] Your publishable API key.
+     * @param[receiver] An optional receiver for the client-side delivery of events.
+     * @param[provider] The location services provider.
+     * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
+     */
+    @JvmStatic
+    fun initialize(
+        context: Context?, 
+        publishableKey: String? = null, 
+        receiver: RadarReceiver? = null, 
+        provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, 
+        fraud: Boolean = false) {
+        initialize(context, publishableKey, RadarInitializeOptions(
+            fraud = fraud,
+            receiver = receiver,
+            provider = provider,
+        ))
     }
 
     /**
