@@ -306,9 +306,13 @@ internal class RadarApiClient(
             } else {
                 params.putOpt("xPlatformType", "Native")
             }
+            val fraudFailureReasons = mutableListOf<String>()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
                 val mocked = location.isFromMockProvider
                 params.putOpt("mocked", mocked)
+                if (mocked) {
+                    fraudFailureReasons.add("fraud_mocked_from_mock_provider")
+                }
             }
             if (tripOptions != null) {
                 val tripOptionsObj = JSONObject()
@@ -337,10 +341,15 @@ internal class RadarApiClient(
             if (verified) {
                 params.putOpt("integrityToken", integrityToken)
                 params.putOpt("integrityException", integrityException)
-                params.putOpt("sharing", RadarUtils.isScreenSharing(context))
+                val sharingFailureReasons = RadarUtils.isScreenSharing(context)
+                if (sharingFailureReasons.isNotEmpty()) {
+                    params.putOpt("sharing", true)
+                    fraudFailureReasons.addAll(sharingFailureReasons)
+                }
                 params.putOpt("encrypted", encrypted)
             }
             params.putOpt("appId", context.packageName)
+            params.putOpt("fraudFailureReasons", fraudFailureReasons)
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
