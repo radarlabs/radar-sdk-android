@@ -123,16 +123,25 @@ internal object RadarUtils {
                 || Build.PRODUCT.contains("simulator");
     }
 
-    internal fun isScreenSharing(context: Context): Boolean {
+    internal fun isScreenSharing(context: Context): List<String> {
+        val sharingFailureReasons = mutableListOf<String>()
+
         if (Build.VERSION.SDK_INT < 17) {
-            return false
+            return sharingFailureReasons
         }
+
         val displayManager = DisplayManagerCompat.getInstance(context)
         val multipleDisplays = displayManager.displays.size > 1
+        if (multipleDisplays) {
+            sharingFailureReasons.add("fraud_sharing_multiple_displays")
+        }
 
         val sharing = RadarSettings.getSharing(context)
+        if (sharing) {
+            sharingFailureReasons.add("fraud_sharing_virtual_input_device")
+        }
 
-        return multipleDisplays || sharing
+        return sharingFailureReasons
     }
 
     internal fun isoStringToDate(str: String?): Date? {
