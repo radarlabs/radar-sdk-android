@@ -56,7 +56,12 @@ data class RadarFraud(
     /**
      * A boolean indicating whether the user's location is not accurate enough. May be `false` if Fraud is not enabled.
      */
-    val inaccurate: Boolean
+    val inaccurate: Boolean,
+
+    /**
+     * A boolean indicating whether the user has been manually blocked. May be `false` if Fraud is not enabled.
+     */
+    val blocked: Boolean,
 ) {
     companion object {
         private const val PASSED = "passed"
@@ -68,6 +73,7 @@ data class RadarFraud(
         private const val JUMPED = "jumped"
         private const val SHARING = "sharing"
         private const val INACCURATE = "inaccurate"
+        private const val BLOCKED = "blocked"
 
         @JvmStatic
         fun fromJson(json: JSONObject?): RadarFraud {
@@ -80,7 +86,8 @@ data class RadarFraud(
                 compromised = json?.optBoolean(COMPROMISED, false) ?: false,
                 jumped = json?.optBoolean(JUMPED, false) ?: false,
                 sharing = json?.optBoolean(SHARING, false) ?: false,
-                inaccurate = json?.optBoolean(INACCURATE, false) ?: false
+                inaccurate = json?.optBoolean(INACCURATE, false) ?: false,
+                blocked = json?.optBoolean(BLOCKED, false) ?: false,
             )
         }
     }
@@ -96,6 +103,7 @@ data class RadarFraud(
             putOpt(JUMPED, jumped)
             putOpt(SHARING, sharing)
             putOpt(INACCURATE, inaccurate)
+            putOpt(BLOCKED, blocked)
         }
     }
 }
