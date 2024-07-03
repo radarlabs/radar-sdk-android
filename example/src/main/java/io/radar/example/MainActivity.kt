@@ -18,6 +18,7 @@ import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
 import java.util.EnumSet
 import androidx.core.content.edit
+import io.radar.sdk.RadarInitializeOptions
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,10 +28,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        this.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit { putString("host", "https://api-shicheng.radar-staging.com") }
-
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+
+        RadarInitializeOptions()
+        Radar.initialize(
+            this,
+            "prj_test_pk_0000000000000000000000000000000000000000",
+            RadarInitializeOptions(
+                receiver = receiver,
+                provider = Radar.RadarLocationServicesProvider.GOOGLE,
+                fraud = true
+            )
+        )
         Radar.sdkVersion().let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {

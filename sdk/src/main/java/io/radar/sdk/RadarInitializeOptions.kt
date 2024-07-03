@@ -28,4 +28,34 @@ data class RadarInitializeOptions(
      * The location services provider.
      */
     var provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE,
-)
+) {
+
+    companion object {
+        internal const val KEY_FRAUD = "fraud"
+        internal const val KEY_USER_ID = "userId"
+        internal const val KEY_METADATA = "metadata"
+        internal const val KEY_PROVIDER = "provider"
+
+        @JvmStatic
+        fun fromJson(obj: JSONObject): RadarInitializeOptions {
+            val initializeOptions = RadarInitializeOptions()
+            initializeOptions.fraud = obj.optBoolean(KEY_FRAUD)
+            initializeOptions.userId = obj.optString(KEY_USER_ID)
+            initializeOptions.metadata = obj.optJSONObject(KEY_METADATA)
+            val providerString = obj.optString(KEY_PROVIDER)
+            if (!providerString.isNullOrEmpty()) {
+                initializeOptions.provider = RadarLocationServicesProvider.valueOf(providerString)
+            }
+            return initializeOptions
+        }
+    }
+
+    fun toJson(): JSONObject {
+        val obj = JSONObject()
+        obj.put(KEY_FRAUD, fraud)
+        obj.put(KEY_USER_ID, userId)
+        obj.put(KEY_METADATA, metadata)
+        obj.put(KEY_PROVIDER, provider.toString().lowercase())
+        return obj
+    }
+}

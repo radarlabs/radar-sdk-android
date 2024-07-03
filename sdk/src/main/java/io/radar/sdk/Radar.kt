@@ -8,6 +8,7 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
+import androidx.core.content.edit
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.util.RadarLogBuffer
@@ -540,9 +541,11 @@ object Radar {
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: RadarStatus, config: RadarConfig) {
-                locationManager.updateTrackingFromMeta(config.meta)
-                RadarSettings.setFeatureSettings(context, config.meta.featureSettings)
-                RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                if (status == RadarStatus.SUCCESS) {
+                    locationManager.updateTrackingFromMeta(config.meta)
+                    RadarSettings.setFeatureSettings(context, config.meta.featureSettings)
+                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                }
 
                 val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
                 if (sdkConfiguration?.startTrackingOnInitialize == true && !RadarSettings.getTracking(context)) {
@@ -574,6 +577,8 @@ object Radar {
      * @param[provider] The location services provider.
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
+    @Deprecated("",
+        replaceWith = ReplaceWith("Radar.initialize(context, publishableKey, RadarInitializeOptions(receiver=receiver, provider=provider, fraud=fraud))"))
     @JvmStatic
     fun initialize(
         context: Context?, 
@@ -3176,8 +3181,18 @@ object Radar {
         if (!initialized) {
             return
         }
-
-        RadarSettings.setLogLevel(context, level)
+        // update clientSdkConfiguration if the new level is different, otherwise no-op
+        val sdkConfiguration = RadarSettings.getClientSdkConfiguration(context)
+        if (sdkConfiguration.optString("logLevel") == level.toString().lowercase()) {
+            return;
+        }
+        sdkConfiguration.put("logLevel", level.toString().lowercase())
+        RadarSettings.setClientSdkConfiguration(context, sdkConfiguration)
+        // if the current log level is already the target log level, no-op
+        if (RadarSettings.getLogLevel(context) == level) {
+            return;
+        }
+        RadarSdkConfiguration.updateSdkConfigurationFromServer(context)
     }
 
     /**
