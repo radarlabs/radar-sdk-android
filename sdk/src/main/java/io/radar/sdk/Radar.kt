@@ -577,8 +577,7 @@ object Radar {
      * @param[provider] The location services provider.
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
-    @Deprecated("",
-        replaceWith = ReplaceWith("Radar.initialize(context, publishableKey, RadarInitializeOptions(receiver=receiver, provider=provider, fraud=fraud))"))
+    @Deprecated("", replaceWith = ReplaceWith("Radar.initialize(context, publishableKey, RadarInitializeOptions(receiver=receiver, provider=provider, fraud=fraud))"))
     @JvmStatic
     fun initialize(
         context: Context?, 

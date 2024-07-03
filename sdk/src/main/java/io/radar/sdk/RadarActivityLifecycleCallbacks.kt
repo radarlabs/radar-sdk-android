@@ -20,7 +20,7 @@ internal class RadarActivityLifecycleCallbacks(
     private val fraud: Boolean = false
 ) : Application.ActivityLifecycleCallbacks {
     private var count = 0
-    private var isFirstCreate = true
+    private var isFirstOnResume = true
 
     companion object {
         var foreground: Boolean = false
@@ -45,8 +45,7 @@ internal class RadarActivityLifecycleCallbacks(
     }
 
     override fun onActivityResumed(activity: Activity) {
-        Log.w(TAG, "ON RESUME ${count} ${isFirstCreate}")
-        if (count == 0 && !isFirstCreate) {
+        if (count == 0 && !isFirstOnResume) {
             try {
                 val updated = RadarSettings.updateSessionId(activity.applicationContext)
                 if (updated) {
@@ -76,7 +75,7 @@ internal class RadarActivityLifecycleCallbacks(
             }
         }
         count++
-        isFirstCreate = false
+        isFirstOnResume = false
         foreground = count > 0
 
         Radar.logOpenedAppConversion()
