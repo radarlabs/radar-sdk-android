@@ -319,13 +319,14 @@ internal object RadarSettings {
         if (configuration != null) {
             setLogLevel(context, configuration.logLevel)
         }
-        val sdkConfigurationString = configuration?.toJson().toString()
+        val sdkConfigurationString = configuration?.toJson()?.toString()
         getSharedPreferences(context).edit { putString(KEY_SDK_CONFIGURATION, sdkConfigurationString) }
     }
 
     fun getSdkConfiguration(context: Context): RadarSdkConfiguration? {
         val sdkConfigurationString = getSharedPreferences(context).getString(KEY_SDK_CONFIGURATION, null)
-        return RadarSdkConfiguration.fromJson(sdkConfigurationString?.let { JSONObject(it) })
+        val sdkConfigurationJSON = sdkConfigurationString?.let { JSONObject(it) }
+        return RadarSdkConfiguration.fromJson(sdkConfigurationJSON)
     }
 
     fun getClientSdkConfiguration(context: Context): JSONObject {
@@ -346,7 +347,7 @@ internal object RadarSettings {
     }
 
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {
-        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, 3)
+        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, Radar.RadarLogLevel.INFO.value)
         val userDebug = getUserDebug(context)
         return if (userDebug) Radar.RadarLogLevel.DEBUG else Radar.RadarLogLevel.fromInt(logLevelInt)
     }

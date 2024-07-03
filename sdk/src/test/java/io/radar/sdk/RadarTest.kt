@@ -267,7 +267,13 @@ class RadarTest {
         Radar.apiClient.apiHelper = apiHelperMock
         setUpLogConversionTest()
 
-        Radar.initialize(context, publishableKey)
+        val options = RadarInitializeOptions(
+            userId = "initUserId",
+            metadata = JSONObject(mapOf(
+                "initMetaKey" to "initMetaValue"
+            ))
+        )
+        Radar.initialize(context, publishableKey, options)
 
         Radar.locationManager.locationClient = locationClientMock
         Radar.locationManager.permissionsHelper = permissionsHelperMock
@@ -276,6 +282,10 @@ class RadarTest {
     @Test
     fun test_Radar_initialize() {
         assertEquals(publishableKey, RadarSettings.getPublishableKey(context))
+        assertEquals("initUserId", Radar.getUserId())
+        assertEquals(JSONObject(mapOf(
+            "initMetaKey" to "initMetaValue"
+        )).toString(), Radar.getMetadata().toString())
     }
 
     @Test
@@ -1551,6 +1561,7 @@ class RadarTest {
     fun test_Radar_setSdkConfiguration() {
         val sdkConfiguration = RadarSdkConfiguration(Radar.RadarLogLevel.WARNING, true, false, true)
 
+        RadarSettings.setUserDebug(context, false)
         RadarSettings.setSdkConfiguration(context, sdkConfiguration)
 
         assertEquals(Radar.RadarLogLevel.WARNING, RadarSettings.getLogLevel(context))
@@ -1573,7 +1584,7 @@ class RadarTest {
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
-        RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
+        Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
         val clientSdkConfiguration = RadarSettings.getClientSdkConfiguration(context)
         val logLevel = Radar.RadarLogLevel.valueOf(clientSdkConfiguration.get("logLevel").toString().uppercase())
         assertEquals(Radar.RadarLogLevel.DEBUG, logLevel)
