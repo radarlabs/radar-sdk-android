@@ -28,14 +28,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val receiver = MyRadarReceiver()
-
         RadarInitializeOptions()
         Radar.initialize(
-            this,
-            "prj_test_pk_0000000000000000000000000000000000000000",
+            this, "prj_test_pk_0000000000000000000000000000000000000000",
             RadarInitializeOptions(
-                receiver = receiver,
+                receiver = MyRadarReceiver(),
                 provider = Radar.RadarLocationServicesProvider.GOOGLE,
                 fraud = true
             )

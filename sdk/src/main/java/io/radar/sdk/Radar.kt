@@ -481,7 +481,7 @@ object Radar {
         if (publishableKey != null) {
             RadarSettings.setPublishableKey(this.context, publishableKey)
         }
-        
+
         if (!options.userId.isNullOrEmpty()) {
             RadarSettings.setUserId(context, options.userId);
         }
@@ -576,7 +576,10 @@ object Radar {
      * @param[provider] The location services provider.
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
-    @Deprecated("", replaceWith = ReplaceWith("Radar.initialize(context, publishableKey, RadarInitializeOptions(receiver=receiver, provider=provider, fraud=fraud))"))
+    @Deprecated(
+        "Use the new initialize function with RadarInitializeOptions",
+        replaceWith = ReplaceWith("Radar.initialize(context, publishableKey, RadarInitializeOptions(receiver=receiver, provider=provider, fraud=fraud))")
+    )
     @JvmStatic
     fun initialize(
         context: Context?, 
