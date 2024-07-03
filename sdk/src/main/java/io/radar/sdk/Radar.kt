@@ -481,8 +481,7 @@ object Radar {
         if (publishableKey != null) {
             RadarSettings.setPublishableKey(this.context, publishableKey)
         }
-
-
+        
         if (!options.userId.isNullOrEmpty()) {
             RadarSettings.setUserId(context, options.userId);
         }

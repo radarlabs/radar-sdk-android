@@ -1591,8 +1591,8 @@ class RadarTest {
 
         val savedSdkConfiguration = RadarSettings.getSdkConfiguration(context)
         assertEquals(Radar.RadarLogLevel.INFO, savedSdkConfiguration?.logLevel)
-        assertEquals(false, savedSdkConfiguration?.startTrackingOnInitialize)
+        assertEquals(true, savedSdkConfiguration?.startTrackingOnInitialize)
         assertEquals(true, savedSdkConfiguration?.trackOnceOnInitialize)
-        assertEquals(false, savedSdkConfiguration?.trackOnceOnResume)
+        assertEquals(true, savedSdkConfiguration?.trackOnceOnResume)
     }
 }
