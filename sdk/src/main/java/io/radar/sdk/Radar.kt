@@ -450,6 +450,7 @@ object Radar {
      * @param[options] Additional initialization options.
      */
     @JvmStatic
+    @JvmOverloads
     fun initialize(context: Context?, publishableKey: String? = null, options: RadarInitializeOptions = RadarInitializeOptions()) {
         if (context == null) {
             return
@@ -462,8 +463,8 @@ object Radar {
             this.activity = context
         }
 
-        if (receiver != null) {
-            this.receiver = receiver
+        if (options.receiver != null) {
+            this.receiver = options.receiver
         }
 
         if (!this::logBuffer.isInitialized) {
