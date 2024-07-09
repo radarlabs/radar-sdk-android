@@ -46,7 +46,7 @@ class RadarTimeZone(
         private const val FIELD_DST_OFFSET = "dstOffset"
 
         @JvmStatic
-        fun fromJson(obj: JSONObject?): RadarTimezone? {
+        fun fromJson(obj: JSONObject?): RadarTimeZone? {
             if (obj == null) {
                 return null
             }
@@ -57,7 +57,7 @@ class RadarTimeZone(
             val utcOffset = obj.getInt("utcOffset")
             val dstOffset = obj.getInt("dstOffset")
 
-            return RadarTimezone(
+            return RadarTimeZone(
                 id,
                 name,
                 code,
