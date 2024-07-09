@@ -4,9 +4,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Represents a timezone.
+ * Represents a time zone.
  */
-class RadarTimezone(
+class RadarTimeZone(
     /**
      * 
      */
