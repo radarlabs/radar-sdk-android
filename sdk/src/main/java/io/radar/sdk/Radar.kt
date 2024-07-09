@@ -1469,6 +1469,8 @@ object Radar {
 
                     if (trackingOptions != null) {
                         Radar.startTracking(trackingOptions)
+                    } else if (!isTracking) {
+                        Radar.startTracking(RadarSettings.getRemoteTrackingOptions(context) ?: RadarSettings.getTrackingOptions(context))
                     }
 
                     // flush location update to generate events
