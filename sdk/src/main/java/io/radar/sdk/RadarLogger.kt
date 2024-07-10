@@ -60,6 +60,10 @@ internal class RadarLogger(
 
     @RequiresApi(Build.VERSION_CODES.R)
     fun logPastTermination(){
+        if (RadarSettings.getSdkConfiguration(this.context)?.lifecycleLogging == false) {
+            return
+        }
+
         val activityManager = this.context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val sharedPreferences = this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -93,15 +97,20 @@ internal class RadarLogger(
     }
 
     fun logBackgrounding() {
+        if (RadarSettings.getSdkConfiguration(this.context)?.lifecycleLogging == false) {
+            return
+        }
         val batteryLevel = this.getBatteryLevel()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         this.i("App entering background | at ${dateFormat.format(Date())} | with ${batteryLevel * 100}% battery")
     }
 
-     fun logResigningActive() {
+    fun logResigningActive() {
+        if (RadarSettings.getSdkConfiguration(this.context)?.lifecycleLogging == false) {
+            return
+        }
         val batteryLevel = this.getBatteryLevel()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         this.i("App resigning active | at ${dateFormat.format(Date())} | with ${batteryLevel * 100}% battery")
     }
-
 }
