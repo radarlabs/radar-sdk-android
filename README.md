@@ -23,6 +23,8 @@ See an example app in `example/`.
 
 To run the example app, clone this repository, add your publishable API key in `MainActivity.kt`, and build the app.
 
+Setup Radar public key check pre-commit hook with `cp -r hooks .git` to prevent accidental key leak when working with the Example app.
+
 ## Support
 
 Have questions? We're here to help! Email us at [support@radar.com](mailto:support@radar.com).
