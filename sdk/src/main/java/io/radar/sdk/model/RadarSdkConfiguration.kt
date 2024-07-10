@@ -12,14 +12,12 @@ import io.radar.sdk.RadarSettings
 internal data class RadarSdkConfiguration(
     val logLevel: Radar.RadarLogLevel,
     val startTrackingOnInitialize: Boolean,
-    val trackOnceOnInitialize: Boolean,
-    val trackOnceOnResume: Boolean,
+    val trackOnceOnAppOpen: Boolean,
 ) {
     companion object {
         private const val LOG_LEVEL = "logLevel"
         private const val START_TRACKING_ON_INITIALIZE = "startTrackingOnInitialize"
-        private const val TRACK_ONCE_ON_INITIALIZE = "trackOnceOnInitialize"
-        private const val TRACK_ONCE_ON_RESUME = "trackOnceOnResume"
+        private const val TRACK_ONCE_ON_APP_OPEN = "trackOnceOnAppOpen"
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration? {
             if (json == null) {
@@ -28,14 +26,12 @@ internal data class RadarSdkConfiguration(
 
             val logLevelString = json.optString(LOG_LEVEL)
             val startTrackingOnInitialize = json.optBoolean(START_TRACKING_ON_INITIALIZE)
-            val trackOnceOnInitialize = json.optBoolean(TRACK_ONCE_ON_INITIALIZE)
-            val trackOnceOnResume = json.optBoolean(TRACK_ONCE_ON_RESUME)
+            val trackOnceOnAppOpen = json.optBoolean(TRACK_ONCE_ON_APP_OPEN)
 
             return RadarSdkConfiguration(
                 if (!logLevelString.isNullOrEmpty()) Radar.RadarLogLevel.valueOf(logLevelString.uppercase()) else Radar.RadarLogLevel.INFO,
                 startTrackingOnInitialize,
-                trackOnceOnInitialize,
-                trackOnceOnResume,
+                trackOnceOnAppOpen,
             )
         }
 
@@ -52,8 +48,7 @@ internal data class RadarSdkConfiguration(
         return JSONObject().apply {
             putOpt(LOG_LEVEL, logLevel.toString().lowercase())
             putOpt(START_TRACKING_ON_INITIALIZE, startTrackingOnInitialize)
-            putOpt(TRACK_ONCE_ON_INITIALIZE, trackOnceOnInitialize)
-            putOpt(TRACK_ONCE_ON_RESUME, trackOnceOnResume)
+            putOpt(TRACK_ONCE_ON_APP_OPEN, trackOnceOnAppOpen)
         }
     }
 }

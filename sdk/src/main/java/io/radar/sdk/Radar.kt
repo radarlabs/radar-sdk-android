@@ -551,7 +551,7 @@ object Radar {
                 if (sdkConfiguration?.startTrackingOnInitialize == true && !RadarSettings.getTracking(context)) {
                     Radar.startTracking(Radar.getTrackingOptions())
                 }
-                if (sdkConfiguration?.trackOnceOnInitialize == true) {
+                if (sdkConfiguration?.trackOnceOnAppOpen == true) {
                     Radar.trackOnce()
                 }
             }
