@@ -267,13 +267,7 @@ class RadarTest {
         Radar.apiClient.apiHelper = apiHelperMock
         setUpLogConversionTest()
 
-        val options = RadarInitializeOptions(
-            userId = "initUserId",
-            metadata = JSONObject(mapOf(
-                "initMetaKey" to "initMetaValue"
-            ))
-        )
-        Radar.initialize(context, publishableKey, options)
+        Radar.initialize(context, publishableKey)
 
         Radar.locationManager.locationClient = locationClientMock
         Radar.locationManager.permissionsHelper = permissionsHelperMock
@@ -282,10 +276,6 @@ class RadarTest {
     @Test
     fun test_Radar_initialize() {
         assertEquals(publishableKey, RadarSettings.getPublishableKey(context))
-        assertEquals("initUserId", Radar.getUserId())
-        assertEquals(JSONObject(mapOf(
-            "initMetaKey" to "initMetaValue"
-        )).toString(), Radar.getMetadata().toString())
     }
 
     @Test
