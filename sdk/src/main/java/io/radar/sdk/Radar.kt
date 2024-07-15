@@ -437,22 +437,6 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
-    private lateinit var locationPermissionManager: RadarLocationPermissionManager
-
-    /**
-     * Used by React Native module to setup the activity.
-     */
-    @JvmStatic
-    fun onActivityCreate(activity: Activity, context: Context?) {
-        this.context = context ?: activity;
-        this.activity = activity;
-
-        val application = this.context as? Application
-        if (!this::locationPermissionManager.isInitialized) {
-            this.locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
-            application?.registerActivityLifecycleCallbacks(locationPermissionManager)
-        }
-    }
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -549,11 +533,6 @@ object Radar {
             RadarSettings.setSharing(this.context, false)
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
-
-        if (!this::locationPermissionManager.isInitialized) {
-            this.locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
-            application?.registerActivityLifecycleCallbacks(locationPermissionManager)
-        }
 
         val featureSettings = RadarSettings.getFeatureSettings(this.context)
         if (featureSettings.usePersistence) {
@@ -3123,39 +3102,6 @@ object Radar {
             })
         }
     }
-    /**
-     * Requests foreground location permissions.
-     */
-    @JvmStatic
-    fun requestForegroundLocationPermission() {
-        locationPermissionManager.requestForegroundLocationPermission()
-    }
-
-    /**
-     * Requests background location permissions.
-     */
-    @JvmStatic
-    fun requestBackgroundLocationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            locationPermissionManager.requestBackgroundLocationPermission()
-        }
-    }
-
-    /**
-     * @return A RadarPermissionStatus object with the current location permissions status.
-     */
-    @JvmStatic
-    fun getLocationPermissionStatus():RadarLocationPermissionStatus {
-        return locationPermissionManager.getLocationPermissionStatus()
-    }
-
-    /**
-     * Directs the user to the app settings to enable location permissions.
-     */
-    @JvmStatic
-    fun openAppSettings() {
-        locationPermissionManager.openAppSettings()
-    }
 
     /**
      * Sets the log level for debug logs.
@@ -3496,11 +3442,6 @@ object Radar {
         logger.i("📍️ Radar token updated | passed = ${token.passed}; expiresAt = ${token.expiresAt}; expiresIn = ${token.expiresIn}; token = ${token.token}")
     }
 
-    internal fun sendLocationPermissionStatus(status: RadarLocationPermissionStatus) {
-        receiver?.onLocationPermissionStatusUpdated(context, status)
-
-        logger.i("📍️ Radar location permission updated | status = $status")
-    }
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {
         this.logBuffer.setPersistentLogFeatureFlag(enabled)

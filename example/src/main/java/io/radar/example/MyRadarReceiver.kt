@@ -11,8 +11,6 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarReceiver
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
-import io.radar.sdk.model.RadarLocationPermissionStatus
-import kotlin.random.Random
 
 class MyRadarReceiver : RadarReceiver() {
 
@@ -68,15 +66,6 @@ class MyRadarReceiver : RadarReceiver() {
 
     override fun onLog(context: Context, message: String) {
         notify(context, message)
-    }
-
-    override fun onLocationPermissionStatusUpdated(
-        context: Context,
-        status: RadarLocationPermissionStatus
-    ) {
-        val statusString = RadarLocationPermissionStatus.stringForLocationPermissionState(status.status)
-        val body = "Location permission status updated: ${statusString}"
-        notify(context, body)
     }
 
 }
