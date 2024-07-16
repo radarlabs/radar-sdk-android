@@ -32,21 +32,20 @@ internal data class RadarSdkConfiguration(
         private const val START_TRACKING_ON_INITIALIZE = "startTrackingOnInitialize"
         private const val TRACK_ONCE_ON_APP_OPEN = "trackOnceOnAppOpen"
 
-        fun fromJson(json: JSONObject?): RadarSdkConfiguration? {
-            if (json == null) {
-                return null
-            }
+        fun fromJson(json: JSONObject?): RadarSdkConfiguration {
+            // set json as empty object if json is null, which uses fallback values
+            val config = json ?: JSONObject();
 
             return RadarSdkConfiguration(
-                json.optInt(MAX_CONCURRENT_JOBS, DEFAULT_MAX_CONCURRENT_JOBS),
-                json.optBoolean(SCHEDULER_REQUIRES_NETWORK, false),
-                json.optBoolean(USE_PERSISTENCE, false),
-                json.optBoolean(EXTEND_FLUSH_REPLAYS, false),
-                json.optBoolean(USE_LOG_PERSISTENCE, false),
-                json.optBoolean(USE_RADAR_MODIFIED_BEACON, false),
-                Radar.RadarLogLevel.valueOf(json.optString(LOG_LEVEL, "info").uppercase()),
-                json.optBoolean(START_TRACKING_ON_INITIALIZE, false),
-                json.optBoolean(TRACK_ONCE_ON_APP_OPEN, false),
+                config.optInt(MAX_CONCURRENT_JOBS, DEFAULT_MAX_CONCURRENT_JOBS),
+                config.optBoolean(SCHEDULER_REQUIRES_NETWORK, false),
+                config.optBoolean(USE_PERSISTENCE, false),
+                config.optBoolean(EXTEND_FLUSH_REPLAYS, false),
+                config.optBoolean(USE_LOG_PERSISTENCE, false),
+                config.optBoolean(USE_RADAR_MODIFIED_BEACON, false),
+                Radar.RadarLogLevel.valueOf(config.optString(LOG_LEVEL, "info").uppercase()),
+                config.optBoolean(START_TRACKING_ON_INITIALIZE, false),
+                config.optBoolean(TRACK_ONCE_ON_APP_OPEN, false),
             )
         }
 

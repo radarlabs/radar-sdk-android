@@ -3,8 +3,6 @@ package io.radar.sdk
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import io.radar.sdk.model.RadarConfig
-import io.radar.sdk.model.RadarFeatureSettings
 import io.radar.sdk.model.RadarSdkConfiguration
 import org.json.JSONObject
 import java.text.DecimalFormat
@@ -28,7 +26,6 @@ internal object RadarSettings {
     private const val KEY_REMOTE_TRACKING_OPTIONS = "remote_tracking_options"
     private const val KEY_FOREGROUND_SERVICE = "foreground_service"
     private const val KEY_NOTIFICATION_OPTIONS = "notification_options"
-    private const val KEY_FEATURE_SETTINGS = "feature_settings"
     private const val KEY_CLIENT_SDK_CONFIGURATION = "client_sdk_configuration"
     private const val KEY_SDK_CONFIGURATION = "sdk_configuration"
     private const val KEY_TRIP_OPTIONS = "trip_options"
@@ -85,7 +82,7 @@ internal object RadarSettings {
         val timestampSeconds = System.currentTimeMillis() / 1000
         val sessionIdSeconds = getSharedPreferences(context).getLong(KEY_SESSION_ID, 0)
 
-        val settings = RadarSettings.getFeatureSettings(context)
+        val settings = getSdkConfiguration(context)
         if (settings.extendFlushReplays) {
             Radar.logger.d("Flushing replays from updateSessionId()")
             Radar.flushReplays()
@@ -296,34 +293,19 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putString(KEY_TRIP_OPTIONS, optionsJson) }
     }
 
-    fun setFeatureSettings(context: Context, featureSettings: RadarFeatureSettings) {
-        Radar.setLogPersistenceFeatureFlag(featureSettings.useLogPersistence)
-        val optionsJson = featureSettings.toJson().toString()
-
-        getSharedPreferences(context).edit { putString(KEY_FEATURE_SETTINGS, optionsJson) }
-    }
-
-    fun getFeatureSettings(context: Context): RadarFeatureSettings {
-        val sharedPrefFeatureSettings = getSharedPreferences(context).getString(KEY_FEATURE_SETTINGS, null)
-        try {
-            Radar.logger.d("Getting feature settings | featureSettings = $sharedPrefFeatureSettings")
-        } catch (e: Exception) {
-
-        }
-        val optionsJson = sharedPrefFeatureSettings ?: return RadarFeatureSettings.default()
-        return RadarFeatureSettings.fromJson(JSONObject(optionsJson))
-    }
-
     fun setSdkConfiguration(context: Context, configuration: RadarSdkConfiguration?) {
         Radar.logger.d("set SDK Configuration | sdkConfiguration = $configuration")
         if (configuration != null) {
+            Radar.setLogPersistenceFeatureFlag(configuration.useLogPersistence)
             setLogLevel(context, configuration.logLevel)
+            val sdkConfigurationString = configuration.toJson().toString()
+            getSharedPreferences(context).edit { putString(KEY_SDK_CONFIGURATION, sdkConfigurationString) }
+        } else {
+            getSharedPreferences(context).edit { remove(KEY_SDK_CONFIGURATION) }
         }
-        val sdkConfigurationString = configuration?.toJson()?.toString()
-        getSharedPreferences(context).edit { putString(KEY_SDK_CONFIGURATION, sdkConfigurationString) }
     }
 
-    fun getSdkConfiguration(context: Context): RadarSdkConfiguration? {
+    fun getSdkConfiguration(context: Context): RadarSdkConfiguration {
         val sdkConfigurationString = getSharedPreferences(context).getString(KEY_SDK_CONFIGURATION, null)
         val sdkConfigurationJSON = sdkConfigurationString?.let { JSONObject(it) }
         return RadarSdkConfiguration.fromJson(sdkConfigurationJSON)
