@@ -79,7 +79,7 @@ internal class RadarLogger(
                     break
                 }
             }
-        } 
+        }
     }
 
     fun getBatteryLevel(): Float {

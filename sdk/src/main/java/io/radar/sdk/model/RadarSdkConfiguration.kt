@@ -18,8 +18,7 @@ internal data class RadarSdkConfiguration(
     val useRadarModifiedBeacon: Boolean,
     val logLevel: Radar.RadarLogLevel,
     val startTrackingOnInitialize: Boolean,
-    val trackOnceOnInitialize: Boolean,
-    val trackOnceOnResume: Boolean,
+    val trackOnceOnAppOpen: Boolean,
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -31,8 +30,7 @@ internal data class RadarSdkConfiguration(
         private const val USE_RADAR_MODIFIED_BEACON = "useRadarModifiedBeacon"
         private const val LOG_LEVEL = "logLevel"
         private const val START_TRACKING_ON_INITIALIZE = "startTrackingOnInitialize"
-        private const val TRACK_ONCE_ON_INITIALIZE = "trackOnceOnInitialize"
-        private const val TRACK_ONCE_ON_RESUME = "trackOnceOnResume"
+        private const val TRACK_ONCE_ON_APP_OPEN = "trackOnceOnAppOpen"
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration? {
             if (json == null) {
@@ -48,8 +46,7 @@ internal data class RadarSdkConfiguration(
                 json.optBoolean(USE_RADAR_MODIFIED_BEACON, false),
                 Radar.RadarLogLevel.valueOf(json.optString(LOG_LEVEL, "info").uppercase()),
                 json.optBoolean(START_TRACKING_ON_INITIALIZE, false),
-                json.optBoolean(TRACK_ONCE_ON_INITIALIZE, false),
-                false,
+                json.optBoolean(TRACK_ONCE_ON_APP_OPEN, false),
             )
         }
 
@@ -66,8 +63,7 @@ internal data class RadarSdkConfiguration(
         return JSONObject().apply {
             putOpt(LOG_LEVEL, logLevel.toString().lowercase())
             putOpt(START_TRACKING_ON_INITIALIZE, startTrackingOnInitialize)
-            putOpt(TRACK_ONCE_ON_INITIALIZE, trackOnceOnInitialize)
-            putOpt(TRACK_ONCE_ON_RESUME, trackOnceOnResume)
+            putOpt(TRACK_ONCE_ON_APP_OPEN, trackOnceOnAppOpen)
         }
     }
 }
