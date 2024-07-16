@@ -273,6 +273,13 @@ object Radar {
         )
     }
 
+    // interface RadarIndoorSurveyCallback {
+    //     fun onComplete(
+    //         status: RadarStatus,
+    //         indoorsPayload: String
+    //     )
+    // }
+
     /**
      * The status types for a request. See [](https://radar.com/documentation/sdk/android#foreground-tracking).
      */
@@ -431,6 +438,7 @@ object Radar {
     private var verifiedReceiver: RadarVerifiedReceiver? = null
     internal lateinit var logger: RadarLogger
     internal lateinit var apiClient: RadarApiClient
+    internal lateinit var indoorSurveyManager: RadarIndoorSurveyManager
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var beaconManager: RadarBeaconManager
     private lateinit var logBuffer: RadarLogBuffer
@@ -542,6 +550,10 @@ object Radar {
             this.logger.d("Using Google location services")
         } else if (provider == RadarLocationServicesProvider.HUAWEI) {
             this.logger.d("Using Huawei location services")
+        }
+
+        if (!this::indoorSurveyManager.isInitialized) {
+            this.indoorSurveyManager = RadarIndoorSurveyManager(this.context, logger, locationManager, apiClient)
         }
 
         val application = this.context as? Application
@@ -825,8 +837,8 @@ object Radar {
                     return
                 }
 
-                val callTrackApi = { beacons: Array<RadarBeacon>? ->
-                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, beacons, callback = object : RadarApiClient.RadarTrackApiCallback {
+                val callTrackApi = { beacons: Array<RadarBeacon>?, indoorsPayload: String ->
+                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, beacons, indoorsPayload, callback = object : RadarApiClient.RadarTrackApiCallback {
                         override fun onComplete(
                             status: RadarStatus,
                             res: JSONObject?,
@@ -846,45 +858,58 @@ object Radar {
                     })
                 }
 
-                if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                        override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
-                             if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
-
-                                beaconManager.rangeBeaconUUIDs(uuids, uids, false, object : RadarBeaconCallback {
-                                    override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
-                                        if (status != RadarStatus.SUCCESS || beacons == null) {
-                                            callTrackApi(null)
-
-                                            return
-                                        }
-
-                                        callTrackApi(beacons)
-                                    }
-                                })
-                            } else if (beacons != null) {
-                                beaconManager.startMonitoringBeacons(beacons)
-
-                                beaconManager.rangeBeacons(beacons, false, object : RadarBeaconCallback {
-                                    override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
-                                        if (status != RadarStatus.SUCCESS || beacons == null) {
-                                            callTrackApi(null)
-
-                                            return
-                                        }
-
-                                        callTrackApi(beacons)
-                                    }
-                                })
-                            } else {
-                                callTrackApi(arrayOf());
-                            }
+                logger.i("calling RadarIndoorsSurvey", RadarLogType.SDK_CALL)
+                // todo: call indoors survey here
+                indoorSurveyManager.start("WHEREAMI", 10, location, true, callback = object : RadarIndoorSurveyManager.RadarIndoorSurveyCallback {
+                    override fun onComplete(status: RadarStatus, indoorsPayload: String) {
+                        if (status != RadarStatus.SUCCESS) {
+                            callTrackApi(null, "")
+                        } else {
+                            callTrackApi(null, indoorsPayload)
                         }
-                    }, false)
-                } else {
-                    callTrackApi(null)
-                }
+                    }
+                })
+
+
+                // if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                //     apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                //         override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
+                //              if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                //                 beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
+
+                //                 beaconManager.rangeBeaconUUIDs(uuids, uids, false, object : RadarBeaconCallback {
+                //                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                //                         if (status != RadarStatus.SUCCESS || beacons == null) {
+                //                             callTrackApi(null)
+
+                //                             return
+                //                         }
+
+                //                         callTrackApi(beacons)
+                //                     }
+                //                 })
+                //             } else if (beacons != null) {
+                //                 beaconManager.startMonitoringBeacons(beacons)
+
+                //                 beaconManager.rangeBeacons(beacons, false, object : RadarBeaconCallback {
+                //                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                //                         if (status != RadarStatus.SUCCESS || beacons == null) {
+                //                             callTrackApi(null)
+
+                //                             return
+                //                         }
+
+                //                         callTrackApi(beacons)
+                //                     }
+                //                 })
+                //             } else {
+                //                 callTrackApi(arrayOf());
+                //             }
+                //         }
+                //     }, false)
+                // } else {
+                //     callTrackApi(null)
+                // }
             }
         })
     }

@@ -111,7 +111,12 @@ data class RadarTrackingOptions(
     /**
      * Determines whether to monitor beacons.
      */
-    var beacons: Boolean
+    var beacons: Boolean,
+
+    /**
+     * Determines whether to do an indoor survey
+     */
+    var doIndoorsSurvey: Boolean
 ) {
 
     /**
@@ -377,7 +382,8 @@ data class RadarTrackingOptions(
             syncGeofences = true,
             syncGeofencesLimit = 0,
             foregroundServiceEnabled = true,
-            beacons = false
+            beacons = false,
+            doIndoorsSurvey = false
         )
 
         /**
@@ -406,7 +412,8 @@ data class RadarTrackingOptions(
             syncGeofences = true,
             syncGeofencesLimit = 10,
             foregroundServiceEnabled = false,
-            beacons = false
+            beacons = false,
+            doIndoorsSurvey = false
         )
 
         /**
@@ -435,7 +442,8 @@ data class RadarTrackingOptions(
             syncGeofences = true,
             syncGeofencesLimit = 10,
             foregroundServiceEnabled = false,
-            beacons = false
+            beacons = false,
+            doIndoorsSurvey = false
         )
 
         internal const val KEY_DESIRED_STOPPED_UPDATE_INTERVAL = "desiredStoppedUpdateInterval"
@@ -458,6 +466,7 @@ data class RadarTrackingOptions(
         internal const val KEY_SYNC_GEOFENCES_LIMIT = "syncGeofencesLimit"
         internal const val KEY_FOREGROUND_SERVICE_ENABLED = "foregroundServiceEnabled"
         internal const val KEY_BEACONS = "beacons"
+        internal const val KEY_DO_INDOORS_SURVEY = "doIndoorsSurvey"
 
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTrackingOptions {
@@ -517,7 +526,8 @@ data class RadarTrackingOptions(
                 syncGeofences = obj.optBoolean(KEY_SYNC_GEOFENCES),
                 syncGeofencesLimit = obj.optInt(KEY_SYNC_GEOFENCES_LIMIT, 10),
                 foregroundServiceEnabled = obj.optBoolean(KEY_FOREGROUND_SERVICE_ENABLED, false),
-                beacons = obj.optBoolean(KEY_BEACONS)
+                beacons = obj.optBoolean(KEY_BEACONS),
+                doIndoorsSurvey = obj.optBoolean(KEY_DO_INDOORS_SURVEY, false)
             )
         }
     }
@@ -544,6 +554,7 @@ data class RadarTrackingOptions(
         obj.put(KEY_SYNC_GEOFENCES_LIMIT, syncGeofencesLimit)
         obj.put(KEY_FOREGROUND_SERVICE_ENABLED, foregroundServiceEnabled)
         obj.put(KEY_BEACONS, beacons)
+        obj.put(KEY_DO_INDOORS_SURVEY, doIndoorsSurvey)
         return obj
     }
 

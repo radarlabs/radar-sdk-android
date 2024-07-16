@@ -231,7 +231,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, callback: RadarTrackApiCallback? = null) {
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, indoorsWhereAmIScan: String? = null, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -340,6 +340,9 @@ internal class RadarApiClient(
                 params.putOpt("integrityException", integrityException)
                 params.putOpt("sharing", RadarUtils.isScreenSharing(context))
                 params.putOpt("encrypted", encrypted)
+            }
+            if (indoorsWhereAmIScan != null) {
+                params.putOpt("indoorsWhereAmIScan", indoorsWhereAmIScan)
             }
             params.putOpt("appId", context.packageName)
         } catch (e: JSONException) {

@@ -98,6 +98,7 @@ internal class RadarVerificationManager(
                                         Radar.RadarLocationSource.FOREGROUND_LOCATION,
                                         false,
                                         beacons,
+                                        null,
                                         true,
                                         integrityToken,
                                         integrityException,

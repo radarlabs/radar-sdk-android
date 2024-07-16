@@ -166,6 +166,8 @@ class RadarEvent(
         USER_ARRIVED_AT_WRONG_TRIP_DESTINATION,
         /** `user.failed_fraud` */
         USER_FAILED_FRAUD,
+        /** `user.indoor_location` */
+        USER_INDOOR_LOCATION
     }
 
     /**
