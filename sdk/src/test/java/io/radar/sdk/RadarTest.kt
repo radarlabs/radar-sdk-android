@@ -1549,7 +1549,7 @@ class RadarTest {
 
     @Test
     fun test_Radar_setSdkConfiguration() {
-        val sdkConfiguration = RadarSdkConfiguration(Radar.RadarLogLevel.WARNING, true, true)
+        val sdkConfiguration = RadarSdkConfiguration(1, false, false, false, false, false, Radar.RadarLogLevel.WARNING, true, true)
 
         RadarSettings.setUserDebug(context, false)
         RadarSettings.setSdkConfiguration(context, sdkConfiguration)
