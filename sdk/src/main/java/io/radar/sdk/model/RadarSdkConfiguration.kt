@@ -10,12 +10,25 @@ import io.radar.sdk.RadarSettings
  * Represents server-side configuration settings.
  */
 internal data class RadarSdkConfiguration(
+    val maxConcurrentJobs: Int,
+    val schedulerRequiresNetwork: Boolean,
+    val usePersistence: Boolean,
+    val extendFlushReplays: Boolean,
+    val useLogPersistence: Boolean,
+    val useRadarModifiedBeacon: Boolean,
     val logLevel: Radar.RadarLogLevel,
     val startTrackingOnInitialize: Boolean,
     val trackOnceOnInitialize: Boolean,
     val trackOnceOnResume: Boolean,
 ) {
     companion object {
+        private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
+        private const val DEFAULT_MAX_CONCURRENT_JOBS = 1
+        private const val USE_PERSISTENCE = "usePersistence"
+        private const val SCHEDULER_REQUIRES_NETWORK = "networkAny"
+        private const val EXTEND_FLUSH_REPLAYS = "extendFlushReplays"
+        private const val USE_LOG_PERSISTENCE = "useLogPersistence"
+        private const val USE_RADAR_MODIFIED_BEACON = "useRadarModifiedBeacon"
         private const val LOG_LEVEL = "logLevel"
         private const val START_TRACKING_ON_INITIALIZE = "startTrackingOnInitialize"
         private const val TRACK_ONCE_ON_INITIALIZE = "trackOnceOnInitialize"
@@ -26,16 +39,17 @@ internal data class RadarSdkConfiguration(
                 return null
             }
 
-            val logLevelString = json.optString(LOG_LEVEL)
-            val startTrackingOnInitialize = json.optBoolean(START_TRACKING_ON_INITIALIZE)
-            val trackOnceOnInitialize = json.optBoolean(TRACK_ONCE_ON_INITIALIZE)
-            val trackOnceOnResume = json.optBoolean(TRACK_ONCE_ON_RESUME)
-
             return RadarSdkConfiguration(
-                if (!logLevelString.isNullOrEmpty()) Radar.RadarLogLevel.valueOf(logLevelString.uppercase()) else Radar.RadarLogLevel.INFO,
-                startTrackingOnInitialize,
-                trackOnceOnInitialize,
-                trackOnceOnResume,
+                json.optInt(MAX_CONCURRENT_JOBS, DEFAULT_MAX_CONCURRENT_JOBS),
+                json.optBoolean(SCHEDULER_REQUIRES_NETWORK, false),
+                json.optBoolean(USE_PERSISTENCE, false),
+                json.optBoolean(EXTEND_FLUSH_REPLAYS, false),
+                json.optBoolean(USE_LOG_PERSISTENCE, false),
+                json.optBoolean(USE_RADAR_MODIFIED_BEACON, false),
+                Radar.RadarLogLevel.valueOf(json.optString(LOG_LEVEL, "info").uppercase()),
+                json.optBoolean(START_TRACKING_ON_INITIALIZE, false),
+                json.optBoolean(TRACK_ONCE_ON_INITIALIZE, false),
+                false,
             )
         }
 

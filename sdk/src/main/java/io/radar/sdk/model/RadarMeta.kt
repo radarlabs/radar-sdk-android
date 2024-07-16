@@ -11,12 +11,10 @@ internal data class RadarMeta(
     companion object {
         private const val TRACKING_OPTIONS = "trackingOptions"
         private const val FEATURE_SETTINGS = "featureSettings"
-        private const val SDK_CONFIGURATION = "sdkConfiguration"
 
         fun fromJson(meta: JSONObject?): RadarMeta {
             val rawOptions = meta?.optJSONObject(TRACKING_OPTIONS)
             val rawFeatureSettings = meta?.optJSONObject(FEATURE_SETTINGS)
-            val rawSdkConfiguration = meta?.optJSONObject(SDK_CONFIGURATION)
             
             var trackingOptions: RadarTrackingOptions? = null
             if (rawOptions != null) {
@@ -25,7 +23,6 @@ internal data class RadarMeta(
             return RadarMeta(
                 trackingOptions,
                 RadarFeatureSettings.fromJson(rawFeatureSettings),
-                RadarSdkConfiguration.fromJson(rawSdkConfiguration),
             )
         }
     }

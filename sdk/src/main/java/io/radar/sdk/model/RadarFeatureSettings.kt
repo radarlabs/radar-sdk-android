@@ -42,8 +42,8 @@ internal data class RadarFeatureSettings(
                 DEFAULT_MAX_CONCURRENT_JOBS,
                 false, // networkAny
                 false, // usePersistence
-                false,  // extendFlushReplays
-                false,  // useLogPersistence
+                false, // extendFlushReplays
+                false, // useLogPersistence
                 false, // useRadarModifiedBeacon
             )
         }
