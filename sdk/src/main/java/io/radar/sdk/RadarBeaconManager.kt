@@ -69,7 +69,7 @@ internal class RadarBeaconManager(
     }
 
     fun startMonitoringBeacons(beacons: Array<RadarBeacon>) {
-        if (RadarSettings.getFeatureSettings(context).useRadarModifiedBeacon) {
+        if (RadarSettings.getSdkConfiguration(context).useRadarModifiedBeacon) {
             return
         }
 
@@ -149,7 +149,7 @@ internal class RadarBeaconManager(
     }
 
     fun startMonitoringBeaconUUIDs(beaconUUIDs: Array<String>?, beaconUIDs: Array<String>?) {
-        if (RadarSettings.getFeatureSettings(context).useRadarModifiedBeacon) {
+        if (RadarSettings.getSdkConfiguration(context).useRadarModifiedBeacon) {
             return
         }
 
@@ -256,7 +256,7 @@ internal class RadarBeaconManager(
     }
 
     fun stopMonitoringBeacons() {
-        if (RadarSettings.getFeatureSettings(context).useRadarModifiedBeacon) {
+        if (RadarSettings.getSdkConfiguration(context).useRadarModifiedBeacon) {
             return
         }
 

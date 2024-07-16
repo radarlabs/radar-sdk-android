@@ -28,8 +28,8 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
             buffer.removeFirst()
         }
         buffer.offer(RadarReplay(replayParams))
-        val featureSettings = RadarSettings.getFeatureSettings(context)
-        if (featureSettings.usePersistence) {
+        val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+        if (sdkConfiguration.usePersistence) {
             // if buffer length is above 50, remove every fifth replay from the persisted buffer
             if (buffer.size > 50) {
                 val prunedBuffer = buffer.filterIndexed { index, _ -> index % 5 != 0 }

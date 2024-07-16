@@ -118,7 +118,7 @@ internal class RadarLocationManager(
         this.started = false
         RadarSettings.setTracking(context, false)
         this.updateTracking()
-        val settings = RadarSettings.getFeatureSettings(context)
+        val settings = RadarSettings.getSdkConfiguration(context)
         if (settings.extendFlushReplays) {
             Radar.flushReplays()
         }

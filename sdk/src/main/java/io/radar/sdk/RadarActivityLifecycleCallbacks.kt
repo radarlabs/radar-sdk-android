@@ -54,19 +54,18 @@ internal class RadarActivityLifecycleCallbacks(
                         override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
                             if (status == Radar.RadarStatus.SUCCESS) {
                                 Radar.locationManager.updateTrackingFromMeta(config.meta)
-                                RadarSettings.setFeatureSettings(activity.applicationContext, config.meta.featureSettings)
                                 RadarSettings.setSdkConfiguration(activity.applicationContext, config.meta.sdkConfiguration)
                             }
 
                             val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
-                            if (sdkConfiguration?.trackOnceOnAppOpen == true) {
+                            if (sdkConfiguration.trackOnceOnAppOpen) {
                                 Radar.trackOnce()
                             }
                         }
                     })
                 } else {
                     val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
-                    if (sdkConfiguration?.trackOnceOnAppOpen == true) {
+                    if (sdkConfiguration.trackOnceOnAppOpen) {
                         Radar.trackOnce()
                     }
                 }

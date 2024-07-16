@@ -546,7 +546,7 @@ object Radar {
             application?.registerActivityLifecycleCallbacks(locationPermissionManager)
         }
 
-        val featureSettings = RadarSettings.getFeatureSettings(this.context)
+        val featureSettings = RadarSettings.getSdkConfiguration(this.context)
         if (featureSettings.usePersistence) {
             Radar.loadReplayBufferFromSharedPreferences()
         }
@@ -555,15 +555,14 @@ object Radar {
             override fun onComplete(status: RadarStatus, config: RadarConfig) {
                 if (status == RadarStatus.SUCCESS) {
                     locationManager.updateTrackingFromMeta(config.meta)
-                    RadarSettings.setFeatureSettings(context, config.meta.featureSettings)
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
                 }
 
                 val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
-                if (sdkConfiguration?.startTrackingOnInitialize == true && !RadarSettings.getTracking(context)) {
+                if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(context)) {
                     Radar.startTracking(Radar.getTrackingOptions())
                 }
-                if (sdkConfiguration?.trackOnceOnAppOpen == true) {
+                if (sdkConfiguration.trackOnceOnAppOpen) {
                     Radar.trackOnce()
                 }
             }
