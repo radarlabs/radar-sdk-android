@@ -60,6 +60,11 @@ internal data class RadarSdkConfiguration(
 
     fun toJson(): JSONObject {
         return JSONObject().apply {
+            putOpt(MAX_CONCURRENT_JOBS, maxConcurrentJobs)
+            putOpt(USE_PERSISTENCE, usePersistence)
+            putOpt(EXTEND_FLUSH_REPLAYS, extendFlushReplays)
+            putOpt(USE_LOG_PERSISTENCE, useLogPersistence)
+            putOpt(USE_RADAR_MODIFIED_BEACON, useRadarModifiedBeacon)
             putOpt(LOG_LEVEL, logLevel.toString().lowercase())
             putOpt(START_TRACKING_ON_INITIALIZE, startTrackingOnInitialize)
             putOpt(TRACK_ONCE_ON_APP_OPEN, trackOnceOnAppOpen)
