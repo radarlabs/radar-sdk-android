@@ -48,7 +48,7 @@ class RadarSdkConfigurationTest {
     @Test
     fun testToJson() {
         assertEquals(
-            jsonString.removeWhitespace(),
+            JSONObject(jsonString).toString(),
             RadarSdkConfiguration(
                 maxConcurrentJobs,
                 requiresNetwork,
@@ -59,7 +59,7 @@ class RadarSdkConfigurationTest {
                 logLevel,
                 startTrackingOnInitialize,
                 trackOnceOnAppOpen,
-            ).toJson().toString().removeWhitespace()
+            ).toJson().toString()
         )
     }
 

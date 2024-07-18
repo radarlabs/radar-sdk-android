@@ -60,6 +60,7 @@ internal data class RadarSdkConfiguration(
 
     fun toJson(): JSONObject {
         return JSONObject().apply {
+            putOpt(SCHEDULER_REQUIRES_NETWORK, schedulerRequiresNetwork)
             putOpt(MAX_CONCURRENT_JOBS, maxConcurrentJobs)
             putOpt(USE_PERSISTENCE, usePersistence)
             putOpt(EXTEND_FLUSH_REPLAYS, extendFlushReplays)
