@@ -34,7 +34,7 @@ internal class RadarSimpleLogBuffer(override val context: Context): RadarLogBuff
     private val logBuffer = LinkedBlockingDeque<RadarLog>()
 
     init {
-        persistentLogFeatureFlag = RadarSettings.getFeatureSettings(context).useLogPersistence
+        persistentLogFeatureFlag = RadarSettings.getSdkConfiguration(context).useLogPersistence
         val file = File(context.filesDir, logFileDir)
         if (!file.exists()) {
             file.mkdir()

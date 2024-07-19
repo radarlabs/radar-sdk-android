@@ -1,0 +1,17 @@
+{
+    "meta": {
+        "code": 200,
+        "featureSettings": {
+            "useLocationMetadata": false,
+            "useRadarKVStore": true,
+            "useRadarModifiedBeacon": true,
+            "radarLowPowerManagerDesiredAccuracy": 3000,
+            "radarLowPowerManagerDistanceFilter": 3000
+        },
+        "sdkConfiguration": {
+            "logLevel": "info",
+            "startTrackingOnInitialize": true,
+            "trackOnceOnAppOpen": true
+        }
+    }
+}

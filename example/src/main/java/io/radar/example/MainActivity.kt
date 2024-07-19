@@ -14,6 +14,7 @@ import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
 import java.util.EnumSet
+import androidx.core.content.edit
 
 class MainActivity : AppCompatActivity() {
 

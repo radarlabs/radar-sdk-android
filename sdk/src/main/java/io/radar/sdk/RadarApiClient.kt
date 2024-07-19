@@ -14,6 +14,7 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
+import java.net.URLEncoder
 
 internal class RadarApiClient(
     private val context: Context,
@@ -130,6 +131,8 @@ internal class RadarApiClient(
         if (usage != null) {
             queryParams.append("&usage=${usage}")
         }
+        val clientSdkConfiguration = RadarSettings.getClientSdkConfiguration(context).toString()
+        queryParams.append("&clientSdkConfiguration=${URLEncoder.encode(clientSdkConfiguration, "utf-8")}")
 
         val path = "v1/config?${queryParams}"
         val headers = headers(publishableKey)

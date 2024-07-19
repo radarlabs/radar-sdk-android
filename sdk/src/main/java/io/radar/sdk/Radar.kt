@@ -8,6 +8,7 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
+import androidx.core.content.edit
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.util.RadarLogBuffer
@@ -463,7 +464,12 @@ object Radar {
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false) {
+    fun initialize(
+        context: Context?, 
+        publishableKey: String? = null, 
+        receiver: RadarReceiver? = null, 
+        provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, 
+        fraud: Boolean = false) {
         if (context == null) {
             return
         }
@@ -534,16 +540,26 @@ object Radar {
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
 
-        val featureSettings = RadarSettings.getFeatureSettings(this.context)
-        if (featureSettings.usePersistence) {
+        val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
+        if (sdkConfiguration.usePersistence) {
             Radar.loadReplayBufferFromSharedPreferences()
         }
 
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: RadarStatus, config: RadarConfig) {
-                locationManager.updateTrackingFromMeta(config?.meta)
-                RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
+                if (status == RadarStatus.SUCCESS) {
+                    locationManager.updateTrackingFromMeta(config.meta)
+                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                }
+
+                val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+                if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(context)) {
+                    Radar.startTracking(Radar.getTrackingOptions())
+                }
+                if (sdkConfiguration.trackOnceOnAppOpen) {
+                    Radar.trackOnce()
+                }
             }
         })
 
@@ -3113,8 +3129,18 @@ object Radar {
         if (!initialized) {
             return
         }
-
-        RadarSettings.setLogLevel(context, level)
+        // update clientSdkConfiguration if the new level is different, otherwise no-op
+        val sdkConfiguration = RadarSettings.getClientSdkConfiguration(context)
+        if (sdkConfiguration.optString("logLevel") == level.toString().lowercase()) {
+            return;
+        }
+        sdkConfiguration.put("logLevel", level.toString().lowercase())
+        RadarSettings.setClientSdkConfiguration(context, sdkConfiguration)
+        // if the current log level is already the target log level, no-op
+        if (RadarSettings.getLogLevel(context) == level) {
+            return;
+        }
+        RadarSdkConfiguration.updateSdkConfigurationFromServer(context)
     }
 
     /**
