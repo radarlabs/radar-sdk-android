@@ -1,7 +1,9 @@
 package io.radar.sdk
 
 import android.annotation.SuppressLint
+import android.annotation.TargetApi
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
@@ -14,6 +16,7 @@ import android.location.Location
 import android.os.Handler
 import android.os.Build
 import android.os.Looper
+import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarBeaconCallback
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarBeacon
@@ -23,6 +26,7 @@ import java.util.*
 import java.util.zip.GZIPOutputStream
 
 @SuppressLint("MissingPermission")
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarIndoorSurveyManager(
     private val context: Context,
     private val logger: RadarLogger,
@@ -106,7 +110,7 @@ internal class RadarIndoorSurveyManager(
         logger.d("Kicking off BluetoothLeScanner")
         logger.d("time: ${System.currentTimeMillis() / 1000.0}")
 
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        bluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
         bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
         startScanning()
 

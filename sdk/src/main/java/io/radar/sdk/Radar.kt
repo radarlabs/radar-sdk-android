@@ -552,7 +552,7 @@ object Radar {
             this.logger.d("Using Huawei location services")
         }
 
-        if (!this::indoorSurveyManager.isInitialized) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !this::indoorSurveyManager.isInitialized) {
             this.indoorSurveyManager = RadarIndoorSurveyManager(this.context, logger, locationManager, apiClient)
         }
 
@@ -860,15 +860,19 @@ object Radar {
 
                 logger.i("calling RadarIndoorsSurvey", RadarLogType.SDK_CALL)
                 // todo: call indoors survey here
-                indoorSurveyManager.start("WHEREAMI", 10, location, true, callback = object : RadarIndoorSurveyManager.RadarIndoorSurveyCallback {
-                    override fun onComplete(status: RadarStatus, indoorsPayload: String) {
-                        if (status != RadarStatus.SUCCESS) {
-                            callTrackApi(null, "")
-                        } else {
-                            callTrackApi(null, indoorsPayload)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    indoorSurveyManager.start("WHEREAMI", 10, location, true, callback = object : RadarIndoorSurveyManager.RadarIndoorSurveyCallback {
+                        override fun onComplete(status: RadarStatus, payload: String) {
+                            if (status != RadarStatus.SUCCESS) {
+                                callTrackApi(null, "")
+                            } else {
+                                callTrackApi(null, payload)
+                            }
                         }
-                    }
-                })
+                    })
+                } else {
+                    callTrackApi(null, "")
+                }
 
 
                 // if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
