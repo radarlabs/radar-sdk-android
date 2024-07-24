@@ -16,6 +16,7 @@ import android.location.Location
 import android.os.Handler
 import android.os.Build
 import android.os.Looper
+import android.util.Base64
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarBeaconCallback
 import io.radar.sdk.Radar.RadarStatus
@@ -135,7 +136,7 @@ internal class RadarIndoorSurveyManager(
         val compressedData = gzip(payload)
         logger.d("compressedData length: ${compressedData.size}")
 
-        val compressedDataBase64 = Base64.getEncoder().encodeToString(compressedData)
+        val compressedDataBase64 = Base64.encodeToString(compressedData, Base64.NO_WRAP)
         logger.d("compressedDataBase64 length: ${compressedDataBase64.length}")
 
         logger.d("isWhereAmIScan $isWhereAmIScan")

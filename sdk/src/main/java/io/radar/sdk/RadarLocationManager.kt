@@ -622,7 +622,7 @@ internal class RadarLocationManager(
         val sendLocation = locationCachedWhileIndoorScanning ?: location
 
         // call RadarIndoorsSurvey start
-        if (options.doIndoorsSurvey && !isIndoorScanning && !stopped) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && options.doIndoorsSurvey && !isIndoorScanning && !stopped) {
             isIndoorScanning = true
             Radar.indoorSurveyManager.start("WHEREAMI", 10, sendLocation, true, object : RadarIndoorSurveyCallback {
                 override fun onComplete(status: RadarStatus, indoorsWhereAmIScan: String) {
