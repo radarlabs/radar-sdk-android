@@ -1,7 +1,6 @@
 package io.radar.sdk
 
 import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
@@ -13,17 +12,15 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.location.Location
-import android.os.Handler
 import android.os.Build
+import android.os.Handler
 import android.os.Looper
 import android.util.Base64
 import androidx.annotation.RequiresApi
-import io.radar.sdk.Radar.RadarBeaconCallback
 import io.radar.sdk.Radar.RadarStatus
-import io.radar.sdk.model.RadarBeacon
 import java.io.ByteArrayOutputStream
 import java.net.URLEncoder
-import java.util.*
+import java.util.UUID
 import java.util.zip.GZIPOutputStream
 
 @SuppressLint("MissingPermission")
@@ -34,14 +31,9 @@ internal class RadarIndoorSurveyManager(
     private val locationManager: RadarLocationManager,
     private val apiClient: RadarApiClient
 ) : SensorEventListener {
-
-    interface RadarIndoorSurveyCallback {
-        fun onComplete(status: RadarStatus, payload: String)
-    }
-
     private var isScanning = false
     private lateinit var placeLabel: String
-    private lateinit var callback: RadarIndoorSurveyCallback
+    private lateinit var callback: Radar.RadarIndoorSurveyCallback
     private val bluetoothReadings = mutableListOf<String>()
     private var isWhereAmIScan = false
     private lateinit var scanId: String
@@ -57,7 +49,7 @@ internal class RadarIndoorSurveyManager(
         surveyLengthSeconds: Int,
         knownLocation: Location?,
         isWhereAmIScan: Boolean,
-        callback: RadarIndoorSurveyCallback
+        callback: Radar.RadarIndoorSurveyCallback
     ) {
         logger.d("start called with placeLabel: $placeLabel, surveyLengthSeconds: $surveyLengthSeconds, isWhereAmIScan: $isWhereAmIScan")
         logger.d("isScanning: $isScanning")

@@ -256,6 +256,11 @@ object Radar {
         )
     }
 
+
+    interface RadarIndoorSurveyCallback {
+        fun onComplete(status: RadarStatus, payload: String)
+    }
+
     /**
      * Called when a request to log a conversion succeeds, fails, or times out.
      */
@@ -861,7 +866,7 @@ object Radar {
                 logger.i("calling RadarIndoorsSurvey", RadarLogType.SDK_CALL)
                 // todo: call indoors survey here
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    indoorSurveyManager.start("WHEREAMI", 10, location, true, callback = object : RadarIndoorSurveyManager.RadarIndoorSurveyCallback {
+                    indoorSurveyManager.start("WHEREAMI", 10, location, true, callback = object : RadarIndoorSurveyCallback {
                         override fun onComplete(status: RadarStatus, payload: String) {
                             if (status != RadarStatus.SUCCESS) {
                                 callTrackApi(null, "")
@@ -2986,6 +2991,20 @@ object Radar {
                 block(status, location, context)
             }
         })
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun doIndoorSurvey(placeLabel: String, surveyLengthSeconds: Int, callback: RadarIndoorSurveyCallback) {
+        indoorSurveyManager.start(placeLabel, surveyLengthSeconds, null, false,
+            object : RadarIndoorSurveyCallback {
+                override fun onComplete(status: RadarStatus, payload: String) {
+                    handler.post {
+                        callback.onComplete(status, payload);
+                    }
+                }
+            }
+        )
     }
 
     /**
