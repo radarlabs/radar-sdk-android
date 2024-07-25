@@ -450,7 +450,6 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
-    private lateinit var locationPermissionManager: RadarLocationPermissionManager
 
     /**
      * Used by React Native module to setup the activity.
@@ -461,10 +460,6 @@ object Radar {
         this.activity = activity;
 
         val application = this.context as? Application
-        if (!this::locationPermissionManager.isInitialized) {
-            this.locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
-            application?.registerActivityLifecycleCallbacks(locationPermissionManager)
-        }
     }
 
     /**
@@ -566,11 +561,6 @@ object Radar {
             RadarSettings.setSharing(this.context, false)
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
-
-        if (!this::locationPermissionManager.isInitialized) {
-            this.locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
-            application?.registerActivityLifecycleCallbacks(locationPermissionManager)
-        }
 
         val featureSettings = RadarSettings.getFeatureSettings(this.context)
         if (featureSettings.usePersistence) {
@@ -842,7 +832,7 @@ object Radar {
                     return
                 }
 
-                val callTrackApi = { beacons: Array<RadarBeacon>?, indoorsPayload: String ->
+                val callTrackApi = { beacons: Array<RadarBeacon>?, indoorsPayload: String? ->
                     apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, beacons, indoorsPayload, callback = object : RadarApiClient.RadarTrackApiCallback {
                         override fun onComplete(
                             status: RadarStatus,
@@ -863,62 +853,60 @@ object Radar {
                     })
                 }
 
-                logger.i("calling RadarIndoorsSurvey", RadarLogType.SDK_CALL)
                 // todo: call indoors survey here
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    indoorSurveyManager.start("WHEREAMI", 10, location, true, callback = object : RadarIndoorSurveyCallback {
-                        override fun onComplete(status: RadarStatus, payload: String) {
-                            if (status != RadarStatus.SUCCESS) {
-                                callTrackApi(null, "")
-                            } else {
-                                callTrackApi(null, payload)
-                            }
+                    logger.i("calling RadarIndoorsSurvey", RadarLogType.SDK_CALL)
+                    indoorSurveyManager.start("WHEREAMI", 10, location, true) { status, payload ->
+                        if (status != RadarStatus.SUCCESS) {
+                            callTrackApi(null, null)
+                        } else {
+                            callTrackApi(null, payload)
                         }
-                    })
+                    }
                 } else {
-                    callTrackApi(null, "")
+                    callTrackApi(null, null)
                 }
 
 
-                // if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                //     apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                //         override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
-                //              if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                //                 beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
+                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                     apiClient.searchBeacons(location, 1000, 10, false, object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                         override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
+                              if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                                 beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
-                //                 beaconManager.rangeBeaconUUIDs(uuids, uids, false, object : RadarBeaconCallback {
-                //                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
-                //                         if (status != RadarStatus.SUCCESS || beacons == null) {
-                //                             callTrackApi(null)
+                                 beaconManager.rangeBeaconUUIDs(uuids, uids, false, object : RadarBeaconCallback {
+                                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                                         if (status != RadarStatus.SUCCESS || beacons == null) {
+                                             callTrackApi(null, null)
 
-                //                             return
-                //                         }
+                                             return
+                                         }
 
-                //                         callTrackApi(beacons)
-                //                     }
-                //                 })
-                //             } else if (beacons != null) {
-                //                 beaconManager.startMonitoringBeacons(beacons)
+                                         callTrackApi(beacons, null)
+                                     }
+                                 })
+                             } else if (beacons != null) {
+                                 beaconManager.startMonitoringBeacons(beacons)
 
-                //                 beaconManager.rangeBeacons(beacons, false, object : RadarBeaconCallback {
-                //                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
-                //                         if (status != RadarStatus.SUCCESS || beacons == null) {
-                //                             callTrackApi(null)
+                                 beaconManager.rangeBeacons(beacons, false, object : RadarBeaconCallback {
+                                     override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                                         if (status != RadarStatus.SUCCESS || beacons == null) {
+                                             callTrackApi(null, null)
 
-                //                             return
-                //                         }
+                                             return
+                                         }
 
-                //                         callTrackApi(beacons)
-                //                     }
-                //                 })
-                //             } else {
-                //                 callTrackApi(arrayOf());
-                //             }
-                //         }
-                //     }, false)
-                // } else {
-                //     callTrackApi(null)
-                // }
+                                         callTrackApi(beacons, null)
+                                     }
+                                 })
+                             } else {
+                                 callTrackApi(arrayOf(), null);
+                             }
+                         }
+                     })
+                 } else {
+                     callTrackApi(null, null)
+                 }
             }
         })
     }
@@ -2996,15 +2984,11 @@ object Radar {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun doIndoorSurvey(placeLabel: String, surveyLengthSeconds: Int, callback: RadarIndoorSurveyCallback) {
-        indoorSurveyManager.start(placeLabel, surveyLengthSeconds, null, false,
-            object : RadarIndoorSurveyCallback {
-                override fun onComplete(status: RadarStatus, payload: String) {
-                    handler.post {
-                        callback.onComplete(status, payload);
-                    }
-                }
+        indoorSurveyManager.start(placeLabel, surveyLengthSeconds, null, false) { status, payload ->
+            handler.post {
+                callback.onComplete(status, payload);
             }
-        )
+        }
     }
 
     /**
@@ -3170,39 +3154,6 @@ object Radar {
                 }
             })
         }
-    }
-    /**
-     * Requests foreground location permissions.
-     */
-    @JvmStatic
-    fun requestForegroundLocationPermission() {
-        locationPermissionManager.requestForegroundLocationPermission()
-    }
-
-    /**
-     * Requests background location permissions.
-     */
-    @JvmStatic
-    fun requestBackgroundLocationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            locationPermissionManager.requestBackgroundLocationPermission()
-        }
-    }
-
-    /**
-     * @return A RadarPermissionStatus object with the current location permissions status.
-     */
-    @JvmStatic
-    fun getLocationPermissionStatus():RadarLocationPermissionStatus {
-        return locationPermissionManager.getLocationPermissionStatus()
-    }
-
-    /**
-     * Directs the user to the app settings to enable location permissions.
-     */
-    @JvmStatic
-    fun openAppSettings() {
-        locationPermissionManager.openAppSettings()
     }
 
     /**
@@ -3544,11 +3495,11 @@ object Radar {
         logger.i("📍️ Radar token updated | passed = ${token.passed}; expiresAt = ${token.expiresAt}; expiresIn = ${token.expiresIn}; token = ${token.token}")
     }
 
-    internal fun sendLocationPermissionStatus(status: RadarLocationPermissionStatus) {
-        receiver?.onLocationPermissionStatusUpdated(context, status)
+    // internal fun sendLocationPermissionStatus(status: RadarLocationPermissionStatus) {
+    //     receiver?.onLocationPermissionStatusUpdated(context, status)
 
-        logger.i("📍️ Radar location permission updated | status = $status")
-    }
+    //     logger.i("📍️ Radar location permission updated | status = $status")
+    // }
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {
         this.logBuffer.setPersistentLogFeatureFlag(enabled)

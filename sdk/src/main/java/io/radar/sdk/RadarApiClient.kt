@@ -774,8 +774,8 @@ internal class RadarApiClient(
         location: Location,
         radius: Int,
         limit: Int?,
+        cache: Boolean,
         callback: RadarSearchBeaconsApiCallback,
-        cache: Boolean
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {

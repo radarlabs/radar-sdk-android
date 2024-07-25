@@ -138,6 +138,7 @@ internal class RadarVerificationManager(
                                         location,
                                         1000,
                                         10,
+                                        false,
                                         object : RadarApiClient.RadarSearchBeaconsApiCallback {
                                             override fun onComplete(
                                                 status: Radar.RadarStatus,
@@ -196,8 +197,7 @@ internal class RadarVerificationManager(
                                                     callTrackApi(arrayOf())
                                                 }
                                             }
-                                        },
-                                        false
+                                        }
                                     )
                                 } else {
                                     callTrackApi(null)

@@ -33,7 +33,7 @@ internal class RadarIndoorSurveyManager(
 ) : SensorEventListener {
     private var isScanning = false
     private lateinit var placeLabel: String
-    private lateinit var callback: Radar.RadarIndoorSurveyCallback
+    private lateinit var callback: (status: RadarStatus, payload: String) -> Unit
     private val bluetoothReadings = mutableListOf<String>()
     private var isWhereAmIScan = false
     private lateinit var scanId: String
@@ -49,14 +49,14 @@ internal class RadarIndoorSurveyManager(
         surveyLengthSeconds: Int,
         knownLocation: Location?,
         isWhereAmIScan: Boolean,
-        callback: Radar.RadarIndoorSurveyCallback
+        callback: (status: RadarStatus, payload: String) -> Unit
     ) {
         logger.d("start called with placeLabel: $placeLabel, surveyLengthSeconds: $surveyLengthSeconds, isWhereAmIScan: $isWhereAmIScan")
         logger.d("isScanning: $isScanning")
 
         if (isScanning) {
             logger.e("Error: start called while already scanning")
-            callback.onComplete(RadarStatus.ERROR_UNKNOWN, "Error: start called while already scanning")
+            callback(RadarStatus.ERROR_UNKNOWN, "Error: start called while already scanning")
             return
         }
 
@@ -68,7 +68,7 @@ internal class RadarIndoorSurveyManager(
 
         if (isWhereAmIScan && knownLocation == null) {
             logger.e("Error: start called with isWhereAmIScan but no knownLocation")
-            callback.onComplete(RadarStatus.ERROR_UNKNOWN, "Error: start called with isWhereAmIScan but no knownLocation")
+            callback(RadarStatus.ERROR_UNKNOWN, "Error: start called with isWhereAmIScan but no knownLocation")
             isScanning = false
             return
         } else if (isWhereAmIScan && knownLocation != null) {
@@ -79,7 +79,7 @@ internal class RadarIndoorSurveyManager(
             locationManager.getLocation(object : Radar.RadarLocationCallback { 
                 override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
                     if (status != RadarStatus.SUCCESS || location == null) {
-                        callback.onComplete(status, "")
+                        callback(status, "")
                         isScanning = false
                         return
                     }
@@ -134,7 +134,7 @@ internal class RadarIndoorSurveyManager(
         logger.d("isWhereAmIScan $isWhereAmIScan")
 
         if (isWhereAmIScan) {
-            callback.onComplete(RadarStatus.SUCCESS, compressedDataBase64)
+            callback(RadarStatus.SUCCESS, compressedDataBase64)
         } else {
             // TODO: Implement POST request to server using apiClient
         }

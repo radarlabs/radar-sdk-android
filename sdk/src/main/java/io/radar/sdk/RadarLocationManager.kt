@@ -15,8 +15,6 @@ import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.RadarApiClient.RadarTrackApiCallback
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
-import io.radar.sdk.RadarIndoorSurveyManager
-import io.radar.sdk.RadarIndoorSurveyManager.RadarIndoorSurveyCallback
 import io.radar.sdk.model.*
 import org.json.JSONObject
 import java.util.*
@@ -624,34 +622,32 @@ internal class RadarLocationManager(
         // call RadarIndoorsSurvey start
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && options.doIndoorsSurvey && !isIndoorScanning && !stopped) {
             isIndoorScanning = true
-            Radar.indoorSurveyManager.start("WHEREAMI", 10, sendLocation, true, object : RadarIndoorSurveyCallback {
-                override fun onComplete(status: RadarStatus, indoorsWhereAmIScan: String) {
-                    logger.d("Indoors survey complete | indoorsWhereAmIScan = $indoorsWhereAmIScan")
-                    isIndoorScanning = false
-                    apiClientCaptured.track(sendLocation, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, null, indoorsWhereAmIScan, callback = object : RadarTrackApiCallback {
-                        override fun onComplete(
-                            status: RadarStatus,
-                            res: JSONObject?,
-                            events: Array<RadarEvent>?,
-                            user: RadarUser?,
-                            nearbyGeofences: Array<RadarGeofence>?,
-                            config: RadarConfig?,
-                            token: RadarVerifiedLocationToken?
-                        ) {
-                            // would we maybe null this out before the api call?
-                            locationCachedWhileIndoorScanning = null
-                            locationManager.replaceSyncedGeofences(nearbyGeofences)
+            Radar.indoorSurveyManager.start("WHEREAMI", 10, sendLocation, true) { status, indoorsWhereAmIScan ->
+                logger.d("Indoors survey complete | indoorsWhereAmIScan = $indoorsWhereAmIScan")
+                isIndoorScanning = false
+                apiClientCaptured.track(sendLocation, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, null, indoorsWhereAmIScan, callback = object : RadarTrackApiCallback {
+                    override fun onComplete(
+                        status: RadarStatus,
+                        res: JSONObject?,
+                        events: Array<RadarEvent>?,
+                        user: RadarUser?,
+                        nearbyGeofences: Array<RadarGeofence>?,
+                        config: RadarConfig?,
+                        token: RadarVerifiedLocationToken?
+                    ) {
+                        // would we maybe null this out before the api call?
+                        locationCachedWhileIndoorScanning = null
+                        locationManager.replaceSyncedGeofences(nearbyGeofences)
 
-                            if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
-                                locationManager.stopForegroundService()
-                            }
-
-                            updateTrackingFromMeta(config?.meta)
-                            // update feature settings?
+                        if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                            locationManager.stopForegroundService()
                         }
-                    })
-                }
-            })
+
+                        updateTrackingFromMeta(config?.meta)
+                        // update feature settings?
+                    }
+                })
+            }
         } else {
             val callTrackApi = { beacons: Array<RadarBeacon>? ->
                 this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, callback = object : RadarTrackApiCallback {
@@ -678,9 +674,9 @@ internal class RadarLocationManager(
             if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                 && permissionsHelper.bluetoothPermissionsGranted(context)) {
                 val cache = stopped || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT
-                this.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                this.apiClient.searchBeacons(location, 1000, 10, cache, object : RadarApiClient.RadarSearchBeaconsApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
-                    if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                        if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                             Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
                             Radar.beaconManager.rangeBeaconUUIDs(uuids, uids, true, object : Radar.RadarBeaconCallback {
@@ -694,7 +690,7 @@ internal class RadarLocationManager(
                                     callTrackApi(beacons)
                                 }
                             })
-                    } else if (beacons != null) {
+                        } else if (!beacons.isNullOrEmpty()) {
                             Radar.beaconManager.startMonitoringBeacons(beacons)
 
                             Radar.beaconManager.rangeBeacons(beacons, true, object : Radar.RadarBeaconCallback {
@@ -708,11 +704,11 @@ internal class RadarLocationManager(
                                     callTrackApi(beacons)
                                 }
                             })
-                    } else {
-                        callTrackApi(arrayOf())
+                        } else {
+                            callTrackApi(arrayOf())
+                        }
                     }
-                    }
-                }, cache)
+                })
             } else {
                 callTrackApi(null)
             }
