@@ -2,19 +2,17 @@ package io.radar.sdk
 
 import android.content.Context
 import android.location.Location
-import android.net.Uri
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.model.*
 import org.json.JSONObject
-import org.junit.Test
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
-import java.net.URL
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -1549,7 +1547,7 @@ class RadarTest {
 
     @Test
     fun test_Radar_setSdkConfiguration() {
-        val sdkConfiguration = RadarSdkConfiguration(1, false, false, false, false, false, Radar.RadarLogLevel.WARNING, true, true)
+        val sdkConfiguration = RadarSdkConfiguration(1, false, false, false, false, false, Radar.RadarLogLevel.WARNING, true, true, true)
 
         RadarSettings.setUserDebug(context, false)
         RadarSettings.setSdkConfiguration(context, sdkConfiguration)
@@ -1583,5 +1581,6 @@ class RadarTest {
         assertEquals(Radar.RadarLogLevel.INFO, savedSdkConfiguration?.logLevel)
         assertEquals(true, savedSdkConfiguration?.startTrackingOnInitialize)
         assertEquals(true, savedSdkConfiguration?.trackOnceOnAppOpen)
+        assertEquals(true,savedSdkConfiguration?.useLocationMetaData)
     }
 }
