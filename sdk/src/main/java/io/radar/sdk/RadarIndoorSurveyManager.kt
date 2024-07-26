@@ -7,6 +7,7 @@ import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
+import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -42,8 +43,6 @@ internal class RadarIndoorSurveyManager(
     private var locationAtTimeOfSurveyStart: Location? = null
     private var lastMagnetometerData: SensorEvent? = null
 
-    private var bluetoothAdapter: BluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
-    private lateinit var bluetoothLeScanner: BluetoothLeScanner
     private lateinit var sensorManager: SensorManager
 
     internal fun start(
@@ -55,7 +54,7 @@ internal class RadarIndoorSurveyManager(
     ) {
         logger.d("start called with placeLabel: $placeLabel, surveyLengthSeconds: $surveyLengthSeconds, isWhereAmIScan: $isWhereAmIScan")
 
-        if (!bluetoothAdapter.isEnabled) {
+        if (getBluetoothScanner(context) == null) {
             logger.e("Error: bluetooth is disabled on the device")
             callback(RadarStatus.ERROR_BLUETOOTH, "Error: bluetooth is disabled on the device")
             return
@@ -103,6 +102,11 @@ internal class RadarIndoorSurveyManager(
         }
     }
 
+    private fun getBluetoothScanner(context: Context): BluetoothLeScanner? {
+        val bluetoothManager = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?)
+        return bluetoothManager?.adapter?.bluetoothLeScanner
+    }
+
     private fun kickOffMotionAndBluetooth(surveyLengthSeconds: Int) {
         logger.d("Kicking off SensorManager")
         sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -112,8 +116,6 @@ internal class RadarIndoorSurveyManager(
         logger.d("Kicking off BluetoothLeScanner")
         logger.d("time: ${System.currentTimeMillis() / 1000.0}")
 
-        bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
-
         startScanning()
 
         Handler(Looper.getMainLooper()).postDelayed({ stopScanning() }, surveyLengthSeconds * 1000L)
@@ -121,14 +123,14 @@ internal class RadarIndoorSurveyManager(
 
     private fun startScanning() {
         logger.d("startScanning called --- calling startScan")
-        bluetoothLeScanner.startScan(scanCallback)
+        getBluetoothScanner(context)?.startScan(scanCallback)
     }
 
     private fun stopScanning() {
         logger.d("stopScanning called")
         logger.d("time: ${System.currentTimeMillis() / 1000.0}")
 
-        bluetoothLeScanner.stopScan(scanCallback)
+        getBluetoothScanner(context)?.stopScan(scanCallback)
 
         val payload = bluetoothReadings.joinToString("\n")
 

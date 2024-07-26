@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
@@ -620,6 +621,10 @@ internal class RadarBeaconManager(
                 } else {
                     logger.d("Handling beacon entry | beacon.type = ${beacon.type}; beacon.uuid = ${beacon.uuid}; beacon.major = ${beacon.major}; beacon.minor = ${beacon.minor}; beacon.rssi = ${beacon.rssi}")
 
+                    val existingBeacon = nearbyBeacons.find { it == beacon }
+                    if (existingBeacon != null && beacon.rssi != null && beacon.rssi != 0 && beacon.rssi != existingBeacon.rssi) {
+                        nearbyBeacons.remove(existingBeacon)
+                    }
                     nearbyBeacons.add(beacon)
                 }
             }
@@ -641,8 +646,7 @@ internal class RadarBeaconManager(
                 adapter = defaultAdapter
             }
         }
-
-        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter.bluetoothLeScanner != null
     }
 
     private fun getScanSettings(scanMode: Int): ScanSettings {
