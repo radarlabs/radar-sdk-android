@@ -2983,10 +2983,10 @@ object Radar {
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun doIndoorSurvey(placeLabel: String, surveyLengthSeconds: Int, callback: RadarIndoorSurveyCallback) {
+    fun doIndoorSurvey(placeLabel: String, surveyLengthSeconds: Int, callback: (status: RadarStatus, payload: String) -> Unit) {
         indoorSurveyManager.start(placeLabel, surveyLengthSeconds, null, false) { status, payload ->
             handler.post {
-                callback.onComplete(status, payload);
+                callback(status, payload);
             }
         }
     }

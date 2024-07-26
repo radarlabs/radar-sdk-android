@@ -69,14 +69,4 @@ class MyRadarReceiver : RadarReceiver() {
     override fun onLog(context: Context, message: String) {
         notify(context, message)
     }
-
-    override fun onLocationPermissionStatusUpdated(
-        context: Context,
-        status: RadarLocationPermissionStatus
-    ) {
-        val statusString = RadarLocationPermissionStatus.stringForLocationPermissionState(status.status)
-        val body = "Location permission status updated: ${statusString}"
-        notify(context, body)
-    }
-
 }

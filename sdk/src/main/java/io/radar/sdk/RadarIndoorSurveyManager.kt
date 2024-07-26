@@ -16,7 +16,9 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Base64
+import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.util.forEach
 import io.radar.sdk.Radar.RadarStatus
 import java.io.ByteArrayOutputStream
 import java.net.URLEncoder
@@ -40,11 +42,11 @@ internal class RadarIndoorSurveyManager(
     private var locationAtTimeOfSurveyStart: Location? = null
     private var lastMagnetometerData: SensorEvent? = null
 
-    private lateinit var bluetoothAdapter: BluetoothAdapter
+    private var bluetoothAdapter: BluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
     private lateinit var bluetoothLeScanner: BluetoothLeScanner
     private lateinit var sensorManager: SensorManager
 
-   internal fun start(
+    internal fun start(
         placeLabel: String,
         surveyLengthSeconds: Int,
         knownLocation: Location?,
@@ -52,6 +54,13 @@ internal class RadarIndoorSurveyManager(
         callback: (status: RadarStatus, payload: String) -> Unit
     ) {
         logger.d("start called with placeLabel: $placeLabel, surveyLengthSeconds: $surveyLengthSeconds, isWhereAmIScan: $isWhereAmIScan")
+
+        if (!bluetoothAdapter.isEnabled) {
+            logger.e("Error: bluetooth is disabled on the device")
+            callback(RadarStatus.ERROR_BLUETOOTH, "Error: bluetooth is disabled on the device")
+            return
+        }
+
         logger.d("isScanning: $isScanning")
 
         if (isScanning) {
@@ -103,8 +112,8 @@ internal class RadarIndoorSurveyManager(
         logger.d("Kicking off BluetoothLeScanner")
         logger.d("time: ${System.currentTimeMillis() / 1000.0}")
 
-        bluetoothAdapter = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
         bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+
         startScanning()
 
         Handler(Looper.getMainLooper()).postDelayed({ stopScanning() }, surveyLengthSeconds * 1000L)
@@ -198,10 +207,12 @@ internal class RadarIndoorSurveyManager(
                 "magnetometer.field.y" to lastMagnetometerData?.values?.get(1).toString(),
                 "magnetometer.field.z" to lastMagnetometerData?.values?.get(2).toString(),
                 "magnetometer.timestamp" to lastMagnetometerData?.timestamp.toString(),
+                "magnetometer.field.magnitude" to "0"
                 // "magnetometer.field.magnitude" to lastMagnetometerData?.let {
                 //     Math.sqrt(it.values[0].toDouble().pow(2) + it.values[1].toDouble().pow(2) + it.values[2].toDouble().pow(2))
                 // }.toString(),
-                // "isConnectable" to scanRecord?.isConnectable().toString()
+                // "isConnectable" to ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) && result.isConnectable).toString()
+                // "txPowerLevel" to (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && result.txPower > 0) result.txPower else 0).toString()
             )
 
             val queryString = queryItems.joinToString("&") { (key, value) ->

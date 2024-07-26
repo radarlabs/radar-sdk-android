@@ -1,17 +1,11 @@
 package io.radar.example
 
-import android.Manifest
 import android.content.Context
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.View.OnClickListener
 import android.widget.Button
 import android.widget.LinearLayout
-import android.widget.ScrollView
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
@@ -20,7 +14,6 @@ import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
 import java.util.EnumSet
-import androidx.core.content.edit
 
 class MainActivity : AppCompatActivity() {
 
@@ -31,7 +24,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val receiver = MyRadarReceiver()
+        val receiver = null // MyRadarReceiver()
         Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
         Radar.sdkVersion().let { Log.i("version", it) }
 
@@ -60,13 +53,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun createButtons() {
-        createButton("requestForegorundPermission") {
-            Radar.requestForegroundLocationPermission()
-        }
+        createButton("survey") {
+            Radar.doIndoorSurvey("", 5) { status, payload ->
 
-        createButton("requestBackgroundPermission") {
-            Radar.requestBackgroundLocationPermission()
+            }
         }
+        return
 
         createButton("getLocation") {
             Radar.getLocation { status, location, stopped ->
