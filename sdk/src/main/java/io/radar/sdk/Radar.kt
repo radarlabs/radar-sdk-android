@@ -8,7 +8,6 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
-import androidx.core.content.edit
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.util.RadarLogBuffer
@@ -411,6 +410,15 @@ object Radar {
         AMBIGUOUS,
         UNVERIFIED,
         NONE
+    }
+
+    enum class RadarActivityType {
+        UNKNOWN,
+        STATIONARY,
+        FOOT,
+        RUN,
+        BIKE,
+        CAR
     }
 
     /**

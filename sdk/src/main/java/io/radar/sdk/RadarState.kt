@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import io.radar.sdk.model.RadarBeacon
+import org.json.JSONObject
 
 internal object RadarState {
 
@@ -37,6 +38,11 @@ internal object RadarState {
     private const val KEY_LAST_BEACONS = "last_beacons"
     private const val KEY_LAST_BEACON_UUIDS = "last_beacon_uuids"
     private const val KEY_LAST_BEACON_UIDS = "last_beacon_uids"
+    private const val KEY_LAST_HEADING = "last_heading"
+    private const val KEY_LAST_MOTION_ACTIVITY = "last_motion_activity"
+    private const val KEY_LAST_ACCELEROMETER = "last_accelerometer"
+    private const val KEY_LAST_GYROSCOPE = "last_gyroscope"
+    private const val KEY_LAST_MAGNETOMETER = "last_magnetometer"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -252,5 +258,81 @@ internal object RadarState {
     internal fun setLastBeaconUIDs(context: Context, uids: Array<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
     }
+
+
+
+private fun jsonObjectToString(jsonObject: JSONObject?): String? {
+    return jsonObject?.toString()
+}
+
+private fun stringToJsonObject(jsonString: String?): JSONObject? {
+    return jsonString?.let {
+        try {
+            JSONObject(it)
+        } catch (e: Exception) {
+            null
+        }
+    }
+}
+
+internal fun getLastHeading(context: Context): JSONObject? {
+    val jsonString = getSharedPreferences(context).getString(KEY_LAST_HEADING, null)
+    return stringToJsonObject(jsonString)
+}
+
+internal fun setLastHeading(context: Context, headingJson: JSONObject?) {
+    val jsonString = jsonObjectToString(headingJson)
+    getSharedPreferences(context).edit {
+        putString(KEY_LAST_HEADING, jsonString)
+    }
+}
+
+    internal fun getLastMotion(context: Context): JSONObject? {
+    val jsonString = getSharedPreferences(context).getString(KEY_LAST_MOTION_ACTIVITY, null)
+    return stringToJsonObject(jsonString)
+}
+
+internal fun setLastMotion(context: Context, motionJson: JSONObject?) {
+    val jsonString = jsonObjectToString(motionJson)
+    getSharedPreferences(context).edit {
+        putString(KEY_LAST_MOTION_ACTIVITY, jsonString)
+    }
+}
+
+internal fun getLastAccelerometer(context: Context): JSONObject? {
+    val jsonString = getSharedPreferences(context).getString(KEY_LAST_ACCELEROMETER, null)
+    return stringToJsonObject(jsonString)
+}
+
+internal fun setLastAccelerometer(context: Context, accelerometerJson: JSONObject?) {
+    val jsonString = jsonObjectToString(accelerometerJson)
+    getSharedPreferences(context).edit {
+        putString(KEY_LAST_ACCELEROMETER, jsonString)
+    }
+}
+
+internal fun getLastGyro(context: Context): JSONObject? {
+    val jsonString = getSharedPreferences(context).getString(KEY_LAST_GYROSCOPE, null)
+    return stringToJsonObject(jsonString)
+}
+
+internal fun setLastGyro(context: Context, gyroJson: JSONObject?) {
+    val jsonString = jsonObjectToString(gyroJson)
+    getSharedPreferences(context).edit {
+        putString(KEY_LAST_GYROSCOPE, jsonString)
+    }
+}
+
+internal fun getLastMagnetometer(context: Context): JSONObject? {
+    val jsonString = getSharedPreferences(context).getString(KEY_LAST_MAGNETOMETER, null)
+    return stringToJsonObject(jsonString)
+}
+
+internal fun setLastMagnetometer(context: Context, magnetometerJson: JSONObject?) {
+    val jsonString = jsonObjectToString(magnetometerJson)
+    getSharedPreferences(context).edit {
+        putString(KEY_LAST_MAGNETOMETER, jsonString)
+    }
+}
 
 }

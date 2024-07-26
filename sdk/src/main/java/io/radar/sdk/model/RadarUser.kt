@@ -119,7 +119,12 @@ class RadarUser(
     /**
      * The user's current fraud state. May be `null` if Fraud is not enabled. See [](https://radar.com/documentation/fraud).
      */
-    val fraud: RadarFraud?
+    val fraud: RadarFraud?,
+
+    /**
+    The user's current activity type.
+     */
+    val activityType: Radar.RadarActivityType?
 ) {
     internal companion object {
         private const val FIELD_ID = "_id"
@@ -146,6 +151,7 @@ class RadarUser(
         private const val FIELD_TRIP = "trip"
         private const val FIELD_DEBUG = "debug"
         private const val FIELD_FRAUD = "fraud"
+        private const val FIELD_ACTIVITY_TYPE = "activityType"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarUser? {
@@ -192,6 +198,14 @@ class RadarUser(
             val trip = RadarTrip.fromJson(obj.optJSONObject(FIELD_TRIP))
             val debug = obj.optBoolean(FIELD_DEBUG)
             val fraud = RadarFraud.fromJson(obj.optJSONObject(FIELD_FRAUD))
+            val activityType = when (obj.optString(FIELD_ACTIVITY_TYPE)) {
+                "FOOT" -> Radar.RadarActivityType.FOOT
+                "RUN" -> Radar.RadarActivityType.RUN
+                "BIKE" -> Radar.RadarActivityType.BIKE
+                "CAR" -> Radar.RadarActivityType.CAR
+                "STATIONARY" -> Radar.RadarActivityType.STATIONARY
+                else -> Radar.RadarActivityType.UNKNOWN
+            }
 
             return RadarUser(
                 id,
@@ -215,7 +229,8 @@ class RadarUser(
                 source,
                 trip,
                 debug,
-                fraud
+                fraud,
+                activityType
             )
         }
     }
@@ -250,6 +265,7 @@ class RadarUser(
         obj.putOpt(FIELD_TRIP, this.trip?.toJson())
         obj.putOpt(FIELD_DEBUG, this.debug)
         obj.putOpt(FIELD_FRAUD, this.fraud?.toJson())
+        obj.putOpt(FIELD_ACTIVITY_TYPE,this.activityType.toString())
         return obj
     }
 

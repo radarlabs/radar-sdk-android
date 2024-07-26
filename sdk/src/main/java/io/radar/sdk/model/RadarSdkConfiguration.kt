@@ -1,10 +1,10 @@
 package io.radar.sdk.model
 
 import android.content.Context
-import org.json.JSONObject
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarApiClient
 import io.radar.sdk.RadarSettings
+import org.json.JSONObject
 
 /**
  * Represents server-side configuration settings.
@@ -19,6 +19,7 @@ internal data class RadarSdkConfiguration(
     val logLevel: Radar.RadarLogLevel,
     val startTrackingOnInitialize: Boolean,
     val trackOnceOnAppOpen: Boolean,
+    val useLocationMetaData: Boolean
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -31,6 +32,8 @@ internal data class RadarSdkConfiguration(
         private const val LOG_LEVEL = "logLevel"
         private const val START_TRACKING_ON_INITIALIZE = "startTrackingOnInitialize"
         private const val TRACK_ONCE_ON_APP_OPEN = "trackOnceOnAppOpen"
+        private const val USE_LOCATION_METADATA = "useLocationMetadata"
+
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             // set json as empty object if json is null, which uses fallback values
@@ -46,6 +49,7 @@ internal data class RadarSdkConfiguration(
                 Radar.RadarLogLevel.valueOf(config.optString(LOG_LEVEL, "info").uppercase()),
                 config.optBoolean(START_TRACKING_ON_INITIALIZE, false),
                 config.optBoolean(TRACK_ONCE_ON_APP_OPEN, false),
+                config.optBoolean(USE_LOCATION_METADATA, false),
             )
         }
 
@@ -69,6 +73,7 @@ internal data class RadarSdkConfiguration(
             putOpt(LOG_LEVEL, logLevel.toString().lowercase())
             putOpt(START_TRACKING_ON_INITIALIZE, startTrackingOnInitialize)
             putOpt(TRACK_ONCE_ON_APP_OPEN, trackOnceOnAppOpen)
+            putOpt(USE_LOCATION_METADATA, useLocationMetaData)
         }
     }
 }
