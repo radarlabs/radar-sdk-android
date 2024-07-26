@@ -2,14 +2,12 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.app.NotificationManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import com.google.android.gms.location.ActivityTransitionResult
 import io.radar.sdk.Radar.RadarLocationCallback
 import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
 import io.radar.sdk.Radar.RadarLocationSource
@@ -29,7 +27,7 @@ internal class RadarLocationManager(
     private val batteryManager: RadarBatteryManager,
     private val provider: Radar.RadarLocationServicesProvider,
     internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper(),
-):BroadcastReceiver() {
+){
 
     @SuppressLint("VisibleForTests")
     internal var locationClient: RadarAbstractLocationClient = if (provider == HUAWEI) RadarHuaweiLocationClient(context, logger) else RadarGoogleLocationClient(context, logger)
@@ -38,6 +36,7 @@ internal class RadarLocationManager(
     private var startedInterval = 0
     private var startedFastestInterval = 0
     private val callbacks = ArrayList<RadarLocationCallback>()
+    private val activityManager = RadarActivityManager(context)
 
     internal companion object {
         private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
@@ -124,6 +123,10 @@ internal class RadarLocationManager(
         if (settings.extendFlushReplays) {
             Radar.flushReplays()
         }
+        if (settings.useLocationMetaData) {
+            activityManager.stopActivityUpdates()
+            activityManager.stopMotionUpdates()
+        }
     }
 
     private fun startLocationUpdates(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, interval: Int, fastestInterval: Int) {
@@ -190,6 +193,10 @@ internal class RadarLocationManager(
         }
 
         if (tracking) {
+            if (RadarSettings.getSdkConfiguration(context).useLocationMetaData) {
+                activityManager.startActivityUpdates()
+                activityManager.startMotionUpdates()
+            }
             if (options.foregroundServiceEnabled) {
                 val foregroundService = RadarSettings.getForegroundService(context)
                 if (!foregroundService.updatesOnly) {
@@ -585,6 +592,10 @@ internal class RadarLocationManager(
         }
         RadarState.updateLastSentAt(context)
 
+        if (RadarSettings.getSdkConfiguration(context).useLocationMetaData) {
+            // activityManager.requestActivityUpdates()
+        }
+
         if (source == RadarLocationSource.FOREGROUND_LOCATION) {
             return
         }
@@ -708,15 +719,4 @@ internal class RadarLocationManager(
             }
         }
     }
-
-    override fun onReceive(context: Context, intent: Intent) {
-        if (ActivityTransitionResult.hasResult(intent)) {
-            val result = ActivityTransitionResult.extractResult(intent)!!
-            for (event in result.transitionEvents) {
-                // chronological sequence of events....
-                // TODO: copy over logic from iOS
-            }
-        }
-    }
-
 }

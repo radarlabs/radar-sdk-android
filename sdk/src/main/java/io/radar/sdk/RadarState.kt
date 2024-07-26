@@ -287,12 +287,12 @@ internal fun setLastHeading(context: Context, headingJson: JSONObject?) {
     }
 }
 
-    internal fun getLastMotion(context: Context): JSONObject? {
+    internal fun getLastMotionActivity(context: Context): JSONObject? {
     val jsonString = getSharedPreferences(context).getString(KEY_LAST_MOTION_ACTIVITY, null)
     return stringToJsonObject(jsonString)
 }
 
-internal fun setLastMotion(context: Context, motionJson: JSONObject?) {
+internal fun setLastMotionActivity(context: Context, motionJson: JSONObject?) {
     val jsonString = jsonObjectToString(motionJson)
     getSharedPreferences(context).edit {
         putString(KEY_LAST_MOTION_ACTIVITY, jsonString)

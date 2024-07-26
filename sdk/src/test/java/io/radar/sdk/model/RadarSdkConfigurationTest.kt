@@ -26,7 +26,7 @@ class RadarSdkConfigurationTest {
     private var logLevel = Radar.RadarLogLevel.INFO
     private var startTrackingOnInitialize = false
     private var trackOnceOnAppOpen = false
-    private var useLocationMetaData = false
+    private var useLocationMetadata = false
 
     @Before
     fun setUp() {
@@ -42,8 +42,8 @@ class RadarSdkConfigurationTest {
             "extendFlushReplays":$extendFlushReplays,
             "logLevel":"info",
             "startTrackingOnInitialize":$startTrackingOnInitialize,
-            "trackOnceOnAppOpen":$trackOnceOnAppOpen
-            "useLocationMetaData":$useLocationMetaData
+            "trackOnceOnAppOpen":$trackOnceOnAppOpen,
+            "useLocationMetadata":$useLocationMetadata
         }""".trimIndent()
     }
 
@@ -61,7 +61,7 @@ class RadarSdkConfigurationTest {
                 logLevel,
                 startTrackingOnInitialize,
                 trackOnceOnAppOpen,
-                useLocationMetaData
+                useLocationMetadata
             ).toJson().toString()
         )
     }
@@ -78,7 +78,7 @@ class RadarSdkConfigurationTest {
         assertEquals(logLevel, settings.logLevel)
         assertEquals(startTrackingOnInitialize, settings.startTrackingOnInitialize)
         assertEquals(trackOnceOnAppOpen, settings.trackOnceOnAppOpen)
-        assertEquals(useLocationMetaData, settings.useLocationMetaData)
+        assertEquals(useLocationMetadata, settings.useLocationMetaData)
     }
 
     @Test

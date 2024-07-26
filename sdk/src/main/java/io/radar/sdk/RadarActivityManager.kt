@@ -18,9 +18,21 @@ internal class RadarActivityManager (private val context: Context) {
     val request: ActivityTransitionRequest
 
     internal companion object {
+        fun getActivityType(int: Int): Radar.RadarActivityType {
+            return when (int) {
+                0 -> Radar.RadarActivityType.CAR
+                1 -> Radar.RadarActivityType.BIKE
+                3 -> Radar.RadarActivityType.STATIONARY
+                7 -> Radar.RadarActivityType.FOOT
+                8 -> Radar.RadarActivityType.RUN
+                else -> Radar.RadarActivityType.UNKNOWN
+            }
+        }
 
         private const val REQUEST_ID = 20160525 // random notification ID (Radar's birthday!)
     }
+
+
 
     init {
         // TODO: need complete set
@@ -30,14 +42,23 @@ internal class RadarActivityManager (private val context: Context) {
             .build()
         transitions +=
             ActivityTransition.Builder()
-                .setActivityType(DetectedActivity.IN_VEHICLE)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                .setActivityType(DetectedActivity.ON_BICYCLE)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
                 .build()
-
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.RUNNING)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build()
+        transitions +=
+            ActivityTransition.Builder()
+                .setActivityType(DetectedActivity.STILL)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
+                .build()
         transitions +=
             ActivityTransition.Builder()
                 .setActivityType(DetectedActivity.WALKING)
-                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_EXIT)
+                .setActivityTransition(ActivityTransition.ACTIVITY_TRANSITION_ENTER)
                 .build()
         request = ActivityTransitionRequest(transitions)
     }
@@ -65,7 +86,7 @@ internal class RadarActivityManager (private val context: Context) {
             "com.google.android.gms.permission.ACTIVITY_RECOGNITION"
         ]
     )
-    internal fun startActivity(context: Context) = kotlin.runCatching {
+    internal fun startActivityUpdates() = kotlin.runCatching {
 
         val task = activityClient.requestActivityTransitionUpdates(
             request, pendingIntent
@@ -86,7 +107,7 @@ internal class RadarActivityManager (private val context: Context) {
             "com.google.android.gms.permission.ACTIVITY_RECOGNITION"
         ]
     )
-    internal fun stopActivityUpdates(context: Context) {
+    internal fun stopActivityUpdates() {
         activityClient.removeActivityUpdates(pendingIntent)
     }
 

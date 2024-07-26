@@ -9,6 +9,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import com.google.android.gms.location.ActivityTransitionResult
+import io.radar.sdk.RadarActivityManager.Companion.getActivityType
+import org.json.JSONObject
 
 class RadarLocationReceiver : BroadcastReceiver() {
 
@@ -147,6 +150,18 @@ class RadarLocationReceiver : BroadcastReceiver() {
             Intent.ACTION_BOOT_COMPLETED -> {
                 Radar.handleBootCompleted(context)
             }
+        }
+        if (ActivityTransitionResult.hasResult(intent)) {
+            val result = ActivityTransitionResult.extractResult(intent)!!
+            for (event in result.transitionEvents) {
+                val eventType = getActivityType(event.activityType)
+                val motionActivity = JSONObject()
+                motionActivity.put("type", eventType.toString())
+                motionActivity.put("dateTime", event.elapsedRealTimeNanos)
+                RadarState.setLastMotionActivity(context, motionActivity)
+                Radar.logger.d("Activity detected, initiating trackOnce")
+            }
+            Radar.trackOnce()
         }
     }
 
