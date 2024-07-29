@@ -80,9 +80,9 @@ internal class RadarActivityManager (private val context: Context) {
         }
 
         if (!hasPermission) {
-        Radar.logger.d("Permission for activity recognition not granted")
-        return@runCatching
-    }
+            Radar.logger.d("Permission for activity recognition not granted")
+            return@runCatching
+        }
        if (!isActivityUpdatesStarted) {
             Radar.logger.d("trying to start activity updates")
 
@@ -163,7 +163,7 @@ class SensorSnapshotManager(private val context: Context) {
             gyroscopeSensorEventListener = object : SensorEventListener {
                 override fun onSensorChanged(event: SensorEvent) {
                     val sensorData = event.values
-                    Radar.logger.i("gyroscopeSensor data: ${sensorData.joinToString()}")
+                    Radar.logger.d("gyroscopeSensor data: ${sensorData.joinToString()}")
                     val jsonObject = JSONObject().apply {
                         put("x", sensorData[0])
                         put("y", sensorData[1])

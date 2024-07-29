@@ -38,7 +38,6 @@ internal object RadarState {
     private const val KEY_LAST_BEACONS = "last_beacons"
     private const val KEY_LAST_BEACON_UUIDS = "last_beacon_uuids"
     private const val KEY_LAST_BEACON_UIDS = "last_beacon_uids"
-    private const val KEY_LAST_HEADING = "last_heading"
     private const val KEY_LAST_MOTION_ACTIVITY = "last_motion_activity"
     private const val KEY_LAST_ACCELEROMETER = "last_accelerometer"
     private const val KEY_LAST_GYROSCOPE = "last_gyroscope"
@@ -259,8 +258,6 @@ internal object RadarState {
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
     }
 
-
-
     private fun jsonObjectToString(jsonObject: JSONObject?): String? {
         return jsonObject?.toString()
     }
@@ -272,18 +269,6 @@ internal object RadarState {
             } catch (e: Exception) {
                 null
             }
-        }
-    }
-
-    internal fun getLastHeading(context: Context): JSONObject? {
-        val jsonString = getSharedPreferences(context).getString(KEY_LAST_HEADING, null)
-        return stringToJsonObject(jsonString)
-    }
-
-    internal fun setLastHeading(context: Context, headingJson: JSONObject?) {
-        val jsonString = jsonObjectToString(headingJson)
-        getSharedPreferences(context).edit {
-            putString(KEY_LAST_HEADING, jsonString)
         }
     }
 
