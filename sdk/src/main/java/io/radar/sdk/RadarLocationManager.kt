@@ -125,7 +125,6 @@ internal class RadarLocationManager(
         }
         if (settings.useLocationMetadata) {
             activityManager.stopActivityUpdates()
-            activityManager.stopMotionUpdates()
         }
     }
 
@@ -195,7 +194,6 @@ internal class RadarLocationManager(
         if (tracking) {
             if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
                 activityManager.startActivityUpdates()
-                activityManager.startMotionUpdates()
             }
             if (options.foregroundServiceEnabled) {
                 val foregroundService = RadarSettings.getForegroundService(context)
@@ -593,7 +591,7 @@ internal class RadarLocationManager(
         RadarState.updateLastSentAt(context)
 
         if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
-            // activityManager.requestActivityUpdates()
+            activityManager.requestMotionUpdates()
         }
 
         if (source == RadarLocationSource.FOREGROUND_LOCATION) {
