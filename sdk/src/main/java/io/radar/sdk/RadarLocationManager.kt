@@ -123,7 +123,7 @@ internal class RadarLocationManager(
         if (settings.extendFlushReplays) {
             Radar.flushReplays()
         }
-        if (settings.useLocationMetaData) {
+        if (settings.useLocationMetadata) {
             activityManager.stopActivityUpdates()
             activityManager.stopMotionUpdates()
         }
@@ -193,7 +193,7 @@ internal class RadarLocationManager(
         }
 
         if (tracking) {
-            if (RadarSettings.getSdkConfiguration(context).useLocationMetaData) {
+            if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
                 activityManager.startActivityUpdates()
                 activityManager.startMotionUpdates()
             }
@@ -592,7 +592,7 @@ internal class RadarLocationManager(
         }
         RadarState.updateLastSentAt(context)
 
-        if (RadarSettings.getSdkConfiguration(context).useLocationMetaData) {
+        if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
             // activityManager.requestActivityUpdates()
         }
 

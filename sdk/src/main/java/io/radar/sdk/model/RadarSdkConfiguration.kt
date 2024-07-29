@@ -19,7 +19,7 @@ internal data class RadarSdkConfiguration(
     val logLevel: Radar.RadarLogLevel,
     val startTrackingOnInitialize: Boolean,
     val trackOnceOnAppOpen: Boolean,
-    val useLocationMetaData: Boolean
+    val useLocationMetadata: Boolean
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -73,7 +73,7 @@ internal data class RadarSdkConfiguration(
             putOpt(LOG_LEVEL, logLevel.toString().lowercase())
             putOpt(START_TRACKING_ON_INITIALIZE, startTrackingOnInitialize)
             putOpt(TRACK_ONCE_ON_APP_OPEN, trackOnceOnAppOpen)
-            putOpt(USE_LOCATION_METADATA, useLocationMetaData)
+            putOpt(USE_LOCATION_METADATA, useLocationMetadata)
         }
     }
 }

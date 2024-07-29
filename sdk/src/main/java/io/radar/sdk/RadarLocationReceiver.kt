@@ -21,11 +21,13 @@ class RadarLocationReceiver : BroadcastReceiver() {
         internal const val ACTION_BUBBLE_GEOFENCE = "io.radar.sdk.LocationReceiver.GEOFENCE"
         internal const val ACTION_SYNCED_GEOFENCES = "io.radar.sdk.LocationReceiver.SYNCED_GEOFENCES"
         internal const val ACTION_BEACON = "io.radar.sdk.LocationReceiver.BEACON"
+        internal const val ACTION_ACTIVITY = "io.radar.sdk.LocationReceiver.ACTIVITY"
 
         private const val REQUEST_CODE_LOCATION = 201605250
         private const val REQUEST_CODE_BUBBLE_GEOFENCE = 201605251
         private const val REQUEST_CODE_SYNCED_GEOFENCES = 201605252
         private const val REQUEST_CODE_BEACON = 201605253
+        private const val REQUEST_CODE_ACTIVITY = 201605254
 
         internal fun getLocationPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
@@ -95,6 +97,23 @@ class RadarLocationReceiver : BroadcastReceiver() {
             )
         }
 
+        internal fun getActivityPendingIntent(context: Context): PendingIntent {
+            val intent = baseIntent(context).apply {
+                action = ACTION_ACTIVITY
+            }
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_ACTIVITY,
+                intent,
+                flags
+            )
+        }
+
         private fun baseIntent(context: Context): Intent = Intent(context, RadarLocationReceiver::class.java)
 
     }
@@ -159,7 +178,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 motionActivity.put("type", eventType.toString())
                 motionActivity.put("dateTime", event.elapsedRealTimeNanos)
                 RadarState.setLastMotionActivity(context, motionActivity)
-                Radar.logger.d("Activity detected, initiating trackOnce")
+                Radar.logger.i("Activity detected and initiating trackOnce for: $eventType")
             }
             Radar.trackOnce()
         }

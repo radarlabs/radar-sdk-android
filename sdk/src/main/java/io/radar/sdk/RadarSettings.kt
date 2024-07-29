@@ -402,7 +402,7 @@ internal object RadarSettings {
     }
 
     internal fun useLocationMetaData(context: Context):Boolean {
-        return getSdkConfiguration(context).useLocationMetaData
+        return getSdkConfiguration(context).useLocationMetadata
     }
 
 }

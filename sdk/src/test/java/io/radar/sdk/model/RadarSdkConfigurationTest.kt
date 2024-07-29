@@ -78,7 +78,7 @@ class RadarSdkConfigurationTest {
         assertEquals(logLevel, settings.logLevel)
         assertEquals(startTrackingOnInitialize, settings.startTrackingOnInitialize)
         assertEquals(trackOnceOnAppOpen, settings.trackOnceOnAppOpen)
-        assertEquals(useLocationMetadata, settings.useLocationMetaData)
+        assertEquals(useLocationMetadata, settings.useLocationMetadata)
     }
 
     @Test
@@ -93,7 +93,7 @@ class RadarSdkConfigurationTest {
         assertEquals(Radar.RadarLogLevel.INFO, settings.logLevel)
         assertFalse(settings.startTrackingOnInitialize)
         assertFalse(settings.trackOnceOnAppOpen)
-        assertFalse(settings.useLocationMetaData)
+        assertFalse(settings.useLocationMetadata)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")
