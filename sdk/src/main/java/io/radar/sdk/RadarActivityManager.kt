@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.ActivityRecognition
 import com.google.android.gms.location.ActivityTransition
@@ -65,13 +64,16 @@ internal class RadarActivityManager (private val context: Context) {
 
     private val activityClient = ActivityRecognition.getClient(context)
 
-    @RequiresApi(Build.VERSION_CODES.Q)
     internal fun startActivityUpdates() = kotlin.runCatching {
-        val hasPermission = ContextCompat.checkSelfPermission(
-        context, Manifest.permission.ACTIVITY_RECOGNITION
-    ) == PackageManager.PERMISSION_GRANTED
+        val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACTIVITY_RECOGNITION
+        ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            false
+        }
 
-    if (!hasPermission) {
+        if (!hasPermission) {
         Radar.logger.i("Permission for activity recognition not granted")
         return@runCatching
     }
@@ -111,7 +113,7 @@ internal class RadarActivityManager (private val context: Context) {
 
     }
 
-//    internal fun requestMotionUpdates():Map<String,Float> {
-//
-//    }
+    internal fun requestMotionUpdates() {
+
+    }
 }
