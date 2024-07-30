@@ -21,7 +21,6 @@ internal class RadarActivityLifecycleCallbacks(
 ) : Application.ActivityLifecycleCallbacks {
     private var count = 0
     private var isFirstOnResume = true
-    private var hadLocationPermission = false
 
     companion object {
         var foreground: Boolean = false
@@ -45,13 +44,7 @@ internal class RadarActivityLifecycleCallbacks(
         }
     }
 
-    private fun hasLocationPermissions(activity: Activity): Boolean {
-        return (ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-                    ContextCompat.checkSelfPermission(activity.applicationContext, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-    }
-
     override fun onActivityResumed(activity: Activity) {
-        var trackedOnce = false
         if (count == 0 && !isFirstOnResume) {
             try {
                 val updated = RadarSettings.updateSessionId(activity.applicationContext)
@@ -72,7 +65,7 @@ internal class RadarActivityLifecycleCallbacks(
                     })
                 } else {
                     val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
-                    if (sdkConfiguration.trackOnceOnAppOpen) {
+                    if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
                         Radar.trackOnce()
                     }
                 }
@@ -86,12 +79,6 @@ internal class RadarActivityLifecycleCallbacks(
 
         Radar.logOpenedAppConversion()
 
-        if ((!hadLocationPermission && hasLocationPermissions(activity))
-            && (RadarSettings.getSdkConfiguration(activity.applicationContext).trackOnceOnAppOpen ||
-                    RadarSettings.getSdkConfiguration(activity.applicationContext).startTrackingOnInitialize)) {
-            Radar.trackOnce()
-        }
-        hadLocationPermission = hasLocationPermissions(activity)
         updatePermissionsDenied(activity)
 
         if (fraud) {
