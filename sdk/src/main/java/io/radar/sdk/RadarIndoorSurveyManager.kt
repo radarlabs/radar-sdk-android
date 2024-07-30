@@ -34,7 +34,7 @@ import java.util.zip.GZIPOutputStream
 import javax.net.ssl.HttpsURLConnection
 
 @SuppressLint("MissingPermission")
-@RequiresApi(Build.VERSION_CODES.M)
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarIndoorSurveyManager(
     private val context: Context,
     private val logger: RadarLogger,
@@ -67,7 +67,8 @@ internal class RadarIndoorSurveyManager(
             return
         }
 
-        if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+            context.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             logger.e("Error: bluetooth scan permission is denied")
             callback(RadarStatus.ERROR_PERMISSIONS, "Error: bluetooth scan permission is denied")
             return
