@@ -285,6 +285,11 @@ data class RadarTrackingOptions(
         val id: Int? = null,
 
         /**
+         * Determines the notification channel id. Optional, defaults to "RadarSDK"
+         */
+        val channelId: String? = null,
+        
+        /**
          * Determines the user-facing channel name, which can be viewed in notification settings for the application.
          * Optional, defaults to `"Location Services"`.
          */
@@ -311,6 +316,7 @@ data class RadarTrackingOptions(
             internal const val KEY_FOREGROUND_SERVICE_ACTIVITY = "activity"
             internal const val KEY_FOREGROUND_SERVICE_IMPORTANCE = "importance"
             internal const val KEY_FOREGROUND_SERVICE_ID = "id"
+            internal const val KEY_FOREGROUND_SERVICE_CHANNEL_ID = "channelId"
             internal const val KEY_FOREGROUND_SERVICE_CHANNEL_NAME = "channelName"
 
             @JvmStatic
@@ -328,8 +334,9 @@ data class RadarTrackingOptions(
                 val activity = if (obj.isNull(KEY_FOREGROUND_SERVICE_ACTIVITY)) null else obj.optString(KEY_FOREGROUND_SERVICE_ACTIVITY)
                 val importance = if (obj.isNull(KEY_FOREGROUND_SERVICE_IMPORTANCE)) null else obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
                 val id = if (obj.isNull(KEY_FOREGROUND_SERVICE_ID)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ID)
+                val channelId = if (obj.isNull(KEY_FOREGROUND_SERVICE_CHANNEL_ID)) null else obj.getString(KEY_FOREGROUND_SERVICE_CHANNEL_ID)
                 val channelName = if (obj.isNull(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)) null else obj.optString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)
-                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id, channelName, iconString, iconColor)
+                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id, channelId, channelName, iconString, iconColor)
             }
         }
 
@@ -345,6 +352,7 @@ data class RadarTrackingOptions(
             obj.put(KEY_FOREGROUND_SERVICE_UPDATES_ONLY, updatesOnly)
             obj.put(KEY_FOREGROUND_SERVICE_IMPORTANCE, importance)
             obj.put(KEY_FOREGROUND_SERVICE_ID, id)
+            obj.put(KEY_FOREGROUND_SERVICE_CHANNEL_ID, channelId)
             obj.put(KEY_FOREGROUND_SERVICE_CHANNEL_NAME, channelName)
             return obj
         }
