@@ -232,7 +232,7 @@ internal class RadarLocationManager(
                 }, 5000)
             }
 
-            if (options.doIndoorsSurvey) {
+            if (options.indoors) {
                 logger.d("Starting indoors survey")
             }
         } else {
@@ -486,7 +486,8 @@ internal class RadarLocationManager(
         val wasStopped = RadarState.getStopped(context)
         var stopped: Boolean
 
-        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT)
+        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT || options.indoors)
+
         if (!force && location.accuracy > 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
             logger.d("Skipping location: inaccurate | accuracy = ${location.accuracy}")
 
@@ -620,7 +621,7 @@ internal class RadarLocationManager(
         val sendLocation = locationCachedWhileIndoorScanning ?: location
 
         // call RadarIndoorsSurvey start
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && options.doIndoorsSurvey && !isIndoorScanning && !stopped) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && options.indoors && !isIndoorScanning && !stopped) {
             isIndoorScanning = true
             Radar.indoorSurveyManager.start("WHEREAMI", 10, sendLocation, true) { status, indoorsWhereAmIScan ->
                 logger.d("Indoors survey complete | indoorsWhereAmIScan = $indoorsWhereAmIScan")

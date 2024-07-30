@@ -53,12 +53,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun createButtons() {
-        createButton("survey") {
+        createButton("doIndoorSurvey") {
             Radar.doIndoorSurvey("", 5) { status, payload ->
-
+                Log.v(
+                    "example",
+                    "Indoors survey: status = ${status}; payload = $payload"
+                )
             }
         }
-        return
 
         createButton("getLocation") {
             Radar.getLocation { status, location, stopped ->

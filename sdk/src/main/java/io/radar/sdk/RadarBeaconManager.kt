@@ -623,6 +623,7 @@ internal class RadarBeaconManager(
 
                     val existingBeacon = nearbyBeacons.find { it == beacon }
                     if (existingBeacon != null && beacon.rssi != null && beacon.rssi != 0 && beacon.rssi != existingBeacon.rssi) {
+                        // overwriting stale rssi
                         nearbyBeacons.remove(existingBeacon)
                     }
                     nearbyBeacons.add(beacon)

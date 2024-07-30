@@ -1,6 +1,7 @@
 package io.radar.sdk.model
 
 import android.location.Location
+import io.radar.sdk.Radar
 import io.radar.sdk.RadarUtils
 import io.radar.sdk.model.RadarEvent.RadarEventType.*
 import org.json.JSONArray
@@ -286,7 +287,11 @@ class RadarEvent(
                 longitude = locationCoordinatesObj?.optDouble(0) ?: 0.0
                 latitude = locationCoordinatesObj?.optDouble(1) ?: 0.0
                 if (obj.has(FIELD_LOCATION_ACCURACY)) {
-                    accuracy = obj.optDouble(FIELD_LOCATION_ACCURACY).toFloat()
+                    accuracy = if (Radar.getTrackingOptions().indoors) {
+                        10.0f
+                    } else {
+                        obj.optDouble(FIELD_LOCATION_ACCURACY).toFloat()
+                    }
                 }
                 time = createdAt.time
             }

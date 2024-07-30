@@ -1,5 +1,6 @@
 package io.radar.sdk
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
@@ -21,13 +22,19 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.util.forEach
 import io.radar.sdk.Radar.RadarStatus
+import org.json.JSONException
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
+import java.io.IOException
+import java.io.OutputStreamWriter
+import java.net.URL
 import java.net.URLEncoder
 import java.util.UUID
 import java.util.zip.GZIPOutputStream
+import javax.net.ssl.HttpsURLConnection
 
 @SuppressLint("MissingPermission")
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+@RequiresApi(Build.VERSION_CODES.M)
 internal class RadarIndoorSurveyManager(
     private val context: Context,
     private val logger: RadarLogger,
@@ -57,6 +64,12 @@ internal class RadarIndoorSurveyManager(
         if (getBluetoothScanner(context) == null) {
             logger.e("Error: bluetooth is disabled on the device")
             callback(RadarStatus.ERROR_BLUETOOTH, "Error: bluetooth is disabled on the device")
+            return
+        }
+
+        if (context.checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            logger.e("Error: bluetooth scan permission is denied")
+            callback(RadarStatus.ERROR_PERMISSIONS, "Error: bluetooth scan permission is denied")
             return
         }
 
@@ -147,7 +160,17 @@ internal class RadarIndoorSurveyManager(
         if (isWhereAmIScan) {
             callback(RadarStatus.SUCCESS, compressedDataBase64)
         } else {
-            // TODO: Implement POST request to server using apiClient
+            apiClient.apiHelper.request(context,
+                URL("https://ml-staging.radarindoors.com/scan_results"),
+                "POST",
+                mapOf("Content-Type" to "application/x-www-form-urlencoded"),
+                compressedDataBase64,
+                false,
+            ) { status, res ->
+                if (res != null) {
+                    callback(status, res)
+                }
+            }
         }
 
         logger.d("Calling clear, resetting scanId, etc.")

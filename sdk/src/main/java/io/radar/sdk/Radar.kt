@@ -853,18 +853,19 @@ object Radar {
                     })
                 }
 
-                // todo: call indoors survey here
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    logger.i("calling RadarIndoorsSurvey", RadarLogType.SDK_CALL)
-                    indoorSurveyManager.start("WHEREAMI", 10, location, true) { status, payload ->
-                        if (status != RadarStatus.SUCCESS) {
-                            callTrackApi(null, null)
-                        } else {
-                            callTrackApi(null, payload)
+                val maybeIndoorSurveyThenCallTrackAPI = { beacons: Array<RadarBeacon>? ->
+                    if (getTrackingOptions().indoors && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        logger.i("calling RadarIndoorsSurvey", RadarLogType.SDK_CALL)
+                        indoorSurveyManager.start("WHEREAMI", 10, location, true) { status, payload ->
+                            if (status != RadarStatus.SUCCESS) {
+                                callTrackApi(beacons, null)
+                            } else {
+                                callTrackApi(beacons, payload)
+                            }
                         }
+                    } else {
+                        callTrackApi(beacons, null)
                     }
-                } else {
-                    callTrackApi(null, null)
                 }
 
 
@@ -877,12 +878,12 @@ object Radar {
                                  beaconManager.rangeBeaconUUIDs(uuids, uids, false, object : RadarBeaconCallback {
                                      override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
                                          if (status != RadarStatus.SUCCESS || beacons == null) {
-                                             callTrackApi(null, null)
+                                             maybeIndoorSurveyThenCallTrackAPI(null)
 
                                              return
                                          }
 
-                                         callTrackApi(beacons, null)
+                                         maybeIndoorSurveyThenCallTrackAPI(beacons)
                                      }
                                  })
                              } else if (beacons != null) {
@@ -896,11 +897,11 @@ object Radar {
                                              return
                                          }
 
-                                         callTrackApi(beacons, null)
+                                         maybeIndoorSurveyThenCallTrackAPI(beacons)
                                      }
                                  })
                              } else {
-                                 callTrackApi(arrayOf(), null);
+                                  maybeIndoorSurveyThenCallTrackAPI(arrayOf());
                              }
                          }
                      })
