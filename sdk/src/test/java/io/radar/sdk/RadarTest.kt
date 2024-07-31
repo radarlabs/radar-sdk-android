@@ -740,13 +740,14 @@ class RadarTest {
     @Test
     fun test_Radar_startTrip_scheduledArrivalAt() {
         val tripOptions = getTestTripOptions()
+        assertNull(tripOptions.scheduledArrivalAt)
         val tripOptionsJson = tripOptions.toJson()
         assertFalse(tripOptionsJson.has("scheduledArrivalAt"))
 
         val newScheduledArrivalAt = Date()
         tripOptions.scheduledArrivalAt = newScheduledArrivalAt
         val newTripOptionsJson = tripOptions.toJson()
-        assertEquals(newTripOptionsJson.getString("scheduledArrivalAt"), tripOptions.scheduledArrivalAt?.time.toString())
+        assertEquals(newTripOptionsJson.getString("scheduledArrivalAt"), RadarUtils.dateToISOString(tripOptions.scheduledArrivalAt))
     }
 
     @Test

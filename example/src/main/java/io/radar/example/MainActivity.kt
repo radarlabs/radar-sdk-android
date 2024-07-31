@@ -217,7 +217,7 @@ class MainActivity : AppCompatActivity() {
                 countryCode = "US",
                 addressLabel = "841 Broadway",
             )
-            Radar.validateAddress(addressWithStreetAndNumber) { status, address, verificationStatus ->
+            Radar.validateAddress(addressWithAddressLabel) { status, address, verificationStatus ->
                 Log.v(
                     "example",
                     "Validate address with address label: status $status; address = ${address?.toJson()}; verificationStatus = ${verificationStatus.toString()}"
