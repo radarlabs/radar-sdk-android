@@ -11,7 +11,8 @@
         "sdkConfiguration": {
             "logLevel": "info",
             "startTrackingOnInitialize": true,
-            "trackOnceOnAppOpen": true
+            "trackOnceOnAppOpen": true,
+            "useLocationMetadata": true
         }
     }
 }

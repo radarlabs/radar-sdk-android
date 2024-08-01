@@ -4,17 +4,31 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.SystemClock
-import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import android.util.Log
+import io.radar.sdk.Radar.RadarAddressVerificationStatus
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
-import io.radar.sdk.Radar.RadarAddressVerificationStatus
 import io.radar.sdk.Radar.locationManager
-import io.radar.sdk.model.*
+import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarLog
+import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarReplay
+import io.radar.sdk.model.RadarRouteMatrix
+import io.radar.sdk.model.RadarRoutes
+import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.*
 import java.net.URLEncoder
+import java.util.EnumSet
 
 internal class RadarApiClient(
     private val context: Context,
@@ -345,6 +359,15 @@ internal class RadarApiClient(
                 params.putOpt("encrypted", encrypted)
             }
             params.putOpt("appId", context.packageName)
+            if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
+                val metadata = JSONObject()
+                metadata.putOpt("motionActivityData", RadarState.getLastMotionActivity(context))
+                metadata.putOpt("accelerometerData", RadarState.getLastAccelerometer(context))
+                metadata.putOpt("gyroscopeData", RadarState.getLastGyro(context))
+                metadata.putOpt("magnetometerData", RadarState.getLastMagnetometer(context))
+                params.putOpt("locationMetadata", metadata)
+                Log.d("testing","params are $params")
+            }
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 

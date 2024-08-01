@@ -8,7 +8,6 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
-import androidx.core.content.edit
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.util.RadarLogBuffer
@@ -411,6 +410,40 @@ object Radar {
         AMBIGUOUS,
         UNVERIFIED,
         NONE
+    }
+
+    enum class RadarActivityType {
+        UNKNOWN,
+        STATIONARY,
+        FOOT,
+        RUN,
+        BIKE,
+        CAR;
+        companion object {
+            @JvmStatic
+            fun fromString(value: String): RadarActivityType {
+                return when (value) {
+                    "unknown" -> UNKNOWN
+                    "stationary" -> STATIONARY
+                    "foot" -> FOOT
+                    "run" -> RUN
+                    "bike" -> BIKE
+                    "car" -> CAR
+                    else -> UNKNOWN
+                }
+            }
+        }
+
+        override fun toString(): String {
+            return when (this) {
+                UNKNOWN -> "unknown"
+                STATIONARY -> "stationary"
+                FOOT -> "foot"
+                RUN -> "run"
+                BIKE -> "bike"
+                CAR -> "car"
+            }
+        }
     }
 
     /**
