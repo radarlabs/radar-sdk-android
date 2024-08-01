@@ -198,15 +198,8 @@ class RadarUser(
             val trip = RadarTrip.fromJson(obj.optJSONObject(FIELD_TRIP))
             val debug = obj.optBoolean(FIELD_DEBUG)
             val fraud = RadarFraud.fromJson(obj.optJSONObject(FIELD_FRAUD))
-            val activityType = when (obj.optString(FIELD_ACTIVITY_TYPE)) {
-                "FOOT" -> Radar.RadarActivityType.FOOT
-                "RUN" -> Radar.RadarActivityType.RUN
-                "BIKE" -> Radar.RadarActivityType.BIKE
-                "CAR" -> Radar.RadarActivityType.CAR
-                "STATIONARY" -> Radar.RadarActivityType.STATIONARY
-                else -> Radar.RadarActivityType.UNKNOWN
-            }
-
+            val activityType = Radar.RadarActivityType.fromString(obj.optString(FIELD_ACTIVITY_TYPE))
+            
             return RadarUser(
                 id,
                 userId,
@@ -265,7 +258,7 @@ class RadarUser(
         obj.putOpt(FIELD_TRIP, this.trip?.toJson())
         obj.putOpt(FIELD_DEBUG, this.debug)
         obj.putOpt(FIELD_FRAUD, this.fraud?.toJson())
-        obj.putOpt(FIELD_ACTIVITY_TYPE,this.activityType.toString())
+        obj.putOpt(FIELD_ACTIVITY_TYPE,this.activityType?.toString())
         return obj
     }
 

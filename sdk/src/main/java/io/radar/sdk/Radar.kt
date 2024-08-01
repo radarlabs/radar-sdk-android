@@ -418,7 +418,32 @@ object Radar {
         FOOT,
         RUN,
         BIKE,
-        CAR
+        CAR;
+        companion object {
+            @JvmStatic
+            fun fromString(value: String): RadarActivityType {
+                return when (value) {
+                    "unknown" -> UNKNOWN
+                    "stationary" -> STATIONARY
+                    "foot" -> FOOT
+                    "run" -> RUN
+                    "bike" -> BIKE
+                    "car" -> CAR
+                    else -> UNKNOWN
+                }
+            }
+        }
+
+        override fun toString(): String {
+            return when (this) {
+                UNKNOWN -> "unknown"
+                STATIONARY -> "stationary"
+                FOOT -> "foot"
+                RUN -> "run"
+                BIKE -> "bike"
+                CAR -> "car"
+            }
+        }
     }
 
     /**

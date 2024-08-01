@@ -21,7 +21,7 @@ internal class RadarActivityManager (private val context: Context) {
 
     private val transitions = mutableListOf<ActivityTransition>()
     val request: ActivityTransitionRequest
-    val sensorSnapshotManager:SensorSnapshotManager
+    private val sensorSnapshotManager:SensorSnapshotManager
 
     internal companion object {
         private var isActivityUpdatesStarted = false
