@@ -58,14 +58,14 @@ internal class RadarActivityLifecycleCallbacks(
                             }
 
                             val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
-                            if (sdkConfiguration.trackOnceOnAppOpen) {
+                            if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
                                 Radar.trackOnce()
                             }
                         }
                     })
                 } else {
                     val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
-                    if (sdkConfiguration.trackOnceOnAppOpen) {
+                    if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
                         Radar.trackOnce()
                     }
                 }
