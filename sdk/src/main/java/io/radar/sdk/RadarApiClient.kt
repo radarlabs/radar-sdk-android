@@ -5,7 +5,6 @@ import android.location.Location
 import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
-import android.util.Log
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
@@ -16,7 +15,6 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
-import java.net.URLEncoder
 
 internal class RadarApiClient(
     private val context: Context,
