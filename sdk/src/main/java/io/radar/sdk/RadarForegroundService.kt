@@ -55,13 +55,12 @@ class RadarForegroundService : Service() {
         manager.deleteNotificationChannel("RadarSDK")
         var id = extras?.getInt("id") ?: 0
         id = if (id == 0) NOTIFICATION_ID else id
-        var importance = extras?.getInt("importance") ?: 0
-        importance = if (importance == 0) NotificationManager.IMPORTANCE_DEFAULT else importance
+        val importance = extras?.getInt("importance", NotificationManager.IMPORTANCE_DEFAULT) ?: NotificationManager.IMPORTANCE_DEFAULT
         val title = extras?.getString("title")
         val text = extras?.getString("text") ?: "Location tracking started"
-        var icon = extras?.getInt("icon") ?: 0
-        var iconString = extras?.getString("iconString") ?: this.applicationInfo.icon.toString()
-        var iconColor = extras?.getString("iconColor") ?: ""
+        val icon = extras?.getInt("icon") ?: 0
+        val iconString = extras?.getString("iconString") ?: this.applicationInfo.icon.toString()
+        val iconColor = extras?.getString("iconColor") ?: ""
         var smallIcon = resources.getIdentifier(iconString, "drawable", applicationContext.packageName) 
         if (icon != 0){
            smallIcon = resources.getIdentifier(icon.toString(), "drawable", applicationContext.packageName)  
@@ -74,7 +73,7 @@ class RadarForegroundService : Service() {
             .setContentText(text as CharSequence?)
             .setOngoing(true)
             .setSmallIcon(smallIcon)
-        if (title != null && title.isNotEmpty()) {
+        if (!title.isNullOrEmpty()) {
             builder = builder.setContentTitle(title as CharSequence?)
         }
         if (iconColor.isNotEmpty()) {
