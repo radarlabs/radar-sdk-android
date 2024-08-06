@@ -60,6 +60,9 @@ internal class RadarActivityLifecycleCallbacks(
                             val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
                             if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
                                 Radar.trackOnce()
+                                if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(activity.applicationContext)) {
+                                    Radar.startTracking(Radar.getTrackingOptions())
+                                }
                             }
                         }
                     })
@@ -67,6 +70,9 @@ internal class RadarActivityLifecycleCallbacks(
                     val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
                     if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
                         Radar.trackOnce()
+                        if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(activity.applicationContext)) {
+                            Radar.startTracking(Radar.getTrackingOptions())
+                        }
                     }
                 }
             } catch (e: Exception) {
