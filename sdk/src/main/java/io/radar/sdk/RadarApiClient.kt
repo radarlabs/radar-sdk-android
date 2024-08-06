@@ -757,7 +757,6 @@ internal class RadarApiClient(
 
         val path = "v1/search/geofences${queryParams}"
         val headers = headers(publishableKey)
-        Log.v("example", path)
 
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
