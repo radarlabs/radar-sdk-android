@@ -1,7 +1,13 @@
 package io.radar.sdk.model
 
+import io.radar.sdk.RadarTripOptions
+import io.radar.sdk.RadarUtils
 import org.json.JSONArray
 import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Represents a time zone.
@@ -25,13 +31,13 @@ class RadarTimeZone(
     /**
      * 
      */
-    val currentTime: String,
-    
+    val currentTime: Date,
+
     /**
      * 
      */
     val utcOffset: Int,
-    
+
     /**
      * 
      */
@@ -56,12 +62,13 @@ class RadarTimeZone(
             val currentTime = obj.getString("currentTime")
             val utcOffset = obj.getInt("utcOffset")
             val dstOffset = obj.getInt("dstOffset")
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.US)
 
             return RadarTimeZone(
                 id,
                 name,
                 code,
-                currentTime,
+                dateFormat.parse(currentTime)!!,
                 utcOffset,
                 dstOffset,
             )
@@ -73,7 +80,8 @@ class RadarTimeZone(
         obj.putOpt(FIELD_ID, id)
         obj.putOpt(FIELD_NAME, name)
         obj.putOpt(FIELD_CODE, code)
-        obj.putOpt(FIELD_CURRENT_TIME, currentTime)
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.US)
+        obj.putOpt(FIELD_CURRENT_TIME, dateFormat.format(currentTime))
         obj.putOpt(FIELD_UTC_OFFSET, utcOffset)
         obj.putOpt(FIELD_DST_OFFSET, dstOffset)
         return obj
