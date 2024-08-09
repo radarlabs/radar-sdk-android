@@ -8,15 +8,28 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
-import androidx.core.content.edit
-import io.radar.sdk.model.*
+import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarReplay
+import io.radar.sdk.model.RadarRouteMatrix
+import io.radar.sdk.model.RadarRoutes
+import io.radar.sdk.model.RadarSdkConfiguration
+import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import io.radar.sdk.util.RadarLogBuffer
 import io.radar.sdk.util.RadarReplayBuffer
 import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
-import java.util.*
+import java.util.Date
+import java.util.EnumSet
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -499,6 +512,8 @@ object Radar {
 
         if (publishableKey != null) {
             RadarSettings.setPublishableKey(this.context, publishableKey)
+        } else {
+            this.logger.w("Initialize called with null key")
         }
 
         if (!this::apiClient.isInitialized) {
@@ -3192,6 +3207,7 @@ object Radar {
     @JvmStatic
     internal fun flushReplays(replayParams: JSONObject? = null, callback: RadarTrackCallback? = null) {
         if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
             return
         }
 
