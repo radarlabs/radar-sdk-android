@@ -35,7 +35,7 @@ internal class RadarApiClient(
     }
 
     interface RadarGetConfigApiCallback {
-        fun onComplete(status: RadarStatus, config: RadarConfig)
+        fun onComplete(status: RadarStatus, config: RadarConfig? = null)
     }
 
     interface RadarTripApiCallback {
@@ -116,7 +116,11 @@ internal class RadarApiClient(
     }
 
     internal fun getConfig(usage: String? = null, verified: Boolean = false, callback: RadarGetConfigApiCallback? = null) {
-        val publishableKey = RadarSettings.getPublishableKey(context) ?: return
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            return
+        }
 
         val queryParams = StringBuilder()
         queryParams.append("installId=${RadarSettings.getInstallId(context)}")
