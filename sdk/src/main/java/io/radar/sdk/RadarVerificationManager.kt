@@ -44,6 +44,8 @@ internal class RadarVerificationManager(
     private var lastTokenElapsedRealtime: Long = 0L
     private var lastTokenBeacons: Boolean = false
     private var lastIPs: String? = null
+    private var expectedCountryCode: String? = null
+    private var expectedStateCode: String? = null
 
     internal companion object {
         private const val WARM_UP_WINDOW_SECONDS = 3600 * 12 // 12 hours
@@ -102,6 +104,8 @@ internal class RadarVerificationManager(
                                         integrityToken,
                                         integrityException,
                                         false,
+                                        verificationManager.expectedCountryCode,
+                                        verificationManager.expectedStateCode,
                                         callback = object : RadarApiClient.RadarTrackApiCallback {
                                             override fun onComplete(
                                                 status: Radar.RadarStatus,
@@ -235,6 +239,11 @@ internal class RadarVerificationManager(
                         minInterval -= 10
                     }
 
+                    // min interval is 10 seconds
+                    if (minInterval < 10) {
+                        minInterval = 10;
+                    }
+
                     if (verificationManager.scheduled) {
                         verificationManager.logger.d("Token request already scheduled")
 
@@ -342,6 +351,11 @@ internal class RadarVerificationManager(
         }
 
         this.trackVerified(this.lastTokenBeacons, callback)
+    }
+
+    fun setExpectedJurisdiction(countryCode: String?, stateCode: String?) {
+        this.expectedCountryCode = countryCode
+        this.expectedStateCode = stateCode
     }
 
     fun getRequestHash(location: Location): String {

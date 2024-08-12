@@ -1093,6 +1093,26 @@ object Radar {
     }
 
     /**
+     * Optionally sets the user's expected country and state for jurisdiction checks.
+     *
+     * @param[countryCode] The user's expected country code.
+     * * @param[countryCode] The user's expected country code.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun setExpectedJurisdiction(countryCode: String?, stateCode: String?) {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("setExpectedJurisdiction()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.setExpectedJurisdiction(countryCode, stateCode)
+    }
+
+    /**
      * Starts tracking the user's location in the background.
      *
      * @see [](https://radar.com/documentation/sdk/android#background-tracking-for-geofencing)
