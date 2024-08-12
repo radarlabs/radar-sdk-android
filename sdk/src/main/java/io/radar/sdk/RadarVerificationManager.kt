@@ -58,15 +58,15 @@ internal class RadarVerificationManager(
         val usage = "trackVerified"
         Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                val googlePlayProjectNumber = config?.googlePlayProjectNumber ?: 0L
-
-                if (status != Radar.RadarStatus.SUCCESS) {
+                if (status != Radar.RadarStatus.SUCCESS || config == null) {
                     Radar.handler.post {
                         callback?.onComplete(status)
                     }
 
                     return
                 }
+
+                val googlePlayProjectNumber = config.googlePlayProjectNumber
 
                 Radar.locationManager.getLocation(
                     RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
