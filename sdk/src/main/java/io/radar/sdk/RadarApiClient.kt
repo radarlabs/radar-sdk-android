@@ -365,6 +365,12 @@ internal class RadarApiClient(
                 metadata.putOpt("accelerometerData", RadarState.getLastAccelerometer(context))
                 metadata.putOpt("gyroscopeData", RadarState.getLastGyro(context))
                 metadata.putOpt("magnetometerData", RadarState.getLastMagnetometer(context))
+                if (location.hasSpeed() && !location.speed.isNaN()) {
+                    metadata.putOpt("speed",location.speed)
+                } 
+                if (location.hasBearing() && !location.bearing.isNaN()) {
+                    metadata.putOpt("bearing", location.bearing)
+                } 
                 params.putOpt("locationMetadata", metadata)
                 Log.d("testing","params are $params")
             }
