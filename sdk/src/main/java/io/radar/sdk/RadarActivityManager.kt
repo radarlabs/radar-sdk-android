@@ -97,8 +97,7 @@ internal class RadarActivityManager (private val context: Context) {
             task.addOnFailureListener { e: Exception ->
                 Radar.logger.e("Activity updates failed to start")
             }
-       }
-       else {
+       } else {
             Radar.logger.d("Activity updates already started")
        }
     }
