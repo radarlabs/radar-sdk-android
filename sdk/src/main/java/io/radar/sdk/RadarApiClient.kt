@@ -377,8 +377,6 @@ internal class RadarApiClient(
                     // we are doing this to keep a consistent shape of the metadata
                     metadata.putOpt("bearing", "null")
                 }
-                params.putOpt("locationMetadata", metadata)
-                Log.d("testing","params are $params")
             }
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
