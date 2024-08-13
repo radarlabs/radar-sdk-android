@@ -369,13 +369,13 @@ internal class RadarApiClient(
                     metadata.putOpt("speed",location.speed)
                 } else {
                     // we are doing this to keep a consistent shape of the metadata
-                    metadata.putOpt("speed", null)
+                    metadata.putOpt("speed", "null")
                 }
                 if (location.hasBearing() && !location.bearing.isNaN()) {
                     metadata.putOpt("bearing", location.bearing)
                 } else {
                     // we are doing this to keep a consistent shape of the metadata
-                    metadata.putOpt("bearing", null)
+                    metadata.putOpt("bearing", "null")
                 }
                 params.putOpt("locationMetadata", metadata)
                 Log.d("testing","params are $params")
