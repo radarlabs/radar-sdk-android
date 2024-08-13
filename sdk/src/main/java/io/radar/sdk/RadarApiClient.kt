@@ -4,7 +4,6 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.SystemClock
-import android.util.Log
 import io.radar.sdk.Radar.RadarAddressVerificationStatus
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus

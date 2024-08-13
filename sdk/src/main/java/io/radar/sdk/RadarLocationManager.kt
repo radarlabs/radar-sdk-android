@@ -27,7 +27,7 @@ internal class RadarLocationManager(
     private val batteryManager: RadarBatteryManager,
     private val provider: Radar.RadarLocationServicesProvider,
     internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper(),
-){
+) {
 
     @SuppressLint("VisibleForTests")
     internal var locationClient: RadarAbstractLocationClient = if (provider == HUAWEI) RadarHuaweiLocationClient(context, logger) else RadarGoogleLocationClient(context, logger)

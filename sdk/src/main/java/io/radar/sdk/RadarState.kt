@@ -258,10 +258,6 @@ internal object RadarState {
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
     }
 
-    private fun jsonObjectToString(jsonObject: JSONObject?): String? {
-        return jsonObject?.toString()
-    }
-
     private fun stringToJsonObject(jsonString: String?): JSONObject? {
         return jsonString?.let {
             try {
@@ -278,7 +274,7 @@ internal object RadarState {
     }
 
     internal fun setLastMotionActivity(context: Context, motionJson: JSONObject?) {
-        val jsonString = jsonObjectToString(motionJson)
+        val jsonString = motionJson?.toString()
         getSharedPreferences(context).edit {
             putString(KEY_LAST_MOTION_ACTIVITY, jsonString)
         }
@@ -290,7 +286,7 @@ internal object RadarState {
     }
 
     internal fun setLastAccelerometer(context: Context, accelerometerJson: JSONObject?) {
-        val jsonString = jsonObjectToString(accelerometerJson)
+        val jsonString = accelerometerJson?.toString()
         getSharedPreferences(context).edit {
             putString(KEY_LAST_ACCELEROMETER, jsonString)
         }
@@ -302,7 +298,7 @@ internal object RadarState {
     }
 
     internal fun setLastGyro(context: Context, gyroJson: JSONObject?) {
-        val jsonString = jsonObjectToString(gyroJson)
+        val jsonString = gyroJson.toString()
         getSharedPreferences(context).edit {
             putString(KEY_LAST_GYROSCOPE, jsonString)
         }
@@ -314,7 +310,7 @@ internal object RadarState {
     }
 
     internal fun setLastMagnetometer(context: Context, magnetometerJson: JSONObject?) {
-        val jsonString = jsonObjectToString(magnetometerJson)
+        val jsonString = magnetometerJson?.toString()
         getSharedPreferences(context).edit {
             putString(KEY_LAST_MAGNETOMETER, jsonString)
         }
