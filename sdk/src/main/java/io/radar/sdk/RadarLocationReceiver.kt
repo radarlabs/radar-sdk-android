@@ -174,12 +174,22 @@ class RadarLocationReceiver : BroadcastReceiver() {
             val result = ActivityTransitionResult.extractResult(intent)!!
             for (event in result.transitionEvents) {
                 val eventType = getActivityType(event.activityType)
+                val previousActivity = RadarState.getLastMotionActivity(context)
+                // we only want to track once when we are truly changing activity and not due to flaky activity detection changes
+                if (previousActivity != null) {
+                    val previousEventType = previousActivity.getString("type")
+                    if (previousEventType == eventType.toString()) {
+                        Radar.logger.i("Activity detected but not initiating trackOnce for: $eventType")
+                        return
+                    }
+                }
                 val motionActivity = JSONObject()
                 motionActivity.put("type", eventType.toString())
                 motionActivity.put("dateTime", event.elapsedRealTimeNanos)
                 RadarState.setLastMotionActivity(context, motionActivity)
                 Radar.logger.i("Activity detected and initiating trackOnce for: $eventType")
             }
+            
             Radar.trackOnce()
         }
     }
