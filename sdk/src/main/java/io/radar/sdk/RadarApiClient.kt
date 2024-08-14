@@ -367,13 +367,11 @@ internal class RadarApiClient(
                 if (location.hasSpeed() && !location.speed.isNaN()) {
                     metadata.putOpt("speed",location.speed)
                 } else {
-                    // we are doing this to keep a consistent shape of the metadata
                     metadata.putOpt("speed", "null")
                 }
                 if (location.hasBearing() && !location.bearing.isNaN()) {
                     metadata.putOpt("bearing", location.bearing)
                 } else {
-                    // we are doing this to keep a consistent shape of the metadata
                     metadata.putOpt("bearing", "null")
                 }
             }
