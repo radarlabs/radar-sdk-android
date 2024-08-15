@@ -39,9 +39,6 @@ internal object RadarState {
     private const val KEY_LAST_BEACON_UUIDS = "last_beacon_uuids"
     private const val KEY_LAST_BEACON_UIDS = "last_beacon_uids"
     private const val KEY_LAST_MOTION_ACTIVITY = "last_motion_activity"
-    private const val KEY_LAST_ACCELEROMETER = "last_accelerometer"
-    private const val KEY_LAST_GYROSCOPE = "last_gyroscope"
-    private const val KEY_LAST_MAGNETOMETER = "last_magnetometer"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -280,39 +277,4 @@ internal object RadarState {
         }
     }
 
-    internal fun getLastAccelerometer(context: Context): JSONObject? {
-        val jsonString = getSharedPreferences(context).getString(KEY_LAST_ACCELEROMETER, null)
-        return stringToJsonObject(jsonString)
-    }
-
-    internal fun setLastAccelerometer(context: Context, accelerometerJson: JSONObject?) {
-        val jsonString = accelerometerJson?.toString()
-        getSharedPreferences(context).edit {
-            putString(KEY_LAST_ACCELEROMETER, jsonString)
-        }
-    }
-
-    internal fun getLastGyro(context: Context): JSONObject? {
-        val jsonString = getSharedPreferences(context).getString(KEY_LAST_GYROSCOPE, null)
-        return stringToJsonObject(jsonString)
-    }
-
-    internal fun setLastGyro(context: Context, gyroJson: JSONObject?) {
-        val jsonString = gyroJson.toString()
-        getSharedPreferences(context).edit {
-            putString(KEY_LAST_GYROSCOPE, jsonString)
-        }
-    }
-
-    internal fun getLastMagnetometer(context: Context): JSONObject? {
-        val jsonString = getSharedPreferences(context).getString(KEY_LAST_MAGNETOMETER, null)
-        return stringToJsonObject(jsonString)
-    }
-
-    internal fun setLastMagnetometer(context: Context, magnetometerJson: JSONObject?) {
-        val jsonString = magnetometerJson?.toString()
-        getSharedPreferences(context).edit {
-            putString(KEY_LAST_MAGNETOMETER, jsonString)
-        }
-    }
 }

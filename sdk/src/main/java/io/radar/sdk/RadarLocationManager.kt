@@ -590,10 +590,6 @@ internal class RadarLocationManager(
         }
         RadarState.updateLastSentAt(context)
 
-        if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
-            activityManager.requestMotionUpdates()
-        }
-
         if (source == RadarLocationSource.FOREGROUND_LOCATION) {
             return
         }

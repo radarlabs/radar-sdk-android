@@ -361,9 +361,6 @@ internal class RadarApiClient(
             if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
                 val metadata = JSONObject()
                 metadata.putOpt("motionActivityData", RadarState.getLastMotionActivity(context))
-                metadata.putOpt("accelerometerData", RadarState.getLastAccelerometer(context))
-                metadata.putOpt("gyroscopeData", RadarState.getLastGyro(context))
-                metadata.putOpt("magnetometerData", RadarState.getLastMagnetometer(context))
                 if (location.hasSpeed() && !location.speed.isNaN()) {
                     metadata.putOpt("speed",location.speed)
                 }
