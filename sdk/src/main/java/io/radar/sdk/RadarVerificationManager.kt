@@ -383,7 +383,7 @@ internal class RadarVerificationManager(
 
             logger.w("Integrity API not included")
 
-            block("", integrityException)
+            block(null, integrityException)
 
             return
         }
