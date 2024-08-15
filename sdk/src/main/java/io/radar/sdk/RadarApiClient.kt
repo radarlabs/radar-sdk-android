@@ -366,14 +366,11 @@ internal class RadarApiClient(
                 metadata.putOpt("magnetometerData", RadarState.getLastMagnetometer(context))
                 if (location.hasSpeed() && !location.speed.isNaN()) {
                     metadata.putOpt("speed",location.speed)
-                } else {
-                    metadata.putOpt("speed", "null")
                 }
                 if (location.hasBearing() && !location.bearing.isNaN()) {
                     metadata.putOpt("bearing", location.bearing)
-                } else {
-                    metadata.putOpt("bearing", "null")
                 }
+                params.putOpt("locationMetadata", metadata)
             }
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
