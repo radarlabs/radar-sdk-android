@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import io.radar.sdk.model.RadarBeacon
+import org.json.JSONObject
 
 internal object RadarState {
 
@@ -37,6 +38,7 @@ internal object RadarState {
     private const val KEY_LAST_BEACONS = "last_beacons"
     private const val KEY_LAST_BEACON_UUIDS = "last_beacon_uuids"
     private const val KEY_LAST_BEACON_UIDS = "last_beacon_uids"
+    private const val KEY_LAST_MOTION_ACTIVITY = "last_motion_activity"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -251,6 +253,28 @@ internal object RadarState {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeaconUIDs(context: Context, uids: Array<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
+    }
+
+    private fun stringToJsonObject(jsonString: String?): JSONObject? {
+        return jsonString?.let {
+            try {
+                JSONObject(it)
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    internal fun getLastMotionActivity(context: Context): JSONObject? {
+        val jsonString = getSharedPreferences(context).getString(KEY_LAST_MOTION_ACTIVITY, null)
+        return stringToJsonObject(jsonString)
+    }
+
+    internal fun setLastMotionActivity(context: Context, motionJson: JSONObject?) {
+        val jsonString = motionJson?.toString()
+        getSharedPreferences(context).edit {
+            putString(KEY_LAST_MOTION_ACTIVITY, jsonString)
+        }
     }
 
 }
