@@ -580,7 +580,11 @@ object Radar {
 
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: RadarStatus, config: RadarConfig) {
+            override fun onComplete(status: RadarStatus, config: RadarConfig?) {
+                if (config == null) {
+                    return
+                }
+
                 if (status == RadarStatus.SUCCESS) {
                     locationManager.updateTrackingFromMeta(config.meta)
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
@@ -1123,6 +1127,26 @@ object Radar {
                 block(status, token)
             }
         })
+    }
+
+    /**
+     * Optionally sets the user's expected country and state for jurisdiction checks.
+     *
+     * @param[countryCode] The user's expected country code.
+     * * @param[countryCode] The user's expected country code.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun setExpectedJurisdiction(countryCode: String?, stateCode: String?) {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("setExpectedJurisdiction()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.setExpectedJurisdiction(countryCode, stateCode)
     }
 
     /**

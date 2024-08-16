@@ -48,7 +48,7 @@ internal class RadarApiClient(
     }
 
     interface RadarGetConfigApiCallback {
-        fun onComplete(status: RadarStatus, config: RadarConfig)
+        fun onComplete(status: RadarStatus, config: RadarConfig? = null)
     }
 
     interface RadarTripApiCallback {
@@ -129,7 +129,11 @@ internal class RadarApiClient(
     }
 
     internal fun getConfig(usage: String? = null, verified: Boolean = false, callback: RadarGetConfigApiCallback? = null) {
-        val publishableKey = RadarSettings.getPublishableKey(context) ?: return
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            return
+        }
 
         val queryParams = StringBuilder()
         queryParams.append("installId=${RadarSettings.getInstallId(context)}")
@@ -247,7 +251,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, callback: RadarTrackApiCallback? = null) {
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, expectedCountryCode: String? = null, expectedStateCode: String? = null, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -356,6 +360,12 @@ internal class RadarApiClient(
                 params.putOpt("integrityException", integrityException)
                 params.putOpt("sharing", RadarUtils.isScreenSharing(context))
                 params.putOpt("encrypted", encrypted)
+                if (expectedCountryCode != null) {
+                    params.putOpt("expectedCountryCode", expectedCountryCode)
+                }
+                if (expectedStateCode != null) {
+                    params.putOpt("expectedStateCode", expectedStateCode)
+                }
             }
             params.putOpt("appId", context.packageName)
             if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {

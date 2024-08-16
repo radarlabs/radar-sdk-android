@@ -55,7 +55,11 @@ internal data class RadarSdkConfiguration(
 
         fun updateSdkConfigurationFromServer(context: Context) {
             Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
-                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
+                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                    if (config == null) {
+                        return
+                    }
+
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
                 }
             })
