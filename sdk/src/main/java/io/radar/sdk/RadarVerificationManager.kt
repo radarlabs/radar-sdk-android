@@ -413,7 +413,7 @@ internal class RadarVerificationManager(
         if (!isIntegrityApiIncluded()) {
             val integrityException = "Integrity API not included"
 
-            logger.w("Integrity API not included")
+            logger.w(integrityException)
 
             block(null, integrityException)
 
@@ -456,7 +456,7 @@ internal class RadarVerificationManager(
         if (!isIntegrityApiIncluded()) {
             val integrityException = "Integrity API not included"
 
-            logger.w("Integrity API not included")
+            logger.w(integrityException)
 
             block(null, integrityException)
 
