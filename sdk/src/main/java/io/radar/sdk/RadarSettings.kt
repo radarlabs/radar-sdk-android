@@ -294,7 +294,7 @@ internal object RadarSettings {
     }
 
     fun setSdkConfiguration(context: Context, configuration: RadarSdkConfiguration?) {
-        Radar.logger.d("set SDK Configuration | sdkConfiguration = $configuration")
+        Radar.logger.d("Setting SDK configuration | sdkConfiguration = $configuration")
         if (configuration != null) {
             Radar.setLogPersistenceFeatureFlag(configuration.useLogPersistence)
             setLogLevel(context, configuration.logLevel)

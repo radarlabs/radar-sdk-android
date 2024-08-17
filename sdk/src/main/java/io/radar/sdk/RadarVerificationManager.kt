@@ -51,6 +51,15 @@ internal class RadarVerificationManager(
         private const val WARM_UP_WINDOW_SECONDS = 3600 * 12 // 12 hours
     }
 
+    private fun isIntegrityApiIncluded(): Boolean {
+        return try {
+            Class.forName("com.google.android.play.core.integrity.StandardIntegrityManager")
+            true
+        } catch (e: ClassNotFoundException) {
+            false
+        }
+    }
+
     fun trackVerified(beacons: Boolean = false, callback: Radar.RadarTrackVerifiedCallback? = null) {
         val verificationManager = this
         val lastTokenBeacons = beacons
@@ -369,6 +378,16 @@ internal class RadarVerificationManager(
     }
 
     private fun warmUpProviderAndFetchTokenFromGoogle(googlePlayProjectNumber: Long, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
+        if (!isIntegrityApiIncluded()) {
+            val integrityException = "Integrity API not included"
+
+            logger.w(integrityException)
+
+            block(null, integrityException)
+
+            return
+        }
+
         val standardIntegrityManager = IntegrityManagerFactory.createStandard(this.context)
         standardIntegrityManager.prepareIntegrityToken(
             StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
@@ -391,6 +410,16 @@ internal class RadarVerificationManager(
     }
 
     fun getIntegrityToken(googlePlayProjectNumber: Long?, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
+        if (!isIntegrityApiIncluded()) {
+            val integrityException = "Integrity API not included"
+
+            logger.w(integrityException)
+
+            block(null, integrityException)
+
+            return
+        }
+
         if (requestHash == null) {
             val integrityException = "Missing request hash"
 
@@ -424,6 +453,16 @@ internal class RadarVerificationManager(
     }
 
     private fun fetchTokenFromGoogle(requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
+        if (!isIntegrityApiIncluded()) {
+            val integrityException = "Integrity API not included"
+
+            logger.w(integrityException)
+
+            block(null, integrityException)
+
+            return
+        }
+
         logger.d("Requesting integrity token")
 
         val integrityTokenResponse: Task<StandardIntegrityToken> = this.standardIntegrityTokenProvider.request(
