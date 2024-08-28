@@ -577,11 +577,6 @@ object Radar {
         if (sdkConfiguration.usePersistence) {
             Radar.loadReplayBufferFromSharedPreferences()
         }
-        if(sdkConfiguration.useLogPersistence){
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                this.logger.logPastTermination()
-            }
-        }
 
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
@@ -604,6 +599,10 @@ object Radar {
                 }
             }
         })
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            this.logger.logPastTermination()
+        }
 
         this.initialized = true
 

@@ -60,6 +60,10 @@ internal class RadarLogger(
 
     @RequiresApi(Build.VERSION_CODES.R)
     fun logPastTermination(){
+        val level = RadarSettings.getLogLevel(this.context)
+        if (level != RadarLogLevel.DEBUG) {
+            return
+        }
         val activityManager = this.context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         // only run in foreground
         val appProcesses = activityManager.runningAppProcesses
@@ -81,7 +85,7 @@ internal class RadarLogger(
         if (crashLists.isNotEmpty()) {
             for (crashInfo in crashLists) {                
                 if (crashInfo.timestamp > previousTimestamp) {
-                    Radar.sendLog(RadarLogLevel.INFO, "App terminating | with reason: ${crashInfo.getDescription()} | at ${dateFormat.format(Date(crashInfo.timestamp))} | with ${batteryLevel * 100}% battery", null, Date(crashInfo.timestamp))
+                    Radar.sendLog(RadarLogLevel.DEBUG, "App terminating | with reason: ${crashInfo.getDescription()} | at ${dateFormat.format(Date(crashInfo.timestamp))} | with ${batteryLevel * 100}% battery", null, Date(crashInfo.timestamp))
                     break
                 }
             }
@@ -101,13 +105,13 @@ internal class RadarLogger(
     fun logBackgrounding() {
         val batteryLevel = this.getBatteryLevel()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        this.i("App entering background | at ${dateFormat.format(Date())} | with ${batteryLevel * 100}% battery")
+        this.d("App entering background | at ${dateFormat.format(Date())} | with ${batteryLevel * 100}% battery")
     }
 
      fun logResigningActive() {
         val batteryLevel = this.getBatteryLevel()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        this.i("App resigning active | at ${dateFormat.format(Date())} | with ${batteryLevel * 100}% battery")
+        this.d("App resigning active | at ${dateFormat.format(Date())} | with ${batteryLevel * 100}% battery")
     }
 
 }
