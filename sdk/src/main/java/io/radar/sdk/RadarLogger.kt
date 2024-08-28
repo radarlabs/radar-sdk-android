@@ -1,7 +1,6 @@
 package io.radar.sdk
 
 import android.app.ActivityManager
-import java.text.SimpleDateFormat
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -11,6 +10,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarLogLevel
 import io.radar.sdk.Radar.RadarLogType
+import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
@@ -61,6 +61,12 @@ internal class RadarLogger(
     @RequiresApi(Build.VERSION_CODES.R)
     fun logPastTermination(){
         val activityManager = this.context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        // only run in foreground
+        val appProcesses = activityManager.runningAppProcesses
+        val isForeground = appProcesses?.any { it.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND && it.processName == context.packageName } ?: false
+        if (!isForeground) {
+            return
+        }
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val sharedPreferences = this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
         val previousTimestamp = sharedPreferences.getLong("last_timestamp", 0)
