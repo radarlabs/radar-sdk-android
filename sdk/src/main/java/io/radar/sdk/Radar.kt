@@ -576,7 +576,6 @@ object Radar {
         val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
         if (sdkConfiguration.usePersistence) {
             Radar.loadReplayBufferFromSharedPreferences()
-            
         }
         if(sdkConfiguration.useLogPersistence){
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
