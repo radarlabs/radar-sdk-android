@@ -1417,10 +1417,6 @@ object Radar {
      */
     @JvmStatic
     fun setReceiver(receiver: RadarReceiver?) {
-        if (!initialized) {
-            return
-        }
-
         this.receiver = receiver
     }
 
@@ -1433,10 +1429,6 @@ object Radar {
      */
     @JvmStatic
     fun setVerifiedReceiver(verifiedReceiver: RadarVerifiedReceiver?) {
-        if (!initialized) {
-            return
-        }
-
         this.verifiedReceiver = verifiedReceiver
     }
 
