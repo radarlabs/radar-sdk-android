@@ -679,12 +679,18 @@ object Radar {
             return
         }
 
-//        var paramMatch = false
-//        for (cnst in c.constructors) {
-//            if (cnst.parameterCount == 1 && cnst.parameterTypes.first()) {
-//
-//            }
-//        }
+        var constructorMatch = false
+        for (cnst in c.constructors) {
+            if (cnst.parameterTypes.size == 1 && cnst.parameterTypes.first().isAssignableFrom(Context::class.java)) {
+                constructorMatch = true
+                break;
+            }
+        }
+
+        if (!constructorMatch) {
+            this.logger.e("Provided receiver does not match required constructor signature")
+            return
+        }
 
         RadarSettings.setHeadlessReceiverName(context, c.name)
     }
