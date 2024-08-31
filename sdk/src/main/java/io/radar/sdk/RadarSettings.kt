@@ -44,6 +44,7 @@ internal object RadarSettings {
     private const val KEY_OLD_SYNC_MODE = "sync_mode"
     private const val KEY_OLD_OFFLINE_MODE = "offline_mode"
     private const val KEY_USER_DEBUG = "user_debug"
+    private const val KEY_PERSISTENT_RECEIVER_NAME = "persistent_receiver_name"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -250,6 +251,16 @@ internal object RadarSettings {
         val optionsJson = getSharedPreferences(context).getString(KEY_NOTIFICATION_OPTIONS, null) ?: return null
         val optionsObj = JSONObject(optionsJson)
         return RadarNotificationOptions.fromJson(optionsObj)
+    }
+
+    internal fun getHeadlessReceiverName(context: Context): String? {
+        return getSharedPreferences(context).getString(KEY_PERSISTENT_RECEIVER_NAME, null)
+    }
+
+    internal fun setHeadlessReceiverName(context: Context, name: String?) {
+        getSharedPreferences(context).edit {
+            putString(KEY_PERSISTENT_RECEIVER_NAME, name)
+        }
     }
 
     internal fun getForegroundService(context: Context): RadarTrackingOptions.RadarTrackingOptionsForegroundService {

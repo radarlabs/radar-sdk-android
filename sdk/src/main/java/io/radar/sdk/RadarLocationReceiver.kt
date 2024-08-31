@@ -122,6 +122,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (!Radar.initialized) {
             Radar.initialize(context)
+            Radar.attachHeadlessReceiver(context)
         }
 
         Radar.logger.d("Received broadcast | action = ${intent.action}")
