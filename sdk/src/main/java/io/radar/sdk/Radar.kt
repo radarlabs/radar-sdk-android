@@ -674,6 +674,11 @@ object Radar {
     }
 
     @JvmStatic
+    fun isInitialized(): Boolean {
+        return this.initialized
+    }
+
+    @JvmStatic
     fun <T : Any> setHeadlessReceiver(c: Class<T>) {
         if (!initialized) {
             return
@@ -688,11 +693,12 @@ object Radar {
         }
 
         if (!constructorMatch) {
-            this.logger.e("Provided receiver does not match required constructor signature")
+            this.logger.e("Provided receiver does not contain required constructor signature")
             return
         }
 
         RadarSettings.setHeadlessReceiverName(context, c.name)
+        this.logger.i("Registered headless receiver.")
     }
 
     @JvmStatic
@@ -3570,7 +3576,7 @@ object Radar {
                 this.receiver = headlessReceiverClass.getConstructor(Context::class.java).newInstance(context) as RadarReceiver
                 this.logger.d("Successfully attached headless receiver: $headlessReceiverName")
             } catch (e: Exception) {
-                this.logger.e("Failed to instantiate: $headlessReceiverName")
+                this.logger.e("Failed to instantiate: $headlessReceiverName", RadarLogType.SDK_EXCEPTION)
                 this.logger.e(e.toString())
             }
         }
