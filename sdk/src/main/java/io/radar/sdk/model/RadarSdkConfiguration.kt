@@ -19,7 +19,8 @@ internal data class RadarSdkConfiguration(
     val logLevel: Radar.RadarLogLevel,
     val startTrackingOnInitialize: Boolean,
     val trackOnceOnAppOpen: Boolean,
-    val useLocationMetadata: Boolean
+    val useLocationMetadata: Boolean,
+    val useOpenedAppConversion: Boolean = false,
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -33,6 +34,7 @@ internal data class RadarSdkConfiguration(
         private const val START_TRACKING_ON_INITIALIZE = "startTrackingOnInitialize"
         private const val TRACK_ONCE_ON_APP_OPEN = "trackOnceOnAppOpen"
         private const val USE_LOCATION_METADATA = "useLocationMetadata"
+        private const val USE_OPENED_APP_CONVERSION = "useOpenedAppConversion"
 
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
@@ -50,6 +52,7 @@ internal data class RadarSdkConfiguration(
                 config.optBoolean(START_TRACKING_ON_INITIALIZE, false),
                 config.optBoolean(TRACK_ONCE_ON_APP_OPEN, false),
                 config.optBoolean(USE_LOCATION_METADATA, false),
+                config.optBoolean(USE_OPENED_APP_CONVERSION, false),
             )
         }
 
@@ -78,6 +81,7 @@ internal data class RadarSdkConfiguration(
             putOpt(START_TRACKING_ON_INITIALIZE, startTrackingOnInitialize)
             putOpt(TRACK_ONCE_ON_APP_OPEN, trackOnceOnAppOpen)
             putOpt(USE_LOCATION_METADATA, useLocationMetadata)
+            putOpt(USE_OPENED_APP_CONVERSION, useOpenedAppConversion)
         }
     }
 }
