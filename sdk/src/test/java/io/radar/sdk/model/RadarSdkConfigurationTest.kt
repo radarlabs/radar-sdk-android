@@ -27,6 +27,7 @@ class RadarSdkConfigurationTest {
     private var startTrackingOnInitialize = false
     private var trackOnceOnAppOpen = false
     private var useLocationMetadata = false
+    private var useOpenedAppConversion = false
 
     @Before
     fun setUp() {
@@ -43,7 +44,8 @@ class RadarSdkConfigurationTest {
             "logLevel":"info",
             "startTrackingOnInitialize":$startTrackingOnInitialize,
             "trackOnceOnAppOpen":$trackOnceOnAppOpen,
-            "useLocationMetadata":$useLocationMetadata
+            "useLocationMetadata":$useLocationMetadata,
+            "useOpenedAppConversion":$useOpenedAppConversion
         }""".trimIndent()
     }
 
@@ -61,7 +63,8 @@ class RadarSdkConfigurationTest {
                 logLevel,
                 startTrackingOnInitialize,
                 trackOnceOnAppOpen,
-                useLocationMetadata
+                useLocationMetadata,
+                useOpenedAppConversion
             ).toJson().toString()
         )
     }
@@ -79,6 +82,7 @@ class RadarSdkConfigurationTest {
         assertEquals(startTrackingOnInitialize, settings.startTrackingOnInitialize)
         assertEquals(trackOnceOnAppOpen, settings.trackOnceOnAppOpen)
         assertEquals(useLocationMetadata, settings.useLocationMetadata)
+        assertEquals(useOpenedAppConversion, settings.useOpenedAppConversion)
     }
 
     @Test
@@ -94,6 +98,7 @@ class RadarSdkConfigurationTest {
         assertFalse(settings.startTrackingOnInitialize)
         assertFalse(settings.trackOnceOnAppOpen)
         assertFalse(settings.useLocationMetadata)
+        assertFalse(settings.useOpenedAppConversion)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")
