@@ -4,6 +4,7 @@ import io.radar.sdk.Radar
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -98,7 +99,7 @@ class RadarSdkConfigurationTest {
         assertFalse(settings.startTrackingOnInitialize)
         assertFalse(settings.trackOnceOnAppOpen)
         assertFalse(settings.useLocationMetadata)
-        assertFalse(settings.useOpenedAppConversion)
+        assertTrue(settings.useOpenedAppConversion)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")

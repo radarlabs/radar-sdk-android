@@ -52,7 +52,7 @@ internal data class RadarSdkConfiguration(
                 config.optBoolean(START_TRACKING_ON_INITIALIZE, false),
                 config.optBoolean(TRACK_ONCE_ON_APP_OPEN, false),
                 config.optBoolean(USE_LOCATION_METADATA, false),
-                config.optBoolean(USE_OPENED_APP_CONVERSION, false),
+                config.optBoolean(USE_OPENED_APP_CONVERSION, true),
             )
         }
 
