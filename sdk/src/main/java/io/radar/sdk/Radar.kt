@@ -3163,6 +3163,9 @@ object Radar {
     }
 
     internal fun logOpenedAppConversion() {
+        if (!RadarSettings.getSdkConfiguration(context).useOpenedAppConversion) {
+            return
+        }
         // if opened_app has been logged in the last 1000 milliseconds, don't log it again
         val timestamp = System.currentTimeMillis()
         val lastAppOpenTime = RadarSettings.getLastAppOpenTimeMillis(context)
