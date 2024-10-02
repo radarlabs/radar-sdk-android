@@ -3517,9 +3517,7 @@ object Radar {
 
     internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?, createdAt: Date = Date()) {
         receiver?.onLog(context, message)
-        if (isTestKey()) {
-            logBuffer.write(level, type, message, createdAt)
-        }
+        logBuffer.write(level, type, message, createdAt)
     }
 
     internal fun sendToken(token: RadarVerifiedLocationToken) {
