@@ -1,4 +1,6 @@
 # Migration guides
+## 3.11.x to 3.12.x
+-`RadarReceiver` interface has been changed to include `onLocationPermissionStatusUpdated` method.
 
 ## 3.12.x to 3.13.x
 -  The `Radar.trackVerified()` method now returns `token: RadarVerifiedLocationToken`, which includes `user`, `events`, `token,`, `expiresAt`, `expiresIn`, and `passed`. The `Radar.trackVerifiedToken()` method has been removed, since `Radar.trackVerified()` now returns a signed JWT.

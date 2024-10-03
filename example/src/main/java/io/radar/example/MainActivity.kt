@@ -44,19 +44,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestForegroundPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
-        } else {
-            Log.v("example", "Foreground location permission already granted")
-        }
+        Radar.requestForegroundLocationPermission()
     }
 
     private fun requestBackgroundPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), 2)
-        } else {
-            Log.v("example", "Background location permission already granted")
-        }
+        Radar.requestBackgroundLocationPermission()
     }
 
      private fun requestActivityRecognitionPermission() {
