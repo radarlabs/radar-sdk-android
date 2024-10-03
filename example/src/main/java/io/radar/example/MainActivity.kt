@@ -4,14 +4,11 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import android.widget.LinearLayout
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.Radar
@@ -47,19 +44,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestForegroundPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
-        } else {
-            Log.v("example", "Foreground location permission already granted")
-        }
+        Radar.requestForegroundLocationPermission()
     }
 
     private fun requestBackgroundPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), 2)
-        } else {
-            Log.v("example", "Background location permission already granted")
-        }
+        Radar.requestBackgroundLocationPermission()
     }
 
      private fun requestActivityRecognitionPermission() {
