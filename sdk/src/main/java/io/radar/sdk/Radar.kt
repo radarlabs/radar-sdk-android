@@ -474,6 +474,20 @@ object Radar {
     private lateinit var locationPermissionManager: RadarLocationPermissionManager
 
     /**
+     * Used by React Native module to setup the activity.
+     */
+    @JvmStatic
+    fun onActivityCreate(activity: Activity, context: Context?) {
+        this.context = context ?: activity;
+        this.activity = activity;
+        val application = this.context as? Application
+        if (!this::locationPermissionManager.isInitialized) {
+            this.locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
+            application?.registerActivityLifecycleCallbacks(locationPermissionManager)
+        }
+    }
+
+    /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
      *
      * @see [](https://radar.com/documentation/sdk/android#initialize-sdk)
@@ -574,8 +588,10 @@ object Radar {
         }
         application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
 
-        locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
-        application?.registerActivityLifecycleCallbacks(locationPermissionManager)
+        if (!this::locationPermissionManager.isInitialized) {
+            this.locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
+            application?.registerActivityLifecycleCallbacks(locationPermissionManager)
+        }
 
         val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
         if (sdkConfiguration.usePersistence) {
