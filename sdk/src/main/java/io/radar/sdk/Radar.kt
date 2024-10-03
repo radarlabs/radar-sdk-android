@@ -85,19 +85,19 @@ object Radar {
     }
 
     /**
-     * Called when a track request with token callback succeeds, fails, or times out.
+     * Called when a track verified request succeeds, fails, or times out.
      */
-    interface RadarTrackTokenCallback {
+    interface RadarTrackVerifiedCallback {
 
         /**
-         * Called when a track request with token callback succeeds, fails, or times out. Receives the request status and, if successful, a JSON Web Token (JWT) containing an array of the events generated and the user. Verify the JWT server-side using your secret key.
+         * Called when a track verified request succeeds, fails, or times out. Receives the request status and, if successful, the user's verified location. Verify the token server-side using your secret key.
          *
          * @param[status] RadarStatus The request status.
-         * @param[token] String? If successful, a JSON Web Token (JWT).
+         * @param[token] RadarVerifiedLocationToken? If successful, the user's verified location.
          */
         fun onComplete(
             status: RadarStatus,
-            token: String? = null
+            token: RadarVerifiedLocationToken? = null
         )
 
     }
@@ -412,6 +412,40 @@ object Radar {
         NONE
     }
 
+    enum class RadarActivityType {
+        UNKNOWN,
+        STATIONARY,
+        FOOT,
+        RUN,
+        BIKE,
+        CAR;
+        companion object {
+            @JvmStatic
+            fun fromString(value: String): RadarActivityType {
+                return when (value) {
+                    "unknown" -> UNKNOWN
+                    "stationary" -> STATIONARY
+                    "foot" -> FOOT
+                    "run" -> RUN
+                    "bike" -> BIKE
+                    "car" -> CAR
+                    else -> UNKNOWN
+                }
+            }
+        }
+
+        override fun toString(): String {
+            return when (this) {
+                UNKNOWN -> "unknown"
+                STATIONARY -> "stationary"
+                FOOT -> "foot"
+                RUN -> "run"
+                BIKE -> "bike"
+                CAR -> "car"
+            }
+        }
+    }
+
     /**
      * The location services providers.
      */
@@ -464,7 +498,12 @@ object Radar {
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
     @JvmStatic
-    fun initialize(context: Context?, publishableKey: String? = null, receiver: RadarReceiver? = null, provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, fraud: Boolean = false) {
+    fun initialize(
+        context: Context?, 
+        publishableKey: String? = null, 
+        receiver: RadarReceiver? = null, 
+        provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, 
+        fraud: Boolean = false) {
         if (context == null) {
             return
         }
@@ -538,16 +577,30 @@ object Radar {
         locationPermissionManager = RadarLocationPermissionManager(this.context, this.activity)
         application?.registerActivityLifecycleCallbacks(locationPermissionManager)
 
-
-        val featureSettings = RadarSettings.getFeatureSettings(this.context)
-        if (featureSettings.usePersistence) {
+        val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
+        if (sdkConfiguration.usePersistence) {
             Radar.loadReplayBufferFromSharedPreferences()
         }
+
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: RadarStatus, config: RadarConfig) {
-                locationManager.updateTrackingFromMeta(config?.meta)
-                RadarSettings.setFeatureSettings(context, config?.meta.featureSettings)
+            override fun onComplete(status: RadarStatus, config: RadarConfig?) {
+                if (config == null) {
+                    return
+                }
+
+                if (status == RadarStatus.SUCCESS) {
+                    locationManager.updateTrackingFromMeta(config.meta)
+                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                }
+
+                val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+                if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(context)) {
+                    Radar.startTracking(Radar.getTrackingOptions())
+                }
+                if (sdkConfiguration.trackOnceOnAppOpen) {
+                    Radar.trackOnce()
+                }
             }
         })
 
@@ -817,7 +870,7 @@ object Radar {
                             user: RadarUser?,
                             nearbyGeofences: Array<RadarGeofence>?,
                             config: RadarConfig?,
-                            token: String?
+                            token: RadarVerifiedLocationToken?
                         ) {
                             if (status == RadarStatus.SUCCESS ){
                                 locationManager.updateTrackingFromMeta(config?.meta)
@@ -914,7 +967,7 @@ object Radar {
                 user: RadarUser?,
                 nearbyGeofences: Array<RadarGeofence>?,
                 config: RadarConfig?,
-                token: String?
+                token: RadarVerifiedLocationToken?
             ) {
                 if (status == RadarStatus.SUCCESS ){
                     locationManager.updateTrackingFromMeta(config?.meta)
@@ -955,7 +1008,7 @@ object Radar {
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerified(beacons: Boolean = false, callback: RadarTrackCallback? = null) {
+    fun trackVerified(beacons: Boolean = false, callback: RadarTrackVerifiedCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -982,56 +1035,9 @@ object Radar {
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerified(beacons: Boolean = false, block: (status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) -> Unit) {
-        trackVerified(beacons, object : RadarTrackCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
-                block(status, location, events, user)
-            }
-        })
-    }
-
-    /**
-     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Verify the JWT server-side using your secret key.
-     *
-     * Note that you must configure SSL pinning before calling this method.
-     *
-     * @see [](https://radar.com/documentation/fraud)
-     *
-     * @param[beacons] A boolean indicating whether to range beacons.
-     * @param[callback] An optional callback.
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @JvmStatic
-    fun trackVerifiedToken(beacons: Boolean = false, callback: RadarTrackTokenCallback? = null) {
-        if (!initialized) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
-            return
-        }
-        this.logger.i("trackVerifiedToken()", RadarLogType.SDK_CALL)
-
-        if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
-        }
-
-        this.verificationManager.trackVerifiedToken(beacons, callback)
-    }
-
-    /**
-     * Tracks the user's location with device integrity information for location verification use cases. Returns a JSON Web Token (JWT). Verify the JWT server-side using your secret key.
-     *
-     * Note that you must configure SSL pinning before calling this method.
-     *
-     * @see [](https://radar.com/documentation/fraud)
-     *
-     * @param[beacons] A boolean indicating whether to range beacons.
-     * @param[block] A block callback.
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @JvmStatic
-    fun trackVerifiedToken(beacons: Boolean = false, block: (status: RadarStatus, token: String?) -> Unit) {
-        trackVerifiedToken(beacons, object : RadarTrackTokenCallback {
-            override fun onComplete(status: RadarStatus, token: String?) {
+    fun trackVerified(beacons: Boolean = false, block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
+        trackVerified(beacons, object : RadarTrackVerifiedCallback {
+            override fun onComplete(status: RadarStatus, token: RadarVerifiedLocationToken?) {
                 block(status, token)
             }
         })
@@ -1044,13 +1050,12 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
-     * @param[token] A boolean indicating whether to return a JSON Web Token (JWT). If `true`, tokens are delivered to your `RadarVerifiedReceiver`. If `false`, location updates are delivered to your `RadarReceiver`.
      * @param[interval] The interval in seconds between each location update.
      * @param[beacons] A boolean indicating whether to range beacons.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun startTrackingVerified(token: Boolean, interval: Int, beacons: Boolean) {
+    fun startTrackingVerified(interval: Int, beacons: Boolean) {
         if (!initialized) {
             return
         }
@@ -1060,7 +1065,92 @@ object Radar {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        this.verificationManager.startTrackingVerified(token, interval, beacons)
+        this.verificationManager.startTrackingVerified(interval, beacons)
+    }
+
+    /**
+     * Stops tracking the user's location with device integrity information for location verification use cases.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun stopTrackingVerified() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("stopTrackingVerified()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.stopTrackingVerified()
+    }
+
+    /**
+     * Returns the user's last verified location token if still valid, or requests a fresh token if not.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[callback] An optional callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun getVerifiedLocationToken(callback: RadarTrackVerifiedCallback? = null) {
+        if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+        this.logger.i("getVerifiedLocationToken()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.getVerifiedLocationToken(callback)
+    }
+
+    /**
+     * Returns the user's last verified location token if still valid, or requests a fresh token if not.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[block] A block callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun getVerifiedLocationToken(block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
+        getVerifiedLocationToken(object : RadarTrackVerifiedCallback {
+            override fun onComplete(status: RadarStatus, token: RadarVerifiedLocationToken?) {
+                block(status, token)
+            }
+        })
+    }
+
+    /**
+     * Optionally sets the user's expected country and state for jurisdiction checks.
+     *
+     * @param[countryCode] The user's expected country code.
+     * * @param[countryCode] The user's expected country code.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun setExpectedJurisdiction(countryCode: String?, stateCode: String?) {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("setExpectedJurisdiction()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.setExpectedJurisdiction(countryCode, stateCode)
     }
 
     /**
@@ -1154,7 +1244,7 @@ object Radar {
                                 user: RadarUser?,
                                 nearbyGeofences: Array<RadarGeofence>?,
                                 config: RadarConfig?,
-                                token: String?
+                                token: RadarVerifiedLocationToken?
                             ) {
                                 handler.post {
                                     callback?.onComplete(status, location, events, user)
@@ -1442,8 +1532,6 @@ object Radar {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, options)
 
-                    // store previous tracking options for post-trip
-                    // if tracking was false, previousTrackingOptions will be null
                     val isTracking = Radar.isTracking()
                     if (isTracking) {
                         val previousTrackingOptions = RadarSettings.getTrackingOptions(context)
@@ -1452,9 +1540,10 @@ object Radar {
                         RadarSettings.removePreviousTrackingOptions(context)
                     }
 
-                    // if trackingOptions provided, startTracking
                     if (trackingOptions != null) {
-                        Radar.startTracking(trackingOptions);
+                        Radar.startTracking(trackingOptions)
+                    } else if (!isTracking) {
+                        Radar.startTracking(RadarSettings.getRemoteTrackingOptions(context) ?: RadarSettings.getTrackingOptions(context))
                     }
 
                     // flush location update to generate events
@@ -3078,6 +3167,9 @@ object Radar {
     }
 
     internal fun logOpenedAppConversion() {
+        if (!RadarSettings.getSdkConfiguration(context).useOpenedAppConversion) {
+            return
+        }
         // if opened_app has been logged in the last 1000 milliseconds, don't log it again
         val timestamp = System.currentTimeMillis()
         val lastAppOpenTime = RadarSettings.getLastAppOpenTimeMillis(context)
@@ -3134,8 +3226,18 @@ object Radar {
         if (!initialized) {
             return
         }
-
-        RadarSettings.setLogLevel(context, level)
+        // update clientSdkConfiguration if the new level is different, otherwise no-op
+        val sdkConfiguration = RadarSettings.getClientSdkConfiguration(context)
+        if (sdkConfiguration.optString("logLevel") == level.toString().lowercase()) {
+            return;
+        }
+        sdkConfiguration.put("logLevel", level.toString().lowercase())
+        RadarSettings.setClientSdkConfiguration(context, sdkConfiguration)
+        // if the current log level is already the target log level, no-op
+        if (RadarSettings.getLogLevel(context) == level) {
+            return;
+        }
+        RadarSdkConfiguration.updateSdkConfigurationFromServer(context)
     }
 
     /**
@@ -3255,8 +3357,7 @@ object Radar {
     internal fun loadReplayBufferFromSharedPreferences() {
         replayBuffer.loadFromSharedPreferences()
         val replayCount = replayBuffer.getSize()
-        // TODO: revisit this log
-        logger.d("loaded replay buffer from shared preferences with $replayCount replays")
+        logger.d("Loaded replays | replayCount = $replayCount")
     }
 
     @JvmStatic
@@ -3458,10 +3559,10 @@ object Radar {
         }
     }
 
-    internal fun sendToken(token: String) {
+    internal fun sendToken(token: RadarVerifiedLocationToken) {
         verifiedReceiver?.onTokenUpdated(context, token)
 
-        logger.i("📍️ Radar token updated | token = $token")
+        logger.i("📍️ Radar token updated | passed = ${token.passed}; expiresAt = ${token.expiresAt}; expiresIn = ${token.expiresIn}; token = ${token.token}")
     }
 
     internal fun sendLocationPermissionStatus(status: RadarLocationPermissionStatus) {

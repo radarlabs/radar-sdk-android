@@ -8,6 +8,7 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Build
 import android.os.Handler
+import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import com.google.android.play.core.integrity.StandardIntegrityManager
 import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityToken
@@ -20,7 +21,11 @@ import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarGeofence
 import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
+import java.net.InetAddress
+import java.net.NetworkInterface
+import java.util.Enumeration
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarVerificationManager(
@@ -32,26 +37,45 @@ internal class RadarVerificationManager(
     private var lastWarmUpTimestampSeconds = 0L
     private val handler = Handler(this.context.mainLooper)
     private val connectivityManager = this.context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var started = false
+    private var scheduled = false
+    private var lastToken: RadarVerifiedLocationToken? = null
+    private var lastTokenElapsedRealtime: Long = 0L
+    private var lastTokenBeacons: Boolean = false
+    private var lastIPs: String? = null
+    private var expectedCountryCode: String? = null
+    private var expectedStateCode: String? = null
 
     internal companion object {
         private const val WARM_UP_WINDOW_SECONDS = 3600 * 12 // 12 hours
     }
 
-    fun trackVerified(beacons: Boolean = false, callback: Radar.RadarTrackCallback? = null) {
+    private fun isIntegrityApiIncluded(): Boolean {
+        return try {
+            Class.forName("com.google.android.play.core.integrity.StandardIntegrityManager")
+            true
+        } catch (e: ClassNotFoundException) {
+            false
+        }
+    }
+
+    fun trackVerified(beacons: Boolean = false, callback: Radar.RadarTrackVerifiedCallback? = null) {
         val verificationManager = this
+        val lastTokenBeacons = beacons
 
         val usage = "trackVerified"
         Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
-                val googlePlayProjectNumber = config.googlePlayProjectNumber
-
-                if (status != Radar.RadarStatus.SUCCESS) {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                if (status != Radar.RadarStatus.SUCCESS || config == null) {
                     Radar.handler.post {
                         callback?.onComplete(status)
                     }
 
                     return
                 }
+
+                val googlePlayProjectNumber = config.googlePlayProjectNumber
 
                 Radar.locationManager.getLocation(
                     RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
@@ -89,6 +113,8 @@ internal class RadarVerificationManager(
                                         integrityToken,
                                         integrityException,
                                         false,
+                                        verificationManager.expectedCountryCode,
+                                        verificationManager.expectedStateCode,
                                         callback = object : RadarApiClient.RadarTrackApiCallback {
                                             override fun onComplete(
                                                 status: Radar.RadarStatus,
@@ -97,19 +123,22 @@ internal class RadarVerificationManager(
                                                 user: RadarUser?,
                                                 nearbyGeofences: Array<RadarGeofence>?,
                                                 config: RadarConfig?,
-                                                token: String?
+                                                token: RadarVerifiedLocationToken?
                                             ) {
                                                 if (status == Radar.RadarStatus.SUCCESS) {
                                                     Radar.locationManager.updateTrackingFromMeta(
                                                         config?.meta
                                                     )
+                                                }
+                                                if (token != null) {
+                                                    verificationManager.lastToken = token
+                                                    verificationManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
+                                                    verificationManager.lastTokenBeacons = lastTokenBeacons
                                                 }
                                                 Radar.handler.post {
                                                     callback?.onComplete(
                                                         status,
-                                                        location,
-                                                        events,
-                                                        user
+                                                        token
                                                     )
                                                 }
                                             }
@@ -192,159 +221,62 @@ internal class RadarVerificationManager(
         })
     }
 
-    fun trackVerifiedToken(beacons: Boolean = false, callback: Radar.RadarTrackTokenCallback? = null) {
+    fun startTrackingVerified(interval: Int, beacons: Boolean) {
         val verificationManager = this
 
-        val usage = "trackVerifiedToken"
-        Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
-                val googlePlayProjectNumber = config.googlePlayProjectNumber
+        verificationManager.started = true
+        verificationManager.scheduled = false
 
-                if (status != Radar.RadarStatus.SUCCESS) {
-                    Radar.handler.post {
-                        callback?.onComplete(status)
+        val trackVerified = { ->
+            verificationManager.trackVerified(beacons, object : Radar.RadarTrackVerifiedCallback {
+                override fun onComplete(
+                    status: Radar.RadarStatus,
+                    token: RadarVerifiedLocationToken?
+                ) {
+                    var expiresIn = 0
+                    var minInterval: Int = interval
+
+                    token?.let {
+                        expiresIn = it.expiresIn
+
+                        // if expiresIn is shorter than interval, override interval
+                        minInterval = minOf(it.expiresIn, interval)
                     }
 
-                    return
+                    // re-request early to maximize the likelihood that a cached token is available
+                    if (minInterval > 20) {
+                        minInterval -= 10
+                    }
 
-                }
+                    // min interval is 10 seconds
+                    if (minInterval < 10) {
+                        minInterval = 10;
+                    }
 
-                Radar.locationManager.getLocation(
-                    RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH,
-                    Radar.RadarLocationSource.FOREGROUND_LOCATION,
-                    object :
-                        Radar.RadarLocationCallback {
-                        override fun onComplete(
-                            status: Radar.RadarStatus,
-                            location: Location?,
-                            stopped: Boolean
-                        ) {
-                            if (status != Radar.RadarStatus.SUCCESS || location == null) {
-                                Radar.handler.post {
-                                    callback?.onComplete(status)
-                                }
+                    if (verificationManager.scheduled) {
+                        verificationManager.logger.d("Token request already scheduled")
 
-                                return
-                            }
+                        return
+                    }
 
-                            val requestHash = verificationManager.getRequestHash(location)
+                    verificationManager.logger.d("Requesting token again in $minInterval seconds | minInterval = $minInterval; expiresIn = $expiresIn; interval = $interval")
 
-                            verificationManager.getIntegrityToken(
-                                googlePlayProjectNumber,
-                                requestHash
-                            ) { integrityToken, integrityException ->
-                                val callTrackApi = { beacons: Array<RadarBeacon>? ->
-                                    Radar.apiClient.track(
-                                        location,
-                                        RadarState.getStopped(verificationManager.context),
-                                        RadarActivityLifecycleCallbacks.foreground,
-                                        Radar.RadarLocationSource.FOREGROUND_LOCATION,
-                                        false,
-                                        beacons,
-                                        true,
-                                        integrityToken,
-                                        integrityException,
-                                        true,
-                                        object : RadarApiClient.RadarTrackApiCallback {
-                                            override fun onComplete(
-                                                status: Radar.RadarStatus,
-                                                res: JSONObject?,
-                                                events: Array<RadarEvent>?,
-                                                user: RadarUser?,
-                                                nearbyGeofences: Array<RadarGeofence>?,
-                                                config: RadarConfig?,
-                                                token: String?
-                                            ) {
-                                                if (status == Radar.RadarStatus.SUCCESS) {
-                                                    Radar.locationManager.updateTrackingFromMeta(
-                                                        config?.meta
-                                                    )
-                                                }
-                                                Radar.handler.post {
-                                                    callback?.onComplete(status, token)
-                                                }
-                                            }
-                                        })
-                                }
+                    verificationManager.scheduled = true
 
-                                if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    Radar.apiClient.searchBeacons(
-                                        location,
-                                        1000,
-                                        10,
-                                        object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                                            override fun onComplete(
-                                                status: Radar.RadarStatus,
-                                                res: JSONObject?,
-                                                beacons: Array<RadarBeacon>?,
-                                                uuids: Array<String>?,
-                                                uids: Array<String>?
-                                            ) {
-                                                if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                                    Radar.beaconManager.startMonitoringBeaconUUIDs(
-                                                        uuids,
-                                                        uids
-                                                    )
+                    handler.postDelayed(object : Runnable {
+                        override fun run() {
+                            if (verificationManager.started) {
+                                verificationManager.logger.d("Token request interval fired")
 
-                                                    Radar.beaconManager.rangeBeaconUUIDs(
-                                                        uuids,
-                                                        uids,
-                                                        false,
-                                                        object : Radar.RadarBeaconCallback {
-                                                            override fun onComplete(
-                                                                status: Radar.RadarStatus,
-                                                                beacons: Array<RadarBeacon>?
-                                                            ) {
-                                                                if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
-                                                                    callTrackApi(null)
+                                trackVerified()
 
-                                                                    return
-                                                                }
-
-                                                                callTrackApi(beacons)
-                                                            }
-                                                        })
-                                                } else if (beacons != null) {
-                                                    Radar.beaconManager.startMonitoringBeacons(
-                                                        beacons
-                                                    )
-
-                                                    Radar.beaconManager.rangeBeacons(
-                                                        beacons,
-                                                        false,
-                                                        object : Radar.RadarBeaconCallback {
-                                                            override fun onComplete(
-                                                                status: Radar.RadarStatus,
-                                                                beacons: Array<RadarBeacon>?
-                                                            ) {
-                                                                if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
-                                                                    callTrackApi(null)
-
-                                                                    return
-                                                                }
-
-                                                                callTrackApi(beacons)
-                                                            }
-                                                        })
-                                                } else {
-                                                    callTrackApi(arrayOf())
-                                                }
-                                            }
-                                        },
-                                        false
-                                    )
-                                } else {
-                                    callTrackApi(null)
-                                }
+                                verificationManager.scheduled = false
                             }
                         }
-                    })
-            }
-        })
-    }
-
-    fun startTrackingVerified(token: Boolean, interval: Int, beacons: Boolean) {
-        val verificationManager = this
+                    }, minInterval * 1000L)
+                }
+            })
+        }
 
         val request = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
@@ -354,37 +286,85 @@ internal class RadarVerificationManager(
             .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
             .build()
 
-        connectivityManager.registerNetworkCallback(request, object : ConnectivityManager.NetworkCallback() {
+        val handleNetworkChange = {
+            val ips = verificationManager.getIPs()
+            var changed = false
+
+            if (verificationManager.lastIPs == null) {
+                verificationManager.logger.d("First time getting IPs")
+                changed = false
+            } else if (ips == "error") {
+                verificationManager.logger.d("Error getting IPs")
+                changed = true
+            } else if (ips != verificationManager.lastIPs) {
+                verificationManager.logger.d("IPs changed | ips = $ips; lastIPs = ${verificationManager.lastIPs}")
+                changed = true
+            } else {
+                verificationManager.logger.d("IPs unchanged")
+            }
+            verificationManager.lastIPs = ips
+
+            if (changed) {
+                trackVerified()
+            }
+        }
+
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
-
                 verificationManager.logger.d("Network connected")
-
-                if (token) {
-                    verificationManager.trackVerifiedToken(beacons)
-                } else {
-                    verificationManager.trackVerified(beacons)
-                }
+                handleNetworkChange()
             }
 
             override fun onLost(network: Network) {
                 super.onLost(network)
-
                 verificationManager.logger.d("Network lost")
+                handleNetworkChange()
             }
-        })
+        }
 
-        handler.post(object : Runnable {
-            override fun run() {
-                if (token) {
-                    verificationManager.trackVerifiedToken(beacons)
-                } else {
-                    verificationManager.trackVerified(beacons)
+        networkCallback?.let {
+            connectivityManager.registerNetworkCallback(request, it)
+        }
+
+        trackVerified()
+    }
+
+    fun stopTrackingVerified() {
+        this.started = false
+
+        networkCallback?.let {
+            connectivityManager.unregisterNetworkCallback(it)
+        }
+    }
+
+    fun getVerifiedLocationToken(callback: Radar.RadarTrackVerifiedCallback? = null) {
+        val lastTokenElapsed = (SystemClock.elapsedRealtime() - this.lastTokenElapsedRealtime) / 1000
+
+        if (this.lastToken != null) {
+            this.lastToken?.let {
+                if (lastTokenElapsed < it.expiresIn) {
+                    Radar.logger.d("Last token valid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed")
+
+                    Radar.flushLogs()
+
+                    callback?.onComplete(Radar.RadarStatus.SUCCESS, it)
+
+                    return
                 }
 
-                handler.postDelayed(this, interval * 1000L)
+                Radar.logger.d("Last token invalid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed")
             }
-        })
+        } else {
+            Radar.logger.d("No last token")
+        }
+
+        this.trackVerified(this.lastTokenBeacons, callback)
+    }
+
+    fun setExpectedJurisdiction(countryCode: String?, stateCode: String?) {
+        this.expectedCountryCode = countryCode
+        this.expectedStateCode = stateCode
     }
 
     fun getRequestHash(location: Location): String {
@@ -398,6 +378,16 @@ internal class RadarVerificationManager(
     }
 
     private fun warmUpProviderAndFetchTokenFromGoogle(googlePlayProjectNumber: Long, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
+        if (!isIntegrityApiIncluded()) {
+            val integrityException = "Integrity API not included"
+
+            logger.w(integrityException)
+
+            block(null, integrityException)
+
+            return
+        }
+
         val standardIntegrityManager = IntegrityManagerFactory.createStandard(this.context)
         standardIntegrityManager.prepareIntegrityToken(
             StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
@@ -420,6 +410,16 @@ internal class RadarVerificationManager(
     }
 
     fun getIntegrityToken(googlePlayProjectNumber: Long?, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
+        if (!isIntegrityApiIncluded()) {
+            val integrityException = "Integrity API not included"
+
+            logger.w(integrityException)
+
+            block(null, integrityException)
+
+            return
+        }
+
         if (requestHash == null) {
             val integrityException = "Missing request hash"
 
@@ -453,6 +453,16 @@ internal class RadarVerificationManager(
     }
 
     private fun fetchTokenFromGoogle(requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
+        if (!isIntegrityApiIncluded()) {
+            val integrityException = "Integrity API not included"
+
+            logger.w(integrityException)
+
+            block(null, integrityException)
+
+            return
+        }
+
         logger.d("Requesting integrity token")
 
         val integrityTokenResponse: Task<StandardIntegrityToken> = this.standardIntegrityTokenProvider.request(
@@ -475,6 +485,33 @@ internal class RadarVerificationManager(
                 
                 block(null, integrityException)
             }
+    }
+
+    fun getIPs(): String {
+        val ips = mutableListOf<String>()
+
+        try {
+            val interfaces: Enumeration<NetworkInterface> = NetworkInterface.getNetworkInterfaces()
+            while (interfaces.hasMoreElements()) {
+                val networkInterface: NetworkInterface = interfaces.nextElement()
+                val addresses: Enumeration<InetAddress> = networkInterface.inetAddresses
+
+                while (addresses.hasMoreElements()) {
+                    val address: InetAddress = addresses.nextElement()
+                    address.hostAddress?.let { ips.add(it) }
+                }
+            }
+        } catch (e: Exception) {
+            logger.d("Error getting IPs | e = ${e.localizedMessage}")
+
+            return "error"
+        }
+
+        if (ips.size > 0) {
+            return ips.joinToString(",")
+        }
+
+        return "error"
     }
 
 }

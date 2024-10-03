@@ -1,6 +1,5 @@
 package io.radar.sdk.util
 
-import io.radar.sdk.Radar
 import io.radar.sdk.RadarSettings
 import io.radar.sdk.model.RadarReplay
 import android.content.Context
@@ -9,10 +8,6 @@ import androidx.core.content.edit
 import java.util.concurrent.LinkedBlockingDeque
 import org.json.JSONObject
 import org.json.JSONArray
-
-/**
- * A buffer for replay events.
- */
 
 internal class RadarSimpleReplayBuffer(private val context: Context) : RadarReplayBuffer {
 
@@ -33,9 +28,9 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
             buffer.removeFirst()
         }
         buffer.offer(RadarReplay(replayParams))
-        val featureSettings = RadarSettings.getFeatureSettings(context)
-        if (featureSettings.usePersistence) {
-            // If buffer length is above 50, remove every fifth replay from the persisted buffer 
+        val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+        if (sdkConfiguration.usePersistence) {
+            // if buffer length is above 50, remove every fifth replay from the persisted buffer
             if (buffer.size > 50) {
                 val prunedBuffer = buffer.filterIndexed { index, _ -> index % 5 != 0 }
                 val prunedReplaysAsJsonArray = JSONArray(prunedBuffer.map { it.toJson() })

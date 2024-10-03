@@ -5,9 +5,9 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.os.Build
 import io.radar.sdk.Radar.RadarLocationCallback
 import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
 import io.radar.sdk.Radar.RadarLocationSource
@@ -36,6 +36,7 @@ internal class RadarLocationManager(
     private var startedInterval = 0
     private var startedFastestInterval = 0
     private val callbacks = ArrayList<RadarLocationCallback>()
+    private val activityManager = RadarActivityManager(context)
 
     internal companion object {
         private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
@@ -118,9 +119,12 @@ internal class RadarLocationManager(
         this.started = false
         RadarSettings.setTracking(context, false)
         this.updateTracking()
-        val settings = RadarSettings.getFeatureSettings(context)
+        val settings = RadarSettings.getSdkConfiguration(context)
         if (settings.extendFlushReplays) {
             Radar.flushReplays()
+        }
+        if (settings.useLocationMetadata) {
+            activityManager.stopActivityUpdates()
         }
     }
 
@@ -188,6 +192,9 @@ internal class RadarLocationManager(
         }
 
         if (tracking) {
+            if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
+                activityManager.startActivityUpdates()
+            }
             if (options.foregroundServiceEnabled) {
                 val foregroundService = RadarSettings.getForegroundService(context)
                 if (!foregroundService.updatesOnly) {
@@ -554,7 +561,7 @@ internal class RadarLocationManager(
                 return
             }
 
-            // We add the 0.1 second buffer to account for the fact that the timer may fire slightly before the desired interval
+            // add a 0.1 second buffer to account for the fact that the timer may fire slightly before the desired interval
             val lastSyncIntervalWithBuffer = lastSyncInterval + 0.1
             if (lastSyncIntervalWithBuffer < options.desiredSyncInterval) {
                 logger.d("Skipping sync: desired sync interval | desiredSyncInterval = ${options.desiredSyncInterval}; lastSyncInterval = ${lastSyncIntervalWithBuffer}")
@@ -611,7 +618,7 @@ internal class RadarLocationManager(
                     user: RadarUser?,
                     nearbyGeofences: Array<RadarGeofence>?,
                     config: RadarConfig?,
-                    token: String?
+                    token: RadarVerifiedLocationToken?
                 ) {
                     locationManager.replaceSyncedGeofences(nearbyGeofences)
 
@@ -706,5 +713,4 @@ internal class RadarLocationManager(
             }
         }
     }
-
 }

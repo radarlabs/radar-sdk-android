@@ -4,16 +4,30 @@ import android.content.Context
 import android.location.Location
 import android.os.Build
 import android.os.SystemClock
-import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.Radar.RadarAddressVerificationStatus
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
-import io.radar.sdk.Radar.RadarAddressVerificationStatus
 import io.radar.sdk.Radar.locationManager
-import io.radar.sdk.model.*
+import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarLog
+import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarReplay
+import io.radar.sdk.model.RadarRouteMatrix
+import io.radar.sdk.model.RadarRoutes
+import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.util.*
+import java.net.URLEncoder
+import java.util.EnumSet
 
 internal class RadarApiClient(
     private val context: Context,
@@ -29,12 +43,12 @@ internal class RadarApiClient(
             user: RadarUser? = null,
             nearbyGeofences: Array<RadarGeofence>? = null,
             config: RadarConfig? = null,
-            token: String? = null
+            token: RadarVerifiedLocationToken? = null
         )
     }
 
     interface RadarGetConfigApiCallback {
-        fun onComplete(status: RadarStatus, config: RadarConfig)
+        fun onComplete(status: RadarStatus, config: RadarConfig? = null)
     }
 
     interface RadarTripApiCallback {
@@ -102,7 +116,8 @@ internal class RadarApiClient(
             "X-Radar-Device-Model" to RadarUtils.deviceModel,
             "X-Radar-Device-OS" to RadarUtils.deviceOS,
             "X-Radar-Device-Type" to RadarUtils.deviceType,
-            "X-Radar-SDK-Version" to RadarUtils.sdkVersion
+            "X-Radar-SDK-Version" to RadarUtils.sdkVersion,
+            "X-Radar-Mobile-Origin" to context.packageName
         )
         if (RadarSettings.isXPlatform(context)) {
             headers["X-Radar-X-Platform-SDK-Type"] = RadarSettings.getXPlatformSDKType(context)
@@ -114,7 +129,11 @@ internal class RadarApiClient(
     }
 
     internal fun getConfig(usage: String? = null, verified: Boolean = false, callback: RadarGetConfigApiCallback? = null) {
-        val publishableKey = RadarSettings.getPublishableKey(context) ?: return
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            return
+        }
 
         val queryParams = StringBuilder()
         queryParams.append("installId=${RadarSettings.getInstallId(context)}")
@@ -129,6 +148,8 @@ internal class RadarApiClient(
         if (usage != null) {
             queryParams.append("&usage=${usage}")
         }
+        val clientSdkConfiguration = RadarSettings.getClientSdkConfiguration(context).toString()
+        queryParams.append("&clientSdkConfiguration=${URLEncoder.encode(clientSdkConfiguration, "utf-8")}")
 
         val path = "v1/config?${queryParams}"
         val headers = headers(publishableKey)
@@ -177,15 +198,10 @@ internal class RadarApiClient(
             },
             extendedTimeout = false,
             stream = true,
-            // Do not log the saved log events. If the logs themselves were logged it would create a redundancy and
-            // eventually lead to a crash when creating a downstream log request, since these will log to memory as a
-            // single log entry. Then each time after, this log entry would contain more and more logs, eventually
-            // causing an out of memory exception.
-            logPayload = false
+            logPayload = false // avoid logging the logging call
         )
     }
 
-    // api handler for /track/replay, just takes in a list of replays to send to API
     internal fun replay(replays: List<RadarReplay>, callback: RadarReplayApiCallback?) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -235,7 +251,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, callback: RadarTrackApiCallback? = null) {
+    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, expectedCountryCode: String? = null, expectedStateCode: String? = null, callback: RadarTrackApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -344,8 +360,25 @@ internal class RadarApiClient(
                 params.putOpt("integrityException", integrityException)
                 params.putOpt("sharing", RadarUtils.isScreenSharing(context))
                 params.putOpt("encrypted", encrypted)
+                if (expectedCountryCode != null) {
+                    params.putOpt("expectedCountryCode", expectedCountryCode)
+                }
+                if (expectedStateCode != null) {
+                    params.putOpt("expectedStateCode", expectedStateCode)
+                }
             }
             params.putOpt("appId", context.packageName)
+            if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
+                val metadata = JSONObject()
+                metadata.putOpt("motionActivityData", RadarState.getLastMotionActivity(context))
+                if (location.hasSpeed() && !location.speed.isNaN()) {
+                    metadata.putOpt("speed",location.speed)
+                }
+                if (location.hasBearing() && !location.bearing.isNaN()) {
+                    metadata.putOpt("bearing", location.bearing)
+                }
+                params.putOpt("locationMetadata", metadata)
+            }
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
@@ -413,17 +446,7 @@ internal class RadarApiClient(
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
                     RadarGeofence.fromJson(nearbyGeofencesArr)
                 }
-                val token = res.optString("token")
-
-                if (encrypted == true) {
-                    callback?.onComplete(status, res, null, null, null, null, token)
-
-                    if (token != null) {
-                        Radar.sendToken(token)
-                    }
-
-                    return
-                }
+                val token = RadarVerifiedLocationToken.fromJson(res)
 
                 if (user != null) {
                     val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
@@ -454,7 +477,7 @@ internal class RadarApiClient(
                     RadarSettings.setId(context, user._id)
 
                     if (user.trip == null) {
-                        // if user was on a trip that ended server side, restore previous tracking options
+                        // if user was on a trip that ended server-side, restore previous tracking options
                         val tripOptions = RadarSettings.getTripOptions(context)
                         if (tripOptions != null) {
                             locationManager.restartPreviousTrackingOptions()
@@ -470,7 +493,11 @@ internal class RadarApiClient(
                         Radar.sendEvents(events, user)
                     }
 
-                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config)
+                    if (token != null) {
+                        Radar.sendToken(token)
+                    }
+
+                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config, token)
 
                     return
                 }

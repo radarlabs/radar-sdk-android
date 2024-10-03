@@ -1,8 +1,10 @@
 package io.radar.sdk.model
 
+import io.radar.sdk.Radar
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -13,7 +15,7 @@ import kotlin.random.Random
  * Unit test [RadarFeatureSettings]
  */
 @RunWith(JUnit4::class)
-class RadarFeatureSettingsTest {
+class RadarSdkConfigurationTest {
 
     private var maxConcurrentJobs = -1
     private var requiresNetwork = false
@@ -22,6 +24,11 @@ class RadarFeatureSettingsTest {
     private var useLogPersistence = true
     private var useRadarModifiedBeacon = false
     private lateinit var jsonString: String
+    private var logLevel = Radar.RadarLogLevel.INFO
+    private var startTrackingOnInitialize = false
+    private var trackOnceOnAppOpen = false
+    private var useLocationMetadata = false
+    private var useOpenedAppConversion = false
 
     @Before
     fun setUp() {
@@ -34,45 +41,65 @@ class RadarFeatureSettingsTest {
             "usePersistence":$usePersistence,
             "useRadarModifiedBeacon":$useRadarModifiedBeacon,
             "useLogPersistence":$useLogPersistence,
-            "extendFlushReplays":$extendFlushReplays
+            "extendFlushReplays":$extendFlushReplays,
+            "logLevel":"info",
+            "startTrackingOnInitialize":$startTrackingOnInitialize,
+            "trackOnceOnAppOpen":$trackOnceOnAppOpen,
+            "useLocationMetadata":$useLocationMetadata,
+            "useOpenedAppConversion":$useOpenedAppConversion
         }""".trimIndent()
     }
 
     @Test
     fun testToJson() {
         assertEquals(
-            jsonString.removeWhitespace(),
-            RadarFeatureSettings(
+            JSONObject(jsonString).toString(),
+            RadarSdkConfiguration(
                 maxConcurrentJobs,
                 requiresNetwork,
                 usePersistence,
                 extendFlushReplays,
                 useLogPersistence,
-                useRadarModifiedBeacon
-            ).toJson().toString().removeWhitespace()
+                useRadarModifiedBeacon,
+                logLevel,
+                startTrackingOnInitialize,
+                trackOnceOnAppOpen,
+                useLocationMetadata,
+                useOpenedAppConversion
+            ).toJson().toString()
         )
     }
 
     @Test
     fun testFromJson() {
-        val settings = RadarFeatureSettings.fromJson(JSONObject(jsonString))
+        val settings = RadarSdkConfiguration.fromJson(JSONObject(jsonString))
         assertEquals(maxConcurrentJobs, settings.maxConcurrentJobs)
         assertEquals(requiresNetwork, settings.schedulerRequiresNetwork)
         assertEquals(usePersistence, settings.usePersistence)
         assertEquals(extendFlushReplays, settings.extendFlushReplays)
         assertEquals(useLogPersistence, settings.useLogPersistence)
         assertEquals(useRadarModifiedBeacon, settings.useRadarModifiedBeacon)
+        assertEquals(logLevel, settings.logLevel)
+        assertEquals(startTrackingOnInitialize, settings.startTrackingOnInitialize)
+        assertEquals(trackOnceOnAppOpen, settings.trackOnceOnAppOpen)
+        assertEquals(useLocationMetadata, settings.useLocationMetadata)
+        assertEquals(useOpenedAppConversion, settings.useOpenedAppConversion)
     }
 
     @Test
     fun testDefault() {
-        val settings = RadarFeatureSettings.default()
+        val settings = RadarSdkConfiguration.fromJson(null)
         assertEquals(1, settings.maxConcurrentJobs)
         assertFalse(settings.schedulerRequiresNetwork)
         assertFalse(settings.usePersistence)
         assertFalse(settings.extendFlushReplays)
         assertFalse(settings.useLogPersistence)
         assertFalse(settings.useRadarModifiedBeacon)
+        assertEquals(Radar.RadarLogLevel.INFO, settings.logLevel)
+        assertFalse(settings.startTrackingOnInitialize)
+        assertFalse(settings.trackOnceOnAppOpen)
+        assertFalse(settings.useLocationMetadata)
+        assertTrue(settings.useOpenedAppConversion)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")

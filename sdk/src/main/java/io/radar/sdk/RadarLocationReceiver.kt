@@ -9,6 +9,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import com.google.android.gms.location.ActivityTransitionResult
+import io.radar.sdk.RadarActivityManager.Companion.getActivityType
+import org.json.JSONObject
 
 class RadarLocationReceiver : BroadcastReceiver() {
 
@@ -18,11 +21,13 @@ class RadarLocationReceiver : BroadcastReceiver() {
         internal const val ACTION_BUBBLE_GEOFENCE = "io.radar.sdk.LocationReceiver.GEOFENCE"
         internal const val ACTION_SYNCED_GEOFENCES = "io.radar.sdk.LocationReceiver.SYNCED_GEOFENCES"
         internal const val ACTION_BEACON = "io.radar.sdk.LocationReceiver.BEACON"
+        internal const val ACTION_ACTIVITY = "io.radar.sdk.LocationReceiver.ACTIVITY"
 
         private const val REQUEST_CODE_LOCATION = 201605250
         private const val REQUEST_CODE_BUBBLE_GEOFENCE = 201605251
         private const val REQUEST_CODE_SYNCED_GEOFENCES = 201605252
         private const val REQUEST_CODE_BEACON = 201605253
+        private const val REQUEST_CODE_ACTIVITY = 201605254
 
         internal fun getLocationPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
@@ -92,6 +97,23 @@ class RadarLocationReceiver : BroadcastReceiver() {
             )
         }
 
+        internal fun getActivityPendingIntent(context: Context): PendingIntent {
+            val intent = baseIntent(context).apply {
+                action = ACTION_ACTIVITY
+            }
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_ACTIVITY,
+                intent,
+                flags
+            )
+        }
+
         private fun baseIntent(context: Context): Intent = Intent(context, RadarLocationReceiver::class.java)
 
     }
@@ -147,6 +169,28 @@ class RadarLocationReceiver : BroadcastReceiver() {
             Intent.ACTION_BOOT_COMPLETED -> {
                 Radar.handleBootCompleted(context)
             }
+        }
+        if (ActivityTransitionResult.hasResult(intent)) {
+            val result = ActivityTransitionResult.extractResult(intent)!!
+            for (event in result.transitionEvents) {
+                val eventType = getActivityType(event.activityType)
+                val previousActivity = RadarState.getLastMotionActivity(context)
+                // we only want to track once when we are truly changing activity and not due to flaky activity detection changes
+                if (previousActivity != null) {
+                    val previousEventType = previousActivity.getString("type")
+                    if (previousEventType == eventType.toString()) {
+                        Radar.logger.i("Activity detected but not initiating trackOnce for: $eventType")
+                        return
+                    }
+                }
+                val motionActivity = JSONObject()
+                motionActivity.put("type", eventType.toString())
+                motionActivity.put("dateTime", event.elapsedRealTimeNanos)
+                RadarState.setLastMotionActivity(context, motionActivity)
+                Radar.logger.i("Activity detected and initiating trackOnce for: $eventType")
+            }
+            
+            Radar.trackOnce()
         }
     }
 

@@ -108,6 +108,11 @@ class RadarAddress(
     val plus4: String?,
 
     /**
+     * The distance to the search anchor in meters
+     */
+    val distance: Int?,
+
+    /**
      * The layer of the address
      */
     val layer: String?,
@@ -120,7 +125,12 @@ class RadarAddress(
     /**
      * The confidence level of the geocoding result.
      */
-    val confidence: RadarAddressConfidence
+    val confidence: RadarAddressConfidence,
+
+    /**
+     * The time zone information of the location.
+     */
+    val timeZone: RadarTimeZone?,
 ) {
 
     /**
@@ -155,9 +165,11 @@ class RadarAddress(
         private const val FIELD_PLACE_LABEL = "placeLabel"
         private const val FIELD_UNIT = "unit"
         private const val FIELD_PLUS4 = "plus4"
+        private const val FIELD_DISTANCE = "distance"
         private const val FIELD_LAYER = "layer"
         private const val FIELD_METADATA = "metadata"
         private const val FIELD_CONFIDENCE = "confidence"
+        private const val FIELD_TIME_ZONE = "timeZone"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarAddress? {
@@ -185,6 +197,7 @@ class RadarAddress(
             val placeLabel = obj.optString(FIELD_PLACE_LABEL) ?: null
             val unit = obj.optString(FIELD_UNIT) ?: null
             val plus4 = obj.optString(FIELD_PLUS4) ?: null
+            val distance = obj.optInt(FIELD_DISTANCE)
             val layer = obj.optString(FIELD_LAYER) ?: null
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
             val confidence = when(obj.optString(FIELD_CONFIDENCE)) {
@@ -193,6 +206,7 @@ class RadarAddress(
                 "fallback" -> RadarAddressConfidence.FALLBACK
                 else -> RadarAddressConfidence.NONE
             }
+            val timeZone = RadarTimeZone.fromJson(obj.optJSONObject(FIELD_TIME_ZONE))
 
             return RadarAddress(
                 coordinate,
@@ -215,9 +229,11 @@ class RadarAddress(
                 placeLabel,
                 unit,
                 plus4,
+                distance,
                 layer,
                 metadata,
-                confidence
+                confidence,
+                timeZone,
             )
         }
 
@@ -288,9 +304,11 @@ class RadarAddress(
         obj.putOpt(FIELD_PLACE_LABEL, this.placeLabel)
         obj.putOpt(FIELD_UNIT, this.unit)
         obj.putOpt(FIELD_PLUS4, this.plus4)
+        obj.putOpt(FIELD_DISTANCE, this.distance)
         obj.putOpt(FIELD_LAYER, this.layer)
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_CONFIDENCE, stringForConfidence(this.confidence))
+        obj.putOpt(FIELD_TIME_ZONE, this.timeZone?.toJson())
         return obj
     }
 

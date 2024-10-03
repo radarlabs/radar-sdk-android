@@ -3,11 +3,10 @@ package io.radar.sdk
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import io.radar.sdk.model.RadarFeatureSettings
+import io.radar.sdk.model.RadarSdkConfiguration
 import org.json.JSONObject
 import java.text.DecimalFormat
-import java.util.*
-
+import java.util.UUID
 
 internal object RadarSettings {
 
@@ -27,7 +26,8 @@ internal object RadarSettings {
     private const val KEY_REMOTE_TRACKING_OPTIONS = "remote_tracking_options"
     private const val KEY_FOREGROUND_SERVICE = "foreground_service"
     private const val KEY_NOTIFICATION_OPTIONS = "notification_options"
-    private const val KEY_FEATURE_SETTINGS = "feature_settings"
+    private const val KEY_CLIENT_SDK_CONFIGURATION = "client_sdk_configuration"
+    private const val KEY_SDK_CONFIGURATION = "sdk_configuration"
     private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
     private const val KEY_HOST = "host"
@@ -82,9 +82,9 @@ internal object RadarSettings {
         val timestampSeconds = System.currentTimeMillis() / 1000
         val sessionIdSeconds = getSharedPreferences(context).getLong(KEY_SESSION_ID, 0)
 
-        val settings = RadarSettings.getFeatureSettings(context)
+        val settings = getSdkConfiguration(context)
         if (settings.extendFlushReplays) {
-            Radar.logger.d("Flushing replays from updateSessionId")
+            Radar.logger.d("Flushing replays from updateSessionId()")
             Radar.flushReplays()
         }
 
@@ -231,7 +231,6 @@ internal object RadarSettings {
     internal fun setNotificationOptions(context:Context,notificationOptions:RadarNotificationOptions){
         val notificationOptionsJson = notificationOptions.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_NOTIFICATION_OPTIONS, notificationOptionsJson) }
-        // Update foregroundServiceOptions as well.
         var previousValue = getForegroundService(context)
         setForegroundService(context,RadarTrackingOptions.RadarTrackingOptionsForegroundService(
             previousValue.text,
@@ -270,7 +269,7 @@ internal object RadarSettings {
         context: Context,
         foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService
     ) {
-        // Previous values of iconColor and iconString are preserved if new fields are null.
+        // previous values of iconColor and iconString are preserved if new fields are null
         val previousValue = getForegroundService(context)
         if (foregroundService.iconString == null) {
            foregroundService.iconString = previousValue.iconString 
@@ -294,35 +293,49 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putString(KEY_TRIP_OPTIONS, optionsJson) }
     }
 
-    fun setFeatureSettings(context: Context, featureSettings: RadarFeatureSettings) {
-        Radar.setLogPersistenceFeatureFlag(featureSettings.useLogPersistence)
-        val optionsJson = featureSettings.toJson().toString()
-
-        getSharedPreferences(context).edit { putString(KEY_FEATURE_SETTINGS, optionsJson) }
+    fun setSdkConfiguration(context: Context, configuration: RadarSdkConfiguration?) {
+        Radar.logger.d("Setting SDK configuration | sdkConfiguration = $configuration")
+        if (configuration != null) {
+            Radar.setLogPersistenceFeatureFlag(configuration.useLogPersistence)
+            setLogLevel(context, configuration.logLevel)
+            val sdkConfigurationString = configuration.toJson().toString()
+            getSharedPreferences(context).edit { putString(KEY_SDK_CONFIGURATION, sdkConfigurationString) }
+        } else {
+            getSharedPreferences(context).edit { remove(KEY_SDK_CONFIGURATION) }
+        }
     }
 
-    fun getFeatureSettings(context: Context): RadarFeatureSettings {
-        val sharedPrefFeatureSettings = getSharedPreferences(context).getString(KEY_FEATURE_SETTINGS, null)
-        // The log buffer singleton is initialized before the logger, but requires calling this method
-        // to obtain its feature flag. Thus we cannot call the logger yet as its not yet initialized.
-        try {
-            Radar.logger.d("getFeatureSettings | featureSettings = $sharedPrefFeatureSettings")
-        } catch (e: Exception) {
-            // Do nothing for now
+    fun getSdkConfiguration(context: Context): RadarSdkConfiguration {
+        val sdkConfigurationString = getSharedPreferences(context).getString(KEY_SDK_CONFIGURATION, null)
+        val sdkConfigurationJSON = sdkConfigurationString?.let { JSONObject(it) }
+        return RadarSdkConfiguration.fromJson(sdkConfigurationJSON)
+    }
+
+    fun getClientSdkConfiguration(context: Context): JSONObject {
+        val sharedPrefClientSdkConfig = getSharedPreferences(context).getString(KEY_CLIENT_SDK_CONFIGURATION, null);
+
+        return if (sharedPrefClientSdkConfig != null) {
+            JSONObject(sharedPrefClientSdkConfig)
+        } else {
+            JSONObject()
         }
-        val optionsJson = sharedPrefFeatureSettings ?: return RadarFeatureSettings.default()
-        return RadarFeatureSettings.fromJson(JSONObject(optionsJson))
+    }
+
+    fun setClientSdkConfiguration(context: Context, sdkConfiguration: JSONObject?) {
+        val sdkConfigurationString = sdkConfiguration?.toString()
+        getSharedPreferences(context).edit {
+            putString(KEY_CLIENT_SDK_CONFIGURATION, sdkConfigurationString)
+        }
     }
 
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {
-        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, 3)
+        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, Radar.RadarLogLevel.INFO.value)
         val userDebug = getUserDebug(context)
         return if (userDebug) Radar.RadarLogLevel.DEBUG else Radar.RadarLogLevel.fromInt(logLevelInt)
     }
 
     internal fun setLogLevel(context: Context, level: Radar.RadarLogLevel) {
-        val logLevelInt = level.value
-        getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, logLevelInt) }
+        getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, level.value) }
     }
 
     internal fun getHost(context: Context): String {
@@ -386,6 +399,10 @@ internal object RadarSettings {
 
     internal fun getXPlatformSDKVersion(context: Context): String? {
         return getSharedPreferences(context).getString(KEY_X_PLATFORM_SDK_VERSION, null);
+    }
+
+    internal fun useLocationMetaData(context: Context):Boolean {
+        return getSdkConfiguration(context).useLocationMetadata
     }
 
 }
