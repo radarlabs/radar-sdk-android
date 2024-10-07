@@ -41,4 +41,27 @@ class RadarOperatingHour(
         }
     }
 
+    fun toJson(): JSONObject {
+        val jsonObject = JSONObject()
+
+        for ((key, value) in hours) {
+            if (value is List<*>) {
+                val jsonArray = JSONArray()
+
+                for (innerList in value) {
+                    if (innerList is List<*>) {
+                        val jsonInnerArray = JSONArray()
+                        for (item in innerList) {
+                            jsonInnerArray.put(item)
+                        }
+                        jsonArray.put(jsonInnerArray)
+                    }
+                }
+                jsonObject.put(key, jsonArray)
+            }
+        }
+
+        return jsonObject
+    }
+
 }

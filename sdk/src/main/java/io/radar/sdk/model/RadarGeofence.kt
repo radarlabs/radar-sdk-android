@@ -174,7 +174,7 @@ class RadarGeofence(
         obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
         obj.putOpt(FIELD_DESCRIPTION, this.description)
         obj.putOpt(FIELD_METADATA, this.metadata)
-        obj.putOpt(FIELD_OPERATING_HOURS, this.operatingHours)
+        obj.putOpt(FIELD_OPERATING_HOURS, this.operatingHours?.toJson() ?: null)
         this.geometry?.let { geometry ->
             when (geometry) {
                 is RadarCircleGeometry -> {
