@@ -1,7 +1,6 @@
 package io.radar.sdk.model
 
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -35,7 +34,10 @@ class RadarGeofence(
      */
     val metadata: JSONObject?,
 
-
+    /**
+     * The optional set of custom key-value pairs for the geofence.
+     */
+    val operatingHours: RadarOperatingHour?,
     /**
      * The geometry of the geofence.
      */
@@ -48,6 +50,7 @@ class RadarGeofence(
         private const val FIELD_DESCRIPTION = "description"
         private const val FIELD_TAG = "tag"
         private const val FIELD_EXTERNAL_ID = "externalId"
+        private const val FIELD_OPERATING_HOURS = "operatingHours"
         private const val FIELD_METADATA = "metadata"
         private const val FIELD_TYPE = "type"
         private const val FIELD_GEOMETRY = "geometry"
@@ -73,6 +76,9 @@ class RadarGeofence(
             val tag: String? = obj.optString(FIELD_TAG) ?: null
             val externalId: String? = obj.optString(FIELD_EXTERNAL_ID) ?: null
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
+            val operatingHours: RadarOperatingHour? = obj.optJSONObject(FIELD_OPERATING_HOURS)?.let { operatingHours ->
+                RadarOperatingHour.fromJson(operatingHours)
+            }
             val center = obj.optJSONObject(FIELD_GEOMETRY_CENTER)?.optJSONArray(FIELD_COORDINATES)?.let { coordinate ->
                 RadarCoordinate(
                     coordinate.optDouble(1),
@@ -117,7 +123,7 @@ class RadarGeofence(
                 else -> null
             } ?: RadarCircleGeometry(RadarCoordinate(0.0, 0.0), 0.0)
 
-            return RadarGeofence(id, description, tag, externalId, metadata, geometry)
+            return RadarGeofence(id, description, tag, externalId, metadata, operatingHours, geometry)
         }
 
         @JvmStatic
@@ -168,6 +174,7 @@ class RadarGeofence(
         obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
         obj.putOpt(FIELD_DESCRIPTION, this.description)
         obj.putOpt(FIELD_METADATA, this.metadata)
+        obj.putOpt(FIELD_OPERATING_HOURS, this.operatingHours?.toJson() ?: null)
         this.geometry?.let { geometry ->
             when (geometry) {
                 is RadarCircleGeometry -> {

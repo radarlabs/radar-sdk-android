@@ -1104,6 +1104,8 @@ class RadarTest {
         assertTrue(geofenceJson.has("geometryRadius"))
         assertTrue(geofenceJson.has("geometryCenter"))
 
+        assertTrue(geofenceJson.has("operatingHours"))
+
     }
 
     @Test
