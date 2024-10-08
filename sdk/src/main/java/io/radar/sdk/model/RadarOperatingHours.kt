@@ -3,13 +3,13 @@ package io.radar.sdk.model
 import org.json.JSONArray
 import org.json.JSONObject
 
-class RadarOperatingHour(
+class RadarOperatingHours(
     val hours: MutableMap<String, Any>
 ) {
 
     internal companion object {
         @JvmStatic
-        fun fromJson(obj: JSONObject): RadarOperatingHour? {
+        fun fromJson(obj: JSONObject): RadarOperatingHours? {
             if (obj == null) {
                 return null
                 
@@ -37,7 +37,7 @@ class RadarOperatingHour(
                     dictionary[key] = list
                 }
             }
-            return RadarOperatingHour(dictionary)
+            return RadarOperatingHours(dictionary)
         }
     }
 

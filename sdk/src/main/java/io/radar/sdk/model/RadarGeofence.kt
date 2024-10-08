@@ -37,7 +37,7 @@ class RadarGeofence(
     /**
      * The optional set of custom key-value pairs for the geofence.
      */
-    val operatingHours: RadarOperatingHour?,
+    val operatingHours: RadarOperatingHours?,
     /**
      * The geometry of the geofence.
      */
@@ -76,8 +76,8 @@ class RadarGeofence(
             val tag: String? = obj.optString(FIELD_TAG) ?: null
             val externalId: String? = obj.optString(FIELD_EXTERNAL_ID) ?: null
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
-            val operatingHours: RadarOperatingHour? = obj.optJSONObject(FIELD_OPERATING_HOURS)?.let { operatingHours ->
-                RadarOperatingHour.fromJson(operatingHours)
+            val operatingHours: RadarOperatingHours? = obj.optJSONObject(FIELD_OPERATING_HOURS)?.let { operatingHours ->
+                RadarOperatingHours.fromJson(operatingHours)
             }
             val center = obj.optJSONObject(FIELD_GEOMETRY_CENTER)?.optJSONArray(FIELD_COORDINATES)?.let { coordinate ->
                 RadarCoordinate(
