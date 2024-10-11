@@ -44,9 +44,20 @@ internal class RadarVerificationManager(
     private var lastTokenElapsedRealtime: Long = 0L
     private var lastTokenBeacons: Boolean = false
     private var lastIPs: String? = null
+    private var expectedCountryCode: String? = null
+    private var expectedStateCode: String? = null
 
     internal companion object {
         private const val WARM_UP_WINDOW_SECONDS = 3600 * 12 // 12 hours
+    }
+
+    private fun isIntegrityApiIncluded(): Boolean {
+        return try {
+            Class.forName("com.google.android.play.core.integrity.StandardIntegrityManager")
+            true
+        } catch (e: ClassNotFoundException) {
+            false
+        }
     }
 
     fun trackVerified(beacons: Boolean = false, callback: Radar.RadarTrackVerifiedCallback? = null) {
@@ -55,16 +66,16 @@ internal class RadarVerificationManager(
 
         val usage = "trackVerified"
         Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
-                val googlePlayProjectNumber = config.googlePlayProjectNumber
-
-                if (status != Radar.RadarStatus.SUCCESS) {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                if (status != Radar.RadarStatus.SUCCESS || config == null) {
                     Radar.handler.post {
                         callback?.onComplete(status)
                     }
 
                     return
                 }
+
+                val googlePlayProjectNumber = config.googlePlayProjectNumber
 
                 Radar.locationManager.getLocation(
                     RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
@@ -102,6 +113,8 @@ internal class RadarVerificationManager(
                                         integrityToken,
                                         integrityException,
                                         false,
+                                        verificationManager.expectedCountryCode,
+                                        verificationManager.expectedStateCode,
                                         callback = object : RadarApiClient.RadarTrackApiCallback {
                                             override fun onComplete(
                                                 status: Radar.RadarStatus,
@@ -235,6 +248,11 @@ internal class RadarVerificationManager(
                         minInterval -= 10
                     }
 
+                    // min interval is 10 seconds
+                    if (minInterval < 10) {
+                        minInterval = 10;
+                    }
+
                     if (verificationManager.scheduled) {
                         verificationManager.logger.d("Token request already scheduled")
 
@@ -344,6 +362,11 @@ internal class RadarVerificationManager(
         this.trackVerified(this.lastTokenBeacons, callback)
     }
 
+    fun setExpectedJurisdiction(countryCode: String?, stateCode: String?) {
+        this.expectedCountryCode = countryCode
+        this.expectedStateCode = stateCode
+    }
+
     fun getRequestHash(location: Location): String {
         val stringBuffer = StringBuilder()
         stringBuffer.append(RadarSettings.getInstallId(this.context))
@@ -355,6 +378,16 @@ internal class RadarVerificationManager(
     }
 
     private fun warmUpProviderAndFetchTokenFromGoogle(googlePlayProjectNumber: Long, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
+        if (!isIntegrityApiIncluded()) {
+            val integrityException = "Integrity API not included"
+
+            logger.w(integrityException)
+
+            block(null, integrityException)
+
+            return
+        }
+
         val standardIntegrityManager = IntegrityManagerFactory.createStandard(this.context)
         standardIntegrityManager.prepareIntegrityToken(
             StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
@@ -377,6 +410,16 @@ internal class RadarVerificationManager(
     }
 
     fun getIntegrityToken(googlePlayProjectNumber: Long?, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
+        if (!isIntegrityApiIncluded()) {
+            val integrityException = "Integrity API not included"
+
+            logger.w(integrityException)
+
+            block(null, integrityException)
+
+            return
+        }
+
         if (requestHash == null) {
             val integrityException = "Missing request hash"
 
@@ -410,6 +453,16 @@ internal class RadarVerificationManager(
     }
 
     private fun fetchTokenFromGoogle(requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
+        if (!isIntegrityApiIncluded()) {
+            val integrityException = "Integrity API not included"
+
+            logger.w(integrityException)
+
+            block(null, integrityException)
+
+            return
+        }
+
         logger.d("Requesting integrity token")
 
         val integrityTokenResponse: Task<StandardIntegrityToken> = this.standardIntegrityTokenProvider.request(

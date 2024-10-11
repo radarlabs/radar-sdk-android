@@ -4,6 +4,7 @@ import io.radar.sdk.Radar
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,6 +27,8 @@ class RadarSdkConfigurationTest {
     private var logLevel = Radar.RadarLogLevel.INFO
     private var startTrackingOnInitialize = false
     private var trackOnceOnAppOpen = false
+    private var useLocationMetadata = false
+    private var useOpenedAppConversion = false
 
     @Before
     fun setUp() {
@@ -41,7 +44,9 @@ class RadarSdkConfigurationTest {
             "extendFlushReplays":$extendFlushReplays,
             "logLevel":"info",
             "startTrackingOnInitialize":$startTrackingOnInitialize,
-            "trackOnceOnAppOpen":$trackOnceOnAppOpen
+            "trackOnceOnAppOpen":$trackOnceOnAppOpen,
+            "useLocationMetadata":$useLocationMetadata,
+            "useOpenedAppConversion":$useOpenedAppConversion
         }""".trimIndent()
     }
 
@@ -59,6 +64,8 @@ class RadarSdkConfigurationTest {
                 logLevel,
                 startTrackingOnInitialize,
                 trackOnceOnAppOpen,
+                useLocationMetadata,
+                useOpenedAppConversion
             ).toJson().toString()
         )
     }
@@ -75,6 +82,8 @@ class RadarSdkConfigurationTest {
         assertEquals(logLevel, settings.logLevel)
         assertEquals(startTrackingOnInitialize, settings.startTrackingOnInitialize)
         assertEquals(trackOnceOnAppOpen, settings.trackOnceOnAppOpen)
+        assertEquals(useLocationMetadata, settings.useLocationMetadata)
+        assertEquals(useOpenedAppConversion, settings.useOpenedAppConversion)
     }
 
     @Test
@@ -89,6 +98,8 @@ class RadarSdkConfigurationTest {
         assertEquals(Radar.RadarLogLevel.INFO, settings.logLevel)
         assertFalse(settings.startTrackingOnInitialize)
         assertFalse(settings.trackOnceOnAppOpen)
+        assertFalse(settings.useLocationMetadata)
+        assertTrue(settings.useOpenedAppConversion)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")

@@ -8,7 +8,6 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
-import androidx.core.content.edit
 import io.radar.sdk.model.*
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.util.RadarLogBuffer
@@ -413,6 +412,40 @@ object Radar {
         NONE
     }
 
+    enum class RadarActivityType {
+        UNKNOWN,
+        STATIONARY,
+        FOOT,
+        RUN,
+        BIKE,
+        CAR;
+        companion object {
+            @JvmStatic
+            fun fromString(value: String): RadarActivityType {
+                return when (value) {
+                    "unknown" -> UNKNOWN
+                    "stationary" -> STATIONARY
+                    "foot" -> FOOT
+                    "run" -> RUN
+                    "bike" -> BIKE
+                    "car" -> CAR
+                    else -> UNKNOWN
+                }
+            }
+        }
+
+        override fun toString(): String {
+            return when (this) {
+                UNKNOWN -> "unknown"
+                STATIONARY -> "stationary"
+                FOOT -> "foot"
+                RUN -> "run"
+                BIKE -> "bike"
+                CAR -> "car"
+            }
+        }
+    }
+
     /**
      * The location services providers.
      */
@@ -547,7 +580,11 @@ object Radar {
 
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: RadarStatus, config: RadarConfig) {
+            override fun onComplete(status: RadarStatus, config: RadarConfig?) {
+                if (config == null) {
+                    return
+                }
+
                 if (status == RadarStatus.SUCCESS) {
                     locationManager.updateTrackingFromMeta(config.meta)
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
@@ -1090,6 +1127,26 @@ object Radar {
                 block(status, token)
             }
         })
+    }
+
+    /**
+     * Optionally sets the user's expected country and state for jurisdiction checks.
+     *
+     * @param[countryCode] The user's expected country code.
+     * * @param[countryCode] The user's expected country code.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    fun setExpectedJurisdiction(countryCode: String?, stateCode: String?) {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("setExpectedJurisdiction()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.setExpectedJurisdiction(countryCode, stateCode)
     }
 
     /**
@@ -3106,6 +3163,9 @@ object Radar {
     }
 
     internal fun logOpenedAppConversion() {
+        if (!RadarSettings.getSdkConfiguration(context).useOpenedAppConversion) {
+            return
+        }
         // if opened_app has been logged in the last 1000 milliseconds, don't log it again
         val timestamp = System.currentTimeMillis()
         val lastAppOpenTime = RadarSettings.getLastAppOpenTimeMillis(context)
@@ -3457,9 +3517,7 @@ object Radar {
 
     internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?, createdAt: Date = Date()) {
         receiver?.onLog(context, message)
-        if (isTestKey()) {
-            logBuffer.write(level, type, message, createdAt)
-        }
+        logBuffer.write(level, type, message, createdAt)
     }
 
     internal fun sendToken(token: RadarVerifiedLocationToken) {

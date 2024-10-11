@@ -6,7 +6,7 @@ import androidx.core.content.edit
 import io.radar.sdk.model.RadarSdkConfiguration
 import org.json.JSONObject
 import java.text.DecimalFormat
-import java.util.*
+import java.util.UUID
 
 internal object RadarSettings {
 
@@ -294,7 +294,7 @@ internal object RadarSettings {
     }
 
     fun setSdkConfiguration(context: Context, configuration: RadarSdkConfiguration?) {
-        Radar.logger.d("set SDK Configuration | sdkConfiguration = $configuration")
+        Radar.logger.d("Setting SDK configuration | sdkConfiguration = $configuration")
         if (configuration != null) {
             Radar.setLogPersistenceFeatureFlag(configuration.useLogPersistence)
             setLogLevel(context, configuration.logLevel)
@@ -399,6 +399,10 @@ internal object RadarSettings {
 
     internal fun getXPlatformSDKVersion(context: Context): String? {
         return getSharedPreferences(context).getString(KEY_X_PLATFORM_SDK_VERSION, null);
+    }
+
+    internal fun useLocationMetaData(context: Context):Boolean {
+        return getSdkConfiguration(context).useLocationMetadata
     }
 
 }

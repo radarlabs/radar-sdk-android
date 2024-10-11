@@ -51,22 +51,32 @@ internal class RadarActivityLifecycleCallbacks(
                 if (updated) {
                     val usage = "resume"
                     Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
-                        override fun onComplete(status: Radar.RadarStatus, config: RadarConfig) {
+                        override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                            if (config == null) {
+                                return
+                            }
+
                             if (status == Radar.RadarStatus.SUCCESS) {
                                 Radar.locationManager.updateTrackingFromMeta(config.meta)
                                 RadarSettings.setSdkConfiguration(activity.applicationContext, config.meta.sdkConfiguration)
                             }
 
                             val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
-                            if (sdkConfiguration.trackOnceOnAppOpen) {
+                            if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
                                 Radar.trackOnce()
+                                if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(activity.applicationContext)) {
+                                    Radar.startTracking(Radar.getTrackingOptions())
+                                }
                             }
                         }
                     })
                 } else {
                     val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
-                    if (sdkConfiguration.trackOnceOnAppOpen) {
+                    if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
                         Radar.trackOnce()
+                        if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(activity.applicationContext)) {
+                            Radar.startTracking(Radar.getTrackingOptions())
+                        }
                     }
                 }
             } catch (e: Exception) {

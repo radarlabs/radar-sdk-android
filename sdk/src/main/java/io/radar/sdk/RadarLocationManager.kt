@@ -5,9 +5,9 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.location.Location
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.os.Build
 import io.radar.sdk.Radar.RadarLocationCallback
 import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
 import io.radar.sdk.Radar.RadarLocationSource
@@ -36,6 +36,7 @@ internal class RadarLocationManager(
     private var startedInterval = 0
     private var startedFastestInterval = 0
     private val callbacks = ArrayList<RadarLocationCallback>()
+    private val activityManager = RadarActivityManager(context)
 
     internal companion object {
         private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
@@ -122,6 +123,9 @@ internal class RadarLocationManager(
         if (settings.extendFlushReplays) {
             Radar.flushReplays()
         }
+        if (settings.useLocationMetadata) {
+            activityManager.stopActivityUpdates()
+        }
     }
 
     private fun startLocationUpdates(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, interval: Int, fastestInterval: Int) {
@@ -188,6 +192,9 @@ internal class RadarLocationManager(
         }
 
         if (tracking) {
+            if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
+                activityManager.startActivityUpdates()
+            }
             if (options.foregroundServiceEnabled) {
                 val foregroundService = RadarSettings.getForegroundService(context)
                 if (!foregroundService.updatesOnly) {
@@ -706,5 +713,4 @@ internal class RadarLocationManager(
             }
         }
     }
-
 }
