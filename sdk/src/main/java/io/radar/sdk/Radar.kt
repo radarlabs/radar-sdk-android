@@ -1136,6 +1136,7 @@ object Radar {
      * * @param[countryCode] The user's expected country code.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
     fun setExpectedJurisdiction(countryCode: String?, stateCode: String?) {
         if (!initialized) {
             return

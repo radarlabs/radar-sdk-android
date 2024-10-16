@@ -109,6 +109,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        createButton("setExpectedJurisdiction") {
+            Radar.setExpectedJurisdiction("US", "CA")
+        }
+
         createButton("trackOnce") {
             Radar.trackOnce { status, location, events, user ->
                 Log.v(
