@@ -1,18 +1,89 @@
 {
-    "meta": {
-        "code": 200,
-        "featureSettings": {
-            "useLocationMetadata": false,
-            "useRadarKVStore": true,
-            "useRadarModifiedBeacon": true,
-            "radarLowPowerManagerDesiredAccuracy": 3000,
-            "radarLowPowerManagerDistanceFilter": 3000
-        },
-        "sdkConfiguration": {
-            "logLevel": "info",
-            "startTrackingOnInitialize": true,
-            "trackOnceOnAppOpen": true,
-            "useLocationMetadata": true
-        }
+  "meta": {
+    "code": 200,
+    "featureSettings": {
+      "useLocationMetadata": false,
+      "useRadarKVStore": true,
+      "useRadarModifiedBeacon": true,
+      "radarLowPowerManagerDesiredAccuracy": 3000,
+      "radarLowPowerManagerDistanceFilter": 3000
+    },
+    "sdkConfiguration": {
+      "logLevel": "info",
+      "startTrackingOnInitialize": true,
+      "trackOnceOnAppOpen": true,
+      "useLocationMetadata": true,
+      "useOfflineRTOUpdates":true,
+      "inGeofenceTrackingOptions": {
+        "desiredStoppedUpdateInterval": 0,
+        "fastestStoppedUpdateInterval": 0,
+        "desiredMovingUpdateInterval": 150,
+        "fastestMovingUpdateInterval": 30,
+        "desiredSyncInterval": 20,
+        "desiredAccuracy": "medium",
+        "stopDuration": 140,
+        "stopDistance": 70,
+        "startTrackingAfter": null,
+        "stopTrackingAfter": null,
+        "replay": "stops",
+        "sync": "all",
+        "useStoppedGeofence": true,
+        "stoppedGeofenceRadius": 100,
+        "useMovingGeofence": true,
+        "movingGeofenceRadius": 100,
+        "syncGeofences": true,
+        "syncGeofencesLimit": 10,
+        "foregroundServiceEnabled": false,
+        "beacons": false
+      }
+      ,
+      "defaultTrackingOptions": {
+        "desiredStoppedUpdateInterval": 3600,
+        "fastestStoppedUpdateInterval": 1200,
+        "desiredMovingUpdateInterval": 1200,
+        "fastestMovingUpdateInterval": 360,
+        "desiredSyncInterval": 140,
+        "desiredAccuracy": "medium",
+        "stopDuration": 140,
+        "stopDistance": 70,
+        "startTrackingAfter": null,
+        "stopTrackingAfter": null,
+        "replay": "stops",
+        "sync": "all",
+        "useStoppedGeofence": false,
+        "stoppedGeofenceRadius": 0,
+        "useMovingGeofence": false,
+        "movingGeofenceRadius": 0,
+        "syncGeofences": true,
+        "syncGeofencesLimit": 10,
+        "foregroundServiceEnabled": false,
+        "beacons": false
+      }
+      ,
+      "onTripTrackingOptions": {
+        "desiredStoppedUpdateInterval": 30,
+        "fastestStoppedUpdateInterval": 30,
+        "desiredMovingUpdateInterval": 30,
+        "fastestMovingUpdateInterval": 30,
+        "desiredSyncInterval": 20,
+        "desiredAccuracy": "high",
+        "stopDuration": 140,
+        "stopDistance": 70,
+        "startTrackingAfter": null,
+        "stopTrackingAfter": null,
+        "replay": "none",
+        "sync": "all",
+        "useStoppedGeofence": false,
+        "stoppedGeofenceRadius": 0,
+        "useMovingGeofence": false,
+        "movingGeofenceRadius": 0,
+        "syncGeofences": true,
+        "syncGeofencesLimit": 0,
+        "foregroundServiceEnabled": true,
+        "beacons": false
+      }
+      ,
+      "inGeofenceTrackingOptionsTags": ["venue"]
     }
+  }
 }

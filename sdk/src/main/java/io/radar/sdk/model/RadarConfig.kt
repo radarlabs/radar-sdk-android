@@ -2,7 +2,7 @@ package io.radar.sdk.model
 
 import org.json.JSONObject
 
-internal data class RadarConfig(
+data class RadarConfig(
     val meta: RadarMeta,
     val googlePlayProjectNumber: Long?,
     val nonce: String?

@@ -868,7 +868,7 @@ object Radar {
                             config: RadarConfig?,
                             token: RadarVerifiedLocationToken?
                         ) {
-                            if (status == RadarStatus.SUCCESS ){
+                            if (config != null) {
                                 locationManager.updateTrackingFromMeta(config?.meta)
                             }
                             handler.post {
@@ -965,7 +965,7 @@ object Radar {
                 config: RadarConfig?,
                 token: RadarVerifiedLocationToken?
             ) {
-                if (status == RadarStatus.SUCCESS ){
+                if (config != null) {
                     locationManager.updateTrackingFromMeta(config?.meta)
                 }
                 handler.post {

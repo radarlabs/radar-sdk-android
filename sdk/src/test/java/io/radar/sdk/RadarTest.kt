@@ -1549,7 +1549,7 @@ class RadarTest {
 
     @Test
     fun test_Radar_setSdkConfiguration() {
-        val sdkConfiguration = RadarSdkConfiguration(1, false, false, false, false, false, Radar.RadarLogLevel.WARNING, true, true, true)
+        val sdkConfiguration = RadarSdkConfiguration(1, false, false, false, false, false, Radar.RadarLogLevel.WARNING, true, true, true,true, true, null, null, null, setOf())
 
         RadarSettings.setUserDebug(context, false)
         RadarSettings.setSdkConfiguration(context, sdkConfiguration)
@@ -1586,5 +1586,10 @@ class RadarTest {
         assertEquals(true, savedSdkConfiguration?.startTrackingOnInitialize)
         assertEquals(true, savedSdkConfiguration?.trackOnceOnAppOpen)
         assertEquals(true,savedSdkConfiguration?.useLocationMetadata)
+        assertEquals(true, savedSdkConfiguration.useOfflineRTOUpdates)
+        assertEquals(RadarTrackingOptions.RESPONSIVE,savedSdkConfiguration.inGeofenceTrackingOptions)
+        assertEquals(RadarTrackingOptions.EFFICIENT, savedSdkConfiguration.defaultTrackingOptions)
+        assertEquals(RadarTrackingOptions.CONTINUOUS, savedSdkConfiguration.onTripTrackingOptions)
+        assertEquals(setOf("venue"),savedSdkConfiguration.inGeofenceTrackingOptionsTags)
     }
 }

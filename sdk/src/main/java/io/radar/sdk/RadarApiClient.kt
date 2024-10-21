@@ -425,9 +425,19 @@ internal class RadarApiClient(
                     }
 
                     Radar.sendError(status)
-
-                    callback?.onComplete(status)
-
+                    if (RadarSettings.getSdkConfiguration(context).useOfflineRTOUpdates) {
+                        RadarOfflineManager().contextualizeLocation(context, location, object : RadarOfflineManager.RadarOfflineCallback {
+                            override fun onComplete(config: RadarConfig?) {
+                                if (config != null) {
+                                    callback?.onComplete(status, null, null, null, null, config)
+                                } else {
+                                    callback?.onComplete(status)
+                                }
+                            }
+                        })
+                    } else {
+                        callback?.onComplete(status)
+                    }
                     return
                 }
 
