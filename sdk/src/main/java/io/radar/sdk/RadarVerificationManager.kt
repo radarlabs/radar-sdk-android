@@ -356,8 +356,8 @@ internal class RadarVerificationManager(
 
         if (this.lastToken != null) {
             this.lastToken?.let {
-                if (lastTokenElapsed < it.expiresIn) {
-                    Radar.logger.d("Last token valid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed")
+                if (lastTokenElapsed < it.expiresIn && it.passed) {
+                    Radar.logger.d("Last token valid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}")
 
                     Radar.flushLogs()
 
@@ -366,7 +366,7 @@ internal class RadarVerificationManager(
                     return
                 }
 
-                Radar.logger.d("Last token invalid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed")
+                Radar.logger.d("Last token invalid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}")
             }
         } else {
             Radar.logger.d("No last token")
