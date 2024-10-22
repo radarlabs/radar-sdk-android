@@ -426,6 +426,7 @@ internal class RadarApiClient(
 
                     Radar.sendError(status)
                     if (RadarSettings.getSdkConfiguration(context).useOfflineRTOUpdates) {
+                        Radar.logger.d("network issue enountered, falling back to RadarOfflineManager")
                         RadarOfflineManager().contextualizeLocation(context, location, object : RadarOfflineManager.RadarOfflineCallback {
                             override fun onComplete(config: RadarConfig?) {
                                 if (config != null) {

@@ -871,6 +871,9 @@ object Radar {
                             if (config != null) {
                                 locationManager.updateTrackingFromMeta(config?.meta)
                             }
+                            if (status == RadarStatus.SUCCESS) {
+                                locationManager.replaceSyncedGeofences(nearbyGeofences)
+                            }
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
                             }
@@ -967,6 +970,9 @@ object Radar {
             ) {
                 if (config != null) {
                     locationManager.updateTrackingFromMeta(config?.meta)
+                }
+                if (status == RadarStatus.SUCCESS) {
+                    locationManager.replaceSyncedGeofences(nearbyGeofences)
                 }
                 handler.post {
                     callback?.onComplete(status, location, events, user)

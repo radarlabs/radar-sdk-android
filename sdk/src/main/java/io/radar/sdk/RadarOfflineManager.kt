@@ -17,6 +17,7 @@ class RadarOfflineManager {
         var newGeofenceTags = mutableSetOf<String>()
         val nearbyGeofences = RadarState.getNearbyGeofences(context)
         if (nearbyGeofences == null) {
+            Radar.logger.d("skipping as no synced nearby geofence")
             callback.onComplete(null)
             return
         }
@@ -55,14 +56,16 @@ class RadarOfflineManager {
         var newTrackingOptions: RadarTrackingOptions? = null
         if (isRampedUp) {
             // ramp up
+            Radar.logger.d("Ramp up geofences with trackingOptions: $sdkConfiguration.inGeofenceTrackingOptions")
             newTrackingOptions = sdkConfiguration.inGeofenceTrackingOptions
         } else {
             val tripOptions = RadarSettings.getTripOptions(context)
-            val onTripTrackingOptions = sdkConfiguration.onTripTrackingOptions
-            newTrackingOptions = if (tripOptions != null && onTripTrackingOptions != null){
-                onTripTrackingOptions
+            if (tripOptions != null && sdkConfiguration.onTripTrackingOptions != null){
+                Radar.logger.d("Ramp down geofences with trackingOptions: $sdkConfiguration.6onTripTrackingOptions")
+                newTrackingOptions = sdkConfiguration.onTripTrackingOptions
             } else {
-                sdkConfiguration.defaultTrackingOptions
+                Radar.logger.d("Ramp down geofences with trackingOptions: $sdkConfiguration.defaultTrackingOptions")
+                newTrackingOptions = sdkConfiguration.defaultTrackingOptions
             }
         }
         if (newTrackingOptions != null) {

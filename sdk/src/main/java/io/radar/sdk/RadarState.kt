@@ -281,7 +281,7 @@ internal object RadarState {
     }
 
     internal fun getNearbyGeofences(context: Context): Array<RadarGeofence>? {
-        val jsonString = getSharedPreferences(context).getString(KEY_NEARBY_GEOFENCES, null)
+        val jsonString = getSharedPreferences(context).getString(KEY_NEARBY_GEOFENCES, "")
         val jsonArray = jsonString?.let { JSONArray(it) }
         return RadarGeofence.fromJson(jsonArray)
     }
