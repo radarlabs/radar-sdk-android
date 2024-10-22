@@ -109,6 +109,26 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        createButton("startTrackingVerified") {
+            Radar.startTrackingVerified(60, false)
+        }
+
+        createButton("stopTrackingVerified") {
+            Radar.stopTrackingVerified()
+        }
+
+        createButton("getVerifiedLocationToken") {
+            Radar.getVerifiedLocationToken { status, token ->
+                Log.v("example", "GetVerifiedLocationToken: status = $status; token = ${token?.toJson()}")
+            }
+        }
+
+        createButton("trackVerified") {
+            Radar.trackVerified(false) { status, token ->
+                Log.v("example", "TrackVerified: status = $status; token = ${token?.toJson()}")
+            }
+        }
+
         createButton("setExpectedJurisdiction") {
             Radar.setExpectedJurisdiction("US", "CA")
         }
@@ -125,6 +145,10 @@ class MainActivity : AppCompatActivity() {
         createButton("startTracking") {
             val options = RadarTrackingOptions.RESPONSIVE
             Radar.startTracking(options)
+        }
+
+        createButton("stopTracking") {
+            Radar.stopTracking()
         }
 
         createButton("getContext") {
