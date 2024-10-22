@@ -282,6 +282,8 @@ internal class RadarVerificationManager(
     fun startTrackingVerified(interval: Int, beacons: Boolean) {
         val verificationManager = this
 
+        verificationManager.stopTrackingVerified()
+
         verificationManager.started = true
         verificationManager.scheduled = false
 
