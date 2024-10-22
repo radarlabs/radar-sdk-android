@@ -1592,4 +1592,126 @@ class RadarTest {
         assertEquals(RadarTrackingOptions.CONTINUOUS, savedSdkConfiguration.onTripTrackingOptions)
         assertEquals(setOf("venue"),savedSdkConfiguration.inGeofenceTrackingOptionsTags)
     }
+
+    @Test
+    fun test_Radar_trackOnce_offlineRampUp() {
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/get_config_response.json")
+
+        val latch = CountDownLatch(1)
+
+        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+
+                if (config != null) {
+                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                }
+                assertEquals(RadarTrackingOptions.EFFICIENT, Radar.getTrackingOptions())
+                assertEquals(status, Radar.RadarStatus.SUCCESS)
+                permissionsHelperMock.mockFineLocationPermissionGranted = true
+                val mockLocation = Location("RadarSDK")
+                mockLocation.latitude = 40.783825
+                mockLocation.longitude = -73.975365
+                mockLocation.accuracy = 65f
+                mockLocation.time = System.currentTimeMillis()
+                locationClientMock.mockLocation = mockLocation
+                apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+                apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
+                Radar.trackOnce { status, location, events, user ->
+                    assertEquals(status, Radar.RadarStatus.SUCCESS)
+                    apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
+                    Radar.trackOnce(mockLocation) {status, location, events, user ->
+                        assertEquals(status, Radar.RadarStatus.ERROR_NETWORK)
+                        assertEquals(RadarTrackingOptions.RESPONSIVE,Radar.getTrackingOptions())
+                        latch.countDown()
+                    }
+                }
+            }
+        })
+    }
+    @Test
+    fun test_Radar_trackOnce_offlineRampDown_default() {
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/get_config_response.json")
+
+        val latch = CountDownLatch(1)
+
+        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+
+                if (config != null) {
+                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                }
+                assertEquals(RadarTrackingOptions.EFFICIENT, Radar.getTrackingOptions())
+                assertEquals(status, Radar.RadarStatus.SUCCESS)
+                permissionsHelperMock.mockFineLocationPermissionGranted = true
+                val mockLocation = Location("RadarSDK")
+                mockLocation.latitude = 40.783825
+                mockLocation.longitude = -73.975365
+                mockLocation.accuracy = 65f
+                mockLocation.time = System.currentTimeMillis()
+                locationClientMock.mockLocation = mockLocation
+                apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+                apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track_with_rampup.json")
+                Radar.trackOnce { status, location, events, user ->
+                    assertEquals(status, Radar.RadarStatus.SUCCESS)
+                    assertEquals(RadarTrackingOptions.RESPONSIVE,Radar.getTrackingOptions()) 
+                    apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
+                    mockLocation.latitude = 50.783825
+                    mockLocation.longitude = -63.975365 
+                    Radar.trackOnce(mockLocation) {status, location, events, user ->
+                        assertEquals(status, Radar.RadarStatus.ERROR_NETWORK)
+                        assertEquals(RadarTrackingOptions.EFFICIENT,Radar.getTrackingOptions())
+                        latch.countDown()
+                    }
+                }
+            }
+        })
+    }
+
+    @Test
+    fun test_Radar_trackOnce_offlineRampDown_trips() {
+
+        val tripOptions = getTestTripOptions()
+
+        Radar.startTrip(tripOptions) { status, trip, events ->
+            apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+            apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/get_config_response.json")
+
+            val latch = CountDownLatch(1)
+
+            Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
+                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+
+                    if (config != null) {
+                        RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                    }
+                    assertEquals(RadarTrackingOptions.EFFICIENT, Radar.getTrackingOptions())
+                    assertEquals(status, Radar.RadarStatus.SUCCESS)
+                    permissionsHelperMock.mockFineLocationPermissionGranted = true
+                    val mockLocation = Location("RadarSDK")
+                    mockLocation.latitude = 40.783825
+                    mockLocation.longitude = -73.975365
+                    mockLocation.accuracy = 65f
+                    mockLocation.time = System.currentTimeMillis()
+                    locationClientMock.mockLocation = mockLocation
+                    apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+                    apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track_with_rampup.json")
+                    Radar.trackOnce { status, location, events, user ->
+                        assertEquals(status, Radar.RadarStatus.SUCCESS)
+                        assertEquals(RadarTrackingOptions.RESPONSIVE,Radar.getTrackingOptions())
+                        mockLocation.latitude = 50.783825
+                        mockLocation.longitude = -63.975365  
+                        apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
+                        Radar.trackOnce(mockLocation) {status, location, events, user ->
+                            assertEquals(status, Radar.RadarStatus.ERROR_NETWORK)
+                            assertEquals(RadarTrackingOptions.CONTINUOUS,Radar.getTrackingOptions())
+                            Radar.cancelTrip()
+                            latch.countDown()
+                        }
+                    }
+                }
+            })
+        }
+    }
 }

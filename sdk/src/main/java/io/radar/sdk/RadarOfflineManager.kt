@@ -78,8 +78,10 @@ class RadarOfflineManager {
     }
 
     private fun isPointInsideCircle(center: RadarCoordinate, radius: Double, point: Location): Boolean {
-        val distance = Math.sqrt(Math.pow(center.latitude - point.latitude, 2.0) + Math.pow(center.longitude - point.longitude, 2.0))
-        return distance <= radius
+        val centerLocation = Location("centerLocation")
+        centerLocation.latitude = center.latitude
+        centerLocation.longitude = center.longitude
+        val distanceBetween = point.distanceTo(centerLocation)
+        return distanceBetween <= radius
     }
-
 }

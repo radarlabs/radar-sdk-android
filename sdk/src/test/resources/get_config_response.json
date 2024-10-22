@@ -84,6 +84,28 @@
       }
       ,
       "inGeofenceTrackingOptionsTags": ["venue"]
-    }
+    },
+    "trackingOptions": {
+        "desiredStoppedUpdateInterval": 3600,
+        "fastestStoppedUpdateInterval": 1200,
+        "desiredMovingUpdateInterval": 1200,
+        "fastestMovingUpdateInterval": 360,
+        "desiredSyncInterval": 140,
+        "desiredAccuracy": "medium",
+        "stopDuration": 140,
+        "stopDistance": 70,
+        "startTrackingAfter": null,
+        "stopTrackingAfter": null,
+        "replay": "stops",
+        "sync": "all",
+        "useStoppedGeofence": false,
+        "stoppedGeofenceRadius": 0,
+        "useMovingGeofence": false,
+        "movingGeofenceRadius": 0,
+        "syncGeofences": true,
+        "syncGeofencesLimit": 10,
+        "foregroundServiceEnabled": false,
+        "beacons": false
+      } 
   }
 }
