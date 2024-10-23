@@ -5,6 +5,7 @@ import android.location.Location
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.radar.sdk.Radar.locationManager
 import io.radar.sdk.model.*
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -331,7 +332,7 @@ class RadarTest {
             icon = 1337,
             updatesOnly = true,
         ))
-        // Radar.setNotificationOptions has side effects on foregroundServiceOptions. 
+        // Radar.setNotificationOptions has side effects on foregroundServiceOptions.
         Radar.setNotificationOptions(RadarNotificationOptions(
             "foo",
             "red",
@@ -591,15 +592,15 @@ class RadarTest {
             updatesOnly = true,
             iconColor = "#FF0000"
         ))
-
-        val options = RadarTrackingOptions.EFFICIENT
-        options.desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW
         val now = Date()
-        options.startTrackingAfter = now
-        options.stopTrackingAfter = Date(now.time + 1000)
-        options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.NONE
-        options.syncGeofences = true
-        options.syncGeofencesLimit = 100
+        val options = RadarTrackingOptions.EFFICIENT.copy(
+            desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW,
+            startTrackingAfter = now,
+            stopTrackingAfter = Date(now.time + 1000),
+            sync = RadarTrackingOptions.RadarTrackingOptionsSync.NONE,
+            syncGeofences = true,
+            syncGeofencesLimit = 100
+        )
         Radar.startTracking(options)
         assertEquals(options, Radar.getTrackingOptions())
         assertTrue(Radar.isTracking())
@@ -1578,7 +1579,7 @@ class RadarTest {
                 latch.countDown()
             }
         })
-        
+
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
@@ -1610,6 +1611,7 @@ class RadarTest {
 
                 if (config != null) {
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                    locationManager.updateTrackingFromMeta(config.meta)
                 }
                 assertEquals(RadarTrackingOptions.EFFICIENT, Radar.getTrackingOptions())
                 assertEquals(status, Radar.RadarStatus.SUCCESS)
@@ -1660,6 +1662,7 @@ class RadarTest {
 
                     if (config != null) {
                         RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                        locationManager.updateTrackingFromMeta(config.meta)
                     }
                     assertEquals(RadarTrackingOptions.EFFICIENT, Radar.getTrackingOptions())
                     assertEquals(status, Radar.RadarStatus.SUCCESS)
@@ -1726,6 +1729,7 @@ class RadarTest {
 
                 if (config != null) {
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                    locationManager.updateTrackingFromMeta(config.meta)
                 }
                 assertEquals(RadarTrackingOptions.EFFICIENT, Radar.getTrackingOptions())
                 assertEquals(status, Radar.RadarStatus.SUCCESS)
@@ -1761,7 +1765,8 @@ class RadarTest {
                 latch3.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
                 assertEquals(secondTrackOnceStatus, Radar.RadarStatus.ERROR_NETWORK)
                 assertEquals(RadarTrackingOptions.CONTINUOUS,Radar.getTrackingOptions())
-                Radar.cancelTrip()
+                // clean up
+                RadarSettings.setTripOptions(context, null)
                 apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/track.json")!!)
             }
         })
