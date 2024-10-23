@@ -36,9 +36,9 @@ class RadarNexusClient extends NexusClient {
     RadarNexusClient(String username, String password) {
         super(BASE_URL, username, password, null, null)
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder()
-                .writeTimeout(5, TimeUnit.MINUTES)
-                .readTimeout(5, TimeUnit.MINUTES)
-                .connectTimeout(5, TimeUnit.MINUTES)
+                .writeTimeout(30, TimeUnit.MINUTES)
+                .readTimeout(30, TimeUnit.MINUTES)
+                .connectTimeout(30, TimeUnit.MINUTES)
                 .addInterceptor { chain ->
                     String version = NexusClient.package.implementationVersion ?: 'dev'
                     chain.proceed(chain.request().newBuilder()
