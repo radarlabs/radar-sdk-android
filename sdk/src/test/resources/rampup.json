@@ -27,7 +27,7 @@
   "user": {
     "location": {
       "type": "Point",
-      "coordinates": [-73.975365, 40.783825]
+      "coordinates": [-73.9753651, 40.7838251]
     },
     "live": false,
     "geofences": [

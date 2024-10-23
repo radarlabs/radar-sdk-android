@@ -1572,6 +1572,7 @@ class RadarTest {
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
                 }
 
+
                 assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
 
                 latch.countDown()
@@ -1670,8 +1671,7 @@ class RadarTest {
                     mockLocation.time = System.currentTimeMillis()
                     locationClientMock.mockLocation = mockLocation
                     apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
-                    apiHelperMock.mockResponse =
-                        RadarTestUtils.jsonObjectFromResource("/track_with_rampup.json")
+                    apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/rampup.json")!!)
                     val latch = CountDownLatch(1)
                     var firstTrackOnceStatus = Radar.RadarStatus.SUCCESS
                     Radar.trackOnce { status, _, _, _ ->
@@ -1682,10 +1682,10 @@ class RadarTest {
                     latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
                     assertEquals(firstTrackOnceStatus, Radar.RadarStatus.SUCCESS)
                     // need to fix this
-//                    assertEquals(
-//                            RadarTrackingOptions.RESPONSIVE,
-//                            Radar.getTrackingOptions()
-//                        )
+                    assertEquals(
+                            RadarTrackingOptions.RESPONSIVE,
+                            Radar.getTrackingOptions()
+                        )
                     apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
                     mockLocation.latitude = 50.783825
                     mockLocation.longitude = -63.975365
@@ -1702,6 +1702,7 @@ class RadarTest {
                         RadarTrackingOptions.EFFICIENT,
                         Radar.getTrackingOptions()
                     )
+                    apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/track.json")!!)
                 }
             }
         )
@@ -1736,7 +1737,7 @@ class RadarTest {
                 mockLocation.time = System.currentTimeMillis()
                 locationClientMock.mockLocation = mockLocation
                 apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
-                apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track_with_rampup.json")
+                apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/rampup.json")!!)
                 val latch2 = CountDownLatch(1)
                 var firstTrackOnceStatus = Radar.RadarStatus.SUCCESS
                 Radar.trackOnce { status, _, _, _ ->
@@ -1746,8 +1747,7 @@ class RadarTest {
                 ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
                 latch2.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
                 assertEquals(firstTrackOnceStatus, Radar.RadarStatus.SUCCESS)
-                // need to fix
-                //assertEquals(RadarTrackingOptions.RESPONSIVE,Radar.getTrackingOptions())
+                assertEquals(RadarTrackingOptions.RESPONSIVE,Radar.getTrackingOptions())
                 mockLocation.latitude = 50.783825
                 mockLocation.longitude = -63.975365
                 apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
@@ -1762,6 +1762,7 @@ class RadarTest {
                 assertEquals(secondTrackOnceStatus, Radar.RadarStatus.ERROR_NETWORK)
                 assertEquals(RadarTrackingOptions.CONTINUOUS,Radar.getTrackingOptions())
                 Radar.cancelTrip()
+                apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/track.json")!!)
             }
         })
     }
