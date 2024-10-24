@@ -1130,5 +1130,25 @@
             "code": "501"
          }
       }
+   ],
+   "nearbyGeofences": [
+      {
+         "geometryCenter": {
+            "coordinates": [
+               -73.975365,
+               40.783825
+            ],
+            "type": "Point"
+         },
+         "_id": "5ca7dd72208530002b30683c",
+         "description": "S3 Test Monk's Café",
+         "type": "circle",
+         "metadata": {
+            "category": "restaurant"
+         },
+         "geometryRadius": 50,
+         "tag": "venue",
+         "externalId": "2"
+      } 
    ]
 }

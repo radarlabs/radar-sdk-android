@@ -1,9 +1,12 @@
 package io.radar.sdk.model
 
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarTrackingOptions
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -29,6 +32,7 @@ class RadarSdkConfigurationTest {
     private var trackOnceOnAppOpen = false
     private var useLocationMetadata = false
     private var useOpenedAppConversion = false
+    private var useOfflineRTOUpdates = false
 
     @Before
     fun setUp() {
@@ -46,14 +50,83 @@ class RadarSdkConfigurationTest {
             "startTrackingOnInitialize":$startTrackingOnInitialize,
             "trackOnceOnAppOpen":$trackOnceOnAppOpen,
             "useLocationMetadata":$useLocationMetadata,
-            "useOpenedAppConversion":$useOpenedAppConversion
+            "useOpenedAppConversion":$useOpenedAppConversion,
+            "useOfflineRTOUpdates":$useOfflineRTOUpdates,
+            "inGeofenceTrackingOptions": {
+                "desiredStoppedUpdateInterval": 0,
+                "fastestStoppedUpdateInterval": 0,
+                "desiredMovingUpdateInterval": 150,
+                "fastestMovingUpdateInterval": 30,
+                "desiredSyncInterval": 20,
+                "desiredAccuracy": "medium",
+                "stopDuration": 140,
+                "stopDistance": 70,
+
+                "replay": "stops",
+                "sync": "all",
+                "useStoppedGeofence": true,
+                "stoppedGeofenceRadius": 100,
+                "useMovingGeofence": true,
+                "movingGeofenceRadius": 100,
+                "syncGeofences": true,
+                "syncGeofencesLimit": 10,
+                "foregroundServiceEnabled": false,
+                "beacons": false
+            }
+            ,
+            "defaultTrackingOptions": {
+                "desiredStoppedUpdateInterval": 3600,
+                "fastestStoppedUpdateInterval": 1200,
+                "desiredMovingUpdateInterval": 1200,
+                "fastestMovingUpdateInterval": 360,
+                "desiredSyncInterval": 140,
+                "desiredAccuracy": "medium",
+                "stopDuration": 140,
+                "stopDistance": 70,
+
+                "replay": "stops",
+                "sync": "all",
+                "useStoppedGeofence": false,
+                "stoppedGeofenceRadius": 0,
+                "useMovingGeofence": false,
+                "movingGeofenceRadius": 0,
+                "syncGeofences": true,
+                "syncGeofencesLimit": 10,
+                "foregroundServiceEnabled": false,
+                "beacons": false
+            }
+            ,
+            "onTripTrackingOptions": {
+                "desiredStoppedUpdateInterval": 30,
+                "fastestStoppedUpdateInterval": 30,
+                "desiredMovingUpdateInterval": 30,
+                "fastestMovingUpdateInterval": 30,
+                "desiredSyncInterval": 20,
+                "desiredAccuracy": "high",
+                "stopDuration": 140,
+                "stopDistance": 70,
+
+                "replay": "none",
+                "sync": "all",
+                "useStoppedGeofence": false,
+                "stoppedGeofenceRadius": 0,
+                "useMovingGeofence": false,
+                "movingGeofenceRadius": 0,
+                "syncGeofences": true,
+                "syncGeofencesLimit": 0,
+                "foregroundServiceEnabled": true,
+                "beacons": false
+            }
+            ,
+            "inGeofenceTrackingOptionsTags": ["venue"]
+
         }""".trimIndent()
     }
 
     @Test
     fun testToJson() {
         assertEquals(
-            JSONObject(jsonString).toString(),
+            JSONObject(jsonString).toMap(),
             RadarSdkConfiguration(
                 maxConcurrentJobs,
                 requiresNetwork,
@@ -65,9 +138,30 @@ class RadarSdkConfigurationTest {
                 startTrackingOnInitialize,
                 trackOnceOnAppOpen,
                 useLocationMetadata,
-                useOpenedAppConversion
-            ).toJson().toString()
+                useOpenedAppConversion,
+                useOfflineRTOUpdates,
+                RadarTrackingOptions.RESPONSIVE,
+                RadarTrackingOptions.EFFICIENT,
+                RadarTrackingOptions.CONTINUOUS,
+                setOf("venue")
+            ).toJson().toMap()
         )
+    }
+
+    fun JSONObject.toMap(): Map<String, Any?> = keys().asSequence().associateWith { key ->
+        when (val value = this[key]) {
+            is JSONArray -> value.toList()
+            is JSONObject -> value.toMap()
+            else -> value
+        }
+    }
+
+    fun JSONArray.toList(): List<Any?> = (0 until length()).map { index ->
+        when (val value = get(index)) {
+            is JSONArray -> value.toList()
+            is JSONObject -> value.toMap()
+            else -> value
+        }
     }
 
     @Test
@@ -84,6 +178,11 @@ class RadarSdkConfigurationTest {
         assertEquals(trackOnceOnAppOpen, settings.trackOnceOnAppOpen)
         assertEquals(useLocationMetadata, settings.useLocationMetadata)
         assertEquals(useOpenedAppConversion, settings.useOpenedAppConversion)
+        assertEquals(useOfflineRTOUpdates, settings.useOfflineRTOUpdates)
+        assertEquals(RadarTrackingOptions.RESPONSIVE, settings.inGeofenceTrackingOptions)
+        assertEquals(RadarTrackingOptions.EFFICIENT, settings.defaultTrackingOptions)
+        assertEquals(RadarTrackingOptions.CONTINUOUS, settings.onTripTrackingOptions)
+        assertEquals(setOf("venue"), settings.inGeofenceTrackingOptionsTags)
     }
 
     @Test
@@ -100,6 +199,11 @@ class RadarSdkConfigurationTest {
         assertFalse(settings.trackOnceOnAppOpen)
         assertFalse(settings.useLocationMetadata)
         assertTrue(settings.useOpenedAppConversion)
+        assertFalse(settings.useOfflineRTOUpdates)
+        assertNull(settings.inGeofenceTrackingOptions)
+        assertNull(settings.defaultTrackingOptions)
+        assertNull(settings.onTripTrackingOptions)
+        assertEquals(emptySet<String>(), settings.inGeofenceTrackingOptionsTags)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")
