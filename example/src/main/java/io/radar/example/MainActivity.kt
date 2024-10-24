@@ -18,6 +18,9 @@ import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
 import java.util.EnumSet
+import androidx.core.content.edit
+import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarCoordinate
 
 class MainActivity : AppCompatActivity() {
 
@@ -253,7 +256,39 @@ class MainActivity : AppCompatActivity() {
             Radar.ipGeocode { status, address, proxy ->
                 Log.v(
                     "example",
-                    "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}; proxy = $proxy"
+                    "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}; proxy = $proxy ${address?.toJson()}"
+                )
+            }
+        }
+
+        createButton("validateAddress") {
+            val addressWithStreetAndNumber = RadarAddress(
+                coordinate = RadarCoordinate(.0, .0),
+                city = "New York",
+                stateCode = "NY",
+                postalCode = "10003",
+                countryCode = "US",
+                street = "Broadway",
+                number = "841",
+            )
+            Radar.validateAddress(addressWithStreetAndNumber) { status, address, verificationStatus ->
+                Log.v(
+                    "example",
+                    "Validate address with street + number: status $status; address = ${address?.toJson()}; verificationStatus = ${verificationStatus.toString()}"
+                )
+            }
+            val addressWithAddressLabel = RadarAddress(
+                coordinate = RadarCoordinate(.0, .0),
+                city = "New York",
+                stateCode = "NY",
+                postalCode = "10003",
+                countryCode = "US",
+                addressLabel = "841 Broadway",
+            )
+            Radar.validateAddress(addressWithAddressLabel) { status, address, verificationStatus ->
+                Log.v(
+                    "example",
+                    "Validate address with address label: status $status; address = ${address?.toJson()}; verificationStatus = ${verificationStatus.toString()}"
                 )
             }
         }

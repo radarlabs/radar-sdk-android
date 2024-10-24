@@ -15,122 +15,122 @@ class RadarAddress(
     /**
      * The formatted representation of the address.
      */
-    val formattedAddress: String?,
+    val formattedAddress: String? = null,
 
     /**
     * The name of the country of the address.
     */
-    val country: String?,
+    val country: String? = null,
 
     /**
      * The unique code of the country of the address.
      */
-    val countryCode: String?,
+    val countryCode: String? = null,
 
     /**
      * The flag of the country of the address.
      */
-    val countryFlag: String?,
+    val countryFlag: String? = null,
 
     /**
      * The name of the DMA of the address.
      */
-    val dma: String?,
+    val dma: String? = null,
 
     /**
      * The unique code of the DMA of the address.
      */
-    val dmaCode: String?,
+    val dmaCode: String? = null,
 
     /**
      * The name of the state of the address.
      */
-    val state: String?,
+    val state: String? = null,
 
     /**
      * The unique code of the state of the address.
      */
-    val stateCode: String?,
+    val stateCode: String? = null,
 
     /**
      * The postal code of the address.
      */
-    val postalCode: String?,
+    val postalCode: String? = null,
 
     /**
      * The city of the address.
      */
-    val city: String?,
+    val city: String? = null,
 
     /**
      * The borough of the address.
      */
-    val borough: String?,
+    val borough: String? = null,
 
     /**
      * The county of the address.
      */
-    val county: String?,
+    val county: String? = null,
 
     /**
      * The neighborhood of the address.
      */
-    val neighborhood: String?,
+    val neighborhood: String? = null,
 
     /**
      * The street of the address.
      */
-    val street: String?,
+    val street: String? = null,
 
     /**
      * The street number of the address.
      */
-    val number: String?,
+    val number: String? = null,
 
     /**
      * The name of the address.
      */
-    val addressLabel: String?,
+    val addressLabel: String? = null,
 
     /**
      * The place name of the address.
      */
-    val placeLabel: String?,
+    val placeLabel: String? = null,
 
     /**
      * The unit of the address
      */
-    val unit: String?,
+    val unit: String? = null,
 
     /**
      * The plus4 of the zip of the address
      */
-    val plus4: String?,
+    val plus4: String? = null,
 
     /**
      * The distance to the search anchor in meters
      */
-    val distance: Int?,
+    val distance: Int? = null,
 
     /**
      * The layer of the address
      */
-    val layer: String?,
+    val layer: String? = null,
 
     /**
      * The metadata of the address.
      */
-    val metadata: JSONObject?,
+    val metadata: JSONObject? = null,
 
     /**
      * The confidence level of the geocoding result.
      */
-    val confidence: RadarAddressConfidence,
+    val confidence: RadarAddressConfidence = RadarAddressConfidence.NONE,
 
     /**
      * The time zone information of the location.
      */
-    val timeZone: RadarTimeZone?,
+    val timeZone: RadarTimeZone? = null,
 ) {
 
     /**

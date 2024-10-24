@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.content.Context
 import android.location.Location
+import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
 import io.radar.sdk.Radar.RadarAddressVerificationStatus
@@ -956,15 +957,22 @@ internal class RadarApiClient(
         queryParams.append("countryCode=${address.countryCode}")
         queryParams.append("&stateCode=${address.stateCode}")
         queryParams.append("&city=${address.city}")
-        queryParams.append("&number=${address.number}")
-        queryParams.append("&street=${address.street}")
         queryParams.append("&postalCode=${address.postalCode}")
-
+        if (address.number != null) {
+            queryParams.append("&number=${address.number}")
+        }
+        if (address.street != null) {
+            queryParams.append("&street=${address.street}")
+        }
         if (address.unit != null) {
             queryParams.append("&unit=${address.unit}")
         }
+        if (address.addressLabel != null) {
+            queryParams.append("&addressLabel=${address.addressLabel}")
+        }
 
         val path = "v1/addresses/validate?${queryParams}"
+
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
@@ -979,11 +987,12 @@ internal class RadarApiClient(
                     RadarAddress.fromJson(address)
                 }
 
-                val verificationStatus = when(res.optString("verificationStatus")) {
-                    "V" -> RadarAddressVerificationStatus.VERIFIED
-                    "P" -> RadarAddressVerificationStatus.PARTIALLY_VERIFIED
-                    "A" -> RadarAddressVerificationStatus.AMBIGUOUS
-                    "U"-> RadarAddressVerificationStatus.UNVERIFIED
+                val result = res.optJSONObject("result")
+                val verificationStatus = when(result?.optString("verificationStatus")) {
+                    "verified" -> RadarAddressVerificationStatus.VERIFIED
+                    "partially verified" -> RadarAddressVerificationStatus.PARTIALLY_VERIFIED
+                    "ambiguous" -> RadarAddressVerificationStatus.AMBIGUOUS
+                    "unverified"-> RadarAddressVerificationStatus.UNVERIFIED
                     else -> RadarAddressVerificationStatus.NONE
                 }
 
