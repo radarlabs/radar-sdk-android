@@ -62,6 +62,9 @@ class RadarGeofence(
         private const val TYPE_POLYGON = "polygon"
         private const val TYPE_ISOCHRONE = "isochrone"
 
+        private const val TYPE_GEOMETRY_CIRCLE = "Circle"
+        private const val TYPE_GEOMETRY_POLYGON = "Polygon"
+
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarGeofence? {
             if (obj == null) {
@@ -84,13 +87,13 @@ class RadarGeofence(
             } ?: RadarCoordinate(0.0, 0.0)
             val radius = obj.optDouble(FIELD_GEOMETRY_RADIUS)
             val geometry = when (obj.optString(FIELD_TYPE)) {
-                TYPE_CIRCLE -> {
+                TYPE_CIRCLE, TYPE_GEOMETRY_CIRCLE -> {
                     RadarCircleGeometry(
                         center,
                         radius
                     )
                 }
-                TYPE_POLYGON, TYPE_ISOCHRONE -> {
+                TYPE_POLYGON, TYPE_ISOCHRONE, TYPE_GEOMETRY_POLYGON -> {
                 val geometryObj = obj.optJSONObject(FIELD_GEOMETRY)
                 val coordinatesArr = geometryObj?.optJSONArray(FIELD_COORDINATES)
                 if (coordinatesArr != null) {
@@ -177,7 +180,7 @@ class RadarGeofence(
                 is RadarCircleGeometry -> {
                     obj.putOpt(FIELD_GEOMETRY_CENTER, geometry.center.toJson())
                     obj.putOpt(FIELD_GEOMETRY_RADIUS, geometry.radius)
-                    obj.putOpt(FIELD_TYPE, TYPE_CIRCLE)
+                    obj.putOpt(FIELD_TYPE, TYPE_GEOMETRY_CIRCLE)
                 }
                 is RadarPolygonGeometry -> {
                     obj.putOpt(FIELD_GEOMETRY_CENTER, geometry.center.toJson())
@@ -187,7 +190,7 @@ class RadarGeofence(
                         geometryCoordinates.put(toJson(geometry.coordinates))
                         obj.putOpt(FIELD_COORDINATES, geometryCoordinates)
                     }
-                    obj.putOpt(FIELD_TYPE, TYPE_POLYGON)
+                    obj.putOpt(FIELD_TYPE, TYPE_GEOMETRY_POLYGON)
                 }
             }
         }
