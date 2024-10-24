@@ -400,12 +400,26 @@ internal class RadarApiClient(
         // before we track, check if replays need to sync
         val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && hasReplays && !verified
         if (replaying) {
+            // creating alias to location to avoid name space conflict
+            val trackLocation = location
             Radar.flushReplays(
                 replayParams = params,
                 callback = object : Radar.RadarTrackCallback {
                     override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                         // pass through flush replay onComplete for track callback
-                        callback?.onComplete(status)
+                        if (status != RadarStatus.SUCCESS && RadarSettings.getSdkConfiguration(context).useOfflineRTOUpdates) {
+                           RadarOfflineManager().contextualizeLocation(context, trackLocation, object : RadarOfflineManager.RadarOfflineCallback {
+                            override fun onComplete(config: RadarConfig?) {
+                                if (config != null) {
+                                    callback?.onComplete(status, null, null, null, null, config)
+                                } else {
+                                    callback?.onComplete(status)
+                                }
+                            }
+                        }) 
+                        } else {
+                            callback?.onComplete(status)
+                        }
                     }
                 }
             )
