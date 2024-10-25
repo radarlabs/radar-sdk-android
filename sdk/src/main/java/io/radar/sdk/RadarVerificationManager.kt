@@ -39,7 +39,8 @@ internal class RadarVerificationManager(
     private val connectivityManager = this.context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
     private var started = false
-    private var scheduled = false
+    private var startedInterval = 0
+    private var startedBeacons = false
     private var runnable: Runnable? = null
     private var lastToken: RadarVerifiedLocationToken? = null
     private var lastTokenElapsedRealtime: Long = 0L
@@ -222,27 +223,27 @@ internal class RadarVerificationManager(
         })
     }
 
-    private fun callTrackVerified(interval: Int, beacons: Boolean) {
+    private fun callTrackVerified() {
         val verificationManager = this
 
-        verificationManager.trackVerified(beacons, object : Radar.RadarTrackVerifiedCallback {
+        if (!verificationManager.started) {
+            return
+        }
+
+        verificationManager.trackVerified(verificationManager.startedBeacons, object : Radar.RadarTrackVerifiedCallback {
             override fun onComplete(
                 status: Radar.RadarStatus,
                 token: RadarVerifiedLocationToken?
             ) {
                 var expiresIn = 0
-                var minInterval: Int = interval
+                var minInterval: Int = verificationManager.startedInterval
 
                 token?.let {
                     expiresIn = it.expiresIn
 
                     // if expiresIn is shorter than interval, override interval
-                    minInterval = minOf(it.expiresIn, interval)
-                }
-
-                // re-request early to maximize the likelihood that a cached token is available
-                if (minInterval > 20) {
-                    minInterval -= 10
+                    // re-request early to maximize the likelihood that a cached token is available
+                    minInterval = minOf(it.expiresIn - 10, verificationManager.startedInterval)
                 }
 
                 // min interval is 10 seconds
@@ -250,29 +251,23 @@ internal class RadarVerificationManager(
                     minInterval = 10;
                 }
 
-                if (verificationManager.scheduled) {
-                    verificationManager.logger.d("Token request already scheduled")
-
-                    return
-                }
-
-                verificationManager.logger.d("Requesting token again in $minInterval seconds | minInterval = $minInterval; expiresIn = $expiresIn; interval = $interval")
-
-                verificationManager.scheduled = true
-
                 if (runnable == null) {
                     runnable = Runnable {
-                        if (verificationManager.started) {
-                            verificationManager.logger.d("Token request interval fired")
+                        verificationManager.logger.d("Token request interval fired")
 
-                            callTrackVerified(interval, beacons)
-
-                            verificationManager.scheduled = false
-                        }
+                        callTrackVerified()
                     }
                 }
 
                 runnable?.let {
+                    handler.removeCallbacks(it)
+
+                    if (!verificationManager.started) {
+                        return
+                    }
+
+                    verificationManager.logger.d("Requesting token again in $minInterval seconds | minInterval = $minInterval; expiresIn = $expiresIn; interval = ${verificationManager.startedInterval}")
+
                     handler.postDelayed(it, minInterval * 1000L)
                 }
             }
@@ -285,7 +280,8 @@ internal class RadarVerificationManager(
         verificationManager.stopTrackingVerified()
 
         verificationManager.started = true
-        verificationManager.scheduled = false
+        verificationManager.startedInterval = interval
+        verificationManager.startedBeacons = beacons
 
         val request = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
@@ -314,7 +310,7 @@ internal class RadarVerificationManager(
             verificationManager.lastIPs = ips
 
             if (changed) {
-                callTrackVerified(interval, beacons)
+                callTrackVerified()
             }
         }
 
@@ -336,7 +332,7 @@ internal class RadarVerificationManager(
             connectivityManager.registerNetworkCallback(request, it)
         }
 
-        callTrackVerified(interval, beacons)
+        callTrackVerified()
     }
 
     fun stopTrackingVerified() {
