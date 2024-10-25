@@ -38,6 +38,7 @@ internal class RadarVerificationManager(
     private val handler = Handler(this.context.mainLooper)
     private val connectivityManager = this.context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var started = false
     private var startedInterval = 0
     private var startedBeacons = false
     private var runnable: Runnable? = null
@@ -225,6 +226,10 @@ internal class RadarVerificationManager(
     private fun callTrackVerified() {
         val verificationManager = this
 
+        if (!verificationManager.started) {
+            return
+        }
+
         verificationManager.trackVerified(verificationManager.startedBeacons, object : Radar.RadarTrackVerifiedCallback {
             override fun onComplete(
                 status: Radar.RadarStatus,
@@ -259,9 +264,13 @@ internal class RadarVerificationManager(
                 }
 
                 runnable?.let {
-                    verificationManager.logger.d("Requesting token again in $minInterval seconds | minInterval = $minInterval; expiresIn = $expiresIn; interval = ${verificationManager.startedInterval}")
-
                     handler.removeCallbacks(it)
+                    
+                    if (!verificationManager.started) {
+                        return
+                    }
+
+                    verificationManager.logger.d("Requesting token again in $minInterval seconds | minInterval = $minInterval; expiresIn = $expiresIn; interval = ${verificationManager.startedInterval}")
 
                     handler.postDelayed(it, minInterval * 1000L)
                 }
@@ -274,6 +283,7 @@ internal class RadarVerificationManager(
 
         verificationManager.stopTrackingVerified()
 
+        verificationManager.started = true
         verificationManager.startedInterval = interval
         verificationManager.startedBeacons = beacons
 
@@ -330,6 +340,8 @@ internal class RadarVerificationManager(
     }
 
     fun stopTrackingVerified() {
+        this.started = false
+
         networkCallback?.let {
             connectivityManager.unregisterNetworkCallback(it)
         }
