@@ -1555,7 +1555,7 @@ class RadarTest {
 
     @Test
     fun test_Radar_setSdkConfiguration() {
-        val sdkConfiguration = RadarSdkConfiguration(1, false, false, false, false, false, Radar.RadarLogLevel.WARNING, true, true, true,true, true, null, null, null, setOf())
+        val sdkConfiguration = RadarSdkConfiguration(1, false, false, false, false, false, Radar.RadarLogLevel.WARNING, true, true, true,true, true, null)
 
         RadarSettings.setUserDebug(context, false)
         RadarSettings.setSdkConfiguration(context, sdkConfiguration)
@@ -1572,7 +1572,6 @@ class RadarTest {
                 if (config != null) {
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
                 }
-
 
                 assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
 
@@ -1594,10 +1593,12 @@ class RadarTest {
         assertEquals(true, savedSdkConfiguration?.trackOnceOnAppOpen)
         assertEquals(true,savedSdkConfiguration?.useLocationMetadata)
         assertEquals(true, savedSdkConfiguration.useOfflineRTOUpdates)
-        assertEquals(RadarTrackingOptions.RESPONSIVE,savedSdkConfiguration.inGeofenceTrackingOptions)
-        assertEquals(RadarTrackingOptions.EFFICIENT, savedSdkConfiguration.defaultTrackingOptions)
-        assertEquals(RadarTrackingOptions.CONTINUOUS, savedSdkConfiguration.onTripTrackingOptions)
-        assertEquals(setOf("venue"),savedSdkConfiguration.inGeofenceTrackingOptionsTags)
+        assertEquals(RadarTrackingOptions.EFFICIENT, RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(savedSdkConfiguration.alternativeTrackingOptions,"default"))
+        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(savedSdkConfiguration.alternativeTrackingOptions,"inGeofence"))
+        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(savedSdkConfiguration.alternativeTrackingOptions,"onTrip"))
+        assertEquals(arrayOf("venue")[0],
+            (RadarAlternativeTrackingOptions.getGeofenceTagsWithKey(savedSdkConfiguration.alternativeTrackingOptions,"inGeofence"))?.get(0) ?: ""
+        )
     }
 
     @Test

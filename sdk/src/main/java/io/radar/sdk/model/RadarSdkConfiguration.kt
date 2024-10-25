@@ -4,8 +4,6 @@ import android.content.Context
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarApiClient
 import io.radar.sdk.RadarSettings
-import io.radar.sdk.RadarTrackingOptions
-import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -24,11 +22,7 @@ data class RadarSdkConfiguration(
     val useLocationMetadata: Boolean,
     val useOpenedAppConversion: Boolean = false,
     val useOfflineRTOUpdates: Boolean,
-    val inGeofenceTrackingOptions: RadarTrackingOptions?,
-    val defaultTrackingOptions:RadarTrackingOptions?,
-    val onTripTrackingOptions:RadarTrackingOptions?,
-    val inGeofenceTrackingOptionsTags:Set<String>?,
-
+    val alternativeTrackingOptions: Array<RadarAlternativeTrackingOptions>?,
     ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -44,11 +38,7 @@ data class RadarSdkConfiguration(
         private const val USE_LOCATION_METADATA = "useLocationMetadata"
         private const val USE_OPENED_APP_CONVERSION = "useOpenedAppConversion"
         private const val USE_OFFLINE_RTO_UPDATES = "useOfflineRTOUpdates"
-        private const val IN_GEOFENCE_TRACKING_OPTIONS = "inGeofenceTrackingOptions"
-        private const val DEFAULT_TRACKING_OPTIONS = "defaultTrackingOptions"
-        private const val ON_TRIP_TRACKING_OPTIONS = "onTripTrackingOptions"
-        private const val IN_GEOFENCE_TRACKING_OPTIONS_TAGS = "inGeofenceTrackingOptionsTags"
-
+        private const val ALTERNATIVE_TRACKING_OPTIONS = "alternativeTrackingOptions"
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             // set json as empty object if json is null, which uses fallback values
@@ -67,17 +57,7 @@ data class RadarSdkConfiguration(
                 config.optBoolean(USE_LOCATION_METADATA, false),
                 config.optBoolean(USE_OPENED_APP_CONVERSION, true),
                 config.optBoolean(USE_OFFLINE_RTO_UPDATES, false),
-                config.optJSONObject(IN_GEOFENCE_TRACKING_OPTIONS)
-                    ?.let { RadarTrackingOptions.fromJson(it) },
-                config.optJSONObject(DEFAULT_TRACKING_OPTIONS)
-                    ?.let { RadarTrackingOptions.fromJson(it) },
-                config.optJSONObject(ON_TRIP_TRACKING_OPTIONS)
-                    ?.let { RadarTrackingOptions.fromJson(it) },
-                config.optJSONArray(IN_GEOFENCE_TRACKING_OPTIONS_TAGS)?.let { tags ->
-                    (0 until tags.length()).map { index -> 
-                        tags.getString(index) 
-                     }.toSet()
-                } ?: emptySet()
+                config.optJSONArray(ALTERNATIVE_TRACKING_OPTIONS)?.let { RadarAlternativeTrackingOptions.fromJson(it) },
             )
         }
 
@@ -108,10 +88,7 @@ data class RadarSdkConfiguration(
             putOpt(USE_LOCATION_METADATA, useLocationMetadata)
             putOpt(USE_OPENED_APP_CONVERSION, useOpenedAppConversion)
             putOpt(USE_OFFLINE_RTO_UPDATES, useOfflineRTOUpdates)
-            putOpt(IN_GEOFENCE_TRACKING_OPTIONS, inGeofenceTrackingOptions?.toJson() ?: null)
-            putOpt(DEFAULT_TRACKING_OPTIONS, defaultTrackingOptions?.toJson() ?: null)
-            putOpt(ON_TRIP_TRACKING_OPTIONS, onTripTrackingOptions?.toJson() ?: null)
-            putOpt(IN_GEOFENCE_TRACKING_OPTIONS_TAGS, JSONArray(inGeofenceTrackingOptionsTags?.toList() ?: emptyList<Int>()))
+            putOpt(ALTERNATIVE_TRACKING_OPTIONS, RadarAlternativeTrackingOptions.toJson(alternativeTrackingOptions))
         }
     }
 }

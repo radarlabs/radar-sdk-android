@@ -33,6 +33,11 @@ class RadarSdkConfigurationTest {
     private var useLocationMetadata = false
     private var useOpenedAppConversion = false
     private var useOfflineRTOUpdates = false
+    private var alternativeTrackingOptions =
+        arrayOf(RadarAlternativeTrackingOptions("default",RadarTrackingOptions.EFFICIENT,null),
+            RadarAlternativeTrackingOptions("onTrip", RadarTrackingOptions.CONTINUOUS,null),
+            RadarAlternativeTrackingOptions("inGeofence", RadarTrackingOptions.RESPONSIVE, arrayOf("venue"))
+        )
 
     @Before
     fun setUp() {
@@ -52,74 +57,78 @@ class RadarSdkConfigurationTest {
             "useLocationMetadata":$useLocationMetadata,
             "useOpenedAppConversion":$useOpenedAppConversion,
             "useOfflineRTOUpdates":$useOfflineRTOUpdates,
-            "inGeofenceTrackingOptions": {
-                "desiredStoppedUpdateInterval": 0,
-                "fastestStoppedUpdateInterval": 0,
-                "desiredMovingUpdateInterval": 150,
-                "fastestMovingUpdateInterval": 30,
-                "desiredSyncInterval": 20,
-                "desiredAccuracy": "medium",
-                "stopDuration": 140,
-                "stopDistance": 70,
-
-                "replay": "stops",
-                "sync": "all",
-                "useStoppedGeofence": true,
-                "stoppedGeofenceRadius": 100,
-                "useMovingGeofence": true,
-                "movingGeofenceRadius": 100,
-                "syncGeofences": true,
-                "syncGeofencesLimit": 10,
-                "foregroundServiceEnabled": false,
-                "beacons": false
-            }
-            ,
-            "defaultTrackingOptions": {
-                "desiredStoppedUpdateInterval": 3600,
-                "fastestStoppedUpdateInterval": 1200,
-                "desiredMovingUpdateInterval": 1200,
-                "fastestMovingUpdateInterval": 360,
-                "desiredSyncInterval": 140,
-                "desiredAccuracy": "medium",
-                "stopDuration": 140,
-                "stopDistance": 70,
-
-                "replay": "stops",
-                "sync": "all",
-                "useStoppedGeofence": false,
-                "stoppedGeofenceRadius": 0,
-                "useMovingGeofence": false,
-                "movingGeofenceRadius": 0,
-                "syncGeofences": true,
-                "syncGeofencesLimit": 10,
-                "foregroundServiceEnabled": false,
-                "beacons": false
-            }
-            ,
-            "onTripTrackingOptions": {
-                "desiredStoppedUpdateInterval": 30,
-                "fastestStoppedUpdateInterval": 30,
-                "desiredMovingUpdateInterval": 30,
-                "fastestMovingUpdateInterval": 30,
-                "desiredSyncInterval": 20,
-                "desiredAccuracy": "high",
-                "stopDuration": 140,
-                "stopDistance": 70,
-
-                "replay": "none",
-                "sync": "all",
-                "useStoppedGeofence": false,
-                "stoppedGeofenceRadius": 0,
-                "useMovingGeofence": false,
-                "movingGeofenceRadius": 0,
-                "syncGeofences": true,
-                "syncGeofencesLimit": 0,
-                "foregroundServiceEnabled": true,
-                "beacons": false
-            }
-            ,
-            "inGeofenceTrackingOptionsTags": ["venue"]
-
+            "alternativeTrackingOptions": [
+                {
+                    "type": "default",
+                    "trackingOptions":{
+                        "desiredStoppedUpdateInterval": 3600,
+                        "fastestStoppedUpdateInterval": 1200,
+                        "desiredMovingUpdateInterval": 1200,
+                        "fastestMovingUpdateInterval": 360,
+                        "desiredSyncInterval": 140,
+                        "desiredAccuracy": "medium",
+                        "stopDuration": 140,
+                        "stopDistance": 70,
+                        "replay": "stops",
+                        "sync": "all",
+                        "useStoppedGeofence": false,
+                        "stoppedGeofenceRadius": 0,
+                        "useMovingGeofence": false,
+                        "movingGeofenceRadius": 0,
+                        "syncGeofences": true,
+                        "syncGeofencesLimit": 10,
+                        "foregroundServiceEnabled": false,
+                        "beacons": false
+                    }
+                },
+                {
+                    "type": "onTrip",
+                    "trackingOptions":{
+                        "desiredStoppedUpdateInterval": 30,
+                        "fastestStoppedUpdateInterval": 30,
+                        "desiredMovingUpdateInterval": 30,
+                        "fastestMovingUpdateInterval": 30,
+                        "desiredSyncInterval": 20,
+                        "desiredAccuracy": "high",
+                        "stopDuration": 140,
+                        "stopDistance": 70,
+                        "replay": "none",
+                        "sync": "all",
+                        "useStoppedGeofence": false,
+                        "stoppedGeofenceRadius": 0,
+                        "useMovingGeofence": false,
+                        "movingGeofenceRadius": 0,
+                        "syncGeofences": true,
+                        "syncGeofencesLimit": 0,
+                        "foregroundServiceEnabled": true,
+                        "beacons": false
+                    }
+                },
+                {
+                    "type":"inGeofence",
+                    "trackingOptions":{
+                        "desiredStoppedUpdateInterval": 0,
+                        "fastestStoppedUpdateInterval": 0,
+                        "desiredMovingUpdateInterval": 150,
+                        "fastestMovingUpdateInterval": 30,
+                        "desiredSyncInterval": 20,
+                        "desiredAccuracy": "medium",
+                        "stopDuration": 140,
+                        "stopDistance": 70,
+                        "replay": "stops",
+                        "sync": "all",
+                        "useStoppedGeofence": true,
+                        "stoppedGeofenceRadius": 100,
+                        "useMovingGeofence": true,
+                        "movingGeofenceRadius": 100,
+                        "syncGeofences": true,
+                        "syncGeofencesLimit": 10,
+                        "foregroundServiceEnabled": false,
+                        "beacons": false
+                    },
+                    "geofenceTags":["venue"]
+                }
+            ]
         }""".trimIndent()
     }
 
@@ -140,10 +149,7 @@ class RadarSdkConfigurationTest {
                 useLocationMetadata,
                 useOpenedAppConversion,
                 useOfflineRTOUpdates,
-                RadarTrackingOptions.RESPONSIVE,
-                RadarTrackingOptions.EFFICIENT,
-                RadarTrackingOptions.CONTINUOUS,
-                setOf("venue")
+                alternativeTrackingOptions
             ).toJson().toMap()
         )
     }
@@ -179,10 +185,13 @@ class RadarSdkConfigurationTest {
         assertEquals(useLocationMetadata, settings.useLocationMetadata)
         assertEquals(useOpenedAppConversion, settings.useOpenedAppConversion)
         assertEquals(useOfflineRTOUpdates, settings.useOfflineRTOUpdates)
-        assertEquals(RadarTrackingOptions.RESPONSIVE, settings.inGeofenceTrackingOptions)
-        assertEquals(RadarTrackingOptions.EFFICIENT, settings.defaultTrackingOptions)
-        assertEquals(RadarTrackingOptions.CONTINUOUS, settings.onTripTrackingOptions)
-        assertEquals(setOf("venue"), settings.inGeofenceTrackingOptionsTags)
+        assertEquals(RadarTrackingOptions.EFFICIENT, RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(settings.alternativeTrackingOptions,"default"))
+        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(settings.alternativeTrackingOptions,"inGeofence"))
+        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(settings.alternativeTrackingOptions,"onTrip"))
+        assertEquals(arrayOf("venue")[0],
+            RadarAlternativeTrackingOptions.getGeofenceTagsWithKey(settings.alternativeTrackingOptions,"inGeofence")
+                ?.get(0) ?: ""
+        )
     }
 
     @Test
@@ -200,10 +209,8 @@ class RadarSdkConfigurationTest {
         assertFalse(settings.useLocationMetadata)
         assertTrue(settings.useOpenedAppConversion)
         assertFalse(settings.useOfflineRTOUpdates)
-        assertNull(settings.inGeofenceTrackingOptions)
-        assertNull(settings.defaultTrackingOptions)
-        assertNull(settings.onTripTrackingOptions)
-        assertEquals(emptySet<String>(), settings.inGeofenceTrackingOptionsTags)
+        assertNull(settings.alternativeTrackingOptions)
+
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")
