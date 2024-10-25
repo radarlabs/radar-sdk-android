@@ -242,12 +242,8 @@ internal class RadarVerificationManager(
                     expiresIn = it.expiresIn
 
                     // if expiresIn is shorter than interval, override interval
-                    minInterval = minOf(it.expiresIn, verificationManager.startedInterval)
-                }
-
-                // re-request early to maximize the likelihood that a cached token is available
-                if (minInterval > 20) {
-                    minInterval -= 10
+                    // re-request early to maximize the likelihood that a cached token is available
+                    minInterval = minOf(it.expiresIn - 10, verificationManager.startedInterval)
                 }
 
                 // min interval is 10 seconds
@@ -265,7 +261,7 @@ internal class RadarVerificationManager(
 
                 runnable?.let {
                     handler.removeCallbacks(it)
-                    
+
                     if (!verificationManager.started) {
                         return
                     }
