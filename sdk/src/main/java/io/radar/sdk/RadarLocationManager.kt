@@ -354,8 +354,10 @@ internal class RadarLocationManager(
     }
 
     private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
-        this.removeSyncedGeofences() { success ->
-            this.addSyncedGeofences(radarGeofences)
+        if (radarGeofences != null) {
+            this.removeSyncedGeofences() { success ->
+                this.addSyncedGeofences(radarGeofences)
+            }
         }
     }
 
