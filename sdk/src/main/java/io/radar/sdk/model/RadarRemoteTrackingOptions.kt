@@ -45,8 +45,8 @@ class RadarRemoteTrackingOptions(
                 return null
             }
             val arr = JSONArray()
-            remoteTrackingOptions.forEach { alternativeTrackingOption ->
-                arr.put(alternativeTrackingOption.toJson())
+            remoteTrackingOptions.forEach { remoteTrackingOption ->
+                arr.put(remoteTrackingOption.toJson())
             }
             return arr
         }
@@ -56,9 +56,9 @@ class RadarRemoteTrackingOptions(
             if (remoteTrackingOptions == null) {
                 return null
             }
-            for (alternativeTrackingOption in remoteTrackingOptions) {
-                if (alternativeTrackingOption.type == key) {
-                    return alternativeTrackingOption.trackingOptions
+            for (remoteTrackingOption in remoteTrackingOptions) {
+                if (remoteTrackingOption.type == key) {
+                    return remoteTrackingOption.trackingOptions
                 }
             }
             return null
@@ -70,9 +70,9 @@ class RadarRemoteTrackingOptions(
                 return null
             }
             var geofenceTags: Array<String>? = null
-            for (alternativeTrackingOption in remoteTrackingOptions) {
-                if (alternativeTrackingOption.type == key) {
-                    geofenceTags = alternativeTrackingOption.geofenceTags
+            for (remoteTrackingOption in remoteTrackingOptions) {
+                if (remoteTrackingOption.type == key) {
+                    geofenceTags = remoteTrackingOption.geofenceTags
                 }
             }
             return geofenceTags
