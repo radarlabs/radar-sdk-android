@@ -2,7 +2,7 @@ package io.radar.sdk
 
 import android.content.Context
 import android.location.Location
-import io.radar.sdk.model.RadarAlternativeTrackingOptions
+import io.radar.sdk.model.RadarRemoteTrackingOptions
 import io.radar.sdk.model.RadarCircleGeometry
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarCoordinate
@@ -44,7 +44,7 @@ class RadarOfflineManager {
         }
         RadarState.setGeofenceIds(context,newGeofenceIds)
         val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
-        val rampUpGeofenceTags = RadarAlternativeTrackingOptions.getGeofenceTagsWithKey(sdkConfiguration.alternativeTrackingOptions, "inGeofence")
+        val rampUpGeofenceTags = RadarRemoteTrackingOptions.getGeofenceTagsWithKey(sdkConfiguration.remoteTrackingOptions, "inGeofence")
         var isRampedUp = false
         if (!rampUpGeofenceTags.isNullOrEmpty()) {
             for (tag in rampUpGeofenceTags) {
@@ -58,15 +58,15 @@ class RadarOfflineManager {
         if (isRampedUp) {
             // ramp up
             Radar.logger.d("Ramp up geofences with trackingOptions: $sdkConfiguration.inGeofenceTrackingOptions")
-            newTrackingOptions = RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(sdkConfiguration.alternativeTrackingOptions, "inGeofence")
+            newTrackingOptions = RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(sdkConfiguration.remoteTrackingOptions, "inGeofence")
         } else {
             val tripOptions = RadarSettings.getTripOptions(context)
-            if (tripOptions != null && RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(sdkConfiguration.alternativeTrackingOptions, "onTrip") != null){
+            if (tripOptions != null && RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(sdkConfiguration.remoteTrackingOptions, "onTrip") != null){
                 Radar.logger.d("Ramp down geofences with trackingOptions: $sdkConfiguration.6onTripTrackingOptions")
-                newTrackingOptions = RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(sdkConfiguration.alternativeTrackingOptions, "onTrip")
+                newTrackingOptions = RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(sdkConfiguration.remoteTrackingOptions, "onTrip")
             } else {
                 Radar.logger.d("Ramp down geofences with trackingOptions: $sdkConfiguration.defaultTrackingOptions")
-                newTrackingOptions = RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(sdkConfiguration.alternativeTrackingOptions, "default")
+                newTrackingOptions = RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(sdkConfiguration.remoteTrackingOptions, "default")
             }
         }
         if (newTrackingOptions != null) {

@@ -1593,11 +1593,11 @@ class RadarTest {
         assertEquals(true, savedSdkConfiguration?.trackOnceOnAppOpen)
         assertEquals(true,savedSdkConfiguration?.useLocationMetadata)
         assertEquals(true, savedSdkConfiguration.useOfflineRTOUpdates)
-        assertEquals(RadarTrackingOptions.EFFICIENT, RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(savedSdkConfiguration.alternativeTrackingOptions,"default"))
-        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(savedSdkConfiguration.alternativeTrackingOptions,"inGeofence"))
-        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(savedSdkConfiguration.alternativeTrackingOptions,"onTrip"))
+        assertEquals(RadarTrackingOptions.EFFICIENT, RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(savedSdkConfiguration.remoteTrackingOptions,"default"))
+        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(savedSdkConfiguration.remoteTrackingOptions,"inGeofence"))
+        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(savedSdkConfiguration.remoteTrackingOptions,"onTrip"))
         assertEquals(arrayOf("venue")[0],
-            (RadarAlternativeTrackingOptions.getGeofenceTagsWithKey(savedSdkConfiguration.alternativeTrackingOptions,"inGeofence"))?.get(0) ?: ""
+            (RadarRemoteTrackingOptions.getGeofenceTagsWithKey(savedSdkConfiguration.remoteTrackingOptions,"inGeofence"))?.get(0) ?: ""
         )
     }
 

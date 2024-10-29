@@ -14,7 +14,7 @@
       "trackOnceOnAppOpen": true,
       "useLocationMetadata": true,
       "useOfflineRTOUpdates": true,
-      "alternativeTrackingOptions": [
+      "remoteTrackingOptions": [
         {
           "type": "inGeofence",
           "trackingOptions": {

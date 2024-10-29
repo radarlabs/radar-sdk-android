@@ -33,10 +33,10 @@ class RadarSdkConfigurationTest {
     private var useLocationMetadata = false
     private var useOpenedAppConversion = false
     private var useOfflineRTOUpdates = false
-    private var alternativeTrackingOptions =
-        arrayOf(RadarAlternativeTrackingOptions("default",RadarTrackingOptions.EFFICIENT,null),
-            RadarAlternativeTrackingOptions("onTrip", RadarTrackingOptions.CONTINUOUS,null),
-            RadarAlternativeTrackingOptions("inGeofence", RadarTrackingOptions.RESPONSIVE, arrayOf("venue"))
+    private var remoteTrackingOptions =
+        arrayOf(RadarRemoteTrackingOptions("default",RadarTrackingOptions.EFFICIENT,null),
+            RadarRemoteTrackingOptions("onTrip", RadarTrackingOptions.CONTINUOUS,null),
+            RadarRemoteTrackingOptions("inGeofence", RadarTrackingOptions.RESPONSIVE, arrayOf("venue"))
         )
 
     @Before
@@ -57,7 +57,7 @@ class RadarSdkConfigurationTest {
             "useLocationMetadata":$useLocationMetadata,
             "useOpenedAppConversion":$useOpenedAppConversion,
             "useOfflineRTOUpdates":$useOfflineRTOUpdates,
-            "alternativeTrackingOptions": [
+            "remoteTrackingOptions": [
                 {
                     "type": "default",
                     "trackingOptions":{
@@ -149,7 +149,7 @@ class RadarSdkConfigurationTest {
                 useLocationMetadata,
                 useOpenedAppConversion,
                 useOfflineRTOUpdates,
-                alternativeTrackingOptions
+                remoteTrackingOptions
             ).toJson().toMap()
         )
     }
@@ -185,11 +185,11 @@ class RadarSdkConfigurationTest {
         assertEquals(useLocationMetadata, settings.useLocationMetadata)
         assertEquals(useOpenedAppConversion, settings.useOpenedAppConversion)
         assertEquals(useOfflineRTOUpdates, settings.useOfflineRTOUpdates)
-        assertEquals(RadarTrackingOptions.EFFICIENT, RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(settings.alternativeTrackingOptions,"default"))
-        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(settings.alternativeTrackingOptions,"inGeofence"))
-        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarAlternativeTrackingOptions.getRemoteTrackingOptionsWithKey(settings.alternativeTrackingOptions,"onTrip"))
+        assertEquals(RadarTrackingOptions.EFFICIENT, RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(settings.remoteTrackingOptions,"default"))
+        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(settings.remoteTrackingOptions,"inGeofence"))
+        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(settings.remoteTrackingOptions,"onTrip"))
         assertEquals(arrayOf("venue")[0],
-            RadarAlternativeTrackingOptions.getGeofenceTagsWithKey(settings.alternativeTrackingOptions,"inGeofence")
+            RadarRemoteTrackingOptions.getGeofenceTagsWithKey(settings.remoteTrackingOptions,"inGeofence")
                 ?.get(0) ?: ""
         )
     }
@@ -209,7 +209,7 @@ class RadarSdkConfigurationTest {
         assertFalse(settings.useLocationMetadata)
         assertTrue(settings.useOpenedAppConversion)
         assertFalse(settings.useOfflineRTOUpdates)
-        assertNull(settings.alternativeTrackingOptions)
+        assertNull(settings.remoteTrackingOptions)
 
     }
 

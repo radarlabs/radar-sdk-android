@@ -22,7 +22,7 @@ data class RadarSdkConfiguration(
     val useLocationMetadata: Boolean,
     val useOpenedAppConversion: Boolean = false,
     val useOfflineRTOUpdates: Boolean,
-    val alternativeTrackingOptions: Array<RadarAlternativeTrackingOptions>?,
+    val remoteTrackingOptions: Array<RadarRemoteTrackingOptions>?,
     ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -38,7 +38,7 @@ data class RadarSdkConfiguration(
         private const val USE_LOCATION_METADATA = "useLocationMetadata"
         private const val USE_OPENED_APP_CONVERSION = "useOpenedAppConversion"
         private const val USE_OFFLINE_RTO_UPDATES = "useOfflineRTOUpdates"
-        private const val ALTERNATIVE_TRACKING_OPTIONS = "alternativeTrackingOptions"
+        private const val ALTERNATIVE_TRACKING_OPTIONS = "remoteTrackingOptions"
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             // set json as empty object if json is null, which uses fallback values
@@ -57,7 +57,7 @@ data class RadarSdkConfiguration(
                 config.optBoolean(USE_LOCATION_METADATA, false),
                 config.optBoolean(USE_OPENED_APP_CONVERSION, true),
                 config.optBoolean(USE_OFFLINE_RTO_UPDATES, false),
-                config.optJSONArray(ALTERNATIVE_TRACKING_OPTIONS)?.let { RadarAlternativeTrackingOptions.fromJson(it) },
+                config.optJSONArray(ALTERNATIVE_TRACKING_OPTIONS)?.let { RadarRemoteTrackingOptions.fromJson(it) },
             )
         }
 
@@ -88,7 +88,7 @@ data class RadarSdkConfiguration(
             putOpt(USE_LOCATION_METADATA, useLocationMetadata)
             putOpt(USE_OPENED_APP_CONVERSION, useOpenedAppConversion)
             putOpt(USE_OFFLINE_RTO_UPDATES, useOfflineRTOUpdates)
-            putOpt(ALTERNATIVE_TRACKING_OPTIONS, RadarAlternativeTrackingOptions.toJson(alternativeTrackingOptions))
+            putOpt(ALTERNATIVE_TRACKING_OPTIONS, RadarRemoteTrackingOptions.toJson(remoteTrackingOptions))
         }
     }
 }
