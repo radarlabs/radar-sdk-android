@@ -358,6 +358,8 @@ internal class RadarLocationManager(
             this.removeSyncedGeofences() { success ->
                 this.addSyncedGeofences(radarGeofences)
             }
+        } else {
+            logger.d("Skipping replace synced geofences")
         }
     }
 
