@@ -175,16 +175,17 @@ internal class RadarLocationManager(
     internal fun updateTracking(location: Location? = null) {
         var tracking = RadarSettings.getTracking(context)
         val options = Radar.getTrackingOptions()
+        val localOptions = RadarSettings.getTrackingOptions(context)
 
         logger.d("Updating tracking | options = $options; location = $location")
 
         val now = Date()
-        if (!tracking && options.startTrackingAfter != null && options.startTrackingAfter!!.before(now)) {
+        if (!tracking && localOptions.startTrackingAfter != null && localOptions.startTrackingAfter!!.before(now)) {
             logger.d("Starting time-based tracking | startTrackingAfter = ${options.startTrackingAfter}")
 
             tracking = true
             RadarSettings.setTracking(context, true)
-        } else if (tracking && options.stopTrackingAfter != null && options.stopTrackingAfter!!.before(now)) {
+        } else if (tracking && localOptions.stopTrackingAfter != null && localOptions.stopTrackingAfter!!.before(now)) {
             logger.d("Stopping time-based tracking | startTrackingAfter = ${options.startTrackingAfter}")
 
             tracking = false
