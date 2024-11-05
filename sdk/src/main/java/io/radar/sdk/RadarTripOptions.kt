@@ -39,7 +39,7 @@ data class RadarTripOptions(
      */
     var scheduledArrivalAt: Date? = null,
 
-    var approachingThreshold: Int = 0
+    var approachingThreshold: Int = 0,
 
     var startTracking: Boolean = true
 ) {
