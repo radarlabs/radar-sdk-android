@@ -1537,7 +1537,7 @@ object Radar {
                         RadarSettings.removePreviousTrackingOptions(context)
                     }
 
-                    if (trackingOptions != null && trackingOptions.startTrackingAfter != null) {
+                    if (trackingOptions != null && trackingOptions.startTrackingAfter == null) {
                         Radar.startTracking(trackingOptions)
                     } else if (trackingOptions != null) {
                         RadarSettings.setTrackingOptions(context, trackingOptions)
