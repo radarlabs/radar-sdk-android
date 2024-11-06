@@ -118,6 +118,12 @@ internal class RadarLocationManager(
     fun stopTracking() {
         this.started = false
         RadarSettings.setTracking(context, false)
+        // null out startTrackingAfter and stopTrackingAfter in the local tracking options
+        // so that tracking isn't restarted with a trackOnce call
+        val trackingOptions = RadarSettings.getTrackingOptions(context)
+        trackingOptions.startTrackingAfter = null
+        trackingOptions.stopTrackingAfter = null
+        RadarSettings.setTrackingOptions(context, trackingOptions)
         this.updateTracking()
         val settings = RadarSettings.getSdkConfiguration(context)
         if (settings.extendFlushReplays) {
