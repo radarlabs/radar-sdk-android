@@ -79,7 +79,7 @@ data class RadarTripOptions(
                         RadarUtils.isoStringToDate(obj.optString(KEY_SCHEDULED_ARRIVAL_AT))
                     }
                 } else null,
-                approachingThreshold = obj.optInt(KEY_APPROACHING_THRESHOLD)
+                approachingThreshold = obj.optInt(KEY_APPROACHING_THRESHOLD),
                 startTracking = obj.optBoolean(KEY_START_TRACKING, true)
             )
         }
