@@ -305,10 +305,13 @@ internal class RadarApiClient(
                     params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
                 }
             }
-            if (!foreground && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                val updatedAtMsDiff = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1000000
+            val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
+            val locationMs = location.elapsedRealtimeNanos / 1000000
+            val updatedAtMsDiff = (nowMs - locationMs)
+            if ((!foreground || !verified) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
             }
+            params.putOpt("locationMs", locationMs)
             params.putOpt("foreground", foreground)
             params.putOpt("stopped", stopped)
             params.putOpt("replayed", replayed)
@@ -396,8 +399,6 @@ internal class RadarApiClient(
 
         val hasReplays = Radar.hasReplays()
         var requestParams = params
-        val nowMS = System.currentTimeMillis()
-
         // before we track, check if replays need to sync
         val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && hasReplays && !verified
         if (replaying) {
@@ -418,8 +419,6 @@ internal class RadarApiClient(
                 if (status != RadarStatus.SUCCESS || res == null) {
                     if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
                         params.putOpt("replayed", true)
-                        params.putOpt("updatedAtMs", nowMS)
-                        params.remove("updatedAtMsDiff")
                         Radar.addReplay(params)
                     } else if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
                         RadarState.setLastFailedStoppedLocation(context, location)
