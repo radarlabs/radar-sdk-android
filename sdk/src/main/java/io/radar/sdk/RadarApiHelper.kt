@@ -82,12 +82,14 @@ internal open class RadarApiHelper(
                     val replays = params.optJSONArray("replays")
 
                     if (updatedAtMsDiff != -1L || replays != null) {
+                        val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
+
                         val locationMs = params.optLong("locationMs", -1L)
-                        val nowMs = SystemClock.elapsedRealtime()
                         if (locationMs != -1L){
                             val updatedAtMsDiff = nowMs - locationMs
                             params.put("updatedAtMsDiff", updatedAtMsDiff)
                         }
+
                         if (replays != null) {
                             val updatedReplays = ArrayList<JSONObject>(replays.length())
                             for (i in 0 until replays.length()) {
@@ -101,6 +103,7 @@ internal open class RadarApiHelper(
                                     updatedReplays.add(it)
                                 }
                             }
+                            params.put("replays", updatedReplays)
                         }
                     }
                     urlConnection.doOutput = true
