@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -81,7 +82,7 @@ internal open class RadarApiHelper(
                     val updatedAtMsDiff = params.optLong("updatedAtMsDiff", -1L)
                     val replays = params.optJSONArray("replays")
 
-                    if (updatedAtMsDiff != -1L || replays != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && ( updatedAtMsDiff != -1L || replays != null)) {
                         val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
 
                         val locationMs = params.optLong("locationMs", -1L)
