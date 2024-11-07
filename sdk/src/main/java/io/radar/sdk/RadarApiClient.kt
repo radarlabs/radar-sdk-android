@@ -2,7 +2,6 @@ package io.radar.sdk
 
 import android.content.Context
 import android.location.Location
-import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
 import io.radar.sdk.Radar.RadarAddressVerificationStatus
@@ -305,13 +304,16 @@ internal class RadarApiClient(
                     params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
                 }
             }
-            val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
-            val locationMs = location.elapsedRealtimeNanos / 1000000
-            val updatedAtMsDiff = (nowMs - locationMs)
-            if ((!foreground || !verified) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
+                val locationMs = location.elapsedRealtimeNanos / 1000000
+                val updatedAtMsDiff = (nowMs - locationMs)
+                if ((!foreground || !verified)) {
+                    params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
+
+                }
+                params.putOpt("locationMs", locationMs)
             }
-            params.putOpt("locationMs", locationMs)
             params.putOpt("foreground", foreground)
             params.putOpt("stopped", stopped)
             params.putOpt("replayed", replayed)

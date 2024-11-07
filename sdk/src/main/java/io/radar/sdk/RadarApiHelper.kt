@@ -4,24 +4,17 @@ import android.content.Context
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
+import io.radar.sdk.Radar.RadarLogType
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.BufferedInputStream
-import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStreamWriter
 import java.net.URL
-import java.security.KeyStore
-import java.security.cert.Certificate
-import java.security.cert.CertificateFactory
-import java.util.*
+import java.util.Scanner
 import java.util.concurrent.Executors
-import io.radar.sdk.Radar.RadarLogType
 import javax.net.ssl.HttpsURLConnection
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocketFactory
-import javax.net.ssl.TrustManagerFactory
 
 internal open class RadarApiHelper(
     private var logger: RadarLogger? = null
@@ -85,6 +78,31 @@ internal open class RadarApiHelper(
                 }
 
                 if (params != null) {
+                    val updatedAtMsDiff = params.optLong("updatedAtMsDiff", -1L)
+                    val replays = params.optJSONArray("replays")
+
+                    if (updatedAtMsDiff != -1L || replays != null) {
+                        val locationMs = params.optLong("locationMs", -1L)
+                        val nowMs = SystemClock.elapsedRealtime()
+                        if (locationMs != -1L){
+                            val updatedAtMsDiff = nowMs - locationMs
+                            params.put("updatedAtMsDiff", updatedAtMsDiff)
+                        }
+                        if (replays != null) {
+                            val updatedReplays = ArrayList<JSONObject>(replays.length())
+                            for (i in 0 until replays.length()) {
+                                val replay = replays.optJSONObject(i)
+                                replay?.let {
+                                    val replayLocationMs = it.optLong("locationMs", -1L)
+                                    if (replayLocationMs != -1L) {
+                                        val replayUpdatedAtMsDiff = nowMs - replayLocationMs
+                                        it.put("updatedAtMsDiff", replayUpdatedAtMsDiff)
+                                    }
+                                    updatedReplays.add(it)
+                                }
+                            }
+                        }
+                    }
                     urlConnection.doOutput = true
 
                     val outputStreamWriter = OutputStreamWriter(urlConnection.outputStream)
