@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import io.radar.sdk.Radar.RadarLogType
+import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
@@ -92,7 +93,7 @@ internal open class RadarApiHelper(
                         }
 
                         if (replays != null) {
-                            val updatedReplays = ArrayList<JSONObject>(replays.length())
+                            val updatedReplays = mutableListOf<JSONObject>()
                             for (i in 0 until replays.length()) {
                                 val replay = replays.optJSONObject(i)
                                 replay?.let {
@@ -104,7 +105,7 @@ internal open class RadarApiHelper(
                                     updatedReplays.add(it)
                                 }
                             }
-                            params.put("replays", updatedReplays)
+                            params.put("replays", JSONArray(updatedReplays))
                         }
                     }
                     urlConnection.doOutput = true
