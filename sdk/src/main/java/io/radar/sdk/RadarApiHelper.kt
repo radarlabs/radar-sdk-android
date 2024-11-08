@@ -80,14 +80,13 @@ internal open class RadarApiHelper(
                 }
 
                 if (params != null) {
-                    val updatedAtMsDiff = params.optLong("updatedAtMsDiff", -1L)
+                    val prevUpdatedAtMsDiff = params.optLong("updatedAtMsDiff", -1L)
                     val replays = params.optJSONArray("replays")
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && ( updatedAtMsDiff != -1L || replays != null)) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && (prevUpdatedAtMsDiff != -1L || replays != null)) {
                         val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
-
                         val locationMs = params.optLong("locationMs", -1L)
-                        if (locationMs != -1L){
+                        if (prevUpdatedAtMsDiff != 1L && locationMs != -1L){
                             val updatedAtMsDiff = nowMs - locationMs
                             params.put("updatedAtMsDiff", updatedAtMsDiff)
                         }
