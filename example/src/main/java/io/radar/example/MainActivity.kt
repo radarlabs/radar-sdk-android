@@ -21,6 +21,7 @@ import java.util.EnumSet
 import androidx.core.content.edit
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -32,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+        Radar.initialize(this, "prj_test_pk_000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
         Radar.sdkVersion().let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
@@ -380,6 +381,64 @@ class MainActivity : AppCompatActivity() {
                     "Distance: status = $status; routes.car.distance.value = ${routes?.car?.distance?.value}; routes.car.distance.text = ${routes?.car?.distance?.text}; routes.car.duration.value = ${routes?.car?.duration?.value}; routes.car.duration.text = ${routes?.car?.duration?.text}"
                 )
             }
+        }
+
+       createButton("startTrip") {
+            val tripOptions = RadarTripOptions(
+                "400",
+                null,
+                "store",
+                "123",
+                Radar.RadarRouteMode.CAR,
+                approachingThreshold = 9
+            )
+            Radar.startTrip(tripOptions)
+        }
+
+        createButton("startTrip with start tracking false") {
+            val tripOptions = RadarTripOptions(
+                "501",
+                null,
+                "store",
+                "123",
+                Radar.RadarRouteMode.CAR,
+                approachingThreshold = 9,
+                startTracking = false
+            )
+            Radar.startTrip(tripOptions)
+        }
+
+        createButton("startTrip with tracking options") {
+            val tripOptions = RadarTripOptions(
+                "502",
+                null,
+                "store",
+                "123",
+                Radar.RadarRouteMode.CAR,
+                approachingThreshold = 9
+            )
+            val onTripTrackingOptions = RadarTrackingOptions.CONTINUOUS
+            Radar.startTrip(tripOptions, onTripTrackingOptions)
+        }
+
+        createButton("startTrip with tracking options and startTrackingAfter") {
+            val tripOptions = RadarTripOptions(
+                "507",
+                null,
+                "store",
+                "123",
+                Radar.RadarRouteMode.CAR,
+                approachingThreshold = 9,
+                startTracking = false
+            )
+            val onTripTrackingOptions = RadarTrackingOptions.CONTINUOUS
+            // startTrackingAfter 3 minutes from now
+            onTripTrackingOptions.startTrackingAfter = Date(System.currentTimeMillis() + (3 * 60 * 1000))
+            Radar.startTrip(tripOptions, onTripTrackingOptions)
+        }
+
+        createButton("completeTrip") {
+            Radar.completeTrip()
         }
 
         createButton("mockTracking") {
