@@ -39,7 +39,9 @@ internal class RadarVerificationManager(
     private val connectivityManager = this.context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
     private var started = false
-    private var scheduled = false
+    private var startedInterval = 0
+    private var startedBeacons = false
+    private var runnable: Runnable? = null
     private var lastToken: RadarVerifiedLocationToken? = null
     private var lastTokenElapsedRealtime: Long = 0L
     private var lastTokenBeacons: Boolean = false
@@ -221,62 +223,65 @@ internal class RadarVerificationManager(
         })
     }
 
-    fun startTrackingVerified(interval: Int, beacons: Boolean) {
+    private fun callTrackVerified() {
         val verificationManager = this
 
-        verificationManager.started = true
-        verificationManager.scheduled = false
+        if (!verificationManager.started) {
+            return
+        }
 
-        val trackVerified = { ->
-            verificationManager.trackVerified(beacons, object : Radar.RadarTrackVerifiedCallback {
-                override fun onComplete(
-                    status: Radar.RadarStatus,
-                    token: RadarVerifiedLocationToken?
-                ) {
-                    var expiresIn = 0
-                    var minInterval: Int = interval
+        verificationManager.trackVerified(verificationManager.startedBeacons, object : Radar.RadarTrackVerifiedCallback {
+            override fun onComplete(
+                status: Radar.RadarStatus,
+                token: RadarVerifiedLocationToken?
+            ) {
+                var expiresIn = 0
+                var minInterval: Int = verificationManager.startedInterval
 
-                    token?.let {
-                        expiresIn = it.expiresIn
+                token?.let {
+                    expiresIn = it.expiresIn
 
-                        // if expiresIn is shorter than interval, override interval
-                        minInterval = minOf(it.expiresIn, interval)
-                    }
-
+                    // if expiresIn is shorter than interval, override interval
                     // re-request early to maximize the likelihood that a cached token is available
-                    if (minInterval > 20) {
-                        minInterval -= 10
+                    minInterval = minOf(it.expiresIn - 10, verificationManager.startedInterval)
+                }
+
+                // min interval is 10 seconds
+                if (minInterval < 10) {
+                    minInterval = 10;
+                }
+
+                if (runnable == null) {
+                    runnable = Runnable {
+                        verificationManager.logger.d("Token request interval fired")
+
+                        callTrackVerified()
                     }
+                }
 
-                    // min interval is 10 seconds
-                    if (minInterval < 10) {
-                        minInterval = 10;
-                    }
+                runnable?.let {
+                    handler.removeCallbacks(it)
 
-                    if (verificationManager.scheduled) {
-                        verificationManager.logger.d("Token request already scheduled")
-
+                    if (!verificationManager.started) {
                         return
                     }
 
-                    verificationManager.logger.d("Requesting token again in $minInterval seconds | minInterval = $minInterval; expiresIn = $expiresIn; interval = $interval")
+                    verificationManager.logger.d("Requesting token again in $minInterval seconds | minInterval = $minInterval; expiresIn = $expiresIn; interval = ${verificationManager.startedInterval}")
 
-                    verificationManager.scheduled = true
-
-                    handler.postDelayed(object : Runnable {
-                        override fun run() {
-                            if (verificationManager.started) {
-                                verificationManager.logger.d("Token request interval fired")
-
-                                trackVerified()
-
-                                verificationManager.scheduled = false
-                            }
-                        }
-                    }, minInterval * 1000L)
+                    handler.postDelayed(it, minInterval * 1000L)
                 }
-            })
-        }
+            }
+        })
+    }
+
+    fun startTrackingVerified(interval: Int, beacons: Boolean) {
+        val verificationManager = this
+
+        verificationManager.stopTrackingVerified()
+
+        verificationManager.started = true
+        verificationManager.startedInterval = interval
+        verificationManager.startedBeacons = beacons
 
         val request = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
@@ -305,7 +310,7 @@ internal class RadarVerificationManager(
             verificationManager.lastIPs = ips
 
             if (changed) {
-                trackVerified()
+                callTrackVerified()
             }
         }
 
@@ -327,7 +332,7 @@ internal class RadarVerificationManager(
             connectivityManager.registerNetworkCallback(request, it)
         }
 
-        trackVerified()
+        callTrackVerified()
     }
 
     fun stopTrackingVerified() {
@@ -336,6 +341,10 @@ internal class RadarVerificationManager(
         networkCallback?.let {
             connectivityManager.unregisterNetworkCallback(it)
         }
+
+        runnable?.let {
+            handler.removeCallbacks(it)
+        }
     }
 
     fun getVerifiedLocationToken(callback: Radar.RadarTrackVerifiedCallback? = null) {
@@ -343,8 +352,8 @@ internal class RadarVerificationManager(
 
         if (this.lastToken != null) {
             this.lastToken?.let {
-                if (lastTokenElapsed < it.expiresIn) {
-                    Radar.logger.d("Last token valid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed")
+                if (lastTokenElapsed < it.expiresIn && it.passed) {
+                    Radar.logger.d("Last token valid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}")
 
                     Radar.flushLogs()
 
@@ -353,7 +362,7 @@ internal class RadarVerificationManager(
                     return
                 }
 
-                Radar.logger.d("Last token invalid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed")
+                Radar.logger.d("Last token invalid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}")
             }
         } else {
             Radar.logger.d("No last token")
