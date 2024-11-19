@@ -366,7 +366,8 @@ object Radar {
         SDK_ERROR(2),
         SDK_EXCEPTION(3),
         APP_LIFECYCLE_EVENT(4),
-        PERMISSION_EVENT(5);
+        PERMISSION_EVENT(5),
+        PROFILER(6);
 
         companion object {
             @JvmStatic
