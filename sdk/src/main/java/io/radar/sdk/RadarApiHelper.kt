@@ -4,24 +4,16 @@ import android.content.Context
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import io.radar.sdk.Radar.RadarLogType
 import org.json.JSONException
 import org.json.JSONObject
-import java.io.BufferedInputStream
-import java.io.FileInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStreamWriter
 import java.net.URL
-import java.security.KeyStore
-import java.security.cert.Certificate
-import java.security.cert.CertificateFactory
-import java.util.*
+import java.util.Scanner
 import java.util.concurrent.Executors
-import io.radar.sdk.Radar.RadarLogType
 import javax.net.ssl.HttpsURLConnection
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocketFactory
-import javax.net.ssl.TrustManagerFactory
 
 internal open class RadarApiHelper(
     private var logger: RadarLogger? = null
@@ -37,14 +29,14 @@ internal open class RadarApiHelper(
     internal open fun request(context: Context,
                               method: String,
                               path: String,
-                              headers: Map<String, String>?,
-                              params: JSONObject?,
-                              sleep: Boolean,
-                              callback: RadarApiCallback? = null,
+                              headers: Map<String, String>,
+                              params: JSONObject? = null,
+                              sleep: Boolean = false,
                               extendedTimeout: Boolean = false,
                               stream: Boolean = false,
                               logPayload: Boolean = true,
-                              verified: Boolean = false) {
+                              verified: Boolean = false,
+                              callback: ((status: Radar.RadarStatus, res: JSONObject?) -> Unit)? = null) {
         val host = if (verified) {
             RadarSettings.getVerifiedHost(context)
         } else {
@@ -96,7 +88,7 @@ internal open class RadarApiHelper(
                     val body = urlConnection.inputStream.readAll()
                     if (body == null) {
                         handler.post {
-                            callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                            callback?.invoke(Radar.RadarStatus.ERROR_SERVER, null)
                         }
 
                         return@execute
@@ -107,7 +99,7 @@ internal open class RadarApiHelper(
                     logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res")
                     
                     handler.post {
-                        callback?.onComplete(Radar.RadarStatus.SUCCESS, res)
+                        callback?.invoke(Radar.RadarStatus.SUCCESS, res)
                     }
                 } else {
                     val status = when (urlConnection.responseCode) {
@@ -123,7 +115,7 @@ internal open class RadarApiHelper(
 
                     val body = urlConnection.errorStream.readAll()
                     if (body == null) {
-                        callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                        callback?.invoke(Radar.RadarStatus.ERROR_SERVER, null)
 
                         return@execute
                     }
@@ -133,7 +125,7 @@ internal open class RadarApiHelper(
                     logger?.e("📍 Radar API response | method = ${method}; url = ${url}; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
                     
                     handler.post {
-                        callback?.onComplete(status)
+                        callback?.invoke(status, null)
                     }
                 }
 
@@ -142,19 +134,19 @@ internal open class RadarApiHelper(
                 handler.post {
                     logger?.d("Error calling API | e = ${e.localizedMessage}")
 
-                    callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                    callback?.invoke(Radar.RadarStatus.ERROR_NETWORK, null)
                 }
             } catch (e: JSONException) {
                 logger?.d("Error calling API | e = ${e.localizedMessage}")
 
                 handler.post {
-                    callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                    callback?.invoke(Radar.RadarStatus.ERROR_SERVER, null)
                 }
             } catch (e: Exception) {
                 logger?.d("Error calling API | e = ${e.localizedMessage}")
 
                 handler.post {
-                    callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
+                    callback?.invoke(Radar.RadarStatus.ERROR_UNKNOWN, null)
                 }
             }
 
