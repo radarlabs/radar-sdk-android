@@ -2,7 +2,6 @@ package io.radar.sdk
 
 import android.content.Context
 import android.location.Location
-import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
 import io.radar.sdk.Radar.RadarAddressVerificationStatus
@@ -129,10 +128,10 @@ internal class RadarApiClient(
         return headers
     }
 
-    internal fun getConfig(usage: String? = null, verified: Boolean = false, callback: RadarGetConfigApiCallback? = null) {
+    internal fun getConfig(usage: String? = null, verified: Boolean = false, callback: ((status: RadarStatus, config: RadarConfig?) -> Unit)? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback?.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
             return
         }
 
@@ -160,7 +159,7 @@ internal class RadarApiClient(
                 if (status == RadarStatus.SUCCESS) {
                     Radar.flushLogs()
                 }
-                callback?.onComplete(status, RadarConfig.fromJson(res))
+                callback?.invoke(status, RadarConfig.fromJson(res))
             }
         }, false, true, verified)
     }

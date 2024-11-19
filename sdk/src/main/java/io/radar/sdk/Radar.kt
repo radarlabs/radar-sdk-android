@@ -8,14 +8,28 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
-import io.radar.sdk.model.*
+import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarReplay
+import io.radar.sdk.model.RadarRouteMatrix
+import io.radar.sdk.model.RadarRoutes
+import io.radar.sdk.model.RadarSdkConfiguration
+import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import io.radar.sdk.util.RadarLogBuffer
 import io.radar.sdk.util.RadarReplayBuffer
 import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
-import java.util.*
+import java.util.Date
+import java.util.EnumSet
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -579,26 +593,24 @@ object Radar {
         }
 
         val usage = "initialize"
-        this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: RadarStatus, config: RadarConfig?) {
-                if (config == null) {
-                    return
-                }
-
-                if (status == RadarStatus.SUCCESS) {
-                    locationManager.updateTrackingFromMeta(config.meta)
-                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
-                }
-
-                val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
-                if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(context)) {
-                    Radar.startTracking(Radar.getTrackingOptions())
-                }
-                if (sdkConfiguration.trackOnceOnAppOpen) {
-                    Radar.trackOnce()
-                }
+        this.apiClient.getConfig(usage) { status: RadarStatus, config: RadarConfig? ->
+            if (config == null) {
+                return@getConfig
             }
-        })
+
+            if (status == RadarStatus.SUCCESS) {
+                locationManager.updateTrackingFromMeta(config.meta)
+                RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+            }
+
+            val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+            if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(context)) {
+                Radar.startTracking(Radar.getTrackingOptions())
+            }
+            if (sdkConfiguration.trackOnceOnAppOpen) {
+                Radar.trackOnce()
+            }
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             this.logger.logPastTermination()
