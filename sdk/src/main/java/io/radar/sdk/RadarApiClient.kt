@@ -251,10 +251,19 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, expectedCountryCode: String? = null, expectedStateCode: String? = null, callback: RadarTrackApiCallback? = null) {
+    internal fun track(
+        location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, expectedCountryCode: String? = null, expectedStateCode: String? = null,
+        callback: ((
+            status: RadarStatus,
+            res: JSONObject?,
+            events: Array<RadarEvent>?,
+            user: RadarUser?,
+            nearbyGeofences: Array<RadarGeofence>?,
+            config: RadarConfig?,
+            token: RadarVerifiedLocationToken?) -> Unit)? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback?.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null, null, null, null, null)
 
             return
         }
@@ -380,7 +389,7 @@ internal class RadarApiClient(
                 params.putOpt("locationMetadata", metadata)
             }
         } catch (e: JSONException) {
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            callback?.invoke(RadarStatus.ERROR_BAD_REQUEST, null, null, null, null, null, null)
 
             return
         }
@@ -405,7 +414,7 @@ internal class RadarApiClient(
                 callback = object : Radar.RadarTrackCallback {
                     override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                         // pass through flush replay onComplete for track callback
-                        callback?.onComplete(status)
+                        callback?.invoke(status, null, null, null, null, null, null)
                     }
                 }
             )
@@ -426,7 +435,7 @@ internal class RadarApiClient(
 
                     Radar.sendError(status)
 
-                    callback?.onComplete(status)
+                    callback?.invoke(status, null, null, null, null, null, null)
 
                     return
                 }
@@ -497,14 +506,14 @@ internal class RadarApiClient(
                         Radar.sendToken(token)
                     }
 
-                    callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config, token)
+                    callback?.invoke(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config, token)
 
                     return
                 }
 
                 Radar.sendError(status)
 
-                callback?.onComplete(RadarStatus.ERROR_SERVER)
+                callback?.invoke(RadarStatus.ERROR_SERVER, null, null, null, null, null, null)
             }
         }, replaying, false, !replaying, verified)
     }

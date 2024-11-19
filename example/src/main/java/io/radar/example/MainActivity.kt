@@ -15,13 +15,12 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.RadarVerifiedReceiver
-import io.radar.sdk.model.RadarVerifiedLocationToken
-import org.json.JSONObject
-import java.util.EnumSet
-import androidx.core.content.edit
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
-import java.util.*
+import io.radar.sdk.model.RadarVerifiedLocationToken
+import org.json.JSONObject
+import java.util.Date
+import java.util.EnumSet
 
 class MainActivity : AppCompatActivity() {
 

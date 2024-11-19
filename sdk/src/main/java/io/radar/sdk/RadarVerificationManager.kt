@@ -115,35 +115,32 @@ internal class RadarVerificationManager(
                                     integrityException,
                                     false,
                                     verificationManager.expectedCountryCode,
-                                    verificationManager.expectedStateCode,
-                                    callback = object : RadarApiClient.RadarTrackApiCallback {
-                                        override fun onComplete(
-                                            status: Radar.RadarStatus,
-                                            res: JSONObject?,
-                                            events: Array<RadarEvent>?,
-                                            user: RadarUser?,
-                                            nearbyGeofences: Array<RadarGeofence>?,
-                                            config: RadarConfig?,
-                                            token: RadarVerifiedLocationToken?
-                                        ) {
-                                            if (status == Radar.RadarStatus.SUCCESS) {
-                                                Radar.locationManager.updateTrackingFromMeta(
-                                                    config?.meta
-                                                )
-                                            }
-                                            if (token != null) {
-                                                verificationManager.lastToken = token
-                                                verificationManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
-                                                verificationManager.lastTokenBeacons = lastTokenBeacons
-                                            }
-                                            Radar.handler.post {
-                                                callback?.onComplete(
-                                                    status,
-                                                    token
-                                                )
-                                            }
-                                        }
-                                    })
+                                    verificationManager.expectedStateCode)
+                                { status: Radar.RadarStatus,
+                                  res: JSONObject?,
+                                  events: Array<RadarEvent>?,
+                                  user: RadarUser?,
+                                  nearbyGeofences: Array<RadarGeofence>?,
+                                  config: RadarConfig?,
+                                  token: RadarVerifiedLocationToken? ->
+                                    if (status == Radar.RadarStatus.SUCCESS) {
+                                        Radar.locationManager.updateTrackingFromMeta(
+                                            config?.meta
+                                        )
+                                    }
+                                    if (token != null) {
+                                        verificationManager.lastToken = token
+                                        verificationManager.lastTokenElapsedRealtime =
+                                            SystemClock.elapsedRealtime()
+                                        verificationManager.lastTokenBeacons = lastTokenBeacons
+                                    }
+                                    Radar.handler.post {
+                                        callback?.onComplete(
+                                            status,
+                                            token
+                                        )
+                                    }
+                                }
                             }
 
                             if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

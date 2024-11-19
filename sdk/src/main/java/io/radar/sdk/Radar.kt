@@ -870,24 +870,21 @@ object Radar {
                 }
 
                 val callTrackApi = { beacons: Array<RadarBeacon>? ->
-                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, beacons, callback = object : RadarApiClient.RadarTrackApiCallback {
-                        override fun onComplete(
-                            status: RadarStatus,
-                            res: JSONObject?,
-                            events: Array<RadarEvent>?,
-                            user: RadarUser?,
-                            nearbyGeofences: Array<RadarGeofence>?,
-                            config: RadarConfig?,
-                            token: RadarVerifiedLocationToken?
-                        ) {
-                            if (status == RadarStatus.SUCCESS ){
-                                locationManager.updateTrackingFromMeta(config?.meta)
-                            }
-                            handler.post {
-                                callback?.onComplete(status, location, events, user)
-                            }
+                    apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, beacons)
+                    { status: RadarStatus,
+                      res: JSONObject?,
+                      events: Array<RadarEvent>?,
+                      user: RadarUser?,
+                      nearbyGeofences: Array<RadarGeofence>?,
+                      config: RadarConfig?,
+                      token: RadarVerifiedLocationToken? ->
+                        if (status == RadarStatus.SUCCESS) {
+                            locationManager.updateTrackingFromMeta(config?.meta)
                         }
-                    })
+                        handler.post {
+                            callback?.onComplete(status, location, events, user)
+                        }
+                    }
                 }
 
                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -967,24 +964,21 @@ object Radar {
             return
         }
 
-        apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, callback = object : RadarApiClient.RadarTrackApiCallback {
-            override fun onComplete(
-                status: RadarStatus,
-                res: JSONObject?,
-                events: Array<RadarEvent>?,
-                user: RadarUser?,
-                nearbyGeofences: Array<RadarGeofence>?,
-                config: RadarConfig?,
-                token: RadarVerifiedLocationToken?
-            ) {
-                if (status == RadarStatus.SUCCESS ){
-                    locationManager.updateTrackingFromMeta(config?.meta)
-                }
-                handler.post {
-                    callback?.onComplete(status, location, events, user)
-                }
+        apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null)
+        { status: RadarStatus,
+          res: JSONObject?,
+          events: Array<RadarEvent>?,
+          user: RadarUser?,
+          nearbyGeofences: Array<RadarGeofence>?,
+          config: RadarConfig?,
+          token: RadarVerifiedLocationToken? ->
+            if (status == RadarStatus.SUCCESS) {
+                locationManager.updateTrackingFromMeta(config?.meta)
             }
-        })
+            handler.post {
+                callback?.onComplete(status, location, events, user)
+            }
+        }
     }
 
     /**
@@ -1245,27 +1239,24 @@ object Radar {
                         }
                         val stopped = (i == 0) || (i == coordinates.size - 1)
 
-                        apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null, callback = object : RadarApiClient.RadarTrackApiCallback {
-                            override fun onComplete(
-                                status: RadarStatus,
-                                res: JSONObject?,
-                                events: Array<RadarEvent>?,
-                                user: RadarUser?,
-                                nearbyGeofences: Array<RadarGeofence>?,
-                                config: RadarConfig?,
-                                token: RadarVerifiedLocationToken?
-                            ) {
-                                handler.post {
-                                    callback?.onComplete(status, location, events, user)
-                                }
-
-                                if (i < coordinates.size - 1) {
-                                    handler.postDelayed(track, intervalLimit * 1000L)
-                                }
-
-                                i++
+                        apiClient.track(location, stopped, false, RadarLocationSource.MOCK_LOCATION, false, null)
+                        { status: RadarStatus,
+                          res: JSONObject?,
+                          events: Array<RadarEvent>?,
+                          user: RadarUser?,
+                          nearbyGeofences: Array<RadarGeofence>?,
+                          config: RadarConfig?,
+                          token: RadarVerifiedLocationToken? ->
+                            handler.post {
+                                callback?.onComplete(status, location, events, user)
                             }
-                        })
+
+                            if (i < coordinates.size - 1) {
+                                handler.postDelayed(track, intervalLimit * 1000L)
+                            }
+
+                            i++
+                        }
                     }
                 }
 
