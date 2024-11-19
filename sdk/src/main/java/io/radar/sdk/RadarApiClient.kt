@@ -164,10 +164,10 @@ internal class RadarApiClient(
         }, false, true, verified)
     }
 
-    internal fun log(logs: List<RadarLog>, callback: RadarLogCallback?) {
+    internal fun log(logs: List<RadarLog>, callback: ((status: RadarStatus, res: JSONObject?) -> Unit)?) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback?.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
             return
         }
         val params = JSONObject()
@@ -180,7 +180,7 @@ internal class RadarApiClient(
             logs.forEach { log -> array.put(log.toJson()) }
             params.putOpt("logs", array)
         } catch (e: JSONException) {
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            callback?.invoke(RadarStatus.ERROR_BAD_REQUEST, null)
             return
         }
         val path = "v1/logs"
@@ -193,7 +193,7 @@ internal class RadarApiClient(
             sleep = false,
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                    callback?.onComplete(status, res)
+                    callback?.invoke(status, res)
                 }
             },
             extendedTimeout = false,
@@ -202,10 +202,10 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun replay(replays: List<RadarReplay>, callback: RadarReplayApiCallback?) {
+    internal fun replay(replays: List<RadarReplay>, callback: ((status: RadarStatus, res: JSONObject?) -> Unit)?) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback?.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
 
             return
         }
@@ -242,7 +242,7 @@ internal class RadarApiClient(
                         Radar.sendEvents(events, user)
                     }
 
-                    callback?.onComplete(status, res)
+                    callback?.invoke(status, res)
                 }
             },
             extendedTimeout = true,

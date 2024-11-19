@@ -3253,11 +3253,9 @@ object Radar {
         val flushable = logBuffer.getFlushableLogs()
         val logs = flushable.get()
         if (logs.isNotEmpty()) {
-            apiClient.log(logs, object : RadarApiClient.RadarLogCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                    flushable.onFlush(status == RadarStatus.SUCCESS)
-                }
-            })
+            apiClient.log(logs) { status: RadarStatus, res: JSONObject? ->
+                flushable.onFlush(status == RadarStatus.SUCCESS)
+            }
         }
     }
 
@@ -3300,24 +3298,22 @@ object Radar {
         val replayCount = replays.size
         this.logger.d("Flushing $replayCount replays")
 
-        apiClient.replay(replays, object : RadarApiClient.RadarReplayApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                if (status == RadarStatus.SUCCESS) {
-                    logger.d("Successfully flushed replays")
-                    replaysStash.onFlush(true) // clear from buffer what was synced
-                    Radar.flushLogs()
-                } else {
-                    if (replayParams != null) {
-                        logger.d("Failed to flush replays, adding track update to buffer")
-                        Radar.addReplay(replayParams)
-                    }
-                }
-                Radar.isFlushingReplays = false
-                handler.post {
-                    callback?.onComplete(status)
+        apiClient.replay(replays) { status: RadarStatus, res: JSONObject? ->
+            if (status == RadarStatus.SUCCESS) {
+                logger.d("Successfully flushed replays")
+                replaysStash.onFlush(true) // clear from buffer what was synced
+                Radar.flushLogs()
+            } else {
+                if (replayParams != null) {
+                    logger.d("Failed to flush replays, adding track update to buffer")
+                    Radar.addReplay(replayParams)
                 }
             }
-        })
+            Radar.isFlushingReplays = false
+            handler.post {
+                callback?.onComplete(status)
+            }
+        }
     }
 
     @JvmStatic
