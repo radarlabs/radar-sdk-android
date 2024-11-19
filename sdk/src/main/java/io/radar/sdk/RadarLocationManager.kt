@@ -13,11 +13,19 @@ import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.Radar.RadarStatus
-import io.radar.sdk.RadarApiClient.RadarTrackApiCallback
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
-import io.radar.sdk.model.*
+import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.model.RadarCircleGeometry
+import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarCoordinate
+import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarMeta
+import io.radar.sdk.model.RadarPolygonGeometry
+import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
-import java.util.*
+import java.util.Date
 
 @SuppressLint("MissingPermission")
 internal class RadarLocationManager(
@@ -617,37 +625,41 @@ internal class RadarLocationManager(
         val locationManager = this
 
         val callTrackApi = { beacons: Array<RadarBeacon>? ->
-            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, callback = object : RadarTrackApiCallback {
-                override fun onComplete(
-                    status: RadarStatus,
-                    res: JSONObject?,
-                    events: Array<RadarEvent>?,
-                    user: RadarUser?,
-                    nearbyGeofences: Array<RadarGeofence>?,
-                    config: RadarConfig?,
-                    token: RadarVerifiedLocationToken?
-                ) {
-                    locationManager.replaceSyncedGeofences(nearbyGeofences)
+            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons)
+            { status: RadarStatus,
+              res: JSONObject?,
+              events: Array<RadarEvent>?,
+              user: RadarUser?,
+              nearbyGeofences: Array<RadarGeofence>?,
+              config: RadarConfig?,
+              token: RadarVerifiedLocationToken? ->
+                locationManager.replaceSyncedGeofences(nearbyGeofences)
 
-                    if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
-                        locationManager.stopForegroundService()
-                    }
-
-                    updateTrackingFromMeta(config?.meta)
+                if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                    locationManager.stopForegroundService()
                 }
-            })
+
+                updateTrackingFromMeta(config?.meta)
+            }
         }
 
         if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             && permissionsHelper.bluetoothPermissionsGranted(context)) {
             val cache = stopped || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT
-            this.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
-                   if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                        Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
+            this.apiClient.searchBeacons(location, 1000, 10, cache)
+            { status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>? ->
+                if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                    Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
-                        Radar.beaconManager.rangeBeaconUUIDs(uuids, uids, true, object : Radar.RadarBeaconCallback {
-                            override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                    Radar.beaconManager.rangeBeaconUUIDs(
+                        uuids,
+                        uids,
+                        true,
+                        object : Radar.RadarBeaconCallback {
+                            override fun onComplete(
+                                status: RadarStatus,
+                                beacons: Array<RadarBeacon>?
+                            ) {
                                 if (status != RadarStatus.SUCCESS || beacons == null) {
                                     callTrackApi(null)
 
@@ -657,11 +669,17 @@ internal class RadarLocationManager(
                                 callTrackApi(beacons)
                             }
                         })
-                   } else if (beacons != null) {
-                        Radar.beaconManager.startMonitoringBeacons(beacons)
+                } else if (beacons != null) {
+                    Radar.beaconManager.startMonitoringBeacons(beacons)
 
-                        Radar.beaconManager.rangeBeacons(beacons, true, object : Radar.RadarBeaconCallback {
-                            override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                    Radar.beaconManager.rangeBeacons(
+                        beacons,
+                        true,
+                        object : Radar.RadarBeaconCallback {
+                            override fun onComplete(
+                                status: RadarStatus,
+                                beacons: Array<RadarBeacon>?
+                            ) {
                                 if (status != RadarStatus.SUCCESS || beacons == null) {
                                     callTrackApi(null)
 
@@ -671,11 +689,10 @@ internal class RadarLocationManager(
                                 callTrackApi(beacons)
                             }
                         })
-                   } else {
-                       callTrackApi(arrayOf())
-                   }
+                } else {
+                    callTrackApi(arrayOf())
                 }
-            }, cache)
+            }
         } else {
             callTrackApi(null)
         }

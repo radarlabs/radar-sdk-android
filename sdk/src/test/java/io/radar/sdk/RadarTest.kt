@@ -5,15 +5,35 @@ import android.location.Location
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.radar.sdk.model.*
+import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarChain
+import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarFraud
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarRegion
+import io.radar.sdk.model.RadarRoute
+import io.radar.sdk.model.RadarRoutes
+import io.radar.sdk.model.RadarSdkConfiguration
+import io.radar.sdk.model.RadarSegment
+import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
-import java.util.*
+import java.util.Date
+import java.util.EnumSet
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -1005,7 +1025,8 @@ class RadarTest {
         var callbackLocation: Location? = null
         var callbackPlaces: Array<RadarPlace>? = null
 
-        Radar.searchPlaces(mockLocation, 1000, arrayOf("walmart"), null, null, null, 100) { status, location, places ->
+        Radar.searchPlaces(mockLocation, 1000, arrayOf("walmart"), null, null, null, 100)
+        { status, location, places ->
             callbackStatus = status
             callbackLocation = location
             callbackPlaces = places
@@ -1562,17 +1583,15 @@ class RadarTest {
 
         val latch = CountDownLatch(1)
 
-        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                if (config != null) {
-                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
-                }
-
-                assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
-
-                latch.countDown()
+        Radar.apiClient.getConfig("sdkConfigUpdate", false) { status: Radar.RadarStatus, config: RadarConfig? ->
+            if (config != null) {
+                RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
             }
-        })
+
+            assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
+
+            latch.countDown()
+        }
         
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
