@@ -34,79 +34,6 @@ internal class RadarApiClient(
     private var logger: RadarLogger,
     internal var apiHelper: RadarApiHelper = RadarApiHelper(logger)
 ) {
-
-    interface RadarTrackApiCallback {
-        fun onComplete(
-            status: RadarStatus,
-            res: JSONObject? = null,
-            events: Array<RadarEvent>? = null,
-            user: RadarUser? = null,
-            nearbyGeofences: Array<RadarGeofence>? = null,
-            config: RadarConfig? = null,
-            token: RadarVerifiedLocationToken? = null
-        )
-    }
-
-    interface RadarGetConfigApiCallback {
-        fun onComplete(status: RadarStatus, config: RadarConfig? = null)
-    }
-
-    interface RadarTripApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, trip: RadarTrip? = null, events: Array<RadarEvent>? = null)
-    }
-
-    interface RadarContextApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, context: RadarContext? = null)
-    }
-
-    interface RadarSearchPlacesApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, places: Array<RadarPlace>? = null)
-    }
-
-    interface RadarSearchGeofencesApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, geofences: Array<RadarGeofence>? = null)
-    }
-
-    interface RadarSearchBeaconsApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, beacons: Array<RadarBeacon>? = null, uuids: Array<String>? = null, uids: Array<String>? = null)
-    }
-
-    interface RadarValidateAddressAPICallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null, verificationStatus: RadarAddressVerificationStatus? = null)
-    }
-
-    interface RadarGeocodeApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, addresses: Array<RadarAddress>? = null)
-    }
-
-    interface RadarIpGeocodeApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null, proxy: Boolean = false)
-    }
-
-    interface RadarDistanceApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, routes: RadarRoutes? = null)
-    }
-
-    interface RadarMatrixApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, matrix: RadarRouteMatrix? = null)
-    }
-
-    interface RadarSendEventApiCallback {
-        fun onComplete(
-            status: RadarStatus,
-            res: JSONObject? = null,
-            event: RadarEvent? = null
-        )
-    }
-
-    internal interface RadarLogCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null)
-    }
-
-    internal interface RadarReplayApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null)
-    }
-
     private fun headers(publishableKey: String): Map<String, String> {
         val headers = mutableMapOf(
             "Authorization" to publishableKey,
@@ -164,10 +91,10 @@ internal class RadarApiClient(
         }, false, true, verified)
     }
 
-    internal fun log(logs: List<RadarLog>, callback: ((status: RadarStatus, res: JSONObject?) -> Unit)?) {
+    internal fun log(logs: List<RadarLog>, callback: (status: RadarStatus, res: JSONObject?) -> Unit) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback?.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
+            callback.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
             return
         }
         val params = JSONObject()
@@ -180,7 +107,7 @@ internal class RadarApiClient(
             logs.forEach { log -> array.put(log.toJson()) }
             params.putOpt("logs", array)
         } catch (e: JSONException) {
-            callback?.invoke(RadarStatus.ERROR_BAD_REQUEST, null)
+            callback.invoke(RadarStatus.ERROR_BAD_REQUEST, null)
             return
         }
         val path = "v1/logs"
@@ -193,7 +120,7 @@ internal class RadarApiClient(
             sleep = false,
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                    callback?.invoke(status, res)
+                    callback.invoke(status, res)
                 }
             },
             extendedTimeout = false,
@@ -202,10 +129,10 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun replay(replays: List<RadarReplay>, callback: ((status: RadarStatus, res: JSONObject?) -> Unit)?) {
+    internal fun replay(replays: List<RadarReplay>, callback: (status: RadarStatus, res: JSONObject?) -> Unit) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback?.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
+            callback.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
 
             return
         }
@@ -242,7 +169,7 @@ internal class RadarApiClient(
                         Radar.sendEvents(events, user)
                     }
 
-                    callback?.invoke(status, res)
+                    callback.invoke(status, res)
                 }
             },
             extendedTimeout = true,
@@ -253,17 +180,17 @@ internal class RadarApiClient(
 
     internal fun track(
         location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, expectedCountryCode: String? = null, expectedStateCode: String? = null,
-        callback: ((
+        callback: (
             status: RadarStatus,
             res: JSONObject?,
             events: Array<RadarEvent>?,
             user: RadarUser?,
             nearbyGeofences: Array<RadarGeofence>?,
             config: RadarConfig?,
-            token: RadarVerifiedLocationToken?) -> Unit)? = null) {
+            token: RadarVerifiedLocationToken?) -> Unit) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback?.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null, null, null, null, null)
+            callback.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null, null, null, null, null)
 
             return
         }
@@ -389,7 +316,7 @@ internal class RadarApiClient(
                 params.putOpt("locationMetadata", metadata)
             }
         } catch (e: JSONException) {
-            callback?.invoke(RadarStatus.ERROR_BAD_REQUEST, null, null, null, null, null, null)
+            callback.invoke(RadarStatus.ERROR_BAD_REQUEST, null, null, null, null, null, null)
 
             return
         }
@@ -414,7 +341,7 @@ internal class RadarApiClient(
                 callback = object : Radar.RadarTrackCallback {
                     override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                         // pass through flush replay onComplete for track callback
-                        callback?.invoke(status, null, null, null, null, null, null)
+                        callback.invoke(status, null, null, null, null, null, null)
                     }
                 }
             )
@@ -435,7 +362,7 @@ internal class RadarApiClient(
 
                     Radar.sendError(status)
 
-                    callback?.invoke(status, null, null, null, null, null, null)
+                    callback.invoke(status, null, null, null, null, null, null)
 
                     return
                 }
@@ -506,14 +433,14 @@ internal class RadarApiClient(
                         Radar.sendToken(token)
                     }
 
-                    callback?.invoke(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config, token)
+                    callback.invoke(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config, token)
 
                     return
                 }
 
                 Radar.sendError(status)
 
-                callback?.invoke(RadarStatus.ERROR_SERVER, null, null, null, null, null, null)
+                callback.invoke(RadarStatus.ERROR_SERVER, null, null, null, null, null, null)
             }
         }, replaying, false, !replaying, verified)
     }
@@ -531,17 +458,17 @@ internal class RadarApiClient(
         apiHelper.request(context, "PUT", path, headers, params, false)
     }
 
-    internal fun createTrip(options: RadarTripOptions?, callback: RadarTripApiCallback?) {
+    internal fun createTrip(options: RadarTripOptions?, callback: (status: RadarStatus, res: JSONObject?, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null, null)
 
             return
         }
 
         val externalId = options?.externalId
         if (externalId == null) {
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            callback.invoke(RadarStatus.ERROR_BAD_REQUEST, null, null, null)
 
             return
         }
@@ -571,7 +498,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "POST", path, headers, params, false, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback?.onComplete(status)
+                    callback.invoke(status, null, null, null)
 
                     return
                 }
@@ -587,22 +514,22 @@ internal class RadarApiClient(
                     Radar.sendEvents(events)
                 }
 
-                callback?.onComplete(RadarStatus.SUCCESS, res, trip, events)
+                callback.invoke(RadarStatus.SUCCESS, res, trip, events)
             }
         })
     }
 
-    internal fun updateTrip(options: RadarTripOptions?, status: RadarTrip.RadarTripStatus?, callback: RadarTripApiCallback?) {
+    internal fun updateTrip(options: RadarTripOptions?, status: RadarTrip.RadarTripStatus?, callback: (status: RadarStatus, res: JSONObject?, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null, null)
 
             return
         }
 
         val externalId = options?.externalId
         if (externalId == null) {
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            callback.invoke(RadarStatus.ERROR_BAD_REQUEST, null, null, null)
 
             return
         }
@@ -633,7 +560,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "PATCH", path, headers, params, false, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback?.onComplete(status)
+                    callback.invoke(status, null, null, null)
 
                     return
                 }
@@ -645,22 +572,22 @@ internal class RadarApiClient(
                     RadarEvent.fromJson(eventsArr)
                 }
 
-                if (events != null && events.isNotEmpty()) {
+                if (!events.isNullOrEmpty()) {
                     Radar.sendEvents(events)
                 }
 
-                callback?.onComplete(RadarStatus.SUCCESS, res, trip, events)
+                callback.invoke(RadarStatus.SUCCESS, res, trip, events)
             }
         })
     }
 
     internal fun getContext(
         location: Location,
-        callback: RadarContextApiCallback
+        callback: (status: RadarStatus, res: JSONObject?, context: RadarContext?) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null)
 
             return
         }
@@ -674,7 +601,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", path, headers, null, false, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    callback.invoke(status, null, null)
 
                     return
                 }
@@ -683,12 +610,12 @@ internal class RadarApiClient(
                     RadarContext.fromJson(contextObj)
                 }
                 if (context != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, context)
+                    callback.invoke(RadarStatus.SUCCESS, res, context)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.ERROR_SERVER)
+                callback.invoke(RadarStatus.ERROR_SERVER, null, null)
             }
         })
 
@@ -702,11 +629,11 @@ internal class RadarApiClient(
         categories: Array<String>?,
         groups: Array<String>?,
         limit: Int?,
-        callback: RadarSearchPlacesApiCallback
+        callback: (status: RadarStatus, res: JSONObject?, places: Array<RadarPlace>?) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null)
 
             return
         }
@@ -735,7 +662,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    callback.invoke(status, null, null)
 
                     return
                 }
@@ -744,12 +671,12 @@ internal class RadarApiClient(
                     RadarPlace.fromJson(placesArr)
                 }
                 if (places != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, places)
+                    callback.invoke(RadarStatus.SUCCESS, res, places)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.ERROR_SERVER)
+                callback.invoke(RadarStatus.ERROR_SERVER, null, null)
             }
         })
     }
@@ -761,11 +688,11 @@ internal class RadarApiClient(
         metadata: JSONObject?,
         limit: Int?,
         includeGeometry: Boolean?,
-        callback: RadarSearchGeofencesApiCallback
+        callback: (status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null)
 
             return
         }
@@ -794,7 +721,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    callback.invoke(status, null, null)
 
                     return
                 }
@@ -803,12 +730,12 @@ internal class RadarApiClient(
                     RadarGeofence.fromJson(geofencesArr)
                 }
                 if (geofences != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, geofences)
+                    callback.invoke(RadarStatus.SUCCESS, res, geofences)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.ERROR_SERVER)
+                callback.invoke(RadarStatus.ERROR_SERVER, null, null)
             }
         })
     }
@@ -817,12 +744,12 @@ internal class RadarApiClient(
         location: Location,
         radius: Int,
         limit: Int?,
-        callback: RadarSearchBeaconsApiCallback,
-        cache: Boolean
+        cache: Boolean,
+        callback: (status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null, null, null)
 
             return
         }
@@ -834,7 +761,7 @@ internal class RadarApiClient(
 
             logger.d("Using cached search beacons response | lastBeaconUUIDs = ${lastBeaconUUIDs?.joinToString(",")}; lastBeaconUIDs = ${lastBeaconUIDs?.joinToString(",")}")
 
-            callback.onComplete(RadarStatus.SUCCESS, null, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
+            callback.invoke(RadarStatus.SUCCESS, null, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
 
             return
         }
@@ -861,7 +788,7 @@ internal class RadarApiClient(
                         lastBeaconUIDs = RadarState.getLastBeaconUIDs(context)
                     }
 
-                    callback.onComplete(status, res, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
+                    callback.invoke(status, res, lastBeacons, lastBeaconUUIDs, lastBeaconUIDs)
 
                     return
                 }
@@ -888,7 +815,7 @@ internal class RadarApiClient(
                     RadarState.setLastBeaconUIDs(context, uids)
                 }
 
-                callback.onComplete(RadarStatus.SUCCESS, res, beacons, uuids, uids)
+                callback.invoke(RadarStatus.SUCCESS, res, beacons, uuids, uids)
             }
         })
     }
@@ -900,11 +827,11 @@ internal class RadarApiClient(
         limit: Int? = null,
         country: String? = null,
         mailable: Boolean? = null,
-        callback: RadarGeocodeApiCallback
+        callback: (status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null)
 
             return
         }
@@ -931,7 +858,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    callback(status, null, null)
 
                     return
                 }
@@ -940,23 +867,23 @@ internal class RadarApiClient(
                     RadarAddress.fromJson(addressesArr)
                 }
                 if (addresses != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, addresses)
+                    callback(RadarStatus.SUCCESS, res, addresses)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.ERROR_SERVER)
+                callback(RadarStatus.ERROR_SERVER, null, null)
             }
         })
     }
 
     internal fun validateAddress(
         address: RadarAddress,
-        callback: RadarValidateAddressAPICallback
+        callback: (status: RadarStatus, res: JSONObject?, address: RadarAddress?, verificationStatus: RadarAddressVerificationStatus?) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null, null)
 
             return
         }
@@ -986,7 +913,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    callback.invoke(status, null, null, null)
 
                     return
                 }
@@ -1005,12 +932,12 @@ internal class RadarApiClient(
                 }
 
                 if (address != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, address, verificationStatus)
+                    callback.invoke(RadarStatus.SUCCESS, res, address, verificationStatus)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.ERROR_SERVER)
+                callback.invoke(RadarStatus.ERROR_SERVER, null, null, null)
             }
         })
     }
@@ -1019,11 +946,11 @@ internal class RadarApiClient(
         query: String,
         layers: Array<String>? = null,
         countries: Array<String>? = null,
-        callback: RadarGeocodeApiCallback
+        callback: (status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null)
 
             return
         }
@@ -1043,7 +970,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", path, headers, null, false, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    callback(status, null, null)
 
                     return
                 }
@@ -1052,12 +979,12 @@ internal class RadarApiClient(
                     RadarAddress.fromJson(addressesArr)
                 }
                 if (addresses != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, addresses)
+                    callback(RadarStatus.SUCCESS, res, addresses)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.ERROR_SERVER)
+                callback(RadarStatus.ERROR_SERVER, null, null)
             }
         })
     }
@@ -1065,11 +992,11 @@ internal class RadarApiClient(
     internal fun reverseGeocode(
         location: Location,
         layers: Array<String>? = null,
-        callback: RadarGeocodeApiCallback
+        callback: (status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null)
 
             return
         }
@@ -1087,7 +1014,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", path, headers, null, false, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    callback(status, null, null)
 
                     return
                 }
@@ -1096,22 +1023,22 @@ internal class RadarApiClient(
                     RadarAddress.fromJson(addressesArr)
                 }
                 if (addresses != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, addresses)
+                    callback(RadarStatus.SUCCESS, res, addresses)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.ERROR_SERVER)
+                callback(RadarStatus.ERROR_SERVER, null, null)
             }
         })
     }
 
     internal fun ipGeocode(
-        callback: RadarIpGeocodeApiCallback
+        callback: (status: RadarStatus, res: JSONObject?, address: RadarAddress?, proxy: Boolean) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null, false)
 
             return
         }
@@ -1122,7 +1049,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", path, headers, null, false, object: RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    callback(status, null, null, false)
 
                     return
                 }
@@ -1133,12 +1060,12 @@ internal class RadarApiClient(
                 val proxy = res.optBoolean("proxy")
 
                 if (address != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, address, proxy)
+                    callback(RadarStatus.SUCCESS, res, address, proxy)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.ERROR_SERVER)
+                callback(RadarStatus.ERROR_SERVER, null, null, false)
             }
         })
     }
@@ -1149,11 +1076,11 @@ internal class RadarApiClient(
         modes: EnumSet<Radar.RadarRouteMode>,
         units: Radar.RadarRouteUnits,
         geometryPoints: Int,
-        callback: RadarDistanceApiCallback
+        callback: (status: RadarStatus, res: JSONObject?, routes: RadarRoutes?) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null)
 
             return
         }
@@ -1194,7 +1121,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    callback(status, null, null)
 
                     return
                 }
@@ -1203,12 +1130,12 @@ internal class RadarApiClient(
                     RadarRoutes.fromJson(routesObj)
                 }
                 if (routes != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, routes)
+                    callback(RadarStatus.SUCCESS, res, routes)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.ERROR_SERVER)
+                callback(RadarStatus.ERROR_SERVER, null, null)
             }
         })
     }
@@ -1218,11 +1145,11 @@ internal class RadarApiClient(
         destinations: Array<Location>,
         mode: Radar.RadarRouteMode,
         units: Radar.RadarRouteUnits,
-        callback: RadarMatrixApiCallback
+        callback: (status: RadarStatus, res: JSONObject?, matrix: RadarRouteMatrix?) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null)
 
             return
         }
@@ -1265,7 +1192,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    callback(status, null, null)
 
                     return
                 }
@@ -1274,12 +1201,12 @@ internal class RadarApiClient(
                     RadarRouteMatrix.fromJson(matrixObj)
                 }
                 if (matrix != null) {
-                    callback.onComplete(RadarStatus.SUCCESS, res, matrix)
+                    callback(RadarStatus.SUCCESS, res, matrix)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.ERROR_SERVER)
+                callback(RadarStatus.ERROR_SERVER, null, null)
             }
         })
     }
@@ -1287,11 +1214,11 @@ internal class RadarApiClient(
     internal fun sendEvent(
         name: String,
         metadata: JSONObject?,
-        callback: RadarSendEventApiCallback
+        callback: (status: RadarStatus, res: JSONObject?, event: RadarEvent?) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null)
 
             return
         }
@@ -1305,7 +1232,7 @@ internal class RadarApiClient(
             params.putOpt("type", name)
             params.putOpt("metadata", metadata)
         } catch (e: JSONException) {
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            callback(RadarStatus.ERROR_BAD_REQUEST, null, null)
 
             return
         }
@@ -1316,7 +1243,7 @@ internal class RadarApiClient(
         apiHelper.request(context, "POST", path, headers, params, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    callback(status, null, null)
 
                     return
                 }
@@ -1326,12 +1253,12 @@ internal class RadarApiClient(
                 }
 
                 if (conversionEvent == null) {
-                    callback.onComplete(RadarStatus.ERROR_SERVER)
+                    callback(RadarStatus.ERROR_SERVER, null, null)
 
                     return
                 }
 
-                callback.onComplete(RadarStatus.SUCCESS, res, conversionEvent)
+                callback(RadarStatus.SUCCESS, res, conversionEvent)
             }
         })
     }

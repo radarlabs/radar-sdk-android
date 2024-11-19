@@ -646,13 +646,20 @@ internal class RadarLocationManager(
         if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             && permissionsHelper.bluetoothPermissionsGranted(context)) {
             val cache = stopped || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT
-            this.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
-                   if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                        Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
+            this.apiClient.searchBeacons(location, 1000, 10, cache)
+            { status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>? ->
+                if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                    Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
-                        Radar.beaconManager.rangeBeaconUUIDs(uuids, uids, true, object : Radar.RadarBeaconCallback {
-                            override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                    Radar.beaconManager.rangeBeaconUUIDs(
+                        uuids,
+                        uids,
+                        true,
+                        object : Radar.RadarBeaconCallback {
+                            override fun onComplete(
+                                status: RadarStatus,
+                                beacons: Array<RadarBeacon>?
+                            ) {
                                 if (status != RadarStatus.SUCCESS || beacons == null) {
                                     callTrackApi(null)
 
@@ -662,11 +669,17 @@ internal class RadarLocationManager(
                                 callTrackApi(beacons)
                             }
                         })
-                   } else if (beacons != null) {
-                        Radar.beaconManager.startMonitoringBeacons(beacons)
+                } else if (beacons != null) {
+                    Radar.beaconManager.startMonitoringBeacons(beacons)
 
-                        Radar.beaconManager.rangeBeacons(beacons, true, object : Radar.RadarBeaconCallback {
-                            override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                    Radar.beaconManager.rangeBeacons(
+                        beacons,
+                        true,
+                        object : Radar.RadarBeaconCallback {
+                            override fun onComplete(
+                                status: RadarStatus,
+                                beacons: Array<RadarBeacon>?
+                            ) {
                                 if (status != RadarStatus.SUCCESS || beacons == null) {
                                     callTrackApi(null)
 
@@ -676,11 +689,10 @@ internal class RadarLocationManager(
                                 callTrackApi(beacons)
                             }
                         })
-                   } else {
-                       callTrackApi(arrayOf())
-                   }
+                } else {
+                    callTrackApi(arrayOf())
                 }
-            }, cache)
+            }
         } else {
             callTrackApi(null)
         }

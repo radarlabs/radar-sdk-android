@@ -1025,7 +1025,8 @@ class RadarTest {
         var callbackLocation: Location? = null
         var callbackPlaces: Array<RadarPlace>? = null
 
-        Radar.searchPlaces(mockLocation, 1000, arrayOf("walmart"), null, null, null, 100) { status, location, places ->
+        Radar.searchPlaces(mockLocation, 1000, arrayOf("walmart"), null, null, null, 100)
+        { status, location, places ->
             callbackStatus = status
             callbackLocation = location
             callbackPlaces = places
