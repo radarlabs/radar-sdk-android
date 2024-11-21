@@ -62,15 +62,15 @@ internal class RadarVerifyServer(
             val latch = CountDownLatch(1)
             var response = newFixedLengthResponse(Status.INTERNAL_ERROR, "application/json", null)
 
-            if (isAdbEnabled(context)) {
-                val resStr = "{\"meta\":{\"code\":403,\"error\":\"ERROR_FORBIDDEN\"}}"
-                response = newFixedLengthResponse(Status.FORBIDDEN, "application/json", resStr)
-                latch.countDown()
-            } else {
+            // if (isAdbEnabled(context)) {
+            //     val resStr = "{\"meta\":{\"code\":403,\"error\":\"ERROR_FORBIDDEN\"}}"
+            //     response = newFixedLengthResponse(Status.FORBIDDEN, "application/json", resStr)
+            //     latch.countDown()
+            // } else {
                 Radar.trackVerified { status, token ->
                     if (status == Radar.RadarStatus.SUCCESS) {
-                        val userStr = token?.user?.toJson().toString()
-                        val eventsStr = token?.events?.joinToString(separator = ",", prefix = "[", postfix = "]") { it.toJson().toString() }
+                        val userStr = token?.user?.toRawJson().toString()
+                        val eventsStr = token?.events?.joinToString(separator = ",", prefix = "[", postfix = "]") { it.toRawJson().toString() }
                         val resStr = "{\"meta\":{\"code\":200},\"user\":$userStr,\"events\":$eventsStr}"
                         response = newFixedLengthResponse(Status.OK, "application/json", resStr)
                     } else if (status == Radar.RadarStatus.ERROR_PERMISSIONS) {
@@ -86,7 +86,7 @@ internal class RadarVerifyServer(
 
                     latch.countDown()
                 }
-            }
+            // }
 
             latch.await()
 
