@@ -9,14 +9,28 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
-import io.radar.sdk.model.*
+import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarReplay
+import io.radar.sdk.model.RadarRouteMatrix
+import io.radar.sdk.model.RadarRoutes
+import io.radar.sdk.model.RadarSdkConfiguration
+import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import io.radar.sdk.util.RadarLogBuffer
 import io.radar.sdk.util.RadarReplayBuffer
 import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
-import java.util.*
+import java.util.Date
+import java.util.EnumSet
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -367,7 +381,7 @@ object Radar {
         SDK_EXCEPTION(3),
         APP_LIFECYCLE_EVENT(4),
         PERMISSION_EVENT(5),
-        PROFILER(6);
+        TELEMETRY(6);
 
         companion object {
             @JvmStatic
@@ -885,8 +899,14 @@ object Radar {
         }
         this.logger.i("trackOnce()", RadarLogType.SDK_CALL)
 
+        val telemetry = RadarTelemetry()
+        telemetry.start("total")
+        telemetry.start("getLocation")
+
         locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                telemetry.end("getLocation")
+
                 if (status != RadarStatus.SUCCESS || location == null) {
                     handler.post {
                         callback?.onComplete(status)
@@ -896,6 +916,7 @@ object Radar {
                 }
 
                 val callTrackApi = { beacons: Array<RadarBeacon>? ->
+                    telemetry.start("trackAPI")
                     apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, beacons, callback = object : RadarApiClient.RadarTrackApiCallback {
                         override fun onComplete(
                             status: RadarStatus,
@@ -906,10 +927,14 @@ object Radar {
                             config: RadarConfig?,
                             token: RadarVerifiedLocationToken?
                         ) {
+                            telemetry.end("trackAPI")
+
                             if (status == RadarStatus.SUCCESS ){
                                 locationManager.updateTrackingFromMeta(config?.meta)
                             }
                             handler.post {
+                                telemetry.end("total")
+                                logger.i("trackOnce | ${telemetry.formatted()}", Radar.RadarLogType.TELEMETRY)
                                 callback?.onComplete(status, location, events, user)
                             }
                         }

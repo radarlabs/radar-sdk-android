@@ -2,7 +2,7 @@ package io.radar.sdk
 
 import java.util.Date
 
-class RadarProfiler {
+class RadarTelemetry {
     private val startTimes: MutableMap<String, Long> = mutableMapOf()
     private val endTimes: MutableMap<String, Long> = mutableMapOf()
     fun start(tag: String = "") {
