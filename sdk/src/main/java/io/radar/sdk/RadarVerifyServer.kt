@@ -1,6 +1,8 @@
 package io.radar.sdk
 
 import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.provider.Settings
 import androidx.annotation.RequiresApi
 import fi.iki.elonen.NanoHTTPD
@@ -99,4 +101,39 @@ internal class RadarVerifyServer(
             return response
         }
     }
+
+    override fun start() {
+        super.start()
+
+        startForegroundService()
+    }
+
+    override fun stop() {
+        super.stop()
+
+        stopForegroundService()
+    }
+
+    private fun startForegroundService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val intent = Intent(context, RadarForegroundService::class.java).apply {
+                action = "start"
+                putExtra("title", "Location checks started")
+                putExtra("text", "Please return to the browser to continue")
+            }
+
+            context.startForegroundService(intent)
+        }
+    }
+
+    private fun stopForegroundService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val stopIntent = Intent(context, RadarForegroundService::class.java).apply {
+                action = "stop"
+            }
+
+            context.startService(stopIntent)
+        }
+    }
+
 }
