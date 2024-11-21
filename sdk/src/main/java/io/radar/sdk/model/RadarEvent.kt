@@ -112,7 +112,7 @@ class RadarEvent(
     val metadata: JSONObject?,
 
     /**
-     * The raw JSON of the event.
+     * The raw JSON for the event.
      */
     val rawJson: JSONObject?,
 ) {
