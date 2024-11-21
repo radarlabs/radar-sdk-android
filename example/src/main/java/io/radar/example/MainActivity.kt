@@ -123,6 +123,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        createButton("startVerifyServer") {
+            Radar.startVerifyServer()
+        }
+
+        createButton("stopTrackingVerified") {
+            Radar.stopVerifyServer()
+        }
+
         createButton("trackVerified") {
             Radar.trackVerified(false) { status, token ->
                 Log.v("example", "TrackVerified: status = $status; token = ${token?.toJson()}")
