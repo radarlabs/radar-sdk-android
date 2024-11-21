@@ -471,6 +471,7 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
+    private lateinit var verifyServer: RadarVerifyServer
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -1148,6 +1149,54 @@ object Radar {
         }
 
         this.verificationManager.setExpectedJurisdiction(countryCode, stateCode)
+    }
+
+    /**
+     * Starts the Radar Verify companion app server.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun startVerifyServer() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("startVerifyServer()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+        if (!this::verifyServer.isInitialized) {
+            this.verifyServer = RadarVerifyServer(this.context, this.logger)
+        }
+
+        this.verifyServer.start()
+    }
+
+    /**
+     * Stops the Radar Verify companion app server.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun stopVerifyServer() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("stopVerifyServer()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            return
+        }
+        if (!this::verifyServer.isInitialized) {
+            return
+        }
+
+        this.verifyServer.stop()
     }
 
     /**

@@ -124,7 +124,12 @@ class RadarUser(
     /**
     The user's current activity type.
      */
-    val activityType: Radar.RadarActivityType?
+    val activityType: Radar.RadarActivityType?,
+
+    /**
+    The raw JSON for the user.
+     */
+    val rawJson: JSONObject?
 ) {
     internal companion object {
         private const val FIELD_ID = "_id"
@@ -223,7 +228,8 @@ class RadarUser(
                 trip,
                 debug,
                 fraud,
-                activityType
+                activityType,
+                rawJson = obj,
             )
         }
     }
@@ -260,6 +266,10 @@ class RadarUser(
         obj.putOpt(FIELD_FRAUD, this.fraud?.toJson())
         obj.putOpt(FIELD_ACTIVITY_TYPE,this.activityType?.toString())
         return obj
+    }
+
+    fun toRawJson(): JSONObject? {
+        return rawJson
     }
 
 }

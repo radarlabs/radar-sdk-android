@@ -137,6 +137,14 @@ class MainActivity : AppCompatActivity() {
             Radar.setExpectedJurisdiction("US", "CA")
         }
 
+        createButton("startVerifyServer") {
+            Radar.startVerifyServer()
+        }
+
+        createButton("stopVerifyServer") {
+            Radar.stopVerifyServer()
+        }
+
         createButton("trackOnce") {
             Radar.trackOnce { status, location, events, user ->
                 Log.v(
