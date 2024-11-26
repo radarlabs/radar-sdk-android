@@ -317,6 +317,7 @@ internal class RadarApiClient(
             params.putOpt("sdkVersion", RadarUtils.sdkVersion)
             params.putOpt("deviceModel", RadarUtils.deviceModel)
             params.putOpt("deviceOS", RadarUtils.deviceOS)
+            params.putOpt("deviceSDK", RadarUtils.deviceSDK)
             params.putOpt("deviceType", RadarUtils.deviceType)
             params.putOpt("deviceMake", RadarUtils.deviceMake)
             params.putOpt("country", RadarUtils.country)
@@ -360,6 +361,14 @@ internal class RadarApiClient(
                 params.putOpt("integrityToken", integrityToken)
                 params.putOpt("integrityException", integrityException)
                 params.putOpt("sharing", RadarUtils.isScreenSharing(context))
+
+                val (packageHash, packageCount) = RadarUtils.getPackageHashAndCount(context)
+                params.putOpt("packageHash", packageHash)
+                params.putOpt("packageCount", packageCount)
+                params.putOpt("ssid", RadarUtils.getCurrentSSID(context))
+                params.putOpt("playStoreVersion", RadarUtils.getPlayStoreVersion(context))
+                params.putOpt("kernelRelease", RadarUtils.getKernelRelease())
+
                 params.putOpt("encrypted", encrypted)
                 if (expectedCountryCode != null) {
                     params.putOpt("expectedCountryCode", expectedCountryCode)
