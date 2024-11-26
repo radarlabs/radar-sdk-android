@@ -140,7 +140,6 @@ internal object RadarUtils {
         return multipleDisplays || sharing
     }
 
-
     internal fun getPackageHashAndCount(context: Context): Pair<String, Int> {
         val pm = context.packageManager
         val packages = pm.getInstalledPackages(0)
@@ -153,7 +152,6 @@ internal object RadarUtils {
         val count = packages.size
         return Pair(hash, count)
     }
-
 
     internal fun getCurrentSSID(context: Context): String? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -170,7 +168,6 @@ internal object RadarUtils {
             e.message
         }
     }
-
 
     internal fun getPlayStoreVersion(context: Context): String? {
         val playStorePackageName = "com.android.vending"
