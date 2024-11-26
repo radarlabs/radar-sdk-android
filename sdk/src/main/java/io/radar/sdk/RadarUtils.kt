@@ -10,7 +10,6 @@ import android.location.LocationManager
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.hardware.display.DisplayManagerCompat
