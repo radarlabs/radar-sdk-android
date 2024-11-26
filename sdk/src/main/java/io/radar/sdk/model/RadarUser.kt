@@ -125,11 +125,6 @@ class RadarUser(
     The user's current activity type.
      */
     val activityType: Radar.RadarActivityType?,
-
-    /**
-    The raw JSON for the user.
-     */
-    val rawJson: JSONObject?
 ) {
     internal companion object {
         private const val FIELD_ID = "_id"
@@ -229,7 +224,6 @@ class RadarUser(
                 debug,
                 fraud,
                 activityType,
-                rawJson = obj,
             )
         }
     }
@@ -268,8 +262,6 @@ class RadarUser(
         return obj
     }
 
-    fun toRawJson(): JSONObject? {
-        return rawJson
-    }
+
 
 }

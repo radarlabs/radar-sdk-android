@@ -50,6 +50,11 @@ class RadarVerifiedLocationToken(
      * The Radar ID of the location check.
      */
     val _id: String,
+
+    /**
+    The raw JSON for the user.
+     */
+    val rawJson: JSONObject?
 ) {
     internal companion object {
         private const val FIELD_USER = "user"
@@ -83,7 +88,7 @@ class RadarVerifiedLocationToken(
                 return null
             }
 
-            return RadarVerifiedLocationToken(user, events, token, expiresAt, expiresIn, passed, failureReasons, id)
+            return RadarVerifiedLocationToken(user, events, token, expiresAt, expiresIn, passed, failureReasons, id, rawJson = obj)
         }
     }
 
@@ -100,6 +105,10 @@ class RadarVerifiedLocationToken(
         obj.putOpt(FIELD_FAILURE_REASONS, failureReasonsArr)
         obj.putOpt(FIELD_ID, this._id)
         return obj
+    }
+
+    fun toRawJson(): JSONObject? {
+        return rawJson
     }
 
 }

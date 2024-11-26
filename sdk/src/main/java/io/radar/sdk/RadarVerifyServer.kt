@@ -7,6 +7,7 @@ import android.provider.Settings
 import androidx.annotation.RequiresApi
 import fi.iki.elonen.NanoHTTPD
 import fi.iki.elonen.NanoHTTPD.Response.Status
+import org.json.JSONObject
 import java.util.concurrent.CountDownLatch
 
 @RequiresApi(21)
@@ -71,10 +72,15 @@ internal class RadarVerifyServer(
             // } else {
                 Radar.trackVerified { status, token ->
                     if (status == Radar.RadarStatus.SUCCESS) {
-                        val userStr = token?.user?.toRawJson().toString()
-                        val eventsStr = token?.events?.joinToString(separator = ",", prefix = "[", postfix = "]") { it.toRawJson().toString() }
-                        val resStr = "{\"meta\":{\"code\":200},\"user\":$userStr,\"events\":$eventsStr}"
-                        response = newFixedLengthResponse(Status.OK, "application/json", resStr)
+                        token?.toRawJson()?.let {
+                            it.putOpt("meta", JSONObject().put("code", 200))
+                            val resStr = it.toString()
+                            response = newFixedLengthResponse(Status.OK, "application/json", resStr)
+                        }
+                    } else if (status == Radar.RadarStatus.ERROR_UNAUTHORIZED) {
+                        response = newFixedLengthResponse(Status.UNAUTHORIZED, "application/json", null)
+                    } else if (status == Radar.RadarStatus.ERROR_FORBIDDEN) {
+                        response = newFixedLengthResponse(Status.FORBIDDEN, "application/json", null)
                     } else if (status == Radar.RadarStatus.ERROR_PERMISSIONS) {
                         val resStr = "{\"meta\":{\"code\":400,\"error\":\"ERROR_PERMISSIONS\"}}"
                         response = newFixedLengthResponse(Status.BAD_REQUEST, "application/json", resStr)

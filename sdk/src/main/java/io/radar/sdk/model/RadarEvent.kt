@@ -110,11 +110,6 @@ class RadarEvent(
      * The metadata of the event. Present on conversions only.
      */
     val metadata: JSONObject?,
-
-    /**
-     * The raw JSON for the event.
-     */
-    val rawJson: JSONObject?,
 ) {
 
     /**
@@ -300,7 +295,7 @@ class RadarEvent(
 
             val event = RadarEvent(
                 id, createdAt, actualCreatedAt, live, type, conversionName, geofence, place, region, beacon, trip, fraud,
-                alternatePlaces, verifiedPlace, verification, confidence, duration, location, replayed, metadata, rawJson = obj,
+                alternatePlaces, verifiedPlace, verification, confidence, duration, location, replayed, metadata,
             )
 
             return event
@@ -326,18 +321,6 @@ class RadarEvent(
             val arr = JSONArray()
             events.forEach { event ->
                 arr.put(event.toJson())
-            }
-            return arr
-        }
-
-        fun toRawJson(events: Array<RadarEvent> ?): JSONArray? {
-            if (events == null) {
-                return null
-            }
-
-            val arr = JSONArray()
-            events.forEach { event ->
-                arr.put(event.toRawJson())
             }
             return arr
         }
@@ -400,10 +383,6 @@ class RadarEvent(
         obj.putOpt(FIELD_METADATA, metadata)
 
         return obj
-    }
-
-    fun toRawJson(): JSONObject? {
-        return rawJson
     }
 
 }
