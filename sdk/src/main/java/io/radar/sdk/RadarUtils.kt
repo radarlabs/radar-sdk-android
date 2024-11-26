@@ -7,10 +7,13 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.Settings
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.hardware.display.DisplayManagerCompat
+import java.lang.Exception
 import java.security.MessageDigest
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -26,6 +29,8 @@ internal object RadarUtils {
     internal val deviceModel = Build.MODEL
 
     internal val deviceOS = Build.VERSION.RELEASE
+
+    internal val deviceSDK = Build.VERSION.SDK_INT
 
     internal val country: String
         get() = Locale.getDefault().country
@@ -133,6 +138,50 @@ internal object RadarUtils {
         val sharing = RadarSettings.getSharing(context)
 
         return multipleDisplays || sharing
+    }
+
+    internal fun getPackageHashAndCount(context: Context): Pair<String, Int> {
+        val pm = context.packageManager
+        val packages = pm.getInstalledPackages(0)
+            .map { it.packageName }
+            .sorted()
+        val concatenatedPackages = packages.joinToString(",")
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashBytes = digest.digest(concatenatedPackages.toByteArray(Charsets.UTF_8))
+        val hash = hashBytes.joinToString("") { "%02x".format(it) }
+        val count = packages.size
+        return Pair(hash, count)
+    }
+
+    internal fun getCurrentSSID(context: Context): String? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return "Location permission not granted"
+            }
+        }
+        return try {
+            val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            val wifiInfo = wifiManager.connectionInfo
+            val ssid = wifiInfo.ssid
+            if (ssid.isNullOrBlank() || ssid == "<unknown ssid>") null else ssid.replace("\"", "")
+        } catch (e: Exception) {
+            e.message
+        }
+    }
+
+    internal fun getPlayStoreVersion(context: Context): String? {
+        val playStorePackageName = "com.android.vending"
+        return try {
+            val packageManager = context.packageManager
+            val packageInfo = packageManager.getPackageInfo(playStorePackageName, 0)
+            packageInfo.versionName
+        } catch (e: PackageManager.NameNotFoundException) {
+            "not installed"
+        }
+    }
+
+    internal fun getKernelRelease(): String {
+        return System.getProperty("os.version") ?: "Unknown"
     }
 
     internal fun isoStringToDate(str: String?): Date? {
