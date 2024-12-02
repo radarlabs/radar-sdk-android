@@ -338,12 +338,16 @@ internal class RadarVerificationManager(
     fun stopTrackingVerified() {
         this.started = false
 
-        networkCallback?.let {
-            connectivityManager.unregisterNetworkCallback(it)
-        }
+        try {
+            networkCallback?.let {
+                connectivityManager.unregisterNetworkCallback(it)
+            }
 
-        runnable?.let {
-            handler.removeCallbacks(it)
+            runnable?.let {
+                handler.removeCallbacks(it)
+            }
+        } catch (e: Exception) {
+            Radar.logger.e("Error unregistering callbacks", Radar.RadarLogType.SDK_EXCEPTION, e)
         }
     }
 
