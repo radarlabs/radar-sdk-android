@@ -71,6 +71,10 @@ internal class RadarVerificationManager(
             override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
                 if (status != Radar.RadarStatus.SUCCESS || config == null) {
                     Radar.handler.post {
+                        if (status != Radar.RadarStatus.SUCCESS) {
+                            Radar.sendVerifiedError(status)
+                        }
+
                         callback?.onComplete(status)
                     }
 
@@ -91,6 +95,10 @@ internal class RadarVerificationManager(
                         ) {
                             if (status != Radar.RadarStatus.SUCCESS || location == null) {
                                 Radar.handler.post {
+                                    if (status != Radar.RadarStatus.SUCCESS) {
+                                        Radar.sendVerifiedError(status)
+                                    }
+
                                     callback?.onComplete(status)
                                 }
 
@@ -138,10 +146,11 @@ internal class RadarVerificationManager(
                                                     verificationManager.lastTokenBeacons = lastTokenBeacons
                                                 }
                                                 Radar.handler.post {
-                                                    callback?.onComplete(
-                                                        status,
-                                                        token
-                                                    )
+                                                    if (status != Radar.RadarStatus.SUCCESS) {
+                                                        Radar.sendVerifiedError(status)
+                                                    }
+
+                                                    callback?.onComplete(status, token)
                                                 }
                                             }
                                         })
@@ -338,12 +347,16 @@ internal class RadarVerificationManager(
     fun stopTrackingVerified() {
         this.started = false
 
-        networkCallback?.let {
-            connectivityManager.unregisterNetworkCallback(it)
-        }
+        try {
+            networkCallback?.let {
+                connectivityManager.unregisterNetworkCallback(it)
+            }
 
-        runnable?.let {
-            handler.removeCallbacks(it)
+            runnable?.let {
+                handler.removeCallbacks(it)
+            }
+        } catch (e: Exception) {
+            Radar.logger.e("Error unregistering callbacks", Radar.RadarLogType.SDK_EXCEPTION, e)
         }
     }
 

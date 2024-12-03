@@ -17,4 +17,12 @@ abstract class RadarVerifiedReceiver {
      */
     abstract fun onTokenUpdated(context: Context, token: RadarVerifiedLocationToken)
 
+    /**
+     * Tells the receiver that a request failed.
+     *
+     * @param[context] The context.
+     * @param[status] The status.
+     */
+    abstract fun onError(context: Context, status: Radar.RadarStatus)
+
 }
