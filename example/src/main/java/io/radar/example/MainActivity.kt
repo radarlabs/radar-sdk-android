@@ -40,6 +40,10 @@ class MainActivity : AppCompatActivity() {
             override fun onTokenUpdated(context: Context, token: RadarVerifiedLocationToken) {
 
             }
+
+            override fun onError(context: Context, status: Radar.RadarStatus) {
+
+            }
         }
         Radar.setVerifiedReceiver(verifiedReceiver)
 
