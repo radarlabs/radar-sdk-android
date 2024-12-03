@@ -3530,7 +3530,7 @@ object Radar {
     }
 
     internal fun sendVerifiedError(status: RadarStatus) {
-        verifiedReceiver?.onError(context, status)
+        verifiedReceiver?.onVerifiedError(context, status)
 
         logger.e("📍️ Radar verified error received | status = $status", RadarLogType.SDK_ERROR)
     }

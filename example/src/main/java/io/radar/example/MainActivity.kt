@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
 
             }
 
-            override fun onError(context: Context, status: Radar.RadarStatus) {
+            override fun onVerifiedError(context: Context, status: Radar.RadarStatus) {
 
             }
         }
