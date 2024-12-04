@@ -72,7 +72,7 @@ internal class RadarVerificationManager(
                 if (status != Radar.RadarStatus.SUCCESS || config == null) {
                     Radar.handler.post {
                         if (status != Radar.RadarStatus.SUCCESS) {
-                            Radar.sendVerifiedError(status)
+                            Radar.sendError(status)
                         }
 
                         callback?.onComplete(status)
@@ -96,7 +96,7 @@ internal class RadarVerificationManager(
                             if (status != Radar.RadarStatus.SUCCESS || location == null) {
                                 Radar.handler.post {
                                     if (status != Radar.RadarStatus.SUCCESS) {
-                                        Radar.sendVerifiedError(status)
+                                        Radar.sendError(status)
                                     }
 
                                     callback?.onComplete(status)
@@ -147,7 +147,7 @@ internal class RadarVerificationManager(
                                                 }
                                                 Radar.handler.post {
                                                     if (status != Radar.RadarStatus.SUCCESS) {
-                                                        Radar.sendVerifiedError(status)
+                                                        Radar.sendError(status)
                                                     }
 
                                                     callback?.onComplete(status, token)

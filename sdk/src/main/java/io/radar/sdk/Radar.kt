@@ -3529,12 +3529,6 @@ object Radar {
         logger.i("📍️ Radar token updated | passed = ${token.passed}; expiresAt = ${token.expiresAt}; expiresIn = ${token.expiresIn}; token = ${token.token}")
     }
 
-    internal fun sendVerifiedError(status: RadarStatus) {
-        verifiedReceiver?.onVerifiedError(context, status)
-
-        logger.e("📍️ Radar verified error received | status = $status", RadarLogType.SDK_ERROR)
-    }
-
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {
         this.logBuffer.setPersistentLogFeatureFlag(enabled)
     }
