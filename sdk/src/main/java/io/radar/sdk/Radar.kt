@@ -559,6 +559,8 @@ object Radar {
             this.locationManager.updateTracking()
         }
 
+        this.logger.i("initialize()", RadarLogType.SDK_CALL)
+
         if (provider == RadarLocationServicesProvider.GOOGLE) {
             this.logger.d("Using Google location services")
         } else if (provider == RadarLocationServicesProvider.HUAWEI) {
