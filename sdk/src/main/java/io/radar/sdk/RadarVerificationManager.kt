@@ -365,8 +365,10 @@ internal class RadarVerificationManager(
 
         if (this.lastToken != null) {
             this.lastToken?.let {
-                if (lastTokenElapsed < it.expiresIn && it.passed) {
-                    Radar.logger.d("Last token valid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}")
+                val lastDistanceToStateBorder = it.user.state?.distanceToBorder ?: -1.0
+
+                if (lastTokenElapsed < it.expiresIn && it.passed && lastDistanceToStateBorder > 1609) {
+                    Radar.logger.d("Last token valid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}; lastDistanceToStateBorder = $lastDistanceToStateBorder")
 
                     Radar.flushLogs()
 
@@ -375,7 +377,7 @@ internal class RadarVerificationManager(
                     return
                 }
 
-                Radar.logger.d("Last token invalid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}")
+                Radar.logger.d("Last token invalid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}; lastDistanceToStateBorder = $lastDistanceToStateBorder")
             }
         } else {
             Radar.logger.d("No last token")
