@@ -308,7 +308,9 @@ internal class RadarApiClient(
                 val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
                 val locationMs = location.elapsedRealtimeNanos / 1000000
                 val updatedAtMsDiff = (nowMs - locationMs)
-                params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
+                if (RadarSettings.getSdkConfiguration(context).useForegroundLocationUpdatedAtMsDiff || !foreground) {
+                    params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
+                }
                 params.putOpt("locationMs", locationMs)
             }
             params.putOpt("foreground", foreground)
