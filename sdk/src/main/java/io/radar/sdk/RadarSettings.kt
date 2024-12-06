@@ -364,7 +364,7 @@ internal object RadarSettings {
     }
 
     internal fun getUserDebug(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_USER_DEBUG, true)
+        return getSharedPreferences(context).getBoolean(KEY_USER_DEBUG, false)
     }
 
     internal fun setUserDebug(context: Context, userDebug: Boolean) {
