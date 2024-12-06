@@ -29,6 +29,7 @@ class RadarSdkConfigurationTest {
     private var trackOnceOnAppOpen = false
     private var useLocationMetadata = false
     private var useOpenedAppConversion = false
+    private var useForegroundLocationUpdatedAtMsDiff = false
 
     @Before
     fun setUp() {
@@ -46,7 +47,8 @@ class RadarSdkConfigurationTest {
             "startTrackingOnInitialize":$startTrackingOnInitialize,
             "trackOnceOnAppOpen":$trackOnceOnAppOpen,
             "useLocationMetadata":$useLocationMetadata,
-            "useOpenedAppConversion":$useOpenedAppConversion
+            "useOpenedAppConversion":$useOpenedAppConversion,
+            "useForegroundLocationUpdatedAtMsDiff":$useForegroundLocationUpdatedAtMsDiff
         }""".trimIndent()
     }
 
@@ -65,7 +67,8 @@ class RadarSdkConfigurationTest {
                 startTrackingOnInitialize,
                 trackOnceOnAppOpen,
                 useLocationMetadata,
-                useOpenedAppConversion
+                useOpenedAppConversion,
+                useForegroundLocationUpdatedAtMsDiff
             ).toJson().toString()
         )
     }
@@ -84,6 +87,7 @@ class RadarSdkConfigurationTest {
         assertEquals(trackOnceOnAppOpen, settings.trackOnceOnAppOpen)
         assertEquals(useLocationMetadata, settings.useLocationMetadata)
         assertEquals(useOpenedAppConversion, settings.useOpenedAppConversion)
+        assertEquals(useForegroundLocationUpdatedAtMsDiff, settings.useForegroundLocationUpdatedAtMsDiff)
     }
 
     @Test
@@ -100,6 +104,7 @@ class RadarSdkConfigurationTest {
         assertFalse(settings.trackOnceOnAppOpen)
         assertFalse(settings.useLocationMetadata)
         assertTrue(settings.useOpenedAppConversion)
+        assertFalse(settings.useForegroundLocationUpdatedAtMsDiff)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")
