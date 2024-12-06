@@ -83,8 +83,15 @@ internal class RadarVerificationManager(
 
                 val googlePlayProjectNumber = config.googlePlayProjectNumber
 
+                var desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM
+                lastToken?.user?.state?.distanceToBorder?.let {
+                    if (it < 1609) {
+                        desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH
+                    }
+                }
+
                 Radar.locationManager.getLocation(
-                    RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH,
+                    desiredAccuracy,
                     Radar.RadarLocationSource.FOREGROUND_LOCATION,
                     object :
                         Radar.RadarLocationCallback {
