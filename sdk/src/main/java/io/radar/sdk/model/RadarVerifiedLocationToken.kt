@@ -52,9 +52,9 @@ class RadarVerifiedLocationToken(
     val _id: String,
 
     /**
-     * The raw JSON value of the token.
+     * The full JSON value of the token.
      */
-    val rawJson: JSONObject,
+    val fullJson: JSONObject,
 ) {
     internal companion object {
         private const val FIELD_USER = "user"
@@ -76,7 +76,7 @@ class RadarVerifiedLocationToken(
             val token: String? = obj.optString(FIELD_TOKEN)
             val expiresAt: Date? = RadarUtils.isoStringToDate(obj.optString(FIELD_EXPIRES_AT))
             val expiresIn: Int = obj.optInt(FIELD_EXPIRES_IN)
-            val passed: Boolean = user?.fraud?.passed == true && user.country?.passed == true && user.state?.passed == true
+            val passed: Boolean = obj.optBoolean(FIELD_PASSED)
             val failureReasons = obj.optJSONArray(FIELD_FAILURE_REASONS)?.let { failureReasons ->
                 Array<String>(failureReasons.length()) {
                     failureReasons.optString(it)
@@ -93,7 +93,7 @@ class RadarVerifiedLocationToken(
     }
 
     fun toJson(): JSONObject {
-        return rawJson
+        return fullJson
     }
 
 }
