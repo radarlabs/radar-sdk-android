@@ -559,7 +559,7 @@ object Radar {
             this.locationManager.updateTracking()
         }
 
-        this.logger.i("Initializing", RadarLogType.SDK_CALL)
+        this.logger.i("initialize()", RadarLogType.SDK_CALL)
 
         if (provider == RadarLocationServicesProvider.GOOGLE) {
             this.logger.d("Using Google location services")
@@ -3534,7 +3534,6 @@ object Radar {
 
         logger.i("📍️ Radar token updated | passed = ${token.passed}; expiresAt = ${token.expiresAt}; expiresIn = ${token.expiresIn}; token = ${token.token}")
     }
-
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {
         this.logBuffer.setPersistentLogFeatureFlag(enabled)

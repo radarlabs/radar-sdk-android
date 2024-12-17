@@ -32,6 +32,7 @@ class RadarSdkConfigurationTest {
     private var trackOnceOnAppOpen = false
     private var useLocationMetadata = false
     private var useOpenedAppConversion = false
+    private var useForegroundLocationUpdatedAtMsDiff = false
     private var useOfflineRTOUpdates = false
     private var remoteTrackingOptions =
         arrayOf(RadarRemoteTrackingOptions("default",RadarTrackingOptions.EFFICIENT,null),
@@ -56,6 +57,7 @@ class RadarSdkConfigurationTest {
             "trackOnceOnAppOpen":$trackOnceOnAppOpen,
             "useLocationMetadata":$useLocationMetadata,
             "useOpenedAppConversion":$useOpenedAppConversion,
+            "useForegroundLocationUpdatedAtMsDiff":$useForegroundLocationUpdatedAtMsDiff,
             "useOfflineRTOUpdates":$useOfflineRTOUpdates,
             "remoteTrackingOptions": [
                 {
@@ -148,6 +150,7 @@ class RadarSdkConfigurationTest {
                 trackOnceOnAppOpen,
                 useLocationMetadata,
                 useOpenedAppConversion,
+                useForegroundLocationUpdatedAtMsDiff,
                 useOfflineRTOUpdates,
                 remoteTrackingOptions
             ).toJson().toMap()
@@ -184,6 +187,7 @@ class RadarSdkConfigurationTest {
         assertEquals(trackOnceOnAppOpen, settings.trackOnceOnAppOpen)
         assertEquals(useLocationMetadata, settings.useLocationMetadata)
         assertEquals(useOpenedAppConversion, settings.useOpenedAppConversion)
+        assertEquals(useForegroundLocationUpdatedAtMsDiff, settings.useForegroundLocationUpdatedAtMsDiff)
         assertEquals(useOfflineRTOUpdates, settings.useOfflineRTOUpdates)
         assertEquals(RadarTrackingOptions.EFFICIENT, RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(settings.remoteTrackingOptions,"default"))
         assertEquals(RadarTrackingOptions.RESPONSIVE, RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(settings.remoteTrackingOptions,"inGeofence"))
@@ -208,6 +212,7 @@ class RadarSdkConfigurationTest {
         assertFalse(settings.trackOnceOnAppOpen)
         assertFalse(settings.useLocationMetadata)
         assertTrue(settings.useOpenedAppConversion)
+        assertFalse(settings.useForegroundLocationUpdatedAtMsDiff)
         assertFalse(settings.useOfflineRTOUpdates)
         assertNull(settings.remoteTrackingOptions)
 

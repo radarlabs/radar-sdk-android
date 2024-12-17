@@ -21,6 +21,7 @@ data class RadarSdkConfiguration(
     val trackOnceOnAppOpen: Boolean,
     val useLocationMetadata: Boolean,
     val useOpenedAppConversion: Boolean = false,
+    val useForegroundLocationUpdatedAtMsDiff: Boolean = false,
     val useOfflineRTOUpdates: Boolean,
     val remoteTrackingOptions: Array<RadarRemoteTrackingOptions>?,
     ) {
@@ -37,6 +38,7 @@ data class RadarSdkConfiguration(
         private const val TRACK_ONCE_ON_APP_OPEN = "trackOnceOnAppOpen"
         private const val USE_LOCATION_METADATA = "useLocationMetadata"
         private const val USE_OPENED_APP_CONVERSION = "useOpenedAppConversion"
+        private const val USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF = "useForegroundLocationUpdatedAtMsDiff"
         private const val USE_OFFLINE_RTO_UPDATES = "useOfflineRTOUpdates"
         private const val ALTERNATIVE_TRACKING_OPTIONS = "remoteTrackingOptions"
 
@@ -56,6 +58,7 @@ data class RadarSdkConfiguration(
                 config.optBoolean(TRACK_ONCE_ON_APP_OPEN, false),
                 config.optBoolean(USE_LOCATION_METADATA, false),
                 config.optBoolean(USE_OPENED_APP_CONVERSION, true),
+                config.optBoolean(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, false),
                 config.optBoolean(USE_OFFLINE_RTO_UPDATES, false),
                 config.optJSONArray(ALTERNATIVE_TRACKING_OPTIONS)?.let { RadarRemoteTrackingOptions.fromJson(it) },
             )
@@ -87,6 +90,7 @@ data class RadarSdkConfiguration(
             putOpt(TRACK_ONCE_ON_APP_OPEN, trackOnceOnAppOpen)
             putOpt(USE_LOCATION_METADATA, useLocationMetadata)
             putOpt(USE_OPENED_APP_CONVERSION, useOpenedAppConversion)
+            putOpt(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, useForegroundLocationUpdatedAtMsDiff)
             putOpt(USE_OFFLINE_RTO_UPDATES, useOfflineRTOUpdates)
             putOpt(ALTERNATIVE_TRACKING_OPTIONS, RadarRemoteTrackingOptions.toJson(remoteTrackingOptions))
         }

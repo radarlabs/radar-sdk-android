@@ -50,6 +50,11 @@ class RadarVerifiedLocationToken(
      * The Radar ID of the location check.
      */
     val _id: String,
+
+    /**
+     * The full JSON value of the token.
+     */
+    val fullJson: JSONObject,
 ) {
     internal companion object {
         private const val FIELD_USER = "user"
@@ -71,7 +76,7 @@ class RadarVerifiedLocationToken(
             val token: String? = obj.optString(FIELD_TOKEN)
             val expiresAt: Date? = RadarUtils.isoStringToDate(obj.optString(FIELD_EXPIRES_AT))
             val expiresIn: Int = obj.optInt(FIELD_EXPIRES_IN)
-            val passed: Boolean = user?.fraud?.passed == true && user.country?.passed == true && user.state?.passed == true
+            val passed: Boolean = obj.optBoolean(FIELD_PASSED)
             val failureReasons = obj.optJSONArray(FIELD_FAILURE_REASONS)?.let { failureReasons ->
                 Array<String>(failureReasons.length()) {
                     failureReasons.optString(it)
@@ -83,23 +88,12 @@ class RadarVerifiedLocationToken(
                 return null
             }
 
-            return RadarVerifiedLocationToken(user, events, token, expiresAt, expiresIn, passed, failureReasons, id)
+            return RadarVerifiedLocationToken(user, events, token, expiresAt, expiresIn, passed, failureReasons, id, obj)
         }
     }
 
     fun toJson(): JSONObject {
-        val obj = JSONObject()
-        obj.putOpt(FIELD_USER, this.user.toJson())
-        obj.putOpt(FIELD_EVENTS, RadarEvent.toJson(this.events))
-        obj.putOpt(FIELD_TOKEN, this.token)
-        obj.putOpt(FIELD_EXPIRES_AT, RadarUtils.dateToISOString(this.expiresAt))
-        obj.putOpt(FIELD_EXPIRES_IN, this.expiresIn)
-        obj.putOpt(FIELD_PASSED, this.passed)
-        val failureReasonsArr = JSONArray()
-        this.failureReasons.forEach { failureReason -> failureReasonsArr.put(failureReason) }
-        obj.putOpt(FIELD_FAILURE_REASONS, failureReasonsArr)
-        obj.putOpt(FIELD_ID, this._id)
-        return obj
+        return fullJson
     }
 
 }

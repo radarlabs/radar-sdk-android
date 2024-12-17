@@ -71,6 +71,10 @@ internal class RadarVerificationManager(
             override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
                 if (status != Radar.RadarStatus.SUCCESS || config == null) {
                     Radar.handler.post {
+                        if (status != Radar.RadarStatus.SUCCESS) {
+                            Radar.sendError(status)
+                        }
+
                         callback?.onComplete(status)
                     }
 
@@ -80,7 +84,7 @@ internal class RadarVerificationManager(
                 val googlePlayProjectNumber = config.googlePlayProjectNumber
 
                 Radar.locationManager.getLocation(
-                    RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
+                    RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH,
                     Radar.RadarLocationSource.FOREGROUND_LOCATION,
                     object :
                         Radar.RadarLocationCallback {
@@ -91,6 +95,10 @@ internal class RadarVerificationManager(
                         ) {
                             if (status != Radar.RadarStatus.SUCCESS || location == null) {
                                 Radar.handler.post {
+                                    if (status != Radar.RadarStatus.SUCCESS) {
+                                        Radar.sendError(status)
+                                    }
+
                                     callback?.onComplete(status)
                                 }
 
@@ -138,10 +146,11 @@ internal class RadarVerificationManager(
                                                     verificationManager.lastTokenBeacons = lastTokenBeacons
                                                 }
                                                 Radar.handler.post {
-                                                    callback?.onComplete(
-                                                        status,
-                                                        token
-                                                    )
+                                                    if (status != Radar.RadarStatus.SUCCESS) {
+                                                        Radar.sendError(status)
+                                                    }
+
+                                                    callback?.onComplete(status, token)
                                                 }
                                             }
                                         })
@@ -338,12 +347,16 @@ internal class RadarVerificationManager(
     fun stopTrackingVerified() {
         this.started = false
 
-        networkCallback?.let {
-            connectivityManager.unregisterNetworkCallback(it)
-        }
+        try {
+            networkCallback?.let {
+                connectivityManager.unregisterNetworkCallback(it)
+            }
 
-        runnable?.let {
-            handler.removeCallbacks(it)
+            runnable?.let {
+                handler.removeCallbacks(it)
+            }
+        } catch (e: Exception) {
+            Radar.logger.e("Error unregistering callbacks", Radar.RadarLogType.SDK_EXCEPTION, e)
         }
     }
 
@@ -352,8 +365,10 @@ internal class RadarVerificationManager(
 
         if (this.lastToken != null) {
             this.lastToken?.let {
-                if (lastTokenElapsed < it.expiresIn && it.passed) {
-                    Radar.logger.d("Last token valid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}")
+                val lastDistanceToStateBorder = it.user.state?.distanceToBorder ?: -1.0
+
+                if (lastTokenElapsed < it.expiresIn && it.passed && lastDistanceToStateBorder > 1609) {
+                    Radar.logger.d("Last token valid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}; lastDistanceToStateBorder = $lastDistanceToStateBorder")
 
                     Radar.flushLogs()
 
@@ -362,7 +377,7 @@ internal class RadarVerificationManager(
                     return
                 }
 
-                Radar.logger.d("Last token invalid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}")
+                Radar.logger.d("Last token invalid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}; lastDistanceToStateBorder = $lastDistanceToStateBorder")
             }
         } else {
             Radar.logger.d("No last token")
