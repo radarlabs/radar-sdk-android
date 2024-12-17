@@ -87,13 +87,13 @@ class RadarGeofence(
             } ?: RadarCoordinate(0.0, 0.0)
             val radius = obj.optDouble(FIELD_GEOMETRY_RADIUS)
             val geometry = when (obj.optString(FIELD_TYPE)) {
-                TYPE_CIRCLE -> {
+                TYPE_CIRCLE, TYPE_GEOMETRY_CIRCLE -> {
                     RadarCircleGeometry(
                         center,
                         radius
                     )
                 }
-                TYPE_POLYGON, TYPE_ISOCHRONE -> {
+                TYPE_POLYGON, TYPE_ISOCHRONE, TYPE_GEOMETRY_POLYGON -> {
                 val geometryObj = obj.optJSONObject(FIELD_GEOMETRY)
                 val coordinatesArr = geometryObj?.optJSONArray(FIELD_COORDINATES)
                 if (coordinatesArr != null) {
