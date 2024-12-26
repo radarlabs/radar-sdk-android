@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         createButton("startTrackingVerified") {
-            Radar.startTrackingVerified(10, false)
+            Radar.startTrackingVerified(60, false)
         }
 
         createButton("stopTrackingVerified") {
