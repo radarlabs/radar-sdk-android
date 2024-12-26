@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
+import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
@@ -28,9 +29,14 @@ internal class RadarGoogleLocationClient(
     override fun getCurrentLocation(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (location: Location?) -> Unit) {
         val priority = priorityForDesiredAccuracy(desiredAccuracy)
 
+        val currentLocationRequest = CurrentLocationRequest.Builder()
+            .setPriority(priority)
+            .setMaxUpdateAgeMillis(0)
+            .build()
+
         logger.d("Requesting location")
 
-        locationClient.getCurrentLocation(priority, null).addOnSuccessListener { location ->
+        locationClient.getCurrentLocation(currentLocationRequest, null).addOnSuccessListener { location ->
             logger.d("Received current location")
 
             block(location)
@@ -47,11 +53,10 @@ internal class RadarGoogleLocationClient(
     ) {
         val priority = priorityForDesiredAccuracy(desiredAccuracy)
 
-        val locationRequest = LocationRequest().apply {
-            this.priority = priority
-            this.interval = interval * 1000L
-            this.fastestInterval = fastestInterval * 1000L
-        }
+        val locationRequest = LocationRequest.Builder(priority, interval * 1000L)
+            .setMaxUpdateAgeMillis(0)
+            .setMinUpdateIntervalMillis(fastestInterval * 1000L)
+            .build()
 
         locationClient.requestLocationUpdates(locationRequest, pendingIntent)
     }
