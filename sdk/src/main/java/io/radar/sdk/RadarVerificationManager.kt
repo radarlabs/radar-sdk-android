@@ -341,6 +341,10 @@ internal class RadarVerificationManager(
             connectivityManager.registerNetworkCallback(request, it)
         }
 
+        if (startedInterval < 20) {
+            Radar.locationManager.locationClient.requestLocationUpdates(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, 0, 0, RadarLocationReceiver.getVerifiedLocationPendingIntent(context))
+        }
+
         callTrackVerified()
     }
 
@@ -348,6 +352,10 @@ internal class RadarVerificationManager(
         this.started = false
 
         try {
+            if (startedInterval < 20) {
+                Radar.locationManager.locationClient.removeLocationUpdates(RadarLocationReceiver.getVerifiedLocationPendingIntent(context))
+            }
+
             networkCallback?.let {
                 connectivityManager.unregisterNetworkCallback(it)
             }
