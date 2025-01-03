@@ -29,10 +29,12 @@ internal class RadarGoogleLocationClient(
     override fun getCurrentLocation(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (location: Location?) -> Unit) {
         val priority = priorityForDesiredAccuracy(desiredAccuracy)
 
-        val currentLocationRequest = CurrentLocationRequest.Builder()
+        var currentLocationRequestBuilder = CurrentLocationRequest.Builder()
             .setPriority(priority)
-            .setMaxUpdateAgeMillis(0)
-            .build()
+        if (desiredAccuracy == RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH) {
+            currentLocationRequestBuilder = currentLocationRequestBuilder.setMaxUpdateAgeMillis(0)
+        }
+        val currentLocationRequest = currentLocationRequestBuilder.build()
 
         logger.d("Requesting location")
 
@@ -53,10 +55,12 @@ internal class RadarGoogleLocationClient(
     ) {
         val priority = priorityForDesiredAccuracy(desiredAccuracy)
 
-        val locationRequest = LocationRequest.Builder(priority, interval * 1000L)
-            .setMaxUpdateAgeMillis(0)
+        var locationRequestBuilder = LocationRequest.Builder(priority, interval * 1000L)
             .setMinUpdateIntervalMillis(fastestInterval * 1000L)
-            .build()
+        if (desiredAccuracy == RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH) {
+            locationRequestBuilder = locationRequestBuilder.setMaxUpdateAgeMillis(0)
+        }
+        val locationRequest = locationRequestBuilder.build()
 
         locationClient.requestLocationUpdates(locationRequest, pendingIntent)
     }
