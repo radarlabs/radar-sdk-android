@@ -128,7 +128,7 @@ internal object RadarUtils {
         return displayManager.displays.size > 1
     }
 
-    internal fun hasVirtualInput(context: Context): Boolean {
+    internal fun hasVirtualInputDevice(context: Context): Boolean {
         return RadarSettings.getSharing(context)
     }
 

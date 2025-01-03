@@ -361,7 +361,6 @@ internal class RadarApiClient(
             params.putOpt("locationServicesProvider", RadarSettings.getLocationServicesProvider(context))
             params.putOpt("verified", verified)
             if (verified) {
-
                 params.putOpt("integrityToken", integrityToken)
                 params.putOpt("integrityException", integrityException)
                 params.putOpt("encrypted", encrypted)
@@ -374,7 +373,12 @@ internal class RadarApiClient(
                 val failureReasons = mutableListOf<String>()
                 if (RadarUtils.hasMultipleDisplays(context)) {
                     failureReasons.add("fraud_sharing_multiple_displays")
+                }
+                if (RadarUtils.hasVirtualInputDevice(context)) {
                     failureReasons.add("fraud_sharing_virtual_input_device")
+                }
+                if (failureReasons.isNotEmpty()) {
+                    params.putOpt("failureReasons", failureReasons.toTypedArray())
                 }
             }
             params.putOpt("appId", context.packageName)

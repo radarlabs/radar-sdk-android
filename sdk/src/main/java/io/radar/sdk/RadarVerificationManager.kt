@@ -405,7 +405,6 @@ internal class RadarVerificationManager(
         stringBuffer.append(location.latitude)
         stringBuffer.append(location.longitude)
         stringBuffer.append(location.isFromMockProvider)
-        stringBuffer.append(RadarUtils.isScreenSharing(this.context))
         return hashSHA256(stringBuffer.toString())
     }
 
