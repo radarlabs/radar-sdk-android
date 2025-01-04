@@ -363,13 +363,22 @@ internal class RadarApiClient(
             if (verified) {
                 params.putOpt("integrityToken", integrityToken)
                 params.putOpt("integrityException", integrityException)
-                params.putOpt("sharing", RadarUtils.isScreenSharing(context))
                 params.putOpt("encrypted", encrypted)
                 if (expectedCountryCode != null) {
                     params.putOpt("expectedCountryCode", expectedCountryCode)
                 }
                 if (expectedStateCode != null) {
                     params.putOpt("expectedStateCode", expectedStateCode)
+                }
+                val fraudFailureReasons = JSONArray()
+                if (RadarUtils.hasMultipleDisplays(context)) {
+                    fraudFailureReasons.put("fraud_sharing_multiple_displays")
+                }
+                if (RadarUtils.hasVirtualInputDevice(context)) {
+                    fraudFailureReasons.put("fraud_sharing_virtual_input_device")
+                }
+                if (fraudFailureReasons.length() > 0) {
+                    params.putOpt("fraudFailureReasons", fraudFailureReasons)
                 }
             }
             params.putOpt("appId", context.packageName)

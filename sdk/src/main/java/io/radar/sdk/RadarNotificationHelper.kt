@@ -54,7 +54,7 @@ class RadarNotificationHelper {
 
                     val notificationOptions = RadarSettings.getNotificationOptions(context);
 
-                    val iconString = notificationOptions?.getEventIcon()?: context.applicationContext.applicationInfo.icon.toString()
+                    val iconString = notificationOptions?.getEventIcon() ?: context.applicationContext.applicationInfo.icon.toString()
                     val smallIcon = context.applicationContext.resources.getIdentifier(iconString, "drawable", context.applicationContext.packageName)
 
                     val builder = NotificationCompat.Builder(context, CHANNEL_NAME)
@@ -64,7 +64,7 @@ class RadarNotificationHelper {
                         .setStyle(NotificationCompat.BigTextStyle().bigText(notificationText))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
-                    val iconColor = notificationOptions?.getEventColor()?: ""
+                    val iconColor = notificationOptions?.getEventColor() ?: ""
                     if (iconColor.isNotEmpty()) {
                         builder.setColor(Color.parseColor(iconColor))
                     }

@@ -22,12 +22,14 @@ class RadarLocationReceiver : BroadcastReceiver() {
         internal const val ACTION_SYNCED_GEOFENCES = "io.radar.sdk.LocationReceiver.SYNCED_GEOFENCES"
         internal const val ACTION_BEACON = "io.radar.sdk.LocationReceiver.BEACON"
         internal const val ACTION_ACTIVITY = "io.radar.sdk.LocationReceiver.ACTIVITY"
+        internal const val ACTION_VERIFIED_LOCATION = "io.radar.sdk.LocationReceiver.VERIFIED_LOCATION"
 
         private const val REQUEST_CODE_LOCATION = 201605250
         private const val REQUEST_CODE_BUBBLE_GEOFENCE = 201605251
         private const val REQUEST_CODE_SYNCED_GEOFENCES = 201605252
         private const val REQUEST_CODE_BEACON = 201605253
         private const val REQUEST_CODE_ACTIVITY = 201605254
+        private const val REQUEST_CODE_VERIFIED_LOCATION = 201605255
 
         internal fun getLocationPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
@@ -41,6 +43,23 @@ class RadarLocationReceiver : BroadcastReceiver() {
             return PendingIntent.getBroadcast(
                 context,
                 REQUEST_CODE_LOCATION,
+                intent,
+                flags
+            )
+        }
+
+        internal fun getVerifiedLocationPendingIntent(context: Context): PendingIntent {
+            val intent = baseIntent(context).apply {
+                action = ACTION_VERIFIED_LOCATION
+            }
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+            return PendingIntent.getBroadcast(
+                context,
+                REQUEST_CODE_VERIFIED_LOCATION,
                 intent,
                 flags
             )

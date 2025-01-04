@@ -123,16 +123,13 @@ internal object RadarUtils {
                 || Build.PRODUCT.contains("simulator");
     }
 
-    internal fun isScreenSharing(context: Context): Boolean {
-        if (Build.VERSION.SDK_INT < 17) {
-            return false
-        }
+    internal fun hasMultipleDisplays(context: Context): Boolean {
         val displayManager = DisplayManagerCompat.getInstance(context)
-        val multipleDisplays = displayManager.displays.size > 1
+        return displayManager.displays.size > 1
+    }
 
-        val sharing = RadarSettings.getSharing(context)
-
-        return multipleDisplays || sharing
+    internal fun hasVirtualInputDevice(context: Context): Boolean {
+        return RadarSettings.getSharing(context)
     }
 
     internal fun isoStringToDate(str: String?): Date? {

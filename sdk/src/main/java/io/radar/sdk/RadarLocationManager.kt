@@ -25,7 +25,7 @@ internal class RadarLocationManager(
     private val apiClient: RadarApiClient,
     private val logger: RadarLogger,
     private val batteryManager: RadarBatteryManager,
-    private val provider: Radar.RadarLocationServicesProvider,
+    provider: Radar.RadarLocationServicesProvider,
     internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper(),
 ) {
 
