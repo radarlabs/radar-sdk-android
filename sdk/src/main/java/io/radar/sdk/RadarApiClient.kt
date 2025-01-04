@@ -378,7 +378,11 @@ internal class RadarApiClient(
                     fraudFailureReasons.add("fraud_sharing_virtual_input_device")
                 }
                 if (fraudFailureReasons.isNotEmpty()) {
-                    params.putOpt("fraudFailureReasons", fraudFailureReasons.toTypedArray())
+                    val fraudFailureReasonsArr = JSONArray()
+                    for (fraudFailureReason in fraudFailureReasons) {
+                        fraudFailureReasonsArr.put(fraudFailureReason)
+                    }
+                    params.putOpt("fraudFailureReasons", fraudFailureReasonsArr)
                 }
             }
             params.putOpt("appId", context.packageName)

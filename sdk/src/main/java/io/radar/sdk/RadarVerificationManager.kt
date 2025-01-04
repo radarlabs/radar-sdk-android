@@ -405,6 +405,7 @@ internal class RadarVerificationManager(
         stringBuffer.append(location.latitude)
         stringBuffer.append(location.longitude)
         stringBuffer.append(location.isFromMockProvider)
+        stringBuffer.append(false)
         return hashSHA256(stringBuffer.toString())
     }
 
