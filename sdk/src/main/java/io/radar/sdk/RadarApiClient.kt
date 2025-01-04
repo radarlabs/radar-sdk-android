@@ -370,19 +370,15 @@ internal class RadarApiClient(
                 if (expectedStateCode != null) {
                     params.putOpt("expectedStateCode", expectedStateCode)
                 }
-                val fraudFailureReasons = mutableListOf<String>()
+                val fraudFailureReasons = JSONArray()
                 if (RadarUtils.hasMultipleDisplays(context)) {
-                    fraudFailureReasons.add("fraud_sharing_multiple_displays")
+                    fraudFailureReasons.put("fraud_sharing_multiple_displays")
                 }
                 if (RadarUtils.hasVirtualInputDevice(context)) {
-                    fraudFailureReasons.add("fraud_sharing_virtual_input_device")
+                    fraudFailureReasons.put("fraud_sharing_virtual_input_device")
                 }
-                if (fraudFailureReasons.isNotEmpty()) {
-                    val fraudFailureReasonsArr = JSONArray()
-                    for (fraudFailureReason in fraudFailureReasons) {
-                        fraudFailureReasonsArr.put(fraudFailureReason)
-                    }
-                    params.putOpt("fraudFailureReasons", fraudFailureReasonsArr)
+                if (fraudFailureReasons.length() > 0) {
+                    params.putOpt("fraudFailureReasons", fraudFailureReasons)
                 }
             }
             params.putOpt("appId", context.packageName)
