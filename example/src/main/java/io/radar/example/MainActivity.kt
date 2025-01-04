@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "org_test_pk_5857c63d9c1565175db8b00750808a66a002acb8", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
         Radar.sdkVersion().let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         createButton("startTrackingVerified") {
-            Radar.startTrackingVerified(10, false)
+            Radar.startTrackingVerified(60, false)
         }
 
         createButton("stopTrackingVerified") {

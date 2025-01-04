@@ -1133,7 +1133,7 @@ object Radar {
      * Optionally sets the user's expected country and state for jurisdiction checks.
      *
      * @param[countryCode] The user's expected country code.
-     * @param[countryCode] The user's expected country code.
+     * @param[stateCode] The user's expected state code.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
