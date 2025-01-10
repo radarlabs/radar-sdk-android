@@ -62,7 +62,7 @@ internal class RadarVerificationManager(
         }
     }
 
-    fun trackVerified(beacons: Boolean = false, callback: Radar.RadarTrackVerifiedCallback? = null) {
+    fun trackVerified(beacons: Boolean = false, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback: Radar.RadarTrackVerifiedCallback? = null) {
         val verificationManager = this
         val lastTokenBeacons = beacons
 
@@ -84,7 +84,7 @@ internal class RadarVerificationManager(
                 val googlePlayProjectNumber = config.googlePlayProjectNumber
 
                 Radar.locationManager.getLocation(
-                    RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH,
+                    desiredAccuracy,
                     Radar.RadarLocationSource.FOREGROUND_LOCATION,
                     object :
                         Radar.RadarLocationCallback {
@@ -239,48 +239,54 @@ internal class RadarVerificationManager(
             return
         }
 
-        verificationManager.trackVerified(verificationManager.startedBeacons, object : Radar.RadarTrackVerifiedCallback {
+        verificationManager.trackVerified(this.startedBeacons, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, object : Radar.RadarTrackVerifiedCallback {
             override fun onComplete(
                 status: Radar.RadarStatus,
                 token: RadarVerifiedLocationToken?
             ) {
-                var expiresIn = 0
-                var minInterval: Int = verificationManager.startedInterval
-
-                token?.let {
-                    expiresIn = it.expiresIn
-
-                    // if expiresIn is shorter than interval, override interval
-                    // re-request early to maximize the likelihood that a cached token is available
-                    minInterval = minOf(it.expiresIn - 10, verificationManager.startedInterval)
-                }
-
-                // min interval is 10 seconds
-                if (minInterval < 10) {
-                    minInterval = 10;
-                }
-
-                if (runnable == null) {
-                    runnable = Runnable {
-                        verificationManager.logger.d("Token request interval fired")
-
-                        callTrackVerified()
-                    }
-                }
-
-                runnable?.let {
-                    handler.removeCallbacks(it)
-
-                    if (!verificationManager.started) {
-                        return
-                    }
-
-                    verificationManager.logger.d("Requesting token again in $minInterval seconds | minInterval = $minInterval; expiresIn = $expiresIn; interval = ${verificationManager.startedInterval}")
-
-                    handler.postDelayed(it, minInterval * 1000L)
-                }
+                verificationManager.scheduleNextInterval(token)
             }
         })
+    }
+
+    fun scheduleNextInterval(token: RadarVerifiedLocationToken?) {
+        val verificationManager = this
+
+        var expiresIn = 0
+        var minInterval: Int = verificationManager.startedInterval
+
+        token?.let {
+            expiresIn = it.expiresIn
+
+            // if expiresIn is shorter than interval, override interval
+            // re-request early to maximize the likelihood that a cached token is available
+            minInterval = minOf(it.expiresIn - 10, verificationManager.startedInterval)
+        }
+
+        // min interval is 10 seconds
+        if (minInterval < 10) {
+            minInterval = 10;
+        }
+
+        if (runnable == null) {
+            runnable = Runnable {
+                verificationManager.logger.d("Token request interval fired")
+
+                callTrackVerified()
+            }
+        }
+
+        runnable?.let {
+            handler.removeCallbacks(it)
+
+            if (!verificationManager.started) {
+                return
+            }
+
+            verificationManager.logger.d("Requesting token again in $minInterval seconds | minInterval = $minInterval; expiresIn = $expiresIn; interval = ${verificationManager.startedInterval}")
+
+            handler.postDelayed(it, minInterval * 1000L)
+        }
     }
 
     fun startTrackingVerified(interval: Int, beacons: Boolean) {
@@ -345,7 +351,11 @@ internal class RadarVerificationManager(
             Radar.locationManager.locationClient.requestLocationUpdates(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, 0, 0, RadarLocationReceiver.getVerifiedLocationPendingIntent(context))
         }
 
-        callTrackVerified()
+        if (this.isLastTokenValid()) {
+            this.scheduleNextInterval(this.lastToken)
+        } else {
+            callTrackVerified()
+        }
     }
 
     fun stopTrackingVerified() {
@@ -368,30 +378,39 @@ internal class RadarVerificationManager(
         }
     }
 
-    fun getVerifiedLocationToken(callback: Radar.RadarTrackVerifiedCallback? = null) {
-        val lastTokenElapsed = (SystemClock.elapsedRealtime() - this.lastTokenElapsedRealtime) / 1000
+    fun getVerifiedLocationToken(beacons: Boolean, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, callback: Radar.RadarTrackVerifiedCallback? = null) {
+        if (this.isLastTokenValid()) {
+            Radar.flushLogs()
 
-        if (this.lastToken != null) {
-            this.lastToken?.let {
-                val lastDistanceToStateBorder = it.user.state?.distanceToBorder ?: -1.0
+            callback?.onComplete(Radar.RadarStatus.SUCCESS, this.lastToken)
 
-                if (lastTokenElapsed < it.expiresIn && it.passed && lastDistanceToStateBorder > 1609) {
-                    Radar.logger.d("Last token valid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}; lastDistanceToStateBorder = $lastDistanceToStateBorder")
-
-                    Radar.flushLogs()
-
-                    callback?.onComplete(Radar.RadarStatus.SUCCESS, it)
-
-                    return
-                }
-
-                Radar.logger.d("Last token invalid | lastToken.expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${it.passed}; lastDistanceToStateBorder = $lastDistanceToStateBorder")
-            }
-        } else {
-            Radar.logger.d("No last token")
+            return
         }
 
-        this.trackVerified(this.lastTokenBeacons, callback)
+        this.trackVerified(beacons, desiredAccuracy, callback)
+    }
+
+    fun clearVerifiedLocationToken() {
+        this.lastToken = null
+    }
+
+    fun isLastTokenValid(): Boolean {
+        val lastToken = this.lastToken ?: return false
+
+        val lastTokenElapsed = (SystemClock.elapsedRealtime() - this.lastTokenElapsedRealtime) / 1000
+        val lastDistanceToStateBorder = lastToken.user.state?.distanceToBorder ?: -1.0
+
+        val lastTokenValid = lastTokenElapsed < lastToken.expiresIn && lastToken.passed && lastDistanceToStateBorder > 1609
+
+        if (lastTokenValid) {
+            Radar.logger.d("Last token valid | lastToken.expiresIn = ${lastToken.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${lastToken.passed}; lastDistanceToStateBorder = $lastDistanceToStateBorder")
+
+            Radar.flushLogs()
+        } else {
+            Radar.logger.d("Last token invalid | lastToken.expiresIn = ${lastToken.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${lastToken.passed}; lastDistanceToStateBorder = $lastDistanceToStateBorder")
+        }
+
+        return lastTokenValid
     }
 
     fun setExpectedJurisdiction(countryCode: String?, stateCode: String?) {
