@@ -1004,7 +1004,7 @@ object Radar {
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerified(beacons: Boolean = false, callback: RadarTrackVerifiedCallback? = null) {
+    fun trackVerified(beacons: Boolean = false, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback: RadarTrackVerifiedCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1016,7 +1016,7 @@ object Radar {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        this.verificationManager.trackVerified(beacons, callback)
+        this.verificationManager.trackVerified(beacons, desiredAccuracy, callback)
     }
 
     /**
@@ -1031,8 +1031,8 @@ object Radar {
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerified(beacons: Boolean = false, block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
-        trackVerified(beacons, object : RadarTrackVerifiedCallback {
+    fun trackVerified(beacons: Boolean = false, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
+        trackVerified(beacons, desiredAccuracy, object : RadarTrackVerifiedCallback {
             override fun onComplete(status: RadarStatus, token: RadarVerifiedLocationToken?) {
                 block(status, token)
             }
@@ -1091,43 +1091,13 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
-     * @param[callback] An optional callback.
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @JvmStatic
-    fun getVerifiedLocationToken(callback: RadarTrackVerifiedCallback? = null) {
-        getVerifiedLocationToken(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback)
-    }
-
-    /**
-     * Returns the user's last verified location token if still valid, or requests a fresh token if not.
-     *
-     * Note that you must configure SSL pinning before calling this method.
-     *
-     * @see [](https://radar.com/documentation/fraud)
-     *
-     * @param[block] A block callback.
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @JvmStatic
-    fun getVerifiedLocationToken(block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
-        getVerifiedLocationToken(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, block)
-    }
-
-    /**
-     * Returns the user's last verified location token if still valid, or requests a fresh token if not.
-     *
-     * Note that you must configure SSL pinning before calling this method.
-     *
-     * @see [](https://radar.com/documentation/fraud)
-     *
      * @param[beacons] A boolean indicating whether to range beacons.
      * @param[desiredAccuracy] The desired accuracy.
      * @param[callback] An optional callback.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun getVerifiedLocationToken(beacons: Boolean, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, callback: RadarTrackVerifiedCallback? = null) {
+    fun getVerifiedLocationToken(beacons: Boolean = false, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback: RadarTrackVerifiedCallback? = null) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1155,7 +1125,7 @@ object Radar {
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun getVerifiedLocationToken(beacons: Boolean, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
+    fun getVerifiedLocationToken(beacons: Boolean = false, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
         getVerifiedLocationToken(beacons, desiredAccuracy, object : RadarTrackVerifiedCallback {
             override fun onComplete(status: RadarStatus, token: RadarVerifiedLocationToken?) {
                 block(status, token)
