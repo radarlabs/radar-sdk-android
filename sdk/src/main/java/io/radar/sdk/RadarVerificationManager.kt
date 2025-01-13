@@ -244,23 +244,27 @@ internal class RadarVerificationManager(
                 status: Radar.RadarStatus,
                 token: RadarVerifiedLocationToken?
             ) {
-                verificationManager.scheduleNextInterval(token)
+                verificationManager.scheduleNextIntervalWithLastToken()
             }
         })
     }
 
-    fun scheduleNextInterval(token: RadarVerifiedLocationToken?) {
+    fun scheduleNextIntervalWithLastToken() {
         val verificationManager = this
 
         var expiresIn = 0
         var minInterval: Int = verificationManager.startedInterval
 
-        token?.let {
+        this.lastToken?.let {
             expiresIn = it.expiresIn
+
+            val lastTokenElapsed = (SystemClock.elapsedRealtime() - this.lastTokenElapsedRealtime).toInt() / 1000
 
             // if expiresIn is shorter than interval, override interval
             // re-request early to maximize the likelihood that a cached token is available
-            minInterval = minOf(it.expiresIn - 10, verificationManager.startedInterval)
+            minInterval = minOf(it.expiresIn - 10 - lastTokenElapsed, verificationManager.startedInterval)
+
+            verificationManager.logger.d("Calculated next interval | minInterval = $minInterval; expiresIn = $expiresIn; lastTokenElapsed = $lastTokenElapsed; startedInterval = ${verificationManager.startedInterval}")
         }
 
         // min interval is 10 seconds
@@ -283,7 +287,7 @@ internal class RadarVerificationManager(
                 return
             }
 
-            verificationManager.logger.d("Requesting token again in $minInterval seconds | minInterval = $minInterval; expiresIn = $expiresIn; interval = ${verificationManager.startedInterval}")
+            verificationManager.logger.d("Requesting token again in $minInterval seconds")
 
             handler.postDelayed(it, minInterval * 1000L)
         }
@@ -352,7 +356,7 @@ internal class RadarVerificationManager(
         }
 
         if (this.isLastTokenValid()) {
-            this.scheduleNextInterval(this.lastToken)
+            this.scheduleNextIntervalWithLastToken()
         } else {
             callTrackVerified()
         }
