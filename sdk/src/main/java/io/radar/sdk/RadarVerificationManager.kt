@@ -261,7 +261,7 @@ internal class RadarVerificationManager(
             // re-request early to maximize the likelihood that a cached token is available
             minInterval = minOf(it.expiresIn - lastTokenElapsed, verificationManager.startedInterval)
 
-            verificationManager.logger.d("Calculated next interval | minInterval = $minInterval; expiresIn = $expiresIn; lastTokenElapsed = $lastTokenElapsed; startedInterval = ${verificationManager.startedInterval}")
+            verificationManager.logger.d("Calculated next interval | minInterval = $minInterval; expiresIn = ${it.expiresIn}; lastTokenElapsed = $lastTokenElapsed; startedInterval = ${verificationManager.startedInterval}")
         }
 
         var interval = minInterval - 10
