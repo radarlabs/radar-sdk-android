@@ -999,6 +999,36 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
+     * @param[callback] An optional callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun trackVerified(callback: RadarTrackVerifiedCallback? = null) {
+        trackVerified(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback)
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[block] A block callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun trackVerified(block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
+        trackVerified(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, block)
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
      * @param[beacons] A boolean indicating whether to range beacons.
      * @param[callback] An optional callback.
      */
@@ -1082,6 +1112,36 @@ object Radar {
         }
 
         this.verificationManager.stopTrackingVerified()
+    }
+
+    /**
+     * Returns the user's last verified location token if still valid, or requests a fresh token if not.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[callback] An optional callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun getVerifiedLocationToken(callback: RadarTrackVerifiedCallback? = null) {
+        getVerifiedLocationToken(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback)
+    }
+
+    /**
+     * Returns the user's last verified location token if still valid, or requests a fresh token if not.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[block] A block callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun getVerifiedLocationToken(block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
+        getVerifiedLocationToken(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, block)
     }
 
     /**
