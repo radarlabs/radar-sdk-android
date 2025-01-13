@@ -252,24 +252,23 @@ internal class RadarVerificationManager(
     fun scheduleNextIntervalWithLastToken() {
         val verificationManager = this
 
-        var expiresIn = 0
         var minInterval: Int = verificationManager.startedInterval
 
         this.lastToken?.let {
-            expiresIn = it.expiresIn
-
             val lastTokenElapsed = (SystemClock.elapsedRealtime() - this.lastTokenElapsedRealtime).toInt() / 1000
 
             // if expiresIn is shorter than interval, override interval
             // re-request early to maximize the likelihood that a cached token is available
-            minInterval = minOf(it.expiresIn - 10 - lastTokenElapsed, verificationManager.startedInterval)
+            minInterval = minOf(it.expiresIn - lastTokenElapsed, verificationManager.startedInterval)
 
             verificationManager.logger.d("Calculated next interval | minInterval = $minInterval; expiresIn = $expiresIn; lastTokenElapsed = $lastTokenElapsed; startedInterval = ${verificationManager.startedInterval}")
         }
 
+        var interval = minInterval - 10
+
         // min interval is 10 seconds
-        if (minInterval < 10) {
-            minInterval = 10;
+        if (interval < 10) {
+            interval = 10
         }
 
         if (runnable == null) {
@@ -287,9 +286,9 @@ internal class RadarVerificationManager(
                 return
             }
 
-            verificationManager.logger.d("Requesting token again in $minInterval seconds")
+            verificationManager.logger.d("Requesting token again in $interval seconds")
 
-            handler.postDelayed(it, minInterval * 1000L)
+            handler.postDelayed(it, interval * 1000L)
         }
     }
 
