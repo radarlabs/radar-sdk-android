@@ -56,22 +56,31 @@ class RadarTimeZone(
             if (obj == null) {
                 return null
             }
-            val id = obj.getString("id")
-            val name = obj.getString("name")
-            val code = obj.getString("code")
-            val currentTime = obj.getString("currentTime")
-            val utcOffset = obj.getInt("utcOffset")
-            val dstOffset = obj.getInt("dstOffset")
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.US)
-
-            return RadarTimeZone(
-                id,
-                name,
-                code,
-                dateFormat.parse(currentTime)!!,
-                utcOffset,
-                dstOffset,
-            )
+            return try {
+                val id = obj.getString("id")
+                val name = obj.getString("name")
+                val code = obj.getString("code")
+                val currentTime = obj.getString("currentTime")
+                val utcOffset = obj.getInt("utcOffset")
+                val dstOffset = obj.getInt("dstOffset")
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.US)
+                val currentTimeStr = obj.getString(FIELD_CURRENT_TIME)
+                val parsedDate = RadarUtils.isoStringToDate(currentTimeStr)
+                if (parsedDate == null) {
+                    return null
+                }
+    
+                return RadarTimeZone(
+                    id,
+                    name,
+                    code,
+                    currentTime = parsedDate,
+                    utcOffset,
+                    dstOffset,
+                )
+            } catch (e: Exception) {
+                null
+            }
         }
     }
 
