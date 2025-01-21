@@ -1371,8 +1371,8 @@ class RadarTest {
         val timeZoneJson = address?.timeZone?.toJson()
         val formattedTime = timeZoneJson?.optString("currentTime")
         assertNotNull(formattedTime)
-        assertTrue("NYC time should end with -05:00 offset but was: $formattedTime", 
-            formattedTime != null && formattedTime.toString().endsWith("-05:00"))
+        assertTrue("NYC time should end with -0500 offset but was: $formattedTime", 
+            formattedTime != null && formattedTime.toString().endsWith("-0500"))
     }
 
     @Test
@@ -1423,8 +1423,8 @@ class RadarTest {
         val timeZoneJson = address?.timeZone?.toJson()
         val formattedTime = timeZoneJson?.optString("currentTime")
         assertNotNull(formattedTime)
-        assertTrue("London time should end with Z but was: $formattedTime", 
-            formattedTime != null && formattedTime.toString().endsWith("Z"))
+        assertTrue("London time should end with +0000 but was: $formattedTime", 
+            formattedTime != null && formattedTime.toString().endsWith("+0000"))
     }
 
     @Test
