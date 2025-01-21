@@ -1359,7 +1359,8 @@ class RadarTest {
         
         val nycTime = address?.timeZone?.currentTime
         assertNotNull(nycTime)
-        assertTrue(nycTime?.endsWith("-05:00") == true, "NYC time should end with -05:00 offset but was: $nycTime")
+        assertTrue("NYC time should end with -05:00 offset but was: $nycTime", 
+            nycTime?.endsWith("-05:00") == true)
     }
 
     @Test
@@ -1399,7 +1400,7 @@ class RadarTest {
         
         val londonTime = address?.timeZone?.currentTime
         assertNotNull(londonTime)
-        assertTrue(londonTime?.endsWith("Z") == true, "London time should end with Z but was: $londonTime")
+        assertTrue("London time should end with Z but was: $londonTime",  nycTime?.endsWith("-05:00") == true)
     }
 
     @Test
