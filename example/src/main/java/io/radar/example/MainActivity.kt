@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+        Radar.initialize(this, "prj_test_pk_84f0d253be122d675cadaf411fa75ec30c621c80", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
         Radar.sdkVersion().let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
@@ -232,7 +232,18 @@ class MainActivity : AppCompatActivity() {
             Radar.reverseGeocode(reverseGeocodeLocation) { status, addresses ->
                 Log.v(
                     "example",
-                    "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}"
+                    "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}, timeZone = ${addresses?.first()?.timeZone?.toJson()}"
+                )
+            }
+
+            val reverseGeocodeLocationLondon = Location("example")
+            reverseGeocodeLocationLondon.latitude = 51.5074
+            reverseGeocodeLocationLondon.longitude = -0.1278
+            
+            Radar.reverseGeocode(reverseGeocodeLocationLondon) { status, addresses ->
+                Log.v(
+                    "example",
+                    "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}, timeZone = ${addresses?.first()?.timeZone?.toJson()}"
                 )
             }
 

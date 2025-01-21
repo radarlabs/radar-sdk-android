@@ -16,6 +16,7 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.time.Instant
+import java.time.ZonedDateTime
 import kotlin.math.abs
 
 internal object RadarUtils {
@@ -137,15 +138,18 @@ internal object RadarUtils {
         if (str == null) {
             return null
         }
-        try {
-            // First try parsing with java.time.Instant which handles ISO 8601 robustly
-            return Date.from(Instant.parse(str))
+
+        return try {
+            Date.from(ZonedDateTime.parse(str).toInstant())
+        } catch (e: Exception) {
+            Date.from(Instant.parse(str))
         } catch (e: Exception) {
             val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
             dateFormat.timeZone = TimeZone.getTimeZone("UTC")
             try {
                 return dateFormat.parse(str)
             } catch (pe: ParseException) {
+                Log.d("RadarUtils", "isoStringToDate: ParseException: $pe")
                 return null;
             }
         }

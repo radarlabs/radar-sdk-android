@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import android.util.Log
 
 /**
  * Represents a time zone.
@@ -66,7 +67,11 @@ class RadarTimeZone(
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.US)
                 val currentTimeStr = obj.getString(FIELD_CURRENT_TIME)
                 val parsedDate = RadarUtils.isoStringToDate(currentTimeStr)
+                // log the parsed date
+                Log.d("RadarTimeZone", "Parsed date: $parsedDate")
+                
                 if (parsedDate == null) {
+                    Log.d("RadarTimeZone", "Parsed date is null")
                     return null
                 }
     
