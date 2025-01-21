@@ -84,12 +84,21 @@ class RadarTimeZone(
         obj.putOpt(FIELD_ID, id)
         obj.putOpt(FIELD_NAME, name)
         obj.putOpt(FIELD_CODE, code)
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US)
         
+        // Create formatter based on the timezone offset
+        val dateFormat = if (utcOffset == 0) {
+            // For UTC/GMT times, use 'Z' format
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+        } else {
+            // For offset times, use ZZZZZ format
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.US)
+        }
+        
+        // Set the timezone based on the id and offset
         val tz = if (utcOffset == 0) {
             TimeZone.getTimeZone("UTC")
         } else {
-            TimeZone.getTimeZone(id)  // Use the timezone ID (e.g. "America/New_York")
+            TimeZone.getTimeZone(id)
         }
         dateFormat.timeZone = tz
         
