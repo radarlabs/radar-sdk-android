@@ -84,7 +84,13 @@ class RadarTimeZone(
         obj.putOpt(FIELD_ID, id)
         obj.putOpt(FIELD_NAME, name)
         obj.putOpt(FIELD_CODE, code)
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.US)
+        
+        // First get the timezone from the id to ensure correct offset
+        val tz = TimeZone.getTimeZone(id)
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.US).apply {
+            timeZone = tz  // This is crucial - set the timezone before formatting
+        }
+        
         obj.putOpt(FIELD_CURRENT_TIME, dateFormat.format(currentTime))
         obj.putOpt(FIELD_UTC_OFFSET, utcOffset)
         obj.putOpt(FIELD_DST_OFFSET, dstOffset)
