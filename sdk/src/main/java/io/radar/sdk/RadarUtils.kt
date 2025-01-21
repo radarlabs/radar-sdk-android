@@ -142,7 +142,7 @@ internal object RadarUtils {
         try {
             return Date.from(ZonedDateTime.parse(str).toInstant())
         } catch (e: Exception) {
-            // Finally try SimpleDateFormat
+            // Fall back to old date format
             val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
             dateFormat.timeZone = TimeZone.getTimeZone("UTC")
             return try {
