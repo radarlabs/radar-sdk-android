@@ -138,19 +138,17 @@ internal object RadarUtils {
         if (str == null) {
             return null
         }
-
-        return try {
-            Date.from(ZonedDateTime.parse(str).toInstant())
+    
+        try {
+            return Date.from(ZonedDateTime.parse(str).toInstant())
         } catch (e: Exception) {
-            Date.from(Instant.parse(str))
-        } catch (e: Exception) {
+            // Finally try SimpleDateFormat
             val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
             dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-            try {
-                return dateFormat.parse(str)
+            return try {
+                dateFormat.parse(str)
             } catch (pe: ParseException) {
-                Log.d("RadarUtils", "isoStringToDate: ParseException: $pe")
-                return null;
+                null
             }
         }
     }

@@ -8,7 +8,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import android.util.Log
 
 /**
  * Represents a time zone.
@@ -61,20 +60,11 @@ class RadarTimeZone(
                 val id = obj.getString("id")
                 val name = obj.getString("name")
                 val code = obj.getString("code")
-                val currentTime = obj.getString("currentTime")
                 val utcOffset = obj.getInt("utcOffset")
                 val dstOffset = obj.getInt("dstOffset")
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.US)
                 val currentTimeStr = obj.getString(FIELD_CURRENT_TIME)
-                val parsedDate = RadarUtils.isoStringToDate(currentTimeStr)
-                // log the parsed date
-                Log.d("RadarTimeZone", "Parsed date: $parsedDate")
-                
-                if (parsedDate == null) {
-                    Log.d("RadarTimeZone", "Parsed date is null")
-                    return null
-                }
-    
+                val parsedDate = RadarUtils.isoStringToDate(currentTimeStr) ?: return null
+
                 return RadarTimeZone(
                     id,
                     name,
@@ -94,7 +84,15 @@ class RadarTimeZone(
         obj.putOpt(FIELD_ID, id)
         obj.putOpt(FIELD_NAME, name)
         obj.putOpt(FIELD_CODE, code)
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.US)
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US)
+        
+        val tz = if (utcOffset == 0) {
+            TimeZone.getTimeZone("UTC")
+        } else {
+            TimeZone.getTimeZone(id)  // Use the timezone ID (e.g. "America/New_York")
+        }
+        dateFormat.timeZone = tz
+        
         obj.putOpt(FIELD_CURRENT_TIME, dateFormat.format(currentTime))
         obj.putOpt(FIELD_UTC_OFFSET, utcOffset)
         obj.putOpt(FIELD_DST_OFFSET, dstOffset)
