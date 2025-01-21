@@ -85,24 +85,27 @@ class RadarTimeZone(
         obj.putOpt(FIELD_NAME, name)
         obj.putOpt(FIELD_CODE, code)
         
-        // Create formatter based on the timezone offset
-        val dateFormat = if (utcOffset == 0) {
+
+        if (utcOffset == 0) {
             // For UTC/GMT times, use 'Z' format
-            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+            obj.putOpt(FIELD_CURRENT_TIME, dateFormat.format(currentTime))
         } else {
-            // For offset times, use ZZZZZ format
-            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.US)
+            // For offset times, first format without timezone
+            val baseFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
+            baseFormat.timeZone = TimeZone.getTimeZone(id)
+            
+            // Then manually append the timezone with colon
+            val offsetFormat = SimpleDateFormat("Z", Locale.US)
+            offsetFormat.timeZone = TimeZone.getTimeZone(id)
+            val offset = offsetFormat.format(currentTime)
+            // Insert colon between hours and minutes of timezone offset
+            val formattedOffset = "${offset.substring(0, 3)}:${offset.substring(3)}"
+            
+            obj.putOpt(FIELD_CURRENT_TIME, "${baseFormat.format(currentTime)}${formattedOffset}")
         }
         
-        // Set the timezone based on the id and offset
-        val tz = if (utcOffset == 0) {
-            TimeZone.getTimeZone("UTC")
-        } else {
-            TimeZone.getTimeZone(id)
-        }
-        dateFormat.timeZone = tz
-        
-        obj.putOpt(FIELD_CURRENT_TIME, dateFormat.format(currentTime))
         obj.putOpt(FIELD_UTC_OFFSET, utcOffset)
         obj.putOpt(FIELD_DST_OFFSET, dstOffset)
         return obj

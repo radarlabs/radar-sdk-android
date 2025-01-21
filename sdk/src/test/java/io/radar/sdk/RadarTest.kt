@@ -1357,10 +1357,22 @@ class RadarTest {
         assertEquals(-18000, address?.timeZone?.utcOffset)
         assertEquals(0, address?.timeZone?.dstOffset)
         
-        val nycTime = address?.timeZone?.currentTime
-        assertNotNull(nycTime)
-        assertTrue("NYC time should end with -05:00 offset but was: $nycTime", 
-            nycTime?.endsWith("-05:00") == true)
+        // Test the Date object
+        val timeZoneDate = address?.timeZone?.currentTime
+        assertNotNull(timeZoneDate)
+        // January 21, 2025 12:19:23 EST
+        val expectedTime = Calendar.getInstance(TimeZone.getTimeZone("America/New_York")).apply {
+            set(2025, Calendar.JANUARY, 21, 12, 19, 23)
+            set(Calendar.MILLISECOND, 0)
+        }.time
+        assertEquals(expectedTime, timeZoneDate)
+        
+        // Test the formatted string representation
+        val timeZoneJson = address?.timeZone?.toJson()
+        val formattedTime = timeZoneJson?.optString("currentTime")
+        assertNotNull(formattedTime)
+        assertTrue("NYC time should end with -05:00 offset but was: $formattedTime", 
+            formattedTime != null && formattedTime.toString().endsWith("-05:00"))
     }
 
     @Test
@@ -1387,7 +1399,6 @@ class RadarTest {
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertAddressesOk(callbackAddresses)
         
         // Add timezone verification
         val address = callbackAddresses?.get(0)
@@ -1398,9 +1409,22 @@ class RadarTest {
         assertEquals(0, address?.timeZone?.utcOffset)
         assertEquals(0, address?.timeZone?.dstOffset)
         
-        val londonTime = address?.timeZone?.currentTime
-        assertNotNull(londonTime)
-        assertTrue("London time should end with Z but was: $londonTime",  nycTime?.endsWith("-05:00") == true)
+        // Test the Date object
+        val timeZoneDate = address?.timeZone?.currentTime
+        assertNotNull(timeZoneDate)
+        // January 21, 2025 17:22:19 UTC
+        val expectedTime = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            set(2025, Calendar.JANUARY, 21, 17, 22, 19)
+            set(Calendar.MILLISECOND, 0)
+        }.time
+        assertEquals(expectedTime, timeZoneDate)
+        
+        // Test the formatted string representation
+        val timeZoneJson = address?.timeZone?.toJson()
+        val formattedTime = timeZoneJson?.optString("currentTime")
+        assertNotNull(formattedTime)
+        assertTrue("London time should end with Z but was: $formattedTime", 
+            formattedTime != null && formattedTime.toString().endsWith("Z"))
     }
 
     @Test
