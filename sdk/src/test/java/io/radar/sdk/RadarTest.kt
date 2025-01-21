@@ -1347,6 +1347,59 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertAddressesOk(callbackAddresses)
+        
+        // Add timezone verification
+        val address = callbackAddresses?.get(0)
+        assertNotNull(address?.timeZone)
+        assertEquals("America/New_York", address?.timeZone?.id)
+        assertEquals("Eastern Standard Time", address?.timeZone?.name)
+        assertEquals("EST", address?.timeZone?.code)
+        assertEquals(-18000, address?.timeZone?.utcOffset)
+        assertEquals(0, address?.timeZone?.dstOffset)
+        
+        val nycTime = address?.timeZone?.currentTime
+        assertNotNull(nycTime)
+        assertTrue(nycTime?.endsWith("-05:00") == true, "NYC time should end with -05:00 offset but was: $nycTime")
+    }
+
+    @Test
+    fun test_Radar_reverseGeocode_london_location_success() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/geocode_london.json")
+
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 51.5074
+        mockLocation.longitude = -0.1278
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackAddresses: Array<RadarAddress>? = null
+
+        Radar.reverseGeocode(mockLocation) { status, addresses ->
+            callbackStatus = status
+            callbackAddresses = addresses
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertAddressesOk(callbackAddresses)
+        
+        // Add timezone verification
+        val address = callbackAddresses?.get(0)
+        assertNotNull(address?.timeZone)
+        assertEquals("Europe/London", address?.timeZone?.id)
+        assertEquals("Greenwich Mean Time", address?.timeZone?.name)
+        assertEquals("GMT", address?.timeZone?.code)
+        assertEquals(0, address?.timeZone?.utcOffset)
+        assertEquals(0, address?.timeZone?.dstOffset)
+        
+        val londonTime = address?.timeZone?.currentTime
+        assertNotNull(londonTime)
+        assertTrue(londonTime?.endsWith("Z") == true, "London time should end with Z but was: $londonTime")
     }
 
     @Test

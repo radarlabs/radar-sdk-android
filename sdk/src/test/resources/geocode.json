@@ -27,7 +27,15 @@
          "street": "Jay Street",
          "number": "20",
          "addressLabel": "20 Jay Street",
-         "confidence": "exact"
+         "confidence": "exact",
+         "timeZone": {
+            "id": "America/New_York",
+            "name": "Eastern Standard Time",
+            "code": "EST",
+            "currentTime": "2025-01-21T12:19:23-05:00",
+            "utcOffset": -18000,
+            "dstOffset": 0
+          }
       }
    ]
 }
