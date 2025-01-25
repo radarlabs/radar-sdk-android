@@ -11,6 +11,8 @@ apply plugin: 'io.radar.mvnpublish'
 
 ext {
     radarVersion = '3.20.0'
+    playServicesLocationVersionDefault = '21.0.1'
+    playServicesLocationVersion18 = '18.0.0'
 }
 
 String buildNumber = ".${System.currentTimeMillis()}"
@@ -43,6 +45,16 @@ android {
         targetSdkVersion 34
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
         multiDexEnabled = true
+        missingDimensionStrategy "play", "playDefault"
+    }
+    flavorDimensions "play"
+    productFlavors {
+        playDefault {
+            dimension "play"
+        }
+        play18 {
+            dimension "play"
+        }
     }
     buildTypes {
         release {
@@ -66,7 +78,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "androidx.appcompat:appcompat:1.4.0"
     implementation "androidx.core:core-ktx:1.7.0"
-    implementation "com.google.android.gms:play-services-location:21.0.1"
+    playDefaultImplementation "com.google.android.gms:play-services-location:${playServicesLocationVersionDefault}"
+    play18Implementation "com.google.android.gms:play-services-location:${playServicesLocationVersion18}"
     implementation "androidx.activity:activity:1.2.0"
     implementation "androidx.fragment:fragment:1.3.0"
     compileOnly "com.huawei.hms:location:6.4.0.300"
@@ -115,7 +128,17 @@ mvnpublish {
         group = 'io.radar'
         artifactId = 'sdk'
         version = "$radarVersion$buildNumber"
-        artifacts = ["$buildDir/outputs/aar/$project.name-release.aar", androidSourcesJar, androidJavadocsJar]
+        artifacts = ["$buildDir/outputs/aar/$project.name-playDefault-release.aar", androidSourcesJar, androidJavadocsJar]
+        server = isSnapshot ? MavenServer.SNAPSHOT : MavenServer.RELEASE
+    }
+    publication {
+        name = 'Radar Android SDK'
+        description = 'Android SDK for Radar, the leading geofencing and location tracking platform'
+        repositoryName = 'radar-sdk-android'
+        group = 'io.radar'
+        artifactId = 'sdk-play18'
+        version = "$radarVersion$buildNumber"
+        artifacts = ["$buildDir/outputs/aar/$project.name-play18-release.aar", androidSourcesJar, androidJavadocsJar]
         server = isSnapshot ? MavenServer.SNAPSHOT : MavenServer.RELEASE
     }
 }
