@@ -10,7 +10,7 @@ apply plugin: "org.jetbrains.dokka"
 apply plugin: 'io.radar.mvnpublish'
 
 ext {
-    radarVersion = '3.20.0'
+    radarVersion = '3.20.1-beta.1'
     playServicesLocationVersionDefault = '21.0.1'
     playServicesLocationVersion18 = '18.0.0'
 }
