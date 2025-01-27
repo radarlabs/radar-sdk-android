@@ -1,6 +1,6 @@
 # Migration guides
 
-## 3.19.x to 3.20.x
+## 3.20.x to 3.21.x
 - The `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, limit, callback)` is now  `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, countryCodes, limit, callback)`. See [documentation](https://radar.com/documentation/sdk/android#search).
 
 ## 3.12.x to 3.13.x
