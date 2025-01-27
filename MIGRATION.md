@@ -1,5 +1,8 @@
 # Migration guides
 
+## 3.20.x to 3.21.x
+- The `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, limit, callback)` is now  `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, countryCodes, limit, callback)`. See [documentation](https://radar.com/documentation/sdk/android#search).
+
 ## 3.12.x to 3.13.x
 -  The `Radar.trackVerified()` method now returns `token: RadarVerifiedLocationToken`, which includes `user`, `events`, `token,`, `expiresAt`, `expiresIn`, and `passed`. The `Radar.trackVerifiedToken()` method has been removed, since `Radar.trackVerified()` now returns a signed JWT.
 

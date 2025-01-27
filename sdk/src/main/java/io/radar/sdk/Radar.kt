@@ -1869,6 +1869,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -1878,10 +1879,11 @@ object Radar {
         chains: Array<String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
-        searchPlaces(radius, chains, null, categories, groups, limit, callback)
+        searchPlaces(radius, chains, null, categories, groups, countryCodes, limit, callback)
     }
 
     /**
@@ -1895,6 +1897,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -1905,6 +1908,7 @@ object Radar {
         chainMetadata: Map<String, String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
@@ -1925,7 +1929,7 @@ object Radar {
                     return
                 }
 
-                apiClient.searchPlaces(location, radius, chains, chainMetadata, categories, groups, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
+                apiClient.searchPlaces(location, radius, chains, chainMetadata, categories, groups, countryCodes, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, places: Array<RadarPlace>?) {
                         handler.post {
                             callback.onComplete(status, location, places)
@@ -1945,6 +1949,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -1953,10 +1958,11 @@ object Radar {
         chains: Array<String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
     ) {
-        searchPlaces(radius, chains, null, categories, groups, limit, block)
+        searchPlaces(radius, chains, null, categories, groups, countryCodes, limit, block)
     }
 
     /**
@@ -1970,6 +1976,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -1979,6 +1986,7 @@ object Radar {
         chainMetadata: Map<String, String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
     ) {
@@ -1988,6 +1996,7 @@ object Radar {
             chainMetadata,
             categories,
             groups,
+            countryCodes,
             limit,
             object : RadarSearchPlacesCallback {
                 override fun onComplete(status: RadarStatus, location: Location?, places: Array<RadarPlace>?) {
@@ -2007,6 +2016,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -2017,10 +2027,11 @@ object Radar {
         chains: Array<String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
-        searchPlaces(near, radius, chains, null, categories, groups, limit, callback)
+        searchPlaces(near, radius, chains, null, categories, groups, countryCodes, limit, callback)
     }
 
     /**
@@ -2035,6 +2046,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -2046,6 +2058,7 @@ object Radar {
         chainMetadata: Map<String, String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
@@ -2056,7 +2069,7 @@ object Radar {
         }
         this.logger.i("searchPlaces()", RadarLogType.SDK_CALL)
 
-        apiClient.searchPlaces(near, radius, chains, chainMetadata, categories, groups, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
+        apiClient.searchPlaces(near, radius, chains, chainMetadata, categories, groups, countryCodes, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, places: Array<RadarPlace>?) {
                 handler.post {
                     callback.onComplete(status, near, places)
@@ -2075,6 +2088,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -2084,10 +2098,11 @@ object Radar {
         chains: Array<String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
     ) {
-        searchPlaces(near, radius, chains, null, categories, groups, limit, block)
+        searchPlaces(near, radius, chains, null, categories, groups, countryCodes, limit, block)
     }
 
     /**
@@ -2102,6 +2117,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)     
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -2112,6 +2128,7 @@ object Radar {
         chainMetadata: Map<String, String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
     ) {
@@ -2122,6 +2139,7 @@ object Radar {
             chainMetadata,
             categories,
             groups,
+            countryCodes,
             limit,
             object : RadarSearchPlacesCallback {
                 override fun onComplete(status: RadarStatus, location: Location?, places: Array<RadarPlace>?) {

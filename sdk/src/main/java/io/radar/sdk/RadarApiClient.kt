@@ -702,6 +702,7 @@ internal class RadarApiClient(
         chainMetadata: Map<String, String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         callback: RadarSearchPlacesApiCallback
     ) {
@@ -724,6 +725,10 @@ internal class RadarApiClient(
         }
         if (groups?.isNotEmpty() == true) {
             queryParams.append("&groups=${groups.joinToString(separator = ",")}")
+        }
+
+        if (countryCodes?.isNotEmpty() == true) {
+            queryParams.append("&country=${countryCodes.joinToString(separator = ",")}")
         }
 
         chainMetadata?.entries?.forEach {
