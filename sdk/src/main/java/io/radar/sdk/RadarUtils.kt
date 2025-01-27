@@ -15,6 +15,8 @@ import java.security.MessageDigest
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
+import java.time.Instant
+import java.time.ZonedDateTime
 import kotlin.math.abs
 
 internal object RadarUtils {
@@ -136,13 +138,18 @@ internal object RadarUtils {
         if (str == null) {
             return null
         }
-
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+    
         try {
-            return dateFormat.parse(str)
-        } catch (pe: ParseException) {
-            return null;
+            return Date.from(ZonedDateTime.parse(str).toInstant())
+        } catch (e: Exception) {
+            // Fall back to old date format
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+            return try {
+                dateFormat.parse(str)
+            } catch (pe: ParseException) {
+                null
+            }
         }
     }
 

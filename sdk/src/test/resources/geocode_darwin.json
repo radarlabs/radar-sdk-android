@@ -1,0 +1,41 @@
+{
+   "meta": {
+     "code": 200
+   },
+   "addresses": [
+     {
+       "formattedAddress": "5 Cavenagh Street, Darwin CBD, NT, 0800, AU",
+       "addressLabel": "5 Cavenagh Street",
+       "number": "5",
+       "street": "Cavenagh Street",
+       "dependentLocality": "Darwin CBD",
+       "city": "Darwin",
+       "county": "Darwin",
+       "state": "Northern Territory",
+       "stateCode": "NT",
+       "postalCode": "0800",
+       "countryCode": "AU",
+       "country": "Australia",
+       "layer": "address",
+       "latitude": -12.463872,
+       "longitude": 130.844064,
+       "geometry": {
+         "type": "Point",
+         "coordinates": [
+           130.844064,
+           -12.463872
+         ]
+       },
+       "distance": 41.20331642776327,
+       "countryFlag": "🇦🇺",
+       "timeZone": {
+         "id": "Australia/Darwin",
+         "name": "Australian Central Standard Time",
+         "code": "ACST",
+         "currentTime": "2025-01-22T04:17:35+09:30",
+         "utcOffset": 34200,
+         "dstOffset": 0
+       }
+     }
+   ]
+ }

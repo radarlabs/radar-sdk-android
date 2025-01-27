@@ -1,0 +1,41 @@
+{
+   "meta": {
+     "code": 200
+   },
+   "addresses": [
+     {
+       "formattedAddress": "60 Trafalgar Square, Strand, London, WC2N 5DS, UK",
+       "addressLabel": "60 Trafalgar Square",
+       "number": "60",
+       "street": "Trafalgar Square",
+       "dependentLocality": "Strand",
+       "city": "London",
+       "county": "London",
+       "state": "England",
+       "stateCode": "ENG",
+       "postalCode": "WC2N 5DS",
+       "countryCode": "GB",
+       "country": "United Kingdom",
+       "layer": "address",
+       "latitude": 51.5072349,
+       "longitude": -0.1284617,
+       "geometry": {
+         "type": "Point",
+         "coordinates": [
+           -0.1284617,
+           51.5072349
+         ]
+       },
+       "distance": 49.35395812723442,
+       "countryFlag": "🇬🇧",
+       "timeZone": {
+         "id": "Europe/London",
+         "name": "Greenwich Mean Time",
+         "code": "GMT",
+         "currentTime": "2025-01-21T17:22:19Z",
+         "utcOffset": 0,
+         "dstOffset": 0
+       }
+     }
+   ]
+ }
