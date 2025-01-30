@@ -33,12 +33,13 @@ internal class RadarVerificationManager(
     private val logger: RadarLogger,
 ) {
 
+    var started = false
+
     private lateinit var standardIntegrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider
     private var lastWarmUpTimestampSeconds = 0L
     private val handler = Handler(this.context.mainLooper)
     private val connectivityManager = this.context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
-    private var started = false
     private var startedInterval = 0
     private var startedBeacons = false
     private var runnable: Runnable? = null

@@ -1115,6 +1115,27 @@ object Radar {
     }
 
     /**
+     * Returns a boolean indicating whether verified tracking has been started.
+     *
+     * @see [](https://radar.com/documentation/sdk/android#background-tracking-for-geofencing)
+     *
+     * @return A boolean indicating whether verified tracking has been started.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun isTrackingVerified(): Boolean {
+        if (!initialized) {
+            return false
+        }
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        return this.verificationManager.started
+    }
+
+    /**
      * Returns the user's last verified location token if still valid, or requests a fresh token if not.
      *
      * Note that you must configure SSL pinning before calling this method.
