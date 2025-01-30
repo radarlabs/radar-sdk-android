@@ -1117,7 +1117,7 @@ object Radar {
     /**
      * Returns a boolean indicating whether verified tracking has been started.
      *
-     * @see [](https://radar.com/documentation/sdk/android#background-tracking-for-geofencing)
+     * @see [](https://radar.com/documentation/fraud)
      *
      * @return A boolean indicating whether verified tracking has been started.
      */
