@@ -382,12 +382,10 @@ internal class RadarApiClient(
                     params.putOpt("fraudFailureReasons", fraudFailureReasons)
                 }
             }
-            val packageName = context.packageName
-            params.putOpt("appId", packageName)
+            params.putOpt("appId", context.packageName)
             try {
-                val appName = context.applicationInfo.loadLabel(context.packageManager).toString()
-                params.putOpt("appName", appName)
-                val packageInfo = context.packageManager.getPackageInfo(packageName, 0)
+                params.putOpt("appName", context.applicationInfo.loadLabel(context.packageManager).toString())
+                val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
                 params.putOpt("appVersion", packageInfo.versionName)
                 params.putOpt("appBuild", packageInfo.versionCode)
             } catch (_: Exception) {
