@@ -706,6 +706,34 @@ object Radar {
     }
 
     /**
+     * Sets an optional product name, displayed in the dashboard and reports.
+     *
+     * @param[product] A product name. If null, the previous `product` will be cleared.
+     */
+    @JvmStatic
+    fun setProduct(product: String?) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setProduct(context, product)
+    }
+
+    /**
+     * Returns the current `product`.
+     *
+     * @return The current `product`.
+     */
+    @JvmStatic
+    fun getProduct(): String? {
+        if (!initialized) {
+            return null
+        }
+
+        return RadarSettings.getProduct(context)
+    }
+
+    /**
      * Enables anonymous tracking for privacy reasons. Avoids creating user records on the server and avoids sending any stable device IDs, user IDs, and user metadata
      * to the server when calling `trackOnce()` or `startTracking()`. Disabled by default.
      *

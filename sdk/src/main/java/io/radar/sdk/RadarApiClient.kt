@@ -280,6 +280,7 @@ internal class RadarApiClient(
                 params.putOpt("metadata", RadarSettings.getMetadata(context))
                 params.putOpt("sessionId", RadarSettings.getSessionId(context))
             }
+            params.putOpt("product", RadarSettings.getProduct(context))
             params.putOpt("latitude", location.latitude)
             params.putOpt("longitude", location.longitude)
             var accuracy = location.accuracy
