@@ -382,7 +382,13 @@ internal class RadarApiClient(
                     params.putOpt("fraudFailureReasons", fraudFailureReasons)
                 }
             }
-            params.putOpt("appId", context.packageName)
+            val packageName = context.packageName
+            params.putOpt("appId", packageName)
+            val appName = context.applicationInfo.loadLabel(context.packageManager).toString()
+            params.putOpt("appName", appName)
+            val packageInfo = context.packageManager.getPackageInfo(packageName, 0)
+            params.putOpt("appVersion", packageInfo.versionName)
+            params.putOpt("appBuild", packageInfo.versionCode)
             if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
                 val metadata = JSONObject()
                 metadata.putOpt("motionActivityData", RadarState.getLastMotionActivity(context))
