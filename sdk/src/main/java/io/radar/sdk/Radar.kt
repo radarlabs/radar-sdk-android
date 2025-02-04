@@ -706,6 +706,34 @@ object Radar {
     }
 
     /**
+     * Sets an optional product name, displayed in the dashboard and reports.
+     *
+     * @param[product] A product name. If null, the previous `product` will be cleared.
+     */
+    @JvmStatic
+    fun setProduct(product: String?) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setProduct(context, product)
+    }
+
+    /**
+     * Returns the current `product`.
+     *
+     * @return The current `product`.
+     */
+    @JvmStatic
+    fun getProduct(): String? {
+        if (!initialized) {
+            return null
+        }
+
+        return RadarSettings.getProduct(context)
+    }
+
+    /**
      * Enables anonymous tracking for privacy reasons. Avoids creating user records on the server and avoids sending any stable device IDs, user IDs, and user metadata
      * to the server when calling `trackOnce()` or `startTracking()`. Disabled by default.
      *
@@ -1112,6 +1140,27 @@ object Radar {
         }
 
         this.verificationManager.stopTrackingVerified()
+    }
+
+    /**
+     * Returns a boolean indicating whether verified tracking has been started.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @return A boolean indicating whether verified tracking has been started.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun isTrackingVerified(): Boolean {
+        if (!initialized) {
+            return false
+        }
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        return this.verificationManager.started
     }
 
     /**

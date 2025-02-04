@@ -280,6 +280,7 @@ internal class RadarApiClient(
                 params.putOpt("metadata", RadarSettings.getMetadata(context))
                 params.putOpt("sessionId", RadarSettings.getSessionId(context))
             }
+            params.putOpt("product", RadarSettings.getProduct(context))
             params.putOpt("latitude", location.latitude)
             params.putOpt("longitude", location.longitude)
             var accuracy = location.accuracy
@@ -382,6 +383,14 @@ internal class RadarApiClient(
                 }
             }
             params.putOpt("appId", context.packageName)
+            try {
+                params.putOpt("appName", context.applicationInfo.loadLabel(context.packageManager).toString())
+                val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                params.putOpt("appVersion", packageInfo.versionName)
+                params.putOpt("appBuild", packageInfo.versionCode)
+            } catch (_: Exception) {
+
+            }
             if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
                 val metadata = JSONObject()
                 metadata.putOpt("motionActivityData", RadarState.getLastMotionActivity(context))

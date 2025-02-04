@@ -17,6 +17,7 @@ internal object RadarSettings {
     private const val KEY_ID = "radar_user_id"
     private const val KEY_USER_ID = "user_id"
     private const val KEY_DESCRIPTION = "user_description"
+    private const val KEY_PRODUCT = "product"
     private const val KEY_METADATA = "user_metadata"
     private const val KEY_ANONYMOUS = "anonymous"
     private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
@@ -124,6 +125,14 @@ internal object RadarSettings {
 
     internal fun setDescription(context: Context, description: String?) {
         getSharedPreferences(context).edit { putString(KEY_DESCRIPTION, description) }
+    }
+
+    internal fun getProduct(context: Context): String? {
+        return getSharedPreferences(context).getString(KEY_PRODUCT, null)
+    }
+
+    internal fun setProduct(context: Context, product: String?) {
+        getSharedPreferences(context).edit { putString(KEY_PRODUCT, product) }
     }
 
     internal fun getMetadata(context: Context): JSONObject? {
