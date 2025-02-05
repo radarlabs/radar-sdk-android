@@ -3,14 +3,15 @@ package io.radar.sdk
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
-import android.os.Build
-import android.app.PendingIntent
 import android.content.Intent
+import android.graphics.Color
+import android.net.Uri
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import io.radar.sdk.model.RadarEvent
-import android.graphics.Color
 
 class RadarNotificationHelper {
 
@@ -25,7 +26,59 @@ class RadarNotificationHelper {
             }
 
             for (event in events) {
-                var notificationText: String? = null
+                var notificationText: String? = event.metadata?.optString("radar:notificationText")
+                val id = event._id
+                val notificationManager =
+                    context.getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
+
+                val importance = NotificationManager.IMPORTANCE_HIGH
+                val channel = NotificationChannel(CHANNEL_NAME, CHANNEL_NAME, importance)
+                channel.enableVibration(true)
+                notificationManager?.createNotificationChannel(channel)
+
+                val notificationOptions = RadarSettings.getNotificationOptions(context);
+
+                val iconString = notificationOptions?.getEventIcon() ?: context.applicationContext.applicationInfo.icon.toString()
+                val smallIcon = context.applicationContext.resources.getIdentifier(iconString, "drawable", context.applicationContext.packageName)
+
+                if (notificationText != null) {
+                    val notificationTitle: String? = event.metadata?.optString("radar:notificationTitle")
+                    val subTitle: String? = event.metadata?.optString("radar:notificationSubTitle")
+                    val deeplink: String? = event.metadata?.optString("radar:notificationDeeplink")
+                    val campaignId: String? = event.metadata?.optString("radar:notificationCampaignId")
+
+                    val deepLinkUrl = Uri.parse(deeplink)
+                    val deepLinkIntent = Intent(Intent.ACTION_VIEW, deepLinkUrl).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    }
+
+                    val builder = NotificationCompat.Builder(context, CHANNEL_NAME)
+                        .setSmallIcon(smallIcon)
+                        .setAutoCancel(true)
+                        .setContentTitle(notificationTitle)
+                        .setSubText(subTitle)
+                        .setContentText(notificationText)
+                        .setStyle(NotificationCompat.BigTextStyle()
+                            .bigText(notificationText)
+                            .setBigContentTitle(notificationTitle)
+                            .setSummaryText(subTitle))
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setContentIntent(PendingIntent.getActivity(
+                            context,
+                            0,
+                            deepLinkIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        ))
+
+                    val iconColor = notificationOptions?.getEventColor() ?: ""
+                    if (iconColor.isNotEmpty()) {
+                        builder.setColor(Color.parseColor(iconColor))
+                    }
+                    
+                    notificationManager?.notify(id, NOTIFICATION_ID, builder.build())
+
+                    continue
+                }
 
                 if (event.type == RadarEvent.RadarEventType.USER_ENTERED_GEOFENCE) {
                     notificationText = event.geofence?.metadata?.optString("radar:entryNotificationText")
@@ -42,21 +95,7 @@ class RadarNotificationHelper {
                 }
 
                 if (notificationText != null && notificationText.isNotEmpty()) {
-                    val id = event._id
-
-                    val notificationManager =
-                        context.getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
-
-                    val importance = NotificationManager.IMPORTANCE_HIGH
-                    val channel = NotificationChannel(CHANNEL_NAME, CHANNEL_NAME, importance)
-                    channel.enableVibration(true)
-                    notificationManager?.createNotificationChannel(channel)
-
-                    val notificationOptions = RadarSettings.getNotificationOptions(context);
-
-                    val iconString = notificationOptions?.getEventIcon() ?: context.applicationContext.applicationInfo.icon.toString()
-                    val smallIcon = context.applicationContext.resources.getIdentifier(iconString, "drawable", context.applicationContext.packageName)
-
+                   
                     val builder = NotificationCompat.Builder(context, CHANNEL_NAME)
                         .setSmallIcon(smallIcon)
                         .setAutoCancel(true)
