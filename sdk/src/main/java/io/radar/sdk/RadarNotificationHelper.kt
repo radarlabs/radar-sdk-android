@@ -20,13 +20,15 @@ class RadarNotificationHelper {
         private const val NOTIFICATION_ID = 20160525 // Radar's birthday!
 
         @SuppressLint("DiscouragedApi")
-        internal fun showNotifications(context: Context, events: Array<RadarEvent>) {
+        internal fun showNotifications(context: Context, events: Array<RadarEvent>, logger: RadarLogger) {
             if (Build.VERSION.SDK_INT < 26) {
                 return
             }
 
             for (event in events) {
+                
                 var notificationText: String? = event.metadata?.optString("radar:notificationText")
+                
                 val id = event._id
                 val notificationManager =
                     context.getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
@@ -42,15 +44,10 @@ class RadarNotificationHelper {
                 val smallIcon = context.applicationContext.resources.getIdentifier(iconString, "drawable", context.applicationContext.packageName)
 
                 if (notificationText != null) {
+                    logger.d("creating campaign notification with metadata  = ${event.metadata}") 
                     val notificationTitle: String? = event.metadata?.optString("radar:notificationTitle")
                     val subTitle: String? = event.metadata?.optString("radar:notificationSubTitle")
-                    val deeplink: String? = event.metadata?.optString("radar:notificationDeeplink")
                     val campaignId: String? = event.metadata?.optString("radar:notificationCampaignId")
-
-                    val deepLinkUrl = Uri.parse(deeplink)
-                    val deepLinkIntent = Intent(Intent.ACTION_VIEW, deepLinkUrl).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    }
 
                     val builder = NotificationCompat.Builder(context, CHANNEL_NAME)
                         .setSmallIcon(smallIcon)
@@ -63,13 +60,7 @@ class RadarNotificationHelper {
                             .setBigContentTitle(notificationTitle)
                             .setSummaryText(subTitle))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                        .setContentIntent(PendingIntent.getActivity(
-                            context,
-                            0,
-                            deepLinkIntent,
-                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                        ))
-
+                        
                     val iconColor = notificationOptions?.getEventColor() ?: ""
                     if (iconColor.isNotEmpty()) {
                         builder.setColor(Color.parseColor(iconColor))
