@@ -28,6 +28,7 @@ class RadarNotificationHelper {
             for (event in events) {
                 
                 var notificationText: String? = event.metadata?.optString("radar:notificationText")
+                val campaignType = event.metadata?.optString("radar:campaignType")
                 
                 val id = event._id
                 val notificationManager =
@@ -43,7 +44,7 @@ class RadarNotificationHelper {
                 val iconString = notificationOptions?.getEventIcon() ?: context.applicationContext.applicationInfo.icon.toString()
                 val smallIcon = context.applicationContext.resources.getIdentifier(iconString, "drawable", context.applicationContext.packageName)
 
-                if (notificationText != null) {
+                if (notificationText != null && campaignType == "notification") {
                     logger.d("creating campaign notification with metadata  = ${event.metadata}") 
                     val notificationTitle: String? = event.metadata?.optString("radar:notificationTitle")
                     val subTitle: String? = event.metadata?.optString("radar:notificationSubTitle")
