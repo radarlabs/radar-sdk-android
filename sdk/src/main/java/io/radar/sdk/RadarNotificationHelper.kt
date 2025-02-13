@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
 import android.graphics.Color
-import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import io.radar.sdk.model.RadarEvent
@@ -48,6 +47,17 @@ class RadarNotificationHelper {
                     val notificationTitle: String? = event.metadata?.optString("radar:notificationTitle")
                     val subTitle: String? = event.metadata?.optString("radar:notificationSubTitle")
                     val campaignId: String? = event.metadata?.optString("radar:notificationCampaignId")
+                    val notificationIntent = Intent(context, RadarLocationReceiver::class.java).apply {
+                        action = RadarLocationReceiver.ACTION_NOTIFICATION_OPENED
+                        putExtra(RadarLocationReceiver.EXTRA_CAMPAIGN_ID, campaignId)
+                    }
+
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        context,
+                        0,
+                        notificationIntent,
+                        PendingIntent.FLAG_IMMUTABLE
+                    )
 
                     val builder = NotificationCompat.Builder(context, CHANNEL_NAME)
                         .setSmallIcon(smallIcon)
@@ -60,6 +70,7 @@ class RadarNotificationHelper {
                             .setBigContentTitle(notificationTitle)
                             .setSummaryText(subTitle))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setDeleteIntent(pendingIntent)
                         
                     val iconColor = notificationOptions?.getEventColor() ?: ""
                     if (iconColor.isNotEmpty()) {

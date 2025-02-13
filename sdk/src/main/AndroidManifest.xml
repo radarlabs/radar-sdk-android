@@ -19,6 +19,7 @@
                 <action android:name="io.radar.sdk.LocationReceiver.LOCATION" />
                 <action android:name="io.radar.sdk.LocationReceiver.BEACON" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="io.radar.sdk.NotificationHelper.ACTION_NOTIFICATION_OPENED" />
             </intent-filter>
         </receiver>
         <service android:name=".RadarJobScheduler"

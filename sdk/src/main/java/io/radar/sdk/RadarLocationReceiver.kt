@@ -11,6 +11,7 @@ import android.content.Intent
 import android.os.Build
 import com.google.android.gms.location.ActivityTransitionResult
 import io.radar.sdk.RadarActivityManager.Companion.getActivityType
+import io.radar.sdk.model.RadarEvent
 import org.json.JSONObject
 
 class RadarLocationReceiver : BroadcastReceiver() {
@@ -23,6 +24,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
         internal const val ACTION_BEACON = "io.radar.sdk.LocationReceiver.BEACON"
         internal const val ACTION_ACTIVITY = "io.radar.sdk.LocationReceiver.ACTIVITY"
         internal const val ACTION_VERIFIED_LOCATION = "io.radar.sdk.LocationReceiver.VERIFIED_LOCATION"
+        internal const val ACTION_NOTIFICATION_OPENED = "io.radar.sdk.NotificationHelper.ACTION_NOTIFICATION_OPENED"
 
         private const val REQUEST_CODE_LOCATION = 201605250
         private const val REQUEST_CODE_BUBBLE_GEOFENCE = 201605251
@@ -30,6 +32,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
         private const val REQUEST_CODE_BEACON = 201605253
         private const val REQUEST_CODE_ACTIVITY = 201605254
         private const val REQUEST_CODE_VERIFIED_LOCATION = 201605255
+        internal const val EXTRA_CAMPAIGN_ID = "campaignId"
 
         internal fun getLocationPendingIntent(context: Context): PendingIntent {
             val intent = baseIntent(context).apply {
@@ -187,6 +190,19 @@ class RadarLocationReceiver : BroadcastReceiver() {
             }
             Intent.ACTION_BOOT_COMPLETED -> {
                 Radar.handleBootCompleted(context)
+            }
+            ACTION_NOTIFICATION_OPENED -> {
+                val campaignId = intent.getStringExtra(EXTRA_CAMPAIGN_ID)
+                val jsonObject = JSONObject().apply {
+                    put("conversionSource", "radar_notification")
+                    put("campaignId", campaignId)
+                }
+                Radar.logConversion("opened_app", jsonObject, callback = object :
+                    Radar.RadarLogConversionCallback {
+                override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
+                    Radar.logger.i("Conversion name = opened_app from notification")
+                }
+            })
             }
         }
         if (ActivityTransitionResult.hasResult(intent)) {
