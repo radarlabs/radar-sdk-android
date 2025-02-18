@@ -139,5 +139,6 @@ internal class RadarActivityLifecycleCallbacks(
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         Log.w(TAG, "ON CREATE ${count}")
         updatePermissionsDenied(activity)
+        Radar.logOpenedAppConversion(activity.intent)
     }
 }

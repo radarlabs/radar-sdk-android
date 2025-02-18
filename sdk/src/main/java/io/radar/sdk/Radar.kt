@@ -3317,30 +3317,8 @@ object Radar {
             })
     }
 
-    @JvmStatic
-    fun handleRadarDeepLink (context: Context, intent: Intent) {
-        when (intent?.action) {
-            Intent.ACTION_VIEW -> {
-                val deepLinkUrl = intent?.data
-                deepLinkUrl?.let { uri ->
-                    try {
-                        // Option 1: Open in browser or appropriate app
-                        val browserIntent = Intent(Intent.ACTION_VIEW, uri).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
-                        context.startActivity(browserIntent)
 
-                    } catch (e: Exception) {
-                        logger.e("Failed to handle deeplink: ${e.message}")
-                        // Fallback handling if needed
-                    }
-                }
-            }
-        }
-    }
-
-    @JvmStatic
-    fun logOpenedAppConversion( intent: Intent) {
+    internal fun logOpenedAppConversion( intent: Intent) {
         if (!RadarSettings.getSdkConfiguration(context).useOpenedAppConversion) {
             return
         }
