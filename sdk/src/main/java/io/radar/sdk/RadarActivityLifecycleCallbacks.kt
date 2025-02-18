@@ -86,8 +86,8 @@ internal class RadarActivityLifecycleCallbacks(
         count++
         isFirstOnResume = false
         foreground = count > 0
-
-        Radar.logOpenedAppConversion()
+        Radar.logOpenedAppConversion(activity.intent)
+        //Radar.logOpenedAppConversion()
 
         updatePermissionsDenied(activity)
 
@@ -139,6 +139,5 @@ internal class RadarActivityLifecycleCallbacks(
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         Log.w(TAG, "ON CREATE ${count}")
         updatePermissionsDenied(activity)
-        Radar.logOpenedAppConversion(activity.intent)
     }
 }
