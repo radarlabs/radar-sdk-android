@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.Handler
@@ -3314,6 +3315,56 @@ object Radar {
                     }
                 }
             })
+    }
+
+    @JvmStatic
+    fun handleRadarDeepLink (context: Context, intent: Intent) {
+        when (intent?.action) {
+            Intent.ACTION_VIEW -> {
+                val deepLinkUrl = intent?.data
+                deepLinkUrl?.let { uri ->
+                    try {
+                        // Option 1: Open in browser or appropriate app
+                        val browserIntent = Intent(Intent.ACTION_VIEW, uri).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        context.startActivity(browserIntent)
+
+                    } catch (e: Exception) {
+                        logger.e("Failed to handle deeplink: ${e.message}")
+                        // Fallback handling if needed
+                    }
+                }
+            }
+        }
+    }
+
+    @JvmStatic
+    fun logOpenedAppConversion( intent: Intent) {
+        if (!RadarSettings.getSdkConfiguration(context).useOpenedAppConversion) {
+            return
+        }
+        // if opened_app has been logged in the last 1000 milliseconds, don't log it again
+        val timestamp = System.currentTimeMillis()
+        val lastAppOpenTime = RadarSettings.getLastAppOpenTimeMillis(context)
+        if (timestamp - lastAppOpenTime > 1000 && intent != null) {
+            RadarSettings.updateLastAppOpenTimeMillis(context)
+            intent?.getStringExtra(RadarNotificationHelper.RADAR_CAMPAIGN_ID)?.let { campaignId ->
+                if (campaignId.isNullOrEmpty()) {
+                    return
+                }
+                // Handle conversion tracking here
+                val jsonObject = JSONObject().apply {
+                        put("conversionSource", "radar_notification")
+                        put("campaignId", campaignId)
+                    }
+                sendLogConversionRequest("opened_app", jsonObject, callback = object : RadarLogConversionCallback {
+                    override fun onComplete(status: RadarStatus, event: RadarEvent?) {
+                        logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
+                    }
+                }) 
+            }
+        }
     }
 
     internal fun logOpenedAppConversion() {
