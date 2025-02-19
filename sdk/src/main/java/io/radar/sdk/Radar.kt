@@ -3317,8 +3317,11 @@ object Radar {
             })
     }
 
-
-    internal fun logOpenedAppConversion( intent: Intent) {
+    @JvmStatic
+    fun logOpenedAppConversion(intent: Intent) {
+        if (!initialized) {
+            return
+        }
         if (!RadarSettings.getSdkConfiguration(context).useOpenedAppConversion) {
             return
         }
@@ -3327,34 +3330,22 @@ object Radar {
         val lastAppOpenTime = RadarSettings.getLastAppOpenTimeMillis(context)
         if (timestamp - lastAppOpenTime > 1000 && intent != null) {
             RadarSettings.updateLastAppOpenTimeMillis(context)
-
             val campaignId = intent.getStringExtra(RadarNotificationHelper.RADAR_CAMPAIGN_ID)
             val jsonObject = if (!campaignId.isNullOrEmpty()) {
                 JSONObject().apply {
                     put("conversionSource", "radar_notification")
                     put("campaignId", campaignId)
-                    logger.i("Conversion name = opened_app from notification")
                 }
             } else {
                 // we can just have empty JSONObject here
                 JSONObject()
             }
+            logger.i(if (!campaignId.isNullOrEmpty()) "Conversion name = opened_app from notification" else "Conversion name = opened_app")
             sendLogConversionRequest("opened_app", jsonObject, callback = object : RadarLogConversionCallback {
-                    override fun onComplete(status: RadarStatus, event: RadarEvent?) {
-                        logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
-                    }
-                }) 
-            // intent?.getStringExtra(RadarNotificationHelper.RADAR_CAMPAIGN_ID)?.let { campaignId ->
-            //     if (campaignId.isNullOrEmpty()) {
-            //         return
-            //     }
-            //     // Handle conversion tracking here
-            //     val jsonObject = JSONObject().apply {
-            //             put("conversionSource", "radar_notification")
-            //             put("campaignId", campaignId)
-            //         }
-                
-            // }
+                override fun onComplete(status: RadarStatus, event: RadarEvent?) {
+                    logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
+                }
+            }) 
         }
     }
 
