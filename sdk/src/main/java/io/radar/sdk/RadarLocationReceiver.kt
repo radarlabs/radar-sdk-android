@@ -191,19 +191,6 @@ class RadarLocationReceiver : BroadcastReceiver() {
             Intent.ACTION_BOOT_COMPLETED -> {
                 Radar.handleBootCompleted(context)
             }
-            // ACTION_NOTIFICATION_OPENED -> {
-            //     val campaignId = intent.getStringExtra(EXTRA_CAMPAIGN_ID)
-            //     val jsonObject = JSONObject().apply {
-            //         put("conversionSource", "radar_notification")
-            //         put("campaignId", campaignId)
-            //     }
-            //     Radar.logConversion("opened_app", jsonObject, callback = object :
-            //         Radar.RadarLogConversionCallback {
-            //     override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
-            //         Radar.logger.i("Conversion name = opened_app from notification")
-            //     }
-            // })
-            // }
         }
         if (ActivityTransitionResult.hasResult(intent)) {
             val result = ActivityTransitionResult.extractResult(intent)!!
