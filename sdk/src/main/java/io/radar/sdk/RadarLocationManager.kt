@@ -37,6 +37,7 @@ internal class RadarLocationManager(
     private var startedFastestInterval = 0
     private val callbacks = ArrayList<RadarLocationCallback>()
     private val activityManager = RadarActivityManager(context)
+    private val sensorsManager = RadarSensorsManager(context)
 
     internal companion object {
         private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
@@ -131,6 +132,7 @@ internal class RadarLocationManager(
         }
         if (settings.useLocationMetadata) {
             activityManager.stopActivityUpdates()
+            sensorsManager.onPause()
         }
     }
 
@@ -201,6 +203,7 @@ internal class RadarLocationManager(
         if (tracking) {
             if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
                 activityManager.startActivityUpdates()
+                sensorsManager.onResume()
             }
             if (options.foregroundServiceEnabled) {
                 val foregroundService = RadarSettings.getForegroundService(context)
