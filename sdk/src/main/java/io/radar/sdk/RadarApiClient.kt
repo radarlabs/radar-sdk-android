@@ -401,7 +401,7 @@ internal class RadarApiClient(
                     metadata.putOpt("bearing", location.bearing)
                 }
                 if (RadarState.getLastPressure(context) != null) {
-                    metadata.putOpt("pressure", RadarState.getLastPressure(context))
+                    metadata.putOpt("pressureHPa", RadarState.getLastPressure(context))
                 }
                 params.putOpt("locationMetadata", metadata)
             }
