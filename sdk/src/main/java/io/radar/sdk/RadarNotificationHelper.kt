@@ -18,11 +18,10 @@ class RadarNotificationHelper {
     internal companion object {
         private const val CHANNEL_NAME = "Location"
         private const val NOTIFICATION_ID = 20160525 // Radar's birthday!
-        const val RADAR_DEEPLINK_URL = "radar_deeplink_url"
         const val RADAR_CAMPAIGN_ID = "radar_campaign_id"
 
         @SuppressLint("DiscouragedApi", "LaunchActivityFromNotification")
-        internal fun showNotifications(context: Context, events: Array<RadarEvent>, logger: RadarLogger) {
+        internal fun showNotifications(context: Context, events: Array<RadarEvent>) {
             if (Build.VERSION.SDK_INT < 26) {
                 return
             }
@@ -44,17 +43,17 @@ class RadarNotificationHelper {
 
                 val iconString = notificationOptions?.getEventIcon() ?: context.applicationContext.applicationInfo.icon.toString()
                 val smallIcon = context.applicationContext.resources.getIdentifier(iconString, "drawable", context.applicationContext.packageName)
-
-                if (notificationText != null) {
+                val campaignType = event.metadata?.optString("radar:campaignType")
+                if (notificationText != null && campaignType == "notification") {
                     
                     val notificationTitle: String? = event.metadata?.optString("radar:notificationTitle")
                     val subTitle: String? = event.metadata?.optString("radar:notificationSubTitle")
                     val campaignId: String? = event.metadata?.optString("radar:campaignId")
                     val deeplinkURL = event.metadata?.optString("radar:notificationURL")
-                    logger.d("creating campaign notification with metadata  = ${event.metadata}") 
+                    Radar.logger.d("creating campaign notification with metadata  = ${event.metadata}")
                     val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        putExtra(RadarNotificationHelper.RADAR_CAMPAIGN_ID, campaignId)
+                        putExtra(RADAR_CAMPAIGN_ID, campaignId)
                         if (deeplinkURL != null) {
                             data = Uri.parse(deeplinkURL)
                             action = Intent.ACTION_VIEW
@@ -79,9 +78,7 @@ class RadarNotificationHelper {
                             .setBigContentTitle(notificationTitle)
                             .setSummaryText(subTitle))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                        //.setContentIntent(notificationIntentForConversion)
                         .setContentIntent(pendingIntentForAppOpen)
-                        //.setDeleteIntent(notificationIntentForConversion)
                         
                     val iconColor = notificationOptions?.getEventColor() ?: ""
                     if (iconColor.isNotEmpty()) {
@@ -107,7 +104,7 @@ class RadarNotificationHelper {
                     notificationText = event.trip?.metadata?.optString("radar:arrivalNotificationText")
                 }
 
-                if (notificationText != null && notificationText.isNotEmpty()) {
+                if (!notificationText.isNullOrEmpty()) {
                    
                     val builder = NotificationCompat.Builder(context, CHANNEL_NAME)
                         .setSmallIcon(smallIcon)

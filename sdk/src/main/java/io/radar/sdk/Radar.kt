@@ -3675,7 +3675,7 @@ object Radar {
 
         receiver?.onEventsReceived(context, events, user)
 
-        RadarNotificationHelper.showNotifications(context, events, this.logger)
+        RadarNotificationHelper.showNotifications(context, events)
 
         for (event in events) {
             logger.i("📍 Radar event received | type = ${RadarEvent.stringForType(event.type)}; replayed = ${event.replayed}; link = https://radar.com/dashboard/events/${event._id}")
