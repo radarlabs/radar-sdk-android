@@ -251,7 +251,23 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, expectedCountryCode: String? = null, expectedStateCode: String? = null, callback: RadarTrackApiCallback? = null) {
+    internal fun track(
+        location: Location,
+        stopped: Boolean,
+        foreground: Boolean,
+        source: RadarLocationSource,
+        replayed: Boolean,
+        beacons: Array<RadarBeacon>?,
+        verified: Boolean = false,
+        integrityToken: String? = null,
+        integrityException: String? = null,
+        encrypted: Boolean? = false,
+        expectedCountryCode: String? = null,
+        expectedStateCode: String? = null,
+        reason: String? = null,
+        transactionId: String? = null,
+        callback: RadarTrackApiCallback? = null
+    ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -370,6 +386,12 @@ internal class RadarApiClient(
                 }
                 if (expectedStateCode != null) {
                     params.putOpt("expectedStateCode", expectedStateCode)
+                }
+                if (reason != null) {
+                    params.putOpt("reason", reason)
+                }
+                if (transactionId != null) {
+                    params.putOpt("transactionId", transactionId)
                 }
                 val fraudFailureReasons = JSONArray()
                 if (RadarUtils.hasMultipleDisplays(context)) {
