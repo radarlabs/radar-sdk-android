@@ -125,6 +125,10 @@ internal class RadarApiClient(
         } else {
             headers["X-Radar-X-Platform-SDK-Type"] = "Native"
         }
+        val product = RadarSettings.getProduct(context)
+        if (product != null) {
+            headers["X-Radar-Product"] = product
+        }
         return headers
     }
 
@@ -296,7 +300,6 @@ internal class RadarApiClient(
                 params.putOpt("metadata", RadarSettings.getMetadata(context))
                 params.putOpt("sessionId", RadarSettings.getSessionId(context))
             }
-            params.putOpt("product", RadarSettings.getProduct(context))
             params.putOpt("latitude", location.latitude)
             params.putOpt("longitude", location.longitude)
             var accuracy = location.accuracy
