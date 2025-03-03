@@ -132,7 +132,7 @@ internal class RadarVerificationManager(
                                         false,
                                         verificationManager.expectedCountryCode,
                                         verificationManager.expectedStateCode,
-                                        reason,
+                                        reason ?: "manual",
                                         transactionId,
                                         callback = object : RadarApiClient.RadarTrackApiCallback {
                                             override fun onComplete(
@@ -241,7 +241,7 @@ internal class RadarVerificationManager(
         })
     }
 
-    private fun callTrackVerified(reason: String? = "manual") {
+    private fun callTrackVerified(reason: String?) {
         val verificationManager = this
 
         if (!verificationManager.started) {
