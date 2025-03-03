@@ -1059,6 +1059,48 @@ object Radar {
      *
      * @param[beacons] A boolean indicating whether to range beacons.
      * @param[desiredAccuracy] The desired accuracy.
+     * @param[callback] An optional callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun trackVerified(
+        beacons: Boolean = false,
+        desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
+        callback: RadarTrackVerifiedCallback? = null
+    ) {
+        trackVerified(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, null, null, callback)
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[beacons] A boolean indicating whether to range beacons.
+     * @param[desiredAccuracy] The desired accuracy.
+     * @param[block] A block callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun trackVerified(
+        beacons: Boolean = false,
+        desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
+        block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit
+    ) {
+        trackVerified(beacons, desiredAccuracy, null, null, block)
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[beacons] A boolean indicating whether to range beacons.
+     * @param[desiredAccuracy] The desired accuracy.
      * @param[reason] An optional reason, displayed in the dashboard and reports.
      * @param[transactionId] An optional transaction ID, displayed in the dashboard and reports.
      * @param[callback] An optional callback.
