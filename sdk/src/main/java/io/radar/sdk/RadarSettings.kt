@@ -338,7 +338,12 @@ internal object RadarSettings {
     }
 
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {
-        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, Radar.RadarLogLevel.INFO.value)
+        val defaultLogLevelInt = if (BuildConfig.DEBUG) {
+            Radar.RadarLogLevel.INFO.value
+        } else {
+            Radar.RadarLogLevel.NONE.value
+        }
+        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, defaultLogLevelInt)
         val userDebug = getUserDebug(context)
         return if (userDebug) Radar.RadarLogLevel.DEBUG else Radar.RadarLogLevel.fromInt(logLevelInt)
     }
