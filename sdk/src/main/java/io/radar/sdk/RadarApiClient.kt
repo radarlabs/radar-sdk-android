@@ -821,11 +821,11 @@ internal class RadarApiClient(
                     RadarGeofence.fromJson(geofencesArr)
                 }
                 if (geofences != null) {
+                    
                     callback.onComplete(RadarStatus.SUCCESS, res, geofences)
 
                     return
                 }
-
                 callback.onComplete(RadarStatus.ERROR_SERVER)
             }
         })

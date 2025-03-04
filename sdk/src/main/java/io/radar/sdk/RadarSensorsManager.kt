@@ -29,7 +29,8 @@ class RadarSensorsManager(context: Context) : SensorEventListener {
         // Do something with this sensor data.
         val pressureJson = JSONObject()
         pressureJson.put("pressure", millibarsOfPressure)
-        pressureJson.put("timestamp", System.currentTimeMillis())
+        // placate the current server implementation, should change if we ever want to merge this
+        pressureJson.put("relativeAltitudeTimestamp", System.currentTimeMillis())
         RadarState.setLastPressure(context, pressureJson)
     }
 

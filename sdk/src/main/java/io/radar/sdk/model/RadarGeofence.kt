@@ -43,6 +43,8 @@ class RadarGeofence(
      */
     val geometry: RadarGeofenceGeometry?,
 
+    val confidencePercentage: Double?
+
     ) {
 
     internal companion object {
@@ -57,7 +59,7 @@ class RadarGeofence(
         private const val FIELD_GEOMETRY_RADIUS = "geometryRadius"
         private const val FIELD_GEOMETRY_CENTER = "geometryCenter"
         private const val FIELD_COORDINATES = "coordinates"
-
+        private const val FIELD_CONFIDENCE_PERCENTAGE = "confidencePercentage"
         private const val TYPE_CIRCLE = "circle"
         private const val TYPE_POLYGON = "polygon"
         private const val TYPE_ISOCHRONE = "isochrone"
@@ -123,7 +125,16 @@ class RadarGeofence(
                 else -> null
             } ?: RadarCircleGeometry(RadarCoordinate(0.0, 0.0), 0.0)
 
-            return RadarGeofence(id, description, tag, externalId, metadata, operatingHours, geometry)
+            val confidencePercentage: Double? = if (obj.has(FIELD_CONFIDENCE_PERCENTAGE)) {
+                if (obj.isNull(FIELD_CONFIDENCE_PERCENTAGE)) {
+                    null
+                } else {
+                    obj.optDouble(FIELD_CONFIDENCE_PERCENTAGE)
+                }
+            } else {
+                null
+            }
+            return RadarGeofence(id, description, tag, externalId, metadata, operatingHours, geometry, confidencePercentage)
         }
 
         @JvmStatic
@@ -175,6 +186,9 @@ class RadarGeofence(
         obj.putOpt(FIELD_DESCRIPTION, this.description)
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_OPERATING_HOURS, this.operatingHours?.toJson() ?: null)
+        if (this.confidencePercentage != null) {
+            obj.putOpt(FIELD_CONFIDENCE_PERCENTAGE, this.confidencePercentage)
+        }
         this.geometry?.let { geometry ->
             when (geometry) {
                 is RadarCircleGeometry -> {
