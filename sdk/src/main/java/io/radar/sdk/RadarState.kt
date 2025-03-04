@@ -39,6 +39,7 @@ internal object RadarState {
     private const val KEY_LAST_BEACON_UUIDS = "last_beacon_uuids"
     private const val KEY_LAST_BEACON_UIDS = "last_beacon_uids"
     private const val KEY_LAST_MOTION_ACTIVITY = "last_motion_activity"
+    private const val KEY_LAST_PRESSURE = "last_pressure"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -274,6 +275,18 @@ internal object RadarState {
         val jsonString = motionJson?.toString()
         getSharedPreferences(context).edit {
             putString(KEY_LAST_MOTION_ACTIVITY, jsonString)
+        }
+    }
+
+    internal fun getLastPressure(context: Context): JSONObject? {
+        val jsonString = getSharedPreferences(context).getString(KEY_LAST_PRESSURE, null)
+        return stringToJsonObject(jsonString)
+    }
+
+    internal fun setLastPressure(context: Context, pressureJson: JSONObject?) {
+        val jsonString = pressureJson?.toString()
+        getSharedPreferences(context).edit {
+            putString(KEY_LAST_PRESSURE, jsonString)
         }
     }
 

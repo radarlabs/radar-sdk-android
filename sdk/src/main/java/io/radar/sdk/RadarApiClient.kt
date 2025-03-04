@@ -425,6 +425,9 @@ internal class RadarApiClient(
                 if (location.hasBearing() && !location.bearing.isNaN()) {
                     metadata.putOpt("bearing", location.bearing)
                 }
+                if (RadarState.getLastPressure(context) != null) {
+                    metadata.putOpt("pressureHPa", RadarState.getLastPressure(context))
+                }
                 params.putOpt("locationMetadata", metadata)
             }
         } catch (e: JSONException) {
