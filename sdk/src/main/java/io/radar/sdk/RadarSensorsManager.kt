@@ -29,7 +29,7 @@ class RadarSensorsManager(context: Context) : SensorEventListener {
         val accuracy = event.accuracy
         // Do something with this sensor data.
         val pressureJson = JSONObject()
-        pressureJson.put("pressure, millibarsOfPressure)
+        pressureJson.put("pressure", millibarsOfPressure)
         pressureJson.put("accuracy", accuracy)
 
         // placate the current server implementation, should change if we ever want to merge this
