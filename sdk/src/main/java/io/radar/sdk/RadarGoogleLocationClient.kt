@@ -55,14 +55,8 @@ internal class RadarGoogleLocationClient(
     ) {
         val priority = priorityForDesiredAccuracy(desiredAccuracy)
 
-        val locationRequestBuilder = LocationRequest.Builder(priority, interval * 1000L)
+        var locationRequestBuilder = LocationRequest.Builder(priority, interval * 1000L)
             .setMinUpdateIntervalMillis(fastestInterval * 1000L)
-
-        if (interval > 0 && interval <= 5) {
-            locationRequestBuilder = LocationRequest.Builder(priority, 0)
-                .setMinUpdateIntervalMillis(0)
-        } 
-
         if (desiredAccuracy == RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH) {
             locationRequestBuilder = locationRequestBuilder.setMaxUpdateAgeMillis(0)
         }
