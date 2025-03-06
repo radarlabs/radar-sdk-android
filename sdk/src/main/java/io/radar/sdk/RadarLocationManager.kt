@@ -130,10 +130,11 @@ internal class RadarLocationManager(
         if (settings.extendFlushReplays) {
             Radar.flushReplays()
         }
-        if (settings.useLocationMetadata) {
+        //if (settings.useLocationMetadata) {
+        // do it anyways for testing
             activityManager.stopActivityUpdates()
             sensorsManager.onPause()
-        }
+        //}
     }
 
     private fun startLocationUpdates(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, interval: Int, fastestInterval: Int) {
