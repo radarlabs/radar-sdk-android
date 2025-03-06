@@ -33,7 +33,7 @@ class RadarSensorsManager(context: Context) : SensorEventListener {
         pressureJson.put("accuracy", accuracy)
 
         // placate the current server implementation, should change if we ever want to merge this
-        pressureJson.put("relativeAltitudeTimestamp", System.currentTimeMillis())
+        pressureJson.put("relativeAltitudeTimestamp", System.currentTimeMillis() / 1000)
         RadarState.setLastPressure(context, pressureJson)
     }
 
