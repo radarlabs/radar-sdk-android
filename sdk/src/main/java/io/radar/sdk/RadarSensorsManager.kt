@@ -59,7 +59,7 @@ class RadarSensorsManager(context: Context) : SensorEventListener {
         smoothedPressure = smoothingFactor * smoothedPressure + (1 - smoothingFactor) * newPressure
         
         
-        Radar.logger.d("Exponential decay | Raw: $newPressure, Smoothed: $smoothedPressure, Decay: $timeAdjustedDecay")
+        Radar.logger.d("Exponential decay | Raw: $newPressure, Smoothed: $smoothedPressure, smoothingFactor: $smoothingFactor")
     }
 
     private fun sendRawDataToNgrok() {
