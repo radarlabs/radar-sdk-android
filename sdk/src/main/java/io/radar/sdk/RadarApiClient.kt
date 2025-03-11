@@ -297,8 +297,9 @@ internal class RadarApiClient(
             }
              
             if (location.hasAltitude() && !location.altitude.isNaN()) {
-                params.putOpt("altitude", location.altitude)
-                userMetadata.putOpt("altitude", location.altitude)
+                params.putOpt("altitude", location.getAltitude())
+                userMetadata.putOpt("altitude", location.getAltitude())
+
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (location.hasVerticalAccuracy() && !location.verticalAccuracyMeters.isNaN()) {

@@ -59,7 +59,7 @@ class RadarSensorsManager(context: Context) : SensorEventListener {
         smoothedPressure = smoothingFactor * smoothedPressure + (1 - smoothingFactor) * newPressure
         
         
-        Radar.logger.d("Exponential decay | Raw: $newPressure, Smoothed: $smoothedPressure, smoothingFactor: $smoothingFactor")
+        //Radar.logger.d("Exponential decay | Raw: $newPressure, Smoothed: $smoothedPressure, smoothingFactor: $smoothingFactor")
     }
 
     private fun sendRawDataToNgrok() {
@@ -202,7 +202,7 @@ class RadarSensorsManager(context: Context) : SensorEventListener {
         val accuracy = event.accuracy
         val timestamp = System.currentTimeMillis()
         
-        Radar.logger.e("Pressure sensor changed | millibarsOfPressure = $millibarsOfPressure; accuracy = $accuracy")
+        //Radar.logger.e("Pressure sensor changed | millibarsOfPressure = $millibarsOfPressure; accuracy = $accuracy")
         
         // Add to raw readings buffer
         rawReadings.add(Pair(millibarsOfPressure.toDouble(), timestamp/1000))
@@ -238,7 +238,7 @@ class RadarSensorsManager(context: Context) : SensorEventListener {
         //pressureJson.put("pressure", millibarsOfPressure)
         pressureJson.put("pressure", shortTermAverage)
 
-        pressureJson.put("relativeAltitudeTimestamp", timestamp / 1000)
+        pressureJson.put("absoluteAltitudeTimestamp", timestamp / 1000)
 
         // Send data to ngrok endpoint (will only send if 5 seconds have passed)
         //sendPressureDataToNgrok(pressureJson, timestamp)
