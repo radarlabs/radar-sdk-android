@@ -399,7 +399,7 @@ internal class RadarApiClient(
 
             }
             
-            if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
+            if (Radar.getTrackingOptions().useMotion) {
                 
                 userMetadata.putOpt("motionActivityData", RadarState.getLastMotionActivity(context))
                 if (location.hasSpeed() && !location.speed.isNaN()) {
