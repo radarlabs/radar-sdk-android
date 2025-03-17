@@ -410,8 +410,5 @@ internal object RadarSettings {
         return getSharedPreferences(context).getString(KEY_X_PLATFORM_SDK_VERSION, null);
     }
 
-    internal fun useLocationMetaData(context: Context):Boolean {
-        return getSdkConfiguration(context).useLocationMetadata
-    }
 
 }
