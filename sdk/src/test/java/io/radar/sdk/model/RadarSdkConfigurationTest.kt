@@ -109,7 +109,7 @@ class RadarSdkConfigurationTest {
         assertFalse(settings.useLocationMetadata)
         assertTrue(settings.useOpenedAppConversion)
         assertFalse(settings.useForegroundLocationUpdatedAtMsDiff)
-        assertEquals(20000, settings.locationManagerTimeout)
+        assertEquals(0, settings.locationManagerTimeout)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")

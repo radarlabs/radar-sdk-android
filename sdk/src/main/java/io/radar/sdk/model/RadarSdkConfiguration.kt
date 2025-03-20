@@ -22,7 +22,7 @@ internal data class RadarSdkConfiguration(
     val useLocationMetadata: Boolean,
     val useOpenedAppConversion: Boolean = false,
     val useForegroundLocationUpdatedAtMsDiff: Boolean = false,
-    val locationManagerTimeout: Int = 20000,
+    val locationManagerTimeout: Int = 0,
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
