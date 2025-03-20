@@ -91,7 +91,7 @@ internal class RadarLocationManager(
         locationClient.getCurrentLocation(desiredAccuracy) { location ->
             if (location == null) {
                 logger.d("Location timeout")
-
+                Radar.sendError(RadarStatus.ERROR_LOCATION)
                 callCallbacks(RadarStatus.ERROR_LOCATION)
             } else {
                 logger.d("Successfully requested location")
