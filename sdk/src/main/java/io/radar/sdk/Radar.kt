@@ -3726,7 +3726,7 @@ object Radar {
     internal fun sendError(status: RadarStatus, errorMessage: String? = null) {
         receiver?.onError(context, status)
         if (errorMessage != null) {
-            logger.e("📍️ Radar error received | status = $status | errorMessage = $errorMessage", RadarLogType.SDK_ERROR)
+            logger.e("📍️ Radar error received | status = $status | error message = $errorMessage", RadarLogType.SDK_ERROR)
         } else {
             logger.e("📍️ Radar error received | status = $status", RadarLogType.SDK_ERROR)
         }

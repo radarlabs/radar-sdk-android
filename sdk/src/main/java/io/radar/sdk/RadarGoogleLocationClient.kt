@@ -31,14 +31,15 @@ internal class RadarGoogleLocationClient(
         if (desiredAccuracy == RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH) {
             currentLocationRequestBuilder = currentLocationRequestBuilder.setMaxUpdateAgeMillis(0)
         }
-        val currentLocationRequest = currentLocationRequestBuilder.build()
+        
         val timeout = RadarSettings.getSdkConfiguration(context).locationManagerTimeout
         if (timeout > 0) {
             logger.d("Requesting location with timeout $timeout")
-            currentLocationRequestBuilder.setDurationMillis(timeout.toLong())
+            currentLocationRequestBuilder = currentLocationRequestBuilder.setDurationMillis(timeout.toLong())
         } else {
             logger.d("Requesting location with default timeout")
         }
+        val currentLocationRequest = currentLocationRequestBuilder.build()
 
         locationClient.getCurrentLocation(currentLocationRequest, null).addOnSuccessListener { location ->
             logger.d("Received current location")
