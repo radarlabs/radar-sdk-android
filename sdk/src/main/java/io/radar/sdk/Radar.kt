@@ -3723,10 +3723,14 @@ object Radar {
         receiver?.onClientLocationUpdated(context, location, stopped, source)
     }
 
-    internal fun sendError(status: RadarStatus) {
+    internal fun sendError(status: RadarStatus, errorMessage: String? = null) {
         receiver?.onError(context, status)
-
-        logger.e("📍️ Radar error received | status = $status", RadarLogType.SDK_ERROR)
+        if (errorMessage != null) {
+            logger.e("📍️ Radar error received | status = $status | errorMessage = $errorMessage", RadarLogType.SDK_ERROR)
+        } else {
+            logger.e("📍️ Radar error received | status = $status", RadarLogType.SDK_ERROR)
+        }
+        Radar.flushLogs()
     }
 
     internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?, createdAt: Date = Date()) {

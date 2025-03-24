@@ -91,7 +91,7 @@ internal class RadarLocationManager(
         locationClient.getCurrentLocation(desiredAccuracy) { location ->
             if (location == null) {
                 logger.d("Location timeout")
-                Radar.sendError(RadarStatus.ERROR_LOCATION)
+                Radar.sendError(RadarStatus.ERROR_LOCATION, "Location timeout")
                 callCallbacks(RadarStatus.ERROR_LOCATION)
             } else {
                 logger.d("Successfully requested location")
@@ -472,11 +472,16 @@ internal class RadarLocationManager(
         } else {
             logger.d("Handling location | source = $source; location = $location")
         }
+         // Set default accuracy if not provided
+        if (location?.accuracy  == 0f) {
+            location.accuracy = 1001f
+            logger.d("Setting default accuracy of 1001 for location without accuracy")
+        }
 
         if (location == null || !RadarUtils.valid(location)) {
             logger.d("Invalid location | source = $source; location = $location")
 
-            Radar.sendError(RadarStatus.ERROR_LOCATION)
+            Radar.sendError(RadarStatus.ERROR_LOCATION, "Invalid location | source = $source; location = $location")
 
             callCallbacks(RadarStatus.ERROR_LOCATION)
 
