@@ -57,7 +57,7 @@ internal data class RadarSdkConfiguration(
                 config.optBoolean(USE_LOCATION_METADATA, false),
                 config.optBoolean(USE_OPENED_APP_CONVERSION, true),
                 config.optBoolean(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, false),
-                config.optInt(LOCATION_MANAGER_TIMEOUT, 20000),
+                config.optInt(LOCATION_MANAGER_TIMEOUT, 0),
             )
         }
 
