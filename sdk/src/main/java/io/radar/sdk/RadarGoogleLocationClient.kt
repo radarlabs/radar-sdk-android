@@ -34,7 +34,7 @@ internal class RadarGoogleLocationClient(
         
         val timeout = RadarSettings.getSdkConfiguration(context).locationManagerTimeout
         if (timeout > 0) {
-            logger.d("Requesting location with timeout $timeout")
+            logger.d("Requesting location with timeout | timeout = $timeout")
             currentLocationRequestBuilder = currentLocationRequestBuilder.setDurationMillis(timeout.toLong())
         } else {
             logger.d("Requesting location with default timeout")
