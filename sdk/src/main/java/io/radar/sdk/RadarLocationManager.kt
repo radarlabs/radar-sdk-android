@@ -74,6 +74,13 @@ internal class RadarLocationManager(
     }
 
     fun getLocation(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, source: RadarLocationSource, callback: RadarLocationCallback? = null) {
+        if (!permissionsHelper.locationServicesEnabled(context)) {
+            logger.d("Location services are not enabled")
+            Radar.sendError(RadarStatus.ERROR_PERMISSIONS, "Location services are not enabled")
+            callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
+            return
+        }
+
         if (!permissionsHelper.fineLocationPermissionGranted(context) && !permissionsHelper.coarseLocationPermissionGranted(context)) {
             Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
 

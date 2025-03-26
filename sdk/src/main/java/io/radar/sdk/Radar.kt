@@ -3724,13 +3724,13 @@ object Radar {
     }
 
     internal fun sendError(status: RadarStatus, errorMessage: String? = null) {
-        receiver?.onError(context, status)
         if (errorMessage != null) {
             logger.e("📍️ Radar error received | status = $status | error message = $errorMessage", RadarLogType.SDK_ERROR)
         } else {
             logger.e("📍️ Radar error received | status = $status", RadarLogType.SDK_ERROR)
         }
         Radar.flushLogs()
+        receiver?.onError(context, status)
     }
 
     internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?, createdAt: Date = Date()) {
