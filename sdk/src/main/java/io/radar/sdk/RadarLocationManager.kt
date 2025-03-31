@@ -360,7 +360,8 @@ internal class RadarLocationManager(
         }
     }
 
-    private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
+    internal fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
+        RadarState.setNearbyGeofences(context, radarGeofences)
         this.removeSyncedGeofences() { success ->
             this.addSyncedGeofences(radarGeofences)
         }
@@ -627,7 +628,9 @@ internal class RadarLocationManager(
                     config: RadarConfig?,
                     token: RadarVerifiedLocationToken?
                 ) {
-                    locationManager.replaceSyncedGeofences(nearbyGeofences)
+                    if (status == RadarStatus.SUCCESS) {
+                        locationManager.replaceSyncedGeofences(nearbyGeofences)
+                    }
 
                     if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
                         locationManager.stopForegroundService()

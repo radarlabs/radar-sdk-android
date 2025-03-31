@@ -446,12 +446,26 @@ internal class RadarApiClient(
         // before we track, check if replays need to sync
         val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && hasReplays && !verified
         if (replaying) {
+            // creating alias to location to avoid name space conflict
+            val trackLocation = location
             Radar.flushReplays(
                 replayParams = params,
                 callback = object : Radar.RadarTrackCallback {
                     override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
                         // pass through flush replay onComplete for track callback
-                        callback?.onComplete(status)
+                        if (status != RadarStatus.SUCCESS && RadarSettings.getSdkConfiguration(context).useOfflineRTOUpdates) {
+                           RadarOfflineManager().contextualizeLocation(context, trackLocation, object : RadarOfflineManager.RadarOfflineCallback {
+                            override fun onComplete(config: RadarConfig?) {
+                                if (config != null) {
+                                    callback?.onComplete(status, null, null, null, null, config)
+                                } else {
+                                    callback?.onComplete(status)
+                                }
+                            }
+                        }) 
+                        } else {
+                            callback?.onComplete(status)
+                        }
                     }
                 }
             )
@@ -469,9 +483,20 @@ internal class RadarApiClient(
                     }
 
                     Radar.sendError(status)
-
-                    callback?.onComplete(status)
-
+                    if (RadarSettings.getSdkConfiguration(context).useOfflineRTOUpdates) {
+                        Radar.logger.d("network issue encountered, falling back to RadarOfflineManager")
+                        RadarOfflineManager().contextualizeLocation(context, location, object : RadarOfflineManager.RadarOfflineCallback {
+                            override fun onComplete(config: RadarConfig?) {
+                                if (config != null) {
+                                    callback?.onComplete(status, null, null, null, null, config)
+                                } else {
+                                    callback?.onComplete(status)
+                                }
+                            }
+                        })
+                    } else {
+                        callback?.onComplete(status)
+                    }
                     return
                 }
 
