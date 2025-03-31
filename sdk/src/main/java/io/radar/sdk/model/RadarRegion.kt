@@ -58,6 +58,11 @@ class RadarRegion(
      * The distance in meters to the border of the jurisdiction. May be 0 if Fraud is not enabled.
      */
     val distanceToBorder: Double,
+
+    /**
+     * A boolean indicating whether the jurisdiction is expected based on the values passed to `setExpectedJurisdiction()`.
+     */
+    val expected: Boolean = false,
 ) {
 
     internal companion object {
@@ -71,6 +76,7 @@ class RadarRegion(
         private const val FIELD_IN_EXCLUSION_ZONE = "inExclusionZone"
         private const val FIELD_IN_BUFFER_ZONE = "inBufferZone"
         private const val FIELD_DISTANCE_TO_BORDER = "distanceToBorder"
+        private const val FIELD_EXPECTED = "expected"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarRegion? {
@@ -88,8 +94,9 @@ class RadarRegion(
             val inExclusionZone = obj.optBoolean(FIELD_IN_EXCLUSION_ZONE)
             val inBufferZone = obj.optBoolean(FIELD_IN_BUFFER_ZONE)
             val distanceToBorder = obj.optDouble(FIELD_DISTANCE_TO_BORDER)
+            val expected = obj.optBoolean(FIELD_EXPECTED)
 
-            return RadarRegion(id, name, code, type, flag, allowed, passed, inExclusionZone, inBufferZone, distanceToBorder)
+            return RadarRegion(id, name, code, type, flag, allowed, passed, inExclusionZone, inBufferZone, distanceToBorder, expected)
         }
 
         @JvmStatic
@@ -118,6 +125,7 @@ class RadarRegion(
         if (!this.distanceToBorder.isNaN()) {
             obj.putOpt(FIELD_DISTANCE_TO_BORDER, this.distanceToBorder)
         }
+        obj.putOpt(FIELD_EXPECTED, this.expected)
         return obj
     }
 

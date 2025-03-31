@@ -706,6 +706,34 @@ object Radar {
     }
 
     /**
+     * Sets an optional product name, displayed in the dashboard and reports.
+     *
+     * @param[product] A product name. If null, the previous `product` will be cleared.
+     */
+    @JvmStatic
+    fun setProduct(product: String?) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setProduct(context, product)
+    }
+
+    /**
+     * Returns the current `product`.
+     *
+     * @return The current `product`.
+     */
+    @JvmStatic
+    fun getProduct(): String? {
+        if (!initialized) {
+            return null
+        }
+
+        return RadarSettings.getProduct(context)
+    }
+
+    /**
      * Enables anonymous tracking for privacy reasons. Avoids creating user records on the server and avoids sending any stable device IDs, user IDs, and user metadata
      * to the server when calling `trackOnce()` or `startTracking()`. Disabled by default.
      *
@@ -1005,12 +1033,93 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      *
-     * @param[beacons] A boolean indicating whether to range beacons.
      * @param[callback] An optional callback.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerified(beacons: Boolean = false, callback: RadarTrackVerifiedCallback? = null) {
+    fun trackVerified(callback: RadarTrackVerifiedCallback? = null) {
+        trackVerified(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, null, null, callback)
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[block] A block callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun trackVerified(block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
+        trackVerified(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, null, null, block)
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[beacons] A boolean indicating whether to range beacons.
+     * @param[desiredAccuracy] The desired accuracy.
+     * @param[callback] An optional callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun trackVerified(
+        beacons: Boolean = false,
+        desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
+        callback: RadarTrackVerifiedCallback? = null
+    ) {
+        trackVerified(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, null, null, callback)
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[beacons] A boolean indicating whether to range beacons.
+     * @param[desiredAccuracy] The desired accuracy.
+     * @param[block] A block callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun trackVerified(
+        beacons: Boolean = false,
+        desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
+        block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit
+    ) {
+        trackVerified(beacons, desiredAccuracy, null, null, block)
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[beacons] A boolean indicating whether to range beacons.
+     * @param[desiredAccuracy] The desired accuracy.
+     * @param[reason] An optional reason, displayed in the dashboard and reports.
+     * @param[transactionId] An optional transaction ID, displayed in the dashboard and reports.
+     * @param[callback] An optional callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun trackVerified(
+        beacons: Boolean = false,
+        desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
+        reason: String? = null,
+        transactionId: String? = null,
+        callback: RadarTrackVerifiedCallback? = null
+    ) {
         if (!initialized) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -1022,7 +1131,7 @@ object Radar {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        this.verificationManager.trackVerified(beacons, callback)
+        this.verificationManager.trackVerified(beacons, desiredAccuracy, reason, transactionId, callback)
     }
 
     /**
@@ -1033,12 +1142,21 @@ object Radar {
      * @see [](https://radar.com/documentation/fraud)
      *
      * @param[beacons] A boolean indicating whether to range beacons.
+     * @param[desiredAccuracy] The desired accuracy.
+     * @param[reason] An optional reason, displayed in the dashboard and reports.
+     * @param[transactionId] An optional transaction ID, displayed in the dashboard and reports.
      * @param[block] A block callback.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun trackVerified(beacons: Boolean = false, block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
-        trackVerified(beacons, object : RadarTrackVerifiedCallback {
+    fun trackVerified(
+        beacons: Boolean = false,
+        desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
+        reason: String? = null,
+        transactionId: String? = null,
+        block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit
+    ) {
+        trackVerified(beacons, desiredAccuracy, reason, transactionId, object : RadarTrackVerifiedCallback {
             override fun onComplete(status: RadarStatus, token: RadarVerifiedLocationToken?) {
                 block(status, token)
             }
@@ -1091,6 +1209,27 @@ object Radar {
     }
 
     /**
+     * Returns a boolean indicating whether verified tracking has been started.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @return A boolean indicating whether verified tracking has been started.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun isTrackingVerified(): Boolean {
+        if (!initialized) {
+            return false
+        }
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        return this.verificationManager.started
+    }
+
+    /**
      * Returns the user's last verified location token if still valid, or requests a fresh token if not.
      *
      * Note that you must configure SSL pinning before calling this method.
@@ -1102,18 +1241,7 @@ object Radar {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun getVerifiedLocationToken(callback: RadarTrackVerifiedCallback? = null) {
-        if (!initialized) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
-            return
-        }
-        this.logger.i("getVerifiedLocationToken()", RadarLogType.SDK_CALL)
-
-        if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
-        }
-
-        this.verificationManager.getVerifiedLocationToken(callback)
+        getVerifiedLocationToken(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback)
     }
 
     /**
@@ -1128,7 +1256,52 @@ object Radar {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun getVerifiedLocationToken(block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
-        getVerifiedLocationToken(object : RadarTrackVerifiedCallback {
+        getVerifiedLocationToken(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, block)
+    }
+
+    /**
+     * Returns the user's last verified location token if still valid, or requests a fresh token if not.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[beacons] A boolean indicating whether to range beacons.
+     * @param[desiredAccuracy] The desired accuracy.
+     * @param[callback] An optional callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun getVerifiedLocationToken(beacons: Boolean = false, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback: RadarTrackVerifiedCallback? = null) {
+        if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+        this.logger.i("getVerifiedLocationToken()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.getVerifiedLocationToken(beacons, desiredAccuracy, callback)
+    }
+
+    /**
+     * Returns the user's last verified location token if still valid, or requests a fresh token if not.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[beacons] A boolean indicating whether to range beacons.
+     * @param[desiredAccuracy] The desired accuracy.
+     * @param[block] A block callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun getVerifiedLocationToken(beacons: Boolean = false, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
+        getVerifiedLocationToken(beacons, desiredAccuracy, object : RadarTrackVerifiedCallback {
             override fun onComplete(status: RadarStatus, token: RadarVerifiedLocationToken?) {
                 block(status, token)
             }
@@ -1136,10 +1309,30 @@ object Radar {
     }
 
     /**
+     * Clears the user's last verified location token.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun clearVerifiedLocationToken() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("clearVerifiedLocationToken()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.clearVerifiedLocationToken()
+    }
+
+    /**
      * Optionally sets the user's expected country and state for jurisdiction checks.
      *
      * @param[countryCode] The user's expected country code.
-     * * @param[countryCode] The user's expected country code.
+     * @param[stateCode] The user's expected state code.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
@@ -1791,6 +1984,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -1800,10 +1994,11 @@ object Radar {
         chains: Array<String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
-        searchPlaces(radius, chains, null, categories, groups, limit, callback)
+        searchPlaces(radius, chains, null, categories, groups, countryCodes, limit, callback)
     }
 
     /**
@@ -1817,6 +2012,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -1827,6 +2023,7 @@ object Radar {
         chainMetadata: Map<String, String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
@@ -1847,7 +2044,7 @@ object Radar {
                     return
                 }
 
-                apiClient.searchPlaces(location, radius, chains, chainMetadata, categories, groups, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
+                apiClient.searchPlaces(location, radius, chains, chainMetadata, categories, groups, countryCodes, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?, places: Array<RadarPlace>?) {
                         handler.post {
                             callback.onComplete(status, location, places)
@@ -1867,6 +2064,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -1875,10 +2073,11 @@ object Radar {
         chains: Array<String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
     ) {
-        searchPlaces(radius, chains, null, categories, groups, limit, block)
+        searchPlaces(radius, chains, null, categories, groups, countryCodes, limit, block)
     }
 
     /**
@@ -1892,6 +2091,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -1901,6 +2101,7 @@ object Radar {
         chainMetadata: Map<String, String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
     ) {
@@ -1910,6 +2111,7 @@ object Radar {
             chainMetadata,
             categories,
             groups,
+            countryCodes,
             limit,
             object : RadarSearchPlacesCallback {
                 override fun onComplete(status: RadarStatus, location: Location?, places: Array<RadarPlace>?) {
@@ -1929,6 +2131,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -1939,10 +2142,11 @@ object Radar {
         chains: Array<String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
-        searchPlaces(near, radius, chains, null, categories, groups, limit, callback)
+        searchPlaces(near, radius, chains, null, categories, groups, countryCodes, limit, callback)
     }
 
     /**
@@ -1957,6 +2161,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -1968,6 +2173,7 @@ object Radar {
         chainMetadata: Map<String, String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         callback: RadarSearchPlacesCallback
     ) {
@@ -1978,7 +2184,7 @@ object Radar {
         }
         this.logger.i("searchPlaces()", RadarLogType.SDK_CALL)
 
-        apiClient.searchPlaces(near, radius, chains, chainMetadata, categories, groups, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
+        apiClient.searchPlaces(near, radius, chains, chainMetadata, categories, groups, countryCodes, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, places: Array<RadarPlace>?) {
                 handler.post {
                     callback.onComplete(status, near, places)
@@ -1997,6 +2203,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -2006,10 +2213,11 @@ object Radar {
         chains: Array<String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
     ) {
-        searchPlaces(near, radius, chains, null, categories, groups, limit, block)
+        searchPlaces(near, radius, chains, null, categories, groups, countryCodes, limit, block)
     }
 
     /**
@@ -2024,6 +2232,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)     
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -2034,6 +2243,7 @@ object Radar {
         chainMetadata: Map<String, String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
     ) {
@@ -2044,6 +2254,7 @@ object Radar {
             chainMetadata,
             categories,
             groups,
+            countryCodes,
             limit,
             object : RadarSearchPlacesCallback {
                 override fun onComplete(status: RadarStatus, location: Location?, places: Array<RadarPlace>?) {

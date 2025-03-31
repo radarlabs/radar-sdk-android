@@ -17,6 +17,7 @@ internal object RadarSettings {
     private const val KEY_ID = "radar_user_id"
     private const val KEY_USER_ID = "user_id"
     private const val KEY_DESCRIPTION = "user_description"
+    private const val KEY_PRODUCT = "product"
     private const val KEY_METADATA = "user_metadata"
     private const val KEY_ANONYMOUS = "anonymous"
     private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
@@ -126,6 +127,14 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putString(KEY_DESCRIPTION, description) }
     }
 
+    internal fun getProduct(context: Context): String? {
+        return getSharedPreferences(context).getString(KEY_PRODUCT, null)
+    }
+
+    internal fun setProduct(context: Context, product: String?) {
+        getSharedPreferences(context).edit { putString(KEY_PRODUCT, product) }
+    }
+
     internal fun getMetadata(context: Context): JSONObject? {
         val metadataJson = getSharedPreferences(context).getString(KEY_METADATA, null) ?: return null
         return JSONObject(metadataJson)
@@ -232,7 +241,7 @@ internal object RadarSettings {
         val notificationOptionsJson = notificationOptions.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_NOTIFICATION_OPTIONS, notificationOptionsJson) }
         var previousValue = getForegroundService(context)
-        setForegroundService(context,RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+        setForegroundService(context, RadarTrackingOptions.RadarTrackingOptionsForegroundService(
             previousValue.text,
             previousValue.title,
             previousValue.icon,
@@ -241,8 +250,8 @@ internal object RadarSettings {
             previousValue.importance,
             previousValue.id,
             previousValue.channelName,
-            notificationOptions.getForegroundServiceIcon()?:previousValue.iconString,
-            notificationOptions.getForegroundServiceColor()?:previousValue.iconColor
+            notificationOptions.getForegroundServiceIcon() ?: previousValue.iconString,
+            notificationOptions.getForegroundServiceColor() ?: previousValue.iconColor
         ))
     }
 
@@ -329,9 +338,15 @@ internal object RadarSettings {
     }
 
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {
-        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, Radar.RadarLogLevel.INFO.value)
-        val userDebug = getUserDebug(context)
-        return if (userDebug) Radar.RadarLogLevel.DEBUG else Radar.RadarLogLevel.fromInt(logLevelInt)
+        val defaultLogLevelInt = if (getUserDebug(context)) {
+            Radar.RadarLogLevel.DEBUG.value
+        } else if (BuildConfig.DEBUG) {
+            Radar.RadarLogLevel.INFO.value
+        } else {
+            Radar.RadarLogLevel.NONE.value
+        }
+        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, defaultLogLevelInt)
+        return Radar.RadarLogLevel.fromInt(logLevelInt)
     }
 
     internal fun setLogLevel(context: Context, level: Radar.RadarLogLevel) {

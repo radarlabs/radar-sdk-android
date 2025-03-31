@@ -15,13 +15,12 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.RadarVerifiedReceiver
-import io.radar.sdk.model.RadarVerifiedLocationToken
-import org.json.JSONObject
-import java.util.EnumSet
-import androidx.core.content.edit
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
-import java.util.*
+import io.radar.sdk.model.RadarVerifiedLocationToken
+import org.json.JSONObject
+import java.util.Date
+import java.util.EnumSet
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "prj_test_pk_000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
         Radar.sdkVersion().let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
@@ -167,6 +166,7 @@ class MainActivity : AppCompatActivity() {
                 mapOf("orderActive" to "true"),
                 null,
                 null,
+                arrayOf("US", "SG"),
                 10
             ) { status, location, places ->
                 Log.v(
@@ -232,7 +232,18 @@ class MainActivity : AppCompatActivity() {
             Radar.reverseGeocode(reverseGeocodeLocation) { status, addresses ->
                 Log.v(
                     "example",
-                    "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}"
+                    "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}, timeZone = ${addresses?.first()?.timeZone?.toJson()}"
+                )
+            }
+
+            val reverseGeocodeLocationLondon = Location("example")
+            reverseGeocodeLocationLondon.latitude = 51.5074
+            reverseGeocodeLocationLondon.longitude = -0.1278
+            
+            Radar.reverseGeocode(reverseGeocodeLocationLondon) { status, addresses ->
+                Log.v(
+                    "example",
+                    "Reverse geocode: status = $status; coordinate = ${addresses?.first()?.formattedAddress}, timeZone = ${addresses?.first()?.timeZone?.toJson()}"
                 )
             }
 

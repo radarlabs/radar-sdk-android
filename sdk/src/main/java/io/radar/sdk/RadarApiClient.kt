@@ -125,6 +125,10 @@ internal class RadarApiClient(
         } else {
             headers["X-Radar-X-Platform-SDK-Type"] = "Native"
         }
+        val product = RadarSettings.getProduct(context)
+        if (product != null) {
+            headers["X-Radar-Product"] = product
+        }
         return headers
     }
 
@@ -251,7 +255,23 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, expectedCountryCode: String? = null, expectedStateCode: String? = null, callback: RadarTrackApiCallback? = null) {
+    internal fun track(
+        location: Location,
+        stopped: Boolean,
+        foreground: Boolean,
+        source: RadarLocationSource,
+        replayed: Boolean,
+        beacons: Array<RadarBeacon>?,
+        verified: Boolean = false,
+        integrityToken: String? = null,
+        integrityException: String? = null,
+        encrypted: Boolean? = false,
+        expectedCountryCode: String? = null,
+        expectedStateCode: String? = null,
+        reason: String? = null,
+        transactionId: String? = null,
+        callback: RadarTrackApiCallback? = null
+    ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -363,7 +383,6 @@ internal class RadarApiClient(
             if (verified) {
                 params.putOpt("integrityToken", integrityToken)
                 params.putOpt("integrityException", integrityException)
-                params.putOpt("sharing", RadarUtils.isScreenSharing(context))
                 params.putOpt("encrypted", encrypted)
                 if (expectedCountryCode != null) {
                     params.putOpt("expectedCountryCode", expectedCountryCode)
@@ -371,8 +390,32 @@ internal class RadarApiClient(
                 if (expectedStateCode != null) {
                     params.putOpt("expectedStateCode", expectedStateCode)
                 }
+                if (reason != null) {
+                    params.putOpt("reason", reason)
+                }
+                if (transactionId != null) {
+                    params.putOpt("transactionId", transactionId)
+                }
+                val fraudFailureReasons = JSONArray()
+                if (RadarUtils.hasMultipleDisplays(context)) {
+                    fraudFailureReasons.put("fraud_sharing_multiple_displays")
+                }
+                if (RadarUtils.hasVirtualInputDevice(context)) {
+                    fraudFailureReasons.put("fraud_sharing_virtual_input_device")
+                }
+                if (fraudFailureReasons.length() > 0) {
+                    params.putOpt("fraudFailureReasons", fraudFailureReasons)
+                }
             }
             params.putOpt("appId", context.packageName)
+            try {
+                params.putOpt("appName", context.applicationInfo.loadLabel(context.packageManager).toString())
+                val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                params.putOpt("appVersion", packageInfo.versionName)
+                params.putOpt("appBuild", packageInfo.versionCode)
+            } catch (_: Exception) {
+
+            }
             if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
                 val metadata = JSONObject()
                 metadata.putOpt("motionActivityData", RadarState.getLastMotionActivity(context))
@@ -718,6 +761,7 @@ internal class RadarApiClient(
         chainMetadata: Map<String, String>?,
         categories: Array<String>?,
         groups: Array<String>?,
+        countryCodes: Array<String>?,
         limit: Int?,
         callback: RadarSearchPlacesApiCallback
     ) {
@@ -740,6 +784,10 @@ internal class RadarApiClient(
         }
         if (groups?.isNotEmpty() == true) {
             queryParams.append("&groups=${groups.joinToString(separator = ",")}")
+        }
+
+        if (countryCodes?.isNotEmpty() == true) {
+            queryParams.append("&country=${countryCodes.joinToString(separator = ",")}")
         }
 
         chainMetadata?.entries?.forEach {

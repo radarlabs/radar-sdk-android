@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
+import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
@@ -28,9 +29,16 @@ internal class RadarGoogleLocationClient(
     override fun getCurrentLocation(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (location: Location?) -> Unit) {
         val priority = priorityForDesiredAccuracy(desiredAccuracy)
 
+        var currentLocationRequestBuilder = CurrentLocationRequest.Builder()
+            .setPriority(priority)
+        if (desiredAccuracy == RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH) {
+            currentLocationRequestBuilder = currentLocationRequestBuilder.setMaxUpdateAgeMillis(0)
+        }
+        val currentLocationRequest = currentLocationRequestBuilder.build()
+
         logger.d("Requesting location")
 
-        locationClient.getCurrentLocation(priority, null).addOnSuccessListener { location ->
+        locationClient.getCurrentLocation(currentLocationRequest, null).addOnSuccessListener { location ->
             logger.d("Received current location")
 
             block(location)
@@ -47,11 +55,12 @@ internal class RadarGoogleLocationClient(
     ) {
         val priority = priorityForDesiredAccuracy(desiredAccuracy)
 
-        val locationRequest = LocationRequest().apply {
-            this.priority = priority
-            this.interval = interval * 1000L
-            this.fastestInterval = fastestInterval * 1000L
+        var locationRequestBuilder = LocationRequest.Builder(priority, interval * 1000L)
+            .setMinUpdateIntervalMillis(fastestInterval * 1000L)
+        if (desiredAccuracy == RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH) {
+            locationRequestBuilder = locationRequestBuilder.setMaxUpdateAgeMillis(0)
         }
+        val locationRequest = locationRequestBuilder.build()
 
         locationClient.requestLocationUpdates(locationRequest, pendingIntent)
     }

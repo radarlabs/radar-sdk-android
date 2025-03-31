@@ -15,6 +15,8 @@ import java.security.MessageDigest
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
+import java.time.Instant
+import java.time.ZonedDateTime
 import kotlin.math.abs
 
 internal object RadarUtils {
@@ -123,29 +125,31 @@ internal object RadarUtils {
                 || Build.PRODUCT.contains("simulator");
     }
 
-    internal fun isScreenSharing(context: Context): Boolean {
-        if (Build.VERSION.SDK_INT < 17) {
-            return false
-        }
+    internal fun hasMultipleDisplays(context: Context): Boolean {
         val displayManager = DisplayManagerCompat.getInstance(context)
-        val multipleDisplays = displayManager.displays.size > 1
+        return displayManager.displays.size > 1
+    }
 
-        val sharing = RadarSettings.getSharing(context)
-
-        return multipleDisplays || sharing
+    internal fun hasVirtualInputDevice(context: Context): Boolean {
+        return RadarSettings.getSharing(context)
     }
 
     internal fun isoStringToDate(str: String?): Date? {
         if (str == null) {
             return null
         }
-
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+    
         try {
-            return dateFormat.parse(str)
-        } catch (pe: ParseException) {
-            return null;
+            return Date.from(ZonedDateTime.parse(str).toInstant())
+        } catch (e: Exception) {
+            // Fall back to old date format
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+            return try {
+                dateFormat.parse(str)
+            } catch (pe: ParseException) {
+                null
+            }
         }
     }
 
