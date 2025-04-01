@@ -3,12 +3,9 @@ package io.radar.sdk
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
-import android.content.Intent
 import android.graphics.Color
-import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import io.radar.sdk.model.RadarEvent
@@ -20,7 +17,7 @@ class RadarNotificationHelper {
         private const val NOTIFICATION_ID = 20160525 // Radar's birthday!
 
         @SuppressLint("DiscouragedApi")
-        internal fun showNotifications(context: Context, events: Array<RadarEvent>, logger: RadarLogger) {
+        internal fun showNotifications(context: Context, events: Array<RadarEvent>) {
             if (Build.VERSION.SDK_INT < 26) {
                 return
             }
@@ -44,8 +41,8 @@ class RadarNotificationHelper {
                 val iconString = notificationOptions?.getEventIcon() ?: context.applicationContext.applicationInfo.icon.toString()
                 val smallIcon = context.applicationContext.resources.getIdentifier(iconString, "drawable", context.applicationContext.packageName)
 
-                if (notificationText != null && campaignType == "notification") {
-                    logger.d("creating campaign notification with metadata  = ${event.metadata}") 
+                if (notificationText != null && campaignType == "eventBased") {
+                    Radar.logger.d("creating campaign notification with metadata  = ${event.metadata}")
                     val notificationTitle: String? = event.metadata?.optString("radar:notificationTitle")
                     val subTitle: String? = event.metadata?.optString("radar:notificationSubTitle")
                     val campaignId: String? = event.metadata?.optString("radar:notificationCampaignId")
