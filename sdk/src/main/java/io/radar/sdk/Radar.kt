@@ -3729,7 +3729,9 @@ object Radar {
         } else {
             logger.e("📍️ Radar error received | status = $status", RadarLogType.SDK_ERROR)
         }
-        Radar.flushLogs()
+        if (initialized) {
+            Radar.flushLogs()
+        }
         receiver?.onError(context, status)
     }
 
