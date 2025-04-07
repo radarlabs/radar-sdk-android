@@ -482,7 +482,7 @@ internal class RadarLocationManager(
          // Set default accuracy if not provided
         if (location?.accuracy  == 0f) {
             location.accuracy = 1000f
-            logger.d("Setting default accuracy of 1001 for location without accuracy")
+            logger.d("Setting default accuracy of 1000 for location without accuracy")
         }
 
         if (location == null || !RadarUtils.valid(location)) {
