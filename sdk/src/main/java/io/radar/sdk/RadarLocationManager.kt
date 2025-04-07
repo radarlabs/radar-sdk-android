@@ -481,7 +481,7 @@ internal class RadarLocationManager(
         }
          // Set default accuracy if not provided
         if (location?.accuracy  == 0f) {
-            location.accuracy = 1001f
+            location.accuracy = 1000f
             logger.d("Setting default accuracy of 1001 for location without accuracy")
         }
 
@@ -500,7 +500,7 @@ internal class RadarLocationManager(
         var stopped: Boolean
 
         val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT)
-        if (!force && location.accuracy > 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
+        if (!force && location.accuracy >= 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
             logger.d("Skipping location: inaccurate | accuracy = ${location.accuracy}")
 
             this.updateTracking(location)
