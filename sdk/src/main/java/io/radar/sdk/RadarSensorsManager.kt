@@ -13,6 +13,8 @@ class RadarSensorsManager(context: Context) : SensorEventListener {
     private val shortTermWindow = mutableListOf<Float>()
     private val shortTermSize = 50  // 5 seconds at 10 Hz
     private val userAgent = "RadarSDK/Android/4.0.0"
+    private var lastSyncTime: Long = 0
+    private val SYNC_INTERVAL_MS = 2000L // 2 seconds
 
     init {
         sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -23,7 +25,6 @@ class RadarSensorsManager(context: Context) : SensorEventListener {
         } ?: "Not available on device"}")
     }
 
-
     override fun onAccuracyChanged(sensor: Sensor, accuracy: Int) {
         // Right now do nothing here if sensor accuracy changes.
     }
@@ -33,7 +34,6 @@ class RadarSensorsManager(context: Context) : SensorEventListener {
         val accuracy = event.accuracy
         val timestamp = System.currentTimeMillis()
         
-        
         shortTermWindow.add(millibarsOfPressure)
         if (shortTermWindow.size > shortTermSize) {
             shortTermWindow.removeAt(0)
@@ -42,16 +42,16 @@ class RadarSensorsManager(context: Context) : SensorEventListener {
         // Calculate average of both windows
         val shortTermAverage = shortTermWindow.average()
         
-        val pressureJson = JSONObject()
+        // Only update if enough time has passed since last sync
+        if (timestamp - lastSyncTime >= SYNC_INTERVAL_MS) {
+            val pressureJson = JSONObject()
+            pressureJson.put("accuracy", accuracy)
+            pressureJson.put("pressure", shortTermAverage)
+            pressureJson.put("absoluteAltitudeTimestamp", timestamp / 1000)
 
-        pressureJson.put("accuracy", accuracy)
-
-        pressureJson.put("pressure", shortTermAverage)
-
-        pressureJson.put("absoluteAltitudeTimestamp", timestamp / 1000)
-
-
-        RadarState.setLastPressure(context, pressureJson)
+            RadarState.setLastPressure(context, pressureJson)
+            lastSyncTime = timestamp
+        }
     }
 
     fun onResume() {
