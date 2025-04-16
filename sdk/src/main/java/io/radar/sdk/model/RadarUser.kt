@@ -124,7 +124,9 @@ class RadarUser(
     /**
     The user's current activity type.
      */
-    val activityType: Radar.RadarActivityType?
+    val activityType: Radar.RadarActivityType?,
+
+    val barometricAltitude: Double?
 ) {
     internal companion object {
         private const val FIELD_ID = "_id"
@@ -152,6 +154,7 @@ class RadarUser(
         private const val FIELD_DEBUG = "debug"
         private const val FIELD_FRAUD = "fraud"
         private const val FIELD_ACTIVITY_TYPE = "activityType"
+        private const val FIELD_BAROMETRIC_ALTITUDE = "barometricAltitude"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarUser? {
@@ -199,6 +202,15 @@ class RadarUser(
             val debug = obj.optBoolean(FIELD_DEBUG)
             val fraud = RadarFraud.fromJson(obj.optJSONObject(FIELD_FRAUD))
             val activityType = Radar.RadarActivityType.fromString(obj.optString(FIELD_ACTIVITY_TYPE))
+
+            val barometricAltitude = if (obj.has(FIELD_BAROMETRIC_ALTITUDE)) {
+                obj.optDouble(FIELD_BAROMETRIC_ALTITUDE)
+            } else {
+                null
+            }
+            
+            
+
             
             return RadarUser(
                 id,
@@ -223,7 +235,8 @@ class RadarUser(
                 trip,
                 debug,
                 fraud,
-                activityType
+                activityType,
+                barometricAltitude
             )
         }
     }
@@ -259,7 +272,9 @@ class RadarUser(
         obj.putOpt(FIELD_DEBUG, this.debug)
         obj.putOpt(FIELD_FRAUD, this.fraud?.toJson())
         obj.putOpt(FIELD_ACTIVITY_TYPE,this.activityType?.toString())
+        if (this.barometricAltitude != null) {
+            obj.putOpt(FIELD_BAROMETRIC_ALTITUDE, this.barometricAltitude)
+        }
         return obj
     }
-
 }
