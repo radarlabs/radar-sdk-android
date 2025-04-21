@@ -1,7 +1,6 @@
 package io.radar.sdk
 
 import org.json.JSONObject
-import java.util.Date
 
 /**
  * An options class used to configure local notifications.
@@ -38,6 +37,8 @@ data class RadarNotificationOptions(
      * Determines the name of the asset to be used for event notifications. Optional, defaults to iconString.
      */
     val eventIconColor: String? = null,
+
+
 ) {
 
     companion object {

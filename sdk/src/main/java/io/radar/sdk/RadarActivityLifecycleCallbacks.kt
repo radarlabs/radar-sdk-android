@@ -139,5 +139,11 @@ internal class RadarActivityLifecycleCallbacks(
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
         Log.w(TAG, "ON CREATE ${count}")
         updatePermissionsDenied(activity)
+        val res = activity.intent.extras?.getBoolean("radarNotification")
+        Log.i("testing",activity.intent.extras.toString())
+        if (res == true) {
+            Log.i("testing","called from notification")
+            Radar.logOpenedAppConversionFromNotification()
+        }
     }
 }

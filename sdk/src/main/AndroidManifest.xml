@@ -21,6 +21,14 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+        <receiver
+            android:name=".RadarNotificationReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter android:priority="999">
+                <action android:name="io.radar.sdk.NotificationReceiver.CONVERSION" />
+            </intent-filter>
+        </receiver>
         <service android:name=".RadarJobScheduler"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="true" />

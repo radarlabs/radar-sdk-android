@@ -2,7 +2,9 @@ package io.radar.example
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.location.Location
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -12,7 +14,7 @@ import io.radar.sdk.RadarReceiver
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
 
-class MyRadarReceiver : RadarReceiver() {
+class MyRadarReceiver() : RadarReceiver() {
 
     companion object {
 
@@ -33,11 +35,18 @@ class MyRadarReceiver : RadarReceiver() {
                 notificationManager.createNotificationChannel(channel)
             }
 
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            val pendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
             val builder = NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                 .setContentText(body)
                 .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
 
             with(NotificationManagerCompat.from(context)) {
                 notify(identifier % 20, builder.build())
@@ -47,7 +56,10 @@ class MyRadarReceiver : RadarReceiver() {
     }
 
     override fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser?) {
-        events.forEach { event -> notify(context, Utils.stringForRadarEvent(event)) }
+        events.forEach { event -> {
+        //notify(context, Utils.stringForRadarEvent(event))
+        }
+        }
     }
 
     override fun onLocationUpdated(context: Context, location: Location, user: RadarUser) {
@@ -61,11 +73,11 @@ class MyRadarReceiver : RadarReceiver() {
     }
 
     override fun onError(context: Context, status: Radar.RadarStatus) {
-        notify(context, Utils.stringForRadarStatus(status))
+        //notify(context, Utils.stringForRadarStatus(status))
     }
 
     override fun onLog(context: Context, message: String) {
-        notify(context, message)
+        //notify(context, message)
     }
 
 }

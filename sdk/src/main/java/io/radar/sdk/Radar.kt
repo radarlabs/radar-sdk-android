@@ -459,7 +459,7 @@ object Radar {
     internal var initialized = false
     internal var isFlushingReplays = false
     private lateinit var context: Context
-    private var activity: Activity? = null
+    internal var activity: Activity? = null
     internal lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
     private var verifiedReceiver: RadarVerifiedReceiver? = null
@@ -3380,12 +3380,32 @@ object Radar {
         if (!RadarSettings.getSdkConfiguration(context).useOpenedAppConversion) {
             return
         }
-        // if opened_app has been logged in the last 1000 milliseconds, don't log it again
+        // if opened_app_test has been logged in the last 1000 milliseconds, don't log it again
         val timestamp = System.currentTimeMillis()
         val lastAppOpenTime = RadarSettings.getLastAppOpenTimeMillis(context)
         if (timestamp - lastAppOpenTime > 1000) {
             RadarSettings.updateLastAppOpenTimeMillis(context)
-            sendLogConversionRequest("opened_app", callback = object : RadarLogConversionCallback {
+            sendLogConversionRequest("opened_app_test", callback = object : RadarLogConversionCallback {
+                override fun onComplete(status: RadarStatus, event: RadarEvent?) {
+                    logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
+                }
+            })
+        }
+    }
+
+    internal fun logOpenedAppConversionFromNotification() {
+        if (!RadarSettings.getSdkConfiguration(context).useOpenedAppConversion) {
+            return
+        }
+        // if opened_app_test has been logged in the last 1000 milliseconds, don't log it again
+        val timestamp = System.currentTimeMillis()
+        val lastAppOpenTime = RadarSettings.getLastAppOpenTimeMillis(context)
+        if (timestamp - lastAppOpenTime > 1000) {
+            RadarSettings.updateLastAppOpenTimeMillis(context)
+            val metaData = JSONObject().apply {
+                put("conversionSource", "radar_notification")
+            }
+            sendLogConversionRequest("opened_app_test", metaData, callback = object : RadarLogConversionCallback {
                 override fun onComplete(status: RadarStatus, event: RadarEvent?) {
                     logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
                 }
