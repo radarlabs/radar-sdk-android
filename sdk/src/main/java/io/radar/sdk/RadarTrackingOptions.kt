@@ -299,6 +299,7 @@ data class RadarTrackingOptions(
          * Determines the color notification icon. Optional.
          */
         var iconColor: String? = null,
+        val deepLink: String? = null
     ) {
 
         companion object {
@@ -312,7 +313,7 @@ data class RadarTrackingOptions(
             internal const val KEY_FOREGROUND_SERVICE_IMPORTANCE = "importance"
             internal const val KEY_FOREGROUND_SERVICE_ID = "id"
             internal const val KEY_FOREGROUND_SERVICE_CHANNEL_NAME = "channelName"
-
+            internal const val KEY_FOREGROUND_SERVICE_DEEP_LINK = "deepLink"
             @JvmStatic
             fun fromJson(obj: JSONObject?): RadarTrackingOptionsForegroundService? {
                 if (obj == null) {
@@ -329,7 +330,8 @@ data class RadarTrackingOptions(
                 val importance = if (obj.isNull(KEY_FOREGROUND_SERVICE_IMPORTANCE)) null else obj.optInt(KEY_FOREGROUND_SERVICE_IMPORTANCE)
                 val id = if (obj.isNull(KEY_FOREGROUND_SERVICE_ID)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ID)
                 val channelName = if (obj.isNull(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)) null else obj.optString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)
-                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id, channelName, iconString, iconColor)
+                val deepLink = if (obj.isNull(KEY_FOREGROUND_SERVICE_DEEP_LINK)) null else obj.optString(KEY_FOREGROUND_SERVICE_DEEP_LINK)
+                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id, channelName, iconString, iconColor, deepLink)
             }
         }
 
@@ -346,6 +348,7 @@ data class RadarTrackingOptions(
             obj.put(KEY_FOREGROUND_SERVICE_IMPORTANCE, importance)
             obj.put(KEY_FOREGROUND_SERVICE_ID, id)
             obj.put(KEY_FOREGROUND_SERVICE_CHANNEL_NAME, channelName)
+            obj.put(KEY_FOREGROUND_SERVICE_DEEP_LINK, deepLink)
             return obj
         }
 

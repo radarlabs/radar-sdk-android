@@ -251,7 +251,8 @@ internal object RadarSettings {
             previousValue.id,
             previousValue.channelName,
             notificationOptions.getForegroundServiceIcon() ?: previousValue.iconString,
-            notificationOptions.getForegroundServiceColor() ?: previousValue.iconColor
+            notificationOptions.getForegroundServiceColor() ?: previousValue.iconColor,
+            notificationOptions.deepLink
         ))
     }
 
