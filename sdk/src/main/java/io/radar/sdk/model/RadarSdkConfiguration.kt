@@ -22,6 +22,7 @@ internal data class RadarSdkConfiguration(
     val useLocationMetadata: Boolean,
     val useOpenedAppConversion: Boolean = false,
     val useForegroundLocationUpdatedAtMsDiff: Boolean = false,
+    val locationManagerTimeout: Int = 0,
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -37,7 +38,7 @@ internal data class RadarSdkConfiguration(
         private const val USE_LOCATION_METADATA = "useLocationMetadata"
         private const val USE_OPENED_APP_CONVERSION = "useOpenedAppConversion"
         private const val USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF = "useForegroundLocationUpdatedAtMsDiff"
-
+        private const val LOCATION_MANAGER_TIMEOUT = "locationManagerTimeout"
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             // set json as empty object if json is null, which uses fallback values
@@ -56,6 +57,7 @@ internal data class RadarSdkConfiguration(
                 config.optBoolean(USE_LOCATION_METADATA, false),
                 config.optBoolean(USE_OPENED_APP_CONVERSION, true),
                 config.optBoolean(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, false),
+                config.optInt(LOCATION_MANAGER_TIMEOUT, 0),
             )
         }
 
@@ -86,6 +88,7 @@ internal data class RadarSdkConfiguration(
             putOpt(USE_LOCATION_METADATA, useLocationMetadata)
             putOpt(USE_OPENED_APP_CONVERSION, useOpenedAppConversion)
             putOpt(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, useForegroundLocationUpdatedAtMsDiff)
+            putOpt(LOCATION_MANAGER_TIMEOUT, locationManagerTimeout)
         }
     }
 }
