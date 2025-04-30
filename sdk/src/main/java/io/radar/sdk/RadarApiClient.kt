@@ -32,7 +32,8 @@ import java.util.EnumSet
 internal class RadarApiClient(
     private val context: Context,
     private var logger: RadarLogger,
-    internal var apiHelper: RadarApiHelper = RadarApiHelper(logger)
+    internal var apiHelper: RadarApiHelper = RadarApiHelper(logger),
+    private var apiRetryWrapper: RadarAPIRetryWrapper = RadarAPIRetryWrapper(apiHelper)
 ) {
 
     interface RadarTrackApiCallback {
@@ -158,7 +159,7 @@ internal class RadarApiClient(
         val path = "v1/config?${queryParams}"
         val headers = headers(publishableKey)
 
-        apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
+        apiRetryWrapper.requestWithRetry(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status == RadarStatus.SUCCESS) {
                     Radar.flushLogs()
