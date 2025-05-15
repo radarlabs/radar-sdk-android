@@ -38,6 +38,11 @@ data class RadarNotificationOptions(
      * Determines the name of the asset to be used for event notifications. Optional, defaults to iconString.
      */
     val eventIconColor: String? = null,
+
+    /**
+     * Determines the deep link to be used for event notifications. Optional.
+     */
+    val deepLink: String? = null,
 ) {
 
     companion object {
@@ -48,7 +53,7 @@ data class RadarNotificationOptions(
         internal const val KEY_FOREGROUNDSERVICE_ICON_COLOR = "foregroundServiceIconColor"
         internal const val KEY_EVENT_ICON_STRING = "eventIconString"
         internal const val KEY_EVENT_ICON_COLOR = "eventIconColor"
-      
+        internal const val KEY_DEEPLINK = "deepLink"
 
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarNotificationOptions {
@@ -58,8 +63,8 @@ data class RadarNotificationOptions(
             val foregroundServiceIconColor = if (obj.isNull(KEY_FOREGROUNDSERVICE_ICON_COLOR)) null else obj.optString(KEY_FOREGROUNDSERVICE_ICON_COLOR)
             val eventIconString = if (obj.isNull(KEY_EVENT_ICON_STRING)) null else obj.optString(KEY_EVENT_ICON_STRING)
             val eventIconColor = if (obj.isNull(KEY_EVENT_ICON_COLOR)) null else obj.optString(KEY_EVENT_ICON_COLOR)
-
-            return RadarNotificationOptions(iconString, iconColor, foregroundServiceIconString, foregroundServiceIconColor, eventIconString, eventIconColor)
+            val deepLink = if (obj.isNull(KEY_DEEPLINK)) null else obj.optString(KEY_DEEPLINK)
+            return RadarNotificationOptions(iconString, iconColor, foregroundServiceIconString, foregroundServiceIconColor, eventIconString, eventIconColor, deepLink)
         }
     }
 
@@ -71,6 +76,7 @@ data class RadarNotificationOptions(
         obj.put(KEY_FOREGROUNDSERVICE_ICON_COLOR, foregroundServiceIconColor)
         obj.put(KEY_EVENT_ICON_STRING, eventIconString)
         obj.put(KEY_EVENT_ICON_COLOR, eventIconColor)
+        obj.put(KEY_DEEPLINK, deepLink)
         return obj
     }
 
