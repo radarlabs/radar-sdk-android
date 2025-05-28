@@ -39,6 +39,7 @@ class RadarSdkConfigurationTest {
             RadarRemoteTrackingOptions("onTrip", RadarTrackingOptions.CONTINUOUS,null),
             RadarRemoteTrackingOptions("inGeofence", RadarTrackingOptions.RESPONSIVE, arrayOf("venue"))
         )
+    private var locationManagerTimeout = 123456
 
     @Before
     fun setUp() {
@@ -130,7 +131,9 @@ class RadarSdkConfigurationTest {
                     },
                     "geofenceTags":["venue"]
                 }
-            ]
+            ],
+            "locationManagerTimeout":$locationManagerTimeout
+
         }""".trimIndent()
     }
 
@@ -152,7 +155,8 @@ class RadarSdkConfigurationTest {
                 useOpenedAppConversion,
                 useForegroundLocationUpdatedAtMsDiff,
                 useOfflineRTOUpdates,
-                remoteTrackingOptions
+                remoteTrackingOptions,
+                locationManagerTimeout
             ).toJson().toMap()
         )
     }
@@ -196,6 +200,7 @@ class RadarSdkConfigurationTest {
             RadarRemoteTrackingOptions.getGeofenceTagsWithKey(settings.remoteTrackingOptions,"inGeofence")
                 ?.get(0) ?: ""
         )
+        assertEquals(locationManagerTimeout, settings.locationManagerTimeout)
     }
 
     @Test
@@ -215,7 +220,7 @@ class RadarSdkConfigurationTest {
         assertFalse(settings.useForegroundLocationUpdatedAtMsDiff)
         assertFalse(settings.useOfflineRTOUpdates)
         assertNull(settings.remoteTrackingOptions)
-
+        assertEquals(0, settings.locationManagerTimeout)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")

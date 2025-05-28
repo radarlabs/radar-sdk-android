@@ -5,11 +5,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.location.Location
-import android.os.Build
 import com.google.android.gms.location.CurrentLocationRequest
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.Geofence
-import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingEvent
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationRequest
@@ -18,7 +15,7 @@ import com.google.android.gms.location.LocationServices
 
 @SuppressLint("MissingPermission")
 internal class RadarGoogleLocationClient(
-    context: Context,
+    private val context: Context,
     private val logger: RadarLogger
 ): RadarAbstractLocationClient() {
 
@@ -28,15 +25,21 @@ internal class RadarGoogleLocationClient(
 
     override fun getCurrentLocation(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (location: Location?) -> Unit) {
         val priority = priorityForDesiredAccuracy(desiredAccuracy)
-
+        
         var currentLocationRequestBuilder = CurrentLocationRequest.Builder()
             .setPriority(priority)
         if (desiredAccuracy == RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH) {
             currentLocationRequestBuilder = currentLocationRequestBuilder.setMaxUpdateAgeMillis(0)
         }
+        
+        val timeout = RadarSettings.getSdkConfiguration(context).locationManagerTimeout
+        if (timeout > 0) {
+            logger.d("Requesting location with timeout | timeout = $timeout")
+            currentLocationRequestBuilder = currentLocationRequestBuilder.setDurationMillis(timeout.toLong())
+        } else {
+            logger.d("Requesting location with default timeout")
+        }
         val currentLocationRequest = currentLocationRequestBuilder.build()
-
-        logger.d("Requesting location")
 
         locationClient.getCurrentLocation(currentLocationRequest, null).addOnSuccessListener { location ->
             logger.d("Received current location")

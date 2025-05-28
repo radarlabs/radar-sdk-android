@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.Handler
@@ -3382,6 +3383,38 @@ object Radar {
             })
     }
 
+    @JvmStatic
+    fun logOpenedAppConversion(intent: Intent) {
+        if (!initialized) {
+            return
+        }
+        if (!RadarSettings.getSdkConfiguration(context).useOpenedAppConversion) {
+            return
+        }
+        // if opened_app has been logged in the last 1000 milliseconds, don't log it again
+        val timestamp = System.currentTimeMillis()
+        val lastAppOpenTime = RadarSettings.getLastAppOpenTimeMillis(context)
+        if (timestamp - lastAppOpenTime > 1000 && intent != null) {
+            RadarSettings.updateLastAppOpenTimeMillis(context)
+            val campaignId = intent.getStringExtra(RadarNotificationHelper.RADAR_CAMPAIGN_ID)
+            val jsonObject = if (!campaignId.isNullOrEmpty()) {
+                JSONObject().apply {
+                    put("conversionSource", "radar_notification")
+                    put("campaignId", campaignId)
+                }
+            } else {
+                // we can just have empty JSONObject here
+                JSONObject()
+            }
+            logger.i(if (!campaignId.isNullOrEmpty()) "Conversion name = opened_app from notification" else "Conversion name = opened_app")
+            sendLogConversionRequest("opened_app", jsonObject, callback = object : RadarLogConversionCallback {
+                override fun onComplete(status: RadarStatus, event: RadarEvent?) {
+                    logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
+                }
+            }) 
+        }
+    }
+
     internal fun logOpenedAppConversion() {
         if (!RadarSettings.getSdkConfiguration(context).useOpenedAppConversion) {
             return
@@ -3729,10 +3762,16 @@ object Radar {
         receiver?.onClientLocationUpdated(context, location, stopped, source)
     }
 
-    internal fun sendError(status: RadarStatus) {
+    internal fun sendError(status: RadarStatus, errorMessage: String? = null) {
+        if (errorMessage != null) {
+            logger.e("📍️ Radar error received | status = $status | error message = $errorMessage", RadarLogType.SDK_ERROR)
+        } else {
+            logger.e("📍️ Radar error received | status = $status", RadarLogType.SDK_ERROR)
+        }
+        if (initialized) {
+            Radar.flushLogs()
+        }
         receiver?.onError(context, status)
-
-        logger.e("📍️ Radar error received | status = $status", RadarLogType.SDK_ERROR)
     }
 
     internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?, createdAt: Date = Date()) {

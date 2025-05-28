@@ -24,7 +24,8 @@ data class RadarSdkConfiguration(
     val useForegroundLocationUpdatedAtMsDiff: Boolean = false,
     val useOfflineRTOUpdates: Boolean,
     val remoteTrackingOptions: Array<RadarRemoteTrackingOptions>?,
-    ) {
+    val locationManagerTimeout: Int = 0,
+) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
         private const val DEFAULT_MAX_CONCURRENT_JOBS = 1
@@ -41,6 +42,7 @@ data class RadarSdkConfiguration(
         private const val USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF = "useForegroundLocationUpdatedAtMsDiff"
         private const val USE_OFFLINE_RTO_UPDATES = "useOfflineRTOUpdates"
         private const val ALTERNATIVE_TRACKING_OPTIONS = "remoteTrackingOptions"
+        private const val LOCATION_MANAGER_TIMEOUT = "locationManagerTimeout"
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             // set json as empty object if json is null, which uses fallback values
@@ -61,6 +63,7 @@ data class RadarSdkConfiguration(
                 config.optBoolean(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, false),
                 config.optBoolean(USE_OFFLINE_RTO_UPDATES, false),
                 config.optJSONArray(ALTERNATIVE_TRACKING_OPTIONS)?.let { RadarRemoteTrackingOptions.fromJson(it) },
+                config.optInt(LOCATION_MANAGER_TIMEOUT, 0),
             )
         }
 
@@ -93,6 +96,7 @@ data class RadarSdkConfiguration(
             putOpt(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, useForegroundLocationUpdatedAtMsDiff)
             putOpt(USE_OFFLINE_RTO_UPDATES, useOfflineRTOUpdates)
             putOpt(ALTERNATIVE_TRACKING_OPTIONS, RadarRemoteTrackingOptions.toJson(remoteTrackingOptions))
+            putOpt(LOCATION_MANAGER_TIMEOUT, locationManagerTimeout)
         }
     }
 }
