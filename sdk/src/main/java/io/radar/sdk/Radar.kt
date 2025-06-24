@@ -499,10 +499,10 @@ object Radar {
      */
     @JvmStatic
     fun initialize(
-        context: Context?, 
-        publishableKey: String? = null, 
-        receiver: RadarReceiver? = null, 
-        provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, 
+        context: Context?,
+        publishableKey: String? = null,
+        receiver: RadarReceiver? = null,
+        provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE,
         fraud: Boolean = false) {
         if (context == null) {
             return
@@ -624,6 +624,10 @@ object Radar {
         }
 
         RadarSettings.setUserId(context, userId)
+
+        if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
+            trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, false)
+        }
     }
 
     /**
@@ -688,6 +692,10 @@ object Radar {
         }
 
         RadarSettings.setMetadata(context, metadata)
+
+        if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
+            trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, false)
+        }
     }
 
     /**
@@ -1357,7 +1365,7 @@ object Radar {
             return
         }
         this.logger.i("startTracking()", RadarLogType.SDK_CALL)
-        
+
         locationManager.startTracking(options)
     }
 
@@ -1530,7 +1538,7 @@ object Radar {
     }
 
 
-   /** 
+   /**
     *  Returns a string of the radar host.
     *
     *  @return A string of the radar host.
@@ -2086,7 +2094,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -2126,7 +2134,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -2198,7 +2206,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -2227,7 +2235,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)     
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -2637,12 +2645,12 @@ object Radar {
 
     /**
      * Validates an address, attaching to a verification status, property type, and plus4.
-     * 
+     *
      * @see [](https://radar.com/documentation/api#validate-an-address)
-     * 
+     *
      * @param[address] The address to validate.
      * @param[callback] A callback.
-     * 
+     *
      */
 
     @JvmStatic
@@ -2673,12 +2681,12 @@ object Radar {
 
     /**
      * Validates an address, attaching to a verification status, property type, and plus4.
-     * 
+     *
      * @see [](https://radar.com/documentation/api#validate-an-address)
-     * 
+     *
      * @param[address] The address to validate.
      * @param[block] A block callback.
-     * 
+     *
      */
 
     fun validateAddress(
@@ -2856,7 +2864,7 @@ object Radar {
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
      * @param[location] The location to geocode.
-     * @param[layers] Optional 
+     * @param[layers] Optional
      * @param[block] A block callback.
      */
     fun reverseGeocode(
@@ -3405,7 +3413,7 @@ object Radar {
                 override fun onComplete(status: RadarStatus, event: RadarEvent?) {
                     logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
                 }
-            }) 
+            })
         }
     }
 
@@ -3513,7 +3521,7 @@ object Radar {
             this.logger.d("No replays to flush")
             return
         }
-    
+
         this.isFlushingReplays = true
 
         // get a copy of the replays so we can safely clear what was synced up
@@ -3622,7 +3630,7 @@ object Radar {
             else -> "car"
         }
     }
-   
+
     /**
      * Returns a display string for a verification status value.
      *
