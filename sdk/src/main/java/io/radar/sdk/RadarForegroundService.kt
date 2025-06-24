@@ -74,6 +74,7 @@ class RadarForegroundService : Service() {
             .setContentText(text as CharSequence?)
             .setOngoing(true)
             .setSmallIcon(smallIcon)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
         if (!title.isNullOrEmpty()) {
             builder = builder.setContentTitle(title as CharSequence?)
         }
