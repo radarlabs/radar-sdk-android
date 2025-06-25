@@ -626,7 +626,7 @@ object Radar {
         RadarSettings.setUserId(context, userId)
 
         if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
-            trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, false)
+            trackOnce()
         }
     }
 
@@ -694,7 +694,7 @@ object Radar {
         RadarSettings.setMetadata(context, metadata)
 
         if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
-            trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, false)
+            trackOnce()
         }
     }
 
