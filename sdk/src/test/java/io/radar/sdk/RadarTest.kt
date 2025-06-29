@@ -718,6 +718,8 @@ class RadarTest {
 
         val tripOptions = getTestTripOptions()
 
+        val latch = CountDownLatch(1)
+
         // start trip w/ continuous mode
         val onTripTrackingOptions = RadarTrackingOptions.CONTINUOUS
         Radar.startTrip(tripOptions, onTripTrackingOptions) { status, trip, events ->
@@ -725,14 +727,22 @@ class RadarTest {
             assertEquals(onTripTrackingOptions, Radar.getTrackingOptions())
             assertEquals(responsive, RadarSettings.getPreviousTrackingOptions(context))
             assertTrue(Radar.isTracking())
+            latch.countDown()
         }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        val latch2 = CountDownLatch(1)
 
         // returns back to responsive mode after trip
         Radar.completeTrip() { _, _, _ ->
             assertEquals(null, RadarSettings.getPreviousTrackingOptions(context))
             assertEquals(responsive, Radar.getTrackingOptions())
             assertTrue(Radar.isTracking())
+            latch2.countDown()
         }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch2.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
     }
 
     @Test
@@ -755,6 +765,8 @@ class RadarTest {
 
         val tripOptions = getTestTripOptions()
 
+        val latch = CountDownLatch(1)
+
         // start trip w/ continuous mode
         val continuous = RadarTrackingOptions.CONTINUOUS
         Radar.startTrip(tripOptions, continuous) { status, trip, events ->
@@ -762,26 +774,44 @@ class RadarTest {
             assertEquals(continuous, Radar.getTrackingOptions())
             assertEquals(null, RadarSettings.getPreviousTrackingOptions(context))
             assertTrue(Radar.isTracking())
+            latch.countDown()
         }
 
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        val latch2 = CountDownLatch(1)
         // returns back to not tracking after trip
         Radar.completeTrip() { _, _, _ ->
             assertEquals(null, RadarSettings.getPreviousTrackingOptions(context))
             assertEquals(continuous, Radar.getTrackingOptions())
             assertFalse(Radar.isTracking())
+            latch2.countDown()
         }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch2.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
     }
 
     @Test
     fun test_Radar_completeTrip() {
-        Radar.completeTrip()
-        assertNull(Radar.getTripOptions())
+        val latch = CountDownLatch(1)
+        Radar.completeTrip() {_, _, _ ->
+            assertNull(Radar.getTripOptions())
+            latch.countDown()
+        }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
     }
 
     @Test
     fun test_Radar_cancelTrip() {
-        Radar.cancelTrip()
-        assertNull(Radar.getTripOptions())
+        val latch = CountDownLatch(1)
+        Radar.cancelTrip() {_, _, _ ->
+            assertNull(Radar.getTripOptions())
+            latch.countDown()
+        }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
     }
 
     @Test
