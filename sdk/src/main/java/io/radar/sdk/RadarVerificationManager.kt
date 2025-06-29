@@ -144,7 +144,7 @@ internal class RadarVerificationManager(
                                                 config: RadarConfig?,
                                                 token: RadarVerifiedLocationToken?
                                             ) {
-                                                if (status == Radar.RadarStatus.SUCCESS) {
+                                                if (config != null) {
                                                     Radar.locationManager.updateTrackingFromMeta(
                                                         config?.meta
                                                     )

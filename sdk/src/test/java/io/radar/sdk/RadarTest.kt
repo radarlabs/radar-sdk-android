@@ -5,6 +5,7 @@ import android.location.Location
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.radar.sdk.Radar.locationManager
 import io.radar.sdk.model.*
 import org.json.JSONObject
 import org.junit.Assert.*
@@ -331,7 +332,7 @@ class RadarTest {
             icon = 1337,
             updatesOnly = true,
         ))
-        // Radar.setNotificationOptions has side effects on foregroundServiceOptions. 
+        // Radar.setNotificationOptions has side effects on foregroundServiceOptions.
         Radar.setNotificationOptions(RadarNotificationOptions(
             "foo",
             "red",
@@ -591,15 +592,15 @@ class RadarTest {
             updatesOnly = true,
             iconColor = "#FF0000"
         ))
-
-        val options = RadarTrackingOptions.EFFICIENT
-        options.desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW
         val now = Date()
-        options.startTrackingAfter = now
-        options.stopTrackingAfter = Date(now.time + 1000)
-        options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.NONE
-        options.syncGeofences = true
-        options.syncGeofencesLimit = 100
+        val options = RadarTrackingOptions.EFFICIENT.copy(
+            desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW,
+            startTrackingAfter = now,
+            stopTrackingAfter = Date(now.time + 1000),
+            sync = RadarTrackingOptions.RadarTrackingOptionsSync.NONE,
+            syncGeofences = true,
+            syncGeofencesLimit = 100
+        )
         Radar.startTracking(options)
         assertEquals(options, Radar.getTrackingOptions())
         assertTrue(Radar.isTracking())
@@ -701,12 +702,18 @@ class RadarTest {
 
     @Test
     fun test_Radar_startTrip() {
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
         val tripOptions = getTestTripOptions()
+        val latch = CountDownLatch(1)
 
         Radar.startTrip(tripOptions) { status, trip, events ->
-            assertEquals(tripOptions, Radar.getTripOptions())
-            assertFalse(Radar.isTracking())
+            latch.countDown()
         }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+        assertEquals(tripOptions, Radar.getTripOptions())
+        assertTrue(Radar.isTracking())
     }
 
     @Test
@@ -799,7 +806,6 @@ class RadarTest {
 
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
-
         assertEquals(Radar.RadarStatus.ERROR_PERMISSIONS, callbackStatus)
     }
 
@@ -1680,7 +1686,7 @@ class RadarTest {
 
     @Test
     fun test_Radar_setSdkConfiguration() {
-        val sdkConfiguration = RadarSdkConfiguration(1, false, false, false, false, false, Radar.RadarLogLevel.WARNING, true, true, true)
+        val sdkConfiguration = RadarSdkConfiguration(1, false, false, false, false, false, Radar.RadarLogLevel.WARNING, true, true, true,true, true, true,null)
 
         RadarSettings.setUserDebug(context, false)
         RadarSettings.setSdkConfiguration(context, sdkConfiguration)
@@ -1703,7 +1709,7 @@ class RadarTest {
                 latch.countDown()
             }
         })
-        
+
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
@@ -1717,5 +1723,184 @@ class RadarTest {
         assertEquals(true, savedSdkConfiguration?.startTrackingOnInitialize)
         assertEquals(true, savedSdkConfiguration?.trackOnceOnAppOpen)
         assertEquals(true,savedSdkConfiguration?.useLocationMetadata)
+        assertEquals(true, savedSdkConfiguration.useOfflineRTOUpdates)
+        assertEquals(RadarTrackingOptions.EFFICIENT, RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(savedSdkConfiguration.remoteTrackingOptions,"default"))
+        assertEquals(RadarTrackingOptions.RESPONSIVE, RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(savedSdkConfiguration.remoteTrackingOptions,"inGeofence"))
+        assertEquals(RadarTrackingOptions.CONTINUOUS, RadarRemoteTrackingOptions.getRemoteTrackingOptionsWithKey(savedSdkConfiguration.remoteTrackingOptions,"onTrip"))
+        assertEquals(arrayOf("venue")[0],
+            (RadarRemoteTrackingOptions.getGeofenceTagsWithKey(savedSdkConfiguration.remoteTrackingOptions,"inGeofence"))?.get(0) ?: ""
+        )
+    }
+
+    @Test
+    fun test_Radar_trackOnce_offlineRampUp() {
+        RadarSettings.setTripOptions(context, null)
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/get_config_response.json")
+
+        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+
+                if (config != null) {
+                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                    locationManager.updateTrackingFromMeta(config.meta)
+                }
+                assertEquals(RadarTrackingOptions.EFFICIENT, Radar.getTrackingOptions())
+                assertEquals(status, Radar.RadarStatus.SUCCESS)
+                permissionsHelperMock.mockFineLocationPermissionGranted = true
+                val mockLocation = Location("RadarSDK")
+                mockLocation.latitude = 40.783825
+                mockLocation.longitude = -73.975365
+                mockLocation.accuracy = 65f
+                mockLocation.time = System.currentTimeMillis()
+                locationClientMock.mockLocation = mockLocation
+                apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+                apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
+                val latch = CountDownLatch(1)
+                var firstTrackOnceStatus = Radar.RadarStatus.SUCCESS
+                Radar.trackOnce { status, _, _, _ ->
+                    firstTrackOnceStatus = status
+                    latch.countDown()
+                }
+                ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+                latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+                assertEquals(firstTrackOnceStatus, Radar.RadarStatus.SUCCESS)
+                var secondTrackOnceStatus = Radar.RadarStatus.SUCCESS
+                apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
+                val latch2 = CountDownLatch(1)
+                Radar.trackOnce(mockLocation) { status, _, _, _ ->
+                    secondTrackOnceStatus = status
+                    latch2.countDown()
+                }
+                ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+                latch2.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+                assertEquals(secondTrackOnceStatus, Radar.RadarStatus.ERROR_NETWORK)
+                assertEquals(RadarTrackingOptions.RESPONSIVE,Radar.getTrackingOptions())
+            }
+        })
+    }
+    @Test
+    fun test_Radar_trackOnce_offlineRampDown_default() {
+        RadarSettings.setTripOptions(context, null)
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse =
+            RadarTestUtils.jsonObjectFromResource("/get_config_response.json")
+
+        Radar.apiClient.getConfig(
+            "sdkConfigUpdate",
+            false,
+            object : RadarApiClient.RadarGetConfigApiCallback {
+                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+
+                    if (config != null) {
+                        RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                        locationManager.updateTrackingFromMeta(config.meta)
+                    }
+                    assertEquals(RadarTrackingOptions.EFFICIENT, Radar.getTrackingOptions())
+                    assertEquals(status, Radar.RadarStatus.SUCCESS)
+                    permissionsHelperMock.mockFineLocationPermissionGranted = true
+                    val mockLocation = Location("RadarSDK")
+                    mockLocation.latitude = 40.783825
+                    mockLocation.longitude = -73.975365
+                    mockLocation.accuracy = 65f
+                    mockLocation.time = System.currentTimeMillis()
+                    locationClientMock.mockLocation = mockLocation
+                    apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+                    apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/rampup.json")!!)
+                    val latch = CountDownLatch(1)
+                    var firstTrackOnceStatus = Radar.RadarStatus.SUCCESS
+                    Radar.trackOnce { status, _, _, _ ->
+                        firstTrackOnceStatus = status
+                        latch.countDown()
+                    }
+                    ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+                    latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+                    assertEquals(firstTrackOnceStatus, Radar.RadarStatus.SUCCESS)
+                    // need to fix this
+                    assertEquals(
+                            RadarTrackingOptions.RESPONSIVE,
+                            Radar.getTrackingOptions()
+                        )
+                    apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
+                    mockLocation.latitude = 50.783825
+                    mockLocation.longitude = -63.975365
+                    val latch2 = CountDownLatch(1)
+                    var secondTrackOnceStatus = Radar.RadarStatus.SUCCESS
+                    Radar.trackOnce(mockLocation) { status, _, _, _ ->
+                        secondTrackOnceStatus = status
+                        latch2.countDown()
+                    }
+                    ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+                    latch2.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+                    assertEquals(secondTrackOnceStatus, Radar.RadarStatus.ERROR_NETWORK)
+                    assertEquals(
+                        RadarTrackingOptions.EFFICIENT,
+                        Radar.getTrackingOptions()
+                    )
+                    apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/track.json")!!)
+                }
+            }
+        )
+    }
+
+    @Test
+    fun test_Radar_trackOnce_offlineRampDown_trips() {
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        val tripOptions = getTestTripOptions()
+        val latch = CountDownLatch(1)
+        Radar.startTrip(tripOptions) { _, _, _ ->
+            latch.countDown()
+        }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/get_config_response.json")
+
+        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+
+                if (config != null) {
+                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                    locationManager.updateTrackingFromMeta(config.meta)
+                }
+                assertEquals(RadarTrackingOptions.EFFICIENT, Radar.getTrackingOptions())
+                assertEquals(status, Radar.RadarStatus.SUCCESS)
+                permissionsHelperMock.mockFineLocationPermissionGranted = true
+                val mockLocation = Location("RadarSDK")
+                mockLocation.latitude = 40.783825
+                mockLocation.longitude = -73.975365
+                mockLocation.accuracy = 65f
+                mockLocation.time = System.currentTimeMillis()
+                locationClientMock.mockLocation = mockLocation
+                apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+                apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/rampup.json")!!)
+                val latch2 = CountDownLatch(1)
+                var firstTrackOnceStatus = Radar.RadarStatus.SUCCESS
+                Radar.trackOnce { status, _, _, _ ->
+                    firstTrackOnceStatus = status
+                    latch2.countDown()
+                }
+                ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+                latch2.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+                assertEquals(firstTrackOnceStatus, Radar.RadarStatus.SUCCESS)
+                assertEquals(RadarTrackingOptions.RESPONSIVE,Radar.getTrackingOptions())
+                mockLocation.latitude = 50.783825
+                mockLocation.longitude = -63.975365
+                apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
+                var secondTrackOnceStatus = Radar.RadarStatus.SUCCESS
+                val latch3 = CountDownLatch(1)
+                Radar.trackOnce(mockLocation) { status, _, _, _ ->
+                    secondTrackOnceStatus = status
+                    latch3.countDown()
+                }
+                ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+                latch3.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+                assertEquals(secondTrackOnceStatus, Radar.RadarStatus.ERROR_NETWORK)
+                assertEquals(RadarTrackingOptions.CONTINUOUS,Radar.getTrackingOptions())
+                // clean up
+                RadarSettings.setTripOptions(context, null)
+                apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/track.json")!!)
+            }
+        })
     }
 }

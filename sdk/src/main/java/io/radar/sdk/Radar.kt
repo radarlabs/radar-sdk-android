@@ -897,8 +897,11 @@ object Radar {
                             config: RadarConfig?,
                             token: RadarVerifiedLocationToken?
                         ) {
-                            if (status == RadarStatus.SUCCESS ){
+                            if (config != null) {
                                 locationManager.updateTrackingFromMeta(config?.meta)
+                            }
+                            if (status == RadarStatus.SUCCESS) {
+                                locationManager.replaceSyncedGeofences(nearbyGeofences)
                             }
                             handler.post {
                                 callback?.onComplete(status, location, events, user)
@@ -994,8 +997,11 @@ object Radar {
                 config: RadarConfig?,
                 token: RadarVerifiedLocationToken?
             ) {
-                if (status == RadarStatus.SUCCESS ){
+                if (config != null) {
                     locationManager.updateTrackingFromMeta(config?.meta)
+                }
+                if (status == RadarStatus.SUCCESS) {
+                    locationManager.replaceSyncedGeofences(nearbyGeofences)
                 }
                 handler.post {
                     callback?.onComplete(status, location, events, user)
