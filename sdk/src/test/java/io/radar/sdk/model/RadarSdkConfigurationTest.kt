@@ -31,6 +31,7 @@ class RadarSdkConfigurationTest {
     private var useOpenedAppConversion = false
     private var useForegroundLocationUpdatedAtMsDiff = false
     private var locationManagerTimeout = 123456
+    private var syncAfterSetUser = false
 
     @Before
     fun setUp() {
@@ -50,7 +51,8 @@ class RadarSdkConfigurationTest {
             "useLocationMetadata":$useLocationMetadata,
             "useOpenedAppConversion":$useOpenedAppConversion,
             "useForegroundLocationUpdatedAtMsDiff":$useForegroundLocationUpdatedAtMsDiff,
-            "locationManagerTimeout":$locationManagerTimeout
+            "locationManagerTimeout":$locationManagerTimeout,
+            "syncAfterSetUser":$syncAfterSetUser,
         }""".trimIndent()
     }
 
@@ -71,7 +73,8 @@ class RadarSdkConfigurationTest {
                 useLocationMetadata,
                 useOpenedAppConversion,
                 useForegroundLocationUpdatedAtMsDiff,
-                locationManagerTimeout
+                locationManagerTimeout,
+                syncAfterSetUser,
             ).toJson().toString()
         )
     }
@@ -92,6 +95,7 @@ class RadarSdkConfigurationTest {
         assertEquals(useOpenedAppConversion, settings.useOpenedAppConversion)
         assertEquals(useForegroundLocationUpdatedAtMsDiff, settings.useForegroundLocationUpdatedAtMsDiff)
         assertEquals(locationManagerTimeout, settings.locationManagerTimeout)
+        assertEquals(syncAfterSetUser, settings.syncAfterSetUser)
     }
 
     @Test
