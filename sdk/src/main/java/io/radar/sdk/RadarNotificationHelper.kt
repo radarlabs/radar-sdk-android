@@ -12,8 +12,6 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import io.radar.sdk.model.RadarEvent
-import org.json.JSONObject
-
 class RadarNotificationHelper {
 
     internal companion object {
