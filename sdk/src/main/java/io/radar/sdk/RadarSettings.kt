@@ -355,7 +355,6 @@ internal object RadarSettings {
     }
 
     internal fun getHost(context: Context): String {
-        return "https://api-shicheng.radar-staging.com"
         return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
     }
 
