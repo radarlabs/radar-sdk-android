@@ -269,6 +269,12 @@ class RadarTest {
 
         Radar.locationManager.locationClient = locationClientMock
         Radar.locationManager.permissionsHelper = permissionsHelperMock
+
+        // Clear any existing user tags to ensure clean state
+        RadarSettings.removeUserTags(context, arrayOf("premium", "beta_user", "vip", "test_tag_1", "test_tag_2", "nonexistent_tag"))
+        
+        // Clear captured parameters from previous tests
+        apiHelperMock.clearCapturedParams()
     }
 
     @Test
@@ -366,6 +372,301 @@ class RadarTest {
     fun test_Radar_setMetadata_null() {
         Radar.setMetadata(null)
         assertNull(Radar.getMetadata())
+    }
+
+    @Test
+    fun test_Radar_addUserTags() {
+        val userTags = arrayOf("premium", "beta_user")
+        Radar.addUserTags(userTags)
+        
+        val retrievedTags = Radar.getUserTags()
+        assertNotNull(retrievedTags)
+        assertEquals(2, retrievedTags!!.size)
+        assertTrue(retrievedTags.contains("premium"))
+        assertTrue(retrievedTags.contains("beta_user"))
+        
+        // Clean up
+        Radar.removeUserTags(userTags)
+    }
+
+    @Test
+    fun test_Radar_removeUserTags() {
+        // Add tags first
+        Radar.addUserTags(arrayOf("premium", "beta_user"))
+        
+        // Remove some tags
+        Radar.removeUserTags(arrayOf("beta_user"))
+        
+        val retrievedTags = Radar.getUserTags()
+        assertNotNull(retrievedTags)
+        assertEquals(1, retrievedTags!!.size)
+        assertTrue(retrievedTags.contains("premium"))
+        assertFalse(retrievedTags.contains("beta_user"))
+        
+        // Clean up
+        Radar.removeUserTags(arrayOf("premium"))
+    }
+
+    @Test
+    fun test_Radar_getUserTags_initial() {
+        // Clear any existing tags
+        Radar.removeUserTags(arrayOf("premium", "beta_user"))
+        
+        // Initially should be null
+        assertNull(Radar.getUserTags())
+    }
+
+    @Test
+    fun test_Radar_addUserTags_duplicates() {
+        // Add tags first time
+        Radar.addUserTags(arrayOf("premium", "beta_user"))
+        
+        // Add same tags again (should not create duplicates)
+        Radar.addUserTags(arrayOf("premium", "beta_user"))
+        
+        val retrievedTags = Radar.getUserTags()
+        assertNotNull(retrievedTags)
+        assertEquals(2, retrievedTags!!.size)
+        assertTrue(retrievedTags.contains("premium"))
+        assertTrue(retrievedTags.contains("beta_user"))
+        
+        // Clean up
+        Radar.removeUserTags(arrayOf("premium", "beta_user"))
+    }
+
+    @Test
+    fun test_Radar_addUserTags_additional() {
+        // Add initial tags
+        Radar.addUserTags(arrayOf("premium"))
+        
+        // Add additional tags
+        Radar.addUserTags(arrayOf("beta_user", "vip"))
+        
+        val retrievedTags = Radar.getUserTags()
+        assertNotNull(retrievedTags)
+        assertEquals(3, retrievedTags!!.size)
+        assertTrue(retrievedTags.contains("premium"))
+        assertTrue(retrievedTags.contains("beta_user"))
+        assertTrue(retrievedTags.contains("vip"))
+        
+        // Clean up
+        Radar.removeUserTags(arrayOf("premium", "beta_user", "vip"))
+    }
+
+    @Test
+    fun test_Radar_removeUserTags_all() {
+        // Add tags first
+        Radar.addUserTags(arrayOf("premium", "beta_user"))
+        
+        // Remove all tags
+        Radar.removeUserTags(arrayOf("premium", "beta_user"))
+        
+        val retrievedTags = Radar.getUserTags()
+        assertNull(retrievedTags)
+        
+        // No cleanup needed since all tags were removed
+    }
+
+    @Test
+    fun test_Radar_removeUserTags_nonexistent() {
+        // Add some tags
+        Radar.addUserTags(arrayOf("premium"))
+        
+        // Try to remove tags that don't exist
+        Radar.removeUserTags(arrayOf("nonexistent_tag"))
+        
+        val retrievedTags = Radar.getUserTags()
+        assertNotNull(retrievedTags)
+        assertEquals(1, retrievedTags!!.size)
+        assertTrue(retrievedTags.contains("premium"))
+        
+        // Clean up
+        Radar.removeUserTags(arrayOf("premium"))
+    }
+
+    @Test
+    fun test_Radar_userTags_persistence() {
+        // Add tags
+        Radar.addUserTags(arrayOf("premium", "beta_user"))
+        
+        // Verify they are stored
+        val retrievedTags = Radar.getUserTags()
+        assertNotNull(retrievedTags)
+        assertEquals(2, retrievedTags!!.size)
+        
+        // Verify they are stored in RadarSettings directly
+        val settingsTags = RadarSettings.getUserTags(context)
+        assertNotNull(settingsTags)
+        assertEquals(2, settingsTags!!.size)
+        assertTrue(settingsTags.contains("premium"))
+        assertTrue(settingsTags.contains("beta_user"))
+        
+        // Clean up
+        Radar.removeUserTags(arrayOf("premium", "beta_user"))
+    }
+
+    @Test
+    fun test_Radar_userTags_included_in_track_request() {
+        // Set up location permissions and mock location
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+
+        // Set up mock response
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
+
+        // Add user tags
+        Radar.addUserTags(arrayOf("premium", "beta_user"))
+
+        // Clear captured parameters
+        apiHelperMock.clearCapturedParams()
+
+        // Perform track request
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.trackOnce { status, _, _, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        // Verify the request was successful
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+
+        // Verify the track request was made
+        assertEquals("POST", apiHelperMock.lastCapturedMethod)
+        assertEquals("v1/track", apiHelperMock.lastCapturedPath)
+
+        // Verify user tags were included in the request
+        val capturedParams = apiHelperMock.lastCapturedParams
+        assertNotNull(capturedParams)
+        
+        val userTagsArray = capturedParams!!.optJSONArray("userTags")
+        assertNotNull(userTagsArray)
+        assertEquals(2, userTagsArray!!.length())
+        
+        val userTagsList = mutableListOf<String>()
+        for (i in 0 until userTagsArray.length()) {
+            userTagsList.add(userTagsArray.getString(i))
+        }
+        
+        assertTrue(userTagsList.contains("premium"))
+        assertTrue(userTagsList.contains("beta_user"))
+        
+        // Clean up
+        Radar.removeUserTags(arrayOf("premium", "beta_user"))
+    }
+
+    @Test
+    fun test_Radar_userTags_not_included_when_empty() {
+        // Set up location permissions and mock location
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+
+        // Set up mock response
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
+
+        // Ensure no user tags are set
+        Radar.removeUserTags(arrayOf("premium", "beta_user"))
+
+        // Clear captured parameters
+        apiHelperMock.clearCapturedParams()
+
+        // Perform track request
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.trackOnce { status, _, _, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        // Verify the request was successful
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+
+        // Verify the track request was made
+        assertEquals("POST", apiHelperMock.lastCapturedMethod)
+        assertEquals("v1/track", apiHelperMock.lastCapturedPath)
+
+        // Verify user tags were NOT included in the request
+        val capturedParams = apiHelperMock.lastCapturedParams
+        assertNotNull(capturedParams)
+        
+        val userTagsArray = capturedParams!!.optJSONArray("userTags")
+        assertNull(userTagsArray)
+        
+        // No cleanup needed since no tags were set
+    }
+
+    @Test
+    fun test_Radar_userTags_manual_track() {
+        // Set up mock response
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
+
+        // Add user tags
+        Radar.addUserTags(arrayOf("premium", "beta_user"))
+
+        // Clear captured parameters
+        apiHelperMock.clearCapturedParams()
+
+        // Create a manual location
+        val manualLocation = Location("RadarSDK")
+        manualLocation.latitude = 40.78382
+        manualLocation.longitude = -73.97536
+        manualLocation.accuracy = 65f
+        manualLocation.time = System.currentTimeMillis()
+
+        // Perform manual track
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.trackOnce(manualLocation) { status, _, _, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        // Verify the request was successful
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+
+        // Verify user tags were included in the request
+        val capturedParams = apiHelperMock.lastCapturedParams
+        assertNotNull(capturedParams)
+        
+        val userTagsArray = capturedParams!!.optJSONArray("userTags")
+        assertNotNull(userTagsArray)
+        assertEquals(2, userTagsArray!!.length())
+        
+        val userTagsList = mutableListOf<String>()
+        for (i in 0 until userTagsArray.length()) {
+            userTagsList.add(userTagsArray.getString(i))
+        }
+        
+        assertTrue(userTagsList.contains("premium"))
+        assertTrue(userTagsList.contains("beta_user"))
+        
+        // Clean up
+        Radar.removeUserTags(arrayOf("premium", "beta_user"))
     }
 
     @Test

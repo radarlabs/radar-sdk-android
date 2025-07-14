@@ -743,6 +743,56 @@ object Radar {
     }
 
     /**
+     * Returns the current `userTags`.
+     *
+     * @return The current `userTags`.
+     */
+    @JvmStatic
+    fun getUserTags(): Array<String>? {
+        if (!initialized) {
+            return null
+        }
+
+        return RadarSettings.getUserTags(context)
+    }
+
+    /**
+     * Adds user tags to the existing set.
+     *
+     * @param userTags An array of user tags to add.
+     */
+    @JvmStatic
+    fun addUserTags(userTags: Array<String>) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.addUserTags(context, userTags)
+
+        if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
+            trackOnce()
+        }
+    }
+
+    /**
+     * Removes user tags from the existing set.
+     *
+     * @param userTags An array of user tags to remove.
+     */
+    @JvmStatic
+    fun removeUserTags(userTags: Array<String>) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.removeUserTags(context, userTags)
+
+        if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
+            trackOnce()
+        }
+    }
+
+    /**
      * Enables anonymous tracking for privacy reasons. Avoids creating user records on the server and avoids sending any stable device IDs, user IDs, and user metadata
      * to the server when calling `trackOnce()` or `startTracking()`. Disabled by default.
      *

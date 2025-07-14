@@ -39,6 +39,7 @@ internal object RadarSettings {
     private const val KEY_SHARING = "sharing"
     private const val KEY_X_PLATFORM_SDK_TYPE = "x_platform_sdk_type"
     private const val KEY_X_PLATFORM_SDK_VERSION = "x_platform_sdk_version"
+    private const val KEY_USER_TAGS = "user_tags"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -419,6 +420,31 @@ internal object RadarSettings {
 
     internal fun useLocationMetaData(context: Context):Boolean {
         return getSdkConfiguration(context).useLocationMetadata
+    }
+
+    internal fun getUserTags(context: Context): Array<String>? {
+        val userTagsJson = getSharedPreferences(context).getString(KEY_USER_TAGS, null) ?: return null
+        return org.json.JSONArray(userTagsJson).let { jsonArray ->
+            Array(jsonArray.length()) { i -> jsonArray.getString(i) }
+        }
+    }
+
+    internal fun addUserTags(context: Context, userTags: Array<String>) {
+        val existingTags = getUserTags(context)?.toMutableSet() ?: mutableSetOf()
+        existingTags.addAll(userTags)
+        val userTagsJson = org.json.JSONArray(existingTags.toList()).toString()
+        getSharedPreferences(context).edit { putString(KEY_USER_TAGS, userTagsJson) }
+    }
+
+    internal fun removeUserTags(context: Context, userTags: Array<String>) {
+        val existingTags = getUserTags(context)?.toMutableSet() ?: mutableSetOf()
+        existingTags.removeAll(userTags.toSet())
+        val userTagsJson = if (existingTags.isNotEmpty()) {
+            org.json.JSONArray(existingTags.toList()).toString()
+        } else {
+            null
+        }
+        getSharedPreferences(context).edit { putString(KEY_USER_TAGS, userTagsJson) }
     }
 
 }
