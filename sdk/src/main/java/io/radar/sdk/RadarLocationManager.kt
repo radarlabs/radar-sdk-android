@@ -15,6 +15,7 @@ import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.RadarApiClient.RadarTrackApiCallback
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
+import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSyncGeofences
 import io.radar.sdk.model.*
 import org.json.JSONObject
 import java.util.*
@@ -375,7 +376,7 @@ internal class RadarLocationManager(
 
     private fun addSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
         val options = Radar.getTrackingOptions()
-        if (!options.syncGeofences || radarGeofences == null) {
+        if (options.syncGeofences == RadarTrackingOptionsSyncGeofences.NONE || radarGeofences == null) {
             return
         }
 

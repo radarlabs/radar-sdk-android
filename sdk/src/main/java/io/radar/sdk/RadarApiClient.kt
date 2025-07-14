@@ -370,7 +370,7 @@ internal class RadarApiClient(
                 tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
                 params.putOpt("tripOptions", tripOptionsObj)
             }
-            if (options.syncGeofences) {
+            if (options.syncGeofences != RadarTrackingOptions.RadarTrackingOptionsSyncGeofences.NONE) {
                 params.putOpt("nearbyGeofences", true)
                 params.putOpt("nearbyGeofencesLimit", options.syncGeofencesLimit)
             }

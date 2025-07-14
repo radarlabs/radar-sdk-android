@@ -96,7 +96,7 @@ data class RadarTrackingOptions(
     /**
      * Determines whether to sync nearby geofences from the server to the client to improve responsiveness.
      */
-    var syncGeofences: Boolean,
+    var syncGeofences: RadarTrackingOptionsSyncGeofences,
 
     /**
      * Determines how many nearby geofences to sync from the server to the client when `syncGeofences` is enabled.
@@ -248,6 +248,46 @@ data class RadarTrackingOptions(
         }
     }
 
+    enum class RadarTrackingOptionsSyncGeofences(internal val syncGeofences: Int) {
+        /** Does not sync geofences to the server. */
+        NONE(0),
+        /** Syncs the nearest geofence to the server. */
+        NEAREST(1),
+        /** Syncs all geofences to the server. */
+        CAMPAIGN(2);
+
+        internal companion object {
+            internal const val NONE_STR = "none"
+            internal const val NEAREST_STR = "nearest"
+            internal const val CAMPAIGN_STR = "campaign-only"
+
+            fun fromInt(syncGeofences: Int?): RadarTrackingOptionsSyncGeofences {
+                for (value in values()) {
+                    if (syncGeofences == value.syncGeofences) {
+                        return value
+                    }
+                }
+                return NONE
+            }
+
+            fun fromRadarString(syncGeofences: String?): RadarTrackingOptionsSyncGeofences {
+                return when(syncGeofences) {
+                    NEAREST_STR -> NEAREST
+                    CAMPAIGN_STR -> CAMPAIGN
+                    else -> NONE
+                }
+            }
+        }
+
+        fun toRadarString(): String {
+            return when(this) {
+                NEAREST -> NEAREST_STR
+                CAMPAIGN -> CAMPAIGN_STR
+                NONE -> NONE_STR
+            }
+        }
+    }
+
     data class RadarTrackingOptionsForegroundService(
         /**
          * Determines the notification text. Defaults to `"Location tracking started"`.
@@ -377,7 +417,7 @@ data class RadarTrackingOptions(
             stoppedGeofenceRadius = 0,
             useMovingGeofence = false,
             movingGeofenceRadius = 0,
-            syncGeofences = true,
+            syncGeofences = RadarTrackingOptionsSyncGeofences.NEAREST,
             syncGeofencesLimit = 0,
             foregroundServiceEnabled = true,
             beacons = false
@@ -406,7 +446,7 @@ data class RadarTrackingOptions(
             stoppedGeofenceRadius = 100,
             useMovingGeofence = true,
             movingGeofenceRadius = 100,
-            syncGeofences = true,
+            syncGeofences = RadarTrackingOptionsSyncGeofences.NEAREST,
             syncGeofencesLimit = 10,
             foregroundServiceEnabled = false,
             beacons = false
@@ -435,7 +475,7 @@ data class RadarTrackingOptions(
             stoppedGeofenceRadius = 0,
             useMovingGeofence = false,
             movingGeofenceRadius = 0,
-            syncGeofences = true,
+            syncGeofences = RadarTrackingOptionsSyncGeofences.NEAREST,
             syncGeofencesLimit = 10,
             foregroundServiceEnabled = false,
             beacons = false
@@ -517,7 +557,17 @@ data class RadarTrackingOptions(
                 stoppedGeofenceRadius = obj.optInt(KEY_STOPPED_GEOFENCE_RADIUS, 100),
                 useMovingGeofence = obj.optBoolean(KEY_USE_MOVING_GEOFENCE),
                 movingGeofenceRadius = obj.optInt(KEY_MOVING_GEOFENCE_RADIUS, 100),
-                syncGeofences = obj.optBoolean(KEY_SYNC_GEOFENCES),
+                syncGeofences = when {
+                    obj.has(KEY_SYNC_GEOFENCES) && obj.get(KEY_SYNC_GEOFENCES) is Boolean -> {
+                        // If it's a boolean, treat true as NEAREST, false as NONE
+                        if (obj.getBoolean(KEY_SYNC_GEOFENCES)) {
+                            RadarTrackingOptionsSyncGeofences.NEAREST
+                        } else {
+                            RadarTrackingOptionsSyncGeofences.NONE
+                        }
+                    }
+                    else -> RadarTrackingOptionsSyncGeofences.fromRadarString(obj.optString(KEY_SYNC_GEOFENCES))
+                },
                 syncGeofencesLimit = obj.optInt(KEY_SYNC_GEOFENCES_LIMIT, 10),
                 foregroundServiceEnabled = obj.optBoolean(KEY_FOREGROUND_SERVICE_ENABLED, false),
                 beacons = obj.optBoolean(KEY_BEACONS)
@@ -543,7 +593,7 @@ data class RadarTrackingOptions(
         obj.put(KEY_STOPPED_GEOFENCE_RADIUS, stoppedGeofenceRadius)
         obj.put(KEY_USE_MOVING_GEOFENCE, useMovingGeofence)
         obj.put(KEY_MOVING_GEOFENCE_RADIUS, movingGeofenceRadius)
-        obj.put(KEY_SYNC_GEOFENCES, syncGeofences)
+        obj.put(KEY_SYNC_GEOFENCES, syncGeofences.toRadarString())
         obj.put(KEY_SYNC_GEOFENCES_LIMIT, syncGeofencesLimit)
         obj.put(KEY_FOREGROUND_SERVICE_ENABLED, foregroundServiceEnabled)
         obj.put(KEY_BEACONS, beacons)

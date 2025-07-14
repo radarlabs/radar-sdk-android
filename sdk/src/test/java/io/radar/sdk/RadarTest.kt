@@ -16,6 +16,7 @@ import org.robolectric.shadows.ShadowLooper
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSyncGeofences
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk=[Build.VERSION_CODES.P])
@@ -899,7 +900,7 @@ class RadarTest {
         options.startTrackingAfter = now
         options.stopTrackingAfter = Date(now.time + 1000)
         options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.NONE
-        options.syncGeofences = true
+        options.syncGeofences = RadarTrackingOptionsSyncGeofences.NEAREST
         options.syncGeofencesLimit = 100
         Radar.startTracking(options)
         assertEquals(options, Radar.getTrackingOptions())
