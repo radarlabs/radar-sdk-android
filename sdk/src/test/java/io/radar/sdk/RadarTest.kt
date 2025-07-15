@@ -658,6 +658,9 @@ class RadarTest {
         apiHelperMock.clearCapturedParams()
 
         // Verify that a track request was made due to syncAfterSetUser
+        Radar.trackOnce { status, _, _, _ ->
+            assertEquals(Radar.RadarStatus.SUCCESS, status)
+        }   
         // We can verify this by checking if the last captured path is "v1/track"
         // Note: This test assumes syncAfterSetUser is enabled in the test configuration
         val capturedPath = apiHelperMock.lastCapturedPath
