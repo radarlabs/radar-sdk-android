@@ -743,31 +743,31 @@ object Radar {
     }
 
     /**
-     * Returns the current `userTags`.
+     * Returns the current `tags`.
      *
-     * @return The current `userTags`.
+     * @return The current `tags`.
      */
     @JvmStatic
-    fun getUserTags(): Array<String>? {
+    fun getTags(): Array<String>? {
         if (!initialized) {
             return null
         }
 
-        return RadarSettings.getUserTags(context)
+        return RadarSettings.getTags(context)
     }
 
     /**
-     * Adds user tags to the existing set.
+     * Adds tags to the existing set.
      *
-     * @param userTags An array of user tags to add.
+     * @param tags An array of tags to add.
      */
     @JvmStatic
-    fun addUserTags(userTags: Array<String>) {
+    fun addTags(tags: Array<String>) {
         if (!initialized) {
             return
         }
 
-        RadarSettings.addUserTags(context, userTags)
+        RadarSettings.addTags(context, tags)
 
         if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
             trackOnce()
@@ -775,17 +775,35 @@ object Radar {
     }
 
     /**
-     * Removes user tags from the existing set.
+     * Sets tags, replacing all existing tags.
      *
-     * @param userTags An array of user tags to remove.
+     * @param tags An array of tags to set.
      */
     @JvmStatic
-    fun removeUserTags(userTags: Array<String>) {
+    fun setTags(tags: Array<String>) {
         if (!initialized) {
             return
         }
 
-        RadarSettings.removeUserTags(context, userTags)
+        RadarSettings.setTags(context, tags)
+
+        if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
+            trackOnce()
+        }
+    }
+
+    /**
+     * Removes tags from the existing set.
+     *
+     * @param tags An array of tags to remove.
+     */
+    @JvmStatic
+    fun removeTags(tags: Array<String>) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.removeTags(context, tags)
 
         if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
             trackOnce()

@@ -299,9 +299,9 @@ internal class RadarApiClient(
                 params.putOpt("description", RadarSettings.getDescription(context))
                 params.putOpt("metadata", RadarSettings.getMetadata(context))
                 params.putOpt("sessionId", RadarSettings.getSessionId(context))
-                val userTags = RadarSettings.getUserTags(context)
-                if (userTags != null && userTags.isNotEmpty()) {
-                    params.putOpt("userTags", JSONArray(userTags.toList()))
+                val tags = RadarSettings.getTags(context)
+                if (tags != null && tags.isNotEmpty()) {
+                    params.putOpt("userTags", JSONArray(tags.toList()))
                 }
             }
             params.putOpt("latitude", location.latitude)

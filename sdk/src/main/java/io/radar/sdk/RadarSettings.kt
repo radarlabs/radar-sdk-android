@@ -356,7 +356,8 @@ internal object RadarSettings {
     }
 
     internal fun getHost(context: Context): String {
-        return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
+        return "https://arriving-eagle-magnetic.ngrok-free.app"
+        //return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
     }
 
     internal fun setPermissionsDenied(context: Context, denied: Boolean) {
@@ -422,29 +423,48 @@ internal object RadarSettings {
         return getSdkConfiguration(context).useLocationMetadata
     }
 
-    internal fun getUserTags(context: Context): Array<String>? {
-        val userTagsJson = getSharedPreferences(context).getString(KEY_USER_TAGS, null) ?: return null
-        return org.json.JSONArray(userTagsJson).let { jsonArray ->
+    internal fun getTags(context: Context): Array<String>? {
+        val tagsJson = getSharedPreferences(context).getString(KEY_USER_TAGS, null) ?: return null
+        return org.json.JSONArray(tagsJson).let { jsonArray ->
             Array(jsonArray.length()) { i -> jsonArray.getString(i) }
         }
     }
 
-    internal fun addUserTags(context: Context, userTags: Array<String>) {
-        val existingTags = getUserTags(context)?.toMutableSet() ?: mutableSetOf()
-        existingTags.addAll(userTags)
-        val userTagsJson = org.json.JSONArray(existingTags.toList()).toString()
-        getSharedPreferences(context).edit { putString(KEY_USER_TAGS, userTagsJson) }
+    internal fun addTags(context: Context, tags: Array<String>) {
+        val existingTags = getTags(context)?.toMutableSet() ?: mutableSetOf()
+        existingTags.addAll(tags)
+        val tagsJson = org.json.JSONArray(existingTags.toList()).toString()
+        getSharedPreferences(context).edit {
+            putString(KEY_USER_TAGS, tagsJson)
+        }
     }
 
-    internal fun removeUserTags(context: Context, userTags: Array<String>) {
-        val existingTags = getUserTags(context)?.toMutableSet() ?: mutableSetOf()
-        existingTags.removeAll(userTags.toSet())
-        val userTagsJson = if (existingTags.isNotEmpty()) {
-            org.json.JSONArray(existingTags.toList()).toString()
+    internal fun setTags(context: Context, tags: Array<String>) {
+        if (tags.isEmpty()) {
+            getSharedPreferences(context).edit {
+                remove(KEY_USER_TAGS)
+            }
         } else {
-            null
+            val tagsJson = org.json.JSONArray(tags.toList()).toString()
+            getSharedPreferences(context).edit {
+                putString(KEY_USER_TAGS, tagsJson)
+            }
         }
-        getSharedPreferences(context).edit { putString(KEY_USER_TAGS, userTagsJson) }
+    }
+
+    internal fun removeTags(context: Context, tags: Array<String>) {
+        val existingTags = getTags(context)?.toMutableSet() ?: mutableSetOf()
+        existingTags.removeAll(tags.toSet())
+        if (existingTags.isEmpty()) {
+            getSharedPreferences(context).edit {
+                remove(KEY_USER_TAGS)
+            }
+        } else {
+            val tagsJson = org.json.JSONArray(existingTags.toList()).toString()
+            getSharedPreferences(context).edit {
+                putString(KEY_USER_TAGS, tagsJson)
+            }
+        }
     }
 
 }
