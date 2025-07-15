@@ -661,17 +661,18 @@ class RadarTest {
         // We can verify this by checking if the last captured path is "v1/track"
         // Note: This test assumes syncAfterSetUser is enabled in the test configuration
         val capturedPath = apiHelperMock.lastCapturedPath
-        if (capturedPath == "v1/track") {
-            // Verify that user tags were included in the sync request
-            val capturedParams = apiHelperMock.lastCapturedParams
-            assertNotNull(capturedParams)
-            
-            val userTagsArray = capturedParams!!.optJSONArray("userTags")
-            assertNotNull(userTagsArray)
-            assertEquals(2, userTagsArray!!.length())
-            assertTrue(userTagsArray.toString().contains("premium"))
-            assertTrue(userTagsArray.toString().contains("beta_user"))
-        }
+        // Assert that the track request was made
+        assertEquals("v1/track", capturedPath)
+
+        // Verify that user tags were included in the sync request
+        val capturedParams = apiHelperMock.lastCapturedParams
+        assertNotNull(capturedParams)
+        
+        val userTagsArray = capturedParams!!.optJSONArray("userTags")
+        assertNotNull(userTagsArray)
+        assertEquals(2, userTagsArray!!.length())
+        assertTrue(userTagsArray.toString().contains("premium"))
+        assertTrue(userTagsArray.toString().contains("beta_user"))
         
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
