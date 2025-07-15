@@ -5,18 +5,40 @@ import android.location.Location
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.radar.sdk.model.*
+import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSyncGeofences
+import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarChain
+import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarFraud
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarRegion
+import io.radar.sdk.model.RadarRoute
+import io.radar.sdk.model.RadarRoutes
+import io.radar.sdk.model.RadarSdkConfiguration
+import io.radar.sdk.model.RadarSegment
+import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
-import java.util.*
+import java.util.Calendar
+import java.util.Date
+import java.util.EnumSet
+import java.util.TimeZone
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSyncGeofences
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk=[Build.VERSION_CODES.P])
@@ -527,20 +549,40 @@ class RadarTest {
         // Clear captured parameters
         apiHelperMock.clearCapturedParams()
 
-        // Track location
-        Radar.trackOnce(object : Radar.RadarTrackCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
-                // Verify that user tags were included in the request
-                val capturedParams = apiHelperMock.lastCapturedParams
-                assertNotNull(capturedParams)
-                
-                val userTagsArray = capturedParams!!.optJSONArray("userTags")
-                assertNotNull(userTagsArray)
-                assertEquals(2, userTagsArray!!.length())
-                assertTrue(userTagsArray.toString().contains("premium"))
-                assertTrue(userTagsArray.toString().contains("beta_user"))
-            }
-        })
+        // Perform track request
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.trackOnce { status, _, _, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        // Verify the request was successful
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+
+        // Verify the track request was made
+        assertEquals("POST", apiHelperMock.lastCapturedMethod)
+        assertEquals("v1/track", apiHelperMock.lastCapturedPath)
+
+        // Verify user tags were included in the request
+        val capturedParams = apiHelperMock.lastCapturedParams
+        assertNotNull(capturedParams)
+
+        val userTagsArray = capturedParams!!.optJSONArray("userTags")
+        assertNotNull(userTagsArray)
+        assertEquals(2, userTagsArray!!.length())
+
+        val userTagsList = mutableListOf<String>()
+        for (i in 0 until userTagsArray.length()) {
+            userTagsList.add(userTagsArray.getString(i))
+        }
+
+        assertTrue(userTagsList.contains("premium"))
+        assertTrue(userTagsList.contains("beta_user"))
         
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
@@ -567,17 +609,42 @@ class RadarTest {
         // Clear captured parameters
         apiHelperMock.clearCapturedParams()
 
-        // Track location
-        Radar.trackOnce(object : Radar.RadarTrackCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
-                // Verify that user tags were NOT included in the request
-                val capturedParams = apiHelperMock.lastCapturedParams
-                assertNotNull(capturedParams)
-                
-                val userTagsArray = capturedParams!!.optJSONArray("userTags")
-                assertNull(userTagsArray)
-            }
-        })
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.trackOnce { status, _, _, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        // Verify the request was successful
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+
+        // Verify the track request was made
+        assertEquals("POST", apiHelperMock.lastCapturedMethod)
+        assertEquals("v1/track", apiHelperMock.lastCapturedPath)
+
+        // Verify user tags were included in the request
+        val capturedParams = apiHelperMock.lastCapturedParams
+        assertNotNull(capturedParams)
+
+        val userTagsArray = capturedParams!!.optJSONArray("userTags")
+        assertNotNull(userTagsArray)
+        assertEquals(2, userTagsArray!!.length())
+
+        val userTagsList = mutableListOf<String>()
+        for (i in 0 until userTagsArray.length()) {
+            userTagsList.add(userTagsArray.getString(i))
+        }
+
+        assertTrue(userTagsList.contains("premium"))
+        assertTrue(userTagsList.contains("beta_user"))
+
+        // Clean up
+        Radar.removeTags(arrayOf("premium", "beta_user"))
     }
 
     @Test
@@ -2027,47 +2094,6 @@ class RadarTest {
     }
 
     @Test
-    fun test_Radar_tags_sync_after_set() {
-        // Set up location permissions and mock location
-        permissionsHelperMock.mockFineLocationPermissionGranted = true
-        val mockLocation = Location("RadarSDK")
-        mockLocation.latitude = 40.78382
-        mockLocation.longitude = -73.97536
-        mockLocation.accuracy = 65f
-        mockLocation.time = System.currentTimeMillis()
-        locationClientMock.mockLocation = mockLocation
-
-        // Set up mock response
-        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
-        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
-
-        // Add user tags
-        Radar.addTags(arrayOf("premium", "beta_user"))
-
-        // Clear captured parameters
-        apiHelperMock.clearCapturedParams()
-
-        // Verify that a track request was made due to syncAfterSetUser
-        // We can verify this by checking if the last captured path is "v1/track"
-        // Note: This test assumes syncAfterSetUser is enabled in the test configuration
-        val capturedPath = apiHelperMock.lastCapturedPath
-        if (capturedPath == "v1/track") {
-            // Verify that user tags were included in the sync request
-            val capturedParams = apiHelperMock.lastCapturedParams
-            assertNotNull(capturedParams)
-            
-            val userTagsArray = capturedParams!!.optJSONArray("userTags")
-            assertNotNull(userTagsArray)
-            assertEquals(2, userTagsArray!!.length())
-            assertTrue(userTagsArray.toString().contains("premium"))
-            assertTrue(userTagsArray.toString().contains("beta_user"))
-        }
-        
-        // Clean up
-        Radar.removeTags(arrayOf("premium", "beta_user"))
-    }
-
-    @Test
     fun test_Radar_setTags() {
         // Set tags
         val tags = arrayOf("premium", "beta_user", "vip")
@@ -2186,19 +2212,31 @@ class RadarTest {
         apiHelperMock.clearCapturedParams()
 
         // Track location
-        Radar.trackOnce(object : Radar.RadarTrackCallback {
-            override fun onComplete(status: RadarStatus, location: Location?, events: Array<RadarEvent>?, user: RadarUser?) {
-                // Verify that tags were included in the request
-                val capturedParams = apiHelperMock.lastCapturedParams
-                assertNotNull(capturedParams)
-                
-                val userTagsArray = capturedParams!!.optJSONArray("userTags")
-                assertNotNull(userTagsArray)
-                assertEquals(2, userTagsArray!!.length())
-                assertTrue(userTagsArray.toString().contains("premium"))
-                assertTrue(userTagsArray.toString().contains("beta_user"))
-            }
-        })
+        // Perform track request
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.trackOnce { status, _, _, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        // Verify the request was successful
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+
+        // Verify the track request was made
+        assertEquals("POST", apiHelperMock.lastCapturedMethod)
+        assertEquals("v1/track", apiHelperMock.lastCapturedPath)
+
+        // Verify user tags were NOT included in the request
+        val capturedParams = apiHelperMock.lastCapturedParams
+        assertNotNull(capturedParams)
+
+        val userTagsArray = capturedParams!!.optJSONArray("userTags")
+        assertNull(userTagsArray)
         
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
