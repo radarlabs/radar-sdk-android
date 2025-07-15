@@ -439,12 +439,13 @@ internal object RadarSettings {
     }
 
     internal fun setTags(context: Context, tags: Array<String>) {
-        if (tags.isEmpty()) {
+        val uniqueTags = tags.toSet().toList()
+        if (uniqueTags.isEmpty()) {
             getSharedPreferences(context).edit {
                 remove(KEY_USER_TAGS)
             }
         } else {
-            val tagsJson = org.json.JSONArray(tags.toList()).toString()
+            val tagsJson = org.json.JSONArray(uniqueTags).toString()
             getSharedPreferences(context).edit {
                 putString(KEY_USER_TAGS, tagsJson)
             }

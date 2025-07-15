@@ -768,10 +768,6 @@ object Radar {
         }
 
         RadarSettings.addTags(context, tags)
-
-        if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
-            trackOnce()
-        }
     }
 
     /**
@@ -785,11 +781,7 @@ object Radar {
             return
         }
 
-        RadarSettings.setTags(context, tags)
-
-        if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
-            trackOnce()
-        }
+        RadarSettings.setTags(context, tags) 
     }
 
     /**
@@ -804,10 +796,6 @@ object Radar {
         }
 
         RadarSettings.removeTags(context, tags)
-
-        if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
-            trackOnce()
-        }
     }
 
     /**

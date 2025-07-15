@@ -632,19 +632,8 @@ class RadarTest {
         assertNotNull(capturedParams)
 
         val userTagsArray = capturedParams!!.optJSONArray("userTags")
-        assertNotNull(userTagsArray)
-        assertEquals(2, userTagsArray!!.length())
+        assertNull(userTagsArray)
 
-        val userTagsList = mutableListOf<String>()
-        for (i in 0 until userTagsArray.length()) {
-            userTagsList.add(userTagsArray.getString(i))
-        }
-
-        assertTrue(userTagsList.contains("premium"))
-        assertTrue(userTagsList.contains("beta_user"))
-
-        // Clean up
-        Radar.removeTags(arrayOf("premium", "beta_user"))
     }
 
     @Test
@@ -2236,7 +2225,16 @@ class RadarTest {
         assertNotNull(capturedParams)
 
         val userTagsArray = capturedParams!!.optJSONArray("userTags")
-        assertNull(userTagsArray)
+        assertNotNull(userTagsArray)
+        assertEquals(2, userTagsArray!!.length())
+        
+        val userTagsList = mutableListOf<String>()
+        for (i in 0 until userTagsArray.length()) {
+            userTagsList.add(userTagsArray.getString(i))
+        }
+        
+        assertTrue(userTagsList.contains("premium"))
+        assertTrue(userTagsList.contains("beta_user"))
         
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
