@@ -85,6 +85,10 @@ class MainActivity : AppCompatActivity() {
 
     fun createButtons() {
 
+        createButton("testiam") {
+            Radar.testiam()
+        }
+
         createButton("requestForegroundPermission") {
             requestForegroundPermission()
         }
