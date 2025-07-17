@@ -20,7 +20,7 @@ class MyRadarReceiver : RadarReceiver() {
 
         internal fun notify(context: Context, body: String) {
             identifier++
-
+            return;
             val channelId = "example"
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
