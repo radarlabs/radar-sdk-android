@@ -4,16 +4,13 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.LinearLayout
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.edit
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
@@ -22,11 +19,8 @@ import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
-import java.time.Instant
-import java.time.LocalDate
 import java.util.Date
 import java.util.EnumSet
-import java.util.UUID
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,10 +32,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
-            putString("host", "https://api.radar-staging.com")
-        }
-        Radar.initialize(this, "prj_live_pk_bbcc3b729cf153b34d67170da37e1a3b50c7c631", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
         Radar.sdkVersion().let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
@@ -92,7 +83,6 @@ class MainActivity : AppCompatActivity() {
         listView.addView(button)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun createButtons() {
 
         createButton("requestForegroundPermission") {
@@ -146,12 +136,6 @@ class MainActivity : AppCompatActivity() {
                     "example",
                     "Track once: status = ${status}; location = $location; events = $events; user = $user"
                 )
-                events?.forEach { event ->
-                    Log.v("example", "Event ${event.type.name} ${event.trip?.orders?.size ?: -1}")
-                    event.trip?.orders?.forEach { order ->
-                        Log.v("example", "${order.guid} ${order.status.name}")
-                    }
-                }
             }
         }
 
@@ -405,22 +389,14 @@ class MainActivity : AppCompatActivity() {
         }
 
        createButton("startTrip") {
-           val now = Instant.now().plusSeconds(600)
-
             val tripOptions = RadarTripOptions(
-                UUID.randomUUID().toString(),
+                "400",
                 null,
-                "a",
-                "a",
+                "store",
+                "123",
                 Radar.RadarRouteMode.CAR,
-                approachingThreshold = 1,
-                scheduledArrivalAt = Date.from(now)
+                approachingThreshold = 9
             )
-           val metadata = JSONObject()
-           metadata.put("oloOrderGuid", "test-id")
-           metadata.put("oloHandoffMode", "delivery")
-           tripOptions.metadata = metadata
-
             Radar.startTrip(tripOptions)
         }
 
