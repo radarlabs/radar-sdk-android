@@ -24,7 +24,7 @@ import static io.github.gradlenexus.publishplugin.internal.NexusClient.*
 @CompileStatic
 class RadarNexusClient extends NexusClient {
 
-    private static final URI BASE_URL = new URI('https://s01.oss.sonatype.org/service/local/')
+    private static final URI BASE_URL = new URI('https://ossrh-staging-api.central.sonatype.com/service/local/')
     private final ApiExtensions api
 
     /**
