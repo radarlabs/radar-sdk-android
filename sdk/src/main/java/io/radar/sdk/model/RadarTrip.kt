@@ -58,7 +58,12 @@ class RadarTrip(
     /**
      * The status of the trip.
      */
-    val status: RadarTripStatus
+    val status: RadarTripStatus,
+
+    /**
+     * The orders associated with the trip.
+     */
+    val orders: Array<RadarTripOrder>? = null
 ) {
 
     enum class RadarTripStatus {
@@ -91,6 +96,7 @@ class RadarTrip(
         private const val FIELD_DISTANCE = "distance"
         private const val FIELD_DURATION = "duration"
         private const val FIELD_STATUS = "status"
+        private const val FIELD_ORDERS = "orders"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarTrip? {
@@ -134,6 +140,8 @@ class RadarTrip(
                 else -> RadarTripStatus.UNKNOWN
             }
 
+            val orders: Array<RadarTripOrder>? = RadarTripOrder.fromJson(obj.optJSONArray(FIELD_ORDERS))
+
             return RadarTrip(
                 id,
                 externalId,
@@ -144,7 +152,8 @@ class RadarTrip(
                 mode,
                 etaDistance,
                 etaDuration,
-                status
+                status,
+                orders
             )
         }
 
@@ -174,6 +183,7 @@ class RadarTrip(
         etaObj.putOpt(FIELD_DURATION, this.etaDuration)
         obj.putOpt(FIELD_ETA, etaObj)
         obj.putOpt(FIELD_STATUS, Radar.stringForTripStatus(status))
+        obj.putOpt(FIELD_ORDERS, RadarTripOrder.toJson(this.orders))
         return obj
     }
 
