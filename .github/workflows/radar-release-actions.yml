@@ -25,6 +25,5 @@ jobs:
           NEXUS_TOKEN: ${{ secrets.NEXUS_TOKEN }}
           ORG_GRADLE_PROJECT_SIGNINGKEY: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
           ORG_GRADLE_PROJECT_SIGNINGPASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
-          MAVEN_CENTRAL_NAMESPACE: ${{ secrets.MAVEN_CENTRAL_NAMESPACE }}
           SNAPSHOT: false
-        run: ./gradlew build publish
+        run: ./gradlew build publishAggregationToCentralPortal
