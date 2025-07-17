@@ -109,7 +109,7 @@ class RadarMavenPublishPluginExtension {
                                 @Override
                                 void execute(PasswordCredentials passwordCredentials) {
                                     passwordCredentials.username = System.getenv 'NEXUS_USERNAME'
-                                    passwordCredentials.password = System.getenv 'NEXUS_TOKEN'
+                                    passwordCredentials.password = System.getenv 'NEXUS_PASSWORD'
                                 }
 
                             }

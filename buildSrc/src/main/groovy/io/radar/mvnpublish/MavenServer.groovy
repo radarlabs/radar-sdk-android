@@ -9,6 +9,6 @@ enum MavenServer {
     final String url
 
     MavenServer(String path) {
-        url = "https://ossrh-staging-api.central.sonatype.com/$path"
+        url = "https://s01.oss.sonatype.org/$path"
     }
 }
