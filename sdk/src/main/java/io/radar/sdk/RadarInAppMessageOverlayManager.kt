@@ -10,11 +10,13 @@ class RadarInAppMessageOverlayManager {
 
         val rootView = activity.window?.decorView as? ViewGroup ?: return
 
-        val modal = RadarInAppMessageBannerView(activity).apply {
-            setTitle(title)
-            setMessage(message)
-            setOnDismissListener { dismiss() }
-        }
+        val factory = RadarInAppMessageViewFactory(activity)
+        val modal = factory.createInAppMessageView(
+            title = title,
+            message = message,
+            buttonText = "OK",
+            onDismissListener = { dismiss() }
+        ) as RadarInAppMessageBannerView
 
         // Add to root view
         rootView.addView(modal)
