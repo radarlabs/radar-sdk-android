@@ -17,6 +17,7 @@ import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
+import io.radar.sdk.model.RadarInAppMessagePayload
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
 import java.util.Date
@@ -41,6 +42,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
         Radar.setVerifiedReceiver(verifiedReceiver)
+
+        val inAppMessageReceiver = MyInAppMessageReceiver()
+        Radar.setInAppMessageReceiver(inAppMessageReceiver)
 
         listView = findViewById(R.id.buttonList)
         createButtons()
@@ -86,7 +90,8 @@ class MainActivity : AppCompatActivity() {
     fun createButtons() {
 
         createButton("testiam") {
-            Radar.testiam()
+            val payload = RadarInAppMessagePayload("hello", "I'm a test message", "press me")
+            Radar.testiam(payload)
         }
 
         createButton("requestForegroundPermission") {
