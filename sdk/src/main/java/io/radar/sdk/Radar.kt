@@ -5,18 +5,39 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.content.Intent
+import android.graphics.PixelFormat
 import android.location.Location
 import android.os.Build
 import android.os.Handler
+import android.view.WindowManager
 import androidx.annotation.RequiresApi
-import io.radar.sdk.model.*
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.savedstate.findViewTreeSavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarReplay
+import io.radar.sdk.model.RadarRouteMatrix
+import io.radar.sdk.model.RadarRoutes
+import io.radar.sdk.model.RadarSdkConfiguration
+import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import io.radar.sdk.util.RadarLogBuffer
 import io.radar.sdk.util.RadarReplayBuffer
 import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
-import java.util.*
+import java.util.Date
+import java.util.EnumSet
+
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -3709,6 +3730,27 @@ object Radar {
 
         return RadarUtils.sdkVersion
 
+    }
+
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @JvmStatic
+    fun sendInAppMessage() {
+        println("SENDING IN APP MESSAGE")
+        val activity = this.activity
+        if (activity != null) {
+            println("IS ACTIVITY")
+            val windowManager = activity.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+            val newView = getView(activity)
+
+            val layout = WindowManager.LayoutParams(500, 500, WindowManager.LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG,
+                (WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL), PixelFormat.TRANSLUCENT)
+
+            newView.setViewTreeLifecycleOwner(activity.window.decorView.findViewTreeLifecycleOwner())
+            newView.setViewTreeSavedStateRegistryOwner(activity.window.decorView.findViewTreeSavedStateRegistryOwner())
+
+            windowManager.addView(newView, layout)
+        }
     }
 
 

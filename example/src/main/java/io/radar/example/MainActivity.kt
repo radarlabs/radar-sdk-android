@@ -84,6 +84,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun createButtons() {
+        val fId = resources.getIdentifier("io.radar.example:font/papyrus", null, null)
+        println("FONT FROM BASE: ${fId}, ${R.font.papyrus}")
+
+        createButton("SEND IT") {
+            Radar.sendInAppMessage()
+        }
 
         createButton("requestForegroundPermission") {
             requestForegroundPermission()

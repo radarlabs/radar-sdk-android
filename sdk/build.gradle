@@ -5,7 +5,6 @@ import io.radar.mvnpublish.MavenServer
 
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
-apply plugin: "kotlin-android-extensions"
 apply plugin: "org.jetbrains.dokka"
 apply plugin: 'io.radar.mvnpublish'
 
@@ -58,11 +57,18 @@ android {
     lintOptions {
         warningsAsErrors true
     }
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.2"
+    }
 }
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    implementation "androidx.compose.material:material:1.6.8"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "androidx.appcompat:appcompat:1.4.0"
     implementation "androidx.core:core-ktx:1.7.0"
