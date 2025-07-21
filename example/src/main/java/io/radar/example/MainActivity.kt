@@ -94,6 +94,10 @@ class MainActivity : AppCompatActivity() {
             Radar.testiam(payload)
         }
 
+        createButton("showInAppMessage") {
+            Radar.showInAppMessage()
+        }
+
         createButton("requestForegroundPermission") {
             requestForegroundPermission()
         }

@@ -29,4 +29,6 @@ interface RadarInAppMessageReceiver {
      * @param payload The payload containing the message data
      */
     fun onInAppMessageButtonClicked(payload: RadarInAppMessagePayload)
+
+
 } 

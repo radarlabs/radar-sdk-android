@@ -487,7 +487,7 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
-    private var inAppMessageManager: RadarInAppMessageOverlayManager? = RadarInAppMessageOverlayManager()
+    private lateinit var inAppMessageManager: RadarInAppMessageOverlayManager
     internal lateinit var inAppMessageViewFactory: RadarInAppMessageViewFactoryInterface
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -578,6 +578,14 @@ object Radar {
 
         if (!this::inAppMessageViewFactory.isInitialized) {
             this.inAppMessageViewFactory = RadarInAppMessageViewFactory(this.context)
+        }
+
+        if (!this::inAppMessageManager.isInitialized) {
+            if (this.activity != null) {
+                this.inAppMessageManager = RadarInAppMessageOverlayManager(this.activity!!, this.context)
+            } else {
+                this.logger.e("Activity is not initialized, cannot initialize inAppMessageManager")
+            }
         }
 
         this.logger.i("initialize()", RadarLogType.SDK_CALL)
@@ -3747,7 +3755,12 @@ object Radar {
 
     @JvmStatic
     fun testiam(payload: RadarInAppMessagePayload){
-        activity?.let { inAppMessageManager?.showModal(it, payload) }
+        inAppMessageManager?.enqueueInAppMessage(payload) 
+    }
+
+    @JvmStatic
+    fun showInAppMessage(){
+        inAppMessageManager?.dequeueInAppMessage()
     }
 
     @JvmStatic
