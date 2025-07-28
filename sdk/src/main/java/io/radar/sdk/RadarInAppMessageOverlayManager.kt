@@ -1,6 +1,8 @@
 package io.radar.sdk
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.view.View
 import android.view.ViewGroup
 import io.radar.sdk.model.RadarInAppMessagePayload
@@ -23,6 +25,11 @@ class RadarInAppMessageOverlayManager(private val activity: Activity, private va
             },
             onInAppMessageButtonClicked = {
                 inAppMessageReceiver?.onInAppMessageButtonClicked(payload)
+                // call link if it exists
+                payload.button.url?.let { url ->
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    activity.startActivity(intent)
+                }
                 dismiss()
             }
         )
@@ -45,23 +52,22 @@ class RadarInAppMessageOverlayManager(private val activity: Activity, private va
 
    internal fun enqueueInAppMessage(payload: RadarInAppMessagePayload) {
         if (inAppMessageReceiver != null) {
-            val result = inAppMessageReceiver?.beforeInAppMessageDisplayed(payload)
+            val result = inAppMessageReceiver?.shouldDisplayInAppMessage(payload)
             if (result == RadarInAppMessageOperation.DISCARD) {
                 return
             }
-            if (result == RadarInAppMessageOperation.ENQUEUE) {
-                // TODO: enqueue the message
-                RadarState.enqueueInAppMessage(activity, payload)
-                return
-            }
+//            if (result == RadarInAppMessageOperation.ENQUEUE) {
+//                RadarState.enqueueInAppMessage(activity, payload)
+//                return
+//            }
         }
         showModal(payload)
    }
 
-   internal fun dequeueInAppMessage() {
-        val payload = RadarState.dequeueInAppMessage(activity)
-        if (payload != null) {
-            showModal(payload)
-        }
-   }
+//   internal fun dequeueInAppMessage() {
+//        val payload = RadarState.dequeueInAppMessage(activity)
+//        if (payload != null) {
+//            showModal(payload)
+//        }
+//   }
 }

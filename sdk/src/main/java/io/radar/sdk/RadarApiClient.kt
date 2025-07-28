@@ -15,6 +15,7 @@ import io.radar.sdk.model.RadarContext
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarInAppMessagePayload
 import io.radar.sdk.model.RadarLog
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarReplay
@@ -539,6 +540,15 @@ internal class RadarApiClient(
 
                     if (token != null) {
                         Radar.sendToken(token)
+                    }
+
+                    val inAppMessages = res.optJSONArray("inAppMessage")?.let { inAppMessageObj ->
+                        RadarInAppMessagePayload.fromJsonArray(inAppMessageObj)
+                    }
+                    if (inAppMessages != null) {
+                        for (inAppMessage in inAppMessages) {
+                            Radar.showInAppMessage(inAppMessage)
+                        }
                     }
 
                     callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config, token)

@@ -22,8 +22,9 @@ interface RadarInAppMessageViewFactoryInterface {
     /**
      * Creates and returns a new in-app message banner view instance using a payload.
      * 
-     * @param payload The payload containing title, message, and button text
+     * @param payload The payload containing title, body, and button data
      * @param onDismissListener Optional callback for when the banner is dismissed
+     * @param onInAppMessageButtonClicked Optional callback for when the button is clicked
      * @return A configured View with the specified content
      */
     fun createInAppMessageView(
@@ -45,14 +46,21 @@ class RadarInAppMessageViewFactory(private val context: Context) : RadarInAppMes
      * @return A configured View ready for use as a banner
      */
     fun createInAppMessageView(): View {
-        return createInAppMessageView("Title text", "Description text that might wrap to the next line", "Button")
+        return createInAppMessageView(
+            RadarInAppMessagePayload(
+                title = RadarInAppMessagePayload.Title("Title text", "#000000"),
+                body = RadarInAppMessagePayload.Body("Description text that might wrap to the next line", "#666666"),
+                button = RadarInAppMessagePayload.Button("Button", "#FFFFFF", "#FF6B9D")
+            )
+        )
     }
 
     /**
      * Creates and returns a new in-app message banner view instance using a payload.
      * 
-     * @param payload The payload containing title, message, and button text
+     * @param payload The payload containing title, body, and button data
      * @param onDismissListener Optional callback for when the banner is dismissed
+     * @param onInAppMessageButtonClicked Optional callback for when the button is clicked
      * @return A configured View with the specified content
      */
     override fun createInAppMessageView(
@@ -62,17 +70,17 @@ class RadarInAppMessageViewFactory(private val context: Context) : RadarInAppMes
     ): View {
         return createInAppMessageView(
             title = payload.title,
-            message = payload.message,
-            buttonText = payload.buttonText,
+            body = payload.body,
+            button = payload.button,
             onDismissListener = onDismissListener,
             onInAppMessageButtonClicked = onInAppMessageButtonClicked
         )
     }
     
     private fun createInAppMessageView(
-        title: String,
-        message: String,
-        buttonText: String,
+        title: RadarInAppMessagePayload.Title,
+        body: RadarInAppMessagePayload.Body,
+        button: RadarInAppMessagePayload.Button,
         onDismissListener: (() -> Unit)? = null,
         onInAppMessageButtonClicked: (() -> Unit)? = null
     ): View {
@@ -81,8 +89,8 @@ class RadarInAppMessageViewFactory(private val context: Context) : RadarInAppMes
         // Create the view hierarchy
         val modalContainer = createModalContainer()
         val titleView = createTitleView(title)
-        val messageView = createMessageView(message)
-        val actionButton = createActionButton(buttonText, onInAppMessageButtonClicked)
+        val messageView = createMessageView(body)
+        val actionButton = createActionButton(button, onInAppMessageButtonClicked)
         val dismissButton = createDismissButton(onDismissListener)
         val headerContainer = createHeaderContainer(dismissButton)
         
@@ -134,32 +142,32 @@ class RadarInAppMessageViewFactory(private val context: Context) : RadarInAppMes
         }
     }
     
-    private fun createTitleView(title: String): TextView {
+    private fun createTitleView(title: RadarInAppMessagePayload.Title): TextView {
         return TextView(context).apply {
-            setTextColor("#000000".toColorInt())
+            setTextColor(title.color.toColorInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
             setTypeface(null, android.graphics.Typeface.BOLD)
-            text = title
+            text = title.text
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, 20)
         }
     }
     
-    private fun createMessageView(message: String): TextView {
+    private fun createMessageView(body: RadarInAppMessagePayload.Body): TextView {
         return TextView(context).apply {
-            setTextColor("#666666".toColorInt())
+            setTextColor(body.color.toColorInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-            text = message
+            text = body.text
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, 32)
             setLineSpacing(0f, 1.2f)
         }
     }
     
-    private fun createActionButton(buttonText: String, onInAppMessageButtonClicked: (() -> Unit)?): Button {
+    private fun createActionButton(button: RadarInAppMessagePayload.Button, onInAppMessageButtonClicked: (() -> Unit)?): Button {
         return Button(context).apply {
-            text = buttonText
-            setTextColor(Color.WHITE)
+            text = button.text
+            setTextColor(button.color.toColorInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             setTypeface(null, android.graphics.Typeface.BOLD)
             setPadding(48, 16, 48, 16)
@@ -168,7 +176,7 @@ class RadarInAppMessageViewFactory(private val context: Context) : RadarInAppMes
             val buttonShape = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24f, context.resources.displayMetrics)
-                setColor("#FF6B9D".toColorInt()) // Pink color for the button
+                setColor(button.backgroundColor.toColorInt())
             }
             background = buttonShape
             setOnClickListener { 

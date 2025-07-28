@@ -8,14 +8,12 @@ import io.radar.sdk.model.RadarInAppMessagePayload
  */
 interface RadarInAppMessageReceiver {
     
-    /**
-     * Called before an in-app message is displayed.
-     * Allows the delegate to control whether the message should be shown.
-     * 
-     * @param payload The payload containing the message data
-     * @return RadarInAppMessageOperation indicating how to proceed with the message
-     */
-    fun beforeInAppMessageDisplayed(payload: RadarInAppMessagePayload): RadarInAppMessageOperation
+
+    // more of a lifecycle hook 
+    fun beforeInAppMessageDisplayed(payload: RadarInAppMessagePayload) 
+
+    // to show, enqueue or discard (what the state is also trying to do)
+    fun shouldDisplayInAppMessage(payload: RadarInAppMessagePayload): RadarInAppMessageOperation
     
     /**
      * Called when an in-app message is dismissed by the user.

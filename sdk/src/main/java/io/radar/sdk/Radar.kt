@@ -3759,9 +3759,14 @@ object Radar {
     }
 
     @JvmStatic
-    fun showInAppMessage(){
-        inAppMessageManager?.dequeueInAppMessage()
+    fun showInAppMessage(payload: RadarInAppMessagePayload){
+        inAppMessageManager?.enqueueInAppMessage(payload) 
     }
+
+//    @JvmStatic
+//    fun showInAppMessage(){
+//        inAppMessageManager?.dequeueInAppMessage()
+//    }
 
     @JvmStatic
     fun setInAppMessageViewFactory(inAppMessageViewFactory: RadarInAppMessageViewFactoryInterface){
