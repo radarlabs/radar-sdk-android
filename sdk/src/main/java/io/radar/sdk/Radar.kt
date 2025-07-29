@@ -499,10 +499,10 @@ object Radar {
      */
     @JvmStatic
     fun initialize(
-        context: Context?, 
-        publishableKey: String? = null, 
-        receiver: RadarReceiver? = null, 
-        provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, 
+        context: Context?,
+        publishableKey: String? = null,
+        receiver: RadarReceiver? = null,
+        provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE,
         fraud: Boolean = false) {
         if (context == null) {
             return
@@ -622,6 +622,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setUserId(userId=$userId)", RadarLogType.SDK_CALL)
 
         RadarSettings.setUserId(context, userId)
 
@@ -642,6 +643,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getUserId()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getUserId(context)
     }
@@ -658,6 +660,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setDescription(description=$description)", RadarLogType.SDK_CALL)
 
         RadarSettings.setDescription(context, description)
     }
@@ -674,6 +677,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getDescription()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getDescription(context)
     }
@@ -690,6 +694,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setMetadata(metadata=$metadata)", RadarLogType.SDK_CALL)
 
         RadarSettings.setMetadata(context, metadata)
 
@@ -710,6 +715,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getMetadata()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getMetadata(context)
     }
@@ -724,6 +730,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setProduct(product=$product)", RadarLogType.SDK_CALL)
 
         RadarSettings.setProduct(context, product)
     }
@@ -738,6 +745,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getProduct()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getProduct(context)
     }
@@ -750,6 +758,8 @@ object Radar {
      */
     @JvmStatic
     fun setAnonymousTrackingEnabled(enabled: Boolean) {
+        this.logger.i("setAnonymousTrackingEnabled(enabled=$enabled)", RadarLogType.SDK_CALL)
+
         RadarSettings.setAnonymousTrackingEnabled(context, enabled)
     }
 
@@ -1225,6 +1235,7 @@ object Radar {
         if (!initialized) {
             return false
         }
+        this.logger.i("isTrackingVerified()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
@@ -1394,6 +1405,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("mockTracking(origin=$origin, destination=$destination, mode=$mode, steps=$steps, interval=$interval)", RadarLogType.SDK_CALL)
 
         apiClient.getDistance(origin, destination, EnumSet.of(mode), RadarRouteUnits.METRIC, steps, object : RadarApiClient.RadarDistanceApiCallback {
             override fun onComplete(
@@ -1520,6 +1532,7 @@ object Radar {
         if (!initialized) {
             return false
         }
+        this.logger.i("isTracking()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getTracking(context)
     }
@@ -1534,6 +1547,7 @@ object Radar {
         if (!initialized) {
             return false
         }
+        this.logger.i("isUsingRemoteTrackingOptions()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getRemoteTrackingOptions(context) != null
     }
@@ -1549,6 +1563,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getHost()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getHost(context)
     }
@@ -1563,6 +1578,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getPublishableKey()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getPublishableKey(context)
     }
@@ -1591,8 +1607,8 @@ object Radar {
         if (!initialized) {
             return
         }
-
         this.logger.i("setForegroundServiceOptions(options=$options)", RadarLogType.SDK_CALL)
+
         RadarSettings.setForegroundService(context, options)
     }
 
@@ -1608,8 +1624,8 @@ object Radar {
         if (!initialized) {
             return
         }
-
         this.logger.i("setNotificationOptions(options=$options)", RadarLogType.SDK_CALL)
+
         RadarSettings.setNotificationOptions(context, options)
     }
 
@@ -1626,6 +1642,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setReceiver(receiver=$receiver)", RadarLogType.SDK_CALL)
 
         this.receiver = receiver
     }
@@ -1642,6 +1659,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setVerifiedReceiver(verifiedReceiver=$verifiedReceiver)", RadarLogType.SDK_CALL)
 
         this.verifiedReceiver = verifiedReceiver
     }
@@ -1659,6 +1677,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("acceptEvent(eventId=$eventId, verifiedPlaceId=$verifiedPlaceId)", RadarLogType.SDK_CALL)
 
         apiClient.verifyEvent(eventId, RadarEventVerification.ACCEPT, verifiedPlaceId)
     }
@@ -1675,6 +1694,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("rejectEvent(eventId=$eventId)", RadarLogType.SDK_CALL)
 
         apiClient.verifyEvent(eventId, RadarEventVerification.REJECT)
     }
@@ -1691,6 +1711,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getTripOptions()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getTripOptions(context)
     }
