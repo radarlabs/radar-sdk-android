@@ -760,6 +760,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getTags()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getTags(context)
     }
@@ -774,6 +775,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("addTags(tags=${tags.contentToString()})", RadarLogType.SDK_CALL)
 
         RadarSettings.addTags(context, tags)
     }
@@ -788,8 +790,9 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setTags(tags=${tags.contentToString()})", RadarLogType.SDK_CALL)
 
-        RadarSettings.setTags(context, tags) 
+        RadarSettings.setTags(context, tags)
     }
 
     /**
@@ -802,6 +805,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("removeTags(tags=${tags.contentToString()})", RadarLogType.SDK_CALL)
 
         RadarSettings.removeTags(context, tags)
     }
