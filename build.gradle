@@ -1,3 +1,6 @@
+import java.time.Duration
+import java.time.temporal.ChronoUnit
+
 buildscript {
     ext.kotlin_version = "1.7.10"
     repositories {
@@ -31,9 +34,9 @@ nmcpAggregation {
         publishingType = "AUTOMATIC"
 
         // Increase the validation timeout to 5 minutes
-        validationTimeout = java.time.Duration.of(5, ChronoUnit.MINUTES)
+        validationTimeout = Duration.of(5, ChronoUnit.MINUTES)
         // Increase the publishing timeout to 5 minutes
-        publishingTimeout = java.time.Duration.of(5, ChronoUnit.MINUTES)
+        publishingTimeout = Duration.of(5, ChronoUnit.MINUTES)
     }
 }
 
