@@ -17,7 +17,7 @@ import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
-import io.radar.sdk.model.RadarInAppMessagePayload
+import io.radar.sdk.model.RadarInAppMessage
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
 import java.util.Date
@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
     fun createButtons() {
 
         createButton("testiam") {
-            val payload = RadarInAppMessagePayload.fromJson("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"}}")
+            val payload = RadarInAppMessage.fromJson("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"}}")
             if (payload != null) {
                 Radar.testiam(payload)
             }

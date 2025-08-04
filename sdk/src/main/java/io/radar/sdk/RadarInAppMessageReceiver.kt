@@ -1,32 +1,39 @@
 package io.radar.sdk
+import android.content.Context
+import android.view.View
 
-import io.radar.sdk.model.RadarInAppMessagePayload
+import io.radar.sdk.model.RadarInAppMessage
 
 /**
  * Interface for handling in-app message lifecycle events.
  * Provides callbacks for different stages of in-app message display and interaction.
  */
 interface RadarInAppMessageReceiver {
-    
-
-    // more of a lifecycle hook 
-    fun beforeInAppMessageDisplayed(payload: RadarInAppMessagePayload) 
 
     // to show, enqueue or discard (what the state is also trying to do)
-    fun shouldDisplayInAppMessage(payload: RadarInAppMessagePayload): RadarInAppMessageOperation
+    fun onNewInAppMessage(inAppMessage: RadarInAppMessage): RadarInAppMessageOperation {
+        return RadarInAppMessageOperation.DISPLAY
+    }
     
     /**
      * Called when an in-app message is dismissed by the user.
      * Provides an opportunity to perform cleanup or tracking.
      */
-    fun onInAppMessageDismissed(payload: RadarInAppMessagePayload)
+    fun onInAppMessageDismissed(inAppMessage: RadarInAppMessage) {
+        return
+    }
     
     /**
      * Called when the user clicks the action button in an in-app message.
      * 
-     * @param payload The payload containing the message data
+     * @param inAppMessage The payload containing the message data
      */
-    fun onInAppMessageButtonClicked(payload: RadarInAppMessagePayload)
+    fun onInAppMessageButtonClicked(inAppMessage: RadarInAppMessage) {
+        return
+    }
 
-
+    fun createInAppMessageView(context: Context, inAppMessage: RadarInAppMessage, onDismissListener: (() -> Unit)? = null, onInAppMessageButtonClicked: (() -> Unit)? = null ):View {
+        val inAppMessageFactory = RadarInAppMessageViewFactory(context)
+        return inAppMessageFactory.createInAppMessageView(inAppMessage,onDismissListener,onInAppMessageButtonClicked)
+    }
 } 

@@ -16,7 +16,7 @@ import io.radar.sdk.model.RadarContext
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.model.RadarGeofence
-import io.radar.sdk.model.RadarInAppMessagePayload
+import io.radar.sdk.model.RadarInAppMessage
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarReplay
 import io.radar.sdk.model.RadarRouteMatrix
@@ -487,8 +487,7 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
-    private lateinit var inAppMessageManager: RadarInAppMessageOverlayManager
-    internal lateinit var inAppMessageViewFactory: RadarInAppMessageViewFactoryInterface
+    private lateinit var inAppMessageManager: RadarInAppMessageManager
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
      *
@@ -576,13 +575,9 @@ object Radar {
             this.locationManager.updateTracking()
         }
 
-        if (!this::inAppMessageViewFactory.isInitialized) {
-            this.inAppMessageViewFactory = RadarInAppMessageViewFactory(this.context)
-        }
-
         if (!this::inAppMessageManager.isInitialized) {
             if (this.activity != null) {
-                this.inAppMessageManager = RadarInAppMessageOverlayManager(this.activity!!, this.context)
+                this.inAppMessageManager = RadarInAppMessageManager(this.activity!!, this.context)
             } else {
                 this.logger.e("Activity is not initialized, cannot initialize inAppMessageManager")
             }
@@ -3754,23 +3749,13 @@ object Radar {
     }
 
     @JvmStatic
-    fun testiam(payload: RadarInAppMessagePayload){
-        inAppMessageManager?.enqueueInAppMessage(payload) 
+    fun testiam(inAppMessage: RadarInAppMessage){
+        inAppMessageManager.showInAppMessages(arrayOf(inAppMessage))
     }
 
     @JvmStatic
-    fun showInAppMessage(payload: RadarInAppMessagePayload){
-        inAppMessageManager?.enqueueInAppMessage(payload) 
-    }
-
-//    @JvmStatic
-//    fun showInAppMessage(){
-//        inAppMessageManager?.dequeueInAppMessage()
-//    }
-
-    @JvmStatic
-    fun setInAppMessageViewFactory(inAppMessageViewFactory: RadarInAppMessageViewFactoryInterface){
-        this.inAppMessageViewFactory = inAppMessageViewFactory
+    fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>){
+        inAppMessageManager.showInAppMessages(inAppMessages)
     }
 
     internal fun handleLocation(context: Context, location: Location, source: RadarLocationSource) {

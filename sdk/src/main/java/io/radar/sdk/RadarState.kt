@@ -7,7 +7,6 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import io.radar.sdk.model.RadarBeacon
-import io.radar.sdk.model.RadarInAppMessagePayload
 import org.json.JSONObject
 
 internal object RadarState {
@@ -40,7 +39,6 @@ internal object RadarState {
     private const val KEY_LAST_BEACON_UUIDS = "last_beacon_uuids"
     private const val KEY_LAST_BEACON_UIDS = "last_beacon_uids"
     private const val KEY_LAST_MOTION_ACTIVITY = "last_motion_activity"
-    private const val KEY_IN_APP_MESSAGE_QUEUE = "in_app_message_queue"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -277,65 +275,6 @@ internal object RadarState {
         getSharedPreferences(context).edit {
             putString(KEY_LAST_MOTION_ACTIVITY, jsonString)
         }
-    }
-
-    internal fun enqueueInAppMessage(context: Context, payload: RadarInAppMessagePayload) {
-        val queue = getInAppMessageQueue(context).toMutableList()
-        queue.add(payload)
-        setInAppMessageQueue(context, queue)
-    }
-
-    internal fun dequeueInAppMessage(context: Context): RadarInAppMessagePayload? {
-        val queue = getInAppMessageQueue(context).toMutableList()
-        if (queue.isEmpty()) {
-            return null
-        }
-        
-        val payload = queue.removeAt(0)
-        setInAppMessageQueue(context, queue)
-        return payload
-    }
-
-    private fun setInAppMessageQueue(context: Context, queue: List<RadarInAppMessagePayload>) {
-        val jsonArray = org.json.JSONArray()
-        queue.forEach { payload ->
-            jsonArray.put(payload.toJson())
-        }
-        
-        getSharedPreferences(context).edit {
-            putString(KEY_IN_APP_MESSAGE_QUEUE, jsonArray.toString())
-        }
-    }
-    
-
-    internal fun getInAppMessageQueue(context: Context): List<RadarInAppMessagePayload> {
-        val queueJson = getSharedPreferences(context).getString(KEY_IN_APP_MESSAGE_QUEUE, "[]")
-        return try {
-            val jsonArray = org.json.JSONArray(queueJson)
-            val queue = mutableListOf<RadarInAppMessagePayload>()
-            
-            for (i in 0 until jsonArray.length()) {
-                val payloadJson = jsonArray.getString(i)
-                val payload = RadarInAppMessagePayload.fromJson(payloadJson)
-                if (payload != null) {
-                    queue.add(payload)
-                }
-            }
-            
-            queue
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-
-    internal fun clearInAppMessageQueue(context: Context) {
-        getSharedPreferences(context).edit {
-            remove(KEY_IN_APP_MESSAGE_QUEUE)
-        }
-    }
-
-    internal fun getInAppMessageQueueSize(context: Context): Int {
-        return getInAppMessageQueue(context).size
     }
 
 }

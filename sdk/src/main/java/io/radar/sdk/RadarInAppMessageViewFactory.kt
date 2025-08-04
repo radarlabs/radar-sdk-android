@@ -2,7 +2,6 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.util.TypedValue
 import android.view.Gravity
@@ -12,13 +11,13 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
-import io.radar.sdk.model.RadarInAppMessagePayload
+import io.radar.sdk.model.RadarInAppMessage
 
 /**
- * Interface for creating Radar in-app message views.
- * Provides a contract for creating different types of in-app message views.
+ * Factory class for creating Radar in-app message views.
+ * Provides a centralized way to create different types of in-app message views.
  */
-interface RadarInAppMessageViewFactoryInterface {
+class RadarInAppMessageViewFactory(private val context: Context) {
     /**
      * Creates and returns a new in-app message banner view instance using a payload.
      * 
@@ -28,43 +27,7 @@ interface RadarInAppMessageViewFactoryInterface {
      * @return A configured View with the specified content
      */
     fun createInAppMessageView(
-        payload: RadarInAppMessagePayload,
-        onDismissListener: (() -> Unit)? = null,
-        onInAppMessageButtonClicked: (() -> Unit)? = null
-    ): View
-}
-
-/**
- * Factory class for creating Radar in-app message views.
- * Provides a centralized way to create different types of in-app message views.
- */
-class RadarInAppMessageViewFactory(private val context: Context) : RadarInAppMessageViewFactoryInterface {
-
-    /**
-     * Creates and returns a new in-app message banner view instance.
-     * 
-     * @return A configured View ready for use as a banner
-     */
-    fun createInAppMessageView(): View {
-        return createInAppMessageView(
-            RadarInAppMessagePayload(
-                title = RadarInAppMessagePayload.Title("Title text", "#000000"),
-                body = RadarInAppMessagePayload.Body("Description text that might wrap to the next line", "#666666"),
-                button = RadarInAppMessagePayload.Button("Button", "#FFFFFF", "#FF6B9D")
-            )
-        )
-    }
-
-    /**
-     * Creates and returns a new in-app message banner view instance using a payload.
-     * 
-     * @param payload The payload containing title, body, and button data
-     * @param onDismissListener Optional callback for when the banner is dismissed
-     * @param onInAppMessageButtonClicked Optional callback for when the button is clicked
-     * @return A configured View with the specified content
-     */
-    override fun createInAppMessageView(
-        payload: RadarInAppMessagePayload,
+        payload: RadarInAppMessage,
         onDismissListener: (() -> Unit)?,
         onInAppMessageButtonClicked: (() -> Unit)?
     ): View {
@@ -78,9 +41,9 @@ class RadarInAppMessageViewFactory(private val context: Context) : RadarInAppMes
     }
     
     private fun createInAppMessageView(
-        title: RadarInAppMessagePayload.Title,
-        body: RadarInAppMessagePayload.Body,
-        button: RadarInAppMessagePayload.Button,
+        title: RadarInAppMessage.Title,
+        body: RadarInAppMessage.Body,
+        button: RadarInAppMessage.Button,
         onDismissListener: (() -> Unit)? = null,
         onInAppMessageButtonClicked: (() -> Unit)? = null
     ): View {
@@ -142,7 +105,7 @@ class RadarInAppMessageViewFactory(private val context: Context) : RadarInAppMes
         }
     }
     
-    private fun createTitleView(title: RadarInAppMessagePayload.Title): TextView {
+    private fun createTitleView(title: RadarInAppMessage.Title): TextView {
         return TextView(context).apply {
             setTextColor(title.color.toColorInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
@@ -153,7 +116,7 @@ class RadarInAppMessageViewFactory(private val context: Context) : RadarInAppMes
         }
     }
     
-    private fun createMessageView(body: RadarInAppMessagePayload.Body): TextView {
+    private fun createMessageView(body: RadarInAppMessage.Body): TextView {
         return TextView(context).apply {
             setTextColor(body.color.toColorInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
@@ -164,7 +127,7 @@ class RadarInAppMessageViewFactory(private val context: Context) : RadarInAppMes
         }
     }
     
-    private fun createActionButton(button: RadarInAppMessagePayload.Button, onInAppMessageButtonClicked: (() -> Unit)?): Button {
+    private fun createActionButton(button: RadarInAppMessage.Button, onInAppMessageButtonClicked: (() -> Unit)?): Button {
         return Button(context).apply {
             text = button.text
             setTextColor(button.color.toColorInt())

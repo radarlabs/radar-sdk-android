@@ -1,13 +1,13 @@
 package io.radar.sdk.model
 
-import org.json.JSONObject
 import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * Data class representing the payload for an in-app message.
  * Contains all the necessary information to display a banner message.
  */
-data class RadarInAppMessagePayload(
+data class RadarInAppMessage(
     val title: Title,
     val body: Body,
     val button: Button
@@ -46,7 +46,7 @@ data class RadarInAppMessagePayload(
          * @param jsonString The JSON string to parse
          * @return RadarInAppMessagePayload instance or null if parsing fails
          */
-        fun fromJson(jsonString: String): RadarInAppMessagePayload? {
+        fun fromJson(jsonString: String): RadarInAppMessage? {
             return try {
                 val json = JSONObject(jsonString)
                 
@@ -70,7 +70,7 @@ data class RadarInAppMessagePayload(
                     url = if (buttonJson.has(KEY_URL)) buttonJson.getString(KEY_URL) else null
                 )
                 
-                RadarInAppMessagePayload(title, body, button)
+                RadarInAppMessage(title, body, button)
             } catch (e: Exception) {
                 null
             }
@@ -82,9 +82,9 @@ data class RadarInAppMessagePayload(
          * @param jsonArray The JSON array to parse
          * @return Array of RadarInAppMessagePayload instances, empty array if parsing fails
          */
-        fun fromJsonArray(jsonArray: JSONArray): Array<RadarInAppMessagePayload> {
+        fun fromJsonArray(jsonArray: JSONArray): Array<RadarInAppMessage> {
             return try {
-                val payloads = mutableListOf<RadarInAppMessagePayload>()
+                val payloads = mutableListOf<RadarInAppMessage>()
                 
                 for (i in 0 until jsonArray.length()) {
                     val jsonObject = jsonArray.getJSONObject(i)

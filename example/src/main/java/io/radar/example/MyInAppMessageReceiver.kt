@@ -3,17 +3,13 @@ package io.radar.example
 import android.util.Log
 import io.radar.sdk.RadarInAppMessageOperation
 import io.radar.sdk.RadarInAppMessageReceiver
-import io.radar.sdk.model.RadarInAppMessagePayload
+import io.radar.sdk.model.RadarInAppMessage
 
 class MyInAppMessageReceiver : RadarInAppMessageReceiver {
 
     private var callCount = 0
 
-    override fun beforeInAppMessageDisplayed(payload: RadarInAppMessagePayload) {
-        Log.d("MyInAppMessageReceiver", "beforeInAppMessageDisplayed: ${payload.title}")
-    }
-
-    override fun shouldDisplayInAppMessage(payload: RadarInAppMessagePayload): RadarInAppMessageOperation {
+    override fun onNewInAppMessage(payload: RadarInAppMessage): RadarInAppMessageOperation {
         callCount++
         Log.d("MyInAppMessageReceiver", "beforeInAppMessageDisplayed: ${payload.title}, call count: $callCount")
         return if (callCount % 2 == 1) {
@@ -23,13 +19,12 @@ class MyInAppMessageReceiver : RadarInAppMessageReceiver {
         }
     }
 
-    override fun onInAppMessageDismissed(payload: RadarInAppMessagePayload) {
+    override fun onInAppMessageDismissed(payload: RadarInAppMessage) {
         Log.d("MyInAppMessageReceiver", "onInAppMessageDismissed: ${payload.title}")
     }
 
-    override fun onInAppMessageButtonClicked(payload: RadarInAppMessagePayload) {
+    override fun onInAppMessageButtonClicked(payload: RadarInAppMessage) {
         Log.d("MyInAppMessageReceiver", "onInAppMessageButtonClicked: ${payload.title}")
     }
-    
     
 }
