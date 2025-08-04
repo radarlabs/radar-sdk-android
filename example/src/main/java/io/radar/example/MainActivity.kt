@@ -96,10 +96,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-//        createButton("showInAppMessage") {
-//            Radar.showInAppMessage()
-//        }
-
         createButton("requestForegroundPermission") {
             requestForegroundPermission()
         }
