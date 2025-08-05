@@ -6,6 +6,7 @@ import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
@@ -16,6 +17,7 @@ import io.radar.sdk.model.RadarInAppMessage
 /**
  * Custom view for displaying Radar in-app messages.
  * Creates a modal-style banner with title, body, action button, and dismiss functionality.
+ * Includes a screen-wide overlay to blur out the background.
  */
 class RadarInAppMessageView @JvmOverloads constructor(
     context: Context,
@@ -27,11 +29,10 @@ class RadarInAppMessageView @JvmOverloads constructor(
     private var onInAppMessageButtonClicked: (() -> Unit)? = null
 
     init {
-        // Set layout params to be 75% of screen width and centered
+        // Set layout params to match parent (full screen)
         layoutParams = LayoutParams(
-            (context.resources.displayMetrics.widthPixels * 0.75).toInt(),
-            LayoutParams.WRAP_CONTENT,
-            Gravity.CENTER
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.MATCH_PARENT
         )
     }
 
@@ -57,7 +58,10 @@ class RadarInAppMessageView @JvmOverloads constructor(
         // Clear any existing views
         removeAllViews()
         
-        // Create the view hierarchy
+        // Create the overlay background
+        val overlayBackground = createOverlayBackground()
+        
+        // Create the modal container
         val modalContainer = createModalContainer()
         val titleView = createTitleView(payload.title)
         val messageView = createMessageView(payload.body)
@@ -78,7 +82,24 @@ class RadarInAppMessageView @JvmOverloads constructor(
         modalContainer.addView(messageView)
         modalContainer.addView(actionButton)
         
+        // Add overlay and modal to the main container
+        addView(overlayBackground)
         addView(modalContainer)
+    }
+    
+    private fun createOverlayBackground(): View {
+        return View(context).apply {
+            layoutParams = LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT
+            )
+            setBackgroundColor("#80000000".toColorInt()) // Semi-transparent black overlay
+            
+            // Add click listener to dismiss when overlay is tapped
+            setOnClickListener {
+                onDismissListener?.invoke()
+            }
+        }
     }
     
     @SuppressLint("SetTextI18n")
@@ -88,6 +109,13 @@ class RadarInAppMessageView @JvmOverloads constructor(
             setBackgroundColor("#FFFFFF".toColorInt())
             setPadding(48, 40, 48, 48)
             gravity = Gravity.CENTER_HORIZONTAL
+            
+            // Set layout params to center the modal
+            layoutParams = LayoutParams(
+                (context.resources.displayMetrics.widthPixels * 0.75).toInt(),
+                LayoutParams.WRAP_CONTENT,
+                Gravity.CENTER
+            )
             
             // Create rounded corners
             val shape = GradientDrawable().apply {
