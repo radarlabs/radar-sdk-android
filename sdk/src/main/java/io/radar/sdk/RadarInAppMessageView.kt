@@ -72,6 +72,16 @@ class RadarInAppMessageView @JvmOverloads constructor(
         if (image != null) {
             val imageContainer = createImageContainer(image)
             modalContainer.addView(imageContainer)
+        } else {
+            val headerContainer = createHeaderContainer()
+            
+            headerContainer.addView(createDismissButton(), LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.END or Gravity.TOP
+            })
+            modalContainer.addView(headerContainer)
         }
         
         val titleView = createTitleView(inAppMessage.title)
@@ -185,7 +195,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
             // Create rounded button background
             val buttonShape = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
-                cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24f, context.resources.displayMetrics)
+                cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
                 setColor(button.backgroundColor.toColorInt())
             }
             background = buttonShape
@@ -203,28 +213,29 @@ class RadarInAppMessageView @JvmOverloads constructor(
             }
         }
     }
-    
+
     private fun createDismissButton(): TextView {
         return TextView(context).apply {
-            setTextColor("#999999".toColorInt())
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
-            text = "✕"
-            gravity = Gravity.END
             
+            setTextColor("#FFFFFF".toColorInt())
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            text = "X"
+            gravity = Gravity.END
+
             // Create circular background for dismiss button
             val dismissShape = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor("#F0F0F0".toColorInt())
+                setColor("#5A6872".toColorInt())
             }
             background = dismissShape
-            
-            setPadding(20, 12, 20, 12)
+
+            setPadding(24, 6, 24, 6)
             setOnClickListener { 
                 onDismissListener?.invoke()
             }
         }
     }
-    
+
     private fun createHeaderContainer(): FrameLayout {
         return FrameLayout(context).apply {
             setPadding(0, 0, 0, 20)
