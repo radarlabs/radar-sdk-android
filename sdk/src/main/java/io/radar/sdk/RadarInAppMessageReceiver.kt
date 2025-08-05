@@ -33,7 +33,9 @@ interface RadarInAppMessageReceiver {
     }
 
     fun createInAppMessageView(context: Context, inAppMessage: RadarInAppMessage, onDismissListener: (() -> Unit)? = null, onInAppMessageButtonClicked: (() -> Unit)? = null ):View {
-        val inAppMessageFactory = RadarInAppMessageViewFactory(context)
-        return inAppMessageFactory.createInAppMessageView(inAppMessage,onDismissListener,onInAppMessageButtonClicked)
+        
+        val inAppMessageView = RadarInAppMessageView(context)
+        inAppMessageView.initialize(inAppMessage, onDismissListener, onInAppMessageButtonClicked)
+        return inAppMessageView
     }
 } 
