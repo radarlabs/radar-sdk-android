@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
@@ -27,6 +28,10 @@ internal open class RadarApiHelper(
 
     interface RadarApiCallback {
         fun onComplete(status: Radar.RadarStatus, res: JSONObject? = null)
+    }
+
+    interface RadarImageApiCallback {
+        fun onComplete(status: Radar.RadarStatus, bitmap: android.graphics.Bitmap? = null)
     }
 
     internal open fun request(context: Context,
@@ -197,6 +202,77 @@ internal open class RadarApiHelper(
         close()
 
         return body
+    }
+
+    internal open fun requestImage(context: Context,
+                               method: String,
+                               urlString: String,
+                               headers: Map<String, String>?,
+                               callback: RadarImageApiCallback? = null) {
+        val url = URL(urlString)
+
+        logger?.d("📍 Radar API image request | method = $method; url = $url; headers = $headers")
+        
+        executor.execute {
+            try {
+                val urlConnection = url.openConnection() as HttpsURLConnection
+                if (headers != null) {
+                    for ((key, value) in headers) {
+                        try {
+                            urlConnection.setRequestProperty(key, value)
+                        } catch (e: Exception) {
+                            logger?.d("Error setting request property | key = $key; value = $value")
+                        }
+                    }
+                }
+                urlConnection.requestMethod = method
+                urlConnection.connectTimeout = 10000
+                urlConnection.readTimeout = 10000
+
+                if (urlConnection.responseCode in 200 until 400) {
+                    val inputStream = urlConnection.inputStream
+                    val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+                    inputStream.close()
+
+                    logger?.d("📍 Radar API image response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}")
+                    
+                    handler.post {
+                        callback?.onComplete(Radar.RadarStatus.SUCCESS, bitmap)
+                    }
+                } else {
+                    val status = when (urlConnection.responseCode) {
+                        400 -> Radar.RadarStatus.ERROR_BAD_REQUEST
+                        401 -> Radar.RadarStatus.ERROR_UNAUTHORIZED
+                        402 -> Radar.RadarStatus.ERROR_PAYMENT_REQUIRED
+                        403 -> Radar.RadarStatus.ERROR_FORBIDDEN
+                        404 -> Radar.RadarStatus.ERROR_NOT_FOUND
+                        429 -> Radar.RadarStatus.ERROR_RATE_LIMIT
+                        in (500 until 600) -> Radar.RadarStatus.ERROR_SERVER
+                        else -> Radar.RadarStatus.ERROR_UNKNOWN
+                    }
+
+                    logger?.e("📍 Radar API image response | method = ${method}; url = ${url}; responseCode = ${urlConnection.responseCode}", RadarLogType.SDK_ERROR)
+                    
+                    handler.post {
+                        callback?.onComplete(status)
+                    }
+                }
+
+                urlConnection.disconnect()
+            } catch (e: IOException) {
+                handler.post {
+                    logger?.d("Error calling image API | e = ${e.localizedMessage}")
+
+                    callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                }
+            } catch (e: Exception) {
+                logger?.d("Error calling image API | e = ${e.localizedMessage}")
+
+                handler.post {
+                    callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
+                }
+            }
+        }
     }
 
 }

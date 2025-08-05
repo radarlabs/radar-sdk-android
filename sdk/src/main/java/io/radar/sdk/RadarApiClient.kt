@@ -1384,4 +1384,34 @@ internal class RadarApiClient(
         })
     }
 
+    internal fun loadImage(
+        imageUrl: String,
+        callback: RadarApiHelper.RadarImageApiCallback
+    ) {
+        if (imageUrl.isEmpty()) {
+            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            return
+        }
+
+        val finalUrl = if (!imageUrl.startsWith("http")) {
+            val publishableKey = RadarSettings.getPublishableKey(context) ?: run {
+                callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+                return
+            }
+            val radarHost = RadarSettings.getHost(context)
+            "$radarHost/v1/assets/$imageUrl"
+        } else {
+            imageUrl
+        }
+
+        val headers = if (!imageUrl.startsWith("http")) {
+            val publishableKey = RadarSettings.getPublishableKey(context)
+            headers(publishableKey ?: "")
+        } else {
+            emptyMap<String, String>()
+        }
+
+        apiHelper.requestImage(context, "GET", finalUrl, headers, callback)
+    }
+
 }

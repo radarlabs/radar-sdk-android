@@ -10,7 +10,8 @@ import org.json.JSONObject
 data class RadarInAppMessage(
     val title: Title,
     val body: Body,
-    val button: Button
+    val button: Button? = null,
+    val image: Image? = null
 ) {
     
     data class Title(
@@ -29,6 +30,11 @@ data class RadarInAppMessage(
         val backgroundColor: String,
         val url: String? = null
     )
+
+    data class Image(
+        val name: String,
+        val url: String? = null
+    )
     
     companion object {
         // JSON keys for serialization
@@ -39,6 +45,9 @@ data class RadarInAppMessage(
         private const val KEY_COLOR = "color"
         private const val KEY_BACKGROUND_COLOR = "backgroundColor"
         private const val KEY_URL = "url"
+        private const val KEY_NAME = "name"
+        private const val KEY_IMAGE = "image"
+
         
         /**
          * Creates a RadarInAppMessagePayload from a JSON string.
@@ -62,15 +71,27 @@ data class RadarInAppMessage(
                     color = bodyJson.getString(KEY_COLOR)
                 )
                 
-                val buttonJson = json.getJSONObject(KEY_BUTTON)
-                val button = Button(
-                    text = buttonJson.getString(KEY_TEXT),
-                    color = buttonJson.getString(KEY_COLOR),
-                    backgroundColor = buttonJson.getString(KEY_BACKGROUND_COLOR),
-                    url = if (buttonJson.has(KEY_URL)) buttonJson.getString(KEY_URL) else null
-                )
+                val buttonJson = json.optJSONObject(KEY_BUTTON)
+                var button: Button? = null
+                if (buttonJson != null) {
+                    button = Button(
+                        text = buttonJson.getString(KEY_TEXT),
+                        color = buttonJson.getString(KEY_COLOR),
+                        backgroundColor = buttonJson.getString(KEY_BACKGROUND_COLOR),
+                        url = if (buttonJson.has(KEY_URL)) buttonJson.getString(KEY_URL) else null
+                    )
+                }
+
+                val imageJson = json.optJSONObject(KEY_IMAGE)
+                var image: Image? = null
+                if (imageJson != null) {
+                    image = Image(
+                        name = imageJson.getString(KEY_NAME),
+                        url = if (imageJson.has(KEY_URL)) imageJson.getString(KEY_URL) else null
+                    )
+                }
                 
-                RadarInAppMessage(title, body, button)
+                RadarInAppMessage(title, body, button, image)
             } catch (e: Exception) {
                 null
             }
@@ -114,12 +135,20 @@ data class RadarInAppMessage(
                 put(KEY_TEXT, body.text)
                 put(KEY_COLOR, body.color)
             })
-            put(KEY_BUTTON, JSONObject().apply {
-                put(KEY_TEXT, button.text)
-                put(KEY_COLOR, button.color)
-                put(KEY_BACKGROUND_COLOR, button.backgroundColor)
-                button.url?.let { put(KEY_URL, it) }
-            })
+            if (button != null) {
+                put(KEY_BUTTON, JSONObject().apply {
+                    put(KEY_TEXT, button.text)
+                    put(KEY_COLOR, button.color)
+                    put(KEY_BACKGROUND_COLOR, button.backgroundColor)
+                    button.url?.let { put(KEY_URL, it) }
+                })
+            }
+            if (image != null) {
+                put(KEY_IMAGE, JSONObject().apply {
+                    put(KEY_NAME, image.name)
+                    image.url?.let { put(KEY_URL, it) }
+                })
+            }
         }.toString()
     }
 } 

@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.drawable.GradientDrawable
 import android.util.AttributeSet
 import android.util.TypedValue
@@ -9,6 +10,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.graphics.toColorInt
@@ -40,34 +42,52 @@ class RadarInAppMessageView @JvmOverloads constructor(
      * Initializes the view with the provided inAppMessage and callbacks.
      * 
      * @param inAppMessage The inAppMessage containing title, body, and button data
+     * @param image Optional bitmap image to display above the body text
      * @param onDismissListener Optional callback for when the banner is dismissed
      * @param onInAppMessageButtonClicked Optional callback for when the button is clicked
      */
     fun initialize(
         inAppMessage: RadarInAppMessage,
+        image: Bitmap? = null,
         onDismissListener: (() -> Unit)? = null,
         onInAppMessageButtonClicked: (() -> Unit)? = null
     ) {
         this.onDismissListener = onDismissListener
         this.onInAppMessageButtonClicked = onInAppMessageButtonClicked
         
-        createInAppMessageView(inAppMessage)
+        createInAppMessageView(inAppMessage, image)
     }
 
-    private fun createInAppMessageView(inAppMessage: RadarInAppMessage) {
+    private fun createInAppMessageView(inAppMessage: RadarInAppMessage, image: Bitmap? = null) {
         // Clear any existing views
         removeAllViews()
         
         // Create the overlay background
         val overlayBackground = createOverlayBackground()
         
-        // Create the modal container
-        val modalContainer = createModalContainer()
-        val titleView = createTitleView(inAppMessage.title)
-        val messageView = createMessageView(inAppMessage.body)
-        val actionButton = createActionButton(inAppMessage.button)
-        val dismissButton = createDismissButton()
+        // Create the modal container with conditional padding
+        val modalContainer = createModalContainer(image != null)
         val headerContainer = createHeaderContainer()
+        modalContainer.addView(headerContainer)
+        
+        // Add image if provided (above title)
+        if (image != null) {
+            val imageView = createImageView(image)
+            modalContainer.addView(imageView)
+        }
+        
+        val titleView = createTitleView(inAppMessage.title)
+        modalContainer.addView(titleView)
+        
+        val messageView = createMessageView(inAppMessage.body)
+        modalContainer.addView(messageView)
+        if (inAppMessage.button != null) {
+            val actionButton = createActionButton(inAppMessage.button)
+            modalContainer.addView(actionButton)
+        }
+
+        val dismissButton = createDismissButton()
+
         
         // Assemble the view hierarchy
         headerContainer.addView(dismissButton, LayoutParams(
@@ -77,11 +97,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
             gravity = Gravity.END or Gravity.TOP
         })
         
-        modalContainer.addView(headerContainer)
-        modalContainer.addView(titleView)
-        modalContainer.addView(messageView)
-        modalContainer.addView(actionButton)
-        
+
         // Add overlay and modal to the main container
         addView(overlayBackground)
         addView(modalContainer)
@@ -103,11 +119,18 @@ class RadarInAppMessageView @JvmOverloads constructor(
     }
     
     @SuppressLint("SetTextI18n")
-    private fun createModalContainer(): LinearLayout {
+    private fun createModalContainer(hasImage: Boolean = false): LinearLayout {
         return LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor("#FFFFFF".toColorInt())
-            setPadding(48, 40, 48, 48)
+            
+            // Adjust padding based on whether image is present
+            if (hasImage) {
+                setPadding(0, 40, 0, 48) // No horizontal padding when image is present
+            } else {
+                setPadding(48, 40, 48, 48) // Full padding when no image
+            }
+            
             gravity = Gravity.CENTER_HORIZONTAL
             
             // Set layout params to center the modal
@@ -198,6 +221,30 @@ class RadarInAppMessageView @JvmOverloads constructor(
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT
             )
+        }
+    }
+    
+    private fun createImageView(image: Bitmap): ImageView {
+        return ImageView(context).apply {
+            setImageBitmap(image)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            
+            // Set layout params to control image size - flush with borders
+            layoutParams = LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                (context.resources.displayMetrics.widthPixels * 0.4).toInt() // 40% of screen width height
+            ).apply {
+                // No horizontal margins needed since modal has no horizontal padding
+                setMargins(0, 0, 0, 24) // Only bottom margin for spacing
+            }
+            
+            // Create rounded corners for the image
+            val shape = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
+            }
+            background = shape
+            clipToOutline = true
         }
     }
 } 
