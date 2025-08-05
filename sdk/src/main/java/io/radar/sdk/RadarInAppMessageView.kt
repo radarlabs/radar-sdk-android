@@ -95,6 +95,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
             LayoutParams.WRAP_CONTENT
         ).apply {
             gravity = Gravity.END or Gravity.TOP
+            setMargins(0, 0, 48, 0) // Add right margin to compensate for removed container padding
         })
         
 
@@ -158,6 +159,14 @@ class RadarInAppMessageView @JvmOverloads constructor(
             text = title.text
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, 20)
+            
+            // Add horizontal margins to compensate for removed container padding
+            layoutParams = LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(48, 0, 48, 0)
+            }
         }
     }
     
@@ -169,6 +178,14 @@ class RadarInAppMessageView @JvmOverloads constructor(
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, 32)
             setLineSpacing(0f, 1.2f)
+            
+            // Add horizontal margins to compensate for removed container padding
+            layoutParams = LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(48, 0, 48, 0)
+            }
         }
     }
     
@@ -187,6 +204,15 @@ class RadarInAppMessageView @JvmOverloads constructor(
                 setColor(button.backgroundColor.toColorInt())
             }
             background = buttonShape
+            
+            // Add horizontal margins to compensate for removed container padding
+            layoutParams = LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(48, 0, 48, 0)
+            }
+            
             setOnClickListener { 
                 onInAppMessageButtonClicked?.invoke()
             }
