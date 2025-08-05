@@ -542,7 +542,7 @@ internal class RadarApiClient(
                         Radar.sendToken(token)
                     }
 
-                    val inAppMessages = res.optJSONArray("inAppMessage")?.let { inAppMessageObj ->
+                    val inAppMessages = res.optJSONArray("inAppMessages")?.let { inAppMessageObj ->
                         RadarInAppMessage.fromJsonArray(inAppMessageObj)
                     }
                     if (inAppMessages != null) {

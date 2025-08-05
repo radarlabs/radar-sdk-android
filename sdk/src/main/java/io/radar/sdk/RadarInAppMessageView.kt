@@ -37,24 +37,24 @@ class RadarInAppMessageView @JvmOverloads constructor(
     }
 
     /**
-     * Initializes the view with the provided payload and callbacks.
+     * Initializes the view with the provided inAppMessage and callbacks.
      * 
-     * @param payload The payload containing title, body, and button data
+     * @param inAppMessage The inAppMessage containing title, body, and button data
      * @param onDismissListener Optional callback for when the banner is dismissed
      * @param onInAppMessageButtonClicked Optional callback for when the button is clicked
      */
     fun initialize(
-        payload: RadarInAppMessage,
+        inAppMessage: RadarInAppMessage,
         onDismissListener: (() -> Unit)? = null,
         onInAppMessageButtonClicked: (() -> Unit)? = null
     ) {
         this.onDismissListener = onDismissListener
         this.onInAppMessageButtonClicked = onInAppMessageButtonClicked
         
-        createInAppMessageView(payload)
+        createInAppMessageView(inAppMessage)
     }
 
-    private fun createInAppMessageView(payload: RadarInAppMessage) {
+    private fun createInAppMessageView(inAppMessage: RadarInAppMessage) {
         // Clear any existing views
         removeAllViews()
         
@@ -63,9 +63,9 @@ class RadarInAppMessageView @JvmOverloads constructor(
         
         // Create the modal container
         val modalContainer = createModalContainer()
-        val titleView = createTitleView(payload.title)
-        val messageView = createMessageView(payload.body)
-        val actionButton = createActionButton(payload.button)
+        val titleView = createTitleView(inAppMessage.title)
+        val messageView = createMessageView(inAppMessage.body)
+        val actionButton = createActionButton(inAppMessage.button)
         val dismissButton = createDismissButton()
         val headerContainer = createHeaderContainer()
         
