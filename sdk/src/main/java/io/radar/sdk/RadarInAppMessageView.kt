@@ -67,13 +67,11 @@ class RadarInAppMessageView @JvmOverloads constructor(
         
         // Create the modal container with conditional padding
         val modalContainer = createModalContainer(image != null)
-        val headerContainer = createHeaderContainer()
-        modalContainer.addView(headerContainer)
         
-        // Add image if provided (above title)
+        // Add image if provided (at the top)
         if (image != null) {
-            val imageView = createImageView(image)
-            modalContainer.addView(imageView)
+            val imageContainer = createImageContainer(image)
+            modalContainer.addView(imageContainer)
         }
         
         val titleView = createTitleView(inAppMessage.title)
@@ -85,19 +83,6 @@ class RadarInAppMessageView @JvmOverloads constructor(
             val actionButton = createActionButton(inAppMessage.button)
             modalContainer.addView(actionButton)
         }
-
-        val dismissButton = createDismissButton()
-
-        
-        // Assemble the view hierarchy
-        headerContainer.addView(dismissButton, LayoutParams(
-            LayoutParams.WRAP_CONTENT,
-            LayoutParams.WRAP_CONTENT
-        ).apply {
-            gravity = Gravity.END or Gravity.TOP
-            setMargins(0, 0, 48, 0) // Add right margin to compensate for removed container padding
-        })
-        
 
         // Add overlay and modal to the main container
         addView(overlayBackground)
@@ -127,7 +112,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
             
             // Adjust padding based on whether image is present
             if (hasImage) {
-                setPadding(0, 40, 0, 48) // No horizontal padding when image is present
+                setPadding(0, 0, 0, 48) // No top or horizontal padding when image is present
             } else {
                 setPadding(48, 40, 48, 48) // Full padding when no image
             }
@@ -250,27 +235,43 @@ class RadarInAppMessageView @JvmOverloads constructor(
         }
     }
     
-    private fun createImageView(image: Bitmap): ImageView {
-        return ImageView(context).apply {
-            setImageBitmap(image)
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            
-            // Set layout params to control image size - flush with borders
+    private fun createImageContainer(image: Bitmap): FrameLayout {
+        return FrameLayout(context).apply {
             layoutParams = LayoutParams(
                 LayoutParams.MATCH_PARENT,
                 (context.resources.displayMetrics.widthPixels * 0.4).toInt() // 40% of screen width height
             ).apply {
-                // No horizontal margins needed since modal has no horizontal padding
                 setMargins(0, 0, 0, 24) // Only bottom margin for spacing
             }
             
-            // Create rounded corners for the image
-            val shape = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
+            // Add the image
+            val imageView = ImageView(context).apply {
+                setImageBitmap(image)
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                layoutParams = LayoutParams(
+                    LayoutParams.MATCH_PARENT,
+                    LayoutParams.MATCH_PARENT
+                )
+                
+                // Create rounded corners for the image
+                val shape = GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
+                }
+                background = shape
+                clipToOutline = true
             }
-            background = shape
-            clipToOutline = true
+            addView(imageView)
+            
+            // Add dismiss button as overlay
+            val dismissButton = createDismissButton()
+            addView(dismissButton, LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.END or Gravity.TOP
+                setMargins(0, 16, 16, 0) // Top and right margins for positioning
+            })
         }
     }
 } 
