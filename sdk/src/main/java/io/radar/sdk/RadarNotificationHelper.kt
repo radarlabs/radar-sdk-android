@@ -22,6 +22,7 @@ class RadarNotificationHelper {
         const val RADAR_CAMPAIGN_ID = "radar_campaign_id"
         
         // Simple static field for custom notification
+        @Volatile
         private var customForegroundNotification: Notification? = null
         
         /**
