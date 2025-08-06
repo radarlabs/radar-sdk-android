@@ -90,12 +90,10 @@ class RadarForegroundService : Service() {
         val channel = NotificationChannel("RadarSDK", channelName, importance)
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
-
         var builder = Notification.Builder(applicationContext, "RadarSDK")
             .setContentText(text as CharSequence?)
             .setOngoing(true)
             .setSmallIcon(smallIcon)
-        
         if (!title.isNullOrEmpty()) {
             builder = builder.setContentTitle(title as CharSequence?)
         }
