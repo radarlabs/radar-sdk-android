@@ -59,11 +59,10 @@ class RadarForegroundService : Service() {
         var id = extras?.getInt("id") ?: 0
         id = if (id == 0) NOTIFICATION_ID else id
         
-        // Check if a custom notification is set
         val customNotification = RadarNotificationHelper.getCustomForegroundNotification()
 
+        // Use the custom notification
         if (customNotification != null) {
-            // Use the custom notification
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 startForeground(id, customNotification, FOREGROUND_SERVICE_TYPE_LOCATION)
             } else {
@@ -79,9 +78,7 @@ class RadarForegroundService : Service() {
     private fun buildDefaultNotification(extras: Bundle?, id: Int) {
         val importance = extras?.getInt("importance", NotificationManager.IMPORTANCE_DEFAULT) ?: NotificationManager.IMPORTANCE_DEFAULT
         val title = extras?.getString("title")
-        Radar.logger.i("title: $title")
         val text = extras?.getString("text") ?: "Location tracking started"
-        Radar.logger.i("text: $text")
         val icon = extras?.getInt("icon") ?: 0
         val iconString = extras?.getString("iconString") ?: this.applicationInfo.icon.toString()
         val iconColor = extras?.getString("iconColor") ?: ""
@@ -93,8 +90,7 @@ class RadarForegroundService : Service() {
         val channel = NotificationChannel("RadarSDK", channelName, importance)
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
-        
-        // Create notification builder
+
         var builder = Notification.Builder(applicationContext, "RadarSDK")
             .setContentText(text as CharSequence?)
             .setOngoing(true)
@@ -103,9 +99,35 @@ class RadarForegroundService : Service() {
         if (!title.isNullOrEmpty()) {
             builder = builder.setContentTitle(title as CharSequence?)
         }
-        
         if (iconColor.isNotEmpty()) {
             builder.setColor(Color.parseColor(iconColor))
+        }
+
+        try {	
+            val intent: Intent	
+            val deepLinkString = extras?.getString("deepLink")	
+
+            if (deepLinkString != null) {	
+                // If deep link is provided, use it
+                intent = Intent(Intent.ACTION_VIEW, deepLinkString.toUri())	
+                intent.addCategory(Intent.CATEGORY_BROWSABLE)	
+            } else {	
+                // If no deep link, open the main app	
+                val packageManager = applicationContext.packageManager	
+                intent = packageManager.getLaunchIntentForPackage(applicationContext.packageName) ?: 	
+                    Intent(applicationContext, Class.forName(extras?.getString("activity")))	
+            }	
+
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK	
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {	
+                PendingIntent.FLAG_IMMUTABLE	
+            } else {	
+                0	
+            }	
+            val pendingIntent = PendingIntent.getActivity(this, 0, intent, flags)	
+            builder = builder.setContentIntent(pendingIntent)	
+        } catch (e: Exception) {	
+            logger.e("Error setting foreground service content intent", RadarLogType.SDK_EXCEPTION, e)	
         }
         
         val notification = builder.build()

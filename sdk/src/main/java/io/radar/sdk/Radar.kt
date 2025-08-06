@@ -3804,6 +3804,7 @@ object Radar {
 
     }
 
+
     internal fun handleLocation(context: Context, location: Location, source: RadarLocationSource) {
         if (!initialized) {
             initialize(context)
