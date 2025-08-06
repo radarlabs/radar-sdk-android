@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.annotation.SuppressLint
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -19,6 +20,28 @@ class RadarNotificationHelper {
         private const val CHANNEL_NAME = "Location"
         private const val NOTIFICATION_ID = 20160525 // Radar's birthday!
         const val RADAR_CAMPAIGN_ID = "radar_campaign_id"
+        
+        // Simple static field for custom notification
+        private var customForegroundNotification: Notification? = null
+        
+        /**
+         * Set a custom notification for the foreground service.
+         * This notification will be used instead of the default SDK notification.
+         * 
+         * @param notification The custom notification to use
+         */
+        fun setCustomForegroundNotification(notification: Notification?) {
+            customForegroundNotification = notification
+        }
+        
+        /**
+         * Get the custom foreground notification if set.
+         * 
+         * @return The custom notification or null if not set
+         */
+        internal fun getCustomForegroundNotification(): Notification? {
+            return customForegroundNotification
+        }
 
         @SuppressLint("DiscouragedApi", "LaunchActivityFromNotification")
         internal fun showNotifications(context: Context, events: Array<RadarEvent>) {

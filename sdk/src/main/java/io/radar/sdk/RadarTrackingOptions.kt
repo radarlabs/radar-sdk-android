@@ -339,7 +339,12 @@ data class RadarTrackingOptions(
          * Determines the color notification icon. Optional.
          */
         var iconColor: String? = null,
-        val deepLink: String? = null
+
+        val deepLink: String? = null,
+
+        val imageUrl: String? = null,
+
+        val imageResourceName: String? = null
     ) {
 
         companion object {
@@ -354,6 +359,8 @@ data class RadarTrackingOptions(
             internal const val KEY_FOREGROUND_SERVICE_ID = "id"
             internal const val KEY_FOREGROUND_SERVICE_CHANNEL_NAME = "channelName"
             internal const val KEY_FOREGROUND_SERVICE_DEEP_LINK = "deepLink"
+            internal const val KEY_FOREGROUND_SERVICE_IMAGE_URL = "imageUrl"
+            internal const val KEY_FOREGROUND_SERVICE_IMAGE_RESOURCE_NAME = "imageResourceName"
             @JvmStatic
             fun fromJson(obj: JSONObject?): RadarTrackingOptionsForegroundService? {
                 if (obj == null) {
@@ -371,7 +378,9 @@ data class RadarTrackingOptions(
                 val id = if (obj.isNull(KEY_FOREGROUND_SERVICE_ID)) null else obj.optInt(KEY_FOREGROUND_SERVICE_ID)
                 val channelName = if (obj.isNull(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)) null else obj.optString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME)
                 val deepLink = if (obj.isNull(KEY_FOREGROUND_SERVICE_DEEP_LINK)) null else obj.optString(KEY_FOREGROUND_SERVICE_DEEP_LINK)
-                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id, channelName, iconString, iconColor, deepLink)
+                val imageUrl = if (obj.isNull(KEY_FOREGROUND_SERVICE_IMAGE_URL)) null else obj.optString(KEY_FOREGROUND_SERVICE_IMAGE_URL)
+                val imageResourceName = if (obj.isNull(KEY_FOREGROUND_SERVICE_IMAGE_RESOURCE_NAME)) null else obj.optString(KEY_FOREGROUND_SERVICE_IMAGE_RESOURCE_NAME)
+                return RadarTrackingOptionsForegroundService(text, title, icon, updatesOnly, activity, importance, id, channelName, iconString, iconColor, deepLink, imageUrl, imageResourceName)
             }
         }
 
@@ -389,6 +398,8 @@ data class RadarTrackingOptions(
             obj.put(KEY_FOREGROUND_SERVICE_ID, id)
             obj.put(KEY_FOREGROUND_SERVICE_CHANNEL_NAME, channelName)
             obj.put(KEY_FOREGROUND_SERVICE_DEEP_LINK, deepLink)
+            obj.put(KEY_FOREGROUND_SERVICE_IMAGE_URL, imageUrl)
+            obj.put(KEY_FOREGROUND_SERVICE_IMAGE_RESOURCE_NAME, imageResourceName)
             return obj
         }
 
