@@ -100,11 +100,11 @@ class RadarForegroundService : Service() {
         if (iconColor.isNotEmpty()) {
             builder.setColor(Color.parseColor(iconColor))
         }
-        try {	
-            val intent: Intent	
-            val deepLinkString = extras?.getString("deepLink")	
+        try {
+            val intent: Intent
+            val deepLinkString = extras?.getString("deepLink")
 
-            if (deepLinkString != null) {	
+            if (deepLinkString != null) {
                 // If deep link is provided, use it
                 intent = Intent(Intent.ACTION_VIEW, deepLinkString.toUri())
                 intent.addCategory(Intent.CATEGORY_BROWSABLE)
@@ -113,7 +113,7 @@ class RadarForegroundService : Service() {
                 val packageManager = applicationContext.packageManager
                 intent = packageManager.getLaunchIntentForPackage(applicationContext.packageName) ?: 
                     Intent(applicationContext, Class.forName(extras?.getString("activity")))
-            }	
+            }
 
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
