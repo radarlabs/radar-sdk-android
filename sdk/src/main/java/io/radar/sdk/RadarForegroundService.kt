@@ -107,27 +107,26 @@ class RadarForegroundService : Service() {
 
             if (deepLinkString != null) {	
                 // If deep link is provided, use it
-                intent = Intent(Intent.ACTION_VIEW, deepLinkString.toUri())	
-                intent.addCategory(Intent.CATEGORY_BROWSABLE)	
-            } else {	
-                // If no deep link, open the main app	
+                intent = Intent(Intent.ACTION_VIEW, deepLinkString.toUri())
+                intent.addCategory(Intent.CATEGORY_BROWSABLE)
+            } else {
+                // If no deep link, open the main app
                 val packageManager = applicationContext.packageManager	
-                intent = packageManager.getLaunchIntentForPackage(applicationContext.packageName) ?: 	
-                    Intent(applicationContext, Class.forName(extras?.getString("activity")))	
+                intent = packageManager.getLaunchIntentForPackage(applicationContext.packageName) ?: 
+                    Intent(applicationContext, Class.forName(extras?.getString("activity")))
             }	
 
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK	
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {	
                 PendingIntent.FLAG_IMMUTABLE	
-            } else {	
-                0	
-            }	
-            val pendingIntent = PendingIntent.getActivity(this, 0, intent, flags)	
-            builder = builder.setContentIntent(pendingIntent)	
-        } catch (e: Exception) {	
+            } else {
+                0
+            }
+            val pendingIntent = PendingIntent.getActivity(this, 0, intent, flags)
+            builder = builder.setContentIntent(pendingIntent)
+        } catch (e: Exception) {
             logger.e("Error setting foreground service content intent", RadarLogType.SDK_EXCEPTION, e)	
         }
-        
         val notification = builder.build()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(id, notification, FOREGROUND_SERVICE_TYPE_LOCATION);
