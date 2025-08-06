@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
@@ -270,7 +271,9 @@ class RadarInAppMessageView @JvmOverloads constructor(
                     cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
                 }
                 background = shape
-                clipToOutline = true
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    clipToOutline = true
+                }
             }
             addView(imageView)
             
