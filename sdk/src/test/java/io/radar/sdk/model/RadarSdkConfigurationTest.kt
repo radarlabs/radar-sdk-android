@@ -29,6 +29,8 @@ class RadarSdkConfigurationTest {
     private var trackOnceOnAppOpen = false
     private var useOpenedAppConversion = false
     private var useForegroundLocationUpdatedAtMsDiff = false
+    private var locationManagerTimeout = 123456
+    private var syncAfterSetUser = false
 
     @Before
     fun setUp() {
@@ -46,7 +48,9 @@ class RadarSdkConfigurationTest {
             "startTrackingOnInitialize":$startTrackingOnInitialize,
             "trackOnceOnAppOpen":$trackOnceOnAppOpen,
             "useOpenedAppConversion":$useOpenedAppConversion,
-            "useForegroundLocationUpdatedAtMsDiff":$useForegroundLocationUpdatedAtMsDiff
+            "useForegroundLocationUpdatedAtMsDiff":$useForegroundLocationUpdatedAtMsDiff,
+            "locationManagerTimeout":$locationManagerTimeout,
+            "syncAfterSetUser":$syncAfterSetUser,
         }""".trimIndent()
     }
 
@@ -65,7 +69,9 @@ class RadarSdkConfigurationTest {
                 startTrackingOnInitialize,
                 trackOnceOnAppOpen,
                 useOpenedAppConversion,
-                useForegroundLocationUpdatedAtMsDiff
+                useForegroundLocationUpdatedAtMsDiff,
+                locationManagerTimeout,
+                syncAfterSetUser,
             ).toJson().toString()
         )
     }
@@ -84,6 +90,8 @@ class RadarSdkConfigurationTest {
         assertEquals(trackOnceOnAppOpen, settings.trackOnceOnAppOpen)
         assertEquals(useOpenedAppConversion, settings.useOpenedAppConversion)
         assertEquals(useForegroundLocationUpdatedAtMsDiff, settings.useForegroundLocationUpdatedAtMsDiff)
+        assertEquals(locationManagerTimeout, settings.locationManagerTimeout)
+        assertEquals(syncAfterSetUser, settings.syncAfterSetUser)
     }
 
     @Test
@@ -100,6 +108,7 @@ class RadarSdkConfigurationTest {
         assertFalse(settings.trackOnceOnAppOpen)
         assertTrue(settings.useOpenedAppConversion)
         assertFalse(settings.useForegroundLocationUpdatedAtMsDiff)
+        assertEquals(0, settings.locationManagerTimeout)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")

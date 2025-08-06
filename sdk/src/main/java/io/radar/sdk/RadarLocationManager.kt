@@ -15,6 +15,7 @@ import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.RadarApiClient.RadarTrackApiCallback
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
+import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSyncGeofences
 import io.radar.sdk.model.*
 import org.json.JSONObject
 import java.util.*
@@ -75,6 +76,13 @@ internal class RadarLocationManager(
     }
 
     fun getLocation(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, source: RadarLocationSource, callback: RadarLocationCallback? = null) {
+        if (!permissionsHelper.locationServicesEnabled(context)) {
+            logger.d("Location services are not enabled")
+            Radar.sendError(RadarStatus.ERROR_PERMISSIONS, "Location services are not enabled")
+            callback?.onComplete(RadarStatus.ERROR_PERMISSIONS)
+            return
+        }
+
         if (!permissionsHelper.fineLocationPermissionGranted(context) && !permissionsHelper.coarseLocationPermissionGranted(context)) {
             Radar.sendError(RadarStatus.ERROR_PERMISSIONS)
 
@@ -92,7 +100,7 @@ internal class RadarLocationManager(
         locationClient.getCurrentLocation(desiredAccuracy) { location ->
             if (location == null) {
                 logger.d("Location timeout")
-
+                Radar.sendError(RadarStatus.ERROR_LOCATION, "Location timeout")
                 callCallbacks(RadarStatus.ERROR_LOCATION)
             } else {
                 logger.d("Successfully requested location")
@@ -377,7 +385,7 @@ internal class RadarLocationManager(
 
     private fun addSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
         val options = Radar.getTrackingOptions()
-        if (!options.syncGeofences || radarGeofences == null) {
+        if (options.syncGeofences == RadarTrackingOptionsSyncGeofences.NONE || radarGeofences == null) {
             return
         }
 
@@ -481,11 +489,16 @@ internal class RadarLocationManager(
         } else {
             logger.d("Handling location | source = $source; location = $location")
         }
+         // Set default accuracy if not provided
+        if (location?.accuracy  == 0f) {
+            location.accuracy = 1000f
+            logger.d("Setting default accuracy of 1000 for location without accuracy")
+        }
 
         if (location == null || !RadarUtils.valid(location)) {
             logger.d("Invalid location | source = $source; location = $location")
 
-            Radar.sendError(RadarStatus.ERROR_LOCATION)
+            Radar.sendError(RadarStatus.ERROR_LOCATION, "Invalid location | source = $source; location = $location")
 
             callCallbacks(RadarStatus.ERROR_LOCATION)
 
@@ -497,7 +510,7 @@ internal class RadarLocationManager(
         var stopped: Boolean
 
         val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT)
-        if (!force && location.accuracy > 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
+        if (!force && location.accuracy >= 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
             logger.d("Skipping location: inaccurate | accuracy = ${location.accuracy}")
 
             this.updateTracking(location)
@@ -706,6 +719,7 @@ internal class RadarLocationManager(
                         .putExtra("iconString", foregroundService.iconString)
                         .putExtra("iconColor", foregroundService.iconColor)
                         .putExtra("activity", foregroundService.activity)
+                        .putExtra("deepLink", foregroundService.deepLink)
                     logger.d("Starting foreground service with intent | intent = $intent")
                     context.applicationContext.startForegroundService(intent)
                     RadarForegroundService.started = true

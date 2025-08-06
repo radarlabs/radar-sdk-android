@@ -21,6 +21,8 @@ internal data class RadarSdkConfiguration(
     val trackOnceOnAppOpen: Boolean,
     val useOpenedAppConversion: Boolean = false,
     val useForegroundLocationUpdatedAtMsDiff: Boolean = false,
+    val locationManagerTimeout: Int = 0,
+    val syncAfterSetUser: Boolean = false,
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -35,7 +37,8 @@ internal data class RadarSdkConfiguration(
         private const val TRACK_ONCE_ON_APP_OPEN = "trackOnceOnAppOpen"
         private const val USE_OPENED_APP_CONVERSION = "useOpenedAppConversion"
         private const val USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF = "useForegroundLocationUpdatedAtMsDiff"
-
+        private const val LOCATION_MANAGER_TIMEOUT = "locationManagerTimeout"
+        private const val SYNC_AFTER_SET_USER = "syncAfterSetUser"
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             // set json as empty object if json is null, which uses fallback values
@@ -53,6 +56,8 @@ internal data class RadarSdkConfiguration(
                 config.optBoolean(TRACK_ONCE_ON_APP_OPEN, false),
                 config.optBoolean(USE_OPENED_APP_CONVERSION, true),
                 config.optBoolean(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, false),
+                config.optInt(LOCATION_MANAGER_TIMEOUT, 0),
+                config.optBoolean(SYNC_AFTER_SET_USER, false),
             )
         }
 
@@ -82,6 +87,8 @@ internal data class RadarSdkConfiguration(
             putOpt(TRACK_ONCE_ON_APP_OPEN, trackOnceOnAppOpen)
             putOpt(USE_OPENED_APP_CONVERSION, useOpenedAppConversion)
             putOpt(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, useForegroundLocationUpdatedAtMsDiff)
+            putOpt(LOCATION_MANAGER_TIMEOUT, locationManagerTimeout)
+            putOpt(SYNC_AFTER_SET_USER, syncAfterSetUser)
         }
     }
 }

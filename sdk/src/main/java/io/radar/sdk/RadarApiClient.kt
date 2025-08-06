@@ -125,6 +125,10 @@ internal class RadarApiClient(
         } else {
             headers["X-Radar-X-Platform-SDK-Type"] = "Native"
         }
+        val product = RadarSettings.getProduct(context)
+        if (product != null) {
+            headers["X-Radar-Product"] = product
+        }
         return headers
     }
 
@@ -251,7 +255,23 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun track(location: Location, stopped: Boolean, foreground: Boolean, source: RadarLocationSource, replayed: Boolean, beacons: Array<RadarBeacon>?, verified: Boolean = false, integrityToken: String? = null, integrityException: String? = null, encrypted: Boolean? = false, expectedCountryCode: String? = null, expectedStateCode: String? = null, callback: RadarTrackApiCallback? = null) {
+    internal fun track(
+        location: Location,
+        stopped: Boolean,
+        foreground: Boolean,
+        source: RadarLocationSource,
+        replayed: Boolean,
+        beacons: Array<RadarBeacon>?,
+        verified: Boolean = false,
+        integrityToken: String? = null,
+        integrityException: String? = null,
+        encrypted: Boolean? = false,
+        expectedCountryCode: String? = null,
+        expectedStateCode: String? = null,
+        reason: String? = null,
+        transactionId: String? = null,
+        callback: RadarTrackApiCallback? = null
+    ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -280,8 +300,11 @@ internal class RadarApiClient(
                 params.putOpt("description", RadarSettings.getDescription(context))
                 params.putOpt("metadata", RadarSettings.getMetadata(context))
                 params.putOpt("sessionId", RadarSettings.getSessionId(context))
+                val tags = RadarSettings.getTags(context)
+                if (tags != null && tags.isNotEmpty()) {
+                    params.putOpt("userTags", JSONArray(tags.toList()))
+                }
             }
-            params.putOpt("product", RadarSettings.getProduct(context))
             params.putOpt("latitude", location.latitude)
             params.putOpt("longitude", location.longitude)
             var accuracy = location.accuracy
@@ -354,7 +377,7 @@ internal class RadarApiClient(
                 tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
                 params.putOpt("tripOptions", tripOptionsObj)
             }
-            if (options.syncGeofences) {
+            if (options.syncGeofences != RadarTrackingOptions.RadarTrackingOptionsSyncGeofences.NONE) {
                 params.putOpt("nearbyGeofences", true)
                 params.putOpt("nearbyGeofencesLimit", options.syncGeofencesLimit)
             }
@@ -377,6 +400,12 @@ internal class RadarApiClient(
                 }
                 if (expectedStateCode != null) {
                     params.putOpt("expectedStateCode", expectedStateCode)
+                }
+                if (reason != null) {
+                    params.putOpt("reason", reason)
+                }
+                if (transactionId != null) {
+                    params.putOpt("transactionId", transactionId)
                 }
                 val fraudFailureReasons = JSONArray()
                 if (RadarUtils.hasMultipleDisplays(context)) {

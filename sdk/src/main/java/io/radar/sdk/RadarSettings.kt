@@ -39,6 +39,7 @@ internal object RadarSettings {
     private const val KEY_SHARING = "sharing"
     private const val KEY_X_PLATFORM_SDK_TYPE = "x_platform_sdk_type"
     private const val KEY_X_PLATFORM_SDK_VERSION = "x_platform_sdk_version"
+    private const val KEY_USER_TAGS = "user_tags"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -251,7 +252,8 @@ internal object RadarSettings {
             previousValue.id,
             previousValue.channelName,
             notificationOptions.getForegroundServiceIcon() ?: previousValue.iconString,
-            notificationOptions.getForegroundServiceColor() ?: previousValue.iconColor
+            notificationOptions.getForegroundServiceColor() ?: previousValue.iconColor,
+            notificationOptions.deepLink
         ))
     }
 
@@ -338,9 +340,15 @@ internal object RadarSettings {
     }
 
     internal fun getLogLevel(context: Context): Radar.RadarLogLevel {
-        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, Radar.RadarLogLevel.INFO.value)
-        val userDebug = getUserDebug(context)
-        return if (userDebug) Radar.RadarLogLevel.DEBUG else Radar.RadarLogLevel.fromInt(logLevelInt)
+        val defaultLogLevelInt = if (getUserDebug(context)) {
+            Radar.RadarLogLevel.DEBUG.value
+        } else if (BuildConfig.DEBUG) {
+            Radar.RadarLogLevel.INFO.value
+        } else {
+            Radar.RadarLogLevel.NONE.value
+        }
+        val logLevelInt = getSharedPreferences(context).getInt(KEY_LOG_LEVEL, defaultLogLevelInt)
+        return Radar.RadarLogLevel.fromInt(logLevelInt)
     }
 
     internal fun setLogLevel(context: Context, level: Radar.RadarLogLevel) {
@@ -410,5 +418,50 @@ internal object RadarSettings {
         return getSharedPreferences(context).getString(KEY_X_PLATFORM_SDK_VERSION, null);
     }
 
+
+    internal fun getTags(context: Context): Array<String>? {
+        val tagsJson = getSharedPreferences(context).getString(KEY_USER_TAGS, null) ?: return null
+        return org.json.JSONArray(tagsJson).let { jsonArray ->
+            Array(jsonArray.length()) { i -> jsonArray.getString(i) }
+        }
+    }
+
+    internal fun addTags(context: Context, tags: Array<String>) {
+        val existingTags = getTags(context)?.toMutableSet() ?: mutableSetOf()
+        existingTags.addAll(tags)
+        val tagsJson = org.json.JSONArray(existingTags.toList()).toString()
+        getSharedPreferences(context).edit {
+            putString(KEY_USER_TAGS, tagsJson)
+        }
+    }
+
+    internal fun setTags(context: Context, tags: Array<String>) {
+        val uniqueTags = tags.toSet().toList()
+        if (uniqueTags.isEmpty()) {
+            getSharedPreferences(context).edit {
+                remove(KEY_USER_TAGS)
+            }
+        } else {
+            val tagsJson = org.json.JSONArray(uniqueTags).toString()
+            getSharedPreferences(context).edit {
+                putString(KEY_USER_TAGS, tagsJson)
+            }
+        }
+    }
+
+    internal fun removeTags(context: Context, tags: Array<String>) {
+        val existingTags = getTags(context)?.toMutableSet() ?: mutableSetOf()
+        existingTags.removeAll(tags.toSet())
+        if (existingTags.isEmpty()) {
+            getSharedPreferences(context).edit {
+                remove(KEY_USER_TAGS)
+            }
+        } else {
+            val tagsJson = org.json.JSONArray(existingTags.toList()).toString()
+            getSharedPreferences(context).edit {
+                putString(KEY_USER_TAGS, tagsJson)
+            }
+        }
+    }
 
 }

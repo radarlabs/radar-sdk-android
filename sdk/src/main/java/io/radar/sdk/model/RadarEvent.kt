@@ -2,7 +2,30 @@ package io.radar.sdk.model
 
 import android.location.Location
 import io.radar.sdk.RadarUtils
-import io.radar.sdk.model.RadarEvent.RadarEventType.*
+import io.radar.sdk.model.RadarEvent.RadarEventType.CONVERSION
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_APPROACHING_TRIP_DESTINATION
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ARRIVED_AT_TRIP_DESTINATION
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ARRIVED_AT_WRONG_TRIP_DESTINATION
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_DWELLED_IN_GEOFENCE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_BEACON
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_GEOFENCE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_PLACE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_REGION_COUNTRY
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_REGION_DMA
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_REGION_POSTAL_CODE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_REGION_STATE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_BEACON
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_GEOFENCE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_PLACE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_COUNTRY
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_DMA
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_POSTAL_CODE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_STATE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_FAILED_FRAUD
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_NEARBY_PLACE_CHAIN
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STARTED_TRIP
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STOPPED_TRIP
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_UPDATED_TRIP
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Date
@@ -290,12 +313,21 @@ class RadarEvent(
             }
 
             val replayed = obj.optBoolean(FIELD_REPLAYED)
-
-            val metadata = obj.optJSONObject(FIELD_METADATA)
+            
+            val metadataStr = obj.optString(FIELD_METADATA)
+            val metadataJson = if (!metadataStr.isNullOrEmpty()) {
+                try {
+                    JSONObject(metadataStr)
+                } catch (e: Exception) {
+                    null
+                }
+            } else {
+                null
+            }
 
             val event = RadarEvent(
                 id, createdAt, actualCreatedAt, live, type, conversionName, geofence, place, region, beacon, trip, fraud,
-                alternatePlaces, verifiedPlace, verification, confidence, duration, location, replayed, metadata
+                alternatePlaces, verifiedPlace, verification, confidence, duration, location, replayed, metadataJson
             )
 
             return event

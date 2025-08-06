@@ -3,8 +3,11 @@ package io.radar.sdk
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.os.Build
+import android.provider.Settings
 import androidx.core.content.ContextCompat
+import androidx.core.location.LocationManagerCompat
 
 internal open class RadarPermissionsHelper {
 
@@ -27,4 +30,12 @@ internal open class RadarPermissionsHelper {
         }
     }
 
+    internal open fun locationServicesEnabled(context: Context): Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val providers = locationManager.getProviders(true)
+        Radar.logger.d("Location providers: $providers")
+        return LocationManagerCompat.isLocationEnabled(locationManager)
+    }
+
+    
 }

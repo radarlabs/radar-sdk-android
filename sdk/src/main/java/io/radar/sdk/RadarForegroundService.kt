@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import androidx.annotation.RequiresApi
+import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.KEY_FOREGROUND_SERVICE_CHANNEL_NAME
 
@@ -80,19 +81,29 @@ class RadarForegroundService : Service() {
             builder.setColor(Color.parseColor(iconColor))
         }
         try {
-            extras?.getString("activity")?.let {
-                val activityClass = Class.forName(it)
-                val intent = Intent(this, activityClass)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    PendingIntent.FLAG_IMMUTABLE
-                } else {
-                    0
-                }
-                val pendingIntent = PendingIntent.getActivity(this, 0, intent, flags)
-                builder = builder.setContentIntent(pendingIntent)
+            val intent: Intent
+            val deepLinkString = extras?.getString("deepLink")
+            
+            if (deepLinkString != null) {
+                // If deep link is provided, use it
+                intent = Intent(Intent.ACTION_VIEW, deepLinkString.toUri())
+                intent.addCategory(Intent.CATEGORY_BROWSABLE)
+            } else {
+                // If no deep link, open the main app
+                val packageManager = applicationContext.packageManager
+                intent = packageManager.getLaunchIntentForPackage(applicationContext.packageName) ?: 
+                    Intent(applicationContext, Class.forName(extras?.getString("activity")))
             }
-        } catch (e: ClassNotFoundException) {
+            
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_IMMUTABLE
+            } else {
+                0
+            }
+            val pendingIntent = PendingIntent.getActivity(this, 0, intent, flags)
+            builder = builder.setContentIntent(pendingIntent)
+        } catch (e: Exception) {
             logger.e("Error setting foreground service content intent", RadarLogType.SDK_EXCEPTION, e)
         }
         val notification = builder.build()
