@@ -2,7 +2,6 @@ package io.radar.sdk
 
 import android.content.Context
 import org.json.JSONObject
-import java.net.URL
 
 internal class RadarApiHelperMock : RadarApiHelper() {
 
@@ -19,6 +18,13 @@ internal class RadarApiHelperMock : RadarApiHelper() {
      */
     internal var mockResponses: MutableMap<String, JSONObject> = mutableMapOf()
 
+    /**
+     * Captured parameters from the last request for testing purposes.
+     */
+    internal var lastCapturedParams: JSONObject? = null
+    internal var lastCapturedPath: String? = null
+    internal var lastCapturedMethod: String? = null
+
     override fun request(
         context: Context,
         method: String,
@@ -32,7 +38,12 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         logPayload: Boolean,
         verified: Boolean
     ) {
-        // Use the entry in the mockResponses map, if any.
+        if (path != "v1/logs") {
+            lastCapturedPath = path
+            lastCapturedMethod = method
+            lastCapturedParams = params
+        }
+
         if (mockResponses.containsKey(path)) {
             callback?.onComplete(mockStatus, mockResponses[path])
         } else {
@@ -47,6 +58,15 @@ internal class RadarApiHelperMock : RadarApiHelper() {
      */
     fun addMockResponse(path: String, response: JSONObject) {
         mockResponses[path] = response
+    }
+
+    /**
+     * Clear captured parameters from previous requests.
+     */
+    fun clearCapturedParams() {
+        lastCapturedParams = null
+        lastCapturedPath = null
+        lastCapturedMethod = null
     }
 
 }

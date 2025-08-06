@@ -300,6 +300,10 @@ internal class RadarApiClient(
                 params.putOpt("description", RadarSettings.getDescription(context))
                 params.putOpt("metadata", RadarSettings.getMetadata(context))
                 params.putOpt("sessionId", RadarSettings.getSessionId(context))
+                val tags = RadarSettings.getTags(context)
+                if (tags != null && tags.isNotEmpty()) {
+                    params.putOpt("userTags", JSONArray(tags.toList()))
+                }
             }
             params.putOpt("latitude", location.latitude)
             params.putOpt("longitude", location.longitude)
@@ -367,7 +371,7 @@ internal class RadarApiClient(
                 tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
                 params.putOpt("tripOptions", tripOptionsObj)
             }
-            if (options.syncGeofences) {
+            if (options.syncGeofences != RadarTrackingOptions.RadarTrackingOptionsSyncGeofences.NONE) {
                 params.putOpt("nearbyGeofences", true)
                 params.putOpt("nearbyGeofencesLimit", options.syncGeofencesLimit)
             }
