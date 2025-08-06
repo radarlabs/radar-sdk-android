@@ -3804,12 +3804,6 @@ object Radar {
 
     }
 
-    // TODO: remove after testing
-    @JvmStatic
-    fun testiam(inAppMessage: RadarInAppMessage){
-        inAppMessageManager.showInAppMessages(arrayOf(inAppMessage))
-    }
-
     @JvmStatic
     internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>){
         inAppMessageManager.showInAppMessages(inAppMessages)

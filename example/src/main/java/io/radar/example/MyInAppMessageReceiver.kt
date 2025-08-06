@@ -6,17 +6,10 @@ import io.radar.sdk.model.RadarInAppMessage
 
 class MyInAppMessageReceiver : RadarInAppMessageReceiver {
 
-    private var callCount = 0
-
-//    override fun onNewInAppMessage(payload: RadarInAppMessage): RadarInAppMessageOperation {
-//        callCount++
-//        Log.d("MyInAppMessageReceiver", "beforeInAppMessageDisplayed: ${payload.title}, call count: $callCount")
-//        return if (callCount % 2 == 1) {
-//            RadarInAppMessageOperation.DISPLAY
-//        } else {
-//            RadarInAppMessageOperation.DISCARD
-//        }
-//    }
+   override fun onNewInAppMessage(payload: RadarInAppMessage): RadarInAppMessageOperation {
+       Log.d("MyInAppMessageReceiver", "beforeInAppMessageDisplayed: ${payload.title}")
+       return RadarInAppMessageOperation.DISPLAY
+   }
 
     override fun onInAppMessageDismissed(payload: RadarInAppMessage) {
         Log.d("MyInAppMessageReceiver", "onInAppMessageDismissed: ${payload.title}")
