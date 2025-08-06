@@ -64,19 +64,19 @@ class MainActivity : AppCompatActivity() {
         createButtons()
     }
 
-    @SuppressLint("NewApi")
     private fun createCustomNotification(): Notification {
         // Create notification channel (required for Android O+)
         val channelId = "radar_custom_channel"
         val channelName = "Radar Custom Notifications"
-        val channel = NotificationChannel(
-            channelId,
-            channelName,
-            NotificationManager.IMPORTANCE_DEFAULT
-        )
-        
-        val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager.createNotificationChannel(channel)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                channelName,
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(channel)
+        }
         
         // Create intents for actions
         val mainIntent = Intent(this, MainActivity::class.java).apply {
