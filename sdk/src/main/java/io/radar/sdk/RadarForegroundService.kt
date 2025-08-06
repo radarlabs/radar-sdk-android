@@ -80,10 +80,17 @@ class RadarForegroundService : Service() {
         val icon = extras?.getInt("icon") ?: 0
         val iconString = extras?.getString("iconString") ?: this.applicationInfo.icon.toString()
         val iconColor = extras?.getString("iconColor") ?: ""
-        val smallIcon = if (icon != 0) {
+        var smallIcon = if (icon != 0) {
             icon
         } else {
-            applicationInfo.icon
+            try {
+                // Try to get the resource ID directly if it's a valid resource name
+                @Suppress("DiscouragedApi")
+                val resourceId = resources.getIdentifier(iconString, "drawable", applicationContext.packageName)
+                if (resourceId != 0) resourceId else applicationInfo.icon
+            } catch (e: Exception) {
+                applicationInfo.icon
+            }
         }
         val channelName = extras?.getString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME) ?: "Location Services"
         val channel = NotificationChannel("RadarSDK", channelName, importance)
