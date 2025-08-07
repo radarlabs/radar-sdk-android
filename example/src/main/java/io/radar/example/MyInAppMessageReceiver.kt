@@ -1,6 +1,7 @@
 package io.radar.example
 
 import android.util.Log
+import io.radar.sdk.RadarInAppMessageOperation
 import io.radar.sdk.RadarInAppMessageReceiver
 import io.radar.sdk.model.RadarInAppMessage
 
