@@ -1,6 +1,5 @@
 package io.radar.sdk
 import android.content.Context
-import android.graphics.Bitmap
 import android.view.View
 
 import io.radar.sdk.model.RadarInAppMessage
@@ -33,10 +32,10 @@ interface RadarInAppMessageReceiver {
         return
     }
 
-    fun createInAppMessageView(context: Context, inAppMessage: RadarInAppMessage, onDismissListener: (() -> Unit)? = null, onInAppMessageButtonClicked: (() -> Unit)? = null, image: Bitmap? = null ):View {
+    fun createInAppMessageView(context: Context, inAppMessage: RadarInAppMessage, onDismissListener: (() -> Unit)? = null, onInAppMessageButtonClicked: (() -> Unit)? = null ):View {
         
         val inAppMessageView = RadarInAppMessageView(context)
-        inAppMessageView.initialize(inAppMessage, image, onDismissListener, onInAppMessageButtonClicked)
+        inAppMessageView.initialize(inAppMessage, onDismissListener, onInAppMessageButtonClicked)
         return inAppMessageView
     }
 } 

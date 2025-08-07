@@ -49,14 +49,14 @@ class RadarInAppMessageView @JvmOverloads constructor(
      */
     fun initialize(
         inAppMessage: RadarInAppMessage,
-        image: Bitmap? = null,
         onDismissListener: (() -> Unit)? = null,
         onInAppMessageButtonClicked: (() -> Unit)? = null
     ) {
         this.onDismissListener = onDismissListener
         this.onInAppMessageButtonClicked = onInAppMessageButtonClicked
-        
-        createInAppMessageView(inAppMessage, image)
+        Radar.loadImage(inAppMessage.image?.url) { image ->
+            createInAppMessageView(inAppMessage, image)
+        }
     }
 
     private fun createInAppMessageView(inAppMessage: RadarInAppMessage, image: Bitmap? = null) {

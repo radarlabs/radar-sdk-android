@@ -3811,6 +3811,33 @@ object Radar {
         inAppMessageManager.showInAppMessages(inAppMessages)
     }
 
+    /**
+     * Loads an image from a URL using the existing API pattern.
+     *
+     * @param url The URL to load the image from
+     * @param callback Callback to handle the result
+     */
+    @JvmStatic
+    fun loadImage(url: String?, callback: (android.graphics.Bitmap?) -> Unit) {
+        if (url == null) {
+            callback(null)
+            return
+        }
+
+        apiClient.loadImage(url, object : RadarApiHelper.RadarImageApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, bitmap: android.graphics.Bitmap?) {
+                if (status == Radar.RadarStatus.SUCCESS) {
+                    callback(bitmap)
+                } else {
+                    Radar.logger.e("Error loading image: $status")
+                    callback(null)
+                }
+            }
+        })
+    }
+
+
+
     internal fun handleLocation(context: Context, location: Location, source: RadarLocationSource) {
         if (!initialized) {
             initialize(context)

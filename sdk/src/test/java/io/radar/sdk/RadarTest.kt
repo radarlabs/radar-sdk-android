@@ -2,7 +2,6 @@ package io.radar.sdk
 
 import android.app.Activity
 import android.content.Context
-import android.graphics.Bitmap
 import android.location.Location
 import android.os.Build
 import android.view.View
@@ -935,10 +934,9 @@ class RadarTest {
                 inAppMessage: RadarInAppMessage, 
                 onDismissListener: (() -> Unit)?, 
                 onInAppMessageButtonClicked: (() -> Unit)?, 
-                image: Bitmap?
             ): View {
                 createInAppMessageViewCalled = true
-                return super.createInAppMessageView(context, inAppMessage, onDismissListener, onInAppMessageButtonClicked, image)
+                return super.createInAppMessageView(context, inAppMessage, onDismissListener, onInAppMessageButtonClicked)
             }
         }
         
@@ -1008,11 +1006,10 @@ class RadarTest {
                 context: Context, 
                 inAppMessage: RadarInAppMessage, 
                 onDismissListener: (() -> Unit)?, 
-                onInAppMessageButtonClicked: (() -> Unit)?, 
-                image: Bitmap?
+                onInAppMessageButtonClicked: (() -> Unit)?
             ): View {
                 createInAppMessageViewCalled = true
-                return super.createInAppMessageView(context, inAppMessage, onDismissListener, onInAppMessageButtonClicked, image)
+                return super.createInAppMessageView(context, inAppMessage, onDismissListener, onInAppMessageButtonClicked)
             }
         }
         
