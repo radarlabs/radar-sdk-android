@@ -70,7 +70,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
            if (inAppMessageReceiver != null) {
                val result = inAppMessageReceiver?.onNewInAppMessage(inAppMessage)
                if (result == RadarInAppMessageOperation.DISCARD) {
-                   return
+                   continue
                }
            }
            showModal(inAppMessage)
