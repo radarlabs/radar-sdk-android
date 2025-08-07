@@ -166,11 +166,6 @@ signing {
     sign publishing.publications.sdk
 }
 
-// Ensure signing tasks depend on the AAR being built
-tasks.withType(Sign) {
-    dependsOn bundleReleaseAar
-}
-
 task dispatchSnapshot {
     group 'ci'
     description 'Send event to notify listeners that a new SNAPSHOT build has been published.'
