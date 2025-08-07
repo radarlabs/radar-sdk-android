@@ -50,10 +50,10 @@ data class RadarInAppMessage(
 
         
         /**
-         * Creates a RadarInAppMessagePayload from a JSON string.
+         * Creates a RadarInAppMessage from a JSON string.
          * 
          * @param jsonString The JSON string to parse
-         * @return RadarInAppMessagePayload instance or null if parsing fails
+         * @return RadarInAppMessage instance or null if parsing fails
          */
         fun fromJson(jsonString: String): RadarInAppMessage? {
             return try {
