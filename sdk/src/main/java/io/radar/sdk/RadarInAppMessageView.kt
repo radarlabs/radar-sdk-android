@@ -27,6 +27,13 @@ class RadarInAppMessageView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
 
+    companion object {
+        private const val OVERLAY_BACKGROUND_COLOR = "#80000000" // Semi-transparent black overlay
+        private const val MODAL_BACKGROUND_COLOR = "#FFFFFF" // White modal background
+        private const val DISMISS_BUTTON_TEXT_COLOR = "#FFFFFF" // White text for dismiss button
+        private const val DISMISS_BUTTON_BACKGROUND_COLOR = "#5A6872" // Gray background for dismiss button
+    }
+
     private var onDismissListener: (() -> Unit)? = null
     private var onInAppMessageButtonClicked: (() -> Unit)? = null
 
@@ -105,7 +112,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor("#80000000".toColorInt()) // Semi-transparent black overlay
+            setBackgroundColor(OVERLAY_BACKGROUND_COLOR.toColorInt()) // Semi-transparent black overlay
             
             // Add click listener to dismiss when overlay is tapped
             setOnClickListener {
@@ -117,7 +124,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
     private fun createModalContainer(hasImage: Boolean = false): LinearLayout {
         return LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor("#FFFFFF".toColorInt())
+            setBackgroundColor(MODAL_BACKGROUND_COLOR.toColorInt())
             
             // Adjust padding based on whether image is present
             if (hasImage) {
@@ -139,7 +146,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
             val shape = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16f, context.resources.displayMetrics)
-                setColor("#FFFFFF".toColorInt())
+                setColor(MODAL_BACKGROUND_COLOR.toColorInt())
             }
             background = shape
         }
@@ -216,7 +223,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
     private fun createDismissButton(): TextView {
         return TextView(context).apply {
             
-            setTextColor("#FFFFFF".toColorInt())
+            setTextColor(DISMISS_BUTTON_TEXT_COLOR.toColorInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
             text = "X"
             gravity = Gravity.END
@@ -224,7 +231,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
             // Create circular background for dismiss button
             val dismissShape = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor("#5A6872".toColorInt())
+                setColor(DISMISS_BUTTON_BACKGROUND_COLOR.toColorInt())
             }
             background = dismissShape
 
