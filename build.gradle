@@ -1,6 +1,3 @@
-import java.time.Duration
-import java.time.temporal.ChronoUnit
-
 buildscript {
     ext.kotlin_version = "1.7.10"
     repositories {
@@ -32,11 +29,6 @@ nmcpAggregation {
         password = System.getenv('NEXUS_TOKEN')
         // AUTOMATIC publishes as soon as validation succeeds; switch to USER_MANAGED if you prefer manual release
         publishingType = "AUTOMATIC"
-
-        // Increase the validation timeout to 5 minutes
-        validationTimeout = Duration.of(5, ChronoUnit.MINUTES)
-        // Increase the publishing timeout to 5 minutes
-        publishingTimeout = Duration.of(5, ChronoUnit.MINUTES)
     }
 }
 
