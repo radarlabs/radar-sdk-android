@@ -1735,7 +1735,7 @@ object Radar {
             return
         }
 
-        inAppMessageManager?.setInAppMessageReceiver(inAppMessageReceiver)
+        inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver)
     }   
 
     /**
