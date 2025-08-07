@@ -22,6 +22,7 @@ import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_DMA
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_POSTAL_CODE
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_STATE
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_FAILED_FRAUD
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_FIRED_TRIP_ORDERS
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_NEARBY_PLACE_CHAIN
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STARTED_TRIP
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STOPPED_TRIP
@@ -187,6 +188,8 @@ class RadarEvent(
         USER_ARRIVED_AT_TRIP_DESTINATION,
         /** user.arrived_at_wrong_trip_destination */
         USER_ARRIVED_AT_WRONG_TRIP_DESTINATION,
+        /** `user.fired_trip_orders` */
+        USER_FIRED_TRIP_ORDERS,
         /** `user.failed_fraud` */
         USER_FAILED_FRAUD,
     }
@@ -273,6 +276,7 @@ class RadarEvent(
                 "user.approaching_trip_destination" -> USER_APPROACHING_TRIP_DESTINATION
                 "user.arrived_at_trip_destination" -> USER_ARRIVED_AT_TRIP_DESTINATION
                 "user.arrived_at_wrong_trip_destination" -> USER_ARRIVED_AT_WRONG_TRIP_DESTINATION
+                "user.fired_trip_orders" -> USER_FIRED_TRIP_ORDERS
                 "user.failed_fraud" -> USER_FAILED_FRAUD
                 else -> CONVERSION
             }
@@ -382,6 +386,7 @@ class RadarEvent(
                 USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
                 USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
                 USER_ARRIVED_AT_WRONG_TRIP_DESTINATION -> "user.arrived_at_wrong_trip_destination"
+                USER_FIRED_TRIP_ORDERS -> "user.fired_trip_orders"
                 USER_FAILED_FRAUD -> "user.failed_fraud"
                 else -> null
             }
