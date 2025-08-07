@@ -98,10 +98,10 @@ data class RadarInAppMessage(
         }
         
         /**
-         * Creates an array of RadarInAppMessagePayload from a JSON array.
+         * Creates an array of RadarInAppMessage from a JSON array.
          * 
          * @param jsonArray The JSON array to parse
-         * @return Array of RadarInAppMessagePayload instances, empty array if parsing fails
+         * @return Array of RadarInAppMessage instances, empty array if parsing fails
          */
         fun fromJsonArray(jsonArray: JSONArray): Array<RadarInAppMessage> {
             return try {
