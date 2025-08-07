@@ -1,6 +1,5 @@
 package io.radar.sdk
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.GradientDrawable
@@ -115,7 +114,6 @@ class RadarInAppMessageView @JvmOverloads constructor(
         }
     }
     
-    @SuppressLint("SetTextI18n")
     private fun createModalContainer(hasImage: Boolean = false): LinearLayout {
         return LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL

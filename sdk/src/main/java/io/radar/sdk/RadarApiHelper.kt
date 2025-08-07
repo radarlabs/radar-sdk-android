@@ -1,12 +1,11 @@
 package io.radar.sdk
 
 import android.content.Context
-import android.graphics.BitmapFactory
-import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogType
 import org.json.JSONArray
 import org.json.JSONException
@@ -50,7 +49,7 @@ internal open class RadarApiHelper(
         } else {
             RadarSettings.getHost(context)
         }
-        val uri = Uri.parse(host).buildUpon()
+        val uri = host.toUri().buildUpon()
             .appendEncodedPath(path)
             .build()
         val url = URL(uri.toString())
