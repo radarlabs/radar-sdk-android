@@ -38,6 +38,7 @@ internal class RadarLocationManager(
     private var startedFastestInterval = 0
     private val callbacks = ArrayList<RadarLocationCallback>()
     private val activityManager = RadarActivityManager(context)
+    private val sensorsManager = RadarSensorsManager(context)
 
     internal companion object {
         private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
@@ -137,14 +138,21 @@ internal class RadarLocationManager(
         if (settings.extendFlushReplays) {
             Radar.flushReplays()
         }
-        if (settings.useLocationMetadata) {
+        if (Radar.getTrackingOptions().useMotion) {
             activityManager.stopActivityUpdates()
+            sensorsManager.onPause()
         }
     }
 
     private fun startLocationUpdates(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, interval: Int, fastestInterval: Int) {
         if (!started || (desiredAccuracy != startedDesiredAccuracy) || (interval != startedInterval) || (fastestInterval != startedFastestInterval)) {
-            locationClient.requestLocationUpdates(desiredAccuracy, interval, fastestInterval, RadarLocationReceiver.getLocationPendingIntent(context))
+            if (interval > 0 && interval <= 5) {
+                logger.d("Starting location updates | desiredAccuracy = $desiredAccuracy; interval = 0; fastestInterval = 0")
+                locationClient.requestLocationUpdates(desiredAccuracy, 0, 0, RadarLocationReceiver.getLocationPendingIntent(context))
+            } else {
+                logger.d("Starting location updates | desiredAccuracy = $desiredAccuracy; interval = $interval; fastestInterval = $fastestInterval")
+                locationClient.requestLocationUpdates(desiredAccuracy, interval, fastestInterval, RadarLocationReceiver.getLocationPendingIntent(context))
+            }
 
             this.started = true
             this.startedDesiredAccuracy = desiredAccuracy
@@ -207,8 +215,9 @@ internal class RadarLocationManager(
         }
 
         if (tracking) {
-            if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
+            if (Radar.getTrackingOptions().useMotion) {
                 activityManager.startActivityUpdates()
+                sensorsManager.onResume()
             }
             if (options.foregroundServiceEnabled) {
                 val foregroundService = RadarSettings.getForegroundService(context)
