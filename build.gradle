@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = "1.9.20"
+    ext.kotlin_version = "1.7.10"
     repositories {
         google()
         mavenCentral()
@@ -30,8 +30,8 @@ nmcpAggregation {
         // AUTOMATIC publishes as soon as validation succeeds; switch to USER_MANAGED if you prefer manual release
         publishingType = "AUTOMATIC"
 
-        validationTimeout = java.time.Duration.ofMinutes(5)
-        publishingTimeout = java.time.Duration.ofMinutes(5)
+        // validationTimeout = java.time.Duration.ofMinutes(5)
+        // publishingTimeout = java.time.Duration.ofMinutes(5)
     }
 }
 
