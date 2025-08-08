@@ -30,8 +30,8 @@ nmcpAggregation {
         // AUTOMATIC publishes as soon as validation succeeds; switch to USER_MANAGED if you prefer manual release
         publishingType = "AUTOMATIC"
 
-        validationTimeout = java.time.Duration.ZERO
-        publishingTimeout = java.time.Duration.ZERO
+        validationTimeout = java.time.Duration.ofMinutes(5)
+        publishingTimeout = java.time.Duration.ofMinutes(5)
     }
 }
 
