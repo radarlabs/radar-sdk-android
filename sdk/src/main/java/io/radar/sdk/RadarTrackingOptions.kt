@@ -111,7 +111,13 @@ data class RadarTrackingOptions(
     /**
      * Determines whether to monitor beacons.
      */
-    var beacons: Boolean
+    var beacons: Boolean,
+
+
+    /**
+     * Determines whether to use motion detection and collect location metadata.
+     */
+    var useMotion: Boolean,
 ) {
 
     /**
@@ -420,7 +426,8 @@ data class RadarTrackingOptions(
             syncGeofences = RadarTrackingOptionsSyncGeofences.NEAREST,
             syncGeofencesLimit = 0,
             foregroundServiceEnabled = true,
-            beacons = false
+            beacons = false,
+            useMotion = false
         )
 
         /**
@@ -449,7 +456,8 @@ data class RadarTrackingOptions(
             syncGeofences = RadarTrackingOptionsSyncGeofences.NEAREST,
             syncGeofencesLimit = 10,
             foregroundServiceEnabled = false,
-            beacons = false
+            beacons = false,
+            useMotion = false
         )
 
         /**
@@ -478,7 +486,8 @@ data class RadarTrackingOptions(
             syncGeofences = RadarTrackingOptionsSyncGeofences.NEAREST,
             syncGeofencesLimit = 10,
             foregroundServiceEnabled = false,
-            beacons = false
+            beacons = false,
+            useMotion = false
         )
 
         internal const val KEY_DESIRED_STOPPED_UPDATE_INTERVAL = "desiredStoppedUpdateInterval"
@@ -501,7 +510,7 @@ data class RadarTrackingOptions(
         internal const val KEY_SYNC_GEOFENCES_LIMIT = "syncGeofencesLimit"
         internal const val KEY_FOREGROUND_SERVICE_ENABLED = "foregroundServiceEnabled"
         internal const val KEY_BEACONS = "beacons"
-
+        internal const val KEY_USE_MOTION = "useMotion"
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTrackingOptions {
             val desiredAccuracy = if (obj.has(KEY_DESIRED_ACCURACY) && obj.get(KEY_DESIRED_ACCURACY) is String) {
@@ -570,7 +579,8 @@ data class RadarTrackingOptions(
                 },
                 syncGeofencesLimit = obj.optInt(KEY_SYNC_GEOFENCES_LIMIT, 10),
                 foregroundServiceEnabled = obj.optBoolean(KEY_FOREGROUND_SERVICE_ENABLED, false),
-                beacons = obj.optBoolean(KEY_BEACONS)
+                beacons = obj.optBoolean(KEY_BEACONS),
+                useMotion = obj.optBoolean(KEY_USE_MOTION)
             )
         }
     }
@@ -597,6 +607,7 @@ data class RadarTrackingOptions(
         obj.put(KEY_SYNC_GEOFENCES_LIMIT, syncGeofencesLimit)
         obj.put(KEY_FOREGROUND_SERVICE_ENABLED, foregroundServiceEnabled)
         obj.put(KEY_BEACONS, beacons)
+        obj.put(KEY_USE_MOTION, useMotion)
         return obj
     }
 

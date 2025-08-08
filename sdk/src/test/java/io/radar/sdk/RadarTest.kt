@@ -2083,7 +2083,6 @@ class RadarTest {
         assertEquals(Radar.RadarLogLevel.INFO, savedSdkConfiguration?.logLevel)
         assertEquals(true, savedSdkConfiguration?.startTrackingOnInitialize)
         assertEquals(true, savedSdkConfiguration?.trackOnceOnAppOpen)
-        assertEquals(true,savedSdkConfiguration?.useLocationMetadata)
     }
 
     @Test

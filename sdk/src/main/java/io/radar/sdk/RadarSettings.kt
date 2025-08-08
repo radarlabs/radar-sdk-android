@@ -418,9 +418,6 @@ internal object RadarSettings {
         return getSharedPreferences(context).getString(KEY_X_PLATFORM_SDK_VERSION, null);
     }
 
-    internal fun useLocationMetaData(context: Context):Boolean {
-        return getSdkConfiguration(context).useLocationMetadata
-    }
 
     internal fun getTags(context: Context): Array<String>? {
         val tagsJson = getSharedPreferences(context).getString(KEY_USER_TAGS, null) ?: return null
