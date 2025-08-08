@@ -17,6 +17,7 @@ import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
+import io.radar.sdk.model.RadarInAppMessage
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
 import java.util.Date
@@ -41,6 +42,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
         Radar.setVerifiedReceiver(verifiedReceiver)
+
+        val inAppMessageReceiver = MyInAppMessageReceiver()
+        Radar.setInAppMessageReceiver(inAppMessageReceiver)
 
         listView = findViewById(R.id.buttonList)
         createButtons()

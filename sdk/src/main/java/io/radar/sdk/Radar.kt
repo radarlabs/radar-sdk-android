@@ -9,14 +9,29 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
-import io.radar.sdk.model.*
+import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarInAppMessage
+import io.radar.sdk.model.RadarPlace
+import io.radar.sdk.model.RadarReplay
+import io.radar.sdk.model.RadarRouteMatrix
+import io.radar.sdk.model.RadarRoutes
+import io.radar.sdk.model.RadarSdkConfiguration
+import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import io.radar.sdk.util.RadarLogBuffer
 import io.radar.sdk.util.RadarReplayBuffer
 import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
-import java.util.*
+import java.util.Date
+import java.util.EnumSet
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -472,7 +487,7 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
-
+    private lateinit var inAppMessageManager: RadarInAppMessageManager
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
      *
@@ -558,6 +573,16 @@ object Radar {
             this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager, provider)
             RadarSettings.setLocationServicesProvider(this.context, provider)
             this.locationManager.updateTracking()
+        }
+
+        if (!this::inAppMessageManager.isInitialized) {
+            if (this.activity != null) {
+                this.inAppMessageManager = RadarInAppMessageManager(this.activity!!, this.context)
+                val inAppMessageReceiver = object :RadarInAppMessageReceiver{}
+                this.inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver)
+            } else {
+                this.logger.e("Activity is not initialized, cannot initialize inAppMessageManager")
+            }
         }
 
         this.logger.i("initialize()", RadarLogType.SDK_CALL)
@@ -1698,6 +1723,20 @@ object Radar {
 
         this.verifiedReceiver = verifiedReceiver
     }
+
+    /**
+     * Sets a delegate for handling in-app message lifecycle events.
+     *
+     * @param[delegate] A delegate for handling in-app message lifecycle events. If `null`, the previous delegate will be cleared.
+     */
+    @JvmStatic
+    fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver?) {
+        if (!initialized) {
+            return
+        }
+
+        inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver)
+    }   
 
     /**
      * Accepts an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events.
@@ -3766,6 +3805,37 @@ object Radar {
         return RadarUtils.sdkVersion
 
     }
+
+    @JvmStatic
+    internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>){
+        inAppMessageManager.showInAppMessages(inAppMessages)
+    }
+
+    /**
+     * Loads an image from a URL using the existing API pattern.
+     *
+     * @param url The URL to load the image from
+     * @param callback Callback to handle the result
+     */
+    @JvmStatic
+    fun loadImage(url: String?, callback: (android.graphics.Bitmap?) -> Unit) {
+        if (url == null) {
+            callback(null)
+            return
+        }
+
+        apiClient.loadImage(url, object : RadarApiHelper.RadarImageApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, bitmap: android.graphics.Bitmap?) {
+                if (status == Radar.RadarStatus.SUCCESS) {
+                    callback(bitmap)
+                } else {
+                    Radar.logger.e("Error loading image: $status")
+                    callback(null)
+                }
+            }
+        })
+    }
+
 
 
     internal fun handleLocation(context: Context, location: Location, source: RadarLocationSource) {
