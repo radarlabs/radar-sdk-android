@@ -518,7 +518,9 @@ object Radar {
         publishableKey: String? = null, 
         receiver: RadarReceiver? = null, 
         provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, 
-        fraud: Boolean = false) {
+        fraud: Boolean = false,
+        inAppMessageReceiver: RadarInAppMessageReceiver? = null,
+        currentActivity: Activity? = null) {
         if (context == null) {
             return
         }
@@ -528,6 +530,9 @@ object Radar {
 
         if (context is Activity) {
             this.activity = context
+        }
+        if (currentActivity != null) {
+            this.activity = currentActivity
         }
 
         if (receiver != null) {
@@ -578,7 +583,7 @@ object Radar {
         if (!this::inAppMessageManager.isInitialized) {
             if (this.activity != null) {
                 this.inAppMessageManager = RadarInAppMessageManager(this.activity!!, this.context)
-                val inAppMessageReceiver = object :RadarInAppMessageReceiver{}
+                val inAppMessageReceiver = inAppMessageReceiver ?: object :RadarInAppMessageReceiver{}
                 this.inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver)
             } else {
                 this.logger.e("Activity is not initialized, cannot initialize inAppMessageManager")

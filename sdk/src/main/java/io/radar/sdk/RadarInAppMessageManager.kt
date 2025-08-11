@@ -21,6 +21,11 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
     private fun showModal(payload: RadarInAppMessage) {
         if (currentView != null) return // prevent duplicates
 
+        if (activity == null) {
+            Radar.logger.e("Activity is null, cannot show in-app message")
+            return
+        }
+
         val rootView = activity.window?.decorView as? ViewGroup ?: return
 
         // Record the time when modal is shown
