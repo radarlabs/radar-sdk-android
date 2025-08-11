@@ -33,9 +33,8 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
                 // Record the time when modal is dismissed
                 modalDismissTime = System.currentTimeMillis()
                 val displayDuration = modalDismissTime - modalShowTime
-                val metadata = JSONObject()
-                metadata.put("display_duration", displayDuration)
-                Radar.sendLogConversionRequest("in_app_message_dismissed", metadata, callback = object : RadarLogConversionCallback {
+
+                Radar.sendLogConversionRequest("in_app_message_dismissed", makeConversionMetadata(payload), callback = object : RadarLogConversionCallback {
                     override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
                         Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
                     }
@@ -48,9 +47,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
                 // Record the time when modal is dismissed via button click
                 modalDismissTime = System.currentTimeMillis()
                 val displayDuration = modalDismissTime - modalShowTime
-                val metadata = JSONObject()
-                metadata.put("display_duration", displayDuration)
-                Radar.sendLogConversionRequest("in_app_message_clicked", metadata, callback = object : RadarLogConversionCallback {
+                Radar.sendLogConversionRequest("in_app_message_clicked", makeConversionMetadata(payload), callback = object : RadarLogConversionCallback {
                     override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
                         Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
                     }
@@ -92,8 +89,15 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
         }
     }
 
-    internal fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver?) {
-        this.inAppMessageReceiver = inAppMessageReceiver
+    private fun makeConversionMetadata(payload: RadarInAppMessage): JSONObject {
+        var metadata = JSONObject()
+        val payloadMetadata = payload.metadata
+         if (payloadMetadata != null) {
+            metadata = JSONObject(payloadMetadata.toString())
+        }
+        metadata.put("display_duration", System.currentTimeMillis() - modalShowTime)
+
+        return metadata
     }
 
    internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>) {

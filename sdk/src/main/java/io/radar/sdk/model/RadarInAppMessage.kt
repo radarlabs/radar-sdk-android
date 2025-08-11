@@ -11,7 +11,8 @@ data class RadarInAppMessage(
     val title: Title,
     val body: Body,
     val button: Button? = null,
-    val image: Image? = null
+    val image: Image? = null,
+    val metadata: JSONObject? = null
 ) {
     
     data class Title(
@@ -47,6 +48,7 @@ data class RadarInAppMessage(
         private const val KEY_URL = "url"
         private const val KEY_NAME = "name"
         private const val KEY_IMAGE = "image"
+        private const val KEY_METADATA = "metadata"
 
         
         /**
@@ -91,7 +93,9 @@ data class RadarInAppMessage(
                     )
                 }
                 
-                RadarInAppMessage(title, body, button, image)
+                val metadata = json.optJSONObject(KEY_METADATA)
+                
+                RadarInAppMessage(title, body, button, image, metadata)
             } catch (e: Exception) {
                 null
             }
@@ -148,6 +152,9 @@ data class RadarInAppMessage(
                     put(KEY_NAME, image.name)
                     image.url?.let { put(KEY_URL, it) }
                 })
+            }
+            if (metadata != null) {
+                put(KEY_METADATA, metadata)
             }
         }.toString()
     }
