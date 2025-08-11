@@ -59,6 +59,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
                 // Record the time when modal is dismissed via button click
                 modalDismissTime = System.currentTimeMillis()
                 val metadata = makeConversionMetadata(payload)
+                val displayDuration = System.currentTimeMillis() - modalShowTime
                 metadata.put("display_duration", displayDuration)
                 Radar.sendLogConversionRequest("in_app_message_clicked", metadata, callback = object : RadarLogConversionCallback {
                     override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
