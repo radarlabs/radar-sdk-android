@@ -88,10 +88,13 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
     }
 
     private fun makeConversionMetadata(payload: RadarInAppMessage): JSONObject {
-        var metadata = JSONObject()
+        val metadata = JSONObject()
         val payloadMetadata = payload.metadata
          if (payloadMetadata != null) {
-            metadata = JSONObject(payloadMetadata.toString())
+            val payloadMetadataJson = JSONObject(payloadMetadata.toString())
+            metadata.put("campaignId", payloadMetadataJson.optString("radar:campaignId"))
+            metadata.put("geofenceId", payloadMetadataJson.optString("radar:geofenceId"))
+            metadata.put("campaignMetadata", payloadMetadataJson.optString("radar:campaignMetadata"))
         }
         metadata.put("display_duration", System.currentTimeMillis() - modalShowTime)
 
