@@ -499,10 +499,10 @@ object Radar {
      */
     @JvmStatic
     fun initialize(
-        context: Context?, 
-        publishableKey: String? = null, 
-        receiver: RadarReceiver? = null, 
-        provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, 
+        context: Context?,
+        publishableKey: String? = null,
+        receiver: RadarReceiver? = null,
+        provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE,
         fraud: Boolean = false) {
         if (context == null) {
             return
@@ -560,7 +560,7 @@ object Radar {
             this.locationManager.updateTracking()
         }
 
-        this.logger.i("initialize()", RadarLogType.SDK_CALL)
+        this.logger.i("initialize(context=$context, publishableKey=$publishableKey, receiver=$receiver, provider=$provider, fraud=$fraud)", RadarLogType.SDK_CALL)
 
         if (provider == RadarLocationServicesProvider.GOOGLE) {
             this.logger.d("Using Google location services")
@@ -622,6 +622,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setUserId(userId=$userId)", RadarLogType.SDK_CALL)
 
         RadarSettings.setUserId(context, userId)
 
@@ -642,6 +643,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getUserId()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getUserId(context)
     }
@@ -658,6 +660,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setDescription(description=$description)", RadarLogType.SDK_CALL)
 
         RadarSettings.setDescription(context, description)
     }
@@ -674,6 +677,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getDescription()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getDescription(context)
     }
@@ -690,6 +694,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setMetadata(metadata=$metadata)", RadarLogType.SDK_CALL)
 
         RadarSettings.setMetadata(context, metadata)
 
@@ -710,6 +715,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getMetadata()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getMetadata(context)
     }
@@ -724,6 +730,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setProduct(product=$product)", RadarLogType.SDK_CALL)
 
         RadarSettings.setProduct(context, product)
     }
@@ -738,6 +745,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getProduct()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getProduct(context)
     }
@@ -752,6 +760,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getTags()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getTags(context)
     }
@@ -766,6 +775,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("addTags(tags=${tags.contentToString()})", RadarLogType.SDK_CALL)
 
         RadarSettings.addTags(context, tags)
     }
@@ -780,8 +790,9 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setTags(tags=${tags.contentToString()})", RadarLogType.SDK_CALL)
 
-        RadarSettings.setTags(context, tags) 
+        RadarSettings.setTags(context, tags)
     }
 
     /**
@@ -794,6 +805,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("removeTags(tags=${tags.contentToString()})", RadarLogType.SDK_CALL)
 
         RadarSettings.removeTags(context, tags)
     }
@@ -806,6 +818,8 @@ object Radar {
      */
     @JvmStatic
     fun setAnonymousTrackingEnabled(enabled: Boolean) {
+        this.logger.i("setAnonymousTrackingEnabled(enabled=$enabled)", RadarLogType.SDK_CALL)
+
         RadarSettings.setAnonymousTrackingEnabled(context, enabled)
     }
 
@@ -864,7 +878,7 @@ object Radar {
 
             return
         }
-        this.logger.i("getLocation()", RadarLogType.SDK_CALL)
+        this.logger.i("getLocation(desiredAccuracy=$desiredAccuracy)", RadarLogType.SDK_CALL)
 
         locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -938,7 +952,7 @@ object Radar {
 
             return
         }
-        this.logger.i("trackOnce()", RadarLogType.SDK_CALL)
+        this.logger.i("trackOnce(desiredAccuracy=$desiredAccuracy, beacons=$beacons)", RadarLogType.SDK_CALL)
 
         locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -1047,6 +1061,7 @@ object Radar {
 
             return
         }
+        this.logger.i("trackOnce(location=$location)", RadarLogType.SDK_CALL)
 
         apiClient.track(location, false, true, RadarLocationSource.MANUAL_LOCATION, false, null, callback = object : RadarApiClient.RadarTrackApiCallback {
             override fun onComplete(
@@ -1184,7 +1199,7 @@ object Radar {
 
             return
         }
-        this.logger.i("trackVerified()", RadarLogType.SDK_CALL)
+        this.logger.i("trackVerified(beacons=$beacons, desiredAccuracy=$desiredAccuracy, reason=$reason, transactionId=$transactionId)", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
@@ -1238,7 +1253,7 @@ object Radar {
         if (!initialized) {
             return
         }
-        this.logger.i("startTrackingVerified()", RadarLogType.SDK_CALL)
+        this.logger.i("startTrackingVerified(interval=$interval, beacons=$beacons)", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
@@ -1280,6 +1295,7 @@ object Radar {
         if (!initialized) {
             return false
         }
+        this.logger.i("isTrackingVerified()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
@@ -1399,7 +1415,7 @@ object Radar {
         if (!initialized) {
             return
         }
-        this.logger.i("setExpectedJurisdiction()", RadarLogType.SDK_CALL)
+        this.logger.i("setExpectedJurisdiction(countryCode=$countryCode, stateCode=$stateCode)", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
@@ -1420,8 +1436,8 @@ object Radar {
         if (!initialized) {
             return
         }
-        this.logger.i("startTracking()", RadarLogType.SDK_CALL)
-        
+        this.logger.i("startTracking(options=$options)", RadarLogType.SDK_CALL)
+
         locationManager.startTracking(options)
     }
 
@@ -1449,6 +1465,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("mockTracking(origin=$origin, destination=$destination, mode=$mode, steps=$steps, interval=$interval)", RadarLogType.SDK_CALL)
 
         apiClient.getDistance(origin, destination, EnumSet.of(mode), RadarRouteUnits.METRIC, steps, object : RadarApiClient.RadarDistanceApiCallback {
             override fun onComplete(
@@ -1575,6 +1592,7 @@ object Radar {
         if (!initialized) {
             return false
         }
+        this.logger.i("isTracking()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getTracking(context)
     }
@@ -1589,12 +1607,13 @@ object Radar {
         if (!initialized) {
             return false
         }
+        this.logger.i("isUsingRemoteTrackingOptions()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getRemoteTrackingOptions(context) != null
     }
 
 
-   /** 
+   /**
     *  Returns a string of the radar host.
     *
     *  @return A string of the radar host.
@@ -1604,6 +1623,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getHost()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getHost(context)
     }
@@ -1618,6 +1638,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getPublishableKey()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getPublishableKey(context)
     }
@@ -1646,6 +1667,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setForegroundServiceOptions(options=$options)", RadarLogType.SDK_CALL)
 
         RadarSettings.setForegroundService(context, options)
     }
@@ -1662,6 +1684,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setNotificationOptions(options=$options)", RadarLogType.SDK_CALL)
 
         RadarSettings.setNotificationOptions(context, options)
     }
@@ -1679,6 +1702,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setReceiver(receiver=$receiver)", RadarLogType.SDK_CALL)
 
         this.receiver = receiver
     }
@@ -1695,6 +1719,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setVerifiedReceiver(verifiedReceiver=$verifiedReceiver)", RadarLogType.SDK_CALL)
 
         this.verifiedReceiver = verifiedReceiver
     }
@@ -1712,6 +1737,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("acceptEvent(eventId=$eventId, verifiedPlaceId=$verifiedPlaceId)", RadarLogType.SDK_CALL)
 
         apiClient.verifyEvent(eventId, RadarEventVerification.ACCEPT, verifiedPlaceId)
     }
@@ -1728,6 +1754,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("rejectEvent(eventId=$eventId)", RadarLogType.SDK_CALL)
 
         apiClient.verifyEvent(eventId, RadarEventVerification.REJECT)
     }
@@ -1744,6 +1771,7 @@ object Radar {
         if (!initialized) {
             return null
         }
+        this.logger.i("getTripOptions()", RadarLogType.SDK_CALL)
 
         return RadarSettings.getTripOptions(context)
     }
@@ -1775,7 +1803,7 @@ object Radar {
         if (!initialized) {
             return
         }
-        this.logger.i("startTrip()", RadarLogType.SDK_CALL)
+        this.logger.i("startTrip(options=$options, trackingOptions=$trackingOptions)", RadarLogType.SDK_CALL)
 
         apiClient.createTrip(options, object : RadarApiClient.RadarTripApiCallback {
             override fun onComplete(
@@ -1871,7 +1899,7 @@ object Radar {
         if (!initialized) {
             return
         }
-        this.logger.i("updateTrip()", RadarLogType.SDK_CALL)
+        this.logger.i("updateTrip(options=$options, status=$status)", RadarLogType.SDK_CALL)
 
         apiClient.updateTrip(options, status, object : RadarApiClient.RadarTripApiCallback {
             override fun onComplete(
@@ -2091,7 +2119,10 @@ object Radar {
 
             return
         }
-        this.logger.i("searchPlaces()", RadarLogType.SDK_CALL)
+        this.logger.i(
+            "searchPlaces(radius=$radius, chains=[${chains?.joinToString(", ")}], chainMetadata=$chainMetadata, categories=[${categories?.joinToString(", ")}], groups=[${groups?.joinToString(", ")}], countryCodes=[${countryCodes?.joinToString(", ")}], limit=$limit)",
+            RadarLogType.SDK_CALL
+        )
 
         locationManager.getLocation(object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -2150,7 +2181,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -2190,7 +2221,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -2241,7 +2272,10 @@ object Radar {
 
             return
         }
-        this.logger.i("searchPlaces()", RadarLogType.SDK_CALL)
+        this.logger.i(
+            "searchPlaces(near=$near, radius=$radius, chains=[${chains?.joinToString(", ")}], chainMetadata=$chainMetadata, categories=[${categories?.joinToString(", ")}], groups=[${groups?.joinToString(", ")}], countryCodes=[${countryCodes?.joinToString(", ")}], limit=$limit)",
+            RadarLogType.SDK_CALL
+        )
 
         apiClient.searchPlaces(near, radius, chains, chainMetadata, categories, groups, countryCodes, limit, object : RadarApiClient.RadarSearchPlacesApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, places: Array<RadarPlace>?) {
@@ -2262,7 +2296,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -2291,7 +2325,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)     
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -2349,7 +2383,10 @@ object Radar {
 
             return
         }
-        this.logger.i("searchGeofences()", RadarLogType.SDK_CALL)
+        this.logger.i(
+            "searchGeofences(radius=$radius, tags=[${tags?.joinToString(", ")}], metadata=$metadata, limit=$limit, includeGeometry=$includeGeometry)",
+            RadarLogType.SDK_CALL
+        )
 
         locationManager.getLocation(object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -2434,7 +2471,10 @@ object Radar {
 
             return
         }
-        this.logger.i("searchGeofences()", RadarLogType.SDK_CALL)
+        this.logger.i(
+            "searchGeofences(near=$near, radius=$radius, tags=[${tags?.joinToString(", ")}], metadata=$metadata, limit=$limit, includeGeometry=$includeGeometry)",
+            RadarLogType.SDK_CALL
+        )
 
         apiClient.searchGeofences(near, radius, tags, metadata, limit, includeGeometry, object : RadarApiClient.RadarSearchGeofencesApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, geofences: Array<RadarGeofence>?) {
@@ -2505,7 +2545,7 @@ object Radar {
 
             return
         }
-        this.logger.i("autocomplete()", RadarLogType.SDK_CALL)
+        this.logger.i("autocomplete(query=$query, near=$near, limit=$limit)", RadarLogType.SDK_CALL)
 
         apiClient.autocomplete(query, near, null, limit, null, null, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
@@ -2572,7 +2612,10 @@ object Radar {
 
             return
         }
-        this.logger.i("autocomplete()", RadarLogType.SDK_CALL)
+        this.logger.i(
+            "autocomplete(query=$query, near=$near, layers=[${layers?.joinToString(", ")}], limit=$limit, country=$country)",
+            RadarLogType.SDK_CALL
+        )
 
         apiClient.autocomplete(query, near, layers, limit, country, null, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
@@ -2648,6 +2691,10 @@ object Radar {
 
             return
         }
+        this.logger.i(
+            "autocomplete(query=$query, near=$near, layers=[${layers?.joinToString(", ")}], limit=$limit, country=$country, expandUnits=$expandUnits, mailable=$mailable)",
+            RadarLogType.SDK_CALL
+        )
 
         apiClient.autocomplete(query, near, layers, limit, country, mailable, object : RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
@@ -2701,12 +2748,12 @@ object Radar {
 
     /**
      * Validates an address, attaching to a verification status, property type, and plus4.
-     * 
+     *
      * @see [](https://radar.com/documentation/api#validate-an-address)
-     * 
+     *
      * @param[address] The address to validate.
      * @param[callback] A callback.
-     * 
+     *
      */
 
     @JvmStatic
@@ -2719,6 +2766,10 @@ object Radar {
 
             return
         }
+        this.logger.i(
+            "validateAddress(address=${address?.toJson()})",
+            RadarLogType.SDK_CALL
+        )
 
         if (address == null) {
             callback.onComplete(RadarStatus.ERROR_BAD_REQUEST, null)
@@ -2737,12 +2788,12 @@ object Radar {
 
     /**
      * Validates an address, attaching to a verification status, property type, and plus4.
-     * 
+     *
      * @see [](https://radar.com/documentation/api#validate-an-address)
-     * 
+     *
      * @param[address] The address to validate.
      * @param[block] A block callback.
-     * 
+     *
      */
 
     fun validateAddress(
@@ -2781,7 +2832,10 @@ object Radar {
 
             return
         }
-        this.logger.i("geocode()", RadarLogType.SDK_CALL)
+        this.logger.i(
+            "geocode(query=$query, layers=[${layers?.joinToString(", ")}], countries=[${countries?.joinToString(", ")}])",
+            RadarLogType.SDK_CALL
+        )
 
         apiClient.geocode(query, layers, countries, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
@@ -2838,7 +2892,10 @@ object Radar {
 
             return
         }
-        this.logger.i("reverseGeocode()", RadarLogType.SDK_CALL)
+        this.logger.i(
+            "reverseGeocode(layers=[${layers?.joinToString(", ")}])",
+            RadarLogType.SDK_CALL
+        )
 
         locationManager.getLocation(object: RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -2903,7 +2960,10 @@ object Radar {
 
             return
         }
-        this.logger.i("reverseGeocode()", RadarLogType.SDK_CALL)
+        this.logger.i(
+            "reverseGeocode(location=$location, layers=[${layers?.joinToString(", ")}])",
+            RadarLogType.SDK_CALL
+        )
 
         apiClient.reverseGeocode(location, layers, object: RadarApiClient.RadarGeocodeApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
@@ -2920,7 +2980,7 @@ object Radar {
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
      * @param[location] The location to geocode.
-     * @param[layers] Optional 
+     * @param[layers] Optional
      * @param[block] A block callback.
      */
     fun reverseGeocode(
@@ -3007,7 +3067,7 @@ object Radar {
 
             return
         }
-        this.logger.i("getDistance()", RadarLogType.SDK_CALL)
+        this.logger.i("getDistance(destination=$destination, modes=$modes, units=$units)", RadarLogType.SDK_CALL)
 
         locationManager.getLocation(object: RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
@@ -3086,7 +3146,7 @@ object Radar {
 
             return
         }
-        this.logger.i("getDistance()", RadarLogType.SDK_CALL)
+        this.logger.i("getDistance(origin=$origin, destination=$destination, modes=$modes, units=$units)", RadarLogType.SDK_CALL)
 
         apiClient.getDistance(origin, destination, modes, units, -1, object : RadarApiClient.RadarDistanceApiCallback {
             override fun onComplete(
@@ -3156,7 +3216,7 @@ object Radar {
 
             return
         }
-        this.logger.i("getMatrix()", RadarLogType.SDK_CALL)
+        this.logger.i("getMatrix(origins=${origins.contentToString()}, destinations=${destinations.contentToString()}, mode=$mode, units=$units)", RadarLogType.SDK_CALL)
 
         apiClient.getMatrix(origins, destinations, mode, units, object : RadarApiClient.RadarMatrixApiCallback {
             override fun onComplete(
@@ -3265,7 +3325,7 @@ object Radar {
 
             return
         }
-        this.logger.i("getContext()", RadarLogType.SDK_CALL)
+        this.logger.i("getContext(location=$location)", RadarLogType.SDK_CALL)
 
         apiClient.getContext(location, object : RadarApiClient.RadarContextApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?, context: RadarContext?) {
@@ -3306,6 +3366,7 @@ object Radar {
 
             return
         }
+        this.logger.i("logConversion(name=$name, metadata=$metadata)", RadarLogType.SDK_CALL)
 
         // if track() has been returned in the last 60 seconds, don't call it again
         val timestampSeconds = System.currentTimeMillis() / 1000
@@ -3469,7 +3530,7 @@ object Radar {
                 override fun onComplete(status: RadarStatus, event: RadarEvent?) {
                     logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
                 }
-            }) 
+            })
         }
     }
 
@@ -3500,6 +3561,7 @@ object Radar {
         if (!initialized) {
             return
         }
+        this.logger.i("setLogLevel(level=$level)", RadarLogType.SDK_CALL)
         // update clientSdkConfiguration if the new level is different, otherwise no-op
         val sdkConfiguration = RadarSettings.getClientSdkConfiguration(context)
         if (sdkConfiguration.optString("logLevel") == level.toString().lowercase()) {
@@ -3577,7 +3639,7 @@ object Radar {
             this.logger.d("No replays to flush")
             return
         }
-    
+
         this.isFlushingReplays = true
 
         // get a copy of the replays so we can safely clear what was synced up
@@ -3686,7 +3748,7 @@ object Radar {
             else -> "car"
         }
     }
-   
+
     /**
      * Returns a display string for a verification status value.
      *
