@@ -1,13 +1,14 @@
 import io.radar.ci.GitHubActions
 import io.radar.ci.GitHubClient
 import io.radar.ci.SnapshotDispatcher
-import io.radar.mvnpublish.MavenServer
+// Removed custom mvnpublish dependency – switching to standard Gradle publishing
 
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 apply plugin: "kotlin-android-extensions"
 apply plugin: "org.jetbrains.dokka"
-apply plugin: 'io.radar.mvnpublish'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
 ext {
     radarVersion = '3.22.0'
@@ -107,16 +108,68 @@ artifacts {
     archives androidSourcesJar, androidJavadocsJar
 }
 
-mvnpublish {
-    publication {
-        name = 'Radar Android SDK'
-        description = 'Android SDK for Radar, the leading geofencing and location tracking platform'
-        repositoryName = 'radar-sdk-android'
-        group = 'io.radar'
-        artifactId = 'sdk'
-        version = "$radarVersion$buildNumber"
-        artifacts = ["$buildDir/outputs/aar/$project.name-release.aar", androidSourcesJar, androidJavadocsJar]
-        server = isSnapshot ? MavenServer.SNAPSHOT : MavenServer.RELEASE
+// ----------------------------
+//  Gradle Maven Publishing
+// ----------------------------
+publishing {
+    publications {
+        sdk(MavenPublication) {
+            groupId 'io.radar'
+            artifactId 'sdk'
+            version "$radarVersion$buildNumber"
+
+            artifact("$buildDir/outputs/aar/${project.name}-release.aar")
+            artifact androidSourcesJar
+            artifact androidJavadocsJar
+
+            pom {
+                name = 'Radar Android SDK'
+                description = 'Android SDK for Radar, the leading geofencing and location tracking platform'
+                url = 'https://radar.io'
+
+                licenses {
+                    license {
+                        name = 'Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                organization {
+                    name = 'Radar Labs, Inc.'
+                    url = 'https://radar.io'
+                }
+
+                developers {
+                    developer {
+                        id = 'radarlabs'
+                        name = 'Radar Labs, Inc.'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com:radarlabs/radar-sdk-android.git'
+                    developerConnection = 'scm:git:ssh://github.com:radarlabs/radar-sdk-android.git'
+                    url = 'https://github.com/radarlabs/radar-sdk-android'
+                }
+            }
+        }
+    }
+}
+
+// ----------------------------
+//  Artifact Signing
+// ----------------------------
+signing {
+    def signingKey = project.findProperty('SIGNINGKEY')
+    def signingPassword = project.findProperty('SIGNINGPASSWORD')
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign publishing.publications.sdk
+}
+
+// Ensure signing tasks depend on the AAR being built
+afterEvaluate {
+    tasks.withType(Sign) {
+        dependsOn bundleReleaseAar
     }
 }
 
