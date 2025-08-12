@@ -11,7 +11,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 ext {
-    radarVersion = '3.22.0'
+    radarVersion = '3.23.0-beta.1'
 }
 
 String buildNumber = ".${System.currentTimeMillis()}"
@@ -164,6 +164,13 @@ signing {
     def signingPassword = project.findProperty('SIGNINGPASSWORD')
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign publishing.publications.sdk
+}
+
+// Ensure signing tasks depend on the AAR being built
+afterEvaluate {
+    tasks.withType(Sign) {
+        dependsOn bundleReleaseAar
+    }
 }
 
 task dispatchSnapshot {
