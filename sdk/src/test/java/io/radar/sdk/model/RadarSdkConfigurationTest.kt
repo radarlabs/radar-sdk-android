@@ -27,7 +27,6 @@ class RadarSdkConfigurationTest {
     private var logLevel = Radar.RadarLogLevel.INFO
     private var startTrackingOnInitialize = false
     private var trackOnceOnAppOpen = false
-    private var useLocationMetadata = false
     private var useOpenedAppConversion = false
     private var useForegroundLocationUpdatedAtMsDiff = false
     private var locationManagerTimeout = 123456
@@ -48,7 +47,6 @@ class RadarSdkConfigurationTest {
             "logLevel":"info",
             "startTrackingOnInitialize":$startTrackingOnInitialize,
             "trackOnceOnAppOpen":$trackOnceOnAppOpen,
-            "useLocationMetadata":$useLocationMetadata,
             "useOpenedAppConversion":$useOpenedAppConversion,
             "useForegroundLocationUpdatedAtMsDiff":$useForegroundLocationUpdatedAtMsDiff,
             "locationManagerTimeout":$locationManagerTimeout,
@@ -70,7 +68,6 @@ class RadarSdkConfigurationTest {
                 logLevel,
                 startTrackingOnInitialize,
                 trackOnceOnAppOpen,
-                useLocationMetadata,
                 useOpenedAppConversion,
                 useForegroundLocationUpdatedAtMsDiff,
                 locationManagerTimeout,
@@ -91,7 +88,6 @@ class RadarSdkConfigurationTest {
         assertEquals(logLevel, settings.logLevel)
         assertEquals(startTrackingOnInitialize, settings.startTrackingOnInitialize)
         assertEquals(trackOnceOnAppOpen, settings.trackOnceOnAppOpen)
-        assertEquals(useLocationMetadata, settings.useLocationMetadata)
         assertEquals(useOpenedAppConversion, settings.useOpenedAppConversion)
         assertEquals(useForegroundLocationUpdatedAtMsDiff, settings.useForegroundLocationUpdatedAtMsDiff)
         assertEquals(locationManagerTimeout, settings.locationManagerTimeout)
@@ -110,7 +106,6 @@ class RadarSdkConfigurationTest {
         assertEquals(Radar.RadarLogLevel.INFO, settings.logLevel)
         assertFalse(settings.startTrackingOnInitialize)
         assertFalse(settings.trackOnceOnAppOpen)
-        assertFalse(settings.useLocationMetadata)
         assertTrue(settings.useOpenedAppConversion)
         assertFalse(settings.useForegroundLocationUpdatedAtMsDiff)
         assertEquals(0, settings.locationManagerTimeout)

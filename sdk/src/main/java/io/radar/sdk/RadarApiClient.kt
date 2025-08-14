@@ -283,6 +283,7 @@ internal class RadarApiClient(
         val options = Radar.getTrackingOptions()
         val tripOptions = RadarSettings.getTripOptions(context)
         val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
+        var locationMetadata = JSONObject()
         try {
             params.putOpt("anonymous", anonymous)
             if (anonymous) {
@@ -316,6 +317,12 @@ internal class RadarApiClient(
             }
             if (location.hasBearing() && !location.bearing.isNaN()) {
                 params.putOpt("course", location.bearing)
+            }
+             
+            if (location.hasAltitude() && !location.altitude.isNaN()) {
+                params.putOpt("altitude", location.getAltitude())
+                locationMetadata.putOpt("altitude", location.getAltitude())
+
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (location.hasVerticalAccuracy() && !location.verticalAccuracyMeters.isNaN()) {
@@ -420,17 +427,29 @@ internal class RadarApiClient(
             } catch (_: Exception) {
 
             }
-            if (RadarSettings.getSdkConfiguration(context).useLocationMetadata) {
-                val metadata = JSONObject()
-                metadata.putOpt("motionActivityData", RadarState.getLastMotionActivity(context))
+            
+            if (Radar.getTrackingOptions().useMotion) {
+                
+                locationMetadata.putOpt("motionActivityData", RadarState.getLastMotionActivity(context))
                 if (location.hasSpeed() && !location.speed.isNaN()) {
-                    metadata.putOpt("speed",location.speed)
+                    locationMetadata.putOpt("speed",location.speed)
                 }
                 if (location.hasBearing() && !location.bearing.isNaN()) {
-                    metadata.putOpt("bearing", location.bearing)
+                    locationMetadata.putOpt("bearing", location.bearing)
                 }
-                params.putOpt("locationMetadata", metadata)
+                
+                params.putOpt("locationMetadata", locationMetadata)
             }
+            if (Radar.getTrackingOptions().usePressure) {
+                if (RadarState.getLastPressure(context) != null) {
+                    locationMetadata.putOpt("pressureHPa", RadarState.getLastPressure(context))
+                }
+            }
+
+            if (locationMetadata.length() > 0) {
+                params.putOpt("locationMetadata", locationMetadata)
+            }
+            
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
@@ -518,6 +537,7 @@ internal class RadarApiClient(
 
                     val beaconIds = mutableSetOf<String>()
                     user.beacons?.forEach { beacon -> beacon._id?.let { _id -> beaconIds.add(_id) } }
+                    
                     RadarState.setBeaconIds(context, beaconIds)
                 }
 
@@ -847,11 +867,11 @@ internal class RadarApiClient(
                     RadarGeofence.fromJson(geofencesArr)
                 }
                 if (geofences != null) {
+                    
                     callback.onComplete(RadarStatus.SUCCESS, res, geofences)
 
                     return
                 }
-
                 callback.onComplete(RadarStatus.ERROR_SERVER)
             }
         })
