@@ -140,6 +140,8 @@ internal class RadarLocationManager(
         }
         if (Radar.getTrackingOptions().useMotion) {
             activityManager.stopActivityUpdates()
+        }
+        if (Radar.getTrackingOptions().usePressure) {
             sensorsManager.onPause()
         }
     }
@@ -217,6 +219,8 @@ internal class RadarLocationManager(
         if (tracking) {
             if (Radar.getTrackingOptions().useMotion) {
                 activityManager.startActivityUpdates()
+            }
+            if (Radar.getTrackingOptions().usePressure) {
                 sensorsManager.onResume()
             }
             if (options.foregroundServiceEnabled) {
