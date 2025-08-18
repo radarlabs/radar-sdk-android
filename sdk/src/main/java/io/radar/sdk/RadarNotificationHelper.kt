@@ -20,8 +20,6 @@ class RadarNotificationHelper {
         private const val NOTIFICATION_ID = 20160525 // Radar's birthday!
         const val RADAR_CAMPAIGN_ID = "radar_campaign_id"
         const val RADAR_CAMPAIGN_METADATA = "radar_campaign_metadata"
-        
-        // Simple static field for custom notification
         @Volatile
         private var customForegroundNotification: Notification? = null
         
