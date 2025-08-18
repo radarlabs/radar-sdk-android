@@ -13,6 +13,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
 import io.radar.sdk.model.RadarInAppMessage
 
@@ -192,12 +193,15 @@ class RadarInAppMessageView @JvmOverloads constructor(
     
     private fun createActionButton(button: RadarInAppMessage.Button): Button {
         return Button(context).apply {
+            Radar.logger.i(button.text)
             text = button.text
+            // required to override capitalization of string
+            transformationMethod = null
             setTextColor(button.color.toColorInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             setTypeface(null, android.graphics.Typeface.BOLD)
             setPadding(48, 16, 48, 16)
-            
+
             // Create rounded button background
             val buttonShape = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
@@ -223,10 +227,15 @@ class RadarInAppMessageView @JvmOverloads constructor(
     private fun createDismissButton(): TextView {
         return TextView(context).apply {
             
-            setTextColor(DISMISS_BUTTON_TEXT_COLOR.toColorInt())
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
-            text = "X"
-            gravity = Gravity.END
+         val closeIcon = ContextCompat.getDrawable(context, R.drawable.close)?.apply {
+            setTint(android.graphics.Color.WHITE)
+        }
+        setCompoundDrawablesWithIntrinsicBounds(
+            closeIcon, // Replace with your icon name
+            null, null, null
+        )
+
+        gravity = Gravity.CENTER
 
             // Create circular background for dismiss button
             val dismissShape = GradientDrawable().apply {
@@ -235,7 +244,8 @@ class RadarInAppMessageView @JvmOverloads constructor(
             }
             background = dismissShape
 
-            setPadding(24, 6, 24, 6)
+            setPadding(12, 6, 12, 6)
+
             setOnClickListener { 
                 onDismissListener?.invoke()
             }
@@ -273,7 +283,12 @@ class RadarInAppMessageView @JvmOverloads constructor(
                 // Create rounded corners for the image
                 val shape = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
-                    cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
+                    cornerRadii = floatArrayOf(
+                        42f, 42f,  // top-left
+                        42f, 42f,  // top-right
+                        0f, 0f,    // bottom-right
+                        0f, 0f     // bottom-left
+                    )
                 }
                 background = shape
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
