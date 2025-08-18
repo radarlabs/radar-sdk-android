@@ -56,15 +56,41 @@ class RadarForegroundService : Service() {
         manager.deleteNotificationChannel("RadarSDK")
         var id = extras?.getInt("id") ?: 0
         id = if (id == 0) NOTIFICATION_ID else id
+        
+        val customNotification = RadarNotificationHelper.getCustomForegroundNotification()
+
+        // Use the custom notification
+        if (customNotification != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(id, customNotification, FOREGROUND_SERVICE_TYPE_LOCATION)
+            } else {
+                startForeground(id, customNotification)
+            }
+            return
+        }
+
+        // Fall back to default notification building
+        buildDefaultNotification(extras, id)
+    }
+
+    private fun buildDefaultNotification(extras: Bundle?, id: Int) {
         val importance = extras?.getInt("importance", NotificationManager.IMPORTANCE_DEFAULT) ?: NotificationManager.IMPORTANCE_DEFAULT
         val title = extras?.getString("title")
         val text = extras?.getString("text") ?: "Location tracking started"
         val icon = extras?.getInt("icon") ?: 0
         val iconString = extras?.getString("iconString") ?: this.applicationInfo.icon.toString()
         val iconColor = extras?.getString("iconColor") ?: ""
-        var smallIcon = resources.getIdentifier(iconString, "drawable", applicationContext.packageName) 
-        if (icon != 0){
-           smallIcon = resources.getIdentifier(icon.toString(), "drawable", applicationContext.packageName)  
+        var smallIcon = if (icon != 0) {
+            icon
+        } else {
+            try {
+                // Try to get the resource ID directly if it's a valid resource name
+                @Suppress("DiscouragedApi")
+                val resourceId = resources.getIdentifier(iconString, "drawable", applicationContext.packageName)
+                if (resourceId != 0) resourceId else applicationInfo.icon
+            } catch (e: Exception) {
+                applicationInfo.icon
+            }
         }
         val channelName = extras?.getString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME) ?: "Location Services"
         val channel = NotificationChannel("RadarSDK", channelName, importance)
@@ -83,7 +109,7 @@ class RadarForegroundService : Service() {
         try {
             val intent: Intent
             val deepLinkString = extras?.getString("deepLink")
-            
+
             if (deepLinkString != null) {
                 // If deep link is provided, use it
                 intent = Intent(Intent.ACTION_VIEW, deepLinkString.toUri())
@@ -94,7 +120,7 @@ class RadarForegroundService : Service() {
                 intent = packageManager.getLaunchIntentForPackage(applicationContext.packageName) ?: 
                     Intent(applicationContext, Class.forName(extras?.getString("activity")))
             }
-            
+
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 PendingIntent.FLAG_IMMUTABLE
