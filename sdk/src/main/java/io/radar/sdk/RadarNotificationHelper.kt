@@ -13,13 +13,13 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import io.radar.sdk.model.RadarEvent
-
 class RadarNotificationHelper {
 
     internal companion object {
         private const val CHANNEL_NAME = "Location"
         private const val NOTIFICATION_ID = 20160525 // Radar's birthday!
         const val RADAR_CAMPAIGN_ID = "radar_campaign_id"
+        const val RADAR_CAMPAIGN_METADATA = "radar_campaign_metadata"
         
         // Simple static field for custom notification
         @Volatile
@@ -70,15 +70,17 @@ class RadarNotificationHelper {
                 val smallIcon = context.applicationContext.resources.getIdentifier(iconString, "drawable", context.applicationContext.packageName)
 
                 if (notificationText != null && campaignType == "eventBased") {
-                    
                     val notificationTitle: String? = event.metadata?.optString("radar:notificationTitle")
                     val subTitle: String? = event.metadata?.optString("radar:notificationSubTitle")
                     val campaignId: String? = event.metadata?.optString("radar:campaignId")
                     val deeplinkURL = event.metadata?.optString("radar:notificationURL")
+                    val campaignMetadata: String? = event.metadata?.optString("radar:campaignMetadata")
+
                     Radar.logger.d("creating campaign notification with metadata  = ${event.metadata}")
                     val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                         putExtra(RADAR_CAMPAIGN_ID, campaignId)
+                        putExtra(RADAR_CAMPAIGN_METADATA, campaignMetadata)
                         if (deeplinkURL != null) {
                             data = Uri.parse(deeplinkURL)
                             action = Intent.ACTION_VIEW
