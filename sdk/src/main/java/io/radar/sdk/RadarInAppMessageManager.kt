@@ -38,7 +38,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
             }
         })
 
-        val modal = inAppMessageReceiver?.createInAppMessageView(
+        inAppMessageReceiver?.createInAppMessageView(
             context,
             payload,
             onDismissListener = {
@@ -90,10 +90,12 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
 
                 dismiss()
             },
+            onViewReady = { view ->
+                // The view is now fully initialized and ready to display
+                rootView.addView(view)
+                currentView = view
+            }
         )
-        
-        rootView.addView(modal)
-        currentView = modal
     }
 
     private fun dismiss() {

@@ -50,19 +50,22 @@ class RadarInAppMessageView @JvmOverloads constructor(
      * Initializes the view with the provided inAppMessage and callbacks.
      * 
      * @param inAppMessage The inAppMessage containing title, body, and button data
-     * @param image Optional bitmap image to display above the body text
      * @param onDismissListener Optional callback for when the banner is dismissed
      * @param onInAppMessageButtonClicked Optional callback for when the button is clicked
+     * @param onViewReady Callback called when the view is fully initialized and ready to display
      */
     fun initialize(
         inAppMessage: RadarInAppMessage,
         onDismissListener: (() -> Unit)? = null,
-        onInAppMessageButtonClicked: (() -> Unit)? = null
+        onInAppMessageButtonClicked: (() -> Unit)? = null,
+        onViewReady: (View) -> Unit
     ) {
         this.onDismissListener = onDismissListener
         this.onInAppMessageButtonClicked = onInAppMessageButtonClicked
         Radar.loadImage(inAppMessage.image?.url) { image ->
             createInAppMessageView(inAppMessage, image)
+            // Call the callback when the view is fully initialized
+            onViewReady(this)
         }
     }
 

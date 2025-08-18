@@ -933,10 +933,13 @@ class RadarTest {
                 context: Context, 
                 inAppMessage: RadarInAppMessage, 
                 onDismissListener: (() -> Unit)?, 
-                onInAppMessageButtonClicked: (() -> Unit)?, 
-            ): View {
+                onInAppMessageButtonClicked: (() -> Unit)?,
+                onViewReady: (View) -> Unit
+            ) {
                 createInAppMessageViewCalled = true
-                return super.createInAppMessageView(context, inAppMessage, onDismissListener, onInAppMessageButtonClicked)
+                // Create a simple view and call onViewReady immediately for testing
+                val view = View(context)
+                onViewReady(view)
             }
         }
         
@@ -1006,10 +1009,13 @@ class RadarTest {
                 context: Context, 
                 inAppMessage: RadarInAppMessage, 
                 onDismissListener: (() -> Unit)?, 
-                onInAppMessageButtonClicked: (() -> Unit)?
-            ): View {
+                onInAppMessageButtonClicked: (() -> Unit)?,
+                onViewReady: (View) -> Unit
+            ) {
                 createInAppMessageViewCalled = true
-                return super.createInAppMessageView(context, inAppMessage, onDismissListener, onInAppMessageButtonClicked)
+                // Create a simple view and call onViewReady immediately for testing
+                val view = View(context)
+                onViewReady(view)
             }
         }
         
