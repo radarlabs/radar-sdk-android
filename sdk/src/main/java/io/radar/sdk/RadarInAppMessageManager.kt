@@ -90,12 +90,12 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
             onViewReady = { view ->
                 if (currentView != null) {
                     Radar.logger.d("In-app message view already exists, skipping")
-                    return
+                    return@createInAppMessageView
                 }
                 val rootView = activity.window?.decorView as? ViewGroup
                 if (rootView == null) {
                     Radar.logger.e("Activity decorView is null or not a ViewGroup, cannot show in-app message")
-                    return
+                    return@createInAppMessageView
                 }
                 // The view is now fully initialized and ready to display
                 rootView.addView(view)
