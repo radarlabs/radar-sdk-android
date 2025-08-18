@@ -248,6 +248,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
             val dismissShape = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
                 setColor(DISMISS_BUTTON_BACKGROUND_COLOR.toColorInt())
+                alpha = (0.7f * 255).toInt()
             }
             background = dismissShape
 
@@ -311,7 +312,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
                 LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.END or Gravity.TOP
-                setMargins(0, 16, 16, 0) // Top and right margins for positioning
+                setMargins(0, 32, 32, 0) // Top and right margins for positioning
             })
         }
     }
