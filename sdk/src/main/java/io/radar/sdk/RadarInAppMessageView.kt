@@ -196,7 +196,6 @@ class RadarInAppMessageView @JvmOverloads constructor(
     
     private fun createActionButton(button: RadarInAppMessage.Button): Button {
         return Button(context).apply {
-            Radar.logger.i(button.text)
             text = button.text
             // required to override capitalization of string
             transformationMethod = null
