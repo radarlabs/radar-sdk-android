@@ -239,7 +239,7 @@ class MainActivity : AppCompatActivity() {
             val reverseGeocodeLocationLondon = Location("example")
             reverseGeocodeLocationLondon.latitude = 51.5074
             reverseGeocodeLocationLondon.longitude = -0.1278
-            
+
             Radar.reverseGeocode(reverseGeocodeLocationLondon) { status, addresses ->
                 Log.v(
                     "example",
