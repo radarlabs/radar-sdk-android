@@ -227,13 +227,17 @@ class RadarInAppMessageView @JvmOverloads constructor(
     private fun createDismissButton(): TextView {
         return TextView(context).apply {
             
-         val closeIcon = ContextCompat.getDrawable(context, R.drawable.close)?.apply {
-            setTint(android.graphics.Color.WHITE)
-        }
         setCompoundDrawablesWithIntrinsicBounds(
-            closeIcon, // Replace with your icon name
+            ContextCompat.getDrawable(context, R.drawable.close),
             null, null, null
         )
+        
+        compoundDrawables[0]?.let { drawable ->
+            drawable.setColorFilter(
+                android.graphics.Color.WHITE,
+                android.graphics.PorterDuff.Mode.SRC_IN
+            )
+        }
 
         gravity = Gravity.CENTER
 
