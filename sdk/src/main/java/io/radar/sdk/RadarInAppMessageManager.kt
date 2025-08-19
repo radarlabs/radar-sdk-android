@@ -24,17 +24,9 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
             Radar.logger.e("Activity is null, cannot show in-app message")
             return
         }
-
-        // Record the time when modal is shown
-        modalShowTime = System.currentTimeMillis()
         
         val metadata = makeConversionMetadata(payload)
-        Radar.sendLogConversionRequest("in_app_message_displayed", metadata, callback = object : RadarLogConversionCallback {
-            override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
-                Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
-            }
-        })
-
+        
         inAppMessageReceiver?.createInAppMessageView(
             context,
             payload,
@@ -65,20 +57,17 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
                 })
                 
                 inAppMessageReceiver?.onInAppMessageButtonClicked(payload)
-                if (payload.button?.url != null && payload.button.url != "null") {
+                if (payload.button?.url != null && payload.button.url != "null" && !payload.button.url.isBlank()) {
                     payload.button.url.let { url ->
-                        if (url.isBlank()) {
-                            Radar.logger.d("Button URL is blank, skipping URL opening")
-                        } else {
-                            try {
-                                val uri = url.toUri()
-                                Radar.logger.d("Opening URL: $url -> URI: $uri")
-                                val intent = Intent(Intent.ACTION_VIEW, uri)
-                                activity.startActivity(intent)
-                            } catch (e: Exception) {
-                                // Handle invalid URL or no app to handle the intent
-                                Radar.logger.e("Error opening URL '$url': ${e.message}")
-                            }
+                        
+                        try {
+                            val uri = url.toUri()
+                            Radar.logger.d("Opening URL: $url -> URI: $uri")
+                            val intent = Intent(Intent.ACTION_VIEW, uri)
+                            activity.startActivity(intent)
+                        } catch (e: Exception) {
+                            // Handle invalid URL or no app to handle the intent
+                            Radar.logger.e("Error opening URL '$url': ${e.message}")
                         }
                     }
                 } else {
@@ -100,6 +89,12 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
                 // The view is now fully initialized and ready to display
                 rootView.addView(view)
                 currentView = view
+                modalShowTime = System.currentTimeMillis()
+                Radar.sendLogConversionRequest("in_app_message_displayed", metadata, callback = object : RadarLogConversionCallback {
+                    override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
+                        Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
+                    }
+                })
             }
         )
     }

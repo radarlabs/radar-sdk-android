@@ -12,7 +12,7 @@ data class RadarInAppMessage(
     val body: Body,
     val button: Button? = null,
     val image: Image? = null,
-    val metadata: JSONObject? = null
+    val metadata: JSONObject
 ) {
     
     data class Title(
@@ -153,9 +153,9 @@ data class RadarInAppMessage(
                     image.url?.let { put(KEY_URL, it) }
                 })
             }
-            if (metadata != null) {
-                put(KEY_METADATA, metadata)
-            }
+
+            put(KEY_METADATA, metadata)
+
         }.toString()
     }
 } 

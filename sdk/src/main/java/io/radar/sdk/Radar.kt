@@ -3828,12 +3828,9 @@ object Radar {
     */
     @JvmStatic
     fun sdkVersion() : String{
-
         return RadarUtils.sdkVersion
-
     }
 
-    @JvmStatic
     internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>){
         inAppMessageManager.showInAppMessages(inAppMessages)
     }

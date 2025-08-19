@@ -9,12 +9,7 @@ enum class RadarInAppMessageOperation {
      * Display the in-app message normally.
      */
     DISPLAY,
-    
-    /**
-     * Enqueue the in-app message to be displayed later.
-     */
-    ENQUEUE,
-    
+
     /**
      * Discard the in-app message completely.
      */
