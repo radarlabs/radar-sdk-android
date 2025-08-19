@@ -964,7 +964,7 @@ class RadarTest {
         // Create a track response with inAppMessages field
         val trackResponse = RadarTestUtils.jsonObjectFromResource("/track.json")!!
         val inAppMessagesArray = JSONArray()
-        val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"}}")
+        val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"},\"metadata\":{\"test\":\"test\"}}")
         inAppMessagesArray.put(inAppMessageJson)
         trackResponse.put("inAppMessages", inAppMessagesArray)
         
@@ -1040,7 +1040,7 @@ class RadarTest {
         // Create a track response with inAppMessages field
         val trackResponse = RadarTestUtils.jsonObjectFromResource("/track.json")!!
         val inAppMessagesArray = JSONArray()
-        val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"}}")
+        val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"},\"metadata\":{\"test\":\"test\"}}")
         inAppMessagesArray.put(inAppMessageJson)
         trackResponse.put("inAppMessages", inAppMessagesArray)
         
