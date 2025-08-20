@@ -537,7 +537,6 @@ internal class RadarApiClient(
 
                     val beaconIds = mutableSetOf<String>()
                     user.beacons?.forEach { beacon -> beacon._id?.let { _id -> beaconIds.add(_id) } }
-                    
                     RadarState.setBeaconIds(context, beaconIds)
                 }
 
@@ -867,11 +866,11 @@ internal class RadarApiClient(
                     RadarGeofence.fromJson(geofencesArr)
                 }
                 if (geofences != null) {
-                    
                     callback.onComplete(RadarStatus.SUCCESS, res, geofences)
 
                     return
                 }
+                
                 callback.onComplete(RadarStatus.ERROR_SERVER)
             }
         })
