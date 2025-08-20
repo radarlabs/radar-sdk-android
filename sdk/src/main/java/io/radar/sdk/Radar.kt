@@ -381,7 +381,8 @@ object Radar {
         SDK_ERROR(2),
         SDK_EXCEPTION(3),
         APP_LIFECYCLE_EVENT(4),
-        PERMISSION_EVENT(5);
+        PERMISSION_EVENT(5),
+        TELEMETRY(6);
 
         companion object {
             @JvmStatic
@@ -962,8 +963,14 @@ object Radar {
         }
         this.logger.i("trackOnce()", RadarLogType.SDK_CALL)
 
+        val telemetry = RadarTelemetry()
+        telemetry.start("total")
+        telemetry.start("getLocation")
+
         locationManager.getLocation(desiredAccuracy, RadarLocationSource.FOREGROUND_LOCATION, object : RadarLocationCallback {
             override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
+                telemetry.end("getLocation")
+
                 if (status != RadarStatus.SUCCESS || location == null) {
                     handler.post {
                         callback?.onComplete(status)
@@ -973,6 +980,7 @@ object Radar {
                 }
 
                 val callTrackApi = { beacons: Array<RadarBeacon>? ->
+                    telemetry.start("trackAPI")
                     apiClient.track(location, stopped, true, RadarLocationSource.FOREGROUND_LOCATION, false, beacons, callback = object : RadarApiClient.RadarTrackApiCallback {
                         override fun onComplete(
                             status: RadarStatus,
@@ -983,10 +991,14 @@ object Radar {
                             config: RadarConfig?,
                             token: RadarVerifiedLocationToken?
                         ) {
+                            telemetry.end("trackAPI")
+
                             if (status == RadarStatus.SUCCESS ){
                                 locationManager.updateTrackingFromMeta(config?.meta)
                             }
                             handler.post {
+                                telemetry.end("total")
+                                logger.i("trackOnce | ${telemetry.formatted()}", Radar.RadarLogType.TELEMETRY)
                                 callback?.onComplete(status, location, events, user)
                             }
                         }
