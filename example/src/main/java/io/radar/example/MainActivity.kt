@@ -1,8 +1,15 @@
 package io.radar.example
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
@@ -10,7 +17,9 @@ import android.widget.Button
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
@@ -32,8 +41,17 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+        
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
         Radar.sdkVersion().let { Log.i("version", it) }
+        // We can also set the foreground service options like this:
+        // Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+        //     title = "Title Radar SDK",
+        //     text = "Location tracking started Text",
+        //     iconString = "ic_notification",
+        //     iconColor = "#FF6B8D",
+        // ))
+        
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
             override fun onTokenUpdated(context: Context, token: RadarVerifiedLocationToken) {
@@ -44,6 +62,76 @@ class MainActivity : AppCompatActivity() {
 
         listView = findViewById(R.id.buttonList)
         createButtons()
+    }
+
+    @SuppressLint("NewApi")
+    private fun createCustomNotification(): Notification {
+        // Create notification channel (required for Android O+)
+        val channelId = "radar_custom_channel"
+        val channelName = "Radar Custom Notifications"
+        val channel = NotificationChannel(
+            channelId,
+            channelName,
+            NotificationManager.IMPORTANCE_DEFAULT
+        )
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.createNotificationChannel(channel)
+        
+        // Create intents for actions
+        val mainIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val mainPendingIntent = PendingIntent.getActivity(
+            this, 0, mainIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // Google action button
+        val googleIntent = Intent(Intent.ACTION_VIEW, "https://www.google.com".toUri())
+        googleIntent.addCategory(Intent.CATEGORY_BROWSABLE)
+        googleIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        val googlePendingIntent = PendingIntent.getActivity(
+            this, 1, googleIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // Stop tracking action button
+        val stopIntent = Intent(this, io.radar.sdk.RadarForegroundService::class.java).apply {
+            action = "stop"
+        }
+        val stopPendingIntent = PendingIntent.getService(
+            this, 2, stopIntent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // Build the custom notification with image and actions
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle("🚗 Location Tracking Active")
+            .setContentText("Your location is being tracked in the background")
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setLargeIcon(BitmapFactory.decodeResource(resources, android.R.drawable.ic_menu_mylocation))
+            .setOngoing(true)
+            .setContentIntent(mainPendingIntent)
+            .addAction(
+                android.R.drawable.ic_menu_view,
+                "Open Google",
+                googlePendingIntent
+            )
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                "Stop Tracking",
+                stopPendingIntent
+            )
+            .setStyle(
+                NotificationCompat.BigPictureStyle()
+                    .bigPicture(BitmapFactory.decodeResource(resources, android.R.drawable.ic_menu_mylocation))
+                    .setBigContentTitle("🚗 Location Tracking Active")
+                    .setSummaryText("Background location tracking is enabled")
+            )
+            .build()
+        
+        Log.i("MainActivity", "Custom notification created")
+        return notification
     }
 
     private fun requestForegroundPermission() {
@@ -239,7 +327,7 @@ class MainActivity : AppCompatActivity() {
             val reverseGeocodeLocationLondon = Location("example")
             reverseGeocodeLocationLondon.latitude = 51.5074
             reverseGeocodeLocationLondon.longitude = -0.1278
-            
+
             Radar.reverseGeocode(reverseGeocodeLocationLondon) { status, addresses ->
                 Log.v(
                     "example",

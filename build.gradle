@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = "1.6.20"
+    ext.kotlin_version = "1.7.10"
     repositories {
         google()
         mavenCentral()
@@ -11,6 +11,24 @@ buildscript {
         classpath "com.android.tools.build:gradle:7.4.2"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.dokka:dokka-gradle-plugin:1.4.32"
+    }
+}
+
+plugins {
+    id "com.gradleup.nmcp.aggregation" version "1.0.1"
+}
+
+// Configure New Maven Central Publishing via Central Portal
+nmcpAggregation {
+    // Publish all modules that apply the 'maven-publish' plugin
+    publishAllProjectsProbablyBreakingProjectIsolation()
+
+    centralPortal {
+        // Credentials come from environment variables provided in CI (see .github/workflows)
+        username = System.getenv('NEXUS_USERNAME')
+        password = System.getenv('NEXUS_TOKEN')
+        // AUTOMATIC publishes as soon as validation succeeds; switch to USER_MANAGED if you prefer manual release
+        publishingType = "AUTOMATIC"
     }
 }
 
