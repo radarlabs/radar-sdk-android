@@ -148,13 +148,7 @@ internal class RadarLocationManager(
 
     private fun startLocationUpdates(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, interval: Int, fastestInterval: Int) {
         if (!started || (desiredAccuracy != startedDesiredAccuracy) || (interval != startedInterval) || (fastestInterval != startedFastestInterval)) {
-            if (interval > 0 && interval <= 5) {
-                logger.d("Starting location updates | desiredAccuracy = $desiredAccuracy; interval = 0; fastestInterval = 0")
-                locationClient.requestLocationUpdates(desiredAccuracy, 0, 0, RadarLocationReceiver.getLocationPendingIntent(context))
-            } else {
-                logger.d("Starting location updates | desiredAccuracy = $desiredAccuracy; interval = $interval; fastestInterval = $fastestInterval")
-                locationClient.requestLocationUpdates(desiredAccuracy, interval, fastestInterval, RadarLocationReceiver.getLocationPendingIntent(context))
-            }
+            locationClient.requestLocationUpdates(desiredAccuracy, interval, fastestInterval, RadarLocationReceiver.getLocationPendingIntent(context))
 
             this.started = true
             this.startedDesiredAccuracy = desiredAccuracy
