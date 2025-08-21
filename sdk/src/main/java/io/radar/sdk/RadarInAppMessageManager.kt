@@ -47,7 +47,6 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
             onInAppMessageButtonClicked = {
                 // Record the time when modal is dismissed via button click
                 modalDismissTime = System.currentTimeMillis()
-                val metadata = makeConversionMetadata(payload)
                 val displayDuration = System.currentTimeMillis() - modalShowTime
                 metadata.put("display_duration", displayDuration)
                 Radar.sendLogConversionRequest("in_app_message_clicked", metadata, callback = object : RadarLogConversionCallback {
@@ -57,23 +56,6 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
                 })
                 
                 inAppMessageReceiver?.onInAppMessageButtonClicked(payload)
-                if (payload.button?.url != null && payload.button.url != "null" && !payload.button.url.isBlank()) {
-                    payload.button.url.let { url ->
-                        
-                        try {
-                            val uri = url.toUri()
-                            Radar.logger.d("Opening URL: $url -> URI: $uri")
-                            val intent = Intent(Intent.ACTION_VIEW, uri)
-                            activity.startActivity(intent)
-                        } catch (e: Exception) {
-                            // Handle invalid URL or no app to handle the intent
-                            Radar.logger.e("Error opening URL '$url': ${e.message}")
-                        }
-                    }
-                } else {
-                    Radar.logger.d("Button URL is null or 'null' string, skipping URL opening")
-                }
-
                 dismiss()
             },
             onViewReady = { view ->
@@ -109,12 +91,10 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
     private fun makeConversionMetadata(payload: RadarInAppMessage): JSONObject {
         val metadata = JSONObject()
         val payloadMetadata = payload.metadata
-         if (payloadMetadata != null) {
-            val payloadMetadataJson = JSONObject(payloadMetadata.toString())
-            metadata.put("campaignId", payloadMetadataJson.optString("radar:campaignId"))
-            metadata.put("geofenceId", payloadMetadataJson.optString("radar:geofenceId"))
-            metadata.put("campaignMetadata", payloadMetadataJson.optString("radar:campaignMetadata"))
-        }
+        val payloadMetadataJson = JSONObject(payloadMetadata.toString())
+        metadata.put("campaignId", payloadMetadataJson.optString("radar:campaignId"))
+        metadata.put("geofenceId", payloadMetadataJson.optString("radar:geofenceId"))
+        metadata.put("campaignMetadata", payloadMetadataJson.optString("radar:campaignMetadata"))
 
         return metadata
     }

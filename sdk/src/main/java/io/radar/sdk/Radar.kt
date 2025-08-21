@@ -588,10 +588,13 @@ object Radar {
         }
 
         if (!this::inAppMessageManager.isInitialized) {
-            if (this.activity != null) {
-                this.inAppMessageManager = RadarInAppMessageManager(this.activity!!, this.context)
-                val inAppMessageReceiver = inAppMessageReceiver ?: object :RadarInAppMessageReceiver{}
-                this.inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver)
+            val appActivity = this.activity
+            if (appActivity != null) {
+                this.inAppMessageManager = RadarInAppMessageManager(appActivity, this.context)
+                this.inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver ?: object :
+                    RadarInAppMessageReceiver {
+                    override val activity = appActivity
+                })
             } else {
                 this.logger.e("Activity is not initialized, cannot initialize inAppMessageManager")
             }
@@ -613,7 +616,7 @@ object Radar {
 
         val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
         if (sdkConfiguration.usePersistence) {
-            Radar.loadReplayBufferFromSharedPreferences()
+            loadReplayBufferFromSharedPreferences()
         }
 
         val usage = "initialize"
