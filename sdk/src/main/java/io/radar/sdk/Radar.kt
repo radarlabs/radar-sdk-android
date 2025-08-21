@@ -3,6 +3,7 @@ package io.radar.sdk
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
+import android.app.Notification
 import android.content.Context
 import android.content.Intent
 import android.location.Location
@@ -519,6 +520,7 @@ object Radar {
         receiver: RadarReceiver? = null, 
         provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, 
         fraud: Boolean = false,
+        customForegroundNotification: Notification? = null,
         inAppMessageReceiver: RadarInAppMessageReceiver? = null,
         currentActivity: Activity? = null) {
         if (context == null) {
@@ -574,6 +576,11 @@ object Radar {
                 this.beaconManager = RadarBeaconManager(this.context, logger)
             }
         }
+
+        if (customForegroundNotification != null) {
+            RadarNotificationHelper.setCustomForegroundNotification(customForegroundNotification)
+        }
+
         if (!this::locationManager.isInitialized) {
             this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager, provider)
             RadarSettings.setLocationServicesProvider(this.context, provider)
@@ -581,10 +588,13 @@ object Radar {
         }
 
         if (!this::inAppMessageManager.isInitialized) {
-            if (this.activity != null) {
-                this.inAppMessageManager = RadarInAppMessageManager(this.activity!!, this.context)
-                val inAppMessageReceiver = inAppMessageReceiver ?: object :RadarInAppMessageReceiver{}
-                this.inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver)
+            val appActivity = this.activity
+            if (appActivity != null) {
+                this.inAppMessageManager = RadarInAppMessageManager(appActivity, this.context)
+                this.inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver ?: object :
+                    RadarInAppMessageReceiver {
+                    override val activity = appActivity
+                })
             } else {
                 this.logger.e("Activity is not initialized, cannot initialize inAppMessageManager")
             }
@@ -606,7 +616,7 @@ object Radar {
 
         val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
         if (sdkConfiguration.usePersistence) {
-            Radar.loadReplayBufferFromSharedPreferences()
+            loadReplayBufferFromSharedPreferences()
         }
 
         val usage = "initialize"
@@ -1694,6 +1704,21 @@ object Radar {
         }
 
         RadarSettings.setNotificationOptions(context, options)
+    }
+
+    /**
+     * Sets a custom notification for the foreground service.
+     * This notification will be used instead of the default SDK notification.
+     * 
+     * @param[notification] The custom notification to use, or null to use the default
+     */
+    @JvmStatic
+    fun setCustomForegroundNotification(notification: Notification?) {
+        if (!initialized) {
+            return
+        }
+
+        RadarNotificationHelper.setCustomForegroundNotification(notification)
     }
 
 
@@ -3806,12 +3831,9 @@ object Radar {
     */
     @JvmStatic
     fun sdkVersion() : String{
-
         return RadarUtils.sdkVersion
-
     }
 
-    @JvmStatic
     internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>){
         inAppMessageManager.showInAppMessages(inAppMessages)
     }

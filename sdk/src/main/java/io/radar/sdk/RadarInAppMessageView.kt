@@ -13,6 +13,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
 import io.radar.sdk.model.RadarInAppMessage
 
@@ -49,19 +50,22 @@ class RadarInAppMessageView @JvmOverloads constructor(
      * Initializes the view with the provided inAppMessage and callbacks.
      * 
      * @param inAppMessage The inAppMessage containing title, body, and button data
-     * @param image Optional bitmap image to display above the body text
      * @param onDismissListener Optional callback for when the banner is dismissed
      * @param onInAppMessageButtonClicked Optional callback for when the button is clicked
+     * @param onViewReady Callback called when the view is fully initialized and ready to display
      */
     fun initialize(
         inAppMessage: RadarInAppMessage,
         onDismissListener: (() -> Unit)? = null,
-        onInAppMessageButtonClicked: (() -> Unit)? = null
+        onInAppMessageButtonClicked: (() -> Unit)? = null,
+        onViewReady: (View) -> Unit
     ) {
         this.onDismissListener = onDismissListener
         this.onInAppMessageButtonClicked = onInAppMessageButtonClicked
         Radar.loadImage(inAppMessage.image?.url) { image ->
             createInAppMessageView(inAppMessage, image)
+            // Call the callback when the view is fully initialized
+            onViewReady(this)
         }
     }
 
@@ -193,11 +197,13 @@ class RadarInAppMessageView @JvmOverloads constructor(
     private fun createActionButton(button: RadarInAppMessage.Button): Button {
         return Button(context).apply {
             text = button.text
+            // required to override capitalization of string
+            transformationMethod = null
             setTextColor(button.color.toColorInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
             setTypeface(null, android.graphics.Typeface.BOLD)
             setPadding(48, 16, 48, 16)
-            
+
             // Create rounded button background
             val buttonShape = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
@@ -223,19 +229,30 @@ class RadarInAppMessageView @JvmOverloads constructor(
     private fun createDismissButton(): TextView {
         return TextView(context).apply {
             
-            setTextColor(DISMISS_BUTTON_TEXT_COLOR.toColorInt())
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
-            text = "X"
-            gravity = Gravity.END
+        setCompoundDrawablesWithIntrinsicBounds(
+            ContextCompat.getDrawable(context, R.drawable.close),
+            null, null, null
+        )
+        
+        compoundDrawables[0]?.let { drawable ->
+            drawable.setColorFilter(
+                android.graphics.Color.WHITE,
+                android.graphics.PorterDuff.Mode.SRC_IN
+            )
+        }
+
+        gravity = Gravity.CENTER
 
             // Create circular background for dismiss button
             val dismissShape = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
                 setColor(DISMISS_BUTTON_BACKGROUND_COLOR.toColorInt())
+                alpha = (0.7f * 255).toInt()
             }
             background = dismissShape
 
-            setPadding(24, 6, 24, 6)
+            setPadding(12, 6, 12, 6)
+
             setOnClickListener { 
                 onDismissListener?.invoke()
             }
@@ -273,7 +290,12 @@ class RadarInAppMessageView @JvmOverloads constructor(
                 // Create rounded corners for the image
                 val shape = GradientDrawable().apply {
                     shape = GradientDrawable.RECTANGLE
-                    cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, context.resources.displayMetrics)
+                    cornerRadii = floatArrayOf(
+                        42f, 42f,  // top-left
+                        42f, 42f,  // top-right
+                        0f, 0f,    // bottom-right
+                        0f, 0f     // bottom-left
+                    )
                 }
                 background = shape
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -289,7 +311,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
                 LayoutParams.WRAP_CONTENT
             ).apply {
                 gravity = Gravity.END or Gravity.TOP
-                setMargins(0, 16, 16, 0) // Top and right margins for positioning
+                setMargins(0, 32, 32, 0) // Top and right margins for positioning
             })
         }
     }

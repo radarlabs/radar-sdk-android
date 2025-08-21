@@ -19,26 +19,15 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
     private var modalDismissTime: Long = 0L
 
     private fun showModal(payload: RadarInAppMessage) {
-        if (currentView != null) return // prevent duplicates
 
         if (activity == null) {
             Radar.logger.e("Activity is null, cannot show in-app message")
             return
         }
-
-        val rootView = activity.window?.decorView as? ViewGroup ?: return
-
-        // Record the time when modal is shown
-        modalShowTime = System.currentTimeMillis()
         
         val metadata = makeConversionMetadata(payload)
-        Radar.sendLogConversionRequest("in_app_message_displayed", metadata, callback = object : RadarLogConversionCallback {
-            override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
-                Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
-            }
-        })
-
-        val modal = inAppMessageReceiver?.createInAppMessageView(
+        
+        inAppMessageReceiver?.createInAppMessageView(
             context,
             payload,
             onDismissListener = {
@@ -58,7 +47,6 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
             onInAppMessageButtonClicked = {
                 // Record the time when modal is dismissed via button click
                 modalDismissTime = System.currentTimeMillis()
-                val metadata = makeConversionMetadata(payload)
                 val displayDuration = System.currentTimeMillis() - modalShowTime
                 metadata.put("display_duration", displayDuration)
                 Radar.sendLogConversionRequest("in_app_message_clicked", metadata, callback = object : RadarLogConversionCallback {
@@ -68,32 +56,29 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
                 })
                 
                 inAppMessageReceiver?.onInAppMessageButtonClicked(payload)
-                if (payload.button?.url != null && payload.button.url != "null") {
-                    payload.button.url.let { url ->
-                        if (url.isBlank()) {
-                            Radar.logger.d("Button URL is blank, skipping URL opening")
-                        } else {
-                            try {
-                                val uri = url.toUri()
-                                Radar.logger.d("Opening URL: $url -> URI: $uri")
-                                val intent = Intent(Intent.ACTION_VIEW, uri)
-                                activity.startActivity(intent)
-                            } catch (e: Exception) {
-                                // Handle invalid URL or no app to handle the intent
-                                Radar.logger.e("Error opening URL '$url': ${e.message}")
-                            }
-                        }
-                    }
-                } else {
-                    Radar.logger.d("Button URL is null or 'null' string, skipping URL opening")
-                }
-
                 dismiss()
             },
+            onViewReady = { view ->
+                if (currentView != null) {
+                    Radar.logger.d("In-app message view already exists, skipping")
+                    return@createInAppMessageView
+                }
+                val rootView = activity.window?.decorView as? ViewGroup
+                if (rootView == null) {
+                    Radar.logger.e("Activity decorView is null or not a ViewGroup, cannot show in-app message")
+                    return@createInAppMessageView
+                }
+                // The view is now fully initialized and ready to display
+                rootView.addView(view)
+                currentView = view
+                modalShowTime = System.currentTimeMillis()
+                Radar.sendLogConversionRequest("in_app_message_displayed", metadata, callback = object : RadarLogConversionCallback {
+                    override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
+                        Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
+                    }
+                })
+            }
         )
-        
-        rootView.addView(modal)
-        currentView = modal
     }
 
     private fun dismiss() {
@@ -106,12 +91,10 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
     private fun makeConversionMetadata(payload: RadarInAppMessage): JSONObject {
         val metadata = JSONObject()
         val payloadMetadata = payload.metadata
-         if (payloadMetadata != null) {
-            val payloadMetadataJson = JSONObject(payloadMetadata.toString())
-            metadata.put("campaignId", payloadMetadataJson.optString("radar:campaignId"))
-            metadata.put("geofenceId", payloadMetadataJson.optString("radar:geofenceId"))
-            metadata.put("campaignMetadata", payloadMetadataJson.optString("radar:campaignMetadata"))
-        }
+        val payloadMetadataJson = JSONObject(payloadMetadata.toString())
+        metadata.put("campaignId", payloadMetadataJson.optString("radar:campaignId"))
+        metadata.put("geofenceId", payloadMetadataJson.optString("radar:geofenceId"))
+        metadata.put("campaignMetadata", payloadMetadataJson.optString("radar:campaignMetadata"))
 
         return metadata
     }

@@ -933,10 +933,13 @@ class RadarTest {
                 context: Context, 
                 inAppMessage: RadarInAppMessage, 
                 onDismissListener: (() -> Unit)?, 
-                onInAppMessageButtonClicked: (() -> Unit)?, 
-            ): View {
+                onInAppMessageButtonClicked: (() -> Unit)?,
+                onViewReady: (View) -> Unit
+            ) {
                 createInAppMessageViewCalled = true
-                return super.createInAppMessageView(context, inAppMessage, onDismissListener, onInAppMessageButtonClicked)
+                // Create a simple view and call onViewReady immediately for testing
+                val view = View(context)
+                onViewReady(view)
             }
         }
         
@@ -961,7 +964,7 @@ class RadarTest {
         // Create a track response with inAppMessages field
         val trackResponse = RadarTestUtils.jsonObjectFromResource("/track.json")!!
         val inAppMessagesArray = JSONArray()
-        val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"}}")
+        val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"},\"metadata\":{\"test\":\"test\"}}")
         inAppMessagesArray.put(inAppMessageJson)
         trackResponse.put("inAppMessages", inAppMessagesArray)
         
@@ -1006,10 +1009,13 @@ class RadarTest {
                 context: Context, 
                 inAppMessage: RadarInAppMessage, 
                 onDismissListener: (() -> Unit)?, 
-                onInAppMessageButtonClicked: (() -> Unit)?
-            ): View {
+                onInAppMessageButtonClicked: (() -> Unit)?,
+                onViewReady: (View) -> Unit
+            ) {
                 createInAppMessageViewCalled = true
-                return super.createInAppMessageView(context, inAppMessage, onDismissListener, onInAppMessageButtonClicked)
+                // Create a simple view and call onViewReady immediately for testing
+                val view = View(context)
+                onViewReady(view)
             }
         }
         
@@ -1034,7 +1040,7 @@ class RadarTest {
         // Create a track response with inAppMessages field
         val trackResponse = RadarTestUtils.jsonObjectFromResource("/track.json")!!
         val inAppMessagesArray = JSONArray()
-        val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"}}")
+        val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"},\"metadata\":{\"test\":\"test\"}}")
         inAppMessagesArray.put(inAppMessageJson)
         trackResponse.put("inAppMessages", inAppMessagesArray)
         

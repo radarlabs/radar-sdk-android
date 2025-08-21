@@ -1402,8 +1402,7 @@ internal class RadarApiClient(
                 callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
                 return
             }
-            val radarHost = RadarSettings.getHost(context)
-            "$radarHost/v1/assets/$imageUrl"
+            "v1/assets/$imageUrl"
         } else {
             imageUrl
         }

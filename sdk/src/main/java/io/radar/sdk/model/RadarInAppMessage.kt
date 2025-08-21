@@ -12,7 +12,7 @@ data class RadarInAppMessage(
     val body: Body,
     val button: Button? = null,
     val image: Image? = null,
-    val metadata: JSONObject? = null
+    val metadata: JSONObject
 ) {
     
     data class Title(
@@ -29,7 +29,7 @@ data class RadarInAppMessage(
         val text: String,
         val color: String,
         val backgroundColor: String,
-        val url: String? = null
+        val deepLink: String? = null
     )
 
     data class Image(
@@ -45,6 +45,7 @@ data class RadarInAppMessage(
         private const val KEY_TEXT = "text"
         private const val KEY_COLOR = "color"
         private const val KEY_BACKGROUND_COLOR = "backgroundColor"
+        private const val KEY_DEEPLINK = "deepLink"
         private const val KEY_URL = "url"
         private const val KEY_NAME = "name"
         private const val KEY_IMAGE = "image"
@@ -80,7 +81,7 @@ data class RadarInAppMessage(
                         text = buttonJson.getString(KEY_TEXT),
                         color = buttonJson.getString(KEY_COLOR),
                         backgroundColor = buttonJson.getString(KEY_BACKGROUND_COLOR),
-                        url = if (buttonJson.has(KEY_URL)) buttonJson.getString(KEY_URL) else null
+                        deepLink = if (buttonJson.has(KEY_DEEPLINK)) buttonJson.getString(KEY_DEEPLINK) else null
                     )
                 }
 
@@ -144,7 +145,7 @@ data class RadarInAppMessage(
                     put(KEY_TEXT, button.text)
                     put(KEY_COLOR, button.color)
                     put(KEY_BACKGROUND_COLOR, button.backgroundColor)
-                    button.url?.let { put(KEY_URL, it) }
+                    button.deepLink?.let { put(KEY_DEEPLINK, it) }
                 })
             }
             if (image != null) {
@@ -153,9 +154,9 @@ data class RadarInAppMessage(
                     image.url?.let { put(KEY_URL, it) }
                 })
             }
-            if (metadata != null) {
-                put(KEY_METADATA, metadata)
-            }
+
+            put(KEY_METADATA, metadata)
+
         }.toString()
     }
 } 
