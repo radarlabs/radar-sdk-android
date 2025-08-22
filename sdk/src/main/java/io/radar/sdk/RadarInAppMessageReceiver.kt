@@ -2,6 +2,7 @@ package io.radar.sdk
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.view.View
 import androidx.core.net.toUri
 
@@ -13,7 +14,7 @@ import io.radar.sdk.model.RadarInAppMessage
  */
 interface RadarInAppMessageReceiver {
 
-    val activity: Activity?
+    var activity: Activity?
 
     // to show, enqueue or discard (what the state is also trying to do)
     fun onNewInAppMessage(inAppMessage: RadarInAppMessage): RadarInAppMessageOperation {
@@ -35,6 +36,7 @@ interface RadarInAppMessageReceiver {
      */
     fun onInAppMessageButtonClicked(inAppMessage: RadarInAppMessage) {
         val activity = activity
+        Log.d("MyInAppMessageReceiver", "called super, activity is ${activity}")
         if (inAppMessage.button?.deepLink != null && inAppMessage.button.deepLink != "null" && inAppMessage.button.deepLink.isNotBlank() && activity != null) {
             inAppMessage.button.deepLink.let { deepLink ->
                 try {
@@ -49,6 +51,7 @@ interface RadarInAppMessageReceiver {
             }
         } else {
             Radar.logger.d("Button URL is null or 'null' string, skipping URL opening")
+            Log.d("MyInAppMessageReceiver", "Button URL is null or 'null' string, skipping URL opening")
         }
     }
 

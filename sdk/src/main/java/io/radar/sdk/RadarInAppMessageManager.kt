@@ -2,6 +2,7 @@ package io.radar.sdk
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.net.toUri
@@ -101,6 +102,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
 
 
     internal fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver?) {
+        inAppMessageReceiver?.activity = activity
         this.inAppMessageReceiver = inAppMessageReceiver
     }
 
