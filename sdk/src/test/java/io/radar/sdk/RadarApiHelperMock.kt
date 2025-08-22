@@ -36,7 +36,8 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         extendedTimeout: Boolean,
         stream: Boolean,
         logPayload: Boolean,
-        verified: Boolean
+        verified: Boolean,
+        imageCallback: RadarImageApiCallback?
     ) {
         if (path != "v1/logs") {
             lastCapturedPath = path
