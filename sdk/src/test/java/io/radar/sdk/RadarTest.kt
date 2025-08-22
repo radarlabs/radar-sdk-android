@@ -920,6 +920,7 @@ class RadarTest {
         
         // Create a mock in-app message receiver that tracks method calls
         val mockInAppMessageReceiver = object : RadarInAppMessageReceiver {
+            override var activity: Activity? = null
             var onNewInAppMessageCalled = false
             var createInAppMessageViewCalled = false
             var onNewInAppMessageReturnValue: RadarInAppMessageOperation = RadarInAppMessageOperation.DISPLAY
@@ -997,6 +998,7 @@ class RadarTest {
         
         // Create a mock in-app message receiver that returns DISCARD
         val mockInAppMessageReceiver = object : RadarInAppMessageReceiver {
+            override var activity: Activity? = null
             var onNewInAppMessageCalled = false
             var createInAppMessageViewCalled = false
             
