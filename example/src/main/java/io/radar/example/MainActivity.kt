@@ -2,6 +2,7 @@ package io.radar.example
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -23,6 +24,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarInAppMessageReceiver
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.RadarVerifiedReceiver
@@ -68,7 +70,7 @@ class MainActivity : AppCompatActivity() {
         }
         Radar.setVerifiedReceiver(verifiedReceiver)
 
-        val inAppMessageReceiver = MyInAppMessageReceiver(null)
+        val inAppMessageReceiver = MyInAppMessageReceiver()
         Radar.setInAppMessageReceiver(inAppMessageReceiver)
 
         listView = findViewById(R.id.buttonList)

@@ -101,8 +101,10 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
     }
 
 
-    internal fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver?) {
-        inAppMessageReceiver?.activity = activity
+    internal fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver) {
+        if (inAppMessageReceiver.activity == null) {
+            inAppMessageReceiver.activity = activity
+        }
         this.inAppMessageReceiver = inAppMessageReceiver
     }
 

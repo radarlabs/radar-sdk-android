@@ -1760,7 +1760,7 @@ object Radar {
      * @param[delegate] A delegate for handling in-app message lifecycle events. If `null`, the previous delegate will be cleared.
      */
     @JvmStatic
-    fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver?) {
+    fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver) {
         if (!initialized) {
             return
         }
