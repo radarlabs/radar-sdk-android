@@ -8,6 +8,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.location.Location
@@ -19,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
@@ -41,9 +43,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // override host for debugging
+        getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
+//            putString("host", "")
+        }
+
         val receiver = MyRadarReceiver()
         
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
+        Radar.initialize(this, "prj_live_pk_", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
         Radar.sdkVersion().let { Log.i("version", it) }
         // We can also set the foreground service options like this:
         // Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
@@ -61,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         }
         Radar.setVerifiedReceiver(verifiedReceiver)
 
-        val inAppMessageReceiver = MyInAppMessageReceiver()
+        val inAppMessageReceiver = MyInAppMessageReceiver(null)
         Radar.setInAppMessageReceiver(inAppMessageReceiver)
 
         listView = findViewById(R.id.buttonList)
