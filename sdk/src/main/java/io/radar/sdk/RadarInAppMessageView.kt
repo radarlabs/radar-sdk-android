@@ -153,6 +153,10 @@ class RadarInAppMessageView @JvmOverloads constructor(
                 setColor(MODAL_BACKGROUND_COLOR.toColorInt())
             }
             background = shape
+
+            setOnClickListener {
+                // empty click listener so the click is handled instead of propagating to the background
+            }
         }
     }
     
