@@ -19,7 +19,6 @@ internal data class RadarSdkConfiguration(
     val logLevel: Radar.RadarLogLevel,
     val startTrackingOnInitialize: Boolean,
     val trackOnceOnAppOpen: Boolean,
-    val useLocationMetadata: Boolean,
     val useOpenedAppConversion: Boolean = false,
     val useForegroundLocationUpdatedAtMsDiff: Boolean = false,
     val locationManagerTimeout: Int = 0,
@@ -36,7 +35,6 @@ internal data class RadarSdkConfiguration(
         private const val LOG_LEVEL = "logLevel"
         private const val START_TRACKING_ON_INITIALIZE = "startTrackingOnInitialize"
         private const val TRACK_ONCE_ON_APP_OPEN = "trackOnceOnAppOpen"
-        private const val USE_LOCATION_METADATA = "useLocationMetadata"
         private const val USE_OPENED_APP_CONVERSION = "useOpenedAppConversion"
         private const val USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF = "useForegroundLocationUpdatedAtMsDiff"
         private const val LOCATION_MANAGER_TIMEOUT = "locationManagerTimeout"
@@ -56,7 +54,6 @@ internal data class RadarSdkConfiguration(
                 Radar.RadarLogLevel.valueOf(config.optString(LOG_LEVEL, "info").uppercase()),
                 config.optBoolean(START_TRACKING_ON_INITIALIZE, false),
                 config.optBoolean(TRACK_ONCE_ON_APP_OPEN, false),
-                config.optBoolean(USE_LOCATION_METADATA, false),
                 config.optBoolean(USE_OPENED_APP_CONVERSION, true),
                 config.optBoolean(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, false),
                 config.optInt(LOCATION_MANAGER_TIMEOUT, 0),
@@ -88,7 +85,6 @@ internal data class RadarSdkConfiguration(
             putOpt(LOG_LEVEL, logLevel.toString().lowercase())
             putOpt(START_TRACKING_ON_INITIALIZE, startTrackingOnInitialize)
             putOpt(TRACK_ONCE_ON_APP_OPEN, trackOnceOnAppOpen)
-            putOpt(USE_LOCATION_METADATA, useLocationMetadata)
             putOpt(USE_OPENED_APP_CONVERSION, useOpenedAppConversion)
             putOpt(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, useForegroundLocationUpdatedAtMsDiff)
             putOpt(LOCATION_MANAGER_TIMEOUT, locationManagerTimeout)
