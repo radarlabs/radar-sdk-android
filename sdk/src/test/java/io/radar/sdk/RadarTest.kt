@@ -343,7 +343,6 @@ class RadarTest {
     }
 
 
-
     @Test
     fun test_Radar_setUserId() {
         val userId = "userId"
