@@ -1,11 +1,8 @@
 package io.radar.sdk
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogConversionCallback
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarInAppMessage
@@ -38,7 +35,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
         })
     }
 
-    private fun showModal(payload: RadarInAppMessage) {
+    internal fun showInAppMessage(payload: RadarInAppMessage) {
 
         if (activity == null) {
             Radar.logger.e("Activity is null, cannot show in-app message")
@@ -92,17 +89,12 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
         }
         this.inAppMessageReceiver = inAppMessageReceiver
     }
-
+   
    internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>) {
        for (inAppMessage in inAppMessages) {
            if (inAppMessageReceiver != null) {
-               val result = inAppMessageReceiver?.onNewInAppMessage(inAppMessage)
-               if (result == RadarInAppMessageOperation.DISCARD) {
-                   continue
-               }
+               inAppMessageReceiver?.onNewInAppMessage(inAppMessage)
            }
-           showModal(inAppMessage)
        }
-
    }
 }

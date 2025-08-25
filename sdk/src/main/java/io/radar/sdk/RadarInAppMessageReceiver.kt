@@ -16,9 +16,8 @@ interface RadarInAppMessageReceiver {
 
     var activity: Activity?
 
-    // to show, enqueue or discard (what the state is also trying to do)
-    fun onNewInAppMessage(inAppMessage: RadarInAppMessage): RadarInAppMessageOperation {
-        return RadarInAppMessageOperation.DISPLAY
+    fun onNewInAppMessage(inAppMessage: RadarInAppMessage) {
+        Radar.showInAppMessage(inAppMessage)
     }
     
     /**

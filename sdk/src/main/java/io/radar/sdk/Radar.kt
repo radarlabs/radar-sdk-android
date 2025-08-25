@@ -3863,7 +3863,10 @@ object Radar {
         })
     }
 
-
+    @JvmStatic
+    fun showInAppMessage(payload: RadarInAppMessage) {
+        this.inAppMessageManager.showInAppMessage(payload)
+    }
 
     internal fun handleLocation(context: Context, location: Location, source: RadarLocationSource) {
         if (!initialized) {

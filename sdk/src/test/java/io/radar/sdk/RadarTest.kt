@@ -923,11 +923,9 @@ class RadarTest {
             override var activity: Activity? = null
             var onNewInAppMessageCalled = false
             var createInAppMessageViewCalled = false
-            var onNewInAppMessageReturnValue: RadarInAppMessageOperation = RadarInAppMessageOperation.DISPLAY
-            
-            override fun onNewInAppMessage(inAppMessage: RadarInAppMessage): RadarInAppMessageOperation {
+            override fun onNewInAppMessage(inAppMessage: RadarInAppMessage) {
                 onNewInAppMessageCalled = true
-                return onNewInAppMessageReturnValue
+                Radar.showInAppMessage(inAppMessage)
             }
             
             override fun createInAppMessageView(
@@ -1002,9 +1000,8 @@ class RadarTest {
             var onNewInAppMessageCalled = false
             var createInAppMessageViewCalled = false
             
-            override fun onNewInAppMessage(inAppMessage: RadarInAppMessage): RadarInAppMessageOperation {
+            override fun onNewInAppMessage(inAppMessage: RadarInAppMessage) {
                 onNewInAppMessageCalled = true
-                return RadarInAppMessageOperation.DISCARD
             }
             
             override fun createInAppMessageView(
