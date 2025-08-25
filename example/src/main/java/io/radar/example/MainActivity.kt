@@ -45,14 +45,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // override host for debugging
-        getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
-//            putString("host", "")
-        }
-
         val receiver = MyRadarReceiver()
         
-        Radar.initialize(this, "prj_live_pk_", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
         Radar.sdkVersion().let { Log.i("version", it) }
         // We can also set the foreground service options like this:
         // Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(

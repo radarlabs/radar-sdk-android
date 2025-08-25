@@ -50,8 +50,7 @@ interface RadarInAppMessageReceiver {
                 }
             }
         } else {
-            Radar.logger.d("Button URL is null or 'null' string, skipping URL opening")
-            Log.d("MyInAppMessageReceiver", "Button URL is null or 'null' string, skipping URL opening")
+            Radar.logger.d("Button deepLink is null or 'null' string, skipping deepLink opening")
         }
     }
 
@@ -70,4 +69,4 @@ interface RadarInAppMessageReceiver {
             onViewReady
         )
     }
-} 
+}

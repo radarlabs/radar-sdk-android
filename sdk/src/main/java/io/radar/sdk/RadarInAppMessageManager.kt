@@ -17,7 +17,26 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
 
     // Time tracking properties
     private var modalShowTime: Long = 0L
-    private var modalDismissTime: Long = 0L
+    private var currentMessage: RadarInAppMessage? = null
+
+    private fun logConversion(name: String, withDuration: Boolean) {
+        val message = currentMessage ?: return
+
+        val metadata = JSONObject()
+        metadata.put("campaignId", message.metadata.optString("radar:campaignId"))
+        metadata.put("geofenceId", message.metadata.optString("radar:geofenceId"))
+        metadata.put("campaignMetadata", message.metadata.optString("radar:campaignMetadata"))
+
+        if (withDuration) {
+            metadata.put("displayDuration", System.currentTimeMillis() - modalShowTime)
+        }
+
+        Radar.sendLogConversionRequest(name, metadata, callback = object : RadarLogConversionCallback {
+            override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
+                Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
+            }
+        })
+    }
 
     private fun showModal(payload: RadarInAppMessage) {
 
@@ -25,37 +44,19 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
             Radar.logger.e("Activity is null, cannot show in-app message")
             return
         }
-        
-        val metadata = makeConversionMetadata(payload)
-        
+
         inAppMessageReceiver?.createInAppMessageView(
             context,
             payload,
             onDismissListener = {
                 // Record the time when modal is dismissed
-                modalDismissTime = System.currentTimeMillis()
-                val displayDuration = System.currentTimeMillis() - modalShowTime
-                metadata.put("display_duration", displayDuration)
-                Radar.sendLogConversionRequest("in_app_message_dismissed", metadata, callback = object : RadarLogConversionCallback {
-                    override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
-                        Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
-                    }
-                })
-
+                logConversion("in_app_message_dismissed", true)
                 inAppMessageReceiver?.onInAppMessageDismissed(payload)
                 dismiss()
             },
             onInAppMessageButtonClicked = {
                 // Record the time when modal is dismissed via button click
-                modalDismissTime = System.currentTimeMillis()
-                val displayDuration = System.currentTimeMillis() - modalShowTime
-                metadata.put("display_duration", displayDuration)
-                Radar.sendLogConversionRequest("in_app_message_clicked", metadata, callback = object : RadarLogConversionCallback {
-                    override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
-                        Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
-                    }
-                })
-                
+                logConversion("in_app_message_clicked", true)
                 inAppMessageReceiver?.onInAppMessageButtonClicked(payload)
                 dismiss()
             },
@@ -72,12 +73,8 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
                 // The view is now fully initialized and ready to display
                 rootView.addView(view)
                 currentView = view
-                modalShowTime = System.currentTimeMillis()
-                Radar.sendLogConversionRequest("in_app_message_displayed", metadata, callback = object : RadarLogConversionCallback {
-                    override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
-                        Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
-                    }
-                })
+                currentMessage = payload
+                logConversion("in_app_message_clicked", false)
             }
         )
     }
@@ -88,18 +85,6 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
             currentView = null
         }
     }
-
-    private fun makeConversionMetadata(payload: RadarInAppMessage): JSONObject {
-        val metadata = JSONObject()
-        val payloadMetadata = payload.metadata
-        val payloadMetadataJson = JSONObject(payloadMetadata.toString())
-        metadata.put("campaignId", payloadMetadataJson.optString("radar:campaignId"))
-        metadata.put("geofenceId", payloadMetadataJson.optString("radar:geofenceId"))
-        metadata.put("campaignMetadata", payloadMetadataJson.optString("radar:campaignMetadata"))
-
-        return metadata
-    }
-
 
     internal fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver) {
         if (inAppMessageReceiver.activity == null) {
@@ -120,5 +105,4 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
        }
 
    }
-
 }

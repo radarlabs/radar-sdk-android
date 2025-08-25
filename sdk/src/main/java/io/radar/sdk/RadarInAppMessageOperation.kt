@@ -14,4 +14,4 @@ enum class RadarInAppMessageOperation {
      * Discard the in-app message completely.
      */
     DISCARD
-} 
+}
