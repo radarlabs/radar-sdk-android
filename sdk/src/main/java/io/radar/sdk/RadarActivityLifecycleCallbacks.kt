@@ -86,7 +86,7 @@ internal class RadarActivityLifecycleCallbacks(
         count++
         isFirstOnResume = false
         foreground = count > 0
-        activity.intent?.let { Radar.logOpenedAppConversion(it) }
+        activity.intent?.let { Radar.logOpenedAppConversion(it) } ?: Radar.logOpenedAppConversion()
 
         updatePermissionsDenied(activity)
 
