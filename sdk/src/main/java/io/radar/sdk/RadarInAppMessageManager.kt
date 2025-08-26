@@ -54,6 +54,22 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
             onInAppMessageButtonClicked = {
                 // Record the time when modal is dismissed via button click
                 logConversion("in_app_message_clicked", true)
+                Log.d("MyInAppMessageReceiver", "called super, activity is ${activity}")
+                if (inAppMessage.button?.deepLink != null && inAppMessage.button.deepLink != "null" && inAppMessage.button.deepLink.isNotBlank() && activity != null) {
+                    inAppMessage.button.deepLink.let { deepLink ->
+                        try {
+                            val uri = deepLink.toUri()
+                            Radar.logger.d("Opening URL: $deepLink -> URI: $uri")
+                            val intent = Intent(Intent.ACTION_VIEW, uri)
+                            activity.startActivity(intent)
+                        } catch (e: Exception) {
+                            // Handle invalid URL or no app to handle the intent
+                            Radar.logger.e("Error opening URL '$deepLink': ${e.message}")
+                        }
+                    }
+                } else {
+                    Radar.logger.d("Button deepLink is null or 'null' string, skipping deepLink opening")
+                }
                 inAppMessageReceiver?.onInAppMessageButtonClicked(payload)
                 dismiss()
             },
