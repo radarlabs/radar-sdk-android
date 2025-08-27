@@ -6,7 +6,7 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarInAppMessageReceiver
 import io.radar.sdk.model.RadarInAppMessage
 
-class MyInAppMessageReceiver(override var activity: Activity? = null) : RadarInAppMessageReceiver {
+class MyInAppMessageReceiver() : RadarInAppMessageReceiver {
    override fun onNewInAppMessage(inAppMessage: RadarInAppMessage) {
        Log.d("MyInAppMessageReceiver", "beforeInAppMessageDisplayed: ${inAppMessage.title}")
        Radar.showInAppMessage(inAppMessage)

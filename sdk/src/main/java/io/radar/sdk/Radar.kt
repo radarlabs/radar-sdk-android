@@ -591,10 +591,7 @@ object Radar {
             val appActivity = this.activity
             if (appActivity != null) {
                 this.inAppMessageManager = RadarInAppMessageManager(appActivity, this.context)
-                this.inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver ?: object :
-                    RadarInAppMessageReceiver {
-                    override var activity = appActivity
-                })
+                this.inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver ?: object : RadarInAppMessageReceiver {})
             } else {
                 this.logger.e("Activity is not initialized, cannot initialize inAppMessageManager")
             }

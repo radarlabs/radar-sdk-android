@@ -1,8 +1,11 @@
 package io.radar.sdk
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogConversionCallback
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarInAppMessage
@@ -55,8 +58,8 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
                 // Record the time when modal is dismissed via button click
                 logConversion("in_app_message_clicked", true)
                 Log.d("MyInAppMessageReceiver", "called super, activity is ${activity}")
-                if (inAppMessage.button?.deepLink != null && inAppMessage.button.deepLink != "null" && inAppMessage.button.deepLink.isNotBlank() && activity != null) {
-                    inAppMessage.button.deepLink.let { deepLink ->
+                if (payload.button?.deepLink != null && payload.button.deepLink != "null" && payload.button.deepLink.isNotBlank() && activity != null) {
+                    payload.button.deepLink.let { deepLink ->
                         try {
                             val uri = deepLink.toUri()
                             Radar.logger.d("Opening URL: $deepLink -> URI: $uri")
@@ -100,9 +103,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
     }
 
     internal fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver) {
-        if (inAppMessageReceiver.activity == null) {
-            inAppMessageReceiver.activity = activity
-        }
+
         this.inAppMessageReceiver = inAppMessageReceiver
     }
    

@@ -1,6 +1,5 @@
 package io.radar.sdk
 
-import android.app.Activity
 import android.content.Context
 import android.view.View
 import io.radar.sdk.model.RadarInAppMessage
@@ -10,8 +9,6 @@ import io.radar.sdk.model.RadarInAppMessage
  * Provides callbacks for different stages of in-app message display and interaction.
  */
 interface RadarInAppMessageReceiver {
-
-    var activity: Activity?
 
     fun onNewInAppMessage(inAppMessage: RadarInAppMessage) {
         Radar.showInAppMessage(inAppMessage)
