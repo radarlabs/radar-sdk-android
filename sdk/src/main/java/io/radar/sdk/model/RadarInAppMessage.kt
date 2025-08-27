@@ -58,6 +58,7 @@ data class RadarInAppMessage(
          * @param jsonString The JSON string to parse
          * @return RadarInAppMessage instance or null if parsing fails
          */
+        @JvmStatic
         fun fromJson(jsonString: String): RadarInAppMessage? {
             return try {
                 val json = JSONObject(jsonString)
