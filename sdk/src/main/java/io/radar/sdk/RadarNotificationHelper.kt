@@ -13,6 +13,10 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import io.radar.sdk.model.RadarEvent
+import org.json.JSONObject
+import androidx.core.net.toUri
+import androidx.core.graphics.toColorInt
+
 class RadarNotificationHelper {
 
     internal companion object {
@@ -42,6 +46,86 @@ class RadarNotificationHelper {
             return customForegroundNotification
         }
 
+        fun parseNotification(context: Context, metadata: JSONObject?): Notification? {
+            if (Build.VERSION.SDK_INT < 26) {
+                return null
+            }
+            if (metadata == null) {
+                return null
+            }
+
+            val notificationText: String = metadata.optString("radar:notificationText") ?: return null
+
+            val notificationManager =
+                context.getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
+
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel(CHANNEL_NAME, CHANNEL_NAME, importance)
+            channel.enableVibration(true)
+            notificationManager?.createNotificationChannel(channel)
+
+            val notificationOptions = RadarSettings.getNotificationOptions(context);
+
+            val iconString = notificationOptions?.getEventIcon()
+                ?: context.applicationContext.applicationInfo.icon.toString()
+            val smallIcon = context.applicationContext.resources.getIdentifier(
+                iconString,
+                "drawable",
+                context.applicationContext.packageName
+            )
+
+            val notificationTitle: String? = metadata.optString("radar:notificationTitle")
+            val subTitle: String? = metadata.optString("radar:notificationSubTitle")
+            val campaignId: String? = metadata.optString("radar:campaignId")
+            val deeplinkURL = metadata.optString("radar:notificationURL")
+            val campaignMetadata: String? = metadata.optString("radar:campaignMetadata")
+
+            Radar.logger.d("creating campaign notification with metadata  = $metadata")
+            val intent =
+                context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    putExtra(RADAR_CAMPAIGN_ID, campaignId)
+                    putExtra(RADAR_CAMPAIGN_METADATA, campaignMetadata)
+                    data = deeplinkURL.toUri()
+                    action = Intent.ACTION_VIEW
+                }
+
+            val pendingIntentForAppOpen = PendingIntent.getActivity(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val builder = NotificationCompat.Builder(context, CHANNEL_NAME)
+                .setSmallIcon(smallIcon)
+                .setAutoCancel(true)
+                .setContentTitle(notificationTitle)
+                .setSubText(subTitle)
+                .setContentText(notificationText)
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText(notificationText)
+                        .setBigContentTitle(notificationTitle)
+                        .setSummaryText(subTitle)
+                )
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setContentIntent(pendingIntentForAppOpen)
+
+            val iconColor = notificationOptions?.getEventColor() ?: ""
+            if (iconColor.isNotEmpty()) {
+                builder.setColor(iconColor.toColorInt())
+            }
+
+            return builder.build()
+        }
+
+        fun sendNotification(context: Context, id: String, notification: Notification?) {
+            val notificationManager =
+                context.getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
+            notificationManager?.notify(id, NOTIFICATION_ID, notification)
+        }
+
         @SuppressLint("DiscouragedApi", "LaunchActivityFromNotification")
         internal fun showNotifications(context: Context, events: Array<RadarEvent>) {
             if (Build.VERSION.SDK_INT < 26) {
@@ -49,10 +133,10 @@ class RadarNotificationHelper {
             }
 
             for (event in events) {
-                
+
                 var notificationText: String? = event.metadata?.optString("radar:notificationText")
                 val campaignType = event.metadata?.optString("radar:campaignType")
-                
+
                 val id = event._id
                 val notificationManager =
                     context.getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
@@ -80,7 +164,7 @@ class RadarNotificationHelper {
                         putExtra(RADAR_CAMPAIGN_ID, campaignId)
                         putExtra(RADAR_CAMPAIGN_METADATA, campaignMetadata)
                         if (deeplinkURL != null) {
-                            data = Uri.parse(deeplinkURL)
+                            data = deeplinkURL.toUri()
                             action = Intent.ACTION_VIEW
                         }
                     }
@@ -104,12 +188,12 @@ class RadarNotificationHelper {
                             .setSummaryText(subTitle))
                         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                         .setContentIntent(pendingIntentForAppOpen)
-                        
+
                     val iconColor = notificationOptions?.getEventColor() ?: ""
                     if (iconColor.isNotEmpty()) {
-                        builder.setColor(Color.parseColor(iconColor))
+                        builder.setColor(iconColor.toColorInt())
                     }
-                    
+
                     notificationManager?.notify(id, NOTIFICATION_ID, builder.build())
 
                     continue
@@ -140,7 +224,7 @@ class RadarNotificationHelper {
 
                     val iconColor = notificationOptions?.getEventColor() ?: ""
                     if (iconColor.isNotEmpty()) {
-                        builder.setColor(Color.parseColor(iconColor))
+                        builder.setColor(iconColor.toColorInt())
                     }
                     
                     notificationManager?.notify(id, NOTIFICATION_ID, builder.build())

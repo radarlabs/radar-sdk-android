@@ -11,7 +11,9 @@ import android.content.Intent
 import android.os.Build
 import com.google.android.gms.location.ActivityTransitionResult
 import io.radar.sdk.RadarActivityManager.Companion.getActivityType
+import org.json.JSONException
 import org.json.JSONObject
+
 
 class RadarLocationReceiver : BroadcastReceiver() {
 
@@ -82,9 +84,15 @@ class RadarLocationReceiver : BroadcastReceiver() {
             )
         }
 
-        internal fun getSyncedGeofencesPendingIntent(context: Context): PendingIntent {
+        internal fun getSyncedGeofencesPendingIntent(context: Context, extras: JSONObject? = null): PendingIntent {
             val intent = baseIntent(context).apply {
                 action = ACTION_SYNCED_GEOFENCES
+
+                if (extras != null) {
+                    for (key in extras.keys()) {
+                        putExtra(key, extras.getString(key))
+                    }
+                }
             }
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
@@ -143,15 +151,41 @@ class RadarLocationReceiver : BroadcastReceiver() {
             Radar.initialize(context)
         }
 
+        println("RECEIVED BROADCAST | action = ${intent.action}")
         Radar.logger.d("Received broadcast | action = ${intent.action}")
 
         when (intent.action) {
-            ACTION_BUBBLE_GEOFENCE, ACTION_SYNCED_GEOFENCES -> {
+            ACTION_BUBBLE_GEOFENCE -> {
                 val location = Radar.locationManager.getLocationFromGeofenceIntent(intent)
                 val source = Radar.locationManager.getSourceFromGeofenceIntent(intent)
 
                 if (location == null || source == null) {
                     return
+                }
+
+                Radar.handleLocation(context, location, source)
+            }
+            ACTION_SYNCED_GEOFENCES -> {
+                val location = Radar.locationManager.getLocationFromGeofenceIntent(intent)
+                val source = Radar.locationManager.getSourceFromGeofenceIntent(intent)
+
+                if (location == null || source == null) {
+                    return
+                }
+
+                println(intent.extras)
+                val extras = intent.extras
+                if (extras != null) {
+                    val jsonMeta = JSONObject()
+                    for (key in extras.keySet()) {
+                        val value: String? = extras.getString(key)
+                        if (value != null) {
+                            jsonMeta.put(key, value)
+                        }
+                    }
+                    val notification = RadarNotificationHelper.parseNotification(context, jsonMeta)
+                    val id = extras.getString("radar:geofenceId") ?: ""
+                    RadarNotificationHelper.sendNotification(context, id, notification)
                 }
 
                 Radar.handleLocation(context, location, source)
