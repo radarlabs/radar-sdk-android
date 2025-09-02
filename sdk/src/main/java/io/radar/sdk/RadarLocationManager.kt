@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
+import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import io.radar.sdk.Radar.RadarLocationCallback
@@ -422,11 +423,13 @@ internal class RadarLocationManager(
 
                 attempted += 1
 
-                val metadata = radarGeofence.metadata
-                if (metadata != null) {
-                    metadata.put("radar:geofenceId", radarGeofence._id)
-                    val intent = RadarLocationReceiver.getSyncedGeofencesPendingIntent(context, metadata)
-                    println("Adding something something")
+                if (radarGeofence.metadata != null) {
+                    val intentMetadata = Bundle()
+                    intentMetadata.putString("radar:geofence", radarGeofence.toJson().toString())
+                    intentMetadata.putString("radar:registeredAt", Date().toString())
+
+                    val intent = RadarLocationReceiver.getSyncedGeofencesPendingIntent(context, intentMetadata)
+
                     locationClient.addGeofences(arrayOf(geofence), request, intent) { success ->
                         if (!success) {
                             failed += 1

@@ -16,6 +16,8 @@ import io.radar.sdk.model.RadarEvent
 import org.json.JSONObject
 import androidx.core.net.toUri
 import androidx.core.graphics.toColorInt
+import io.radar.sdk.model.RadarGeofence
+import java.util.Date
 
 class RadarNotificationHelper {
 
@@ -118,6 +120,27 @@ class RadarNotificationHelper {
             }
 
             return builder.build()
+        }
+
+        /** Returns a json that can be used to identify the notification
+         * {
+         *   campaignId: string;
+         *   geofenceId: string;
+         *   identifier: string; ( "radar_geofence_<geofenceId>"
+         *   registeredAt: number;
+         * }
+         */
+        fun parseNotificationIdentifier(geofence: RadarGeofence, registeredAt: String?): JSONObject? {
+            val identifier = JSONObject()
+
+            val metadata = geofence.metadata ?: return null
+
+            identifier.put("campaignId", metadata.getString("radar:campaignId") ?: return null)
+            identifier.put("registeredAt", registeredAt ?: return null)
+            identifier.put("geofenceId", geofence._id)
+            identifier.put("identifier", "radar_geofence_${geofence._id}")
+
+            return identifier
         }
 
         fun sendNotification(context: Context, id: String, notification: Notification?) {
