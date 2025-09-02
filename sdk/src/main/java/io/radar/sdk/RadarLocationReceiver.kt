@@ -170,7 +170,6 @@ class RadarLocationReceiver : BroadcastReceiver() {
             Radar.initialize(context)
         }
 
-        println("RECEIVED BROADCAST | action = ${intent.action}")
         Radar.logger.d("Received broadcast | action = ${intent.action}")
 
         when (intent.action) {

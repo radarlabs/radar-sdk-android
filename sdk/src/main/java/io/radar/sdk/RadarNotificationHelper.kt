@@ -56,7 +56,10 @@ class RadarNotificationHelper {
                 return null
             }
 
-            val notificationText: String = metadata.optString("radar:notificationText") ?: return null
+            val notificationText: String = metadata.optString("radar:notificationText")
+            if (notificationText.isEmpty()) {
+                return null
+            }
 
             val notificationManager =
                 context.getSystemService(NOTIFICATION_SERVICE) as? NotificationManager

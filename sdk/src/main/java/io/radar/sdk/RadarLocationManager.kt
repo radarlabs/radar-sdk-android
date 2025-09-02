@@ -149,7 +149,6 @@ internal class RadarLocationManager(
 
     private fun startLocationUpdates(desiredAccuracy: RadarTrackingOptionsDesiredAccuracy, interval: Int, fastestInterval: Int) {
         if (!started || (desiredAccuracy != startedDesiredAccuracy) || (interval != startedInterval) || (fastestInterval != startedFastestInterval)) {
-            print("started location updates")
             locationClient.requestLocationUpdates(desiredAccuracy, interval, fastestInterval, RadarLocationReceiver.getLocationPendingIntent(context))
 
             this.started = true
@@ -642,8 +641,6 @@ internal class RadarLocationManager(
             return
         }
 
-        println("SENDING LOCATION")
-
         this.sendLocation(sendLocation, stopped, source, replayed)
     }
 
@@ -670,7 +667,6 @@ internal class RadarLocationManager(
                     config: RadarConfig?,
                     token: RadarVerifiedLocationToken?
                 ) {
-                    println("called track api from sendLocation, syncing geofences")
                     locationManager.replaceSyncedGeofences(nearbyGeofences)
 
                     if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
