@@ -154,7 +154,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
 
         val geofenceNotification = RadarNotificationHelper.parseNotificationIdentifier(geofence, registeredAt) ?: return
 
-        if (!RadarState.addTriggeredNotifications(context, geofenceNotification)) {
+        if (!RadarState.addDeliveredNotifications(context, geofenceNotification)) {
             // notification already triggered, don't trigger again on repeat entry
             return
         }

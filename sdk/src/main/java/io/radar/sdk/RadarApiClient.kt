@@ -283,6 +283,7 @@ internal class RadarApiClient(
         val options = Radar.getTrackingOptions()
         val tripOptions = RadarSettings.getTripOptions(context)
         val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
+        val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
         var locationMetadata = JSONObject()
         try {
             params.putOpt("anonymous", anonymous)
@@ -449,6 +450,17 @@ internal class RadarApiClient(
             if (locationMetadata.length() > 0) {
                 params.putOpt("locationMetadata", locationMetadata)
             }
+
+            if (sdkConfiguration.useNotificationDiff) {
+                val array = JSONArray()
+                val deliveredNotifications = RadarState.getDeliveredNotifications(context)
+                for (deliveredNotification in deliveredNotifications) {
+                    array.put(deliveredNotification)
+                }
+                params.put("notificationDiff", array)
+
+                println("HERE IS THE NOTIFICATION DIFF $array, ${deliveredNotifications.size}")
+            }
             
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
@@ -497,6 +509,7 @@ internal class RadarApiClient(
 
                     return
                 }
+                // track successful
 
                 RadarState.setLastFailedStoppedLocation(context, null)
                 Radar.flushLogs()
@@ -510,6 +523,9 @@ internal class RadarApiClient(
                 val user = res.optJSONObject("user")?.let { userObj ->
                     RadarUser.fromJson(userObj)
                 }
+                // clean up notification diff (before new nearby sync), since those were successfully sent to the server
+                RadarState.setDeliveredNotifications(context, arrayOf())
+
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
                     RadarGeofence.fromJson(nearbyGeofencesArr)
                 }

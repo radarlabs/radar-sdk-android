@@ -983,9 +983,8 @@ object Radar {
                             config: RadarConfig?,
                             token: RadarVerifiedLocationToken?
                         ) {
-                            locationManager.replaceSyncedGeofences(nearbyGeofences)
-
                             if (status == RadarStatus.SUCCESS ){
+                                locationManager.replaceSyncedGeofences(nearbyGeofences)
                                 locationManager.updateTrackingFromMeta(config?.meta)
                             }
                             handler.post {

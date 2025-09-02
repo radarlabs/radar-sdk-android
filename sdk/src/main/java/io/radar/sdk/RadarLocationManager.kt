@@ -315,6 +315,8 @@ internal class RadarLocationManager(
     }
 
     private fun addBubbleGeofence(location: Location, stopped: Boolean) {
+        return
+
         val options = Radar.getTrackingOptions()
 
         if (stopped && options.useStoppedGeofence) {
@@ -422,18 +424,18 @@ internal class RadarLocationManager(
                 )
 
                 attempted += 1
-
+                var intentMetadata: Bundle? = null
                 if (radarGeofence.metadata != null) {
-                    val intentMetadata = Bundle()
+                    intentMetadata = Bundle()
                     intentMetadata.putString("radar:geofence", radarGeofence.toJson().toString())
-                    intentMetadata.putString("radar:registeredAt", Date().toString())
+                    intentMetadata.putString("radar:registeredAt", RadarUtils.dateToISOString(Date()))
+                }
 
-                    val intent = RadarLocationReceiver.getSyncedGeofencesPendingIntent(context, intentMetadata)
+                val intent = RadarLocationReceiver.getSyncedGeofencesPendingIntent(context, intentMetadata)
 
-                    locationClient.addGeofences(arrayOf(geofence), request, intent) { success ->
-                        if (!success) {
-                            failed += 1
-                        }
+                locationClient.addGeofences(arrayOf(geofence), request, intent) { success ->
+                    if (!success) {
+                        failed += 1
                     }
                 }
 
