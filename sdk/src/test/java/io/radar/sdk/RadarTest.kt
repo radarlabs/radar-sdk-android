@@ -1070,7 +1070,7 @@ class RadarTest {
     fun test_Radar_startTrip() {
         val tripOptions = getTestTripOptions()
 
-        Radar.startTrip(tripOptions) { status, trip, events ->
+        Radar.startTrip(tripOptions) { _, _, _ ->
             assertEquals(tripOptions, Radar.getTripOptions())
             assertFalse(Radar.isTracking())
         }
@@ -1087,7 +1087,7 @@ class RadarTest {
 
         // start trip w/ continuous mode
         val onTripTrackingOptions = RadarTrackingOptions.CONTINUOUS
-        Radar.startTrip(tripOptions, onTripTrackingOptions) { status, trip, events ->
+        Radar.startTrip(tripOptions, onTripTrackingOptions) { _, _, _ ->
             assertEquals(tripOptions, Radar.getTripOptions())
             assertEquals(onTripTrackingOptions, Radar.getTrackingOptions())
             assertEquals(responsive, RadarSettings.getPreviousTrackingOptions(context))
@@ -1353,7 +1353,7 @@ class RadarTest {
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertEquals(mockLocation, callbackLocation)
         assertPlacesOk(callbackPlaces)
-        assertEquals(chainMetadata["orderActive"], callbackPlaces!!.first()!!.chain!!.metadata!!["orderActive"])
+        assertEquals(chainMetadata["orderActive"], callbackPlaces!!.first().chain!!.metadata!!["orderActive"])
     }
 
     @Test
@@ -2028,9 +2028,9 @@ class RadarTest {
     ) {
         assertNotNull(event)
         assertEquals(conversionType, event!!.conversionName)
-        assertNotNull(event!!.conversionName)
+        assertNotNull(event.conversionName)
 
-        val returnedMetadata = event!!.metadata
+        val returnedMetadata = event.metadata
         assertNotNull(returnedMetadata)
         assertEquals(metadata.get("foo"), returnedMetadata!!["foo"])
     }
@@ -2080,9 +2080,9 @@ class RadarTest {
         assertEquals(Radar.RadarLogLevel.DEBUG, logLevel)
 
         val savedSdkConfiguration = RadarSettings.getSdkConfiguration(context)
-        assertEquals(Radar.RadarLogLevel.INFO, savedSdkConfiguration?.logLevel)
-        assertEquals(true, savedSdkConfiguration?.startTrackingOnInitialize)
-        assertEquals(true, savedSdkConfiguration?.trackOnceOnAppOpen)
+        assertEquals(Radar.RadarLogLevel.INFO, savedSdkConfiguration.logLevel)
+        assertEquals(true, savedSdkConfiguration.startTrackingOnInitialize)
+        assertEquals(true, savedSdkConfiguration.trackOnceOnAppOpen)
     }
 
     @Test
@@ -2140,7 +2140,7 @@ class RadarTest {
         Radar.addTags(arrayOf("premium", "beta_user"))
         
         // Set null array (should clear all tags)
-        Radar.setTags(arrayOf<String>())
+        Radar.setTags(arrayOf())
         
         val retrievedTags = Radar.getTags()
         assertNull(retrievedTags)

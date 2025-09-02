@@ -4,7 +4,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.location.Location
 
-internal class RadarMockLocationProvider() : RadarAbstractLocationClient() {
+internal class RadarMockLocationProvider : RadarAbstractLocationClient() {
 
     internal var mockLocation: Location? = null
 

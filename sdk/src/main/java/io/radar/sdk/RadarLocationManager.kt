@@ -314,8 +314,6 @@ internal class RadarLocationManager(
     }
 
     private fun addBubbleGeofence(location: Location, stopped: Boolean) {
-        return
-
         val options = Radar.getTrackingOptions()
 
         if (stopped && options.useStoppedGeofence) {
