@@ -12,7 +12,6 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.edit
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
@@ -39,7 +38,7 @@ class MainActivity : AppCompatActivity() {
             registerActivityLifecycleCallbacks(MyActivityLifecycleCallbacks())
         }
 
-        Radar.initialize(this, "prj_live_pk_bbcc3b729cf153b34d67170da37e1a3b50c7c631", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true)
         Radar.sdkVersion().let { Log.i("version", it) }
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
