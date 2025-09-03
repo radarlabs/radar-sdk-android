@@ -13,7 +13,6 @@ import android.os.Bundle
 import com.google.android.gms.location.ActivityTransitionResult
 import io.radar.sdk.RadarActivityManager.Companion.getActivityType
 import io.radar.sdk.model.RadarGeofence
-import org.json.JSONException
 import org.json.JSONObject
 
 
@@ -146,7 +145,6 @@ class RadarLocationReceiver : BroadcastReceiver() {
     }
 
     private fun triggerGeofenceNotification(context: Context, geofenceString: String?, registeredAt: String?) {
-
         if (geofenceString == null) {
             return
         }

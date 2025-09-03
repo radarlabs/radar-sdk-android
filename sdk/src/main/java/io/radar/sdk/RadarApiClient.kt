@@ -458,8 +458,6 @@ internal class RadarApiClient(
                     array.put(deliveredNotification)
                 }
                 params.put("notificationDiff", array)
-
-                println("HERE IS THE NOTIFICATION DIFF $array, ${deliveredNotifications.size}")
             }
             
         } catch (e: JSONException) {
