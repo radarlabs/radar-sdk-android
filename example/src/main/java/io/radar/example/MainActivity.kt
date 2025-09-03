@@ -2,12 +2,14 @@ package io.radar.example
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.location.Location
@@ -19,13 +21,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarInAppMessageReceiver
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
+import io.radar.sdk.model.RadarInAppMessage
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
 import java.util.Date
@@ -59,6 +64,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
         Radar.setVerifiedReceiver(verifiedReceiver)
+
+        val inAppMessageReceiver = MyInAppMessageReceiver()
+        Radar.setInAppMessageReceiver(inAppMessageReceiver)
 
         listView = findViewById(R.id.buttonList)
         createButtons()

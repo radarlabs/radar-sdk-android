@@ -15,6 +15,7 @@ import io.radar.sdk.model.RadarContext
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarInAppMessage
 import io.radar.sdk.model.RadarLog
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarReplay
@@ -562,6 +563,13 @@ internal class RadarApiClient(
 
                     if (token != null) {
                         Radar.sendToken(token)
+                    }
+
+                    val inAppMessages = res.optJSONArray("inAppMessages")?.let { inAppMessageObj ->
+                        RadarInAppMessage.fromJsonArray(inAppMessageObj)
+                    }
+                    if (inAppMessages != null) {
+                        Radar.showInAppMessages(inAppMessages)
                     }
 
                     callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config, token)
@@ -1397,6 +1405,35 @@ internal class RadarApiClient(
                 callback.onComplete(RadarStatus.SUCCESS, res, conversionEvent)
             }
         })
+    }
+
+    internal fun loadImage(
+        imageUrl: String,
+        callback: RadarApiHelper.RadarImageApiCallback
+    ) {
+        if (imageUrl.isEmpty()) {
+            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            return
+        }
+
+        val finalUrl = if (!imageUrl.startsWith("http")) {
+            val publishableKey = RadarSettings.getPublishableKey(context) ?: run {
+                callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+                return
+            }
+            "v1/assets/$imageUrl"
+        } else {
+            imageUrl
+        }
+
+        val headers = if (!imageUrl.startsWith("http")) {
+            val publishableKey = RadarSettings.getPublishableKey(context)
+            headers(publishableKey ?: "")
+        } else {
+            emptyMap<String, String>()
+        }
+
+        apiHelper.requestImage(context, "GET", finalUrl, headers, callback)
     }
 
 }

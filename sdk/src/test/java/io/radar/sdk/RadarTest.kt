@@ -1,8 +1,10 @@
 package io.radar.sdk
 
+import android.app.Activity
 import android.content.Context
 import android.location.Location
 import android.os.Build
+import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSyncGeofences
@@ -13,6 +15,7 @@ import io.radar.sdk.model.RadarContext
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarFraud
 import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarInAppMessage
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarRegion
 import io.radar.sdk.model.RadarRoute
@@ -21,6 +24,7 @@ import io.radar.sdk.model.RadarSdkConfiguration
 import io.radar.sdk.model.RadarSegment
 import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarUser
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -31,6 +35,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
 import java.util.Calendar
@@ -906,6 +911,156 @@ class RadarTest {
         assertEquals(mockLocation, callbackLocation)
         assertEventsOk(callbackEvents)
         assertUserOk(callbackUser)
+    }
+
+        @Test
+    fun test_Radar_inAppMessaging_flow() {
+        // Create a mock Activity for testing
+        val mockActivity = Robolectric.buildActivity(Activity::class.java).create().get()
+        
+        // Create a mock in-app message receiver that tracks method calls
+        val mockInAppMessageReceiver = object : RadarInAppMessageReceiver {
+            var onNewInAppMessageCalled = false
+            var createInAppMessageViewCalled = false
+            override fun onNewInAppMessage(inAppMessage: RadarInAppMessage) {
+                onNewInAppMessageCalled = true
+                Radar.showInAppMessage(inAppMessage)
+            }
+            
+            override fun createInAppMessageView(
+                context: Context, 
+                inAppMessage: RadarInAppMessage, 
+                onDismissListener: (() -> Unit)?, 
+                onInAppMessageButtonClicked: (() -> Unit)?,
+                onViewReady: (View) -> Unit
+            ) {
+                createInAppMessageViewCalled = true
+                // Create a simple view and call onViewReady immediately for testing
+                val view = View(context)
+                onViewReady(view)
+            }
+        }
+        
+        // Initialize Radar with the mock Activity to ensure inAppMessageManager is created
+        Radar.initialize(mockActivity, publishableKey)
+        
+        // Set the mock receiver
+        Radar.setInAppMessageReceiver(mockInAppMessageReceiver)
+        
+        // Set up permissions and location
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+        
+        // Mock API response with inAppMessages
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        
+        // Create a track response with inAppMessages field
+        val trackResponse = RadarTestUtils.jsonObjectFromResource("/track.json")!!
+        val inAppMessagesArray = JSONArray()
+        val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"},\"metadata\":{\"test\":\"test\"}}")
+        inAppMessagesArray.put(inAppMessageJson)
+        trackResponse.put("inAppMessages", inAppMessagesArray)
+        
+        apiHelperMock.addMockResponse("v1/track", trackResponse)
+        
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        
+        // Call the main track method
+        Radar.trackOnce { status, _, _, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+        
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+        
+        // Verify the track call was successful
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        
+        // Verify that the in-app message receiver methods were called
+        assertTrue("onNewInAppMessage should have been called", mockInAppMessageReceiver.onNewInAppMessageCalled)
+        assertTrue("createInAppMessageView should have been called", mockInAppMessageReceiver.createInAppMessageViewCalled)
+    }
+
+    @Test
+    fun test_Radar_inAppMessaging_discard_operation() {
+        // Create a mock Activity for testing
+        val mockActivity = Robolectric.buildActivity(Activity::class.java).create().get()
+        
+        // Create a mock in-app message receiver that returns DISCARD
+        val mockInAppMessageReceiver = object : RadarInAppMessageReceiver {
+            var onNewInAppMessageCalled = false
+            var createInAppMessageViewCalled = false
+            
+            override fun onNewInAppMessage(inAppMessage: RadarInAppMessage) {
+                onNewInAppMessageCalled = true
+            }
+            
+            override fun createInAppMessageView(
+                context: Context, 
+                inAppMessage: RadarInAppMessage, 
+                onDismissListener: (() -> Unit)?, 
+                onInAppMessageButtonClicked: (() -> Unit)?,
+                onViewReady: (View) -> Unit
+            ) {
+                createInAppMessageViewCalled = true
+                // Create a simple view and call onViewReady immediately for testing
+                val view = View(context)
+                onViewReady(view)
+            }
+        }
+        
+        // Initialize Radar with the mock Activity to ensure inAppMessageManager is created
+        Radar.initialize(mockActivity, publishableKey)
+        
+        // Set the mock receiver
+        Radar.setInAppMessageReceiver(mockInAppMessageReceiver)
+        
+        // Set up permissions and location
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+        
+        // Mock API response with inAppMessages
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        
+        // Create a track response with inAppMessages field
+        val trackResponse = RadarTestUtils.jsonObjectFromResource("/track.json")!!
+        val inAppMessagesArray = JSONArray()
+        val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"},\"metadata\":{\"test\":\"test\"}}")
+        inAppMessagesArray.put(inAppMessageJson)
+        trackResponse.put("inAppMessages", inAppMessagesArray)
+        
+        apiHelperMock.addMockResponse("v1/track", trackResponse)
+        
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        
+        // Call the main track method
+        Radar.trackOnce { status, _, _, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+        
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+        
+        // Verify the track call was successful
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        
+        // Verify that onNewInAppMessage was called but createInAppMessageView was not (due to DISCARD)
+        assertTrue("onNewInAppMessage should have been called", mockInAppMessageReceiver.onNewInAppMessageCalled)
+        assertFalse("createInAppMessageView should not have been called when DISCARD is returned", mockInAppMessageReceiver.createInAppMessageViewCalled)
     }
 
     @Test
