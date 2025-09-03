@@ -9,9 +9,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import com.google.android.gms.location.ActivityTransitionResult
 import io.radar.sdk.RadarActivityManager.Companion.getActivityType
+import io.radar.sdk.model.RadarGeofence
+import org.json.JSONException
 import org.json.JSONObject
+
 
 class RadarLocationReceiver : BroadcastReceiver() {
 
@@ -82,9 +86,13 @@ class RadarLocationReceiver : BroadcastReceiver() {
             )
         }
 
-        internal fun getSyncedGeofencesPendingIntent(context: Context): PendingIntent {
+        internal fun getSyncedGeofencesPendingIntent(context: Context, extras: Bundle? = null): PendingIntent {
             val intent = baseIntent(context).apply {
                 action = ACTION_SYNCED_GEOFENCES
+
+                if (extras != null) {
+                    putExtras(extras)
+                }
             }
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
@@ -137,6 +145,25 @@ class RadarLocationReceiver : BroadcastReceiver() {
 
     }
 
+    private fun triggerGeofenceNotification(context: Context, geofenceString: String?, registeredAt: String?) {
+
+        if (geofenceString == null) {
+            return
+        }
+        val geofence = RadarGeofence.fromJson(JSONObject(geofenceString)) ?: return
+
+        val geofenceNotification = RadarNotificationHelper.parseNotificationIdentifier(geofence, registeredAt) ?: return
+
+        if (!RadarState.addDeliveredNotifications(context, geofenceNotification)) {
+            // notification already triggered, don't trigger again on repeat entry
+            return
+        }
+
+        val notification = RadarNotificationHelper.parseNotification(context, geofence.metadata) ?: return
+
+        RadarNotificationHelper.sendNotification(context, geofence._id, notification)
+    }
+
     @SuppressLint("MissingPermission")
     override fun onReceive(context: Context, intent: Intent) {
         if (!Radar.initialized) {
@@ -146,12 +173,30 @@ class RadarLocationReceiver : BroadcastReceiver() {
         Radar.logger.d("Received broadcast | action = ${intent.action}")
 
         when (intent.action) {
-            ACTION_BUBBLE_GEOFENCE, ACTION_SYNCED_GEOFENCES -> {
+            ACTION_BUBBLE_GEOFENCE -> {
                 val location = Radar.locationManager.getLocationFromGeofenceIntent(intent)
                 val source = Radar.locationManager.getSourceFromGeofenceIntent(intent)
 
                 if (location == null || source == null) {
                     return
+                }
+
+                Radar.handleLocation(context, location, source)
+            }
+            ACTION_SYNCED_GEOFENCES -> {
+                val location = Radar.locationManager.getLocationFromGeofenceIntent(intent)
+                val source = Radar.locationManager.getSourceFromGeofenceIntent(intent)
+
+                if (location == null || source == null) {
+                    return
+                }
+
+                // enter geofence triggers notification
+                val extras = intent.extras
+                if (extras != null && source == Radar.RadarLocationSource.GEOFENCE_ENTER) {
+                    val geofenceString = extras.getString("radar:geofence")
+                    val registeredAt = extras.getString("radar:registeredAt")
+                    triggerGeofenceNotification(context, geofenceString, registeredAt)
                 }
 
                 Radar.handleLocation(context, location, source)
