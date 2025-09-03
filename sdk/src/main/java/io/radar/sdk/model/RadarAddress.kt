@@ -213,9 +213,14 @@ class RadarAddress(
             }
             val timeZone = RadarTimeZone.fromJson(obj.optJSONObject(FIELD_TIME_ZONE))
             val categories = obj.optJSONArray(FIELD_CATEGORIES)?.let { categoriesArr ->
-                Array<String>(categoriesArr.length()) {
-                    categoriesArr.optString(it)
+                val list = mutableListOf<String>()
+                for (i in 0 until categoriesArr.length()) {
+                    val value = categoriesArr.optString(i)
+                    if (!value.isNullOrEmpty()) {
+                        list.add(value)
+                    }
                 }
+                list.toTypedArray()
             }
 
             return RadarAddress(
