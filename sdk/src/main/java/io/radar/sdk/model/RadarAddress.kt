@@ -131,6 +131,11 @@ class RadarAddress(
      * The time zone information of the location.
      */
     val timeZone: RadarTimeZone? = null,
+
+    /**
+     * The categories of the address.
+     */
+    val categories: Array<String>? = null,
 ) {
 
     /**
@@ -170,7 +175,7 @@ class RadarAddress(
         private const val FIELD_METADATA = "metadata"
         private const val FIELD_CONFIDENCE = "confidence"
         private const val FIELD_TIME_ZONE = "timeZone"
-
+        private const val FIELD_CATEGORIES = "categories"
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarAddress? {
             if (obj == null) {
@@ -207,6 +212,11 @@ class RadarAddress(
                 else -> RadarAddressConfidence.NONE
             }
             val timeZone = RadarTimeZone.fromJson(obj.optJSONObject(FIELD_TIME_ZONE))
+            val categories = obj.optJSONArray(FIELD_CATEGORIES)?.let { categoriesArr ->
+                Array<String>(categoriesArr.length()) {
+                    categoriesArr.optString(it)
+                }
+            }
 
             return RadarAddress(
                 coordinate,
@@ -234,6 +244,7 @@ class RadarAddress(
                 metadata,
                 confidence,
                 timeZone,
+                categories,
             )
         }
 
@@ -309,6 +320,11 @@ class RadarAddress(
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_CONFIDENCE, stringForConfidence(this.confidence))
         obj.putOpt(FIELD_TIME_ZONE, this.timeZone?.toJson())
+        obj.putOpt(FIELD_CATEGORIES, this.categories?.let { categories ->
+            JSONArray().apply {
+                categories.forEach { put(it) }
+            }
+        })
         return obj
     }
 
