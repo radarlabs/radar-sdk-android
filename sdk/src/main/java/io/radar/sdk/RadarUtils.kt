@@ -241,9 +241,9 @@ internal object RadarUtils {
             )
         } catch (e: Exception) {
             mapOf(
-                "appName" to "Unknown",
+                "name" to "Unknown",
                 "appVersion" to "Unknown",
-                "buildNumber" to "Unknown",
+                "build" to "Unknown",
                 "bundleId" to context.packageName
             )
         }
