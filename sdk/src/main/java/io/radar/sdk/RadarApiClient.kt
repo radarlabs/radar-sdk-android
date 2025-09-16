@@ -109,6 +109,9 @@ internal class RadarApiClient(
     }
 
     private fun headers(publishableKey: String): Map<String, String> {
+        val networkType = RadarUtils.getConnectionType(context)
+        val applicationInfo = RadarUtils.getApplicationInfo(context)
+
         val headers = mutableMapOf(
             "Authorization" to publishableKey,
             "Content-Type" to "application/json",
@@ -118,7 +121,9 @@ internal class RadarApiClient(
             "X-Radar-Device-OS" to RadarUtils.deviceOS,
             "X-Radar-Device-Type" to RadarUtils.deviceType,
             "X-Radar-SDK-Version" to RadarUtils.sdkVersion,
-            "X-Radar-Mobile-Origin" to context.packageName
+            "X-Radar-Mobile-Origin" to context.packageName,
+            "X-Radar-Network-Type" to networkType.name,
+            "X-Radar-App-Info" to JSONObject(applicationInfo).toString()
         )
         if (RadarSettings.isXPlatform(context)) {
             headers["X-Radar-X-Platform-SDK-Type"] = RadarSettings.getXPlatformSDKType(context)
