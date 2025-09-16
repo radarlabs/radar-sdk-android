@@ -18,6 +18,12 @@ import java.util.*
 import java.time.Instant
 import java.time.ZonedDateTime
 import kotlin.math.abs
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+
+enum class ConnectionType {
+    cellular, unknown, wifi
+}
 
 internal object RadarUtils {
 
@@ -176,4 +182,70 @@ internal object RadarUtils {
         return hexString.toString()
     }
 
+    internal fun getConnectionType(context: Context): ConnectionType {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
+        var result: ConnectionType = ConnectionType.unknown
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            cm?.run {
+                cm.getNetworkCapabilities(cm.activeNetwork)?.run {
+                    if (hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                        result = ConnectionType.wifi
+                    } else if (hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                        result = ConnectionType.cellular
+                    } else {
+                        result = ConnectionType.unknown
+                    }
+                }
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            cm?.run {
+                cm.activeNetworkInfo?.run {
+                    if (type == ConnectivityManager.TYPE_WIFI) {
+                        result = ConnectionType.wifi
+                    } else if (type == ConnectivityManager.TYPE_MOBILE) {
+                        result = ConnectionType.cellular
+                    } else {
+                        result = ConnectionType.unknown
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    internal fun getApplicationInfo(context: Context): Map<String, String> {
+        val packageManager = context.packageManager
+        val packageName = context.packageName
+
+        return try {
+            val packageInfo = packageManager.getPackageInfo(packageName, 0)
+            val applicationInfo = packageManager.getApplicationInfo(packageName, 0)
+
+            val appName = packageManager.getApplicationLabel(applicationInfo).toString()
+            val appVersion = packageInfo.versionName ?: "Unknown"
+            val buildNumber = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                packageInfo.longVersionCode.toString()
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo.versionCode.toString()
+            }
+            val bundleId = packageName
+
+            mapOf(
+                "name" to appName,
+                "appVersion" to appVersion,
+                "build" to buildNumber,
+                "bundleId" to bundleId
+            )
+        } catch (e: Exception) {
+            mapOf(
+                "appName" to "Unknown",
+                "appVersion" to "Unknown",
+                "buildNumber" to "Unknown",
+                "bundleId" to context.packageName
+            )
+        }
+    }
 }
