@@ -47,13 +47,8 @@ class MainActivity : AppCompatActivity() {
 
         val receiver = MyRadarReceiver()
 
-        getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
-            putString("host", "https://shichengradar.ngrok.app")
-        }
-        
-        Radar.initialize(this, "prj_test_pk_c6fa1709de8409ba84177cee351e2d4f9caf9892", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
         Radar.sdkVersion().let { Log.i("version", it) }
-        Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
         // We can also set the foreground service options like this:
         // Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
         //     title = "Title Radar SDK",
