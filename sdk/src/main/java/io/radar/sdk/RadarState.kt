@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
 
 internal object RadarState {
@@ -320,6 +321,4 @@ internal object RadarState {
             putStringSet(KEY_DELIVERED_NOTIFICATIONS, notifications.map { n -> n.toString() }.toSet())
         }
     }
-
-
 }

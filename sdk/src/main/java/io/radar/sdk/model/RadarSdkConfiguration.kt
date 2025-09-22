@@ -24,6 +24,7 @@ internal data class RadarSdkConfiguration(
     val locationManagerTimeout: Int = 0,
     val syncAfterSetUser: Boolean = false,
     val useNotificationDiff: Boolean = false,
+    val useOfflineTracking: Boolean = false,
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -41,6 +42,7 @@ internal data class RadarSdkConfiguration(
         private const val LOCATION_MANAGER_TIMEOUT = "locationManagerTimeout"
         private const val SYNC_AFTER_SET_USER = "syncAfterSetUser"
         private const val USE_NOTIFICATION_DIFF = "useNotificationDiff"
+        private const val USE_OFFLINE_TRACKING = "useOfflineTracking"
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             // set json as empty object if json is null, which uses fallback values
@@ -61,6 +63,7 @@ internal data class RadarSdkConfiguration(
                 config.optInt(LOCATION_MANAGER_TIMEOUT, 0),
                 config.optBoolean(SYNC_AFTER_SET_USER, false),
                 config.optBoolean(USE_NOTIFICATION_DIFF, false),
+                config.optBoolean(USE_OFFLINE_TRACKING, false),
             )
         }
 
@@ -93,6 +96,7 @@ internal data class RadarSdkConfiguration(
             putOpt(LOCATION_MANAGER_TIMEOUT, locationManagerTimeout)
             putOpt(SYNC_AFTER_SET_USER, syncAfterSetUser)
             putOpt(USE_NOTIFICATION_DIFF, useNotificationDiff)
+            putOpt(USE_OFFLINE_TRACKING, useOfflineTracking)
         }
     }
 }

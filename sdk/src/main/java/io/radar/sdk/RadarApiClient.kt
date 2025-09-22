@@ -33,7 +33,8 @@ import java.util.EnumSet
 internal class RadarApiClient(
     private val context: Context,
     private var logger: RadarLogger,
-    internal var apiHelper: RadarApiHelper = RadarApiHelper(logger)
+    internal var apiHelper: RadarApiHelper = RadarApiHelper(logger),
+    private val offlineManager: RadarOfflineManager = RadarOfflineManager(),
 ) {
 
     interface RadarTrackApiCallback {
@@ -494,6 +495,24 @@ internal class RadarApiClient(
 
         apiHelper.request(context, "POST", path, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                var res = res // shadows res from parameter with a var so it can be re-assigned at offline manager
+                var status = status
+
+                // fallback on client offline manager if api encountered a network error
+                // probably want to also add to reply as of now before more server/dashboard infra to save and display client generated events/locations
+                if (status == RadarStatus.ERROR_NETWORK && sdkConfiguration.useOfflineTracking) {
+                    res = offlineManager.track(context, params)
+                    if (res != null) {
+                        status = RadarStatus.SUCCESS
+
+                        // add to replay and send an error
+                        if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
+                            params.putOpt("replayed", true)
+                            Radar.addReplay(params)
+                        }
+                    } // else: offline manager failed (internal error) status is kept as ERROR_NETWORK
+                }
+
                 if (status != RadarStatus.SUCCESS || res == null) {
                     if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
                         params.putOpt("replayed", true)
@@ -523,11 +542,19 @@ internal class RadarApiClient(
                     RadarUser.fromJson(userObj)
                 }
                 // clean up notification diff (before new nearby sync), since those were successfully sent to the server
-                RadarState.setDeliveredNotifications(context, arrayOf())
+                if (!res.optBoolean("offline", false)) { // only clear notifications if actually sent to server
+                    RadarState.setDeliveredNotifications(context, arrayOf())
+                }
 
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
                     RadarGeofence.fromJson(nearbyGeofencesArr)
                 }
+
+                if (!res.optBoolean("offline", false)) {
+                    offlineManager.sync(context, nearbyGeofences)
+                }
+
+
                 val token = RadarVerifiedLocationToken.fromJson(res)
 
                 if (user != null) {
