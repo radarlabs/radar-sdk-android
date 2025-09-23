@@ -183,12 +183,13 @@ internal object RadarUtils {
     }
 
     internal fun getConnectionType(context: Context): ConnectionType {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
         var result: ConnectionType = ConnectionType.unknown
 
+        // API 23+ uses NetworkCapabilities API
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            cm?.run {
-                cm.getNetworkCapabilities(cm.activeNetwork)?.run {
+            connectivityManager?.run {
+                connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)?.run {
                     if (hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
                         result = ConnectionType.wifi
                     } else if (hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
@@ -199,9 +200,10 @@ internal object RadarUtils {
                 }
             }
         } else {
+            // API 22 and lower falls back to ConnectivityManager.activeNetworkInfo
             @Suppress("DEPRECATION")
-            cm?.run {
-                cm.activeNetworkInfo?.run {
+            connectivityManager?.run {
+                connectivityManager.activeNetworkInfo?.run {
                     if (type == ConnectivityManager.TYPE_WIFI) {
                         result = ConnectionType.wifi
                     } else if (type == ConnectivityManager.TYPE_MOBILE) {
@@ -225,9 +227,12 @@ internal object RadarUtils {
 
             val appName = packageManager.getApplicationLabel(applicationInfo).toString()
             val appVersion = packageInfo.versionName ?: "Unknown"
+
+            // `longVersionCode` is available from API 28+
             val buildNumber = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 packageInfo.longVersionCode.toString()
             } else {
+                // API 27 and lower fall back to `versionCode`
                 @Suppress("DEPRECATION")
                 packageInfo.versionCode.toString()
             }
