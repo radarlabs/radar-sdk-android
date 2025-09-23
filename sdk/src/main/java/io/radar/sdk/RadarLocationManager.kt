@@ -309,7 +309,7 @@ internal class RadarLocationManager(
 
     private fun replaceBubbleGeofence(location: Location, stopped: Boolean) {
         this.removeBubbleGeofences() { success ->
-	  this.addBubbleGeofence(location, stopped)
+            this.addBubbleGeofence(location, stopped)
         }
     }
 
