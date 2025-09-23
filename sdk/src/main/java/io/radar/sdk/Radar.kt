@@ -999,7 +999,6 @@ object Radar {
                             token: RadarVerifiedLocationToken?
                         ) {
                             if (status == RadarStatus.SUCCESS ){
-                                locationManager.replaceSyncedGeofences(nearbyGeofences)
                                 locationManager.updateTrackingFromMeta(config?.meta)
                             }
                             handler.post {

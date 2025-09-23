@@ -17,6 +17,7 @@ import org.json.JSONObject
 import androidx.core.net.toUri
 import androidx.core.graphics.toColorInt
 import io.radar.sdk.model.RadarGeofence
+import org.json.JSONException
 import java.util.Date
 
 class RadarNotificationHelper {
@@ -138,12 +139,15 @@ class RadarNotificationHelper {
 
             val metadata = geofence.metadata ?: return null
 
-            identifier.put("campaignId", metadata.getString("radar:campaignId") ?: return null)
-            identifier.put("registeredAt", registeredAt ?: return null)
-            identifier.put("geofenceId", geofence._id)
-            identifier.put("identifier", "radar_geofence_${geofence._id}")
-
-            return identifier
+            try {
+                identifier.put("campaignId", metadata.getString("radar:campaignId") ?: return null)
+                identifier.put("registeredAt", registeredAt ?: return null)
+                identifier.put("geofenceId", geofence._id)
+                identifier.put("identifier", "radar_geofence_${geofence._id}")
+                return identifier
+            } catch (e: JSONException) {
+                return null
+            }
         }
 
         fun sendNotification(context: Context, id: String, notification: Notification?) {

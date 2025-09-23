@@ -14,6 +14,7 @@ import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.Radar.RadarStatus
+import io.radar.sdk.Radar.isTracking
 import io.radar.sdk.RadarApiClient.RadarTrackApiCallback
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSyncGeofences
@@ -309,7 +310,7 @@ internal class RadarLocationManager(
 
     private fun replaceBubbleGeofence(location: Location, stopped: Boolean) {
         this.removeBubbleGeofences() { success ->
-            this.addBubbleGeofence(location, stopped)
+	  this.addBubbleGeofence(location, stopped)
         }
     }
 
@@ -436,7 +437,7 @@ internal class RadarLocationManager(
                     }
                 }
 
-                logger.d("Adding synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius; identifier = $identifier")
+                logger.d("Adding synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius; identifier = $identifier; geofenceId = ${radarGeofence.externalId}")
             } catch (e: Exception) {
                 logger.d("Error building synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius")
             }
@@ -467,7 +468,7 @@ internal class RadarLocationManager(
         }
     }
 
-    private fun removeSyncedGeofences(block: ((success: Boolean) -> Unit)? = null) {
+    fun removeSyncedGeofences(block: ((success: Boolean) -> Unit)? = null) {
         locationClient.removeGeofences(RadarLocationReceiver.getSyncedGeofencesPendingIntent(context)) { success ->
             if (success) {
                 logger.d("Removed synced geofences")
@@ -596,7 +597,7 @@ internal class RadarLocationManager(
 
         val lastSentAt = RadarState.getLastSentAt(context)
         val ignoreSync =
-            lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed
+            lastSentAt == 0L || this.callbacks.isNotEmpty() || justStopped || replayed
         val now = System.currentTimeMillis()
         val lastSyncInterval = (now - lastSentAt) / 1000L
         if (!ignoreSync) {
@@ -665,8 +666,6 @@ internal class RadarLocationManager(
                     config: RadarConfig?,
                     token: RadarVerifiedLocationToken?
                 ) {
-                    locationManager.replaceSyncedGeofences(nearbyGeofences)
-
                     if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
                         locationManager.stopForegroundService()
                     }

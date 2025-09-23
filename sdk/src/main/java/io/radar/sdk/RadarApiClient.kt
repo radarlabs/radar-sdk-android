@@ -7,6 +7,7 @@ import android.os.SystemClock
 import io.radar.sdk.Radar.RadarAddressVerificationStatus
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
+import io.radar.sdk.Radar.isTracking
 import io.radar.sdk.Radar.locationManager
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
@@ -285,8 +286,8 @@ internal class RadarApiClient(
         val options = Radar.getTrackingOptions()
         val tripOptions = RadarSettings.getTripOptions(context)
         val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
-        val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
         var locationMetadata = JSONObject()
+        val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
         try {
             params.putOpt("anonymous", anonymous)
             if (anonymous) {
@@ -304,7 +305,7 @@ internal class RadarApiClient(
                 params.putOpt("metadata", RadarSettings.getMetadata(context))
                 params.putOpt("sessionId", RadarSettings.getSessionId(context))
                 val tags = RadarSettings.getTags(context)
-                if (tags != null && tags.isNotEmpty()) {
+                if (!tags.isNullOrEmpty()) {
                     params.putOpt("userTags", JSONArray(tags.toList()))
                 }
             }
@@ -342,7 +343,7 @@ internal class RadarApiClient(
                 val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
                 val locationMs = location.elapsedRealtimeNanos / 1000000
                 val updatedAtMsDiff = (nowMs - locationMs)
-                if (RadarSettings.getSdkConfiguration(context).useForegroundLocationUpdatedAtMsDiff || !foreground) {
+                if (sdkConfiguration.useForegroundLocationUpdatedAtMsDiff || !foreground) {
                     params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
                 }
                 params.putOpt("locationMs", locationMs)
@@ -452,15 +453,6 @@ internal class RadarApiClient(
             if (locationMetadata.length() > 0) {
                 params.putOpt("locationMetadata", locationMetadata)
             }
-
-            if (sdkConfiguration.useNotificationDiff) {
-                val array = JSONArray()
-                val deliveredNotifications = RadarState.getDeliveredNotifications(context)
-                for (deliveredNotification in deliveredNotifications) {
-                    array.put(deliveredNotification)
-                }
-                params.put("notificationDiff", array)
-            }
             
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
@@ -527,7 +519,6 @@ internal class RadarApiClient(
 
                     return
                 }
-                // track successful
 
                 RadarState.setLastFailedStoppedLocation(context, null)
                 Radar.flushLogs()
@@ -550,15 +541,18 @@ internal class RadarApiClient(
                     RadarGeofence.fromJson(nearbyGeofencesArr)
                 }
 
+                if (isTracking()) {
+                    locationManager.replaceSyncedGeofences(nearbyGeofences)
+                }
+
                 if (!res.optBoolean("offline", false)) {
                     offlineManager.sync(context, nearbyGeofences)
                 }
 
-
                 val token = RadarVerifiedLocationToken.fromJson(res)
 
                 if (user != null) {
-                    val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
+                    val inGeofences = !user.geofences.isNullOrEmpty()
                     val atPlace = user.place != null
                     val canExit = inGeofences || atPlace
                     RadarState.setCanExit(context, canExit)
@@ -690,7 +684,7 @@ internal class RadarApiClient(
                     RadarEvent.fromJson(eventsArr)
                 }
 
-                if (events != null && events.isNotEmpty()) {
+                if (!events.isNullOrEmpty()) {
                     Radar.sendEvents(events)
                 }
 

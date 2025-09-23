@@ -148,6 +148,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
         if (geofenceString == null) {
             return
         }
+        Radar.logger.d("parsing notification for geofence: $geofenceString")
         val geofence = RadarGeofence.fromJson(JSONObject(geofenceString)) ?: return
 
         val geofenceNotification = RadarNotificationHelper.parseNotificationIdentifier(geofence, registeredAt) ?: return
@@ -156,6 +157,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
             // notification already triggered, don't trigger again on repeat entry
             return
         }
+
 
         val notification = RadarNotificationHelper.parseNotification(context, geofence.metadata) ?: return
 
