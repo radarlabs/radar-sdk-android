@@ -464,7 +464,6 @@ internal class RadarLocationManager(
     }
 
     private fun removeAllGeofences() {
-        logger.d("remove all geofences called")
         this.removeBubbleGeofences()
         this.removeSyncedGeofences()
     }
