@@ -13,6 +13,7 @@ import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.Radar.RadarStatus
+import io.radar.sdk.Radar.isTracking
 import io.radar.sdk.RadarApiClient.RadarTrackApiCallback
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSyncGeofences
@@ -375,7 +376,8 @@ internal class RadarLocationManager(
         }
     }
 
-    private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
+    fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
+        logger.d("replace synced geofences called")
         this.removeSyncedGeofences() { success ->
             this.addSyncedGeofences(radarGeofences)
         }
@@ -449,7 +451,7 @@ internal class RadarLocationManager(
         }
     }
 
-    private fun removeSyncedGeofences(block: ((success: Boolean) -> Unit)? = null) {
+    fun removeSyncedGeofences(block: ((success: Boolean) -> Unit)? = null) {
         locationClient.removeGeofences(RadarLocationReceiver.getSyncedGeofencesPendingIntent(context)) { success ->
             if (success) {
                 logger.d("Removed synced geofences")
@@ -462,6 +464,7 @@ internal class RadarLocationManager(
     }
 
     private fun removeAllGeofences() {
+        logger.d("remove all geofences called")
         this.removeBubbleGeofences()
         this.removeSyncedGeofences()
     }
@@ -647,8 +650,6 @@ internal class RadarLocationManager(
                     config: RadarConfig?,
                     token: RadarVerifiedLocationToken?
                 ) {
-                    locationManager.replaceSyncedGeofences(nearbyGeofences)
-
                     if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
                         locationManager.stopForegroundService()
                     }
