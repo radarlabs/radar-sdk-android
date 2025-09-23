@@ -133,15 +133,16 @@ class RadarNotificationHelper {
          *   registeredAt: number;
          * }
          */
-        fun parseNotificationIdentifier(geofence: RadarGeofence, registeredAt: String?): JSONObject? {
+        fun parseNotificationIdentifier(geofenceId: String, metadata: JSONObject, registeredAt: String?): JSONObject? {
+            if (!metadata.has("radar:campaignId")) {
+                return null
+            }
             val identifier = JSONObject()
-
-            val metadata = geofence.metadata ?: return null
 
             identifier.put("campaignId", metadata.getString("radar:campaignId") ?: return null)
             identifier.put("registeredAt", registeredAt ?: return null)
-            identifier.put("geofenceId", geofence._id)
-            identifier.put("identifier", "radar_geofence_${geofence._id}")
+            identifier.put("geofenceId", geofenceId)
+            identifier.put("identifier", "radar_geofence_$geofenceId")
 
             return identifier
         }

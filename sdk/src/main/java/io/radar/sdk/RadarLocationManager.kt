@@ -307,9 +307,13 @@ internal class RadarLocationManager(
         return locationClient.getLocationFromLocationIntent(intent)
     }
 
+    internal fun getGeofenceIdsFromGeofenceIntent(intent: Intent): Array<String>? {
+        return locationClient.getGeofenceIdsFromGeofenceIntent(intent)
+    }
+
     private fun replaceBubbleGeofence(location: Location, stopped: Boolean) {
-        this.removeBubbleGeofences() { success ->
-	  this.addBubbleGeofence(location, stopped)
+        this.removeBubbleGeofences {
+            this.addBubbleGeofence(location, stopped)
         }
     }
 
@@ -388,70 +392,55 @@ internal class RadarLocationManager(
             return
         }
 
-        val request = RadarAbstractLocationClient.RadarAbstractGeofenceRequest()
-
-        var attempted = 0
-        var failed = 0
-
-        radarGeofences.forEachIndexed { i, radarGeofence: RadarGeofence ->
+        val geofences = radarGeofences.mapNotNull { geofence ->
             var center: RadarCoordinate? = null
             var radius = 100.0
-            if (radarGeofence.geometry is RadarCircleGeometry) {
-                center = radarGeofence.geometry.center
-                radius = radarGeofence.geometry.radius
-            } else if (radarGeofence.geometry is RadarPolygonGeometry) {
-                center = radarGeofence.geometry.center
-                radius = radarGeofence.geometry.radius
+            if (geofence.geometry is RadarCircleGeometry) {
+                center = geofence.geometry.center
+                radius = geofence.geometry.radius
+            } else if (geofence.geometry is RadarPolygonGeometry) {
+                center = geofence.geometry.center
+                radius = geofence.geometry.radius
             }
             if (center == null) {
-                return@forEachIndexed
+                return@mapNotNull null
             }
+            return@mapNotNull RadarAbstractLocationClient.RadarAbstractGeofence(
+                requestId = geofence._id,
+                latitude = center.latitude,
+                longitude = center.longitude,
+                radius = radius.toFloat(),
+                transitionEnter = true,
+                transitionExit = true,
+                transitionDwell = true,
+                dwellDuration = options.stopDuration * 1000 + 10000
+            )
+        }.toTypedArray()
 
-            try {
-                val identifier = "${SYNCED_GEOFENCES_REQUEST_ID_PREFIX}_${i}"
-                val geofence = RadarAbstractLocationClient.RadarAbstractGeofence(
-                    requestId = identifier,
-                    latitude = center.latitude,
-                    longitude = center.longitude,
-                    radius = radius.toFloat(),
-                    transitionEnter = true,
-                    transitionExit = true,
-                    transitionDwell = true,
-                    dwellDuration = options.stopDuration * 1000 + 10000
-                )
-
-                attempted += 1
-                var intentMetadata: Bundle? = null
-                if (radarGeofence.metadata != null) {
-                    intentMetadata = Bundle()
-                    intentMetadata.putString("radar:geofence", radarGeofence.toJson().toString())
-                    intentMetadata.putString("radar:registeredAt", RadarUtils.dateToISOString(Date()))
-                }
-
-                val intent = RadarLocationReceiver.getSyncedGeofencesPendingIntent(context, intentMetadata)
-
-                locationClient.addGeofences(arrayOf(geofence), request, intent) { success ->
-                    if (!success) {
-                        failed += 1
-                    }
-                }
-
-                logger.d("Adding synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius; identifier = $identifier")
-            } catch (e: Exception) {
-                logger.d("Error building synced geofence | latitude = ${center.latitude}; longitude = ${center.longitude}; radius = $radius")
+        // { <geofenceId>: { ...geofence.metadata } }, all metadatas of geofences
+        val metadatas = JSONObject()
+        radarGeofences.forEach { geofence ->
+            if (geofence.metadata != null && geofence.metadata.length() > 0) {
+                metadatas.put(geofence._id, geofence.metadata)
             }
         }
+        val intentMetadata = Bundle()
+        intentMetadata.putString("radar:geofenceMetadatas", metadatas.toString())
+        intentMetadata.putString("radar:registeredAt", RadarUtils.dateToISOString(Date()))
 
-        if (attempted == 0) {
-            logger.d("No synced geofences")
+        val request = RadarAbstractLocationClient.RadarAbstractGeofenceRequest()
+        val pendingIntent = RadarLocationReceiver.getSyncedGeofencesPendingIntent(context, intentMetadata)
 
-            return
-        }
-
-        if (failed == 0) {
-            logger.d("Successfully added synced geofences")
+        if (geofences.isNotEmpty()) {
+            locationClient.addGeofences(geofences, request, pendingIntent) { success ->
+                if (success) {
+                    logger.d("Successfully added ${geofences.size} synced geofences")
+                } else {
+                    logger.d("Error adding synced geofences")
+                }
+            }
         } else {
-            logger.d("Error adding synced geofences")
+            logger.d("No geofences to sync")
         }
     }
 

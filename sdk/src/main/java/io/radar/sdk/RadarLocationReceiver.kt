@@ -144,22 +144,24 @@ class RadarLocationReceiver : BroadcastReceiver() {
 
     }
 
-    private fun triggerGeofenceNotification(context: Context, geofenceString: String?, registeredAt: String?) {
-        if (geofenceString == null) {
-            return
+    private fun triggerGeofenceNotification(context: Context, geofenceIds: Array<String>, metadatasString: String, registeredAt: String) {
+        val metadatas = JSONObject(metadatasString)
+        for (geofenceId in geofenceIds) {
+            if (!metadatas.has(geofenceId)) {
+                continue
+            }
+            val metadata = metadatas.getJSONObject(geofenceId)
+            Radar.logger.i("metadata has this geofence: $geofenceId $metadata")
+
+            val geofenceNotification = RadarNotificationHelper.parseNotificationIdentifier(geofenceId, metadata, registeredAt) ?: continue
+
+            if (!RadarState.addDeliveredNotifications(context, geofenceNotification)) {
+                // notification already triggered, don't trigger again on repeat entry
+                continue
+            }
+            val notification = RadarNotificationHelper.parseNotification(context, metadata) ?: continue
+            RadarNotificationHelper.sendNotification(context, geofenceId, notification)
         }
-        val geofence = RadarGeofence.fromJson(JSONObject(geofenceString)) ?: return
-
-        val geofenceNotification = RadarNotificationHelper.parseNotificationIdentifier(geofence, registeredAt) ?: return
-
-        if (!RadarState.addDeliveredNotifications(context, geofenceNotification)) {
-            // notification already triggered, don't trigger again on repeat entry
-            return
-        }
-
-        val notification = RadarNotificationHelper.parseNotification(context, geofence.metadata) ?: return
-
-        RadarNotificationHelper.sendNotification(context, geofence._id, notification)
     }
 
     @SuppressLint("MissingPermission")
@@ -190,11 +192,14 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 }
 
                 // enter geofence triggers notification
+                val geofenceIds = Radar.locationManager.getGeofenceIdsFromGeofenceIntent(intent)
                 val extras = intent.extras
-                if (extras != null && source == Radar.RadarLocationSource.GEOFENCE_ENTER) {
-                    val geofenceString = extras.getString("radar:geofence")
+                if (extras != null && geofenceIds != null && source == Radar.RadarLocationSource.GEOFENCE_ENTER) {
+                    val metadatas = extras.getString("radar:geofenceMetadatas")
                     val registeredAt = extras.getString("radar:registeredAt")
-                    triggerGeofenceNotification(context, geofenceString, registeredAt)
+                    if (metadatas != null && registeredAt != null) {
+                        triggerGeofenceNotification(context, geofenceIds, metadatas, registeredAt)
+                    }
                 }
 
                 Radar.handleLocation(context, location, source)
@@ -255,5 +260,4 @@ class RadarLocationReceiver : BroadcastReceiver() {
             Radar.trackOnce()
         }
     }
-
 }

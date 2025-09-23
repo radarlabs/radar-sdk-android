@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Looper
+import com.google.android.gms.location.GeofencingEvent
 import com.huawei.hms.location.FusedLocationProviderClient
 import com.huawei.hms.location.Geofence
 import com.huawei.hms.location.GeofenceData
@@ -149,29 +150,13 @@ internal class RadarHuaweiLocationClient(
     }
 
     override fun getLocationFromGeofenceIntent(intent: Intent): Location? {
-        if (intent == null) {
-            return null
-        }
-
-        val data = GeofenceData.getDataFromIntent(intent)
-
-        if (data == null) {
-            return null
-        }
+        val data = GeofenceData.getDataFromIntent(intent) ?: return null
 
         return data.convertingLocation
     }
 
     override fun getSourceFromGeofenceIntent(intent: Intent): Radar.RadarLocationSource? {
-        if (intent == null) {
-            return null
-        }
-
-        val data = GeofenceData.getDataFromIntent(intent)
-
-        if (data == null) {
-            return null
-        }
+        val data = GeofenceData.getDataFromIntent(intent) ?: return null
 
         return when (data.conversion) {
             Geofence.ENTER_GEOFENCE_CONVERSION -> Radar.RadarLocationSource.GEOFENCE_ENTER
@@ -181,16 +166,7 @@ internal class RadarHuaweiLocationClient(
     }
 
     override fun getLocationFromLocationIntent(intent: Intent): Location? {
-        if (intent == null) {
-            return null
-        }
-
-        val result = LocationResult.extractResult(intent)
-
-        if (result == null) {
-            return null
-        }
-
+        val result = LocationResult.extractResult(intent) ?: return null
         return result.lastLocation
     }
 
@@ -202,4 +178,8 @@ internal class RadarHuaweiLocationClient(
             RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.NONE -> LocationRequest.PRIORITY_NO_POWER
         }
 
+    override fun getGeofenceIdsFromGeofenceIntent(intent: Intent): Array<String>? {
+        val result = GeofenceData.getDataFromIntent(intent) ?: return null
+        return result.convertingGeofenceList?.map { it.uniqueId }?.toTypedArray();
+    }
 }
