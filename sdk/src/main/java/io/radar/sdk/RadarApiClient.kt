@@ -613,6 +613,7 @@ internal class RadarApiClient(
         }
 
         val params = JSONObject()
+        params.putOpt("user", RadarSettings.getId(context))
         params.putOpt("userId", RadarSettings.getUserId(context))
         params.putOpt("externalId", externalId)
         if (options.metadata != null) {
