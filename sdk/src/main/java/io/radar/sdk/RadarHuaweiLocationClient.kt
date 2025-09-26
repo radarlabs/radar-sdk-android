@@ -6,13 +6,11 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Looper
-import com.google.android.gms.location.GeofencingEvent
 import com.huawei.hms.location.FusedLocationProviderClient
 import com.huawei.hms.location.Geofence
 import com.huawei.hms.location.GeofenceData
 import com.huawei.hms.location.GeofenceRequest
 import com.huawei.hms.location.GeofenceService
-import com.huawei.hms.location.LocationAvailability
 import com.huawei.hms.location.LocationCallback
 import com.huawei.hms.location.LocationRequest
 import com.huawei.hms.location.LocationResult
