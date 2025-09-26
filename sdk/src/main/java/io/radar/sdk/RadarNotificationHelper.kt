@@ -17,7 +17,6 @@ import org.json.JSONObject
 import androidx.core.net.toUri
 import androidx.core.graphics.toColorInt
 import io.radar.sdk.model.RadarGeofence
-import org.json.JSONException
 import java.util.Date
 
 class RadarNotificationHelper {
@@ -134,20 +133,18 @@ class RadarNotificationHelper {
          *   registeredAt: number;
          * }
          */
-        fun parseNotificationIdentifier(geofence: RadarGeofence, registeredAt: String?): JSONObject? {
-            val identifier = JSONObject()
-
-            val metadata = geofence.metadata ?: return null
-
-            try {
-                identifier.put("campaignId", metadata.getString("radar:campaignId") ?: return null)
-                identifier.put("registeredAt", registeredAt ?: return null)
-                identifier.put("geofenceId", geofence._id)
-                identifier.put("identifier", "radar_geofence_${geofence._id}")
-                return identifier
-            } catch (e: JSONException) {
+        fun parseNotificationIdentifier(geofenceId: String, metadata: JSONObject, registeredAt: String?): JSONObject? {
+            if (!metadata.has("radar:campaignId")) {
                 return null
             }
+            val identifier = JSONObject()
+
+            identifier.put("campaignId", metadata.getString("radar:campaignId") ?: return null)
+            identifier.put("registeredAt", registeredAt ?: return null)
+            identifier.put("geofenceId", geofenceId)
+            identifier.put("identifier", "radar_geofence_$geofenceId")
+
+            return identifier
         }
 
         fun sendNotification(context: Context, id: String, notification: Notification?) {
@@ -163,13 +160,10 @@ class RadarNotificationHelper {
             }
 
             for (event in events) {
-
                 var notificationText: String? = event.metadata?.optString("radar:notificationText")
                 val campaignType = event.metadata?.optString("radar:campaignType")
-
                 val id = event._id
-                val notificationManager =
-                    context.getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
+                val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
 
                 val importance = NotificationManager.IMPORTANCE_HIGH
                 val channel = NotificationChannel(CHANNEL_NAME, CHANNEL_NAME, importance)
@@ -182,18 +176,18 @@ class RadarNotificationHelper {
                 val smallIcon = context.applicationContext.resources.getIdentifier(iconString, "drawable", context.applicationContext.packageName)
 
                 if (notificationText != null && campaignType == "eventBased") {
-                    val notificationTitle: String? = event.metadata?.optString("radar:notificationTitle")
-                    val subTitle: String? = event.metadata?.optString("radar:notificationSubTitle")
-                    val campaignId: String? = event.metadata?.optString("radar:campaignId")
-                    val deeplinkURL = event.metadata?.optString("radar:notificationURL")
-                    val campaignMetadata: String? = event.metadata?.optString("radar:campaignMetadata")
+                    val notificationTitle: String? = event.metadata.optString("radar:notificationTitle")
+                    val subTitle: String? = event.metadata.optString("radar:notificationSubTitle")
+                    val campaignId: String? = event.metadata.optString("radar:campaignId")
+                    val deeplinkURL = event.metadata.optString("radar:notificationURL")
+                    val campaignMetadata: String? = event.metadata.optString("radar:campaignMetadata")
 
                     Radar.logger.d("creating campaign notification with metadata  = ${event.metadata}")
                     val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                         putExtra(RADAR_CAMPAIGN_ID, campaignId)
                         putExtra(RADAR_CAMPAIGN_METADATA, campaignMetadata)
-                        if (deeplinkURL != null) {
+                        if (!deeplinkURL.isNullOrEmpty()) {
                             data = deeplinkURL.toUri()
                             action = Intent.ACTION_VIEW
                         }

@@ -76,7 +76,6 @@ class RadarGeofence(
             val tag: String? = obj.optString(FIELD_TAG) ?: null
             val externalId: String? = obj.optString(FIELD_EXTERNAL_ID) ?: null
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
-
             val operatingHours: RadarOperatingHours? = obj.optJSONObject(FIELD_OPERATING_HOURS)?.let { operatingHours ->
                 RadarOperatingHours.fromJson(operatingHours)
             }

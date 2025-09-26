@@ -47,12 +47,7 @@ class MainActivity : AppCompatActivity() {
 
         val receiver = MyRadarReceiver()
 
-        getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
-            putString("host", "https://api.radar-staging.com")
-        }
-
-        Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
-        Radar.initialize(this, "prj_test_pk_3508428416f485c5f54d8e8bb1f616ee405b1995", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
+        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
         Radar.sdkVersion().let { Log.i("version", it) }
         // We can also set the foreground service options like this:
         // Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(

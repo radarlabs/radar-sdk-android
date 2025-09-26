@@ -57,4 +57,7 @@ internal class RadarMockLocationProvider : RadarAbstractLocationClient() {
         return mockLocation!!
     }
 
+    override fun getGeofenceIdsFromGeofenceIntent(intent: Intent): Array<String>? {
+        return null
+    }
 }
