@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        
+
         Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
         Radar.sdkVersion().let { Log.i("version", it) }
         // We can also set the foreground service options like this:

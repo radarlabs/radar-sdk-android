@@ -4,7 +4,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.location.Location
 
-internal class RadarMockLocationProvider() : RadarAbstractLocationClient() {
+internal class RadarMockLocationProvider : RadarAbstractLocationClient() {
 
     internal var mockLocation: Location? = null
 
@@ -57,4 +57,7 @@ internal class RadarMockLocationProvider() : RadarAbstractLocationClient() {
         return mockLocation!!
     }
 
+    override fun getGeofenceIdsFromGeofenceIntent(intent: Intent): Array<String>? {
+        return null
+    }
 }

@@ -2,15 +2,13 @@ package io.radar.sdk.model
 
 import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
-import junit.framework.Assert.assertNull
-import org.json.JSONObject
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
-import java.util.*
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.P])

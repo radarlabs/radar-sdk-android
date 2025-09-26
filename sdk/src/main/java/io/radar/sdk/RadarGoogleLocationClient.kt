@@ -159,29 +159,13 @@ internal class RadarGoogleLocationClient(
         }
 
     override fun getLocationFromGeofenceIntent(intent: Intent): Location? {
-        if (intent == null) {
-            return null
-        }
-
-        val event = GeofencingEvent.fromIntent(intent)
-
-        if (event == null) {
-            return null
-        }
+        val event = GeofencingEvent.fromIntent(intent) ?: return null
 
         return event.triggeringLocation
     }
 
     override fun getSourceFromGeofenceIntent(intent: Intent): Radar.RadarLocationSource? {
-        if (intent == null) {
-            return null
-        }
-
-        val event = GeofencingEvent.fromIntent(intent)
-
-        if (event == null) {
-            return null
-        }
+        val event = GeofencingEvent.fromIntent(intent) ?: return null
 
         return when (event.geofenceTransition) {
             Geofence.GEOFENCE_TRANSITION_ENTER -> Radar.RadarLocationSource.GEOFENCE_ENTER
@@ -191,17 +175,13 @@ internal class RadarGoogleLocationClient(
     }
 
     override fun getLocationFromLocationIntent(intent: Intent): Location? {
-        if (intent == null) {
-            return null
-        }
-
-        val result = LocationResult.extractResult(intent)
-
-        if (result == null) {
-            return null
-        }
+        val result = LocationResult.extractResult(intent) ?: return null
 
         return result.lastLocation
     }
 
+    override fun getGeofenceIdsFromGeofenceIntent(intent: Intent): Array<String>? {
+        val result = GeofencingEvent.fromIntent(intent) ?: return null
+        return result.triggeringGeofences?.map { it.requestId }?.toTypedArray();
+    }
 }
