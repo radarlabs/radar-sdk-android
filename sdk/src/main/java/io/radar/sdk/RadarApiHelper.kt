@@ -149,7 +149,7 @@ internal open class RadarApiHelper(
                         handler.post {
                             imageCallback.onComplete(Radar.RadarStatus.SUCCESS, bitmap)
                         }
-                    }  
+                    }
                 } else {
                     val status = when (urlConnection.responseCode) {
                         400 -> Radar.RadarStatus.ERROR_BAD_REQUEST
@@ -229,5 +229,4 @@ internal open class RadarApiHelper(
                                callback: RadarImageApiCallback? = null) {
         request(context, method, urlString, headers, null, false, null, false, false, false, false, callback)
     }
-
 }

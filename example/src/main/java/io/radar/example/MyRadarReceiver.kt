@@ -19,6 +19,7 @@ class MyRadarReceiver : RadarReceiver() {
         var identifier = 0
 
         internal fun notify(context: Context, body: String) {
+            return
             identifier++
 
             val channelId = "example"
@@ -47,25 +48,26 @@ class MyRadarReceiver : RadarReceiver() {
     }
 
     override fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser?) {
-        events.forEach { event -> notify(context, Utils.stringForRadarEvent(event)) }
+//        events.forEach { event -> notify(context, Utils.stringForRadarEvent(event)) }
     }
 
     override fun onLocationUpdated(context: Context, location: Location, user: RadarUser) {
         val body = "${if (user.stopped) "Stopped at" else "Moved to"} location (${location.latitude}, ${location.longitude}) with accuracy ${location.accuracy}"
-        notify(context, body)
+//        notify(context, body)
     }
 
     override fun onClientLocationUpdated(context: Context, location: Location, stopped: Boolean, source: Radar.RadarLocationSource) {
         val body = "${if (stopped) "Client stopped at" else "Client moved to"} location (${location.latitude}, ${location.longitude}) with accuracy ${location.accuracy} and source ${source}"
-        notify(context, body)
+//        notify(context, body)
     }
 
     override fun onError(context: Context, status: Radar.RadarStatus) {
-        notify(context, Utils.stringForRadarStatus(status))
+//        notify(context, Utils.stringForRadarStatus(status))
     }
 
     override fun onLog(context: Context, message: String) {
-        notify(context, message)
+//        notify(context, message)
+//        println(message)
     }
 
 }

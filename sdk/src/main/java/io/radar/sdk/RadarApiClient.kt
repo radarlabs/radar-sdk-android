@@ -7,6 +7,7 @@ import android.os.SystemClock
 import io.radar.sdk.Radar.RadarAddressVerificationStatus
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
+import io.radar.sdk.Radar.isTracking
 import io.radar.sdk.Radar.locationManager
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
@@ -33,7 +34,8 @@ import java.util.EnumSet
 internal class RadarApiClient(
     private val context: Context,
     private var logger: RadarLogger,
-    internal var apiHelper: RadarApiHelper = RadarApiHelper(logger)
+    internal var apiHelper: RadarApiHelper = RadarApiHelper(logger),
+    private val offlineManager: RadarOfflineManager = RadarOfflineManager(),
 ) {
 
     interface RadarTrackApiCallback {
@@ -285,6 +287,7 @@ internal class RadarApiClient(
         val tripOptions = RadarSettings.getTripOptions(context)
         val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
         var locationMetadata = JSONObject()
+        val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
         try {
             params.putOpt("anonymous", anonymous)
             if (anonymous) {
@@ -302,7 +305,7 @@ internal class RadarApiClient(
                 params.putOpt("metadata", RadarSettings.getMetadata(context))
                 params.putOpt("sessionId", RadarSettings.getSessionId(context))
                 val tags = RadarSettings.getTags(context)
-                if (tags != null && tags.isNotEmpty()) {
+                if (!tags.isNullOrEmpty()) {
                     params.putOpt("userTags", JSONArray(tags.toList()))
                 }
             }
@@ -340,7 +343,7 @@ internal class RadarApiClient(
                 val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
                 val locationMs = location.elapsedRealtimeNanos / 1000000
                 val updatedAtMsDiff = (nowMs - locationMs)
-                if (RadarSettings.getSdkConfiguration(context).useForegroundLocationUpdatedAtMsDiff || !foreground) {
+                if (sdkConfiguration.useForegroundLocationUpdatedAtMsDiff || !foreground) {
                     params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
                 }
                 params.putOpt("locationMs", locationMs)
@@ -484,6 +487,24 @@ internal class RadarApiClient(
 
         apiHelper.request(context, "POST", path, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                var res = res // shadows res from parameter with a var so it can be re-assigned at offline manager
+                var status = status
+
+                // fallback on client offline manager if api encountered a network error
+                // probably want to also add to reply as of now before more server/dashboard infra to save and display client generated events/locations
+                if (status == RadarStatus.ERROR_NETWORK && sdkConfiguration.useOfflineTracking) {
+                    res = offlineManager.track(context, params)
+                    if (res != null) {
+                        status = RadarStatus.SUCCESS
+
+                        // add to replay and send an error
+                        if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
+                            params.putOpt("replayed", true)
+                            Radar.addReplay(params)
+                        }
+                    } // else: offline manager failed (internal error) status is kept as ERROR_NETWORK
+                }
+
                 if (status != RadarStatus.SUCCESS || res == null) {
                     if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
                         params.putOpt("replayed", true)
@@ -511,13 +532,27 @@ internal class RadarApiClient(
                 val user = res.optJSONObject("user")?.let { userObj ->
                     RadarUser.fromJson(userObj)
                 }
+                // clean up notification diff (before new nearby sync), since those were successfully sent to the server
+                if (!res.optBoolean("offline", false)) { // only clear notifications if actually sent to server
+                    RadarState.setDeliveredNotifications(context, arrayOf())
+                }
+
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
                     RadarGeofence.fromJson(nearbyGeofencesArr)
                 }
+
+                if (isTracking()) {
+                    locationManager.replaceSyncedGeofences(nearbyGeofences)
+                }
+
+                if (!res.optBoolean("offline", false)) {
+                    offlineManager.sync(context, nearbyGeofences)
+                }
+
                 val token = RadarVerifiedLocationToken.fromJson(res)
 
                 if (user != null) {
-                    val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
+                    val inGeofences = !user.geofences.isNullOrEmpty()
                     val atPlace = user.place != null
                     val canExit = inGeofences || atPlace
                     RadarState.setCanExit(context, canExit)
@@ -649,7 +684,7 @@ internal class RadarApiClient(
                     RadarEvent.fromJson(eventsArr)
                 }
 
-                if (events != null && events.isNotEmpty()) {
+                if (!events.isNullOrEmpty()) {
                     Radar.sendEvents(events)
                 }
 
