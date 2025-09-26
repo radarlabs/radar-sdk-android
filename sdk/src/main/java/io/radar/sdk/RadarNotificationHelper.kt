@@ -160,13 +160,10 @@ class RadarNotificationHelper {
             }
 
             for (event in events) {
-
                 var notificationText: String? = event.metadata?.optString("radar:notificationText")
                 val campaignType = event.metadata?.optString("radar:campaignType")
-
                 val id = event._id
-                val notificationManager =
-                    context.getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
+                val notificationManager = context.getSystemService(NOTIFICATION_SERVICE) as? NotificationManager
 
                 val importance = NotificationManager.IMPORTANCE_HIGH
                 val channel = NotificationChannel(CHANNEL_NAME, CHANNEL_NAME, importance)
@@ -179,18 +176,18 @@ class RadarNotificationHelper {
                 val smallIcon = context.applicationContext.resources.getIdentifier(iconString, "drawable", context.applicationContext.packageName)
 
                 if (notificationText != null && campaignType == "eventBased") {
-                    val notificationTitle: String? = event.metadata?.optString("radar:notificationTitle")
-                    val subTitle: String? = event.metadata?.optString("radar:notificationSubTitle")
-                    val campaignId: String? = event.metadata?.optString("radar:campaignId")
-                    val deeplinkURL = event.metadata?.optString("radar:notificationURL")
-                    val campaignMetadata: String? = event.metadata?.optString("radar:campaignMetadata")
+                    val notificationTitle: String? = event.metadata.optString("radar:notificationTitle")
+                    val subTitle: String? = event.metadata.optString("radar:notificationSubTitle")
+                    val campaignId: String? = event.metadata.optString("radar:campaignId")
+                    val deeplinkURL = event.metadata.optString("radar:notificationURL")
+                    val campaignMetadata: String? = event.metadata.optString("radar:campaignMetadata")
 
                     Radar.logger.d("creating campaign notification with metadata  = ${event.metadata}")
                     val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                         putExtra(RADAR_CAMPAIGN_ID, campaignId)
                         putExtra(RADAR_CAMPAIGN_METADATA, campaignMetadata)
-                        if (deeplinkURL != null) {
+                        if (!deeplinkURL.isNullOrEmpty()) {
                             data = deeplinkURL.toUri()
                             action = Intent.ACTION_VIEW
                         }

@@ -151,7 +151,6 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 continue
             }
             val metadata = metadatas.getJSONObject(geofenceId)
-            Radar.logger.i("metadata has this geofence: $geofenceId $metadata")
 
             val geofenceNotification = RadarNotificationHelper.parseNotificationIdentifier(geofenceId, metadata, registeredAt) ?: continue
 

@@ -297,7 +297,6 @@ internal object RadarState {
                 ?: return arrayOf()
 
         return jsonStringSet.mapNotNull { s -> stringToJsonObject(s) }.toTypedArray()
-
     }
 
     /**
