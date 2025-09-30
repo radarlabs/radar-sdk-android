@@ -2,11 +2,9 @@ package io.radar.sdk
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogConversionCallback
 import io.radar.sdk.model.RadarEvent
@@ -40,9 +38,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
         })
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun showInAppMessage(payload: RadarInAppMessage) {
-        println("Preparing to show image $inAppMessageReceiver")
         inAppMessageReceiver?.createInAppMessageView(
             context,
             payload,
