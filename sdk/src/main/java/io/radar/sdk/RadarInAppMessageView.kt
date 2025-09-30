@@ -2,19 +2,27 @@ package io.radar.sdk
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BlendModeColorFilter
+import android.graphics.ColorFilter
+import android.graphics.Outline
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
+import android.view.ViewOutlineProvider
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
+import androidx.core.view.marginTop
+import androidx.core.view.setMargins
 import io.radar.sdk.model.RadarInAppMessage
 
 /**
@@ -32,7 +40,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
         private const val OVERLAY_BACKGROUND_COLOR = "#80000000" // Semi-transparent black overlay
         private const val MODAL_BACKGROUND_COLOR = "#FFFFFF" // White modal background
         private const val DISMISS_BUTTON_TEXT_COLOR = "#FFFFFF" // White text for dismiss button
-        private const val DISMISS_BUTTON_BACKGROUND_COLOR = "#5A6872" // Gray background for dismiss button
+        private const val DISMISS_BUTTON_BACKGROUND_COLOR = "#808080" // Gray background for dismiss button
     }
 
     private var onDismissListener: (() -> Unit)? = null
@@ -63,10 +71,18 @@ class RadarInAppMessageView @JvmOverloads constructor(
         this.onDismissListener = onDismissListener
         this.onInAppMessageButtonClicked = onInAppMessageButtonClicked
         Radar.loadImage(inAppMessage.image?.url) { image ->
+            println("Image is: $image")
             createInAppMessageView(inAppMessage, image)
             // Call the callback when the view is fully initialized
             onViewReady(this)
         }
+    }
+
+    /**
+     * convert a value in dp to px
+     */
+    private fun <T : Number> dp(v: T): Float {
+        return v.toFloat() * context.resources.displayMetrics.density // density, multiply to convert from dp to px
     }
 
     private fun createInAppMessageView(inAppMessage: RadarInAppMessage, image: Bitmap? = null) {
@@ -124,35 +140,47 @@ class RadarInAppMessageView @JvmOverloads constructor(
             }
         }
     }
-    
+
     private fun createModalContainer(hasImage: Boolean = false): LinearLayout {
         return LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(MODAL_BACKGROUND_COLOR.toColorInt())
-            
+
             // Adjust padding based on whether image is present
             if (hasImage) {
-                setPadding(0, 0, 0, 48) // No top or horizontal padding when image is present
+                setPadding(0, 0, 0, 40) // No top or horizontal padding when image is present
             } else {
-                setPadding(48, 40, 48, 48) // Full padding when no image
+                setPadding(40, 40, 40, 40) // Full padding when no image
             }
             
             gravity = Gravity.CENTER_HORIZONTAL
             
             // Set layout params to center the modal
             layoutParams = LayoutParams(
-                (context.resources.displayMetrics.widthPixels * 0.75).toInt(),
+                dp(350).toInt(),
                 LayoutParams.WRAP_CONTENT,
                 Gravity.CENTER
             )
-            
+
+
             // Create rounded corners
-            val shape = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16f, context.resources.displayMetrics)
-                setColor(MODAL_BACKGROUND_COLOR.toColorInt())
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                // if we are SDK >= 21, we can use clipping to make it look better
+                outlineProvider = object : ViewOutlineProvider() {
+                    override fun getOutline(view: View, outline: Outline) {
+                        outline.setRoundRect(0, 0, view.width, view.height, dp(20))
+                    }
+                }
+                clipToOutline = true
+            } else {
+                // otherwise just set the background to have a radius
+                val shape = GradientDrawable().apply {
+                    shape = GradientDrawable.RECTANGLE
+                    cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16f, context.resources.displayMetrics)
+                    setColor(MODAL_BACKGROUND_COLOR.toColorInt())
+                }
+                background = shape
             }
-            background = shape
 
             setOnClickListener {
                 // empty click listener so the click is handled instead of propagating to the background
@@ -163,18 +191,18 @@ class RadarInAppMessageView @JvmOverloads constructor(
     private fun createTitleView(title: RadarInAppMessage.Title): TextView {
         return TextView(context).apply {
             setTextColor(title.color.toColorInt())
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 34f)
             setTypeface(null, android.graphics.Typeface.BOLD)
             text = title.text
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 20)
-            
+
             // Add horizontal margins to compensate for removed container padding
             layoutParams = LayoutParams(
-                LayoutParams.MATCH_PARENT,
+                dp(310).toInt(),
                 LayoutParams.WRAP_CONTENT
             ).apply {
                 setMargins(48, 0, 48, 0)
+                setPadding(0, 0, 0, 15)
             }
         }
     }
@@ -182,18 +210,18 @@ class RadarInAppMessageView @JvmOverloads constructor(
     private fun createMessageView(body: RadarInAppMessage.Body): TextView {
         return TextView(context).apply {
             setTextColor(body.color.toColorInt())
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
             text = body.text
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 32)
             setLineSpacing(0f, 1.2f)
             
             // Add horizontal margins to compensate for removed container padding
             layoutParams = LayoutParams(
-                LayoutParams.MATCH_PARENT,
+                dp(310).toInt(),
                 LayoutParams.WRAP_CONTENT
             ).apply {
                 setMargins(48, 0, 48, 0)
+                setPadding(0, 0, 0, 50)
             }
         }
     }
@@ -204,9 +232,8 @@ class RadarInAppMessageView @JvmOverloads constructor(
             // required to override capitalization of string
             transformationMethod = null
             setTextColor(button.color.toColorInt())
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f)
             setTypeface(null, android.graphics.Typeface.BOLD)
-            setPadding(48, 16, 48, 16)
 
             // Create rounded button background
             val buttonShape = GradientDrawable().apply {
@@ -232,30 +259,28 @@ class RadarInAppMessageView @JvmOverloads constructor(
 
     private fun createDismissButton(): TextView {
         return TextView(context).apply {
-            
-        setCompoundDrawablesWithIntrinsicBounds(
-            ContextCompat.getDrawable(context, R.drawable.close),
-            null, null, null
-        )
-        
-        compoundDrawables[0]?.let { drawable ->
-            drawable.setColorFilter(
-                android.graphics.Color.WHITE,
-                android.graphics.PorterDuff.Mode.SRC_IN
+            val drawable = ContextCompat.getDrawable(context, R.drawable.close)?.apply {
+                setColorFilter(
+                    android.graphics.Color.WHITE,
+                    android.graphics.PorterDuff.Mode.SRC_IN
+                )
+            }
+            setCompoundDrawablesWithIntrinsicBounds(
+                drawable,
+                null, null, null
             )
-        }
 
-        gravity = Gravity.CENTER
+            gravity = Gravity.CENTER
 
             // Create circular background for dismiss button
             val dismissShape = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
                 setColor(DISMISS_BUTTON_BACKGROUND_COLOR.toColorInt())
-                alpha = (0.7f * 255).toInt()
+                alpha = (0.5f * 255).toInt()
             }
             background = dismissShape
 
-            setPadding(12, 6, 12, 6)
+            setPadding(18, 12, 18, 12)
 
             setOnClickListener { 
                 onDismissListener?.invoke()
@@ -277,7 +302,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
         return FrameLayout(context).apply {
             layoutParams = LayoutParams(
                 LayoutParams.MATCH_PARENT,
-                (context.resources.displayMetrics.widthPixels * 0.4).toInt() // 40% of screen width height
+                dp(200).toInt()
             ).apply {
                 setMargins(0, 0, 0, 24) // Only bottom margin for spacing
             }
@@ -286,37 +311,20 @@ class RadarInAppMessageView @JvmOverloads constructor(
             val imageView = ImageView(context).apply {
                 setImageBitmap(image)
                 scaleType = ImageView.ScaleType.CENTER_CROP
-                layoutParams = LayoutParams(
-                    LayoutParams.MATCH_PARENT,
-                    LayoutParams.MATCH_PARENT
-                )
-                
-                // Create rounded corners for the image
-                val shape = GradientDrawable().apply {
-                    shape = GradientDrawable.RECTANGLE
-                    cornerRadii = floatArrayOf(
-                        42f, 42f,  // top-left
-                        42f, 42f,  // top-right
-                        0f, 0f,    // bottom-right
-                        0f, 0f     // bottom-left
-                    )
-                }
-                background = shape
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    clipToOutline = true
-                }
             }
             addView(imageView)
             
             // Add dismiss button as overlay
-            val dismissButton = createDismissButton()
-            addView(dismissButton, LayoutParams(
-                LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT
-            ).apply {
-                gravity = Gravity.END or Gravity.TOP
-                setMargins(0, 32, 32, 0) // Top and right margins for positioning
-            })
+            val dismissButton = createDismissButton().apply {
+                layoutParams = LayoutParams(
+                    LayoutParams.WRAP_CONTENT,
+                    LayoutParams.WRAP_CONTENT
+                ).apply {
+                    gravity = Gravity.END or Gravity.TOP
+                    setMargins(dp(12).toInt())
+                }
+            }
+            addView(dismissButton)
         }
     }
 } 

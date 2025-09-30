@@ -62,19 +62,23 @@ data class RadarInAppMessage(
         fun fromJson(jsonString: String): RadarInAppMessage? {
             return try {
                 val json = JSONObject(jsonString)
+
+                println("HERE")
                 
                 val titleJson = json.getJSONObject(KEY_TITLE)
                 val title = Title(
                     text = titleJson.getString(KEY_TEXT),
                     color = titleJson.getString(KEY_COLOR)
                 )
+                println("HERE2")
                 
                 val bodyJson = json.getJSONObject(KEY_BODY)
                 val body = Body(
                     text = bodyJson.getString(KEY_TEXT),
                     color = bodyJson.getString(KEY_COLOR)
                 )
-                
+
+                println("HERE3")
                 val buttonJson = json.optJSONObject(KEY_BUTTON)
                 var button: Button? = null
                 if (buttonJson != null) {
@@ -82,7 +86,7 @@ data class RadarInAppMessage(
                         text = buttonJson.getString(KEY_TEXT),
                         color = buttonJson.getString(KEY_COLOR),
                         backgroundColor = buttonJson.getString(KEY_BACKGROUND_COLOR),
-                        deepLink = if (buttonJson.has(KEY_DEEPLINK)) buttonJson.getString(KEY_DEEPLINK) else null
+                        deepLink = buttonJson.optString(KEY_DEEPLINK)
                     )
                 }
 
@@ -91,12 +95,12 @@ data class RadarInAppMessage(
                 if (imageJson != null) {
                     image = Image(
                         name = imageJson.getString(KEY_NAME),
-                        url = if (imageJson.has(KEY_URL)) imageJson.getString(KEY_URL) else null
+                        url = imageJson.optString(KEY_URL)
                     )
                 }
                 
-                val metadata = json.optJSONObject(KEY_METADATA)
-                
+                val metadata = json.optJSONObject(KEY_METADATA) ?: JSONObject()
+
                 RadarInAppMessage(title, body, button, image, metadata)
             } catch (e: Exception) {
                 null

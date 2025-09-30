@@ -202,6 +202,28 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        createButton("IAM") {
+            val msg = RadarInAppMessage.fromJson(
+                """{
+                "type": "banner",
+                "title": {
+                    "text": "This is the title",
+                    "color": "#000000"
+                },
+                "body": {
+                    "text": "This is a demo message",
+                    "color": "#666666"
+                },
+                "button": {
+                    "text": "Send it",
+                    "color": "#FFFFFF",
+                    "backgroundColor": "#EB0083"
+                }
+            }
+            """
+            )
+            Radar.showInAppMessage(msg!!)
+        }
         createButton("startTrackingVerified") {
             Radar.startTrackingVerified(60, false)
         }

@@ -2,9 +2,11 @@ package io.radar.sdk
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogConversionCallback
 import io.radar.sdk.model.RadarEvent
@@ -38,13 +40,9 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
         })
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun showInAppMessage(payload: RadarInAppMessage) {
-
-        if (activity == null) {
-            Radar.logger.e("Activity is null, cannot show in-app message")
-            return
-        }
-
+        println("Preparing to show image $inAppMessageReceiver")
         inAppMessageReceiver?.createInAppMessageView(
             context,
             payload,
@@ -57,8 +55,8 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
             onInAppMessageButtonClicked = {
                 // Record the time when modal is dismissed via button click
                 logConversion("in_app_message_clicked", true)
-                Log.d("MyInAppMessageReceiver", "called super, activity is ${activity}")
-                if (payload.button?.deepLink != null && payload.button.deepLink != "null" && payload.button.deepLink.isNotBlank() && activity != null) {
+                Log.d("MyInAppMessageReceiver", "called super, activity is $activity")
+                if (payload.button?.deepLink != null && payload.button.deepLink != "null" && payload.button.deepLink.isNotBlank()) {
                     payload.button.deepLink.let { deepLink ->
                         try {
                             val uri = deepLink.toUri()
@@ -95,7 +93,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
         )
     }
 
-    private fun dismiss() {
+    fun dismiss() {
         currentView?.let { modal ->
             (modal.parent as? ViewGroup)?.removeView(modal)
             currentView = null
@@ -103,7 +101,6 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
     }
 
     internal fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver) {
-
         this.inAppMessageReceiver = inAppMessageReceiver
     }
    
