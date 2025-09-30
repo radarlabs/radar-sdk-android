@@ -17,7 +17,8 @@ import kotlin.math.max
 
 
 internal class RadarActivityLifecycleCallbacks(
-    private val fraud: Boolean = false
+    private val fraud: Boolean = false,
+    private val offlineManager: RadarOfflineManager? = null,
 ) : Application.ActivityLifecycleCallbacks {
     private var count = 0
     private var isFirstOnResume = true
@@ -79,6 +80,8 @@ internal class RadarActivityLifecycleCallbacks(
                         }
                     }
                 }
+                
+                offlineManager?.maybeSync(activity.applicationContext)
             } catch (e: Exception) {
                 Log.e(TAG, e.message, e)
             }

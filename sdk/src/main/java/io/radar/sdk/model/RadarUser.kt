@@ -126,7 +126,12 @@ class RadarUser(
      */
     val activityType: Radar.RadarActivityType?,
 
-    val altitude: Double?
+    val altitude: Double?,
+
+    /**
+     * Whether the user object was generated from offline tracking
+     */
+    val offline: Boolean,
 ) {
     internal companion object {
         private const val FIELD_ID = "_id"
@@ -156,6 +161,7 @@ class RadarUser(
         private const val FIELD_ACTIVITY_TYPE = "activityType"
         private const val FIELD_BAROMETRIC_ALTITUDE = "barometricAltitude"
         private const val FIELD_ALTITUDE = "altitude"
+        private const val FIELD_OFFLINE = "offline"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarUser? {
@@ -211,6 +217,7 @@ class RadarUser(
             } else {
                 null
             }
+            val offline = obj.optBoolean(FIELD_OFFLINE)
             
             
 
@@ -239,7 +246,8 @@ class RadarUser(
                 debug,
                 fraud,
                 activityType,
-                altitude
+                altitude,
+                offline,
             )
         }
     }
@@ -278,6 +286,7 @@ class RadarUser(
         if (this.altitude != null) {
             obj.putOpt(FIELD_ALTITUDE, this.altitude)
         }
+        obj.putOpt(FIELD_OFFLINE, this.offline)
         return obj
     }
 }

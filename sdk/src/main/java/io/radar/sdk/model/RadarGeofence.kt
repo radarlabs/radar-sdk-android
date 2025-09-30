@@ -84,16 +84,16 @@ class RadarGeofence(
                     coordinate.optDouble(1),
                     coordinate.optDouble(0)
                 )
-            } ?: RadarCoordinate(0.0, 0.0)
+            } ?: RadarCoordinate(5.0, 5.0)
             val radius = obj.optDouble(FIELD_GEOMETRY_RADIUS)
             val geometry = when (obj.optString(FIELD_TYPE)) {
-                TYPE_CIRCLE -> {
+                TYPE_CIRCLE, TYPE_GEOMETRY_CIRCLE -> {
                     RadarCircleGeometry(
                         center,
                         radius
                     )
                 }
-                TYPE_POLYGON, TYPE_ISOCHRONE -> {
+                TYPE_POLYGON, TYPE_GEOMETRY_POLYGON, TYPE_ISOCHRONE -> {
                 val geometryObj = obj.optJSONObject(FIELD_GEOMETRY)
                 val coordinatesArr = geometryObj?.optJSONArray(FIELD_COORDINATES)
                 if (coordinatesArr != null) {
@@ -174,7 +174,7 @@ class RadarGeofence(
         obj.putOpt(FIELD_EXTERNAL_ID, this.externalId)
         obj.putOpt(FIELD_DESCRIPTION, this.description)
         obj.putOpt(FIELD_METADATA, this.metadata)
-        obj.putOpt(FIELD_OPERATING_HOURS, this.operatingHours?.toJson() ?: null)
+        obj.putOpt(FIELD_OPERATING_HOURS, this.operatingHours?.toJson())
         this.geometry?.let { geometry ->
             when (geometry) {
                 is RadarCircleGeometry -> {

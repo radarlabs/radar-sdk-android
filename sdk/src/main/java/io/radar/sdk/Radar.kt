@@ -489,6 +489,7 @@ object Radar {
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
     private lateinit var inAppMessageManager: RadarInAppMessageManager
+    private lateinit var offlineManager: RadarOfflineManager
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
      *
@@ -557,8 +558,12 @@ object Radar {
             RadarSettings.setPublishableKey(this.context, publishableKey)
         }
 
+        if (!this::offlineManager.isInitialized) {
+            offlineManager = RadarOfflineManager()
+        }
+
         if (!this::apiClient.isInitialized) {
-            this.apiClient = RadarApiClient(this.context, logger)
+            this.apiClient = RadarApiClient(this.context, logger, offlineManager = offlineManager)
         }
 
         if (RadarActivityLifecycleCallbacks.foreground) {
@@ -609,7 +614,7 @@ object Radar {
         if (fraud) {
             RadarSettings.setSharing(this.context, false)
         }
-        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
+        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud, offlineManager))
 
         val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
         if (sdkConfiguration.usePersistence) {
@@ -630,10 +635,13 @@ object Radar {
 
                 val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
                 if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(context)) {
-                    Radar.startTracking(Radar.getTrackingOptions())
+                    startTracking(getTrackingOptions())
                 }
                 if (sdkConfiguration.trackOnceOnAppOpen) {
-                    Radar.trackOnce()
+                    trackOnce()
+                }
+                if (sdkConfiguration.useOfflineTracking || true) {
+                    offlineManager.sync(context)
                 }
             }
         })

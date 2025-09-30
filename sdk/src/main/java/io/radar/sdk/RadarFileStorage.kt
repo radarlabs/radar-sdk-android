@@ -28,13 +28,13 @@ class RadarFileStorage {
     }
 
     fun writeJSON(context: Context, filename: String, json: JSONObject) {
-        writeFile(context, filename, json.toString().toByteArray())
+        writeFile(context, filename, json.toString().toByteArray(Charsets.UTF_8))
     }
 
     fun readJSON(context: Context, filename: String): JSONObject? {
         return readFile(context, filename)?.let {
             try {
-                return JSONObject(it.toString())
+                return JSONObject(it.toString(Charsets.UTF_8))
             }
             catch (e: JSONException) {
                 return null

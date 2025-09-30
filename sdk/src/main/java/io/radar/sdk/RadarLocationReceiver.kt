@@ -169,7 +169,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
             Radar.initialize(context)
         }
 
-        Radar.logger.d("Received broadcast | action = ${intent.action}")
+        println("Received broadcast | action = ${intent.action}")
 
         when (intent.action) {
             ACTION_BUBBLE_GEOFENCE -> {

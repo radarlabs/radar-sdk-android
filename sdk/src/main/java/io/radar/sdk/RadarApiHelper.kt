@@ -44,7 +44,8 @@ internal open class RadarApiHelper(
                               stream: Boolean = false,
                               logPayload: Boolean = true,
                               verified: Boolean = false,
-                              imageCallback: RadarImageApiCallback? = null) {
+                              imageCallback: RadarImageApiCallback? = null,
+                              fnCallback: ((Radar.RadarStatus, JSONObject?) -> Unit) = { _, _ -> }) {
         val host = if (verified) {
             RadarSettings.getVerifiedHost(context)
         } else {
@@ -121,24 +122,6 @@ internal open class RadarApiHelper(
                 }
 
                 if (urlConnection.responseCode in 200 until 400) {
-                    if (callback != null) {
-                        val body = urlConnection.inputStream.readAll()
-                        if (body == null) {
-                            handler.post {
-                                callback.onComplete(Radar.RadarStatus.ERROR_SERVER)
-                            }
-
-                            return@execute
-                        }
-
-                        val res = JSONObject(body)
-
-                        logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res")
-                        
-                        handler.post {
-                            callback.onComplete(Radar.RadarStatus.SUCCESS, res)
-                        }
-                    }
                     if (imageCallback != null) {
                         val inputStream = urlConnection.inputStream
                         val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
@@ -148,6 +131,25 @@ internal open class RadarApiHelper(
                         
                         handler.post {
                             imageCallback.onComplete(Radar.RadarStatus.SUCCESS, bitmap)
+                        }
+                    } else {
+                        val body = urlConnection.inputStream.readAll()
+                        if (body == null) {
+                            handler.post {
+                                callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                                fnCallback(Radar.RadarStatus.ERROR_SERVER, null)
+                            }
+
+                            return@execute
+                        }
+
+                        val res = JSONObject(body)
+
+                        logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res")
+
+                        handler.post {
+                            callback?.onComplete(Radar.RadarStatus.SUCCESS, res)
+                            fnCallback(Radar.RadarStatus.SUCCESS, res)
                         }
                     }
                 } else {
@@ -166,6 +168,7 @@ internal open class RadarApiHelper(
                     if (body == null) {
                         callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
                         imageCallback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                        fnCallback(Radar.RadarStatus.ERROR_SERVER, null)
 
                         return@execute
                     }
@@ -177,6 +180,7 @@ internal open class RadarApiHelper(
                     handler.post {
                         callback?.onComplete(status)
                         imageCallback?.onComplete(status)
+                        fnCallback(status, null)
                     }
                 }
 
@@ -187,6 +191,7 @@ internal open class RadarApiHelper(
 
                     callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                    fnCallback(Radar.RadarStatus.ERROR_NETWORK, null)
                 }
             } catch (e: JSONException) {
                 logger?.d("Error calling API | e = ${e.localizedMessage}")
@@ -194,6 +199,7 @@ internal open class RadarApiHelper(
                 handler.post {
                     callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                    fnCallback(Radar.RadarStatus.ERROR_SERVER, null)
                 }
             } catch (e: Exception) {
                 logger?.d("Error calling API | e = ${e.localizedMessage}")
@@ -201,6 +207,7 @@ internal open class RadarApiHelper(
                 handler.post {
                     callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
+                    fnCallback(Radar.RadarStatus.ERROR_UNKNOWN, null)
                 }
             }
 
