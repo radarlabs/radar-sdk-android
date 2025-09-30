@@ -71,7 +71,6 @@ class RadarInAppMessageView @JvmOverloads constructor(
         this.onDismissListener = onDismissListener
         this.onInAppMessageButtonClicked = onInAppMessageButtonClicked
         Radar.loadImage(inAppMessage.image?.url) { image ->
-            println("Image is: $image")
             createInAppMessageView(inAppMessage, image)
             // Call the callback when the view is fully initialized
             onViewReady(this)
@@ -195,6 +194,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
             setTypeface(null, android.graphics.Typeface.BOLD)
             text = title.text
             gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 15)
 
             // Add horizontal margins to compensate for removed container padding
             layoutParams = LayoutParams(
@@ -202,7 +202,6 @@ class RadarInAppMessageView @JvmOverloads constructor(
                 LayoutParams.WRAP_CONTENT
             ).apply {
                 setMargins(48, 0, 48, 0)
-                setPadding(0, 0, 0, 15)
             }
         }
     }
@@ -214,6 +213,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
             text = body.text
             gravity = Gravity.CENTER
             setLineSpacing(0f, 1.2f)
+            setPadding(0, 0, 0, 50)
             
             // Add horizontal margins to compensate for removed container padding
             layoutParams = LayoutParams(
@@ -221,7 +221,6 @@ class RadarInAppMessageView @JvmOverloads constructor(
                 LayoutParams.WRAP_CONTENT
             ).apply {
                 setMargins(48, 0, 48, 0)
-                setPadding(0, 0, 0, 50)
             }
         }
     }

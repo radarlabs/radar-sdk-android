@@ -63,22 +63,16 @@ data class RadarInAppMessage(
             return try {
                 val json = JSONObject(jsonString)
 
-                println("HERE")
-                
                 val titleJson = json.getJSONObject(KEY_TITLE)
                 val title = Title(
                     text = titleJson.getString(KEY_TEXT),
                     color = titleJson.getString(KEY_COLOR)
                 )
-                println("HERE2")
-                
                 val bodyJson = json.getJSONObject(KEY_BODY)
                 val body = Body(
                     text = bodyJson.getString(KEY_TEXT),
                     color = bodyJson.getString(KEY_COLOR)
                 )
-
-                println("HERE3")
                 val buttonJson = json.optJSONObject(KEY_BUTTON)
                 var button: Button? = null
                 if (buttonJson != null) {
