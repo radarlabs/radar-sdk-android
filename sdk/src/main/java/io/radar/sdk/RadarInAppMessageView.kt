@@ -2,8 +2,6 @@ package io.radar.sdk
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BlendModeColorFilter
-import android.graphics.ColorFilter
 import android.graphics.Outline
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
@@ -11,17 +9,14 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.toColorInt
-import androidx.core.view.marginTop
 import androidx.core.view.setMargins
 import io.radar.sdk.model.RadarInAppMessage
 
@@ -241,11 +236,15 @@ class RadarInAppMessageView @JvmOverloads constructor(
                 setColor(button.backgroundColor.toColorInt())
             }
             background = buttonShape
-            
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                stateListAnimator = null
+            }
+
             // Add horizontal margins to compensate for removed container padding
             layoutParams = LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.WRAP_CONTENT
+                dp(310).toInt(),
+                dp(50).toInt()
             ).apply {
                 setMargins(48, 0, 48, 0)
             }
