@@ -289,7 +289,8 @@ class RadarTest {
     @Before
     fun setUp() {
         Radar.logger = RadarLogger(context)
-        Radar.apiClient = RadarApiClient(context, Radar.logger)
+        Radar.offlineManager = RadarOfflineManager(context)
+        Radar.apiClient = RadarApiClient(context, Radar.logger, offlineManager=Radar.offlineManager)
         Radar.apiClient.apiHelper = apiHelperMock
         setUpLogConversionTest()
 
@@ -2214,17 +2215,14 @@ class RadarTest {
 
         val latch = CountDownLatch(1)
 
-        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                if (config != null) {
-                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
-                }
-
-                assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
-
-                latch.countDown()
+        Radar.apiClient.getConfig("sdkConfigUpdate") { (status, _, sdkConfiguration, _, _) ->
+            if (status != Radar.RadarStatus.SUCCESS) {
+                RadarSettings.setSdkConfiguration(context, sdkConfiguration)
             }
-        })
+
+            assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
+            latch.countDown()
+        }
         
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)

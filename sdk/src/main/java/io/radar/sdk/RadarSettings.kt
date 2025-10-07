@@ -41,7 +41,6 @@ internal object RadarSettings {
     private const val KEY_X_PLATFORM_SDK_TYPE = "x_platform_sdk_type"
     private const val KEY_X_PLATFORM_SDK_VERSION = "x_platform_sdk_version"
     private const val KEY_USER_TAGS = "user_tags"
-    private const val KEY_USER = "user"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -464,15 +463,5 @@ internal object RadarSettings {
                 putString(KEY_USER_TAGS, tagsJson)
             }
         }
-    }
-
-    internal fun setUser(context: Context, user: RadarUser) {
-        val userString = user.toJson().toString()
-        getSharedPreferences(context).edit { putString(KEY_USER, userString) }
-    }
-
-    internal fun getUser(context: Context): RadarUser? {
-        val user = getSharedPreferences(context).getString(KEY_USER, null) ?: return null
-        return RadarUser.fromJson(JSONObject(user))
     }
 }

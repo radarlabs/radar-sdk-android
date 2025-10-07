@@ -12,7 +12,6 @@ import org.json.JSONObject
 
 internal object RadarState {
 
-    private const val KEY_STARTED = "has_started"
     private const val KEY_LAST_LOCATION_LATITUDE = "last_location_latitude"
     private const val KEY_LAST_LOCATION_LONGITUDE = "last_location_longitude"
     private const val KEY_LAST_LOCATION_ACCURACY = "last_location_accuracy"
@@ -42,6 +41,7 @@ internal object RadarState {
     private const val KEY_LAST_MOTION_ACTIVITY = "last_motion_activity"
     private const val KEY_LAST_PRESSURE = "last_pressure"
     private const val KEY_DELIVERED_NOTIFICATIONS = "delivered_notifications"
+    private const val KEY_USER = "user"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -319,5 +319,15 @@ internal object RadarState {
         getSharedPreferences(context).edit {
             putStringSet(KEY_DELIVERED_NOTIFICATIONS, notifications.map { n -> n.toString() }.toSet())
         }
+    }
+
+    internal fun setUser(context: Context, user: RadarUser) {
+        val userString = user.toJson().toString()
+        getSharedPreferences(context).edit { putString(KEY_USER, userString) }
+    }
+
+    internal fun getUser(context: Context): RadarUser? {
+        val user = getSharedPreferences(context).getString(KEY_USER, null) ?: return null
+        return RadarUser.fromJson(JSONObject(user))
     }
 }

@@ -285,6 +285,17 @@ internal class RadarLocationManager(
         updateTracking()
     }
 
+    internal fun updateTracking(options: RadarTrackingOptions?) {
+        if (options != null) {
+            RadarSettings.setRemoteTrackingOptions(context, options)
+            logger.d("Setting remote tracking options | trackingOptions = $options")
+        } else {
+            RadarSettings.removeRemoteTrackingOptions(context)
+            logger.d("Removed remote tracking options | trackingOptions = ${Radar.getTrackingOptions()}")
+        }
+        updateTracking()
+    }
+
     internal fun restartPreviousTrackingOptions() {
         val previousTrackingOptions = RadarSettings.getPreviousTrackingOptions(context)
         logger.d("Restarting previous tracking options | trackingOptions = ${previousTrackingOptions}")

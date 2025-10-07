@@ -2,7 +2,6 @@ package io.radar.sdk
 
 import android.content.Context
 import android.location.Location
-import io.radar.sdk.Radar.apiClient
 import io.radar.sdk.model.RadarCircleGeometry
 import io.radar.sdk.model.RadarCoordinate
 import io.radar.sdk.model.RadarEvent
@@ -11,13 +10,13 @@ import io.radar.sdk.model.RadarPolygonGeometry
 import org.json.JSONArray
 import org.json.JSONObject
 import java.nio.ByteBuffer
-import java.time.Duration
-import java.time.Instant
 import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
-class RadarOfflineManager {
+class RadarOfflineManager(
+    private val context: Context,
+) {
     private var geofences = arrayOf<RadarGeofence>()
     private var inGeofenceTrackingTags = mutableListOf<String>()
     private var inGeofenceTrackingOptions: RadarTrackingOptions? = null
@@ -27,9 +26,9 @@ class RadarOfflineManager {
 
     private var fileStorage = RadarFileStorage()
 
-    private val SYNC_FREQUENCY = 1000 * 60 * 60 * 4 // every 4 hours
+    private companion object {
+        private const val SYNC_FREQUENCY = 1000 * 60 * 60 * 4 // every 4 hours
 
-    companion object ObjectIdGenerator {
         private val machineIdentifier: ByteArray = run {
             val bytes = ByteArray(5)
             Random.nextBytes(bytes)
@@ -39,7 +38,7 @@ class RadarOfflineManager {
         private val counter: AtomicInteger = AtomicInteger((Math.random() * 0xFFFFFF).toInt())
 
         @Synchronized
-        fun generate(): String {
+        fun generateObjectId(): String {
             val id = ByteBuffer.allocate(12)
 
             // 1. timestamp (4 bytes, big endian)
@@ -60,8 +59,7 @@ class RadarOfflineManager {
         }
     }
 
-    fun sync(context: Context) {
-        println("HERE syncing offline ${RadarUtils.dateToISOString(lastSyncTime)}")
+    init {
         val data = fileStorage.readJSON(context, "offlineData.json")
         if (data != null) {
             geofences = data.optJSONArray("geofences")?.let { RadarGeofence.fromJson(it) } ?: arrayOf()
@@ -71,50 +69,61 @@ class RadarOfflineManager {
             defaultTrackingOptions = data.optJSONObject("defaultTrackingOptions")?.let { RadarTrackingOptions.fromJson(it) }
             inGeofenceTrackingTags = data.optJSONArray("inGeofenceTrackingTags")?.let { MutableList(it.length()) { i -> it.getString(i) } } ?: mutableListOf()
         }
-
-        val syncTime = Date()
-        apiClient.getOfflineData(geofences.map { it._id }.toTypedArray(), lastSyncTime) { status, res ->
-            if (status != Radar.RadarStatus.SUCCESS || res == null) {
-                return@getOfflineData
-            }
-
-            val newGeofences = RadarGeofence.fromJson(res.getJSONArray("newGeofences")) ?: arrayOf()
-            val removeGeofences = res.getJSONArray("removeGeofences")
-            val removeIds = mutableSetOf<String>()
-            for (i in 0 until removeGeofences.length()) {
-                removeIds.add(removeGeofences.optString(i))
-            }
-
-            geofences = geofences.filter { it._id !in removeIds }.toTypedArray() + newGeofences
-            inGeofenceTrackingOptions = res.optJSONObject("inGeofenceTrackingOptions")?.let { RadarTrackingOptions.fromJson(it) }
-            onTripTrackingOptions = res.optJSONObject("onTripTrackingOptions")?.let { RadarTrackingOptions.fromJson(it) }
-            defaultTrackingOptions = res.optJSONObject("defaultTrackingOptions")?.let { RadarTrackingOptions.fromJson(it) }
-            inGeofenceTrackingTags = res.optJSONArray("inGeofenceTrackingTags")?.let { MutableList(it.length()) { i -> it.getString(i) } } ?: mutableListOf()
-            lastSyncTime = syncTime
-
-            val newData = JSONObject().apply {
-                put("geofences", RadarGeofence.toJson(geofences))
-                put("lastSyncTime", RadarUtils.dateToISOString(syncTime))
-                put("inGeofenceTrackingOptions", res.optJSONObject("inGeofenceTrackingOptions"))
-                put("onTripTrackingOptions", res.optJSONObject("onTripTrackingOptions"))
-                put("defaultTrackingOptions", res.optJSONObject("defaultTrackingOptions"))
-                put("inGeofenceTrackingTags", res.optJSONArray("inGeofenceTrackingTags"))
-            }
-
-            fileStorage.writeJSON(context, "offlineData.json", newData)
-        }
     }
 
-    fun maybeSync(context: Context) {
-        if (Date().time - lastSyncTime.time > SYNC_FREQUENCY) {
-            sync(context)
+    fun getOfflineDataRequest(): JSONObject? {
+        if (Date().time - lastSyncTime.time < SYNC_FREQUENCY) {
+            // data is not stale, don't need to try and sync every time
+            return null
         }
+
+        val user = RadarState.getUser(context)
+        val offlineDataRequest = JSONObject().apply {
+            put("geofenceIds", geofences.map { it._id }.toTypedArray())
+            put("location", JSONObject().apply {
+                put("latitude", user?.location?.latitude)
+                put("longitude", user?.location?.longitude)
+            })
+            put("lastSyncTime", lastSyncTime)
+        }
+
+        return offlineDataRequest
     }
 
-    fun createGeofenceEvent(context: Context, geofence: RadarGeofence, location: Location, type: String): JSONObject {
+    fun updateOfflineData(time: Date, offlineData: JSONObject?) {
+        if (offlineData == null) {
+            return
+        }
+        val newGeofences = RadarGeofence.fromJson(offlineData.getJSONArray("newGeofences")) ?: arrayOf()
+        val removeGeofences = offlineData.getJSONArray("removeGeofences")
+        val removeIds = mutableSetOf<String>()
+        for (i in 0 until removeGeofences.length()) {
+            removeIds.add(removeGeofences.optString(i))
+        }
+
+        geofences = geofences.filter { it._id !in removeIds }.toTypedArray() + newGeofences
+        inGeofenceTrackingOptions = offlineData.optJSONObject("inGeofenceTrackingOptions")?.let { RadarTrackingOptions.fromJson(it) }
+        onTripTrackingOptions = offlineData.optJSONObject("onTripTrackingOptions")?.let { RadarTrackingOptions.fromJson(it) }
+        defaultTrackingOptions = offlineData.optJSONObject("defaultTrackingOptions")?.let { RadarTrackingOptions.fromJson(it) }
+        inGeofenceTrackingTags = offlineData.optJSONArray("inGeofenceTrackingTags")?.let { MutableList(it.length()) { i -> it.getString(i) } } ?: mutableListOf()
+        lastSyncTime = time
+
+        val newData = JSONObject().apply {
+            put("geofences", RadarGeofence.toJson(geofences))
+            put("lastSyncTime", RadarUtils.dateToISOString(lastSyncTime))
+            put("inGeofenceTrackingOptions", offlineData.optJSONObject("inGeofenceTrackingOptions"))
+            put("onTripTrackingOptions", offlineData.optJSONObject("onTripTrackingOptions"))
+            put("defaultTrackingOptions", offlineData.optJSONObject("defaultTrackingOptions"))
+            put("inGeofenceTrackingTags", offlineData.optJSONArray("inGeofenceTrackingTags"))
+        }
+
+        fileStorage.writeJSON(context, "offlineData.json", newData)
+    }
+
+    private fun createGeofenceEvent(context: Context, geofence: RadarGeofence, location: Location, type: String): JSONObject {
         val now = RadarUtils.dateToISOString(Date())
         return JSONObject().apply {
-            put("_id", ObjectIdGenerator.generate())
+            put("_id", generateObjectId())
             put("createdAt", now)
             put("actualCreatedAt", now)
             // figure out the import scope issue later
@@ -145,7 +154,7 @@ class RadarOfflineManager {
         location.longitude = longitude
         location.latitude = latitude
 
-        val user = RadarSettings.getUser(context) ?: return null
+        val user = RadarState.getUser(context) ?: return null
 
         // Events
         // calculate geofences within and generate events
