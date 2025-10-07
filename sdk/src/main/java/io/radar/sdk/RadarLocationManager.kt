@@ -376,8 +376,7 @@ internal class RadarLocationManager(
         }
     }
 
-    fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
-        logger.d("replace synced geofences called")
+    internal fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
         this.removeSyncedGeofences() { success ->
             this.addSyncedGeofences(radarGeofences)
         }
