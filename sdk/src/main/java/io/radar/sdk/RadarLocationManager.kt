@@ -13,7 +13,6 @@ import io.radar.sdk.Radar.RadarLocationServicesProvider.HUAWEI
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.Radar.RadarStatus
-import io.radar.sdk.Radar.isTracking
 import io.radar.sdk.RadarApiClient.RadarTrackApiCallback
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSyncGeofences
