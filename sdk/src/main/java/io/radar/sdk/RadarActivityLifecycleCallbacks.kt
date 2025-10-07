@@ -12,12 +12,20 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import io.radar.sdk.Radar.RadarStatus
+import io.radar.sdk.Radar.getTrackingOptions
+import io.radar.sdk.Radar.loadReplayBufferFromSharedPreferences
+import io.radar.sdk.Radar.locationManager
+import io.radar.sdk.Radar.startTracking
+import io.radar.sdk.Radar.trackOnce
 import io.radar.sdk.model.RadarConfig
+import java.util.Date
 import kotlin.math.max
 
 
 internal class RadarActivityLifecycleCallbacks(
-    private val fraud: Boolean = false
+    private val fraud: Boolean = false,
+    private val offlineManager: RadarOfflineManager? = null,
 ) : Application.ActivityLifecycleCallbacks {
     private var count = 0
     private var isFirstOnResume = true
@@ -47,37 +55,32 @@ internal class RadarActivityLifecycleCallbacks(
     override fun onActivityResumed(activity: Activity) {
         if (count == 0 && !isFirstOnResume) {
             try {
+                val context = activity.applicationContext
+
+                // called after getConfig API or immediately if session is persisted
+                val updateTrackingFromSdkConfiguration = {
+                    val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+                    if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(context)) {
+                        startTracking(getTrackingOptions())
+                    }
+                    if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
+                        trackOnce()
+                    }
+                }
+
                 val updated = RadarSettings.updateSessionId(activity.applicationContext)
                 if (updated) {
-                    val usage = "resume"
-                    Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
-                        override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                            if (config == null) {
-                                return
-                            }
-
-                            if (status == Radar.RadarStatus.SUCCESS) {
-                                Radar.locationManager.updateTrackingFromMeta(config.meta)
-                                RadarSettings.setSdkConfiguration(activity.applicationContext, config.meta.sdkConfiguration)
-                            }
-
-                            val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
-                            if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
-                                Radar.trackOnce()
-                                if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(activity.applicationContext)) {
-                                    Radar.startTracking(Radar.getTrackingOptions())
-                                }
-                            }
+                    val time = Date()
+                    Radar.apiClient.getConfig("resume") { (status, remoteTrackingOptions, remoteSdkConfig, _, offlineData) ->
+                        if (status == RadarStatus.SUCCESS) {
+                            locationManager.updateTracking(remoteTrackingOptions)
+                            RadarSettings.setSdkConfiguration(context, remoteSdkConfig)
+                            Radar.offlineManager.updateOfflineData(time, offlineData)
                         }
-                    })
-                } else {
-                    val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
-                    if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
-                        Radar.trackOnce()
-                        if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(activity.applicationContext)) {
-                            Radar.startTracking(Radar.getTrackingOptions())
-                        }
+                        updateTrackingFromSdkConfiguration()
                     }
+                } else {
+                    updateTrackingFromSdkConfiguration()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, e.message, e)

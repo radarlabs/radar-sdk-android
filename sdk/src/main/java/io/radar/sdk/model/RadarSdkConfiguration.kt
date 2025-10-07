@@ -23,6 +23,8 @@ internal data class RadarSdkConfiguration(
     val useForegroundLocationUpdatedAtMsDiff: Boolean = false,
     val locationManagerTimeout: Int = 0,
     val syncAfterSetUser: Boolean = false,
+    val useNotificationDiff: Boolean = false,
+    val useOfflineTracking: Boolean = false,
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -39,6 +41,8 @@ internal data class RadarSdkConfiguration(
         private const val USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF = "useForegroundLocationUpdatedAtMsDiff"
         private const val LOCATION_MANAGER_TIMEOUT = "locationManagerTimeout"
         private const val SYNC_AFTER_SET_USER = "syncAfterSetUser"
+        private const val USE_NOTIFICATION_DIFF = "useNotificationDiff"
+        private const val USE_OFFLINE_TRACKING = "useOfflineTracking"
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             // set json as empty object if json is null, which uses fallback values
@@ -58,19 +62,18 @@ internal data class RadarSdkConfiguration(
                 config.optBoolean(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, false),
                 config.optInt(LOCATION_MANAGER_TIMEOUT, 0),
                 config.optBoolean(SYNC_AFTER_SET_USER, false),
+                config.optBoolean(USE_NOTIFICATION_DIFF, false),
+                config.optBoolean(USE_OFFLINE_TRACKING, false),
             )
         }
 
         fun updateSdkConfigurationFromServer(context: Context) {
-            Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
-                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                    if (config == null) {
-                        return
-                    }
-
-                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+            Radar.apiClient.getConfig("sdkConfigUpdate") { (status, _, sdkConfiguration, _, _) ->
+                if (status != Radar.RadarStatus.SUCCESS) {
+                    return@getConfig
                 }
-            })
+                RadarSettings.setSdkConfiguration(context, sdkConfiguration)
+            }
         }
     }
 
@@ -89,6 +92,8 @@ internal data class RadarSdkConfiguration(
             putOpt(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, useForegroundLocationUpdatedAtMsDiff)
             putOpt(LOCATION_MANAGER_TIMEOUT, locationManagerTimeout)
             putOpt(SYNC_AFTER_SET_USER, syncAfterSetUser)
+            putOpt(USE_NOTIFICATION_DIFF, useNotificationDiff)
+            putOpt(USE_OFFLINE_TRACKING, useOfflineTracking)
         }
     }
 }

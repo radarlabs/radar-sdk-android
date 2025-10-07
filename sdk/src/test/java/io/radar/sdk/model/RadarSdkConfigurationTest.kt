@@ -31,6 +31,7 @@ class RadarSdkConfigurationTest {
     private var useForegroundLocationUpdatedAtMsDiff = false
     private var locationManagerTimeout = 123456
     private var syncAfterSetUser = false
+    private var useNotificationDiff = true
 
     @Before
     fun setUp() {
@@ -39,6 +40,7 @@ class RadarSdkConfigurationTest {
         extendFlushReplays = Random.nextBoolean()
         jsonString = """{
             "networkAny":$requiresNetwork,
+            "useNotificationDiff":$useNotificationDiff,
             "maxConcurrentJobs":$maxConcurrentJobs,
             "usePersistence":$usePersistence,
             "useRadarModifiedBeacon":$useRadarModifiedBeacon,
@@ -72,6 +74,7 @@ class RadarSdkConfigurationTest {
                 useForegroundLocationUpdatedAtMsDiff,
                 locationManagerTimeout,
                 syncAfterSetUser,
+                useNotificationDiff,
             ).toJson().toString()
         )
     }

@@ -489,6 +489,7 @@ object Radar {
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
     private lateinit var inAppMessageManager: RadarInAppMessageManager
+    internal lateinit var offlineManager: RadarOfflineManager
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
      *
@@ -557,8 +558,12 @@ object Radar {
             RadarSettings.setPublishableKey(this.context, publishableKey)
         }
 
+        if (!this::offlineManager.isInitialized) {
+            offlineManager = RadarOfflineManager(this.context)
+        }
+
         if (!this::apiClient.isInitialized) {
-            this.apiClient = RadarApiClient(this.context, logger)
+            this.apiClient = RadarApiClient(this.context, logger, offlineManager = offlineManager)
         }
 
         if (RadarActivityLifecycleCallbacks.foreground) {
@@ -609,34 +614,28 @@ object Radar {
         if (fraud) {
             RadarSettings.setSharing(this.context, false)
         }
-        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
+        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud, offlineManager))
 
-        val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
-        if (sdkConfiguration.usePersistence) {
-            loadReplayBufferFromSharedPreferences()
-        }
-
-        val usage = "initialize"
-        this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: RadarStatus, config: RadarConfig?) {
-                if (config == null) {
-                    return
-                }
-
-                if (status == RadarStatus.SUCCESS) {
-                    locationManager.updateTrackingFromMeta(config.meta)
-                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
-                }
-
-                val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
-                if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(context)) {
-                    Radar.startTracking(Radar.getTrackingOptions())
-                }
-                if (sdkConfiguration.trackOnceOnAppOpen) {
-                    Radar.trackOnce()
-                }
+        val time = Date()
+        this.apiClient.getConfig("initialize") { (status, remoteTrackingOptions, remoteSdkConfig, _, offlineData) ->
+            if (status == RadarStatus.SUCCESS) {
+                locationManager.updateTracking(remoteTrackingOptions)
+                RadarSettings.setSdkConfiguration(context, remoteSdkConfig)
+                offlineManager.updateOfflineData(time, offlineData)
             }
-        })
+
+            // even if config fails, we still want to perform these operations with existing sdkConfiguration
+            val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+            if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(context)) {
+                startTracking(getTrackingOptions())
+            }
+            if (sdkConfiguration.trackOnceOnAppOpen) {
+                trackOnce()
+            }
+            if (sdkConfiguration.usePersistence) {
+                loadReplayBufferFromSharedPreferences()
+            }
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             this.logger.logPastTermination()

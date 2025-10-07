@@ -13,8 +13,13 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.location.Location
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -32,22 +37,32 @@ import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
 import io.radar.sdk.model.RadarInAppMessage
 import io.radar.sdk.model.RadarVerifiedLocationToken
+import org.json.JSONException
 import org.json.JSONObject
+import java.io.File
 import java.util.Date
 import java.util.EnumSet
 
 class MainActivity : AppCompatActivity() {
 
-    val demoFunctions: ArrayList<() -> Unit> = ArrayList()
+    val demoFunctions: ArrayList<(button: Button) -> Unit> = ArrayList()
     private lateinit var listView: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
+
         setContentView(R.layout.activity_main)
 
         val receiver = MyRadarReceiver()
-        
-        Radar.initialize(this, "prj_test_pk_0000000000000000000000000000000000000000", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
+
+
+        getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
+            putString("host", "https://shichengradar.ngrok.app")
+        }
+
+        Radar.initialize(this, "prj_test_pk_3508428416f485c5f54d8e8bb1f616ee405b1995", receiver, Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
         Radar.sdkVersion().let { Log.i("version", it) }
         // We can also set the foreground service options like this:
         // Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
@@ -69,7 +84,95 @@ class MainActivity : AppCompatActivity() {
         Radar.setInAppMessageReceiver(inAppMessageReceiver)
 
         listView = findViewById(R.id.buttonList)
+
+        val getUser = {
+            val json = getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).getString("user", "")
+            try {
+                JSONObject(json).toString(2)
+            } catch (e: JSONException) {
+                "get user failed"
+            }
+        }
+
+        val button = Button(this);
+
+        button.text = getUser()
+        button.isAllCaps = false
+        button.tag = demoFunctions.size
+        button.setOnClickListener {
+            button.text = getUser()
+        }
+        button.gravity = Gravity.START
+
+
+        val getData = {
+            val file = File(filesDir, "RadarSDK/offlineData.json")
+            try {
+                if (file.exists()) {
+                    val data = file.readBytes().toString(Charsets.UTF_8)
+                    println(data)
+                    JSONObject(data).toString(2)
+                } else {
+                    "no file"
+                }
+            } catch (e: JSONException) {
+                "get data error: ${e}"
+            }
+        }
+
+        val filebutton = Button(this);
+        filebutton.text = getData()
+        filebutton.isAllCaps = false
+        filebutton.tag = demoFunctions.size
+        filebutton.setOnClickListener {
+            filebutton.text = getData()
+        }
+        filebutton.gravity = Gravity.START
+
+        val delete = Button(this)
+        delete.text = "Delete"
+        delete.isAllCaps = false
+        delete.tag = demoFunctions.size
+        delete.setOnClickListener {
+            File(filesDir, "RadarSDK/offlineData.json").delete()
+        }
+
+        listView.addView(button)
+        listView.addView(delete)
+        listView.addView(filebutton)
+
         createButtons()
+
+
+        val networkRequest = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+            .build()
+        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+            // network is available for use
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                println("Network available")
+            }
+
+            // Network capabilities have changed for the network
+//            override fun onCapabilitiesChanged(
+//                network: Network,
+//                networkCapabilities: NetworkCapabilities
+//            ) {
+//                super.onCapabilitiesChanged(network, networkCapabilities)
+//                val unmetered = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+//                println("Network changed $unmetered")
+//            }
+
+
+            // lost network connection
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                println("Network lost")
+            }
+        }
     }
 
     @SuppressLint("NewApi")
@@ -166,13 +269,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun createButton(text: String, function: () -> Unit) {
+    fun createButton(text: String, function: (button: Button) -> Unit) {
         val button = Button(this);
         button.text = text
         button.isAllCaps = false
         button.tag = demoFunctions.size
         button.setOnClickListener {
-            function()
+            function(button)
         }
 
         demoFunctions.add(function)
@@ -248,12 +351,17 @@ class MainActivity : AppCompatActivity() {
             Radar.setExpectedJurisdiction("US", "CA")
         }
 
-        createButton("trackOnce") {
+        createButton("trackOnce") { button ->
             Radar.trackOnce { status, location, events, user ->
                 Log.v(
                     "example",
                     "Track once: status = ${status}; location = $location; events = $events; user = $user"
                 )
+                button.text = "Track once: status = ${status};\n " +
+                        "location = ${location.toString()}; " +
+                        "events = ${events?.map { it.toJson().toString(2) }?.joinToString(" - ")};" +
+                        "\n user = ${user?.toJson()?.toString(2)}"
+                button.gravity = Gravity.START
             }
         }
 
@@ -662,9 +770,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         createButton("run all demo") {
-            for (function in demoFunctions) {
-                function()
-            }
+//            for (function in demoFunctions) {
+//                function()
+//            }
         }
         demoFunctions.removeAt(demoFunctions.size - 1)
     }

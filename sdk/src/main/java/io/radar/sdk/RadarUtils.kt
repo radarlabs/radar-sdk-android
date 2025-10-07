@@ -21,10 +21,6 @@ import kotlin.math.abs
 
 internal object RadarUtils {
 
-    private fun getSharedPreferences(context: Context): SharedPreferences {
-        return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
-    }
-
     internal val deviceModel = Build.MODEL
 
     internal val deviceOS = Build.VERSION.RELEASE
@@ -52,6 +48,10 @@ internal object RadarUtils {
     internal const val deviceType = "Android"
 
     internal val deviceMake =  Build.MANUFACTURER
+
+    fun isLive(context: Context) {
+        RadarSettings.getPublishableKey(context)?.contains("_live_")
+    }
 
     internal fun getLocationAuthorization(context: Context): String {
         var locationAuthorization = "NOT_DETERMINED"

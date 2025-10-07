@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import io.radar.sdk.model.RadarSdkConfiguration
+import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
 import java.text.DecimalFormat
 import java.util.UUID
@@ -463,5 +464,4 @@ internal object RadarSettings {
             }
         }
     }
-
 }
