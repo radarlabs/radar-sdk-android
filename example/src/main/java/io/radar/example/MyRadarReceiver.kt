@@ -19,6 +19,7 @@ class MyRadarReceiver : RadarReceiver() {
         var identifier = 0
 
         internal fun notify(context: Context, body: String) {
+            return
             identifier++
 
             val channelId = "example"

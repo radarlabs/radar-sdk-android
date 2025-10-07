@@ -3835,6 +3835,10 @@ object Radar {
         inAppMessageManager.showInAppMessages(inAppMessages)
     }
 
+    internal fun dismissInAppMessage() {
+        inAppMessageManager.dismiss()
+    }
+
     /**
      * Loads an image from a URL using the existing API pattern.
      *

@@ -227,7 +227,6 @@ internal open class RadarApiHelper(
                                urlString: String,
                                headers: Map<String, String>?,
                                callback: RadarImageApiCallback? = null) {
-        request(context, method, urlString, headers, null, false, null, false, false, false, false, callback)
+        request(context, method, urlString, headers, null, false, imageCallback=callback)
     }
-
 }
