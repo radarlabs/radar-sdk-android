@@ -450,7 +450,7 @@ internal class RadarLocationManager(
         }
     }
 
-    fun removeSyncedGeofences(block: ((success: Boolean) -> Unit)? = null) {
+    private fun removeSyncedGeofences(block: ((success: Boolean) -> Unit)? = null) {
         locationClient.removeGeofences(RadarLocationReceiver.getSyncedGeofencesPendingIntent(context)) { success ->
             if (success) {
                 logger.d("Removed synced geofences")
