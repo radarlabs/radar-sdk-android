@@ -515,9 +515,6 @@ internal class RadarApiClient(
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
                     RadarGeofence.fromJson(nearbyGeofencesArr)
                 }
-                if (isTracking()) {
-                    locationManager.replaceSyncedGeofences(nearbyGeofences)
-                }
 
                 val token = RadarVerifiedLocationToken.fromJson(res)
 
