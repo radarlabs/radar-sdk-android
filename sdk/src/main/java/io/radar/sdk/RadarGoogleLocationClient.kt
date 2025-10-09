@@ -25,23 +25,8 @@ internal class RadarGoogleLocationClient(
 
     override fun getCurrentLocation(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (location: Location?) -> Unit) {
         val priority = priorityForDesiredAccuracy(desiredAccuracy)
-        
-        var currentLocationRequestBuilder = CurrentLocationRequest.Builder()
-            .setPriority(priority)
-        if (desiredAccuracy == RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH) {
-            currentLocationRequestBuilder = currentLocationRequestBuilder.setMaxUpdateAgeMillis(0)
-        }
-        
-        val timeout = RadarSettings.getSdkConfiguration(context).locationManagerTimeout
-        if (timeout > 0) {
-            logger.d("Requesting location with timeout | timeout = $timeout")
-            currentLocationRequestBuilder = currentLocationRequestBuilder.setDurationMillis(timeout.toLong())
-        } else {
-            logger.d("Requesting location with default timeout")
-        }
-        val currentLocationRequest = currentLocationRequestBuilder.build()
 
-        locationClient.getCurrentLocation(currentLocationRequest, null).addOnSuccessListener { location ->
+        locationClient.getCurrentLocation(priority, null).addOnSuccessListener { location ->
             logger.d("Received current location")
 
             block(location)
@@ -58,12 +43,11 @@ internal class RadarGoogleLocationClient(
     ) {
         val priority = priorityForDesiredAccuracy(desiredAccuracy)
 
-        var locationRequestBuilder = LocationRequest.Builder(priority, interval * 1000L)
-            .setMinUpdateIntervalMillis(fastestInterval * 1000L)
-        if (desiredAccuracy == RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH) {
-            locationRequestBuilder = locationRequestBuilder.setMaxUpdateAgeMillis(0)
+        val locationRequest = LocationRequest().apply {
+            this.priority = priority
+            this.interval = interval * 1000L
+            this.fastestInterval = fastestInterval * 1000L
         }
-        val locationRequest = locationRequestBuilder.build()
 
         locationClient.requestLocationUpdates(locationRequest, pendingIntent)
     }
