@@ -47,6 +47,7 @@ internal class RadarGoogleLocationClient(
             this.priority = priority
             this.interval = interval * 1000L
             this.fastestInterval = fastestInterval * 1000L
+        }
 
         locationClient.requestLocationUpdates(locationRequest, pendingIntent)
     }
