@@ -1,25 +1,18 @@
 package io.radar.example
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
 import android.location.Location
-import android.os.Build
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
+import androidx.compose.runtime.mutableStateListOf
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarReceiver
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarUser
 
 class MyRadarReceiver : RadarReceiver() {
-
-    var events = mutableListOf<RadarEvent>()
-    var logs = mutableListOf<String>()
-
+    var events = mutableStateListOf<RadarEvent>()
+    var logs = mutableStateListOf<String>()
 
     override fun onEventsReceived(context: Context, events: Array<RadarEvent>, user: RadarUser?) {
-//        events.forEach { event -> notify(context, Utils.stringForRadarEvent(event)) }
         this.events.addAll(events)
     }
 
@@ -34,11 +27,9 @@ class MyRadarReceiver : RadarReceiver() {
     }
 
     override fun onError(context: Context, status: Radar.RadarStatus) {
-//        notify(context, Utils.stringForRadarStatus(status))
     }
 
     override fun onLog(context: Context, message: String) {
         this.logs.add(message)
     }
-
 }

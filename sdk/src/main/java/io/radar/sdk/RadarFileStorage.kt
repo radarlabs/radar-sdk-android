@@ -5,8 +5,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 
-class RadarFileStorage {
-
+internal class RadarFileStorage {
     fun writeFile(context: Context, filename: String, content: ByteArray) {
         val root = File(context.filesDir, "RadarSDK")
         val file = File(root, filename)

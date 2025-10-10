@@ -1,5 +1,6 @@
 package io.radar.example
 
+import android.app.Activity
 import android.location.Location
 import android.util.Log
 import android.view.Gravity
@@ -13,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
@@ -39,12 +41,13 @@ fun TestView() {
     val scrollState = rememberScrollState()
 
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
+        val activity = LocalContext.current as Activity
         CustomButton("requestForegroundPermission") {
-//            requestForegroundPermission()
+            requestForegroundPermission(activity)
         }
 
         CustomButton("requestBackgroundPermission") {
-//            requestBackgroundPermission()
+            requestBackgroundPermission(activity)
         }
 
         CustomButton("requestActivityRecognitionPermission") {
