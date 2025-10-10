@@ -5,7 +5,6 @@ import io.radar.ci.SnapshotDispatcher
 
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
-apply plugin: "kotlin-android-extensions"
 apply plugin: "org.jetbrains.dokka"
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
@@ -51,6 +50,9 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
+    buildFeatures {
+        buildConfig true
+    }
     testOptions {
         unitTests {
             includeAndroidResources = true
@@ -59,13 +61,14 @@ android {
     lintOptions {
         warningsAsErrors true
     }
+    namespace 'io.radar.sdk'
 }
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "androidx.appcompat:appcompat:1.4.0"
+    implementation "androidx.appcompat:appcompat:1.7.1"
     implementation "androidx.core:core-ktx:1.7.0"
     implementation "com.google.android.gms:play-services-location:21.0.1"
     implementation "androidx.activity:activity:1.2.0"

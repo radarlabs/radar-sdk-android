@@ -1,293 +1,57 @@
 package io.radar.example
 
-import android.Manifest
-import android.annotation.SuppressLint
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
 import android.location.Location
-import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
-import android.widget.Button
-import android.widget.LinearLayout
-import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.ui.platform.ComposeView
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
-import androidx.core.content.edit
-import androidx.core.net.toUri
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
-import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
-import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
 import java.util.Date
 import java.util.EnumSet
 
-class MainActivity : AppCompatActivity() {
-
-    val demoFunctions: ArrayList<(button: Button) -> Unit> = ArrayList()
-    private lateinit var listView: LinearLayout
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
-            putString("host", "https://shicheng.ngrok.dev")
-        }
-
-        Radar.initialize(this, "prj_test_pk_3508428416f485c5f54d8e8bb1f616ee405b1995", MyRadarReceiver(), Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
-        Radar.sdkVersion().let { Log.i("version", it) }
-
-        // We can also set the foreground service options like this:
-        // Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-        //     title = "Title Radar SDK",
-        //     text = "Location tracking started Text",
-        //     iconString = "ic_notification",
-        //     iconColor = "#FF6B8D",
-        // ))
-
-        val verifiedReceiver = object : RadarVerifiedReceiver() {
-            override fun onTokenUpdated(context: Context, token: RadarVerifiedLocationToken) {
-
-            }
-        }
-        Radar.setVerifiedReceiver(verifiedReceiver)
-
-        val inAppMessageReceiver = MyInAppMessageReceiver()
-        Radar.setInAppMessageReceiver(inAppMessageReceiver)
-
-        setContent {
-            MainView()
-        }
-
-//        listView = findViewById(R.id.buttonList)
-//        listView.addView()
-
-//        val getUser = {
-//            val json = getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).getString("user", "")
-//            try {
-//                JSONObject(json).toString(2)
-//            } catch (e: JSONException) {
-//                "get user failed"
-//            }
-//        }
-//
-//        val button = Button(this);
-//
-//        button.text = getUser()
-//        button.isAllCaps = false
-//        button.tag = demoFunctions.size
-//        button.setOnClickListener {
-//            button.text = getUser()
-//        }
-//        button.gravity = Gravity.START
-//
-//
-//        val getData = {
-//            val file = File(filesDir, "RadarSDK/offlineData.json")
-//            try {
-//                if (file.exists()) {
-//                    val data = file.readBytes().toString(Charsets.UTF_8)
-//                    println(data)
-//                    JSONObject(data).toString(2)
-//                } else {
-//                    "no file"
-//                }
-//            } catch (e: JSONException) {
-//                "get data error: $e"
-//            }
-//        }
-//
-//        val filebutton = Button(this);
-//        filebutton.text = getData()
-//        filebutton.isAllCaps = false
-//        filebutton.tag = demoFunctions.size
-//        filebutton.setOnClickListener {
-//            filebutton.text = getData()
-//        }
-//        filebutton.gravity = Gravity.START
-//
-//        val delete = Button(this)
-//        delete.text = "Delete"
-//        delete.isAllCaps = false
-//        delete.tag = demoFunctions.size
-//        delete.setOnClickListener {
-//            File(filesDir, "RadarSDK/offlineData.json").delete()
-//        }
-//
-//        listView.addView(button)
-//        listView.addView(delete)
-//        listView.addView(filebutton)
-//
-//        createButtons()
-//
-//
-//        val networkRequest = NetworkRequest.Builder()
-//            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-//            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-//            .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
-//            .build()
-//        val networkCallback = object : ConnectivityManager.NetworkCallback() {
-//            // network is available for use
-//            override fun onAvailable(network: Network) {
-//                super.onAvailable(network)
-//                println("Network available")
-//            }
-//
-//            // Network capabilities have changed for the network
-////            override fun onCapabilitiesChanged(
-////                network: Network,
-////                networkCapabilities: NetworkCapabilities
-////            ) {
-////                super.onCapabilitiesChanged(network, networkCapabilities)
-////                val unmetered = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
-////                println("Network changed $unmetered")
-////            }
-//
-//
-//            // lost network connection
-//            override fun onLost(network: Network) {
-//                super.onLost(network)
-//                println("Network lost")
-//            }
-//        }
+@Composable
+fun CustomButton(label: String, onClick: () -> Unit) {
+    val hapticFeedback = LocalHapticFeedback.current
+    Button(onClick = {
+        hapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+        onClick()
+    }) {
+        Text(label)
     }
+}
 
-    @SuppressLint("NewApi")
-    private fun createCustomNotification(): Notification {
-        // Create notification channel (required for Android O+)
-        val channelId = "radar_custom_channel"
-        val channelName = "Radar Custom Notifications"
-        val channel = NotificationChannel(
-            channelId,
-            channelName,
-            NotificationManager.IMPORTANCE_DEFAULT
-        )
-        val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager.createNotificationChannel(channel)
-        
-        // Create intents for actions
-        val mainIntent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
-        val mainPendingIntent = PendingIntent.getActivity(
-            this, 0, mainIntent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
-        
-        // Google action button
-        val googleIntent = Intent(Intent.ACTION_VIEW, "https://www.google.com".toUri())
-        googleIntent.addCategory(Intent.CATEGORY_BROWSABLE)
-        googleIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        val googlePendingIntent = PendingIntent.getActivity(
-            this, 1, googleIntent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
-        
-        // Stop tracking action button
-        val stopIntent = Intent(this, io.radar.sdk.RadarForegroundService::class.java).apply {
-            action = "stop"
-        }
-        val stopPendingIntent = PendingIntent.getService(
-            this, 2, stopIntent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
-        
-        // Build the custom notification with image and actions
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("🚗 Location Tracking Active")
-            .setContentText("Your location is being tracked in the background")
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setLargeIcon(BitmapFactory.decodeResource(resources, android.R.drawable.ic_menu_mylocation))
-            .setOngoing(true)
-            .setContentIntent(mainPendingIntent)
-            .addAction(
-                android.R.drawable.ic_menu_view,
-                "Open Google",
-                googlePendingIntent
-            )
-            .addAction(
-                android.R.drawable.ic_menu_close_clear_cancel,
-                "Stop Tracking",
-                stopPendingIntent
-            )
-            .setStyle(
-                NotificationCompat.BigPictureStyle()
-                    .bigPicture(BitmapFactory.decodeResource(resources, android.R.drawable.ic_menu_mylocation))
-                    .setBigContentTitle("🚗 Location Tracking Active")
-                    .setSummaryText("Background location tracking is enabled")
-            )
-            .build()
-        
-        Log.i("MainActivity", "Custom notification created")
-        return notification
-    }
+@Composable
+fun TestView() {
+    val scrollState = rememberScrollState()
 
-    private fun requestForegroundPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
-        } else {
-            Log.v("example", "Foreground location permission already granted")
-        }
-    }
-
-    private fun requestBackgroundPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION), 2)
-        } else {
-            Log.v("example", "Background location permission already granted")
-        }
-    }
-
-     private fun requestActivityRecognitionPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACTIVITY_RECOGNITION), 3)
-        } else {
-            Log.v("example", "Activity recognition permission already granted")
-        }
-    }
-
-    fun createButton(text: String, function: (button: Button) -> Unit) {
-        val button = Button(this);
-        button.text = text
-        button.isAllCaps = false
-        button.tag = demoFunctions.size
-        button.setOnClickListener {
-            function(button)
+    Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
+        CustomButton("requestForegroundPermission") {
+//            requestForegroundPermission()
         }
 
-        demoFunctions.add(function)
-        listView.addView(button)
-    }
-
-    fun createButtons() {
-
-        createButton("requestForegroundPermission") {
-            requestForegroundPermission()
+        CustomButton("requestBackgroundPermission") {
+//            requestBackgroundPermission()
         }
 
-        createButton("requestBackgroundPermission") {
-            requestBackgroundPermission()
+        CustomButton("requestActivityRecognitionPermission") {
+//            requestActivityRecognitionPermission()
         }
 
-        createButton("requestActivityRecognitionPermission") {
-            requestActivityRecognitionPermission()
-        }
-
-        createButton("getLocation") {
+        CustomButton("getLocation") {
             Radar.getLocation { status, location, stopped ->
                 Log.v(
                     "example",
@@ -296,54 +60,49 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        createButton("startTrackingVerified") {
+        CustomButton("startTrackingVerified") {
             Radar.startTrackingVerified(60, false)
         }
 
-        createButton("stopTrackingVerified") {
+        CustomButton("stopTrackingVerified") {
             Radar.stopTrackingVerified()
         }
 
-        createButton("getVerifiedLocationToken") {
+        CustomButton("getVerifiedLocationToken") {
             Radar.getVerifiedLocationToken { status, token ->
                 Log.v("example", "GetVerifiedLocationToken: status = $status; token = ${token?.toJson()}")
             }
         }
 
-        createButton("trackVerified") {
+        CustomButton("trackVerified") {
             Radar.trackVerified(false) { status, token ->
                 Log.v("example", "TrackVerified: status = $status; token = ${token?.toJson()}")
             }
         }
 
-        createButton("setExpectedJurisdiction") {
+        CustomButton("setExpectedJurisdiction") {
             Radar.setExpectedJurisdiction("US", "CA")
         }
 
-        createButton("trackOnce") { button ->
+        CustomButton("trackOnce") {
             Radar.trackOnce { status, location, events, user ->
                 Log.v(
                     "example",
                     "Track once: status = ${status}; location = $location; events = $events; user = $user"
                 )
-                button.text = "Track once: status = ${status};\n " +
-                        "location = ${location.toString()}; " +
-                        "events = ${events?.map { it.toJson().toString(2) }?.joinToString(" - ")};" +
-                        "\n user = ${user?.toJson()?.toString(2)}"
-                button.gravity = Gravity.START
             }
         }
 
-        createButton("startTracking") {
+        CustomButton("startTracking") {
             val options = RadarTrackingOptions.RESPONSIVE
             Radar.startTracking(options)
         }
 
-        createButton("stopTracking") {
+        CustomButton("stopTracking") {
             Radar.stopTracking()
         }
 
-        createButton("getContext") {
+        CustomButton("getContext") {
             Radar.getContext { status, location, context ->
                 Log.v(
                     "example",
@@ -352,7 +111,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        createButton("searchPlaces") {
+        CustomButton("searchPlaces") {
             // In the Radar dashboard settings (https://radar.com/dashboard/settings), add this to
             // the chain metadata: {"mcdonalds":{"orderActive":"true"}}.
             Radar.searchPlaces(
@@ -371,7 +130,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        createButton("searchGeofences") {
+        CustomButton("searchGeofences") {
             Radar.searchGeofences(
                 1000,
                 arrayOf("store"),
@@ -385,7 +144,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        createButton("geocode") {
+        CustomButton("geocode") {
             Radar.geocode("20 jay street brooklyn") { status, addresses ->
                 Log.v(
                     "example",
@@ -405,7 +164,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        createButton("reverseGeocode") {
+        CustomButton("reverseGeocode") {
             Radar.reverseGeocode { status, addresses ->
                 Log.v(
                     "example",
@@ -453,7 +212,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        createButton("ipGeocode") {
+        CustomButton("ipGeocode") {
             Radar.ipGeocode { status, address, proxy ->
                 Log.v(
                     "example",
@@ -462,7 +221,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        createButton("validateAddress") {
+        CustomButton("validateAddress") {
             val addressWithStreetAndNumber = RadarAddress(
                 coordinate = RadarCoordinate(.0, .0),
                 city = "New York",
@@ -502,7 +261,7 @@ class MainActivity : AppCompatActivity() {
         destination.latitude = 40.70390
         destination.longitude = -73.98670
 
-        createButton("autoComplete") {
+        CustomButton("autoComplete") {
             Radar.autocomplete(
                 "brooklyn",
                 origin,
@@ -569,7 +328,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        createButton("getDistance") {
+        CustomButton("getDistance") {
             Radar.getDistance(
                 origin,
                 destination,
@@ -583,7 +342,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-       createButton("startTrip") {
+        CustomButton("startTrip") {
             val tripOptions = RadarTripOptions(
                 "400",
                 null,
@@ -595,7 +354,7 @@ class MainActivity : AppCompatActivity() {
             Radar.startTrip(tripOptions)
         }
 
-        createButton("startTrip with start tracking false") {
+        CustomButton("startTrip with start tracking false") {
             val tripOptions = RadarTripOptions(
                 "501",
                 null,
@@ -608,7 +367,7 @@ class MainActivity : AppCompatActivity() {
             Radar.startTrip(tripOptions)
         }
 
-        createButton("startTrip with tracking options") {
+        CustomButton("startTrip with tracking options") {
             val tripOptions = RadarTripOptions(
                 "502",
                 null,
@@ -621,7 +380,7 @@ class MainActivity : AppCompatActivity() {
             Radar.startTrip(tripOptions, onTripTrackingOptions)
         }
 
-        createButton("startTrip with tracking options and startTrackingAfter") {
+        CustomButton("startTrip with tracking options and startTrackingAfter") {
             val tripOptions = RadarTripOptions(
                 "507",
                 null,
@@ -637,11 +396,11 @@ class MainActivity : AppCompatActivity() {
             Radar.startTrip(tripOptions, onTripTrackingOptions)
         }
 
-        createButton("completeTrip") {
+        CustomButton("completeTrip") {
             Radar.completeTrip()
         }
 
-        createButton("mockTracking") {
+        CustomButton("mockTracking") {
             val tripOptions = RadarTripOptions(
                 "299",
                 null,
@@ -674,7 +433,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        createButton("getMatrix") {
+        CustomButton("getMatrix") {
             val origin1 = Location("example")
             origin1.latitude = 40.78382
             origin1.longitude = -73.97536
@@ -723,7 +482,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        createButton("logConversion") {
+        CustomButton("logConversion") {
             val conversionMetadata = JSONObject()
             conversionMetadata.put("one", "two")
 
@@ -737,12 +496,5 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
-
-        createButton("run all demo") {
-//            for (function in demoFunctions) {
-//                function()
-//            }
-        }
-        demoFunctions.removeAt(demoFunctions.size - 1)
     }
 }

@@ -27,7 +27,7 @@ class RadarOfflineManager(
     private var fileStorage = RadarFileStorage()
 
     private companion object {
-        private const val SYNC_FREQUENCY = 1000 * 60 * 60 * 4 // every 4 hours
+        private const val SYNC_FREQUENCY_MS = 1000 * 60 * 60 * 4 // every 4 hours
 
         private val machineIdentifier: ByteArray = run {
             val bytes = ByteArray(5)
@@ -72,19 +72,17 @@ class RadarOfflineManager(
     }
 
     fun getOfflineDataRequest(): JSONObject? {
-        if (Date().time - lastSyncTime.time < SYNC_FREQUENCY) {
+        if (Date().time - lastSyncTime.time < SYNC_FREQUENCY_MS) {
             // data is not stale, don't need to try and sync every time
             return null
         }
 
-        val user = RadarState.getUser(context)
+        val location = RadarState.getLastLocation(context) ?: return null
+
         val offlineDataRequest = JSONObject().apply {
-            put("geofenceIds", geofences.map { it._id }.toTypedArray())
-            put("location", JSONObject().apply {
-                put("latitude", user?.location?.latitude)
-                put("longitude", user?.location?.longitude)
-            })
-            put("lastSyncTime", lastSyncTime)
+            put("geofenceIds", JSONArray(geofences.map { it._id }))
+            put("location", "${location.latitude},${location.longitude}")
+            put("lastSyncTime", RadarUtils.dateToISOString(lastSyncTime))
         }
 
         return offlineDataRequest
