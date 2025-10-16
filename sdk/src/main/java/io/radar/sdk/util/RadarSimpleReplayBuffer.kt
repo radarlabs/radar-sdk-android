@@ -6,10 +6,11 @@ import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.model.RadarReplay
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
 import androidx.core.content.edit
 import java.util.concurrent.LinkedBlockingDeque
-import java.util.Timer
-import java.util.TimerTask
+import java.util.concurrent.atomic.AtomicInteger
 import org.json.JSONObject
 import org.json.JSONArray
 
@@ -22,9 +23,9 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
     }
 
     private val buffer = LinkedBlockingDeque<RadarReplay>(MAXIMUM_CAPACITY)
-    private var batchTimer: Timer? = null
-    private var batchStartTime: Long = 0
-    private var batchCount: Int = 0
+    private val handler = Handler(Looper.getMainLooper())
+    private var batchTimerRunnable: Runnable? = null
+    private val batchCount = AtomicInteger(0)
 
     override fun getSize(): Int {
         return buffer.size
@@ -83,27 +84,25 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
     }
 
     override fun addToBatch(batchParams: JSONObject, options: RadarTrackingOptions) {
-        if (batchCount == 0) {
-            batchStartTime = System.currentTimeMillis()
-        }
-        
-        batchCount++
+        batchCount.incrementAndGet()
         write(batchParams)
 
         // Schedule timer if interval is set and timer not already running
-        if (options.batchInterval > 0 && batchTimer == null) {
+        if (options.batchInterval > 0 && batchTimerRunnable == null) {
             scheduleBatchTimer(options)
         }
     }
 
     override fun shouldFlushBatch(options: RadarTrackingOptions): Boolean {
+        val currentCount = batchCount.get()
+        
         // Return false if no batched items
-        if (batchCount == 0) {
+        if (currentCount == 0) {
             return false
         }
         
         // Check size limit
-        if (options.batchSize > 0 && batchCount >= options.batchSize) {
+        if (options.batchSize > 0 && currentCount >= options.batchSize) {
             return true
         }
 
@@ -111,14 +110,12 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
     }
 
     override fun flushBatch(): Boolean {
-        if (batchCount == 0) {
+        val currentCount = batchCount.getAndSet(0)
+        if (currentCount == 0) {
             return false
         }
         
         cancelBatchTimer()
-        batchStartTime = 0
-        batchCount = 0
-        
         Radar.flushReplays()
         
         return true
@@ -128,20 +125,22 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
         if (options.batchInterval <= 0) return
 
         cancelBatchTimer()
-        batchTimer = Timer()
-        batchTimer?.schedule(object : TimerTask() {
-            override fun run() {
-                if (batchCount > 0) {
-                    // Timer fired, trigger flush
-                    flushBatch()
-                }
+        
+        batchTimerRunnable = Runnable {
+            if (batchCount.get() > 0) {
+                // Timer fired, trigger flush
+                flushBatch()
             }
-        }, options.batchInterval * 1000L)
+        }
+        
+        handler.postDelayed(batchTimerRunnable!!, (options.batchInterval * 1000L))
     }
 
     override fun cancelBatchTimer() {
-        batchTimer?.cancel()
-        batchTimer = null
+        batchTimerRunnable?.let { runnable ->
+            handler.removeCallbacks(runnable)
+            batchTimerRunnable = null
+        }
     }
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
