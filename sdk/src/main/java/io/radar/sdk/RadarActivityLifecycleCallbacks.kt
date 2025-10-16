@@ -116,7 +116,9 @@ internal class RadarActivityLifecycleCallbacks(
 
         updatePermissionsDenied(activity)
         Radar.logResigningActive()
-        Radar.dismissInAppMessage()
+        if (Radar.initialized) {
+            Radar.dismissInAppMessage()
+        }
     }
 
     override fun onActivityStarted(activity: Activity) {
