@@ -67,4 +67,7 @@ internal abstract class RadarAbstractLocationClient() {
         intent: Intent
     ): Location?
 
+    abstract fun getGeofenceIdsFromGeofenceIntent(
+        intent: Intent
+    ): Array<String>?
 }

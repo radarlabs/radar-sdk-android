@@ -40,6 +40,7 @@ internal object RadarState {
     private const val KEY_LAST_BEACON_UIDS = "last_beacon_uids"
     private const val KEY_LAST_MOTION_ACTIVITY = "last_motion_activity"
     private const val KEY_LAST_PRESSURE = "last_pressure"
+    private const val KEY_DELIVERED_NOTIFICATIONS = "delivered_notifications"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -289,5 +290,35 @@ internal object RadarState {
             putString(KEY_LAST_PRESSURE, jsonString)
         }
     }
+
+    internal fun getDeliveredNotifications(context: Context): Array<JSONObject> {
+        val jsonStringSet =
+            getSharedPreferences(context).getStringSet(KEY_DELIVERED_NOTIFICATIONS, null)
+                ?: return arrayOf()
+
+        return jsonStringSet.mapNotNull { s -> stringToJsonObject(s) }.toTypedArray()
+    }
+
+    /**
+     * Add a notification to the list of triggered notifications, returns true if successful, false if the notification is already in the list
+     */
+    internal fun addDeliveredNotifications(context: Context, notification: JSONObject): Boolean {
+        val notifications = getDeliveredNotifications(context).toMutableList()
+
+        if (notifications.any { n -> n.getString("campaignId") == notification.getString("campaignId") }) {
+            return false
+        }
+
+        notifications.add(notification)
+        setDeliveredNotifications(context, notifications.toTypedArray())
+        return true
+    }
+
+    internal fun setDeliveredNotifications(context: Context, notifications: Array<JSONObject>) {
+        getSharedPreferences(context).edit {
+            putStringSet(KEY_DELIVERED_NOTIFICATIONS, notifications.map { n -> n.toString() }.toSet())
+        }
+    }
+
 
 }
