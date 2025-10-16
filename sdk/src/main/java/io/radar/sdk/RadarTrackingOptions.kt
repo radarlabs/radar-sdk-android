@@ -123,6 +123,16 @@ data class RadarTrackingOptions(
      * Determines whether to collect pressure data.
      */
     var usePressure: Boolean,
+
+    /**
+     * Determines the time interval between batch events, in seconds.
+     */
+    var batchInterval: Int,
+
+    /**
+     * Determines the number of events per batch.
+     */
+    var batchSize: Int,
 ) {
 
     /**
@@ -433,7 +443,9 @@ data class RadarTrackingOptions(
             foregroundServiceEnabled = true,
             beacons = false,
             useMotion = false,
-            usePressure = false
+            usePressure = false,
+            batchInterval = 0,
+            batchSize = 0
         )
 
         /**
@@ -464,7 +476,9 @@ data class RadarTrackingOptions(
             foregroundServiceEnabled = false,
             beacons = false,
             useMotion = false,
-            usePressure = false
+            usePressure = false,
+            batchInterval = 0,
+            batchSize = 0
         )
 
         /**
@@ -495,7 +509,9 @@ data class RadarTrackingOptions(
             foregroundServiceEnabled = false,
             beacons = false,
             useMotion = false,
-            usePressure = false
+            usePressure = false,
+            batchInterval = 0,
+            batchSize = 0
         )
 
         internal const val KEY_DESIRED_STOPPED_UPDATE_INTERVAL = "desiredStoppedUpdateInterval"
@@ -520,6 +536,8 @@ data class RadarTrackingOptions(
         internal const val KEY_BEACONS = "beacons"
         internal const val KEY_USE_MOTION = "useMotion"
         internal const val KEY_USE_PRESSURE = "usePressure"
+        internal const val KEY_BATCH_INTERVAL = "batchInterval"
+        internal const val KEY_BATCH_SIZE = "batchSize"
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTrackingOptions {
             val desiredAccuracy = if (obj.has(KEY_DESIRED_ACCURACY) && obj.get(KEY_DESIRED_ACCURACY) is String) {
@@ -590,7 +608,9 @@ data class RadarTrackingOptions(
                 foregroundServiceEnabled = obj.optBoolean(KEY_FOREGROUND_SERVICE_ENABLED, false),
                 beacons = obj.optBoolean(KEY_BEACONS),
                 useMotion = obj.optBoolean(KEY_USE_MOTION),
-                usePressure = obj.optBoolean(KEY_USE_PRESSURE)
+                usePressure = obj.optBoolean(KEY_USE_PRESSURE),
+                batchInterval = obj.optInt(KEY_BATCH_INTERVAL),
+                batchSize =  obj.optInt(KEY_BATCH_SIZE)
             )
         }
     }
@@ -619,6 +639,8 @@ data class RadarTrackingOptions(
         obj.put(KEY_BEACONS, beacons)
         obj.put(KEY_USE_MOTION, useMotion)
         obj.put(KEY_USE_PRESSURE, usePressure)
+        obj.put(KEY_BATCH_INTERVAL, batchInterval)
+        obj.put(KEY_BATCH_SIZE, batchSize)
         return obj
     }
 

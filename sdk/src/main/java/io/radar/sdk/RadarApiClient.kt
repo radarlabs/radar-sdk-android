@@ -470,6 +470,25 @@ internal class RadarApiClient(
             this.getConfig(usage)
         }
 
+        // Check if batching is enabled and should be used for this track request
+        val batchingEnabled = (options.batchSize > 0 || options.batchInterval > 0)
+        
+        if (batchingEnabled && 
+            source != RadarLocationSource.MANUAL_LOCATION && 
+            source != RadarLocationSource.FOREGROUND_LOCATION) {
+            
+            val batchParams = JSONObject(params.toString())
+            
+            Radar.addToBatch(batchParams, options)
+            
+            if (Radar.shouldFlushBatch(options)) {
+                Radar.flushBatch()
+            }
+            
+            callback?.onComplete(RadarStatus.SUCCESS)
+            return
+        }
+
         val hasReplays = Radar.hasReplays()
         var requestParams = params
         // before we track, check if replays need to sync

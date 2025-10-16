@@ -3694,6 +3694,21 @@ object Radar {
     }
 
     @JvmStatic
+    internal fun addToBatch(batchParams: JSONObject, options: RadarTrackingOptions) {
+        replayBuffer.addToBatch(batchParams, options)
+    }
+
+    @JvmStatic
+    internal fun shouldFlushBatch(options: RadarTrackingOptions): Boolean {
+        return replayBuffer.shouldFlushBatch(options)
+    }
+
+    @JvmStatic
+    internal fun flushBatch(): Boolean {
+        return replayBuffer.flushBatch()
+    }
+
+    @JvmStatic
     internal fun loadReplayBufferFromSharedPreferences() {
         replayBuffer.loadFromSharedPreferences()
         val replayCount = replayBuffer.getSize()
