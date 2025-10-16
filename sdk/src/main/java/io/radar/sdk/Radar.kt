@@ -3831,11 +3831,17 @@ object Radar {
         return RadarUtils.sdkVersion
     }
 
-    internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>){
+    internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>) {
+        if (!initialized || !this::inAppMessageManager.isInitialized) {
+            return
+        }
         inAppMessageManager.showInAppMessages(inAppMessages)
     }
 
     internal fun dismissInAppMessage() {
+        if (!initialized || !this::inAppMessageManager.isInitialized) {
+            return
+        }
         inAppMessageManager.dismiss()
     }
 
@@ -3866,6 +3872,9 @@ object Radar {
 
     @JvmStatic
     fun showInAppMessage(payload: RadarInAppMessage) {
+        if (!initialized || !this::inAppMessageManager.isInitialized) {
+            return
+        }
         this.inAppMessageManager.showInAppMessage(payload)
     }
 
