@@ -7,6 +7,7 @@ import android.os.SystemClock
 import io.radar.sdk.Radar.RadarAddressVerificationStatus
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
+import io.radar.sdk.Radar.isTracking
 import io.radar.sdk.Radar.locationManager
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
@@ -519,10 +520,11 @@ internal class RadarApiClient(
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
                     RadarGeofence.fromJson(nearbyGeofencesArr)
                 }
+
                 val token = RadarVerifiedLocationToken.fromJson(res)
 
                 if (user != null) {
-                    val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
+                    val inGeofences = !user.geofences.isNullOrEmpty()
                     val atPlace = user.place != null
                     val canExit = inGeofences || atPlace
                     RadarState.setCanExit(context, canExit)
@@ -654,7 +656,7 @@ internal class RadarApiClient(
                     RadarEvent.fromJson(eventsArr)
                 }
 
-                if (events != null && events.isNotEmpty()) {
+                if (!events.isNullOrEmpty()) {
                     Radar.sendEvents(events)
                 }
 
