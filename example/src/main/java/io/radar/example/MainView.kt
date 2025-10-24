@@ -1,6 +1,5 @@
 package io.radar.example
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -21,16 +19,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import io.radar.sdk.Radar
 import org.json.JSONObject
-import org.maplibre.geojson.Feature
-import org.maplibre.geojson.FeatureCollection
 import java.io.File
 
 @Composable
@@ -38,7 +31,7 @@ fun MainView() {
     val myRadarReceiver = MyRadarReceiver().apply {
         Radar.setReceiver(this)
     }
-    val tabs = listOf("Map", "Debug", "Custom", "Tests")
+    val tabs = listOf("Map", "Logs", "Custom", "Tests")
     var tabIndex by remember { mutableIntStateOf(0) }
 
     val file = File(File(LocalContext.current.filesDir, "RadarSDK"), "offlineData.json")
@@ -60,7 +53,7 @@ fun MainView() {
             MapView(disabled = tabIndex != 0)
 
             when (tabIndex) {
-                1 -> DebugView(myRadarReceiver)
+                1 -> LogsView(myRadarReceiver)
                 2 -> Column {
                     Row {
                         Text("Logs:", style = TextStyle(fontWeight = FontWeight.Bold))

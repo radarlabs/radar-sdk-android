@@ -15,7 +15,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 
 @Composable
-fun DebugView(receiver: MyRadarReceiver) {
+fun LogsView(receiver: MyRadarReceiver) {
     val eventScrollState = rememberScrollState()
     val logScrollState = rememberScrollState()
 

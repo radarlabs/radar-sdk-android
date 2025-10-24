@@ -52,6 +52,7 @@ fun createCirclePolygon(
     lng: Double,
     radiusInMeters: Double,
     points: Int = 64,
+    altitude: Double = 0.0,
 ): Polygon {
     val coords = mutableListOf<Point>()
     for (i in 0 until points) {
@@ -63,7 +64,7 @@ fun createCirclePolygon(
         val deltaLat = dy / 111320.0
         val deltaLng = dx / (111320.0 * cos(Math.toRadians(lat)))
 
-        coords.add(Point.fromLngLat(lng + deltaLng, lat + deltaLat))
+        coords.add(Point.fromLngLat(lng + deltaLng, lat + deltaLat, altitude))
     }
     // close ring
     if (coords.isNotEmpty()) coords.add(coords[0])

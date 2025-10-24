@@ -2,6 +2,7 @@ package io.radar.example
 
 import android.app.Activity
 import android.location.Location
+import android.os.Build
 import android.util.Log
 import android.view.Gravity
 import androidx.compose.foundation.layout.Column
@@ -47,11 +48,15 @@ fun TestView() {
         }
 
         CustomButton("requestBackgroundPermission") {
-            requestBackgroundPermission(activity)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                requestBackgroundPermission(activity)
+            }
         }
 
         CustomButton("requestActivityRecognitionPermission") {
-//            requestActivityRecognitionPermission()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                requestActivityRecognitionPermission(activity)
+            }
         }
 
         CustomButton("getLocation") {

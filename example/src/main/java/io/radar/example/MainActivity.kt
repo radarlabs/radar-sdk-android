@@ -28,7 +28,7 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
 
-const val HOST = "https://shicheng.ngrok.dev" // "https://api.radar.io"
+const val HOST = "https://api.radar-staging.com"
 const val PUBLISHABLE_KEY = "prj_test_pk_3508428416f485c5f54d8e8bb1f616ee405b1995"
 
 fun requestForegroundPermission(activity: Activity) {
