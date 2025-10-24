@@ -1,11 +1,19 @@
 package io.radar.sdk.util
 
+import io.radar.sdk.Radar
 import io.radar.sdk.RadarSettings
+import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.model.RadarReplay
+import android.os.Build
+import android.os.SystemClock
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Handler
+import android.os.HandlerThread
+import android.os.Looper
 import androidx.core.content.edit
 import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.atomic.AtomicInteger
 import org.json.JSONObject
 import org.json.JSONArray
 
@@ -18,6 +26,10 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
     }
 
     private val buffer = LinkedBlockingDeque<RadarReplay>(MAXIMUM_CAPACITY)
+    private val batchHandlerThread = HandlerThread("RadarBatchTimer").apply { start() }
+    private val batchHandler = Handler(batchHandlerThread.looper)
+    private var batchTimerRunnable: Runnable? = null
+    private val batchCount = AtomicInteger(0)
 
     override fun getSize(): Int {
         return buffer.size
@@ -72,6 +84,76 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
                 val replay = RadarReplay.fromJson(replayAsJsonObject)
                 buffer.offer(replay)
             }
+        }
+    }
+
+    override fun addToBatch(batchParams: JSONObject, options: RadarTrackingOptions) {
+        val updatedBatchParams = JSONObject(batchParams.toString())
+        updatedBatchParams.put("replayed", true)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
+            updatedBatchParams.put("updatedAtMs", nowMs)
+        }
+        updatedBatchParams.remove("updatedAtMsDiff")
+
+        batchCount.incrementAndGet()
+        write(updatedBatchParams)
+
+        // Schedule timer if interval is set and timer not already running
+        if (options.batchInterval > 0) {
+            synchronized(this) {
+                if (batchTimerRunnable == null) {
+                    scheduleBatchTimer(options)
+                }
+            }
+        }
+    }
+
+    override fun shouldFlushBatch(options: RadarTrackingOptions): Boolean {
+        val currentCount = batchCount.get()
+        
+        if (currentCount == 0) {
+            return false
+        }
+        
+        if (options.batchSize > 0 && currentCount >= options.batchSize) {
+            return true
+        }
+
+        return false
+    }
+
+    override fun flushBatch(): Boolean {
+        val currentCount = batchCount.getAndSet(0)
+        if (currentCount == 0) {
+            return false
+        }
+        
+        cancelBatchTimer()
+        Radar.flushReplays()
+        Radar.logger.d("[BATCH] Batch flushed | count = $currentCount | buffer size = ${buffer.size}")
+
+        return true
+    }
+
+    override fun scheduleBatchTimer(options: RadarTrackingOptions) {
+        if (options.batchInterval <= 0) return
+
+        cancelBatchTimer()
+        
+        batchTimerRunnable = Runnable {
+            // Timer fired, trigger flush
+            flushBatch()
+        }
+        
+        batchHandler.postDelayed(batchTimerRunnable!!, (options.batchInterval * 1000L))
+    }
+
+    override fun cancelBatchTimer() {
+        batchTimerRunnable?.let { runnable ->
+            batchHandler.removeCallbacks(runnable)
+            batchTimerRunnable = null
         }
     }
 

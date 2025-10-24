@@ -3693,6 +3693,18 @@ object Radar {
         replayBuffer.write(replayParams)
     }
 
+    internal fun addToBatch(batchParams: JSONObject, options: RadarTrackingOptions) {
+        replayBuffer.addToBatch(batchParams, options)
+    }
+
+    internal fun shouldFlushBatch(options: RadarTrackingOptions): Boolean {
+        return replayBuffer.shouldFlushBatch(options)
+    }
+
+    internal fun flushBatch(): Boolean {
+        return replayBuffer.flushBatch()
+    }
+
     @JvmStatic
     internal fun loadReplayBufferFromSharedPreferences() {
         replayBuffer.loadFromSharedPreferences()
