@@ -4,6 +4,8 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarSettings
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.model.RadarReplay
+import android.os.Build
+import android.os.SystemClock
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Handler
@@ -84,8 +86,17 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
     }
 
     override fun addToBatch(batchParams: JSONObject, options: RadarTrackingOptions) {
+        val updatedBatchParams = JSONObject(batchParams.toString())
+        updatedBatchParams.put("replayed", true)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
+            updatedBatchParams.put("updatedAtMs", nowMs)
+        }
+        updatedBatchParams.remove("updatedAtMsDiff")
+
         batchCount.incrementAndGet()
-        write(batchParams)
+        write(updatedBatchParams)
 
         // Schedule timer if interval is set and timer not already running
         if (options.batchInterval > 0 && batchTimerRunnable == null) {
@@ -96,12 +107,10 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
     override fun shouldFlushBatch(options: RadarTrackingOptions): Boolean {
         val currentCount = batchCount.get()
         
-        // Return false if no batched items
         if (currentCount == 0) {
             return false
         }
         
-        // Check size limit
         if (options.batchSize > 0 && currentCount >= options.batchSize) {
             return true
         }
@@ -117,7 +126,8 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
         
         cancelBatchTimer()
         Radar.flushReplays()
-        
+        Radar.logger.d("[BATCH] Batch flushed | count = $currentCount | buffer size = ${buffer.size}")
+
         return true
     }
 
