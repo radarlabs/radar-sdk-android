@@ -610,7 +610,7 @@ data class RadarTrackingOptions(
                 useMotion = obj.optBoolean(KEY_USE_MOTION),
                 usePressure = obj.optBoolean(KEY_USE_PRESSURE),
                 batchInterval = obj.optInt(KEY_BATCH_INTERVAL),
-                batchSize =  obj.optInt(KEY_BATCH_SIZE)
+                batchSize = obj.optInt(KEY_BATCH_SIZE)
             )
         }
     }

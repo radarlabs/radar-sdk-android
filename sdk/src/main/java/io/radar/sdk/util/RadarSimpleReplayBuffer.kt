@@ -9,6 +9,7 @@ import android.os.SystemClock
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.Looper
 import androidx.core.content.edit
 import java.util.concurrent.LinkedBlockingDeque
@@ -25,7 +26,8 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
     }
 
     private val buffer = LinkedBlockingDeque<RadarReplay>(MAXIMUM_CAPACITY)
-    private val handler = Handler(Looper.getMainLooper())
+    private val batchHandlerThread = HandlerThread("RadarBatchTimer").apply { start() }
+    private val batchHandler = Handler(batchHandlerThread.looper)
     private var batchTimerRunnable: Runnable? = null
     private val batchCount = AtomicInteger(0)
 
@@ -99,8 +101,12 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
         write(updatedBatchParams)
 
         // Schedule timer if interval is set and timer not already running
-        if (options.batchInterval > 0 && batchTimerRunnable == null) {
-            scheduleBatchTimer(options)
+        if (options.batchInterval > 0) {
+            synchronized(this) {
+                if (batchTimerRunnable == null) {
+                    scheduleBatchTimer(options)
+                }
+            }
         }
     }
 
@@ -137,18 +143,16 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
         cancelBatchTimer()
         
         batchTimerRunnable = Runnable {
-            if (batchCount.get() > 0) {
-                // Timer fired, trigger flush
-                flushBatch()
-            }
+            // Timer fired, trigger flush
+            flushBatch()
         }
         
-        handler.postDelayed(batchTimerRunnable!!, (options.batchInterval * 1000L))
+        batchHandler.postDelayed(batchTimerRunnable!!, (options.batchInterval * 1000L))
     }
 
     override fun cancelBatchTimer() {
         batchTimerRunnable?.let { runnable ->
-            handler.removeCallbacks(runnable)
+            batchHandler.removeCallbacks(runnable)
             batchTimerRunnable = null
         }
     }
