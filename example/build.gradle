@@ -37,16 +37,15 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'com.google.android.gms:play-services-location:21.3.0'
-//    implementation 'com.google.android.gms:play-services-location:21.3.0'
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'androidx.core:core-ktx:1.17.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation "com.google.android.play:integrity:1.5.0"
 
-    implementation platform('androidx.compose:compose-bom:2025.10.00')
+    implementation platform('androidx.compose:compose-bom:2025.10.01')
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.activity:activity-compose'
     implementation 'androidx.compose.material3:material3'
-    implementation 'org.maplibre.gl:android-sdk:12.0.0'
+    implementation 'org.maplibre.gl:android-sdk:12.0.1'
 }
