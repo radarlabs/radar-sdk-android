@@ -12,6 +12,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.KEY_FOREGROUND_SERVICE_CHANNEL_NAME
+import androidx.core.graphics.toColorInt
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -104,7 +105,7 @@ class RadarForegroundService : Service() {
             builder = builder.setContentTitle(title as CharSequence?)
         }
         if (iconColor.isNotEmpty()) {
-            builder.setColor(Color.parseColor(iconColor))
+            builder.setColor(iconColor.toColorInt())
         }
         try {
             val intent: Intent
@@ -122,12 +123,7 @@ class RadarForegroundService : Service() {
             }
 
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                PendingIntent.FLAG_IMMUTABLE
-            } else {
-                0
-            }
-            val pendingIntent = PendingIntent.getActivity(this, 0, intent, flags)
+            val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
             builder = builder.setContentIntent(pendingIntent)
         } catch (e: Exception) {
             logger.e("Error setting foreground service content intent", RadarLogType.SDK_EXCEPTION, e)
