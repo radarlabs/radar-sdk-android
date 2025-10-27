@@ -188,6 +188,10 @@ class RadarLocationReceiver : BroadcastReceiver() {
             Intent.ACTION_BOOT_COMPLETED -> {
                 Radar.handleBootCompleted(context)
             }
+            Intent.ACTION_MY_PACKAGE_REPLACED -> {
+                Radar.logger.d("Package replaced - reinitializing Radar SDK")
+                Radar.handleBootCompleted(context)
+            }
         }
         if (ActivityTransitionResult.hasResult(intent)) {
             val result = ActivityTransitionResult.extractResult(intent)!!
