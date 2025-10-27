@@ -40,7 +40,7 @@ class RadarForegroundService : Service() {
                 }
             } else if (intent.action == "stop") {
                 try {
-                    stopForeground(true)
+                    stopForeground(STOP_FOREGROUND_REMOVE)
                     stopSelf()
                 } catch (e: Exception) {
                     logger.e("Error stopping foreground service", RadarLogType.SDK_EXCEPTION, e)
@@ -51,7 +51,6 @@ class RadarForegroundService : Service() {
         return START_STICKY
     }
 
-    @SuppressLint("DiscouragedApi")
     private fun startForegroundService(extras: Bundle?) {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.deleteNotificationChannel("RadarSDK")
