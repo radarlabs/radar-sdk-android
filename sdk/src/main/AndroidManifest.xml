@@ -18,6 +18,8 @@
                 <action android:name="io.radar.sdk.LocationReceiver.GEOFENCE" />
                 <action android:name="io.radar.sdk.LocationReceiver.LOCATION" />
                 <action android:name="io.radar.sdk.LocationReceiver.BEACON" />
+                <action android:name="io.radar.sdk.LocationReceiver.ACTIVITY" />
+                <action android:name="io.radar.sdk.LocationReceiver.VERIFIED_LOCATION" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>

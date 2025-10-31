@@ -9,9 +9,12 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Bundle
 import com.google.android.gms.location.ActivityTransitionResult
 import io.radar.sdk.RadarActivityManager.Companion.getActivityType
+import io.radar.sdk.model.RadarGeofence
 import org.json.JSONObject
+
 
 class RadarLocationReceiver : BroadcastReceiver() {
 
@@ -82,9 +85,13 @@ class RadarLocationReceiver : BroadcastReceiver() {
             )
         }
 
-        internal fun getSyncedGeofencesPendingIntent(context: Context): PendingIntent {
+        internal fun getSyncedGeofencesPendingIntent(context: Context, extras: Bundle? = null): PendingIntent {
             val intent = baseIntent(context).apply {
                 action = ACTION_SYNCED_GEOFENCES
+
+                if (extras != null) {
+                    putExtras(extras)
+                }
             }
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
@@ -137,6 +144,25 @@ class RadarLocationReceiver : BroadcastReceiver() {
 
     }
 
+    private fun triggerGeofenceNotification(context: Context, geofenceIds: Array<String>, metadatasString: String, registeredAt: String) {
+        val metadatas = JSONObject(metadatasString)
+        for (geofenceId in geofenceIds) {
+            if (!metadatas.has(geofenceId)) {
+                continue
+            }
+            val metadata = metadatas.getJSONObject(geofenceId)
+
+            val geofenceNotification = RadarNotificationHelper.parseNotificationIdentifier(geofenceId, metadata, registeredAt) ?: continue
+
+            if (!RadarState.addDeliveredNotifications(context, geofenceNotification)) {
+                // notification already triggered, don't trigger again on repeat entry
+                continue
+            }
+            val notification = RadarNotificationHelper.parseNotification(context, metadata) ?: continue
+            RadarNotificationHelper.sendNotification(context, geofenceId, notification)
+        }
+    }
+
     @SuppressLint("MissingPermission")
     override fun onReceive(context: Context, intent: Intent) {
         if (!Radar.initialized) {
@@ -146,12 +172,33 @@ class RadarLocationReceiver : BroadcastReceiver() {
         Radar.logger.d("Received broadcast | action = ${intent.action}")
 
         when (intent.action) {
-            ACTION_BUBBLE_GEOFENCE, ACTION_SYNCED_GEOFENCES -> {
+            ACTION_BUBBLE_GEOFENCE -> {
                 val location = Radar.locationManager.getLocationFromGeofenceIntent(intent)
                 val source = Radar.locationManager.getSourceFromGeofenceIntent(intent)
 
                 if (location == null || source == null) {
                     return
+                }
+
+                Radar.handleLocation(context, location, source)
+            }
+            ACTION_SYNCED_GEOFENCES -> {
+                val location = Radar.locationManager.getLocationFromGeofenceIntent(intent)
+                val source = Radar.locationManager.getSourceFromGeofenceIntent(intent)
+
+                if (location == null || source == null) {
+                    return
+                }
+
+                // enter geofence triggers notification
+                val geofenceIds = Radar.locationManager.getGeofenceIdsFromGeofenceIntent(intent)
+                val extras = intent.extras
+                if (extras != null && geofenceIds != null && source == Radar.RadarLocationSource.GEOFENCE_ENTER) {
+                    val metadatas = extras.getString("radar:geofenceMetadatas")
+                    val registeredAt = extras.getString("radar:registeredAt")
+                    if (metadatas != null && registeredAt != null) {
+                        triggerGeofenceNotification(context, geofenceIds, metadatas, registeredAt)
+                    }
                 }
 
                 Radar.handleLocation(context, location, source)
@@ -216,5 +263,4 @@ class RadarLocationReceiver : BroadcastReceiver() {
             Radar.trackOnce()
         }
     }
-
 }
