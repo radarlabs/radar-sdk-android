@@ -72,6 +72,12 @@ dependencies {
     implementation "androidx.fragment:fragment:1.3.0"
     compileOnly "com.huawei.hms:location:6.4.0.300"
     compileOnly "com.google.android.play:integrity:1.2.0"
+    
+    // Optional fraud detection module (Git submodule)
+    if (findProject(':sdk-fraud') != null) {
+        implementation project(':sdk-fraud')
+    }
+    
     testImplementation "androidx.test.ext:junit:1.1.5"
     testImplementation "org.robolectric:robolectric:4.10"
     testImplementation 'org.json:json:20211205'

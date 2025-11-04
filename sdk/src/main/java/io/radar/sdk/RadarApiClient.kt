@@ -276,6 +276,7 @@ internal class RadarApiClient(
         expectedStateCode: String? = null,
         reason: String? = null,
         transactionId: String? = null,
+        fraudPayload: String? = null,
         callback: RadarTrackApiCallback? = null
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -401,6 +402,9 @@ internal class RadarApiClient(
                 params.putOpt("integrityToken", integrityToken)
                 params.putOpt("integrityException", integrityException)
                 params.putOpt("encrypted", encrypted)
+                if (fraudPayload != null) {
+                    params.putOpt("fraudPayload", fraudPayload)
+                }
                 if (expectedCountryCode != null) {
                     params.putOpt("expectedCountryCode", expectedCountryCode)
                 }
