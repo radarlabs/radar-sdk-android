@@ -648,6 +648,14 @@ object Radar {
     }
 
     /**
+     * Whether the RadarSDK has been initialized
+     */
+    @JvmStatic
+    fun isInitialized(): Boolean {
+        return initialized
+    }
+
+    /**
      * Identifies the user. Until you identify the user, Radar will automatically identify the user by `deviceId` (Android ID).
      *
      * @see [](https://radar.com/documentation/sdk/android#identify-user)
