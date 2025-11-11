@@ -10,6 +10,7 @@ import org.json.JSONException
 import java.io.File
 import java.lang.Integer.min
 import java.util.Date
+import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -39,7 +40,7 @@ internal class RadarSimpleLogBuffer(override val context: Context): RadarLogBuff
         if (!file.exists()) {
             file.mkdir()
         }
-        timer.scheduleAtFixedRate({ persistLogs() }, 2, 2, TimeUnit.SECONDS)
+        timer.scheduleWithFixedDelay({ persistLogs() }, 2, 2, TimeUnit.SECONDS)
     }
 
     override fun setPersistentLogFeatureFlag(persistentLogFeatureFlag: Boolean){
@@ -125,7 +126,7 @@ internal class RadarSimpleLogBuffer(override val context: Context): RadarLogBuff
 
     private fun writeToFileStorage(logs: Collection<RadarLog>) {
         for (log in logs) {
-            val counterString = String.format("%04d", fileCounter++)
+            val counterString = String.format(Locale.US, "%04d", fileCounter++)
             val fileName = "${log.createdAt.time / 1000}_${counterString}"
             RadarFileStorage(context).writeData(logFileDir, fileName, log.toJson().toString())
         }

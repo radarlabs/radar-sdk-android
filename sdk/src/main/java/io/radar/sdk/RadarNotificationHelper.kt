@@ -13,6 +13,9 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import io.radar.sdk.model.RadarEvent
+import androidx.core.net.toUri
+import androidx.core.graphics.toColorInt
+
 class RadarNotificationHelper {
 
     internal companion object {
@@ -80,7 +83,7 @@ class RadarNotificationHelper {
                         putExtra(RADAR_CAMPAIGN_ID, campaignId)
                         putExtra(RADAR_CAMPAIGN_METADATA, campaignMetadata)
                         if (deeplinkURL != null) {
-                            data = Uri.parse(deeplinkURL)
+                            data = deeplinkURL.toUri()
                             action = Intent.ACTION_VIEW
                         }
                     }
@@ -107,7 +110,7 @@ class RadarNotificationHelper {
                         
                     val iconColor = notificationOptions?.getEventColor() ?: ""
                     if (iconColor.isNotEmpty()) {
-                        builder.setColor(Color.parseColor(iconColor))
+                        builder.setColor(iconColor.toColorInt())
                     }
                     
                     notificationManager?.notify(id, NOTIFICATION_ID, builder.build())
@@ -140,7 +143,7 @@ class RadarNotificationHelper {
 
                     val iconColor = notificationOptions?.getEventColor() ?: ""
                     if (iconColor.isNotEmpty()) {
-                        builder.setColor(Color.parseColor(iconColor))
+                        builder.setColor(iconColor.toColorInt())
                     }
                     
                     notificationManager?.notify(id, NOTIFICATION_ID, builder.build())
