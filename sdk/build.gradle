@@ -76,6 +76,7 @@ dependencies {
     testImplementation "org.robolectric:robolectric:4.10"
     testImplementation 'org.json:json:20211205'
     testImplementation "com.google.android.play:integrity:1.2.0"
+    compileOnly "com.google.firebase:firebase-messaging:25.0.1"
 }
 
 task androidSourcesJar(type: Jar) {

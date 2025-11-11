@@ -464,4 +464,15 @@ internal object RadarSettings {
         }
     }
 
+    lateinit var sharedPreferences: SharedPreferences
+
+    var pushNotificationToken: String
+        get() {
+            return sharedPreferences.getString("pushNotificationToken", null) ?: ""
+        }
+        set(value) {
+            sharedPreferences.edit {
+                putString("pushNotificationToken", value)
+            }
+        }
 }

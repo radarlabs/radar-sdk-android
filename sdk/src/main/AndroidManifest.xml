@@ -24,8 +24,11 @@
         </receiver>
         <service android:name=".RadarJobScheduler"
             android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="true" />
+            android:exported="true"
+            tools:targetApi="21" />
         <service android:name=".RadarForegroundService"
-            android:foregroundServiceType="location" />
+            android:foregroundServiceType="location"
+            tools:targetApi="26"
+            tools:ignore="ForegroundServicePermission" />
     </application>
 </manifest>
