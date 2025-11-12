@@ -266,7 +266,8 @@ internal object RadarState {
         }
     }
 
-    internal fun getLastMotionActivity(context: Context): JSONObject? {
+    @JvmStatic
+    fun getLastMotionActivity(context: Context): JSONObject? {
         val jsonString = getSharedPreferences(context).getString(KEY_LAST_MOTION_ACTIVITY, null)
         return stringToJsonObject(jsonString)
     }
