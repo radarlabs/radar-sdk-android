@@ -3887,6 +3887,11 @@ object Radar {
         this.inAppMessageManager.showInAppMessage(payload)
     }
 
+    @JvmStatic
+    fun setPushNotificationToken(token: String?) {
+        RadarSettings.pushNotificationToken = token
+    }
+
     internal fun handleLocation(context: Context, location: Location, source: RadarLocationSource) {
         if (!initialized) {
             initialize(context)
