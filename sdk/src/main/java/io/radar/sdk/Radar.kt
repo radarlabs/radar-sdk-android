@@ -1762,8 +1762,8 @@ object Radar {
             return
         }
 
-        if (this.activity == null) {
-            this.logger.e("Provided context is not an activity and optional currentActivity parameter was not provided, cannot set inAppMessageReceiver")
+        if (!this::inAppMessageManager.isInitialized) {
+            this.logger.e("InAppMessageManager is not initialized, cannot set inAppMessageReceiver")
             return
         }
 
