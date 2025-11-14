@@ -368,7 +368,7 @@ object Radar {
         companion object {
             @JvmStatic
             fun fromInt(value: Int): RadarLogLevel {
-                return values().first { it.value == value }
+                return entries.first { it.value == value }
             }
         }
     }
@@ -387,7 +387,7 @@ object Radar {
         companion object {
             @JvmStatic
             fun fromInt(value: Int): RadarLogType {
-                return values().first { it.value == value }
+                return entries.first { it.value == value }
             }
         }
     }
@@ -529,6 +529,7 @@ object Radar {
 
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
+        RadarSettings.sharedPreferences = this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
 
         if (context is Activity) {
             this.activity = context
@@ -645,6 +646,14 @@ object Radar {
         this.initialized = true
 
         logger.i("📍️ Radar initialized")
+    }
+
+    /**
+     * Whether the RadarSDK has been initialized
+     */
+    @JvmStatic
+    fun isInitialized(): Boolean {
+        return initialized
     }
 
     /**
@@ -1754,7 +1763,7 @@ object Radar {
     /**
      * Sets a delegate for handling in-app message lifecycle events.
      *
-     * @param[delegate] A delegate for handling in-app message lifecycle events. If `null`, the previous delegate will be cleared.
+     * @param[inAppMessageReceiver] A delegate for handling in-app message lifecycle events. If `null`, the previous delegate will be cleared.
      */
     @JvmStatic
     fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver) {
@@ -3859,11 +3868,11 @@ object Radar {
         }
 
         apiClient.loadImage(url, object : RadarApiHelper.RadarImageApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, bitmap: android.graphics.Bitmap?) {
-                if (status == Radar.RadarStatus.SUCCESS) {
+            override fun onComplete(status: RadarStatus, bitmap: android.graphics.Bitmap?) {
+                if (status == RadarStatus.SUCCESS) {
                     callback(bitmap)
                 } else {
-                    Radar.logger.e("Error loading image: $status")
+                    logger.e("Error loading image: $status")
                     callback(null)
                 }
             }
@@ -3876,6 +3885,11 @@ object Radar {
             return
         }
         this.inAppMessageManager.showInAppMessage(payload)
+    }
+
+    @JvmStatic
+    fun setPushNotificationToken(token: String?) {
+        RadarSettings.pushNotificationToken = token
     }
 
     internal fun handleLocation(context: Context, location: Location, source: RadarLocationSource) {

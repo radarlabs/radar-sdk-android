@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1081234554095",
+    "project_id": "radar-android-example-shicheng",
+    "storage_bucket": "radar-android-example-shicheng.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1081234554095:android:2bcdc461069faafe44ef1a",
+        "android_client_info": {
+          "package_name": "io.radar.example"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAA-f-Gj82N2voKuisdqRTizAhTXs0bfQk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
