@@ -4,6 +4,36 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
+/**
+ * To use radar silent push, add Firebase dependency to gradle
+ * ```
+ *   implementation platform('com.google.firebase:firebase-bom:34.5.0')
+ *   implementation "com.google.firebase:firebase-messaging"
+ * ```
+ * add the following to AndroidManifest.xml
+ * ```
+ *   <service android:name="io.radar.sdk.RadarFirebaseMessagingService"
+ *       android:exported="false">
+ *       <intent-filter>
+ *           <action android:name="com.google.firebase.MESSAGING_EVENT" />
+ *       </intent-filter>
+ *   </service>
+ * ```
+ * initialize Firebase with
+ * ```
+ * FirebaseApp.initializeApp(this)
+ * ```
+ * then initialize Radar with
+ * ```
+ * Radar.initialize(context, apiKey, RadarInitializeOptions(silentPush=true))
+ * ```
+ * or retrieve the firebase messaging token and set it token manually
+ * ```
+ * FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+ *     Radar.setPushNotificationToken(token)
+ * }
+ * ```
+ */
 class RadarFirebaseMessagingService: FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
@@ -28,7 +58,6 @@ class RadarFirebaseMessagingService: FirebaseMessagingService() {
         fun initialize() {
             FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
                 Radar.setPushNotificationToken(token)
-                println("Got token")
             }.addOnFailureListener {
                 Radar.logger.w("failed to get firebase token")
             }

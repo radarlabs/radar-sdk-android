@@ -513,7 +513,7 @@ object Radar {
      * @param[provider] The location services provider.
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
-    @Deprecated("use initialize()",
+    @Deprecated("use initialize(context, key, RadarInitializeOptions(...))",
         ReplaceWith("initialize(context, publishableKey, RadarInitializeOptions(" +
                 "radarReceiver=receiver, locationProvider=provider, fraud=fraud, " +
                 "customForegroundNotification=customForegroundNotification, inAppMessageReceiver=inAppMessageReceiver))"))

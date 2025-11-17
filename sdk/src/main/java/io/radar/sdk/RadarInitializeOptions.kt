@@ -10,7 +10,8 @@ import android.app.Notification
  * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
  * @param[customForegroundNotification] An optional custom notification which is used for the foreground service
  * @param[inAppMessageReceiver] An optional receiver to handle in app message events.
- * @param[silentPush] A boolean indicating if silent push notification should be configured.
+ * @param[silentPush] A boolean indicating if silent push notification should be configured. see [RadarFirebaseMessagingService] for configuration details
+ *
  */
 class RadarInitializeOptions(
     val radarReceiver: RadarReceiver? = null,

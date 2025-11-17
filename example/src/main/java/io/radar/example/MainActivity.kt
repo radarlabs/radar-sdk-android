@@ -18,7 +18,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.google.firebase.FirebaseApp
-import com.google.firebase.messaging.FirebaseMessaging
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
