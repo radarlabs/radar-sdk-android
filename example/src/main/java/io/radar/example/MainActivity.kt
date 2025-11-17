@@ -20,11 +20,12 @@ import androidx.core.net.toUri
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
 
 const val HOST = "https://api.radar-staging.com"
-const val PUBLISHABLE_KEY = "prj_test_pk_"
+const val PUBLISHABLE_KEY = "prj_test_pk_3508428416f485c5f54d8e8bb1f616ee405b1995"
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,16 +42,16 @@ class MainActivity : AppCompatActivity() {
             null
         }
 
-        Radar.initialize(this, PUBLISHABLE_KEY, MyRadarReceiver(), Radar.RadarLocationServicesProvider.GOOGLE, true, customNotification)
+        val options = RadarInitializeOptions(
+            radarReceiver = MyRadarReceiver(),
+            fraud = true,
+            customForegroundNotification = customNotification,
+            silentPush = true,
+        )
+        Radar.initialize(this, PUBLISHABLE_KEY, options)
+
         Radar.setUserId("android-test-user")
         Radar.sdkVersion().let { Log.i("version", it) }
-
-        FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
-            Radar.setPushNotificationToken(token)
-            println("Has token $token")
-        }.addOnFailureListener {
-            println("Failed to get token")
-        }
 
         // We can also set the foreground service options like this:
         // Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(

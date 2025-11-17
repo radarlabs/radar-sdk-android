@@ -513,6 +513,10 @@ object Radar {
      * @param[provider] The location services provider.
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
+    @Deprecated("use initialize()",
+        ReplaceWith("initialize(context, publishableKey, RadarInitializeOptions(" +
+                "radarReceiver=receiver, locationProvider=provider, fraud=fraud, " +
+                "customForegroundNotification=customForegroundNotification, inAppMessageReceiver=inAppMessageReceiver))"))
     @JvmStatic
     fun initialize(
         context: Context?, 
@@ -523,10 +527,37 @@ object Radar {
         customForegroundNotification: Notification? = null,
         inAppMessageReceiver: RadarInAppMessageReceiver? = null,
         currentActivity: Activity? = null) {
+
         if (context == null) {
             return
         }
+        if (context is Activity) {
+            this.activity = context
+        }
+        if (currentActivity != null) {
+            this.activity = currentActivity
+        }
+        val options = RadarInitializeOptions(
+            radarReceiver = receiver,
+            locationProvider = provider,
+            fraud = fraud,
+            customForegroundNotification = customForegroundNotification,
+            inAppMessageReceiver = inAppMessageReceiver,
+        )
+        initialize(context, publishableKey, options)
+    }
 
+    /**
+     * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
+     *
+     * @see [](https://radar.com/documentation/sdk/android#initialize-sdk)
+     *
+     * @param[context] The context.
+     * @param[publishableKey] Your publishable API key.
+     * @param[options] Initialize options
+     */
+    @JvmStatic
+    fun initialize(context: Context, publishableKey: String?, options: RadarInitializeOptions = RadarInitializeOptions()) {
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
         RadarSettings.setContext(this.context)
@@ -534,12 +565,9 @@ object Radar {
         if (context is Activity) {
             this.activity = context
         }
-        if (currentActivity != null) {
-            this.activity = currentActivity
-        }
 
-        if (receiver != null) {
-            this.receiver = receiver
+        if (options.radarReceiver != null) {
+            receiver = options.radarReceiver
         }
 
         if (!this::logBuffer.isInitialized) {
@@ -578,13 +606,13 @@ object Radar {
             }
         }
 
-        if (customForegroundNotification != null) {
-            RadarNotificationHelper.setCustomForegroundNotification(customForegroundNotification)
+        if (options.customForegroundNotification != null) {
+            RadarNotificationHelper.setCustomForegroundNotification(options.customForegroundNotification)
         }
 
         if (!this::locationManager.isInitialized) {
-            this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager, provider)
-            RadarSettings.setLocationServicesProvider(this.context, provider)
+            this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager, options.locationProvider)
+            RadarSettings.setLocationServicesProvider(this.context, options.locationProvider)
             this.locationManager.updateTracking()
         }
 
@@ -592,7 +620,7 @@ object Radar {
             val appActivity = this.activity
             if (appActivity != null) {
                 this.inAppMessageManager = RadarInAppMessageManager(appActivity, this.context)
-                this.inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver ?: object : RadarInAppMessageReceiver {})
+                this.inAppMessageManager.setInAppMessageReceiver(options.inAppMessageReceiver ?: object : RadarInAppMessageReceiver {})
             } else {
                 this.logger.e("Activity is not initialized, cannot initialize inAppMessageManager")
             }
@@ -600,17 +628,17 @@ object Radar {
 
         this.logger.i("initialize()", RadarLogType.SDK_CALL)
 
-        if (provider == RadarLocationServicesProvider.GOOGLE) {
+        if (options.locationProvider == RadarLocationServicesProvider.GOOGLE) {
             this.logger.d("Using Google location services")
-        } else if (provider == RadarLocationServicesProvider.HUAWEI) {
+        } else if (options.locationProvider == RadarLocationServicesProvider.HUAWEI) {
             this.logger.d("Using Huawei location services")
         }
 
         val application = this.context as? Application
-        if (fraud) {
+        if (options.fraud) {
             RadarSettings.setSharing(this.context, false)
         }
-        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(fraud))
+        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(options.fraud))
 
         val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
         if (sdkConfiguration.usePersistence) {
@@ -641,6 +669,10 @@ object Radar {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             this.logger.logPastTermination()
+        }
+
+        if (options.silentPush) {
+            RadarFirebaseMessagingService.initialize()
         }
 
         this.initialized = true
