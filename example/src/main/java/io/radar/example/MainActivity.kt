@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         Radar.initialize(this, PUBLISHABLE_KEY, MyRadarReceiver(), Radar.RadarLocationServicesProvider.GOOGLE, true, customNotification)
+        Radar.setUserId("android-test-user")
         Radar.sdkVersion().let { Log.i("version", it) }
 
         FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->

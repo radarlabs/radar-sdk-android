@@ -529,7 +529,7 @@ object Radar {
 
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
-        RadarSettings.sharedPreferences = this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
+        RadarSettings.setContext(this.context)
 
         if (context is Activity) {
             this.activity = context
