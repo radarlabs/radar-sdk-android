@@ -1,5 +1,6 @@
 package io.radar.sdk
 
+import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -51,6 +52,11 @@ class RadarFirebaseMessagingService: FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
+
+        if (!Radar.isInitialized()) {
+            Radar.initialize(this)
+        }
+
         RadarSettings.pushNotificationToken = token
     }
 

@@ -10,6 +10,7 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
+import com.google.firebase.messaging.FirebaseMessaging
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
@@ -672,7 +673,11 @@ object Radar {
         }
 
         if (options.silentPush) {
-            RadarFirebaseMessagingService.initialize()
+            try {
+                RadarFirebaseMessagingService.initialize()
+            } catch (e: NoClassDefFoundError) {
+                logger.e("trying to initialize silent push on an app without Firebase")
+            }
         }
 
         this.initialized = true
