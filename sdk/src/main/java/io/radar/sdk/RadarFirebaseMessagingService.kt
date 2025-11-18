@@ -35,7 +35,7 @@ import com.google.firebase.messaging.RemoteMessage
  * }
  * ```
  */
-class RadarFirebaseMessagingService: FirebaseMessagingService() {
+class RadarFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
