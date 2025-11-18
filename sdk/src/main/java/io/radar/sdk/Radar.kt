@@ -593,7 +593,7 @@ object Radar {
                 this.inAppMessageManager = RadarInAppMessageManager(appActivity, this.context)
                 this.inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver ?: object : RadarInAppMessageReceiver {})
             } else {
-                this.logger.e("Activity is not initialized, cannot initialize inAppMessageManager")
+                this.logger.e("Provided context is not an activity and optional currentActivity parameter was not provided, cannot initialize inAppMessageManager")
             }
         }
 
@@ -1759,6 +1759,11 @@ object Radar {
     @JvmStatic
     fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver) {
         if (!initialized) {
+            return
+        }
+
+        if (!this::inAppMessageManager.isInitialized) {
+            this.logger.e("InAppMessageManager is not initialized, cannot set inAppMessageReceiver")
             return
         }
 
