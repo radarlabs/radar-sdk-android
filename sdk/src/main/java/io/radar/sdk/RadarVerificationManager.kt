@@ -113,7 +113,7 @@ internal class RadarVerificationManager(
                             val requestHash = verificationManager.getRequestHash(location)
 
                             // Get fraud payload from fraud detection module
-                            verificationManager.getFraudPayload(desiredAccuracy) { fraudPayload ->
+                            verificationManager.getFraudPayload(location) { fraudPayload ->
                                 verificationManager.getIntegrityToken(
                                     googlePlayProjectNumber,
                                     requestHash
@@ -503,20 +503,11 @@ internal class RadarVerificationManager(
             }
     }
 
-    private fun getFraudPayload(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, callback: (String?) -> Unit) {
+    private fun getFraudPayload(location: Location, callback: (String?) -> Unit) {
         try {
             val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
             val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
             val fraudInstance = sharedInstanceMethod.invoke(null)
-            
-            // Convert desired accuracy to fraud module enum
-            val fraudAccuracyClass = Class.forName("io.radar.sdk.fraud.RadarTrackingOptionsDesiredAccuracy")
-            val fraudAccuracy = when (desiredAccuracy) {
-                RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW -> fraudAccuracyClass.getField("LOW").get(null)
-                RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM -> fraudAccuracyClass.getField("MEDIUM").get(null)
-                RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH -> fraudAccuracyClass.getField("HIGH").get(null)
-                else -> fraudAccuracyClass.getField("MEDIUM").get(null)
-            }
             
             // Create adapter callback that matches detectFraud's Function2 signature
             val detectFraudCallback = object : Function2<String?, String?, Unit> {
@@ -528,10 +519,10 @@ internal class RadarVerificationManager(
             
             val detectFraudMethod = fraudClass.getMethod("detectFraud", 
                 android.content.Context::class.java,
-                fraudAccuracyClass,
+                android.location.Location::class.java,
                 Function2::class.java)
             
-            detectFraudMethod.invoke(fraudInstance, context, fraudAccuracy, detectFraudCallback)
+            detectFraudMethod.invoke(fraudInstance, context, location, detectFraudCallback)
         } catch (e: ClassNotFoundException) {
             logger.d("Skipping fraud checks: RadarSDKFraud submodule not available")
             callback(null)
