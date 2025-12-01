@@ -1,6 +1,8 @@
 # Trigger an SDK publication to Maven Central when a release is created on GitHub.
 name: Radar Release Action
 on:
+  pull_request:
+    types: [opened, edited]
   release:
     # See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
     types: [ prereleased, released ]
@@ -17,13 +19,13 @@ jobs:
           java-version: '17'
           distribution: 'microsoft'
       - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
+        uses: gradle/actions/wrapper-validation@v3
       # Gradle Build & Publish
-      - name: Build SDK and Publish to Maven
-        env:
-          NEXUS_USERNAME: ${{ secrets.NEXUS_USER }}
-          NEXUS_TOKEN: ${{ secrets.NEXUS_TOKEN }}
-          ORG_GRADLE_PROJECT_SIGNINGKEY: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
-          ORG_GRADLE_PROJECT_SIGNINGPASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
-          SNAPSHOT: false
-        run: ./gradlew build publishAggregationToCentralPortal
+      # - name: Build SDK and Publish to Maven
+      #   env:
+      #     NEXUS_USERNAME: ${{ secrets.NEXUS_USER }}
+      #     NEXUS_TOKEN: ${{ secrets.NEXUS_TOKEN }}
+      #     ORG_GRADLE_PROJECT_SIGNINGKEY: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
+      #     ORG_GRADLE_PROJECT_SIGNINGPASSWORD: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
+      #     SNAPSHOT: false
+      #   run: ./gradlew build publishAggregationToCentralPortal
