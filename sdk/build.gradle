@@ -10,7 +10,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 ext {
-    radarVersion = '3.23.5'
+    radarVersion = '3.24.0'
 }
 
 String buildNumber = ".${System.currentTimeMillis()}"
