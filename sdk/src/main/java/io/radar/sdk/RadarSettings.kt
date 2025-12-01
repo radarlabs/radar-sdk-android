@@ -464,4 +464,13 @@ internal object RadarSettings {
         }
     }
 
+    private lateinit var sharedPreferences: SharedPreferences
+    fun setContext(context: Context) {
+        sharedPreferences = getSharedPreferences(context)
+    }
+
+    private const val KEY_PUSH_NOTIFICATION_TOKEN = "pushNotificationToken"
+    var pushNotificationToken: String?
+        get() { return sharedPreferences.getString(KEY_PUSH_NOTIFICATION_TOKEN, null) }
+        set(value) { sharedPreferences.edit { putString(KEY_PUSH_NOTIFICATION_TOKEN, value) } }
 }

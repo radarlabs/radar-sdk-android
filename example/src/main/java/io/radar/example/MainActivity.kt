@@ -1,49 +1,55 @@
 package io.radar.example
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.widget.LinearLayout
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import com.google.firebase.FirebaseApp
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
 
 const val HOST = "https://api.radar-staging.com"
-const val PUBLISHABLE_KEY = "prj_test_pk_3508428416f485c5f54d8e8bb1f616ee405b1995"
+const val PUBLISHABLE_KEY = "prj_test_pk_"
 
 class MainActivity : AppCompatActivity() {
-
-    val demoFunctions: ArrayList<(button: Button) -> Unit> = ArrayList()
-    private lateinit var listView: LinearLayout
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
 
         getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
             putString("host", HOST)
         }
 
-        Radar.initialize(this, PUBLISHABLE_KEY, MyRadarReceiver(), Radar.RadarLocationServicesProvider.GOOGLE, true, createCustomNotification())
+        val customNotification = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
+            createCustomNotification()
+        } else {
+            null
+        }
+
+        val options = RadarInitializeOptions(
+            radarReceiver = MyRadarReceiver(),
+            fraud = true,
+            customForegroundNotification = customNotification,
+            silentPush = true,
+        )
+        Radar.initialize(this, PUBLISHABLE_KEY, options)
+
+        Radar.setUserId("android-test-user")
         Radar.sdkVersion().let { Log.i("version", it) }
 
         // We can also set the foreground service options like this:
@@ -56,7 +62,6 @@ class MainActivity : AppCompatActivity() {
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
             override fun onTokenUpdated(context: Context, token: RadarVerifiedLocationToken) {
-
             }
         }
         Radar.setVerifiedReceiver(verifiedReceiver)
@@ -69,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("NewApi")
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun createCustomNotification(): Notification {
         // Create notification channel (required for Android O+)
         val channelId = "radar_custom_channel"
