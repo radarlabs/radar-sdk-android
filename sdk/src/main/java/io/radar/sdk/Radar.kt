@@ -3815,9 +3815,7 @@ object Radar {
             obj.put("speedAccuracy", location.speedAccuracyMetersPerSecond)
             obj.put("courseAccuracy", location.bearingAccuracyDegrees)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            obj.put("mocked", location.isFromMockProvider)
-        }
+        obj.put("mocked", location.isFromMockProvider)
         return obj
     }
 
