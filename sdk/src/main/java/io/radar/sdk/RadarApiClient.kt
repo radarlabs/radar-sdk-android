@@ -341,15 +341,13 @@ internal class RadarApiClient(
                     params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
                 }
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
-                val locationMs = location.elapsedRealtimeNanos / 1000000
-                val updatedAtMsDiff = (nowMs - locationMs)
-                if (RadarSettings.getSdkConfiguration(context).useForegroundLocationUpdatedAtMsDiff || !foreground) {
-                    params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
-                }
-                params.putOpt("locationMs", locationMs)
+            val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
+            val locationMs = location.elapsedRealtimeNanos / 1000000
+            val updatedAtMsDiff = (nowMs - locationMs)
+            if (RadarSettings.getSdkConfiguration(context).useForegroundLocationUpdatedAtMsDiff || !foreground) {
+                params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
             }
+            params.putOpt("locationMs", locationMs)
             params.putOpt("foreground", foreground)
             params.putOpt("stopped", stopped)
             params.putOpt("replayed", replayed)
@@ -369,10 +367,8 @@ internal class RadarApiClient(
             } else {
                 params.putOpt("xPlatformType", "Native")
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                val mocked = location.isFromMockProvider
-                params.putOpt("mocked", mocked)
-            }
+            val mocked = location.isFromMockProvider
+            params.putOpt("mocked", mocked)
             if (tripOptions != null) {
                 val tripOptionsObj = JSONObject()
                 tripOptionsObj.putOpt("version", "2")
