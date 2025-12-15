@@ -65,7 +65,9 @@ class RadarFirebaseMessagingService : FirebaseMessagingService() {
             FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
                 Radar.setPushNotificationToken(token)
             }.addOnFailureListener {
-                Radar.logger.w("failed to get firebase token")
+                if (Radar.isInitialized()) {
+                    Radar.logger.w("failed to get firebase token")
+                }
             }
         }
     }
