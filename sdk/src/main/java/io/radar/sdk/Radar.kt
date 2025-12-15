@@ -3999,6 +3999,9 @@ object Radar {
     }
 
     internal fun sendLog(level: RadarLogLevel, message: String, type: RadarLogType?, createdAt: Date = Date()) {
+        if (!this::logBuffer.isInitialized) {
+            return
+        }
         receiver?.onLog(context, message)
         logBuffer.write(level, type, message, createdAt)
     }
