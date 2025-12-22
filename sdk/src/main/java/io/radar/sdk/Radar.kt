@@ -1706,6 +1706,17 @@ object Radar {
     }
 
     /**
+     * Set the publishable key used for Radar API requests
+     */
+    @JvmStatic
+    fun setPublishableKey(key: String) {
+        if (!initialized) {
+            return // do nothing if not initialized, because we need this.context
+        }
+        RadarSettings.setPublishableKey(this.context, key)
+    }
+
+    /**
      * Returns the current tracking options.
      *
      * @see [](https://radar.com/documentation/sdk/tracking)
@@ -3918,14 +3929,6 @@ object Radar {
     @JvmStatic
     fun setPushNotificationToken(token: String?) {
         RadarSettings.pushNotificationToken = token
-    }
-
-    @JvmStatic
-    fun setPublishableKey(key: String) {
-        if (!initialized) {
-            return // do nothing if not initialized, because we need this.context
-        }
-        RadarSettings.setPublishableKey(this.context, key)
     }
 
     internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>) {
