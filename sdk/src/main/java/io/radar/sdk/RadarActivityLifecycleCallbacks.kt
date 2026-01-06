@@ -21,6 +21,7 @@ internal class RadarActivityLifecycleCallbacks(
 ) : Application.ActivityLifecycleCallbacks {
     private var count = 0
     private var isFirstOnResume = true
+    private var touchViewAdded = false
 
     companion object {
         var foreground: Boolean = false
@@ -90,7 +91,7 @@ internal class RadarActivityLifecycleCallbacks(
 
         updatePermissionsDenied(activity)
 
-        if (fraud) {
+        if (fraud && !touchViewAdded) {
             val touchView = object: View(activity.applicationContext) {
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     try {
@@ -106,6 +107,7 @@ internal class RadarActivityLifecycleCallbacks(
             }
 
             activity.addContentView(touchView, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+            touchViewAdded = true
         }
 
     }
