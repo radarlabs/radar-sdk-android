@@ -10,6 +10,7 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
+import androidx.core.content.edit
 import com.google.firebase.messaging.FirebaseMessaging
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
@@ -639,9 +640,9 @@ object Radar {
         val application = this.context as? Application
 
         this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
-            .edit()
-            .putBoolean("fraudEnabled", options.fraud)
-            .apply()
+            .edit(commit = true) {
+                putBoolean("fraudEnabled", options.fraud)
+            }
         
         if (options.fraud) {
             RadarSettings.setSharing(this.context, false)
