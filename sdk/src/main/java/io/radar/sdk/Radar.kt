@@ -639,10 +639,7 @@ object Radar {
 
         val application = this.context as? Application
 
-        this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
-            .edit(commit = true) {
-                putBoolean("fraudEnabled", options.fraud)
-            }
+        RadarSettings.setFraudEnabled(this.context, options.fraud)
         
         if (options.fraud) {
             RadarSettings.setSharing(this.context, false)
