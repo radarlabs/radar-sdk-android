@@ -3659,7 +3659,8 @@ object Radar {
      */
     @JvmStatic
     internal fun flushLogs() {
-        if (!initialized || !isTestKey()) {
+        val logLevel = RadarSettings.getLogLevel(this.context)
+        if (!initialized || !isTestKey() || logLevel != RadarLogLevel.NONE) {
             return
         }
 
