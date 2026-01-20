@@ -248,7 +248,7 @@ internal class RadarApiClient(
                         RadarUser.fromJson(userObj)
                     }
 
-                     if (events != null && events.isNotEmpty()) {
+                     if (!events.isNullOrEmpty()) {
                         Radar.sendEvents(events, user)
                     }
 
@@ -290,7 +290,7 @@ internal class RadarApiClient(
         val options = Radar.getTrackingOptions()
         val tripOptions = RadarSettings.getTripOptions(context)
         val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
-        var locationMetadata = JSONObject()
+        val locationMetadata = JSONObject()
         try {
             params.putOpt("anonymous", anonymous)
             if (anonymous) {
@@ -459,6 +459,7 @@ internal class RadarApiClient(
             if (locationMetadata.length() > 0) {
                 params.putOpt("locationMetadata", locationMetadata)
             }
+            params.putOpt("pushNotificationToken", RadarSettings.pushNotificationToken)
             
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
@@ -466,7 +467,7 @@ internal class RadarApiClient(
             return
         }
 
-        var path = "v1/track"
+        val path = "v1/track"
         val headers = headers(publishableKey)
 
         if (anonymous) {
@@ -475,7 +476,6 @@ internal class RadarApiClient(
         }
 
         val hasReplays = Radar.hasReplays()
-        var requestParams = params
         // before we track, check if replays need to sync
         val replaying = options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL && hasReplays && !verified
         if (replaying) {
@@ -491,7 +491,7 @@ internal class RadarApiClient(
             return
         }
 
-        apiHelper.request(context, "POST", path, headers, requestParams, true, object : RadarApiHelper.RadarApiCallback {
+        apiHelper.request(context, "POST", path, headers, params, true, object : RadarApiHelper.RadarApiCallback {
             override fun onComplete(status: RadarStatus, res: JSONObject?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
@@ -1385,7 +1385,7 @@ internal class RadarApiClient(
             params.putOpt("type", name)
             params.putOpt("metadata", metadata)
         } catch (e: JSONException) {
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
             return
         }
@@ -1426,7 +1426,7 @@ internal class RadarApiClient(
         }
 
         val finalUrl = if (!imageUrl.startsWith("http")) {
-            val publishableKey = RadarSettings.getPublishableKey(context) ?: run {
+            RadarSettings.getPublishableKey(context) ?: run {
                 callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
                 return
             }
@@ -1439,7 +1439,7 @@ internal class RadarApiClient(
             val publishableKey = RadarSettings.getPublishableKey(context)
             headers(publishableKey ?: "")
         } else {
-            emptyMap<String, String>()
+            emptyMap()
         }
 
         apiHelper.requestImage(context, "GET", finalUrl, headers, callback)

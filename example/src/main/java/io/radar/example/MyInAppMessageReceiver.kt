@@ -1,6 +1,5 @@
 package io.radar.example
 
-import android.app.Activity
 import android.util.Log
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarInAppMessageReceiver
@@ -18,7 +17,6 @@ class MyInAppMessageReceiver() : RadarInAppMessageReceiver {
 
     override fun onInAppMessageButtonClicked(inAppMessage: RadarInAppMessage) {
         Log.d("MyInAppMessageReceiver", "onInAppMessageButtonClicked: ${inAppMessage.title}")
-        Log.d("MyInAppMessageReceiver", "HERE")
         super.onInAppMessageButtonClicked(inAppMessage)
     }
 }

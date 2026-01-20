@@ -13,9 +13,10 @@ import io.radar.sdk.Radar.RadarLogType
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.core.content.edit
 
 internal class RadarLogger(
-    private val context: Context
+    private val context: Context,
 ) {
 
     internal companion object {
@@ -75,9 +76,8 @@ internal class RadarLogger(
         val sharedPreferences = this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
         val previousTimestamp = sharedPreferences.getLong("last_timestamp", 0)
         val currentTimestamp = System.currentTimeMillis()
-        with(sharedPreferences.edit()) {
+        sharedPreferences.edit {
             putLong("last_timestamp", currentTimestamp)
-            apply()
         }
         val batteryLevel = this.getBatteryLevel()
         

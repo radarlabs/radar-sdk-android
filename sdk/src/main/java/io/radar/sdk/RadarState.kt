@@ -289,5 +289,4 @@ internal object RadarState {
             putString(KEY_LAST_PRESSURE, jsonString)
         }
     }
-
 }
