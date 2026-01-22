@@ -761,6 +761,43 @@ object Radar {
         return RadarSettings.getDescription(context)
     }
 
+    @JvmStatic
+    fun isInitialized(): Boolean {
+        return this.initialized
+    }
+
+    @JvmStatic
+    fun <T : Any> setHeadlessReceiver(c: Class<T>) {
+        if (!initialized) {
+            return
+        }
+
+        var constructorMatch = false
+        for (cnst in c.constructors) {
+            if (cnst.parameterTypes.size == 1 && cnst.parameterTypes.first().isAssignableFrom(Context::class.java)) {
+                constructorMatch = true
+                break;
+            }
+        }
+
+        if (!constructorMatch) {
+            this.logger.e("Provided receiver does not contain required constructor signature")
+            return
+        }
+
+        RadarSettings.setHeadlessReceiverName(context, c.name)
+        this.logger.i("Registered headless receiver.")
+    }
+
+    @JvmStatic
+    fun clearHeadlessReceiver() {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setHeadlessReceiverName(context, null)
+    }
+
     /**
      * Sets an optional set of custom key-value pairs for the user.
      *
@@ -4014,6 +4051,22 @@ object Radar {
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {
         this.logBuffer.setPersistentLogFeatureFlag(enabled)
+    }
+
+    internal fun attachHeadlessReceiver(context: Context) {
+        val headlessReceiverName = RadarSettings.getHeadlessReceiverName(context)
+        if (headlessReceiverName != null) {
+            try {
+                this.logger.d("Attempting to instantiate headless receiver: $headlessReceiverName")
+                val headlessReceiverClass = Class.forName(headlessReceiverName)
+                this.receiver = headlessReceiverClass.getConstructor(Context::class.java).newInstance(context) as RadarReceiver
+                this.logger.d("Successfully attached headless receiver: $headlessReceiverName")
+            } catch (e: Exception) {
+                this.logger.e("Failed to instantiate: $headlessReceiverName", RadarLogType.SDK_EXCEPTION)
+                this.logger.e(e.toString())
+            }
+        }
+
     }
 
 }
