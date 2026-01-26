@@ -10,6 +10,7 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
+import androidx.core.content.edit
 import com.google.firebase.messaging.FirebaseMessaging
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
@@ -490,6 +491,7 @@ object Radar {
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
     private lateinit var inAppMessageManager: RadarInAppMessageManager
+    private var activityLifecycleCallbacks: RadarActivityLifecycleCallbacks? = null
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
      *
@@ -636,11 +638,20 @@ object Radar {
         }
 
         val application = this.context as? Application
+
+        RadarSettings.setFraudEnabled(this.context, options.fraud)
+        
         if (options.fraud) {
             RadarSettings.setSharing(this.context, false)
         }
-        application?.registerActivityLifecycleCallbacks(RadarActivityLifecycleCallbacks(options.fraud))
 
+        activityLifecycleCallbacks?.let {
+            application?.unregisterActivityLifecycleCallbacks(it)
+        }
+
+        activityLifecycleCallbacks = RadarActivityLifecycleCallbacks(options.fraud)
+        application?.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
+        
         val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
         if (sdkConfiguration.usePersistence) {
             loadReplayBufferFromSharedPreferences()

@@ -140,7 +140,9 @@ class RadarLocationReceiver : BroadcastReceiver() {
     @SuppressLint("MissingPermission")
     override fun onReceive(context: Context, intent: Intent) {
         if (!Radar.initialized) {
-            Radar.initialize(context)
+            val fraudEnabled = RadarSettings.getFraudEnabled(context)
+            val initializeOptions = RadarInitializeOptions(fraud = fraudEnabled)
+            Radar.initialize(context, null, initializeOptions)
         }
 
         Radar.logger.d("Received broadcast | action = ${intent.action}")
