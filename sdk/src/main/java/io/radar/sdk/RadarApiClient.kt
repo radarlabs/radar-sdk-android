@@ -525,7 +525,6 @@ internal class RadarApiClient(
                     val altitudeAdjustmentsObj = userObj.optJSONArray("altitudeAdjustments")
                     if (altitudeAdjustmentsObj != null) {
                         RadarState.setAltitudeAdjustments(context, altitudeAdjustmentsObj)
-                        logger.d("Stored ${altitudeAdjustmentsObj.length()} altitude adjustments from track response")
                     }
                     RadarUser.fromJson(userObj)
                 }
