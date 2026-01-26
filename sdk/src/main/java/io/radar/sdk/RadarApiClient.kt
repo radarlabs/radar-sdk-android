@@ -456,6 +456,13 @@ internal class RadarApiClient(
                 params.putOpt("locationMetadata", locationMetadata)
             }
             params.putOpt("pushNotificationToken", RadarSettings.pushNotificationToken)
+
+            // Include stored altitudeAdjustments from previous track responses
+            val altitudeAdjustments = RadarState.getAltitudeAdjustments(context)
+            if (altitudeAdjustments != null && altitudeAdjustments.length() > 0) {
+                params.putOpt("altitudeAdjustments", altitudeAdjustments)
+                logger.d("Including ${altitudeAdjustments.length()} altitude adjustments in track request")
+            }
             
         } catch (e: JSONException) {
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
@@ -514,6 +521,12 @@ internal class RadarApiClient(
                     RadarEvent.fromJson(eventsArr)
                 }
                 val user = res.optJSONObject("user")?.let { userObj ->
+                    // Extract and store altitudeAdjustments from user object
+                    val altitudeAdjustmentsObj = userObj.optJSONArray("altitudeAdjustments")
+                    if (altitudeAdjustmentsObj != null) {
+                        RadarState.setAltitudeAdjustments(context, altitudeAdjustmentsObj)
+                        logger.d("Stored ${altitudeAdjustmentsObj.length()} altitude adjustments from track response")
+                    }
                     RadarUser.fromJson(userObj)
                 }
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->
