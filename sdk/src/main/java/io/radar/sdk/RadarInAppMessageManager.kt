@@ -44,13 +44,13 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
             payload,
             onDismissListener = {
                 // Record the time when modal is dismissed
-                logConversion("in_app_message_dismissed", true)
+                logConversion("campaign.in_app_message_dismissed", true)
                 inAppMessageReceiver?.onInAppMessageDismissed(payload)
                 dismiss()
             },
             onInAppMessageButtonClicked = {
                 // Record the time when modal is dismissed via button click
-                logConversion("in_app_message_clicked", true)
+                logConversion("campaign.in_app_message_clicked", true)
                 Log.d("MyInAppMessageReceiver", "called super, activity is $activity")
                 if (payload.button?.deepLink != null && payload.button.deepLink != "null" && payload.button.deepLink.isNotBlank()) {
                     payload.button.deepLink.let { deepLink ->
@@ -84,7 +84,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
                 rootView.addView(view)
                 currentView = view
                 currentMessage = payload
-                logConversion("in_app_message_clicked", false)
+                logConversion("campaign.in_app_message_displayed", false)
             }
         )
     }
