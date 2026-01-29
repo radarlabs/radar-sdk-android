@@ -509,20 +509,25 @@ internal class RadarVerificationManager(
             val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
             val fraudInstance = sharedInstanceMethod.invoke(null)
             
-            // Create adapter callback that matches detectFraud's Function2 signature
-            val detectFraudCallback = object : Function2<String?, String?, Unit> {
+            // Create adapter callback that matches getFraudPayload's Function2 signature
+            val getFraudPayloadCallback = object : Function2<String?, String?, Unit> {
                 override fun invoke(fraudPayload: String?, error: String?): Unit {
                     // Pass fraudPayload if available, otherwise null (error case)
                     callback(if (error != null) null else fraudPayload)
                 }
             }
             
-            val detectFraudMethod = fraudClass.getMethod("detectFraud", 
-                android.content.Context::class.java,
-                android.location.Location::class.java,
+            // Create options map
+            val options = mapOf(
+                "context" to context,
+                "location" to location
+            )
+            
+            val getFraudPayloadMethod = fraudClass.getMethod("getFraudPayload", 
+                java.util.Map::class.java,
                 Function2::class.java)
             
-            detectFraudMethod.invoke(fraudInstance, context, location, detectFraudCallback)
+            getFraudPayloadMethod.invoke(fraudInstance, options, getFraudPayloadCallback)
         } catch (e: ClassNotFoundException) {
             logger.d("Skipping fraud checks: RadarSDKFraud submodule not available")
             callback(null)

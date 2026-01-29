@@ -1,6 +1,7 @@
 include ':sdk', ':example'
 
 // Optional fraud detection module (Git submodule)
-if (file('sdk-fraud/build.gradle').exists()) {
+if (file('sdk-fraud/sdk-fraud/build.gradle').exists()) {
     include ':sdk-fraud'
+    project(':sdk-fraud').projectDir = new File('sdk-fraud/sdk-fraud')
 }
