@@ -86,6 +86,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
                 rootView.addView(view)
                 currentView = view
                 currentMessage = payload
+                modalShowTime = System.currentTimeMillis()
                 logConversion("user.displayed_in_app_message", false)
             }
         )
