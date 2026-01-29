@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogConversionCallback
+import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarInAppMessage
 import org.json.JSONObject
@@ -30,9 +31,10 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
         if (withDuration) {
             metadata.put("displayDuration", System.currentTimeMillis() - modalShowTime)
         }
+        val campaign = message.metadata.optString("radar:campaignId")
 
-        Radar.sendLogConversionRequest(name, metadata, callback = object : RadarLogConversionCallback {
-            override fun onComplete(status: Radar.RadarStatus, event: RadarEvent?) {
+        Radar.apiClient.sendEvent(name, metadata, campaign, object : RadarApiClient.RadarSendEventApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
                 Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
             }
         })
@@ -44,13 +46,13 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
             payload,
             onDismissListener = {
                 // Record the time when modal is dismissed
-                logConversion("campaign.in_app_message_dismissed", true)
+                logConversion("user.dismissed_in_app_message", true)
                 inAppMessageReceiver?.onInAppMessageDismissed(payload)
                 dismiss()
             },
             onInAppMessageButtonClicked = {
                 // Record the time when modal is dismissed via button click
-                logConversion("campaign.in_app_message_clicked", true)
+                logConversion("user.clicked_in_app_message", true)
                 Log.d("MyInAppMessageReceiver", "called super, activity is $activity")
                 if (payload.button?.deepLink != null && payload.button.deepLink != "null" && payload.button.deepLink.isNotBlank()) {
                     payload.button.deepLink.let { deepLink ->
@@ -84,7 +86,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
                 rootView.addView(view)
                 currentView = view
                 currentMessage = payload
-                logConversion("campaign.in_app_message_displayed", false)
+                logConversion("user.displayed_in_app_message", false)
             }
         )
     }
