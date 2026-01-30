@@ -40,6 +40,7 @@ internal object RadarSettings {
     private const val KEY_X_PLATFORM_SDK_TYPE = "x_platform_sdk_type"
     private const val KEY_X_PLATFORM_SDK_VERSION = "x_platform_sdk_version"
     private const val KEY_USER_TAGS = "user_tags"
+    private const val KEY_FRAUD_ENABLED = "fraudEnabled"
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -160,6 +161,14 @@ internal object RadarSettings {
 
     internal fun setAdIdEnabled(context: Context, enabled: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_AD_ID_ENABLED, enabled) }
+    }
+
+    internal fun getFraudEnabled(context: Context): Boolean {
+        return getSharedPreferences(context).getBoolean(KEY_FRAUD_ENABLED, false)
+    }
+
+    internal fun setFraudEnabled(context: Context, enabled: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_FRAUD_ENABLED, enabled) }
     }
 
     internal fun getTracking(context: Context): Boolean {
