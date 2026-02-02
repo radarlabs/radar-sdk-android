@@ -39,12 +39,15 @@ internal class RadarVerificationManager(
     private lateinit var standardIntegrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider
     private var lastWarmUpTimestampSeconds = 0L
     private val handler = Handler(this.context.mainLooper)
+    private val connectivityManager = this.context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
     private var startedInterval = 0
     private var startedBeacons = false
     private var runnable: Runnable? = null
     private var lastToken: RadarVerifiedLocationToken? = null
     private var lastTokenElapsedRealtime: Long = 0L
     private var lastTokenBeacons: Boolean = false
+    private var lastIPs: String? = null
     private var expectedCountryCode: String? = null
     private var expectedStateCode: String? = null
 
@@ -312,8 +315,54 @@ internal class RadarVerificationManager(
         verificationManager.startedInterval = interval
         verificationManager.startedBeacons = beacons
 
-        // Start IP monitoring via fraud detection module
-        verificationManager.startFraudIPMonitoring()
+        val request = NetworkRequest.Builder()
+            .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
+            .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+            .addTransportType(NetworkCapabilities.TRANSPORT_BLUETOOTH)
+            .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+            .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+            .build()
+
+        val handleNetworkChange = {
+            val ips = verificationManager.getIPs()
+            var changed = false
+
+            if (verificationManager.lastIPs == null) {
+                verificationManager.logger.d("First time getting IPs")
+                changed = false
+            } else if (ips == "error") {
+                verificationManager.logger.d("Error getting IPs")
+                changed = true
+            } else if (ips != verificationManager.lastIPs) {
+                verificationManager.logger.d("IPs changed | ips = $ips; lastIPs = ${verificationManager.lastIPs}")
+                changed = true
+            } else {
+                verificationManager.logger.d("IPs unchanged")
+            }
+            verificationManager.lastIPs = ips
+
+            if (changed) {
+                callTrackVerified("ip_change")
+            }
+        }
+
+        networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                super.onAvailable(network)
+                verificationManager.logger.d("Network connected")
+                handleNetworkChange()
+            }
+
+            override fun onLost(network: Network) {
+                super.onLost(network)
+                verificationManager.logger.d("Network lost")
+                handleNetworkChange()
+            }
+        }
+
+        networkCallback?.let {
+            connectivityManager.registerNetworkCallback(request, it)
+        }
 
         if (startedInterval < 20) {
             Radar.locationManager.locationClient.requestLocationUpdates(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, 0, 0, RadarLocationReceiver.getVerifiedLocationPendingIntent(context))
@@ -334,8 +383,9 @@ internal class RadarVerificationManager(
                 Radar.locationManager.locationClient.removeLocationUpdates(RadarLocationReceiver.getVerifiedLocationPendingIntent(context))
             }
 
-            // Stop IP monitoring via fraud detection module
-            this.stopFraudIPMonitoring()
+            networkCallback?.let {
+                connectivityManager.unregisterNetworkCallback(it)
+            }
 
             runnable?.let {
                 handler.removeCallbacks(it)
@@ -536,42 +586,32 @@ internal class RadarVerificationManager(
             callback(null)
         }
     }
-    
-    private fun startFraudIPMonitoring() {
+
+    fun getIPs(): String {
+        val ips = mutableListOf<String>()
+
         try {
-            val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
-            val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
-            val fraudInstance = sharedInstanceMethod.invoke(null)
-            
-            val startIPMonitoringMethod = fraudClass.getMethod("startIPMonitoring", 
-                android.content.Context::class.java,
-                kotlin.jvm.functions.Function1::class.java)
-            
-            startIPMonitoringMethod.invoke(fraudInstance, context, { reason: String ->
-                callTrackVerified(reason)
-            })
-        } catch (e: ClassNotFoundException) {
-            logger.d("Skipping IP monitoring: RadarSDKFraud submodule not available")
+            val interfaces: Enumeration<NetworkInterface> = NetworkInterface.getNetworkInterfaces()
+            while (interfaces.hasMoreElements()) {
+                val networkInterface: NetworkInterface = interfaces.nextElement()
+                val addresses: Enumeration<InetAddress> = networkInterface.inetAddresses
+
+                while (addresses.hasMoreElements()) {
+                    val address: InetAddress = addresses.nextElement()
+                    address.hostAddress?.let { ips.add(it) }
+                }
+            }
         } catch (e: Exception) {
-            logger.e("Error starting fraud IP monitoring", Radar.RadarLogType.SDK_EXCEPTION, e)
+            logger.d("Error getting IPs | e = ${e.localizedMessage}")
+
+            return "error"
         }
-    }
-    
-    private fun stopFraudIPMonitoring() {
-        try {
-            val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
-            val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
-            val fraudInstance = sharedInstanceMethod.invoke(null)
-            
-            val stopIPMonitoringMethod = fraudClass.getMethod("stopIPMonitoring", 
-                android.content.Context::class.java)
-            
-            stopIPMonitoringMethod.invoke(fraudInstance, context)
-        } catch (e: ClassNotFoundException) {
-            logger.d("Skipping IP monitoring stop: RadarSDKFraud submodule not available")
-        } catch (e: Exception) {
-            logger.e("Error stopping fraud IP monitoring", Radar.RadarLogType.SDK_EXCEPTION, e)
+
+        if (ips.size > 0) {
+            return ips.joinToString(",")
         }
+
+        return "error"
     }
 
 }
