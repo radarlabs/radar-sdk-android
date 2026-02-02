@@ -3548,6 +3548,7 @@ object Radar {
         apiClient.sendEvent(
             name,
             metadata,
+            campaign = null,
             object : RadarApiClient.RadarSendEventApiCallback {
                 override fun onComplete(
                     status: RadarStatus,

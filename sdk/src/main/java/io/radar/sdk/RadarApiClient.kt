@@ -1363,6 +1363,7 @@ internal class RadarApiClient(
     internal fun sendEvent(
         name: String,
         metadata: JSONObject?,
+        campaign: String?,
         callback: RadarSendEventApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -1380,6 +1381,7 @@ internal class RadarApiClient(
             params.putOpt("deviceId", RadarUtils.getDeviceId(context))
             params.putOpt("type", name)
             params.putOpt("metadata", metadata)
+            params.putOpt("campaign", campaign)
         } catch (e: JSONException) {
             callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
