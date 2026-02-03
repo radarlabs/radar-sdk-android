@@ -10,12 +10,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
-import com.google.android.play.core.integrity.StandardIntegrityManager
-import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityToken
-import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityTokenRequest
-import com.google.android.gms.tasks.Task
-import com.google.android.play.core.integrity.IntegrityManagerFactory
-import io.radar.sdk.RadarUtils.hashSHA256
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarEvent
@@ -36,8 +30,6 @@ internal class RadarVerificationManager(
 
     var started = false
 
-    private lateinit var standardIntegrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider
-    private var lastWarmUpTimestampSeconds = 0L
     private val handler = Handler(this.context.mainLooper)
     private val connectivityManager = this.context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
@@ -50,19 +42,6 @@ internal class RadarVerificationManager(
     private var lastIPs: String? = null
     private var expectedCountryCode: String? = null
     private var expectedStateCode: String? = null
-
-    internal companion object {
-        private const val WARM_UP_WINDOW_SECONDS = 3600 * 12 // 12 hours
-    }
-
-    private fun isIntegrityApiIncluded(): Boolean {
-        return try {
-            Class.forName("com.google.android.play.core.integrity.StandardIntegrityManager")
-            true
-        } catch (e: ClassNotFoundException) {
-            false
-        }
-    }
 
     fun trackVerified(
         beacons: Boolean = false,
@@ -113,32 +92,23 @@ internal class RadarVerificationManager(
                                 return
                             }
 
-                            val requestHash = verificationManager.getRequestHash(location)
-
-                            // Get fraud payload from fraud detection module
-                            verificationManager.getFraudPayload(location) { fraudPayload ->
-                                verificationManager.getIntegrityToken(
-                                    googlePlayProjectNumber,
-                                    requestHash
-                                ) { integrityToken, integrityException ->
-                                    val callTrackApi = { beacons: Array<RadarBeacon>? ->
-                                        Radar.apiClient.track(
-                                            location,
-                                            RadarState.getStopped(verificationManager.context),
-                                            RadarActivityLifecycleCallbacks.foreground,
-                                            Radar.RadarLocationSource.FOREGROUND_LOCATION,
-                                            false,
-                                            beacons,
-                                            true,
-                                            integrityToken,
-                                            integrityException,
-                                            false,
-                                            verificationManager.expectedCountryCode,
-                                            verificationManager.expectedStateCode,
-                                            reason ?: "manual",
-                                            transactionId,
-                                            fraudPayload,
-                                            callback = object : RadarApiClient.RadarTrackApiCallback {
+                            verificationManager.getFraudPayload(location, googlePlayProjectNumber) { fraudPayload ->
+                                val callTrackApi = { beacons: Array<RadarBeacon>? ->
+                                    Radar.apiClient.track(
+                                        location,
+                                        RadarState.getStopped(verificationManager.context),
+                                        RadarActivityLifecycleCallbacks.foreground,
+                                        Radar.RadarLocationSource.FOREGROUND_LOCATION,
+                                        false,
+                                        beacons,
+                                        true,
+                                        false,
+                                        verificationManager.expectedCountryCode,
+                                        verificationManager.expectedStateCode,
+                                        reason ?: "manual",
+                                        transactionId,
+                                        fraudPayload,
+                                        callback = object : RadarApiClient.RadarTrackApiCallback {
                                                 override fun onComplete(
                                                     status: Radar.RadarStatus,
                                                     res: JSONObject?,
@@ -238,7 +208,6 @@ internal class RadarVerificationManager(
                                     } else {
                                         callTrackApi(null)
                                     }
-                                }
                             }
                         }
                     })
@@ -433,127 +402,7 @@ internal class RadarVerificationManager(
         this.expectedStateCode = stateCode
     }
 
-    fun getRequestHash(location: Location): String {
-        val stringBuffer = StringBuilder()
-        stringBuffer.append(RadarSettings.getInstallId(this.context))
-        stringBuffer.append(location.latitude)
-        stringBuffer.append(location.longitude)
-        stringBuffer.append(location.isFromMockProvider)
-        stringBuffer.append(false)
-        return hashSHA256(stringBuffer.toString())
-    }
-
-    private fun warmUpProviderAndFetchTokenFromGoogle(googlePlayProjectNumber: Long, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
-        if (!isIntegrityApiIncluded()) {
-            val integrityException = "Integrity API not included"
-
-            logger.w(integrityException)
-
-            block(null, integrityException)
-
-            return
-        }
-
-        val standardIntegrityManager = IntegrityManagerFactory.createStandard(this.context)
-        standardIntegrityManager.prepareIntegrityToken(
-            StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
-                .setCloudProjectNumber(googlePlayProjectNumber)
-                .build()
-        )
-            .addOnSuccessListener { tokenProvider ->
-                this.standardIntegrityTokenProvider = tokenProvider
-                Radar.logger.d("Successfully warmed up integrity token provider")
-                this.lastWarmUpTimestampSeconds = System.currentTimeMillis() / 1000
-                this.fetchTokenFromGoogle(requestHash, block)
-
-            }
-            .addOnFailureListener { exception ->
-                val warmupException = exception.message
-                Radar.logger.e("Error warming up integrity token provider | warmupException = $warmupException", Radar.RadarLogType.SDK_ERROR, exception)
-                block(null, warmupException)
-            }
-
-    }
-
-    fun getIntegrityToken(googlePlayProjectNumber: Long?, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
-        if (!isIntegrityApiIncluded()) {
-            val integrityException = "Integrity API not included"
-
-            logger.w(integrityException)
-
-            block(null, integrityException)
-
-            return
-        }
-
-        if (requestHash == null) {
-            val integrityException = "Missing request hash"
-
-            logger.d(integrityException)
-
-            block(null, integrityException)
-
-            return
-        }
-
-        if (googlePlayProjectNumber == null) {
-            val integrityException = "Google Play project number is null"
-
-            logger.d("Error warming up integrity token provider: Google Play project number is null")
-
-            block(null, integrityException)
-
-            return
-        }
-
-        val nowSeconds = System.currentTimeMillis() / 1000
-        val warmUpProvider = !this::standardIntegrityTokenProvider.isInitialized
-                || this.lastWarmUpTimestampSeconds == 0L
-                || (nowSeconds - this.lastWarmUpTimestampSeconds) > WARM_UP_WINDOW_SECONDS
-        if (warmUpProvider) {
-            this.warmUpProviderAndFetchTokenFromGoogle(googlePlayProjectNumber, requestHash, block)
-
-            return
-        }
-        this.fetchTokenFromGoogle(requestHash, block)
-    }
-
-    private fun fetchTokenFromGoogle(requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
-        if (!isIntegrityApiIncluded()) {
-            val integrityException = "Integrity API not included"
-
-            logger.w(integrityException)
-
-            block(null, integrityException)
-
-            return
-        }
-
-        logger.d("Requesting integrity token")
-
-        val integrityTokenResponse: Task<StandardIntegrityToken> = this.standardIntegrityTokenProvider.request(
-            StandardIntegrityTokenRequest.builder()
-                .setRequestHash(requestHash)
-                .build()
-        )
-        integrityTokenResponse
-            .addOnSuccessListener { response ->
-                val integrityToken = response.token()
-
-                logger.d("Successfully requested integrity token | integrityToken = $integrityToken")
-
-                block(integrityToken, null)
-            }
-            .addOnFailureListener { exception ->
-                val integrityException = exception.message
-
-                logger.d("Error requesting integrity token | integrityException = $integrityException")
-                
-                block(null, integrityException)
-            }
-    }
-
-    private fun getFraudPayload(location: Location, callback: (String?) -> Unit) {
+    private fun getFraudPayload(location: Location, googlePlayProjectNumber: Long?, callback: (String?) -> Unit) {
         try {
             val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
             val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
@@ -568,10 +417,15 @@ internal class RadarVerificationManager(
             }
             
             // Create options map
-            val options = mapOf(
+            val options = mutableMapOf<String, Any?>(
                 "context" to context,
                 "location" to location
             )
+            
+            // Add integrity-related parameters if available
+            if (googlePlayProjectNumber != null) {
+                options["googlePlayProjectNumber"] = googlePlayProjectNumber
+            }
             
             val getFraudPayloadMethod = fraudClass.getMethod("getFraudPayload", 
                 java.util.Map::class.java,

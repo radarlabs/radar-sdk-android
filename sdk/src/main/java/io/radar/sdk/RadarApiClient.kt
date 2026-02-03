@@ -269,8 +269,6 @@ internal class RadarApiClient(
         replayed: Boolean,
         beacons: Array<RadarBeacon>?,
         verified: Boolean = false,
-        integrityToken: String? = null,
-        integrityException: String? = null,
         encrypted: Boolean? = false,
         expectedCountryCode: String? = null,
         expectedStateCode: String? = null,
@@ -399,8 +397,6 @@ internal class RadarApiClient(
             params.putOpt("locationServicesProvider", RadarSettings.getLocationServicesProvider(context))
             params.putOpt("verified", verified)
             if (verified) {
-                params.putOpt("integrityToken", integrityToken)
-                params.putOpt("integrityException", integrityException)
                 params.putOpt("encrypted", encrypted)
                 if (fraudPayload != null) {
                     params.putOpt("fraudPayload", fraudPayload)
