@@ -21,6 +21,7 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.Enumeration
 import kotlin.jvm.functions.Function2
+import kotlin.jvm.functions.Function3
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarVerificationManager(
@@ -92,7 +93,7 @@ internal class RadarVerificationManager(
                                 return
                             }
 
-                            verificationManager.getFraudPayload(location, googlePlayProjectNumber) { fraudPayload ->
+                            verificationManager.getFraudPayload(location, googlePlayProjectNumber) { fraudPayload, fraudKeyVersion ->
                                 val callTrackApi = { beacons: Array<RadarBeacon>? ->
                                     Radar.apiClient.track(
                                         location,
@@ -108,6 +109,7 @@ internal class RadarVerificationManager(
                                         reason ?: "manual",
                                         transactionId,
                                         fraudPayload,
+                                        fraudKeyVersion,
                                         callback = object : RadarApiClient.RadarTrackApiCallback {
                                                 override fun onComplete(
                                                     status: Radar.RadarStatus,
@@ -402,17 +404,21 @@ internal class RadarVerificationManager(
         this.expectedStateCode = stateCode
     }
 
-    private fun getFraudPayload(location: Location, googlePlayProjectNumber: Long?, callback: (String?) -> Unit) {
+    private fun getFraudPayload(location: Location, googlePlayProjectNumber: Long?, callback: (String?, Int?) -> Unit) {
         try {
             val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
             val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
             val fraudInstance = sharedInstanceMethod.invoke(null)
             
-            // Create adapter callback that matches getFraudPayload's Function2 signature
-            val getFraudPayloadCallback = object : Function2<String?, String?, Unit> {
-                override fun invoke(fraudPayload: String?, error: String?): Unit {
-                    // Pass fraudPayload if available, otherwise null (error case)
-                    callback(if (error != null) null else fraudPayload)
+            // Create adapter callback that matches getFraudPayload's Function3 signature
+            val getFraudPayloadCallback = object : Function3<String?, Int?, String?, Unit> {
+                override fun invoke(fraudPayload: String?, fraudKeyVersion: Int?, error: String?): Unit {
+                    // Pass fraudPayload and fraudKeyVersion if available, otherwise null (error case)
+                    if (error != null) {
+                        callback(null, null)
+                    } else {
+                        callback(fraudPayload, fraudKeyVersion)
+                    }
                 }
             }
             
@@ -429,15 +435,15 @@ internal class RadarVerificationManager(
             
             val getFraudPayloadMethod = fraudClass.getMethod("getFraudPayload", 
                 java.util.Map::class.java,
-                Function2::class.java)
+                Function3::class.java)
             
             getFraudPayloadMethod.invoke(fraudInstance, options, getFraudPayloadCallback)
         } catch (e: ClassNotFoundException) {
             logger.d("Skipping fraud checks: RadarSDKFraud submodule not available")
-            callback(null)
+            callback(null, null)
         } catch (e: Exception) {
             logger.e("Error calling fraud detection", Radar.RadarLogType.SDK_EXCEPTION, e)
-            callback(null)
+            callback(null, null)
         }
     }
 

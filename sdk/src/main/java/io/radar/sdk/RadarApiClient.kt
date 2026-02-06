@@ -138,18 +138,6 @@ internal class RadarApiClient(
         return headers
     }
 
-    private fun getFraudKeyVersion(): Int? {
-        return try {
-            val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
-            val getVersionMethod = fraudClass.getMethod("getVersion")
-            getVersionMethod.invoke(null) as? Int
-        } catch (e: ClassNotFoundException) {
-            null
-        } catch (e: Exception) {
-            null
-        }
-    }
-
     internal fun getConfig(usage: String? = null, verified: Boolean = false, callback: RadarGetConfigApiCallback? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -287,6 +275,7 @@ internal class RadarApiClient(
         reason: String? = null,
         transactionId: String? = null,
         fraudPayload: String? = null,
+        fraudKeyVersion: Int? = null,
         callback: RadarTrackApiCallback? = null
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -412,7 +401,6 @@ internal class RadarApiClient(
                 params.putOpt("encrypted", encrypted)
                 if (fraudPayload != null) {
                     params.putOpt("fraudPayload", fraudPayload)
-                    val fraudKeyVersion = getFraudKeyVersion()
                     if (fraudKeyVersion != null) {
                         params.putOpt("fraudKeyVersion", fraudKeyVersion)
                     }
