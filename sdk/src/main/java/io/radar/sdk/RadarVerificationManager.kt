@@ -20,8 +20,7 @@ import org.json.JSONObject
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.Enumeration
-import kotlin.jvm.functions.Function2
-import kotlin.jvm.functions.Function3
+import kotlin.jvm.functions.Function1
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarVerificationManager(
@@ -93,7 +92,18 @@ internal class RadarVerificationManager(
                                 return
                             }
 
-                            verificationManager.getFraudPayload(location, googlePlayProjectNumber) { fraudPayload, fraudKeyVersion ->
+                            verificationManager.getFraudPayload(location, googlePlayProjectNumber) { result ->
+                                val fraudPayload = result?.get("payload") as? String
+                                // -- payload encryption --
+                                // val keyVersionNumber = result?.get("keyVersion") as? Int
+                                // val fraudKeyVersion = keyVersionNumber
+                                
+                                if (result?.containsKey("error") == true || fraudPayload == null) {
+                                    val error = result?.get("error") as? String ?: "Unknown error"
+                                    logger.e("Error getting fraud payload: $error", Radar.RadarLogType.SDK_ERROR)
+                                    callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
+                                    return@getFraudPayload
+                                }
                                 val callTrackApi = { beacons: Array<RadarBeacon>? ->
                                     Radar.apiClient.track(
                                         location,
@@ -109,7 +119,8 @@ internal class RadarVerificationManager(
                                         reason ?: "manual",
                                         transactionId,
                                         fraudPayload,
-                                        fraudKeyVersion,
+                                        // -- payload encryption --
+                                        // fraudKeyVersion,
                                         callback = object : RadarApiClient.RadarTrackApiCallback {
                                                 override fun onComplete(
                                                     status: Radar.RadarStatus,
@@ -404,21 +415,16 @@ internal class RadarVerificationManager(
         this.expectedStateCode = stateCode
     }
 
-    private fun getFraudPayload(location: Location, googlePlayProjectNumber: Long?, callback: (String?, Int?) -> Unit) {
+    private fun getFraudPayload(location: Location, googlePlayProjectNumber: Long?, callback: (Map<String, Any?>?) -> Unit) {
         try {
             val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
             val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
             val fraudInstance = sharedInstanceMethod.invoke(null)
             
-            // Create adapter callback that matches getFraudPayload's Function3 signature
-            val getFraudPayloadCallback = object : Function3<String?, Int?, String?, Unit> {
-                override fun invoke(fraudPayload: String?, fraudKeyVersion: Int?, error: String?): Unit {
-                    // Pass fraudPayload and fraudKeyVersion if available, otherwise null (error case)
-                    if (error != null) {
-                        callback(null, null)
-                    } else {
-                        callback(fraudPayload, fraudKeyVersion)
-                    }
+            // Create adapter callback that matches getFraudPayload's Function1 signature
+            val getFraudPayloadCallback = object : Function1<Map<String, Any?>?, Unit> {
+                override fun invoke(result: Map<String, Any?>?): Unit {
+                    callback(result)
                 }
             }
             
@@ -435,15 +441,15 @@ internal class RadarVerificationManager(
             
             val getFraudPayloadMethod = fraudClass.getMethod("getFraudPayload", 
                 java.util.Map::class.java,
-                Function3::class.java)
+                Function1::class.java)
             
             getFraudPayloadMethod.invoke(fraudInstance, options, getFraudPayloadCallback)
         } catch (e: ClassNotFoundException) {
             logger.d("Skipping fraud checks: RadarSDKFraud submodule not available")
-            callback(null, null)
+            callback(null)
         } catch (e: Exception) {
             logger.e("Error calling fraud detection", Radar.RadarLogType.SDK_EXCEPTION, e)
-            callback(null, null)
+            callback(mapOf("error" to (e.message ?: "Unknown error")))
         }
     }
 
