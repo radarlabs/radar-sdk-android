@@ -10,12 +10,6 @@ import android.os.Build
 import android.os.Handler
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
-import com.google.android.play.core.integrity.StandardIntegrityManager
-import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityToken
-import com.google.android.play.core.integrity.StandardIntegrityManager.StandardIntegrityTokenRequest
-import com.google.android.gms.tasks.Task
-import com.google.android.play.core.integrity.IntegrityManagerFactory
-import io.radar.sdk.RadarUtils.hashSHA256
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarEvent
@@ -26,6 +20,7 @@ import org.json.JSONObject
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.util.Enumeration
+import kotlin.jvm.functions.Function1
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarVerificationManager(
@@ -35,8 +30,6 @@ internal class RadarVerificationManager(
 
     var started = false
 
-    private lateinit var standardIntegrityTokenProvider: StandardIntegrityManager.StandardIntegrityTokenProvider
-    private var lastWarmUpTimestampSeconds = 0L
     private val handler = Handler(this.context.mainLooper)
     private val connectivityManager = this.context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
@@ -49,19 +42,6 @@ internal class RadarVerificationManager(
     private var lastIPs: String? = null
     private var expectedCountryCode: String? = null
     private var expectedStateCode: String? = null
-
-    internal companion object {
-        private const val WARM_UP_WINDOW_SECONDS = 3600 * 12 // 12 hours
-    }
-
-    private fun isIntegrityApiIncluded(): Boolean {
-        return try {
-            Class.forName("com.google.android.play.core.integrity.StandardIntegrityManager")
-            true
-        } catch (e: ClassNotFoundException) {
-            false
-        }
-    }
 
     fun trackVerified(
         beacons: Boolean = false,
@@ -112,12 +92,18 @@ internal class RadarVerificationManager(
                                 return
                             }
 
-                            val requestHash = verificationManager.getRequestHash(location)
-
-                            verificationManager.getIntegrityToken(
-                                googlePlayProjectNumber,
-                                requestHash
-                            ) { integrityToken, integrityException ->
+                            verificationManager.getFraudPayload(location, googlePlayProjectNumber) { result ->
+                                val fraudPayload = result?.get("payload") as? String
+                                // -- payload encryption --
+                                // val keyVersionNumber = result?.get("keyVersion") as? Int
+                                // val fraudKeyVersion = keyVersionNumber
+                                
+                                if (result?.containsKey("error") == true || fraudPayload == null) {
+                                    val error = result?.get("error") as? String ?: "Unknown error"
+                                    logger.e("Error getting fraud payload: $error", Radar.RadarLogType.SDK_ERROR)
+                                    callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
+                                    return@getFraudPayload
+                                }
                                 val callTrackApi = { beacons: Array<RadarBeacon>? ->
                                     Radar.apiClient.track(
                                         location,
@@ -127,117 +113,118 @@ internal class RadarVerificationManager(
                                         false,
                                         beacons,
                                         true,
-                                        integrityToken,
-                                        integrityException,
                                         false,
                                         verificationManager.expectedCountryCode,
                                         verificationManager.expectedStateCode,
                                         reason ?: "manual",
                                         transactionId,
+                                        fraudPayload,
+                                        // -- payload encryption --
+                                        // fraudKeyVersion,
                                         callback = object : RadarApiClient.RadarTrackApiCallback {
-                                            override fun onComplete(
-                                                status: Radar.RadarStatus,
-                                                res: JSONObject?,
-                                                events: Array<RadarEvent>?,
-                                                user: RadarUser?,
-                                                nearbyGeofences: Array<RadarGeofence>?,
-                                                config: RadarConfig?,
-                                                token: RadarVerifiedLocationToken?
-                                            ) {
-                                                if (status == Radar.RadarStatus.SUCCESS) {
-                                                    Radar.locationManager.updateTrackingFromMeta(
-                                                        config?.meta
-                                                    )
-                                                }
-                                                if (token != null) {
-                                                    verificationManager.lastToken = token
-                                                    verificationManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
-                                                    verificationManager.lastTokenBeacons = lastTokenBeacons
-                                                }
-                                                Radar.handler.post {
-                                                    if (status != Radar.RadarStatus.SUCCESS) {
-                                                        Radar.sendError(status)
+                                                override fun onComplete(
+                                                    status: Radar.RadarStatus,
+                                                    res: JSONObject?,
+                                                    events: Array<RadarEvent>?,
+                                                    user: RadarUser?,
+                                                    nearbyGeofences: Array<RadarGeofence>?,
+                                                    config: RadarConfig?,
+                                                    token: RadarVerifiedLocationToken?
+                                                ) {
+                                                    if (status == Radar.RadarStatus.SUCCESS) {
+                                                        Radar.locationManager.updateTrackingFromMeta(
+                                                            config?.meta
+                                                        )
                                                     }
+                                                    if (token != null) {
+                                                        verificationManager.lastToken = token
+                                                        verificationManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
+                                                        verificationManager.lastTokenBeacons = lastTokenBeacons
+                                                    }
+                                                    Radar.handler.post {
+                                                        if (status != Radar.RadarStatus.SUCCESS) {
+                                                            Radar.sendError(status)
+                                                        }
 
-                                                    callback?.onComplete(status, token)
+                                                        callback?.onComplete(status, token)
+                                                    }
                                                 }
-                                            }
-                                        })
-                                }
+                                            })
+                                    }
 
-                                if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    Radar.apiClient.searchBeacons(
-                                        location,
-                                        1000,
-                                        10,
-                                        object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                                            override fun onComplete(
-                                                status: Radar.RadarStatus,
-                                                res: JSONObject?,
-                                                beacons: Array<RadarBeacon>?,
-                                                uuids: Array<String>?,
-                                                uids: Array<String>?
-                                            ) {
-                                                if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                                    Radar.beaconManager.startMonitoringBeaconUUIDs(
-                                                        uuids,
-                                                        uids
-                                                    )
+                                    if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        Radar.apiClient.searchBeacons(
+                                            location,
+                                            1000,
+                                            10,
+                                            object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                                                override fun onComplete(
+                                                    status: Radar.RadarStatus,
+                                                    res: JSONObject?,
+                                                    beacons: Array<RadarBeacon>?,
+                                                    uuids: Array<String>?,
+                                                    uids: Array<String>?
+                                                ) {
+                                                    if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                                                        Radar.beaconManager.startMonitoringBeaconUUIDs(
+                                                            uuids,
+                                                            uids
+                                                        )
 
-                                                    Radar.beaconManager.rangeBeaconUUIDs(
-                                                        uuids,
-                                                        uids,
-                                                        false,
-                                                        object : Radar.RadarBeaconCallback {
-                                                            override fun onComplete(
-                                                                status: Radar.RadarStatus,
-                                                                beacons: Array<RadarBeacon>?
-                                                            ) {
-                                                                if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
-                                                                    callTrackApi(null)
+                                                        Radar.beaconManager.rangeBeaconUUIDs(
+                                                            uuids,
+                                                            uids,
+                                                            false,
+                                                            object : Radar.RadarBeaconCallback {
+                                                                override fun onComplete(
+                                                                    status: Radar.RadarStatus,
+                                                                    beacons: Array<RadarBeacon>?
+                                                                ) {
+                                                                    if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
+                                                                        callTrackApi(null)
 
-                                                                    return
+                                                                        return
+                                                                    }
+
+                                                                    callTrackApi(beacons)
                                                                 }
+                                                            })
+                                                    } else if (beacons != null) {
+                                                        Radar.beaconManager.startMonitoringBeacons(
+                                                            beacons
+                                                        )
 
-                                                                callTrackApi(beacons)
-                                                            }
-                                                        })
-                                                } else if (beacons != null) {
-                                                    Radar.beaconManager.startMonitoringBeacons(
-                                                        beacons
-                                                    )
+                                                        Radar.beaconManager.rangeBeacons(
+                                                            beacons,
+                                                            false,
+                                                            object : Radar.RadarBeaconCallback {
+                                                                override fun onComplete(
+                                                                    status: Radar.RadarStatus,
+                                                                    beacons: Array<RadarBeacon>?
+                                                                ) {
+                                                                    if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
+                                                                        callTrackApi(null)
 
-                                                    Radar.beaconManager.rangeBeacons(
-                                                        beacons,
-                                                        false,
-                                                        object : Radar.RadarBeaconCallback {
-                                                            override fun onComplete(
-                                                                status: Radar.RadarStatus,
-                                                                beacons: Array<RadarBeacon>?
-                                                            ) {
-                                                                if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
-                                                                    callTrackApi(null)
+                                                                        return
+                                                                    }
 
-                                                                    return
+                                                                    callTrackApi(beacons)
                                                                 }
-
-                                                                callTrackApi(beacons)
-                                                            }
-                                                        })
-                                                } else {
-                                                    callTrackApi(arrayOf())
+                                                            })
+                                                    } else {
+                                                        callTrackApi(arrayOf())
+                                                    }
                                                 }
-                                            }
-                                        },
-                                        false
-                                    )
-                                } else {
-                                    callTrackApi(null)
-                                }
+                                            },
+                                            false
+                                        )
+                                    } else {
+                                        callTrackApi(null)
+                                    }
                             }
                         }
                     })
-            }
+                }
         })
     }
 
@@ -428,124 +415,42 @@ internal class RadarVerificationManager(
         this.expectedStateCode = stateCode
     }
 
-    fun getRequestHash(location: Location): String {
-        val stringBuffer = StringBuilder()
-        stringBuffer.append(RadarSettings.getInstallId(this.context))
-        stringBuffer.append(location.latitude)
-        stringBuffer.append(location.longitude)
-        stringBuffer.append(location.isFromMockProvider)
-        stringBuffer.append(false)
-        return hashSHA256(stringBuffer.toString())
-    }
-
-    private fun warmUpProviderAndFetchTokenFromGoogle(googlePlayProjectNumber: Long, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
-        if (!isIntegrityApiIncluded()) {
-            val integrityException = "Integrity API not included"
-
-            logger.w(integrityException)
-
-            block(null, integrityException)
-
-            return
-        }
-
-        val standardIntegrityManager = IntegrityManagerFactory.createStandard(this.context)
-        standardIntegrityManager.prepareIntegrityToken(
-            StandardIntegrityManager.PrepareIntegrityTokenRequest.builder()
-                .setCloudProjectNumber(googlePlayProjectNumber)
-                .build()
-        )
-            .addOnSuccessListener { tokenProvider ->
-                this.standardIntegrityTokenProvider = tokenProvider
-                Radar.logger.d("Successfully warmed up integrity token provider")
-                this.lastWarmUpTimestampSeconds = System.currentTimeMillis() / 1000
-                this.fetchTokenFromGoogle(requestHash, block)
-
+    private fun getFraudPayload(location: Location, googlePlayProjectNumber: Long?, callback: (Map<String, Any?>?) -> Unit) {
+        try {
+            val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
+            val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
+            val fraudInstance = sharedInstanceMethod.invoke(null)
+            
+            // Create adapter callback that matches getFraudPayload's Function1 signature
+            val getFraudPayloadCallback = object : Function1<Map<String, Any?>?, Unit> {
+                override fun invoke(result: Map<String, Any?>?): Unit {
+                    callback(result)
+                }
             }
-            .addOnFailureListener { exception ->
-                val warmupException = exception.message
-                Radar.logger.e("Error warming up integrity token provider | warmupException = $warmupException", Radar.RadarLogType.SDK_ERROR, exception)
-                block(null, warmupException)
+            
+            // Create options map
+            val options = mutableMapOf<String, Any?>(
+                "context" to context,
+                "location" to location
+            )
+            
+            // Add integrity-related parameters if available
+            if (googlePlayProjectNumber != null) {
+                options["googlePlayProjectNumber"] = googlePlayProjectNumber
             }
-
-    }
-
-    fun getIntegrityToken(googlePlayProjectNumber: Long?, requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
-        if (!isIntegrityApiIncluded()) {
-            val integrityException = "Integrity API not included"
-
-            logger.w(integrityException)
-
-            block(null, integrityException)
-
-            return
+            
+            val getFraudPayloadMethod = fraudClass.getMethod("getFraudPayload", 
+                java.util.Map::class.java,
+                Function1::class.java)
+            
+            getFraudPayloadMethod.invoke(fraudInstance, options, getFraudPayloadCallback)
+        } catch (e: ClassNotFoundException) {
+            logger.d("Skipping fraud checks: RadarSDKFraud submodule not available")
+            callback(null)
+        } catch (e: Exception) {
+            logger.e("Error calling fraud detection", Radar.RadarLogType.SDK_EXCEPTION, e)
+            callback(mapOf("error" to (e.message ?: "Unknown error")))
         }
-
-        if (requestHash == null) {
-            val integrityException = "Missing request hash"
-
-            logger.d(integrityException)
-
-            block(null, integrityException)
-
-            return
-        }
-
-        if (googlePlayProjectNumber == null) {
-            val integrityException = "Google Play project number is null"
-
-            logger.d("Error warming up integrity token provider: Google Play project number is null")
-
-            block(null, integrityException)
-
-            return
-        }
-
-        val nowSeconds = System.currentTimeMillis() / 1000
-        val warmUpProvider = !this::standardIntegrityTokenProvider.isInitialized
-                || this.lastWarmUpTimestampSeconds == 0L
-                || (nowSeconds - this.lastWarmUpTimestampSeconds) > WARM_UP_WINDOW_SECONDS
-        if (warmUpProvider) {
-            this.warmUpProviderAndFetchTokenFromGoogle(googlePlayProjectNumber, requestHash, block)
-
-            return
-        }
-        this.fetchTokenFromGoogle(requestHash, block)
-    }
-
-    private fun fetchTokenFromGoogle(requestHash: String?, block: (integrityToken: String?, integrityException: String?) -> Unit) {
-        if (!isIntegrityApiIncluded()) {
-            val integrityException = "Integrity API not included"
-
-            logger.w(integrityException)
-
-            block(null, integrityException)
-
-            return
-        }
-
-        logger.d("Requesting integrity token")
-
-        val integrityTokenResponse: Task<StandardIntegrityToken> = this.standardIntegrityTokenProvider.request(
-            StandardIntegrityTokenRequest.builder()
-                .setRequestHash(requestHash)
-                .build()
-        )
-        integrityTokenResponse
-            .addOnSuccessListener { response ->
-                val integrityToken = response.token()
-
-                logger.d("Successfully requested integrity token | integrityToken = $integrityToken")
-
-                block(integrityToken, null)
-            }
-            .addOnFailureListener { exception ->
-                val integrityException = exception.message
-
-                logger.d("Error requesting integrity token | integrityException = $integrityException")
-                
-                block(null, integrityException)
-            }
     }
 
     fun getIPs(): String {

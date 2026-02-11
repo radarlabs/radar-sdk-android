@@ -269,13 +269,14 @@ internal class RadarApiClient(
         replayed: Boolean,
         beacons: Array<RadarBeacon>?,
         verified: Boolean = false,
-        integrityToken: String? = null,
-        integrityException: String? = null,
         encrypted: Boolean? = false,
         expectedCountryCode: String? = null,
         expectedStateCode: String? = null,
         reason: String? = null,
         transactionId: String? = null,
+        fraudPayload: String? = null,
+        // -- payload encryption --
+        // fraudKeyVersion: Int? = null,
         callback: RadarTrackApiCallback? = null
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -398,9 +399,14 @@ internal class RadarApiClient(
             params.putOpt("locationServicesProvider", RadarSettings.getLocationServicesProvider(context))
             params.putOpt("verified", verified)
             if (verified) {
-                params.putOpt("integrityToken", integrityToken)
-                params.putOpt("integrityException", integrityException)
                 params.putOpt("encrypted", encrypted)
+                if (fraudPayload != null) {
+                    params.putOpt("fraudPayload", fraudPayload)
+                    // -- payload encryption --
+                    // if (fraudKeyVersion != null) {
+                    //     params.putOpt("fraudKeyVersion", fraudKeyVersion)
+                    // }
+                }
                 if (expectedCountryCode != null) {
                     params.putOpt("expectedCountryCode", expectedCountryCode)
                 }
