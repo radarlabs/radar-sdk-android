@@ -318,6 +318,8 @@ object Radar {
         ERROR_FORBIDDEN,
         /** Not found */
         ERROR_NOT_FOUND,
+        /** Missing plugin */
+        ERROR_PLUGIN,
         /** Too many requests (rate limit exceeded) */
         ERROR_RATE_LIMIT,
         /** Internal server error */

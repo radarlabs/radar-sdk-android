@@ -101,7 +101,7 @@ internal class RadarVerificationManager(
                                 if (result?.containsKey("error") == true || fraudPayload == null) {
                                     val error = result?.get("error") as? String ?: "Unknown error"
                                     logger.e("Error getting fraud payload: $error", Radar.RadarLogType.SDK_ERROR)
-                                    callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
+                                    callback?.onComplete(Radar.RadarStatus.ERROR_PLUGIN)
                                     return@getFraudPayload
                                 }
                                 val callTrackApi = { beacons: Array<RadarBeacon>? ->
