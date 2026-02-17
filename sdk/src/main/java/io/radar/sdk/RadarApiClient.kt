@@ -275,8 +275,6 @@ internal class RadarApiClient(
         reason: String? = null,
         transactionId: String? = null,
         fraudPayload: String? = null,
-        // -- payload encryption --
-        // fraudKeyVersion: Int? = null,
         callback: RadarTrackApiCallback? = null
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -370,10 +368,6 @@ internal class RadarApiClient(
             } else {
                 params.putOpt("xPlatformType", "Native")
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                val mocked = location.isFromMockProvider
-                params.putOpt("mocked", mocked)
-            }
             if (tripOptions != null) {
                 val tripOptionsObj = JSONObject()
                 tripOptionsObj.putOpt("version", "2")
@@ -402,10 +396,6 @@ internal class RadarApiClient(
                 params.putOpt("encrypted", encrypted)
                 if (fraudPayload != null) {
                     params.putOpt("fraudPayload", fraudPayload)
-                    // -- payload encryption --
-                    // if (fraudKeyVersion != null) {
-                    //     params.putOpt("fraudKeyVersion", fraudKeyVersion)
-                    // }
                 }
                 if (expectedCountryCode != null) {
                     params.putOpt("expectedCountryCode", expectedCountryCode)
@@ -418,16 +408,6 @@ internal class RadarApiClient(
                 }
                 if (transactionId != null) {
                     params.putOpt("transactionId", transactionId)
-                }
-                val fraudFailureReasons = JSONArray()
-                if (RadarUtils.hasMultipleDisplays(context)) {
-                    fraudFailureReasons.put("fraud_sharing_multiple_displays")
-                }
-                if (RadarUtils.hasVirtualInputDevice(context)) {
-                    fraudFailureReasons.put("fraud_sharing_virtual_input_device")
-                }
-                if (fraudFailureReasons.length() > 0) {
-                    params.putOpt("fraudFailureReasons", fraudFailureReasons)
                 }
             }
             params.putOpt("appId", context.packageName)
