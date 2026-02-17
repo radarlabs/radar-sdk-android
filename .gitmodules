@@ -1,4 +1,3 @@
 [submodule "sdk-fraud"]
 	path = sdk-fraud
 	url = git@github.com:radarlabs/radar-sdk-android-fraud.git
-	branch = initial-setup-2
