@@ -9,6 +9,7 @@ import android.net.NetworkRequest
 import android.os.Build
 import android.os.Handler
 import android.os.SystemClock
+import android.util.Log
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
@@ -94,16 +95,14 @@ internal class RadarVerificationManager(
 
                             verificationManager.getFraudPayload(location, googlePlayProjectNumber) { result ->
                                 val fraudPayload = result?.get("payload") as? String
-                                // -- payload encryption --
-                                // val keyVersionNumber = result?.get("keyVersion") as? Int
-                                // val fraudKeyVersion = keyVersionNumber
-                                
+
                                 if (result?.containsKey("error") == true || fraudPayload == null) {
                                     val error = result?.get("error") as? String ?: "Unknown error"
                                     logger.e("Error getting fraud payload: $error", Radar.RadarLogType.SDK_ERROR)
                                     callback?.onComplete(Radar.RadarStatus.ERROR_PLUGIN)
                                     return@getFraudPayload
                                 }
+
                                 val callTrackApi = { beacons: Array<RadarBeacon>? ->
                                     Radar.apiClient.track(
                                         location,
