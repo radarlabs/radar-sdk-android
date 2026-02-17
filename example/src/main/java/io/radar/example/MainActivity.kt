@@ -23,7 +23,7 @@ import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
 
-const val HOST = "https://api.radar.io"
+const val HOST = "https://api.radar-staging.com"
 const val PUBLISHABLE_KEY = "prj_test_pk_"
 
 class MainActivity : AppCompatActivity() {
