@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import io.radar.sdk.model.RadarBeacon
+import org.json.JSONArray
 import org.json.JSONObject
 
 internal object RadarState {
@@ -40,6 +41,7 @@ internal object RadarState {
     private const val KEY_LAST_BEACON_UIDS = "last_beacon_uids"
     private const val KEY_LAST_MOTION_ACTIVITY = "last_motion_activity"
     private const val KEY_LAST_PRESSURE = "last_pressure"
+    private const val KEY_ALTITUDE_ADJUSTMENTS = "altitude_adjustments"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -287,6 +289,24 @@ internal object RadarState {
         val jsonString = pressureJson?.toString()
         getSharedPreferences(context).edit {
             putString(KEY_LAST_PRESSURE, jsonString)
+        }
+    }
+
+    internal fun getAltitudeAdjustments(context: Context): JSONArray? {
+        val jsonString = getSharedPreferences(context).getString(KEY_ALTITUDE_ADJUSTMENTS, null)
+        return jsonString?.let {
+            try {
+                JSONArray(it)
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    internal fun setAltitudeAdjustments(context: Context, altitudeAdjustments: JSONArray?) {
+        val jsonString = altitudeAdjustments?.toString()
+        getSharedPreferences(context).edit {
+            putString(KEY_ALTITUDE_ADJUSTMENTS, jsonString)
         }
     }
 }
