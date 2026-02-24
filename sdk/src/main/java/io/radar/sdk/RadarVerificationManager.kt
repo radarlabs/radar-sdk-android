@@ -112,7 +112,8 @@ internal class RadarVerificationManager(
 
                             // Create fraud options map with location and googlePlayProjectNumber
                             val fraudOptions = mutableMapOf<String, Any?>(
-                                "location" to location
+                                "location" to location,
+                                "context" to verificationManager.context,
                             )
                             if (googlePlayProjectNumber != null) {
                                 fraudOptions["googlePlayProjectNumber"] = googlePlayProjectNumber

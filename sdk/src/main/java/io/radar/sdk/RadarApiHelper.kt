@@ -216,11 +216,12 @@ internal open class RadarApiHelper(
                         // Update params with updatedAtMsDiff if needed (before passing to fraud SDK)
                         updateParamsTiming(params)
                         
-                        // Add connection, params, and context to fraudOptions
+                        // Pass headers, body (request params), and fraud detection params to fraud SDK
+                        // Fraud SDK will create its own connection to verified server with SSL pinning for privacy
                         val fraudOptionsWithRequest = fraudOptions.toMutableMap()
-                        fraudOptionsWithRequest["connection"] = urlConnection
-                        fraudOptionsWithRequest["params"] = params
-                        fraudOptionsWithRequest["context"] = context
+                        fraudOptionsWithRequest["headers"] = headers
+                        fraudOptionsWithRequest["body"] = params  // Request body params
+                        // fraudOptions already contains fraud detection params (context, location, etc.)
                         
                         // Call fraud SDK's trackVerified
                         val trackVerifiedMethod = fraudClass.getMethod("trackVerified", 
@@ -237,7 +238,7 @@ internal open class RadarApiHelper(
                                 val responseCode = result?.get("responseCode") as? Int ?: -1
                                 val error = result?.get("error") as? Exception
                                 handleResponse(body, responseCode, error)
-                                urlConnection.disconnect()
+                                // Fraud SDK manages its own connection lifecycle - no disconnect needed here
                             }
                         }
                         
