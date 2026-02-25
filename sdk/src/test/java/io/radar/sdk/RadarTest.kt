@@ -740,6 +740,92 @@ class RadarTest {
         Radar.removeTags(arrayOf("premium", "beta_user"))
     }
 
+
+    @Test
+    fun test_Radar_altitudeAdjustments_included_in_track_request() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
+
+        val adjustments = JSONArray()
+        adjustments.put(JSONObject().put("geofenceId", "abc123").put("altitude", 100.5).put("confidence", 3))
+        adjustments.put(JSONObject().put("geofenceId", "def456").put("altitude", 200.0).put("confidence", 2))
+        RadarState.setAltitudeAdjustments(context, adjustments)
+
+        apiHelperMock.clearCapturedParams()
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.trackOnce { status, _, _, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+
+        assertEquals("POST", apiHelperMock.lastCapturedMethod)
+        assertEquals("v1/track", apiHelperMock.lastCapturedPath)
+
+        val capturedParams = apiHelperMock.lastCapturedParams
+        assertNotNull(capturedParams)
+
+        val apiAdjustments = capturedParams!!.optJSONArray("altitudeAdjustments")
+        assertNotNull(apiAdjustments)
+        assertEquals(2, apiAdjustments!!.length())
+        assertEquals("abc123", apiAdjustments.getJSONObject(0).getString("geofenceId"))
+        assertEquals("def456", apiAdjustments.getJSONObject(1).getString("geofenceId"))
+
+        RadarState.setAltitudeAdjustments(context, null)
+    }
+
+    @Test
+    fun test_Radar_altitudeAdjustments_persistence() {
+        val adjustments = JSONArray()
+        val adj1 = JSONObject().put("altitude", 100.0).put("adjustment", 5.0)
+        val adj2 = JSONObject().put("altitude", 200.0).put("adjustment", -3.0)
+        adjustments.put(adj1)
+        adjustments.put(adj2)
+
+        RadarState.setAltitudeAdjustments(context, adjustments)
+
+        val retrieved = RadarState.getAltitudeAdjustments(context)
+        assertNotNull(retrieved)
+        assertEquals(2, retrieved!!.length())
+        RadarState.setAltitudeAdjustments(context, null)
+    }
+
+    @Test
+    fun test_Radar_altitudeAdjustments_cleared_when_null() {
+        val adjustments = JSONArray().put(JSONObject().put("altitude", 100.0))
+        RadarState.setAltitudeAdjustments(context, adjustments)
+        assertNotNull(RadarState.getAltitudeAdjustments(context))
+
+        RadarState.setAltitudeAdjustments(context, null)
+        assertNull(RadarState.getAltitudeAdjustments(context))
+    }
+
+    @Test
+    fun test_Radar_altitudeAdjustments_cleared_when_empty() {
+        val adjustments = JSONArray().put(JSONObject().put("altitude", 100.0))
+        RadarState.setAltitudeAdjustments(context, adjustments)
+
+        RadarState.setAltitudeAdjustments(context, JSONArray())
+        val retrieved = RadarState.getAltitudeAdjustments(context)
+        assertNotNull(retrieved)
+        assertEquals(0, retrieved!!.length())
+    }
+
     @Test
     fun test_Radar_getLocation_errorPermissions() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false

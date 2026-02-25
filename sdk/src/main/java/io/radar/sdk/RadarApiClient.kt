@@ -524,8 +524,9 @@ internal class RadarApiClient(
                     // Extract and store altitudeAdjustments from user object
                     val altitudeAdjustmentsObj = userObj.optJSONArray("altitudeAdjustments")
                     if (altitudeAdjustmentsObj != null) {
-                        RadarState.setAltitudeAdjustments(context, altitudeAdjustmentsObj)
+                        logger.d("Stored ${altitudeAdjustmentsObj.length()} altitude adjustments from track response")
                     }
+                    RadarState.setAltitudeAdjustments(context, altitudeAdjustmentsObj)
                     RadarUser.fromJson(userObj)
                 }
                 val nearbyGeofences = res.optJSONArray("nearbyGeofences")?.let { nearbyGeofencesArr ->

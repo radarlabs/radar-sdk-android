@@ -268,6 +268,16 @@ internal object RadarState {
         }
     }
 
+    private fun stringToJsonArray(jsonString: String?): JSONArray? {
+        return jsonString?.let {
+            try {
+                JSONArray(it)
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
     internal fun getLastMotionActivity(context: Context): JSONObject? {
         val jsonString = getSharedPreferences(context).getString(KEY_LAST_MOTION_ACTIVITY, null)
         return stringToJsonObject(jsonString)
@@ -294,13 +304,7 @@ internal object RadarState {
 
     internal fun getAltitudeAdjustments(context: Context): JSONArray? {
         val jsonString = getSharedPreferences(context).getString(KEY_ALTITUDE_ADJUSTMENTS, null)
-        return jsonString?.let {
-            try {
-                JSONArray(it)
-            } catch (e: Exception) {
-                null
-            }
-        }
+        return stringToJsonArray(jsonString)
     }
 
     internal fun setAltitudeAdjustments(context: Context, altitudeAdjustments: JSONArray?) {
