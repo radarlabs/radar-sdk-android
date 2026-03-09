@@ -7,6 +7,7 @@ import io.radar.sdk.model.RadarSdkConfiguration
 import org.json.JSONObject
 import java.text.DecimalFormat
 import java.util.UUID
+import io.radar.sdk.model.RadarTrip
 
 internal object RadarSettings {
 
@@ -30,6 +31,7 @@ internal object RadarSettings {
     private const val KEY_CLIENT_SDK_CONFIGURATION = "client_sdk_configuration"
     private const val KEY_SDK_CONFIGURATION = "sdk_configuration"
     private const val KEY_TRIP_OPTIONS = "trip_options"
+    private const val KEY_TRIP = "trip"
     private const val KEY_LOG_LEVEL = "log_level"
     private const val KEY_HOST = "host"
     private const val KEY_PERMISSIONS_DENIED = "permissions_denied"
@@ -311,6 +313,18 @@ internal object RadarSettings {
         val optionsObj = options?.toJson()
         val optionsJson = optionsObj?.toString()
         getSharedPreferences(context).edit { putString(KEY_TRIP_OPTIONS, optionsJson) }
+    }
+
+    internal fun getTrip(context: Context): RadarTrip? {
+        val tripJson = getSharedPreferences(context).getString(KEY_TRIP, null) ?: return  null
+        val tripObj = JSONObject(tripJson)
+        return RadarTrip.fromJson(tripObj)
+    }
+
+    internal fun setTrip(context: Context, trip: RadarTrip?) {
+        val tripObj = trip?.toJson()
+        val tripJson = tripObj?.toString()
+        getSharedPreferences(context).edit { putString(KEY_TRIP, tripJson) }
     }
 
     fun setSdkConfiguration(context: Context, configuration: RadarSdkConfiguration?) {

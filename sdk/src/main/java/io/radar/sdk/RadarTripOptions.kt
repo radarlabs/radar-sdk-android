@@ -140,4 +140,18 @@ data class RadarTripOptions(
                 this.legs?.contentDeepEquals(other.legs ?: emptyArray()) ?: (other.legs == null)
     }
 
+    // Array properties require manual equals/hashCode since data class
+    // auto-generated versions use reference equality for arrays.
+    override fun hashCode(): Int {
+        var result = externalId.hashCode()
+        result = 31 * result + (metadata?.toString()?.hashCode() ?: 0)
+        result = 31 * result + (destinationGeofenceTag?.hashCode() ?: 0)
+        result = 31 * result + (destinationGeofenceExternalId?.hashCode() ?: 0)
+        result = 31 * result + mode.hashCode()
+        result = 31 * result + (scheduledArrivalAt?.time?.hashCode() ?: 0)
+        result = 31 * result + approachingThreshold
+        result = 31 * result + startTracking.hashCode()
+        result = 31 * result + (legs?.contentDeepHashCode() ?: 0)
+        return result
+    }
 }
