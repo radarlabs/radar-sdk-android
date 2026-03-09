@@ -24,6 +24,7 @@ import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
+import io.radar.sdk.model.RadarTripLeg
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -54,6 +55,10 @@ internal class RadarApiClient(
 
     interface RadarTripApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null, trip: RadarTrip? = null, events: Array<RadarEvent>? = null)
+    }
+
+    interface RadarTripLegApiCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, trip: RadarTrip? = null, leg: RadarTripLeg? = null, events: Array<RadarEvent>? = null)
     }
 
     interface RadarContextApiCallback {
@@ -548,12 +553,14 @@ internal class RadarApiClient(
                 if (events != null && user != null) {
                     RadarSettings.setId(context, user._id)
 
-                    if (user.trip == null) {
-                        // if user was on a trip that ended server-side, restore previous tracking options
+                    if ( user.trip != null) {
+                        RadarSettings.setTrip(context, user.trip)
+                    } else {
                         val tripOptions = RadarSettings.getTripOptions(context)
                         if (tripOptions != null) {
                             locationManager.restartPreviousTrackingOptions()
                             RadarSettings.setTripOptions(context, null)
+                            RadarSettings.setTrip(context, null)
                         }
                     }
 
@@ -716,6 +723,83 @@ internal class RadarApiClient(
                 }
 
                 if (events != null && events.isNotEmpty()) {
+                    Radar.sendEvents(events)
+                }
+
+                callback?.onComplete(RadarStatus.SUCCESS, res, trip, events)
+            }
+        })
+    }
+
+    internal fun updateTripLeg(tripId: String, legId: String, status: RadarTripLeg.RadarTripLegStatus, callback: RadarTripLegApiCallback?) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            return
+        }
+
+        if (tripId.isEmpty() || legId.isEmpty()) {
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            return
+        }
+
+        val params = JSONObject()
+        params.putOpt("status", RadarTripLeg.stringForStatus(status))
+
+        val path = "v1/trips/$tripId/legs/$legId"
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "PATCH", path, headers, params, false, object: RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback?.onComplete(status)
+                    return
+                }
+
+                val trip = res.optJSONObject("trip")?.let { RadarTrip.fromJson(it) }
+                val leg = res.optJSONObject("leg")?.let { RadarTripLeg.fromJson(it) }
+                val events = res.optJSONArray("events")?.let { RadarEvent.fromJson(it) }
+
+                if (events != null && events.isNotEmpty()) {
+                    Radar.sendEvents(events)
+                }
+
+                callback?.onComplete(RadarStatus.SUCCESS, res, trip , leg, events)
+            }
+        })
+    }
+
+    internal fun reorderTripLegs(tripId: String, legIds: Array<String>, callback: RadarTripApiCallback?) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            return
+        }
+
+        if (tripId.isEmpty() || legIds.isEmpty()) {
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            return
+        }
+
+        val params = JSONObject()
+        val legsArray = JSONArray()
+        legIds.forEach { legsArray.put(it) }
+        params.putOpt("legs", legsArray)
+        
+        val path = "v1/trips/$tripId/legs"
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "PUT", path, headers, params, false, object: RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback?.onComplete(status)
+                    return
+                }
+
+                val trip = res.optJSONObject("trip")?.let { RadarTrip.fromJson(it) }
+                val events = res.optJSONArray("events")?.let { RadarEvent.fromJson(it) }
+
+                if (events!= null && events.isNotEmpty()) {
                     Radar.sendEvents(events)
                 }
 
