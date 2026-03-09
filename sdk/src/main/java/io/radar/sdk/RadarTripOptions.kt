@@ -2,6 +2,8 @@ package io.radar.sdk
 
 import org.json.JSONObject
 import java.util.*
+import io.radar.sdk.model.RadarTripLeg
+
 
 /**
  * An options class used to configure trip options.
@@ -41,7 +43,12 @@ data class RadarTripOptions(
 
     var approachingThreshold: Int = 0,
 
-    var startTracking: Boolean = true
+    var startTracking: Boolean = true,
+
+    /**
+     * For multi-destination trips, an optional array of trip legs.
+     */
+    var legs: Array<RadarTripLeg>? = null
 ) {
 
     companion object {
@@ -54,10 +61,11 @@ data class RadarTripOptions(
         internal const val KEY_SCHEDULED_ARRIVAL_AT = "scheduledArrivalAt"
         internal const val KEY_APPROACHING_THRESHOLD = "approachingThreshold"
         internal const val KEY_START_TRACKING = "startTracking"
+        internal const val KEY_LEGS = "legs"
 
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTripOptions {
-            return RadarTripOptions(
+            val options = RadarTripOptions(
                 externalId = obj.optString(KEY_EXTERNAL_ID),
                 metadata = obj.optJSONObject(KEY_METADATA),
                 destinationGeofenceTag = obj.optString(KEY_DESTINATION_GEOFENCE_TAG),
@@ -82,8 +90,9 @@ data class RadarTripOptions(
                 approachingThreshold = obj.optInt(KEY_APPROACHING_THRESHOLD),
                 startTracking = obj.optBoolean(KEY_START_TRACKING, true)
             )
+            options.legs = obj.optJSONArray(KEY_LEGS)?.let { RadarTripLeg.fromJson(it) }
+            return options
         }
-
     }
 
     fun toJson(): JSONObject {
@@ -100,6 +109,12 @@ data class RadarTripOptions(
             obj.put(KEY_APPROACHING_THRESHOLD, approachingThreshold)
         }
         obj.put("startTracking", startTracking)
+
+        legs?.let {
+            if (it.isNotEmpty()) {
+                obj.put(KEY_LEGS, RadarTripLeg.toJson(it))
+            }
+        }
         return obj
     }
 
@@ -121,7 +136,8 @@ data class RadarTripOptions(
                 this.mode == other.mode &&
                 this.scheduledArrivalAt?.time == other.scheduledArrivalAt?.time &&
                 this.approachingThreshold == other.approachingThreshold &&
-                this.startTracking == other.startTracking
+                this.startTracking == other.startTracking &&
+                this.legs?.contentDeepEquals(other.legs ?: emptyArray()) ?: (other.legs == null)
     }
 
 }
