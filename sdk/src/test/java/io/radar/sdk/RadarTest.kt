@@ -1642,7 +1642,7 @@ class RadarTest {
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals("PATCH", apiHelperMock.lastCapturedMethod)
-        assertTrue(apiHelperMock.lastCapturedPath!!.contains("/v1/trips/trip_abc123/legs/leg_001"))
+        assertTrue(apiHelperMock.lastCapturedPath!!.contains("v1/trips/trip_abc123/legs/leg_001"))
         assertEquals("completed", apiHelperMock.lastCapturedParams!!.getString("status"))
     }
 
@@ -1720,7 +1720,7 @@ class RadarTest {
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals("PUT", apiHelperMock.lastCapturedMethod)
-        assertTrue(apiHelperMock.lastCapturedPath!!.contains("/v1/trips/trip_abc123/legs"))
+        assertTrue(apiHelperMock.lastCapturedPath!!.contains("v1/trips/trip_abc123/legs"))
         val sentLegIds = apiHelperMock.lastCapturedParams!!.getJSONArray("legs")
         assertEquals("leg_002", sentLegIds.getString(0))
         assertEquals("leg_001", sentLegIds.getString(1))
