@@ -296,4 +296,42 @@ class RadarTripLeg (
 
         return obj
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is RadarTripLeg) return false
+
+        if (destinationType != other.destinationType) return false
+        if (status != other.status) return false
+        if (stopDuration != other.stopDuration) return false
+        if (arrivalRadius != other.arrivalRadius) return false
+        if (_id != other._id) return false
+        if (destinationGeofenceTag != other.destinationGeofenceTag) return false
+        if (destinationGeofenceExternalId != other.destinationGeofenceExternalId) return false
+        if (destinationGeofenceId != other.destinationGeofenceId) return false
+        if (address != other.address) return false
+        if (coordinates?.latitude != other.coordinates?.latitude ||
+            coordinates?.longitude != other.coordinates?.longitude) return false
+        if (metadata?.toString() != other.metadata?.toString()) return  false
+
+        return true
+    }
+
+    // Override equals/hashCode to enable value-based comparison
+    // for round-trip serialization testing.
+    override fun hashCode(): Int {
+        var result = _id?.hashCode() ?: 0
+        result = 31 * result + status.hashCode()
+        result = 31 * result + destinationType.hashCode()
+        result = 31 * result + stopDuration
+        result = 31 * result + arrivalRadius
+        result = 31 * result + (destinationGeofenceTag?.hashCode() ?: 0)
+        result = 31 * result + (destinationGeofenceExternalId?.hashCode() ?: 0)
+        result = 31 * result + (destinationGeofenceId?.hashCode() ?: 0)
+        result = 31 * result + (address?.hashCode() ?: 0)
+        result = 31 * result + (coordinates?.latitude?.hashCode() ?: 0)
+        result = 31 * result + (coordinates?.longitude?.hashCode() ?: 0)
+        result = 31 * result + (metadata?.toString()?.hashCode() ?: 0)
+        return result
+    }
 }
