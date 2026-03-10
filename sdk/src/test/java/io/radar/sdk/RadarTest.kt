@@ -24,6 +24,7 @@ import io.radar.sdk.model.RadarSdkConfiguration
 import io.radar.sdk.model.RadarSegment
 import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarTripLeg
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -1422,6 +1423,346 @@ class RadarTest {
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
     }
 
+    // region Trip Leg Integration Tests
+
+    @Test
+    fun test_RadarTrip_fromJson_parsesLegsAndCurrentLeg() {
+        val response = tripWithLegsResponse()!!
+        val tripObj = response.getJSONObject("trip")
+        val trip = RadarTrip.fromJson(tripObj)
+
+        assertNotNull(trip)
+        assertEquals("trip_abc123", trip!!._id)
+        assertEquals("leg_001", trip.currentLegId)
+        assertNotNull(trip.legs)
+        assertEquals(2, trip.legs!!.size)
+
+        val leg1 = trip.legs!![0]
+        assertEquals("leg_001", leg1._id)
+        assertEquals(RadarTripLeg.RadarTripLegStatus.STARTED, leg1.status)
+        assertEquals("store", leg1.destinationGeofenceTag)
+
+        val leg2 = trip.legs!![1]
+        assertEquals("leg_002", leg2._id)
+        assertEquals(RadarTripLeg.RadarTripLegStatus.PENDING, leg2.status)
+        assertEquals("warehouse", leg2.destinationGeofenceTag)
+    }
+
+    @Test
+    fun test_RadarTrip_toJson_includesLegsAndCurrentLeg() {
+        val response = tripWithLegsResponse()!!
+        val tripObj = response.getJSONObject("trip")
+        val trip = RadarTrip.fromJson(tripObj)!!
+
+        val dict = trip.toJson()
+        assertNotNull(dict.optJSONArray("legs"))
+        assertEquals(2, dict.getJSONArray("legs").length())
+        assertEquals("leg_001", dict.optString("currentLeg"))
+    }
+
+    @Test
+    fun test_RadarTripOptions_legsSerializationRoundTrip() {
+        val options = RadarTripOptions("trip-1")
+        options.destinationGeofenceTag = "store"
+        options.destinationGeofenceExternalId = "store-1"
+
+        val leg = RadarTripLeg.forGeofence("warehouse", "wh-1")
+        leg.stopDuration = 10
+        options.legs = arrayOf(leg)
+
+        val json = options.toJson()
+        assertTrue(json.has("legs"))
+
+        val restored = RadarTripOptions.fromJson(json)
+        assertNotNull(restored.legs)
+        assertEquals(1, restored.legs!!.size)
+        assertEquals("warehouse", restored.legs!![0].destinationGeofenceTag)
+    }
+
+    @Test
+    fun test_RadarTripOptions_equals_accountsForLegs() {
+        val options1 = RadarTripOptions("trip-1")
+        options1.destinationGeofenceTag = "store"
+        options1.destinationGeofenceExternalId = "store-1"
+
+        val options2 = RadarTripOptions("trip-1")
+        options2.destinationGeofenceTag = "store"
+        options2.destinationGeofenceExternalId = "store-1"
+
+        val leg = RadarTripLeg.forAddress("123 St")
+        options1.legs = arrayOf(leg)
+
+        assertNotEquals(options1, options2)
+
+        options2.legs = arrayOf(leg)
+        assertEquals(options1, options2)
+    }
+
+    @Test
+    fun test_Radar_getTrip_returnsNullWhenNoTrip() {
+        RadarSettings.setTrip(context, null)
+        assertNull(Radar.getTrip())
+    }
+
+    @Test
+    fun test_Radar_getTrip_returnsStoredTrip() {
+        val response = tripWithLegsResponse()!!
+        val trip = RadarTrip.fromJson(response.getJSONObject("trip"))
+        RadarSettings.setTrip(context, trip)
+
+        val retrieved = Radar.getTrip()
+        assertNotNull(retrieved)
+        assertEquals("trip_abc123", retrieved!!._id)
+        assertEquals(2, retrieved.legs!!.size)
+        assertEquals("leg_001", retrieved.currentLegId)
+
+        RadarSettings.setTrip(context, null)
+    }
+
+    @Test
+    fun test_Radar_startTrip_storesTrip() {
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = tripWithLegsResponse()
+
+        val tripOptions = RadarTripOptions("order-456")
+        tripOptions.destinationGeofenceTag = "store"
+        tripOptions.destinationGeofenceExternalId = "store-1"
+
+        val latch = CountDownLatch(1)
+
+        Radar.startTrip(tripOptions) { status, trip, events ->
+            assertEquals(Radar.RadarStatus.SUCCESS, status)
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        val storedTrip = RadarSettings.getTrip(context)
+        assertNotNull(storedTrip)
+        assertEquals("trip_abc123", storedTrip!!._id)
+
+        RadarSettings.setTrip(context, null)
+        RadarSettings.setTripOptions(context, null)
+    }
+
+    @Test
+    fun test_Radar_completeTrip_clearsTrip() {
+        val response = tripWithLegsResponse()!!
+        val trip = RadarTrip.fromJson(response.getJSONObject("trip"))
+        RadarSettings.setTrip(context, trip)
+        val tripOptions = RadarTripOptions("order-456")
+        tripOptions.destinationGeofenceTag = "store"
+        tripOptions.destinationGeofenceExternalId = "store-1"
+        RadarSettings.setTripOptions(context, tripOptions)
+
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = tripWithLegsResponse()
+
+        val latch = CountDownLatch(1)
+
+        Radar.completeTrip { _, _, _ ->
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertNull(RadarSettings.getTrip(context))
+        assertNull(RadarSettings.getTripOptions(context))
+    }
+
+    @Test
+    fun test_Radar_cancelTrip_clearsTrip() {
+        val response = tripWithLegsResponse()!!
+        val trip = RadarTrip.fromJson(response.getJSONObject("trip"))
+        RadarSettings.setTrip(context, trip)
+        val tripOptions = RadarTripOptions("order-456")
+        tripOptions.destinationGeofenceTag = "store"
+        tripOptions.destinationGeofenceExternalId = "store-1"
+        RadarSettings.setTripOptions(context, tripOptions)
+
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = tripWithLegsResponse()
+
+        val latch = CountDownLatch(1)
+
+        Radar.cancelTrip { _, _, _ ->
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertNull(RadarSettings.getTrip(context))
+        assertNull(RadarSettings.getTripOptions(context))
+    }
+
+    @Test
+    fun test_Radar_updateTripLeg_success() {
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = tripWithLegsResponse()
+
+        val response = tripWithLegsResponse()!!
+        val trip = RadarTrip.fromJson(response.getJSONObject("trip"))
+        RadarSettings.setTrip(context, trip)
+
+        val latch = CountDownLatch(1)
+
+        Radar.updateTripLeg("trip_abc123", "leg_001", RadarTripLeg.RadarTripLegStatus.COMPLETED) { status, trip, leg, events ->
+            assertEquals(Radar.RadarStatus.SUCCESS, status)
+            assertNotNull(trip)
+            assertNotNull(leg)
+            assertEquals("trip_abc123", trip!!._id)
+            assertEquals("leg_001", leg!!._id)
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertNotNull(RadarSettings.getTrip(context))
+
+        RadarSettings.setTrip(context, null)
+    }
+
+    @Test
+    fun test_Radar_updateTripLeg_verifiesRequestParams() {
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = tripWithLegsResponse()
+        apiHelperMock.clearCapturedParams()
+
+        val latch = CountDownLatch(1)
+
+        Radar.updateTripLeg("trip_abc123", "leg_001", RadarTripLeg.RadarTripLegStatus.COMPLETED) { _, _, _, _ ->
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals("PATCH", apiHelperMock.lastCapturedMethod)
+        assertTrue(apiHelperMock.lastCapturedPath!!.contains("/v1/trips/trip_abc123/legs/leg_001"))
+        assertEquals("completed", apiHelperMock.lastCapturedParams!!.getString("status"))
+    }
+
+    @Test
+    fun test_Radar_updateTripLeg_noActiveTrip() {
+        RadarSettings.setTrip(context, null)
+
+        val latch = CountDownLatch(1)
+
+        Radar.updateTripLeg("leg_001", RadarTripLeg.RadarTripLegStatus.COMPLETED, object : Radar.RadarTripLegCallback {
+            override fun onComplete(status: Radar.RadarStatus, trip: RadarTrip?, leg: RadarTripLeg?, events: Array<RadarEvent>?) {
+                assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
+                assertNull(trip)
+                assertNull(leg)
+                latch.countDown()
+            }
+        })
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+    }
+
+    @Test
+    fun test_Radar_updateCurrentTripLeg_noCurrentLeg() {
+        val tripObj = JSONObject()
+        tripObj.put("_id", "trip_abc123")
+        tripObj.put("externalId", "order-456")
+        tripObj.put("metadata", JSONObject())
+        tripObj.put("mode", "car")
+        tripObj.put("destinationGeofenceTag", "store")
+        tripObj.put("destinationGeofenceExternalId", "store-1")
+        val destLoc = JSONObject()
+        destLoc.put("type", "Point")
+        val coords = JSONArray()
+        coords.put(-73.975365)
+        coords.put(40.783825)
+        destLoc.put("coordinates", coords)
+        tripObj.put("destinationLocation", destLoc)
+        val eta = JSONObject()
+        eta.put("distance", 1000)
+        eta.put("duration", 5)
+        tripObj.put("eta", eta)
+        tripObj.put("status", "started")
+        val trip = RadarTrip.fromJson(tripObj)
+        RadarSettings.setTrip(context, trip)
+        assertNull(trip!!.currentLegId)
+        val latch = CountDownLatch(1)
+        Radar.updateCurrentTripLeg(RadarTripLeg.RadarTripLegStatus.COMPLETED, object : Radar.RadarTripLegCallback {
+            override fun onComplete(status: Radar.RadarStatus, trip: RadarTrip?, leg: RadarTripLeg?, events: Array<RadarEvent>?) {
+                assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
+                latch.countDown()
+            }
+        })
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+        RadarSettings.setTrip(context, null)
+    }
+
+    @Test
+    fun test_Radar_reorderTripLegs_success() {
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = tripWithLegsResponse()
+        apiHelperMock.clearCapturedParams()
+
+        val latch = CountDownLatch(1)
+
+        Radar.reorderTripLegs("trip_abc123", arrayOf("leg_002", "leg_001")) { status, trip, events ->
+            assertEquals(Radar.RadarStatus.SUCCESS, status)
+            assertNotNull(trip)
+            assertEquals("trip_abc123", trip!!._id)
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals("PUT", apiHelperMock.lastCapturedMethod)
+        assertTrue(apiHelperMock.lastCapturedPath!!.contains("/v1/trips/trip_abc123/legs"))
+        val sentLegIds = apiHelperMock.lastCapturedParams!!.getJSONArray("legs")
+        assertEquals("leg_002", sentLegIds.getString(0))
+        assertEquals("leg_001", sentLegIds.getString(1))
+    }
+
+    @Test
+    fun test_Radar_reorderTripLegs_noActiveTrip() {
+        RadarSettings.setTrip(context, null)
+
+        val latch = CountDownLatch(1)
+
+        Radar.reorderTripLegs(arrayOf("leg_001", "leg_002"), object : Radar.RadarTripCallback {
+            override fun onComplete(status: Radar.RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) {
+                assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
+                assertNull(trip)
+                latch.countDown()
+            }
+        })
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+    }
+
+    @Test
+    fun test_RadarSettings_tripPersistence() {
+        RadarSettings.setTrip(context, null)
+        assertNull(RadarSettings.getTrip(context))
+
+        val response = tripWithLegsResponse()!!
+        val trip = RadarTrip.fromJson(response.getJSONObject("trip"))
+        RadarSettings.setTrip(context, trip)
+
+        val retrieved = RadarSettings.getTrip(context)
+        assertNotNull(retrieved)
+        assertEquals("trip_abc123", retrieved!!._id)
+        assertEquals(2, retrieved.legs!!.size)
+        assertEquals("leg_001", retrieved.currentLegId)
+
+        RadarSettings.setTrip(context, null)
+        assertNull(RadarSettings.getTrip(context))
+    }
+
     @Test
     fun test_Radar_getContext_errorPermissions() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
@@ -2314,6 +2655,10 @@ class RadarTest {
         tripOptions.mode = Radar.RadarRouteMode.FOOT
 
         return tripOptions
+    }
+
+    private fun tripWithLegsResponse(): JSONObject? {
+        return RadarTestUtils.jsonObjectFromResource("/trip_with_legs.json")
     }
 
     @Test
