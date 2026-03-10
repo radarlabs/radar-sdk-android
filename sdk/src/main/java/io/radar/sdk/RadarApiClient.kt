@@ -785,7 +785,7 @@ internal class RadarApiClient(
         val legsArray = JSONArray()
         legIds.forEach { legsArray.put(it) }
         params.putOpt("legs", legsArray)
-        
+
         val path = "v1/trips/$tripId/legs"
         val headers = headers(publishableKey)
 
