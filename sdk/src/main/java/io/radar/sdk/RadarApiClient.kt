@@ -553,14 +553,14 @@ internal class RadarApiClient(
                 if (events != null && user != null) {
                     RadarSettings.setId(context, user._id)
 
-                    if ( user.trip != null) {
+                    if (user.trip != null) {
                         RadarSettings.setTrip(context, user.trip)
                     } else {
+                        RadarSettings.setTrip(context, null)
                         val tripOptions = RadarSettings.getTripOptions(context)
                         if (tripOptions != null) {
                             locationManager.restartPreviousTrackingOptions()
                             RadarSettings.setTripOptions(context, null)
-                            RadarSettings.setTrip(context, null)
                         }
                     }
 
