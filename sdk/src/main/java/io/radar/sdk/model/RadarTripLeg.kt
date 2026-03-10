@@ -45,7 +45,7 @@ class RadarTripLeg (
         COORDINATES
     }
 
-    internal companion object {
+    companion object {
         private const val FIELD_ID = "_id"
         private const val FIELD_STATUS = "status"
         private const val FIELD_CREATED_AT = "createdAt"
@@ -178,6 +178,14 @@ class RadarTripLeg (
                         RadarTripLegDestinationType.ADDRESS -> {
                             address = sourceObj.optString(FIELD_DATA).takeIf { it.isNotEmpty() }
                         }
+
+                        RadarTripLegDestinationType.COORDINATES -> {
+                            sourceObj.optJSONArray(FIELD_DATA)?.let { coordArr ->
+                                if (coordArr.length() >= 2) {
+                                    coordinates = RadarCoordinate(coordArr.optDouble(1), coordArr.optDouble(0))
+                                }
+                            }
+                        }
                         else -> { }
                     }
                 } else {
@@ -273,9 +281,9 @@ class RadarTripLeg (
             coordArr.put(coord.longitude)
             coordArr.put(coord.latitude)
             destination.putOpt(FIELD_COORDINATES, coordArr)
-            if (arrivalRadius > 0) {
-                destination.putOpt(FIELD_ARRIVAL_RADIUS, arrivalRadius)
-            }
+        }
+        if (arrivalRadius > 0) {
+            destination.putOpt(FIELD_ARRIVAL_RADIUS, arrivalRadius)
         }
 
         if (destination.length() > 0) {

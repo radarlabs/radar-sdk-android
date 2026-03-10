@@ -36,7 +36,6 @@ import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
 import java.util.Date
 import java.util.EnumSet
-import kotlin.math.PI
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -2211,7 +2210,7 @@ object Radar {
         if (!initialized) {
             return
         }
-        this.logger.i("updateTripLeg(tripId=$tripId, legId=$legId", RadarLogType.SDK_CALL)
+        this.logger.i("updateTripLeg(tripId=$tripId, legId=$legId)", RadarLogType.SDK_CALL)
 
         apiClient.updateTripLeg(tripId, legId, status, object: RadarApiClient.RadarTripLegApiCallback {
             override fun onComplete(
@@ -2315,7 +2314,7 @@ object Radar {
         if (!initialized) {
             return
         }
-        this.logger.i("reorderTripLegs(tripId=$tripId", RadarLogType.SDK_CALL)
+        this.logger.i("reorderTripLegs(tripId=$tripId)", RadarLogType.SDK_CALL)
 
         apiClient.reorderTripLegs(tripId, legIds, object : RadarApiClient.RadarTripApiCallback {
             override fun onComplete(

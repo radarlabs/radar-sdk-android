@@ -316,9 +316,14 @@ internal object RadarSettings {
     }
 
     internal fun getTrip(context: Context): RadarTrip? {
-        val tripJson = getSharedPreferences(context).getString(KEY_TRIP, null) ?: return  null
-        val tripObj = JSONObject(tripJson)
-        return RadarTrip.fromJson(tripObj)
+        val tripJson = getSharedPreferences(context).getString(KEY_TRIP, null) ?: return null
+        return try {
+            val tripObj = JSONObject(tripJson)
+            RadarTrip.fromJson(tripObj)
+        } catch (e: Exception) {
+            getSharedPreferences(context).edit { remove(KEY_TRIP) }
+            null
+        }
     }
 
     internal fun setTrip(context: Context, trip: RadarTrip?) {

@@ -641,6 +641,12 @@ internal class RadarApiClient(
             params.put("approachingThreshold", options.approachingThreshold)
         }
 
+        options.legs?.let { legs ->
+            if (legs.isNotEmpty()) {
+                params.putOpt("legs", RadarTripLeg.toJson(legs))
+            }
+        }
+
         val path = "v1/trips"
 
         val headers = headers(publishableKey)
@@ -702,6 +708,12 @@ internal class RadarApiClient(
         params.putOpt("scheduledArrivalAt", RadarUtils.dateToISOString(options.scheduledArrivalAt))
         if (options.approachingThreshold > 0) {
             params.put("approachingThreshold", options.approachingThreshold)
+        }
+
+        options.legs?.let { legs ->
+            if (legs.isNotEmpty()) {
+                params.putOpt("legs", RadarTripLeg.toJson(legs))
+            }
         }
 
         val path = "v1/trips/$externalId/update"
