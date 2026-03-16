@@ -23,6 +23,7 @@ internal data class RadarSdkConfiguration(
     val useForegroundLocationUpdatedAtMsDiff: Boolean = false,
     val locationManagerTimeout: Int = 0,
     val syncAfterSetUser: Boolean = false,
+    val maxReplayBufferSize: Int = DEFAULT_MAX_REPLAY_BUFFER_SIZE,
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -39,10 +40,19 @@ internal data class RadarSdkConfiguration(
         private const val USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF = "useForegroundLocationUpdatedAtMsDiff"
         private const val LOCATION_MANAGER_TIMEOUT = "locationManagerTimeout"
         private const val SYNC_AFTER_SET_USER = "syncAfterSetUser"
+        private const val MAX_REPLAY_BUFFER_SIZE = "maxReplayBufferSize"
+        const val DEFAULT_MAX_REPLAY_BUFFER_SIZE = 120
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             // set json as empty object if json is null, which uses fallback values
             val config = json ?: JSONObject();
+
+            val maxReplayBufferSize = config.optInt(MAX_REPLAY_BUFFER_SIZE, DEFAULT_MAX_REPLAY_BUFFER_SIZE)
+            val validatedMaxReplayBufferSize = if (maxReplayBufferSize > 0 && maxReplayBufferSize <= DEFAULT_MAX_REPLAY_BUFFER_SIZE) {
+                maxReplayBufferSize
+            } else {
+                DEFAULT_MAX_REPLAY_BUFFER_SIZE
+            }
 
             return RadarSdkConfiguration(
                 config.optInt(MAX_CONCURRENT_JOBS, DEFAULT_MAX_CONCURRENT_JOBS),
@@ -58,6 +68,7 @@ internal data class RadarSdkConfiguration(
                 config.optBoolean(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, false),
                 config.optInt(LOCATION_MANAGER_TIMEOUT, 0),
                 config.optBoolean(SYNC_AFTER_SET_USER, false),
+                validatedMaxReplayBufferSize,
             )
         }
 
@@ -89,6 +100,7 @@ internal data class RadarSdkConfiguration(
             putOpt(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, useForegroundLocationUpdatedAtMsDiff)
             putOpt(LOCATION_MANAGER_TIMEOUT, locationManagerTimeout)
             putOpt(SYNC_AFTER_SET_USER, syncAfterSetUser)
+            putOpt(MAX_REPLAY_BUFFER_SIZE, maxReplayBufferSize)
         }
     }
 }
