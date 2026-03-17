@@ -23,8 +23,8 @@ import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
 
-const val HOST = "https://api.radar-staging.com"
-const val PUBLISHABLE_KEY = "prj_test_pk_"
+const val HOST = "https://bailey-nonnebulous-nonaccidentally.ngrok-free.dev"
+const val PUBLISHABLE_KEY = "prj_test_pk_3508428416f485c5f54d8e8bb1f616ee405b1995"
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
