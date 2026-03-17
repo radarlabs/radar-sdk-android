@@ -8,7 +8,7 @@ import io.radar.sdk.RadarInitializeOptions;
 public class Test {
 
     public static void test(Context context) {
-        RadarInitializeOptions options = RadarInitializeOptions.builder().authToken("kjflsd").build();
+        RadarInitializeOptions options = RadarInitializeOptions.builder().authToken("test").build();
         Radar.initialize(context, options);
     }
 }

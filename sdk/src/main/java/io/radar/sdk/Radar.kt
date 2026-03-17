@@ -548,8 +548,9 @@ object Radar {
             fraud = fraud,
             customForegroundNotification = customForegroundNotification,
             inAppMessageReceiver = inAppMessageReceiver,
+            publishableKey = publishableKey,
         )
-        initialize(context, publishableKey, options)
+        initialize(context, options)
     }
 
     /**
@@ -564,7 +565,7 @@ object Radar {
     @JvmStatic
     fun initialize(context: Context, publishableKey: String?, options: RadarInitializeOptions = RadarInitializeOptions()) {
         if (publishableKey != null) {
-            RadarSettings.setPublishableKey(this.context, publishableKey)
+            RadarSettings.setPublishableKey(context.applicationContext, options.publishableKey)
         }
         initialize(context, options)
     }
@@ -579,15 +580,16 @@ object Radar {
      */
     @JvmStatic
     fun initialize(context: Context, options: RadarInitializeOptions) {
+        this.context = context.applicationContext
+        RadarSettings.setContext(this.context)
+
         if (options.publishableKey != null) {
             RadarSettings.setPublishableKey(this.context, options.publishableKey)
         }
         if (options.authToken != null) {
             RadarSettings.setPublishableKey(this.context, "Bearer ${options.authToken}")
         }
-        this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
-        RadarSettings.setContext(this.context)
 
         if (context is Activity) {
             this.activity = context

@@ -6,11 +6,8 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
 import android.util.Log
-import android.view.Gravity
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -27,7 +24,6 @@ import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
-import io.radar.sdk.model.RadarFraud
 import org.json.JSONObject
 import java.util.Date
 import java.util.EnumSet

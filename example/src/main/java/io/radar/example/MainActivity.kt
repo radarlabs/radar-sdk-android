@@ -1,6 +1,5 @@
 package io.radar.example
 
-import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -15,7 +14,6 @@ import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
-import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.google.firebase.FirebaseApp
 import io.radar.sdk.Radar
@@ -44,7 +42,7 @@ class MainActivity : AppCompatActivity() {
             silentPush = true,
         )
         Radar.initialize(this, PUBLISHABLE_KEY, options)
-        Radar.initialize(this, RadarInitializeOptions().authToken(""))
+        Radar.initialize(this, RadarInitializeOptions(authToken = "test"))
 
         Radar.setUserId("android-test-user")
         Radar.sdkVersion().let { Log.i("version", it) }

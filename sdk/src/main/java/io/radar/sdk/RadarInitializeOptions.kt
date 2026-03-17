@@ -44,7 +44,16 @@ class RadarInitializeOptions(
         fun publishableKey(publishableKey: String) = apply { this.publishableKey = publishableKey}
         fun authToken(authToken: String) = apply { this.authToken = authToken}
 
-        fun build() = RadarInitializeOptions(radarReceiver, locationProvider, fraud, customForegroundNotification, inAppMessageReceiver, silentPush, publishableKey, authToken)
+        fun build() = RadarInitializeOptions(
+            radarReceiver=radarReceiver,
+            locationProvider=locationProvider,
+            fraud=fraud,
+            customForegroundNotification=customForegroundNotification,
+            inAppMessageReceiver=inAppMessageReceiver,
+            silentPush=silentPush,
+            publishableKey=publishableKey,
+            authToken=authToken
+        )
     }
 
     companion object {
