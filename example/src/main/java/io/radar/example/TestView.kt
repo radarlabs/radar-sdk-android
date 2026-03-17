@@ -27,9 +27,12 @@ import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
+import io.radar.sdk.model.RadarFraud
 import org.json.JSONObject
 import java.util.Date
 import java.util.EnumSet
+import java.util.Locale
+import java.util.TimeZone
 
 @Composable
 fun CustomButton(label: String, onClick: () -> Unit) {
@@ -48,6 +51,10 @@ fun TestView() {
 
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
         val activity = LocalContext.current as Activity
+
+        Text(Locale.getDefault().toLanguageTag())
+        Text(TimeZone.getDefault().id)
+
         CustomButton("requestForegroundPermission") {
             if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)

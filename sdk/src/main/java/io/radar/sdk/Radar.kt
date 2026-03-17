@@ -519,8 +519,8 @@ object Radar {
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
     @Deprecated("use initialize(context, key, RadarInitializeOptions(...))",
-        ReplaceWith("initialize(context, publishableKey, RadarInitializeOptions(" +
-                "radarReceiver=receiver, locationProvider=provider, fraud=fraud, " +
+        ReplaceWith("initialize(context, RadarInitializeOptions(" +
+                "publishableKey=publishableKey, radarReceiver=receiver, locationProvider=provider, fraud=fraud, " +
                 "customForegroundNotification=customForegroundNotification, inAppMessageReceiver=inAppMessageReceiver))"))
     @JvmStatic
     fun initialize(
@@ -563,6 +563,28 @@ object Radar {
      */
     @JvmStatic
     fun initialize(context: Context, publishableKey: String?, options: RadarInitializeOptions = RadarInitializeOptions()) {
+        if (publishableKey != null) {
+            RadarSettings.setPublishableKey(this.context, publishableKey)
+        }
+        initialize(context, options)
+    }
+
+    /**
+     * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
+     *
+     * @see [](https://radar.com/documentation/sdk/android#initialize-sdk)
+     *
+     * @param[context] The context.
+     * @param[options] Initialize options
+     */
+    @JvmStatic
+    fun initialize(context: Context, options: RadarInitializeOptions) {
+        if (options.publishableKey != null) {
+            RadarSettings.setPublishableKey(this.context, options.publishableKey)
+        }
+        if (options.authToken != null) {
+            RadarSettings.setPublishableKey(this.context, "Bearer ${options.authToken}")
+        }
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
         RadarSettings.setContext(this.context)
@@ -585,10 +607,6 @@ object Radar {
 
         if (!this::logger.isInitialized) {
             this.logger = RadarLogger(this.context)
-        }
-
-        if (publishableKey != null) {
-            RadarSettings.setPublishableKey(this.context, publishableKey)
         }
 
         if (!this::apiClient.isInitialized) {
