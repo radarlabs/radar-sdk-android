@@ -23,18 +23,13 @@ import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
 
-const val HOST = "https://bailey-nonnebulous-nonaccidentally.ngrok-free.dev"
-const val PUBLISHABLE_KEY = "prj_test_pk_3508428416f485c5f54d8e8bb1f616ee405b1995"
+const val PUBLISHABLE_KEY = "prj_test_pk_"
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
 
-        getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
-            putString("host", HOST)
-            putString("verified_host", HOST)
-        }
 
         val customNotification = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
             createCustomNotification()
