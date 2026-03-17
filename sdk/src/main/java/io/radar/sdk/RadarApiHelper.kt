@@ -85,6 +85,7 @@ internal open class RadarApiHelper(
         } else {
             logger?.d("📍 Radar API request | method = $method; url = $url; headers = $headers")
         }
+        println("📍 Radar API request | method = $method; url = $url; headers = $headers; params = $params")
         
         executor.execute {
             try {

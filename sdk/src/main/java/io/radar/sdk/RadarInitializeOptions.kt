@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.app.Notification
+import android.app.Activity
 
 /**
  * Initialize options for Radar
@@ -24,6 +25,7 @@ class RadarInitializeOptions(
     val silentPush: Boolean = false,
     val publishableKey: String? = null,
     val authToken: String? = null,
+    val activity: Activity? = null,
 ) {
     class Builder {
         private var radarReceiver: RadarReceiver? = null
@@ -34,25 +36,27 @@ class RadarInitializeOptions(
         private var silentPush: Boolean = false
         private var publishableKey: String? = null
         private var authToken: String? = null
+        private var activity: Activity? = null
 
         fun radarReceiver(radarReceiver: RadarReceiver) = apply { this.radarReceiver = radarReceiver }
         fun locationProvider(locationProvider: Radar.RadarLocationServicesProvider) = apply { this.locationProvider = locationProvider }
         fun fraud(fraud: Boolean) = apply { this.fraud = fraud }
         fun customForegroundNotification(customForegroundNotification: Notification) = apply { this.customForegroundNotification = customForegroundNotification }
         fun inAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver) = apply { this.inAppMessageReceiver = inAppMessageReceiver }
-        fun silentPush(silentPush: Boolean) = apply { this.silentPush = silentPush}
-        fun publishableKey(publishableKey: String) = apply { this.publishableKey = publishableKey}
-        fun authToken(authToken: String) = apply { this.authToken = authToken}
+        fun silentPush(silentPush: Boolean) = apply { this.silentPush = silentPush }
+        fun publishableKey(publishableKey: String) = apply { this.publishableKey = publishableKey }
+        fun authToken(authToken: String) = apply { this.authToken = authToken }
+        fun activity(activity: Activity) = apply { this.activity = activity }
 
         fun build() = RadarInitializeOptions(
-            radarReceiver=radarReceiver,
-            locationProvider=locationProvider,
-            fraud=fraud,
-            customForegroundNotification=customForegroundNotification,
-            inAppMessageReceiver=inAppMessageReceiver,
-            silentPush=silentPush,
-            publishableKey=publishableKey,
-            authToken=authToken
+            radarReceiver = radarReceiver,
+            locationProvider = locationProvider,
+            fraud = fraud,
+            customForegroundNotification = customForegroundNotification,
+            inAppMessageReceiver = inAppMessageReceiver,
+            silentPush = silentPush,
+            publishableKey = publishableKey,
+            authToken = authToken
         )
     }
 

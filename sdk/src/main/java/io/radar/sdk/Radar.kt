@@ -10,8 +10,6 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
-import androidx.core.content.edit
-import com.google.firebase.messaging.FirebaseMessaging
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
@@ -593,6 +591,9 @@ object Radar {
 
         if (context is Activity) {
             this.activity = context
+        }
+        if (options.activity != null) {
+            this.activity = options.activity
         }
 
         if (options.radarReceiver != null) {
