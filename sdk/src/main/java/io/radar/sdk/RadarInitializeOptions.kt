@@ -57,7 +57,8 @@ data class RadarInitializeOptions(
             inAppMessageReceiver = inAppMessageReceiver,
             silentPush = silentPush,
             publishableKey = publishableKey,
-            authToken = authToken
+            authToken = authToken,
+            activity = activity,
         )
     }
 
