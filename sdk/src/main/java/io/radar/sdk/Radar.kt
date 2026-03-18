@@ -518,10 +518,6 @@ object Radar {
      * @param[provider] The location services provider.
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
-    @Deprecated("use initialize(context, RadarInitializeOptions(...))",
-        ReplaceWith("initialize(context, RadarInitializeOptions(" +
-                "publishableKey=publishableKey, radarReceiver=receiver, locationProvider=provider, fraud=fraud, " +
-                "customForegroundNotification=customForegroundNotification, inAppMessageReceiver=inAppMessageReceiver))"))
     @JvmStatic
     fun initialize(
         context: Context?, 
@@ -531,7 +527,8 @@ object Radar {
         fraud: Boolean = false,
         customForegroundNotification: Notification? = null,
         inAppMessageReceiver: RadarInAppMessageReceiver? = null,
-        currentActivity: Activity? = null) {
+        currentActivity: Activity? = null,
+        authToken: String? = null) {
 
         if (context == null) {
             return
@@ -543,6 +540,7 @@ object Radar {
             customForegroundNotification = customForegroundNotification,
             inAppMessageReceiver = inAppMessageReceiver,
             publishableKey = publishableKey,
+            authToken = authToken,
             activity = currentActivity,
         )
         initialize(context, options)
