@@ -518,10 +518,6 @@ object Radar {
      * @param[provider] The location services provider.
      * @param[fraud] A boolean indicating whether to enable additional fraud detection signals for location verification.
      */
-    @Deprecated("use initialize(context, key, RadarInitializeOptions(...))",
-        ReplaceWith("initialize(context, publishableKey, RadarInitializeOptions(" +
-                "radarReceiver=receiver, locationProvider=provider, fraud=fraud, " +
-                "customForegroundNotification=customForegroundNotification, inAppMessageReceiver=inAppMessageReceiver))"))
     @JvmStatic
     fun initialize(
         context: Context?, 
@@ -531,16 +527,11 @@ object Radar {
         fraud: Boolean = false,
         customForegroundNotification: Notification? = null,
         inAppMessageReceiver: RadarInAppMessageReceiver? = null,
-        currentActivity: Activity? = null) {
+        currentActivity: Activity? = null,
+        authToken: String? = null) {
 
         if (context == null) {
             return
-        }
-        if (context is Activity) {
-            this.activity = context
-        }
-        if (currentActivity != null) {
-            this.activity = currentActivity
         }
         val options = RadarInitializeOptions(
             radarReceiver = receiver,
@@ -548,8 +539,11 @@ object Radar {
             fraud = fraud,
             customForegroundNotification = customForegroundNotification,
             inAppMessageReceiver = inAppMessageReceiver,
+            publishableKey = publishableKey,
+            authToken = authToken,
+            activity = currentActivity,
         )
-        initialize(context, publishableKey, options)
+        initialize(context, options)
     }
 
     /**
@@ -563,12 +557,28 @@ object Radar {
      */
     @JvmStatic
     fun initialize(context: Context, publishableKey: String?, options: RadarInitializeOptions = RadarInitializeOptions()) {
+        val newOptions = options.copy(publishableKey = publishableKey)
+        initialize(context, newOptions)
+    }
+    /**
+     * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
+     *
+     * @see [](https://radar.com/documentation/sdk/android#initialize-sdk)
+     *
+     * @param[context] The context.
+     * @param[options] Initialize options
+     */
+    @JvmStatic
+    fun initialize(context: Context, options: RadarInitializeOptions) {
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
         RadarSettings.setContext(this.context)
 
         if (context is Activity) {
             this.activity = context
+        }
+        if (options.activity != null) {
+            this.activity = options.activity
         }
 
         if (options.radarReceiver != null) {
@@ -587,8 +597,10 @@ object Radar {
             this.logger = RadarLogger(this.context)
         }
 
-        if (publishableKey != null) {
-            RadarSettings.setPublishableKey(this.context, publishableKey)
+        if (options.publishableKey != null) {
+            RadarSettings.setPublishableKey(this.context, options.publishableKey)
+        } else if (options.authToken != null) {
+            RadarSettings.setPublishableKey(this.context, "Bearer ${options.authToken}")
         }
 
         if (!this::apiClient.isInitialized) {
