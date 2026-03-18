@@ -14,7 +14,7 @@ import android.app.Activity
  * @param[silentPush] A boolean indicating if silent push notification should be configured. see [RadarFirebaseMessagingService] for configuration details
  * @param[publishableKey] The project publishable key, if set, authToken should not be set.
  * @param[authToken] A JWT auth token, if set, publishableKey should not be set.
- * @param[activity] A optional activity that overwrites the activity from context.
+ * @param[activity] An optional activity that overwrites the activity from context.
  *
  */
 data class RadarInitializeOptions(
