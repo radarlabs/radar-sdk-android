@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "code": 200
+  },
+  "trip": {
+    "_id": "trip_abc123",
+    "externalId": "order-456",
+    "metadata": {
+      "driver": "testDriver"
+    },
+    "mode": "car",
+    "destinationGeofenceTag": "store",
+    "destinationGeofenceExternalId": "store-1",
+    "destinationLocation": {
+      "type": "Point",
+      "coordinates": [-73.975365, 40.783825]
+    },
+    "eta": {
+      "distance": 5000.0,
+      "duration": 12.5
+    },
+    "status": "started",
+    "currentLeg": "leg_001",
+    "legs": [
+      {
+        "_id": "leg_001",
+        "status": "started",
+        "createdAt": "2026-02-24T12:00:00.000Z",
+        "updatedAt": "2026-02-24T12:05:00.000Z",
+        "eta": {
+          "duration": 5.0,
+          "distance": 2000.0
+        },
+        "destination": {
+          "type": "geofence",
+          "source": {
+            "geofence": "geofence_aaa",
+            "data": {
+              "tag": "store",
+              "externalId": "store-1"
+            }
+          },
+          "location": {
+            "coordinates": [-73.975365, 40.783825]
+          }
+        },
+        "stopDuration": 10,
+        "metadata": {
+          "package": "small"
+        }
+      },
+      {
+        "_id": "leg_002",
+        "status": "pending",
+        "createdAt": "2026-02-24T12:00:00.000Z",
+        "updatedAt": "2026-02-24T12:00:00.000Z",
+        "eta": {
+          "duration": 12.5,
+          "distance": 5000.0
+        },
+        "destination": {
+          "type": "geofence",
+          "source": {
+            "geofence": "geofence_bbb",
+            "data": {
+              "tag": "warehouse",
+              "externalId": "warehouse-1"
+            }
+          },
+          "location": {
+            "coordinates": [-73.985000, 40.750000]
+          }
+        },
+        "stopDuration": 15,
+        "metadata": {
+          "package": "large"
+        }
+      }
+    ]
+  },
+  "leg": {
+    "_id": "leg_001",
+    "status": "completed",
+    "createdAt": "2026-02-24T12:00:00.000Z",
+    "updatedAt": "2026-02-24T12:10:00.000Z",
+    "eta": {
+      "duration": 0,
+      "distance": 0
+    },
+    "destination": {
+      "type": "geofence",
+      "source": {
+        "geofence": "geofence_aaa",
+        "data": {
+          "tag": "store",
+          "externalId": "store-1"
+        }
+      },
+      "location": {
+        "coordinates": [-73.975365, 40.783825]
+      }
+    },
+    "stopDuration": 10,
+    "metadata": {
+      "package": "small"
+    }
+  },
+  "events": [
+    {
+      "_id": "event_001",
+      "type": "user.entered_geofence",
+      "createdAt": "2026-02-24T12:10:00.000Z",
+      "actualCreatedAt": "2026-02-24T12:10:00.000Z",
+      "confidence": 3,
+      "location": {
+        "type": "Point",
+        "coordinates": [-73.975365, 40.783825]
+      },
+      "geofence": {
+        "_id": "geofence_aaa",
+        "description": "Store 1",
+        "type": "circle",
+        "geometryCenter": {
+          "type": "Point",
+          "coordinates": [-73.975365, 40.783825]
+        },
+        "geometryRadius": 100,
+        "tag": "store",
+        "externalId": "store-1",
+        "metadata": {}
+      }
+    }
+  ]
+}
