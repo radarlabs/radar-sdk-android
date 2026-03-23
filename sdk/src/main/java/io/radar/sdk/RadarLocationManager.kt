@@ -563,6 +563,11 @@ internal class RadarLocationManager(
 
         callCallbacks(RadarStatus.SUCCESS, location)
 
+        val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+        if (sdkConfiguration.useSyncRegion && !Radar.syncManager.hasSyncedRegion()) {
+            Radar.syncManager.fetchSyncRegion()
+        }
+
         var sendLocation = location
 
         val lastFailedStoppedLocation = RadarState.getLastFailedStoppedLocation(context)
@@ -615,6 +620,21 @@ internal class RadarLocationManager(
                 return
             }
         }
+
+        if (source != RadarLocationSource.FOREGROUND_LOCATION && source != RadarLocationSource.MANUAL_LOCATION &&
+           sdkConfiguration.useSyncRegion && options.sync == RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
+        ) {
+            if (location.accuracy >= 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
+                logger.d("Skipping sync region eval: inaccurate | accuracy = ${location.accuracy}")
+                return
+            }
+
+            if (!Radar.syncManager.shouldTrack(location, options)) {
+                logger.i("Skipping track: useSyncRegion - no state change detected | source = $source")
+                return
+            }
+        }
+
         RadarState.updateLastSentAt(context)
 
         if (source == RadarLocationSource.FOREGROUND_LOCATION) {
@@ -647,6 +667,15 @@ internal class RadarLocationManager(
                     config: RadarConfig?,
                     token: RadarVerifiedLocationToken?
                 ) {
+
+                    if (RadarSettings.getSdkConfiguration(context).useSyncRegion) {
+                        if (status == RadarStatus.SUCCESS && user != null) {
+                            Radar.syncManager.reconcileSyncState(user)
+                        } else {
+                            Radar.syncManager.rollbackSyncState()
+                        }
+                    }
+
                     locationManager.replaceSyncedGeofences(nearbyGeofences)
 
                     if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {

@@ -493,6 +493,7 @@ object Radar {
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
     private lateinit var inAppMessageManager: RadarInAppMessageManager
+    internal lateinit var syncManager: RadarSyncManager
     private var activityLifecycleCallbacks: RadarActivityLifecycleCallbacks? = null
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -643,6 +644,10 @@ object Radar {
             }
         }
 
+        if (!this::syncManager.isInitialized) {
+            this.syncManager = RadarSyncManager(this.context, apiClient, logger)
+        }
+
         this.logger.i("initialize()", RadarLogType.SDK_CALL)
 
         if (options.locationProvider == RadarLocationServicesProvider.GOOGLE) {
@@ -681,6 +686,13 @@ object Radar {
                 if (status == RadarStatus.SUCCESS) {
                     locationManager.updateTrackingFromMeta(config.meta)
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+
+                    val updatedConfig = RadarSettings.getSdkConfiguration(context)
+                    if (updatedConfig.useSyncRegion) {
+                        syncManager.start(21600 * 1000L)
+                    } else {
+                        syncManager.stop()
+                    }
                 }
 
                 val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
