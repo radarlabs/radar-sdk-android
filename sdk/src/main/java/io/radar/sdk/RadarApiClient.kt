@@ -24,11 +24,13 @@ import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
+import io.radar.sdk.model.RadarCoordinate
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.net.URLEncoder
 import java.util.EnumSet
+import kotlin.math.ln
 
 internal class RadarApiClient(
     private val context: Context,
@@ -97,6 +99,17 @@ internal class RadarApiClient(
             status: RadarStatus,
             res: JSONObject? = null,
             event: RadarEvent? = null
+        )
+    }
+
+    internal interface RadarSyncRegionApiCallback {
+        fun onComplete(
+            status: RadarStatus,
+            geofences: Array<RadarGeofence>? = null,
+            places: Array<RadarPlace>? = null,
+            beacons: Array<RadarBeacon>? = null,
+            regionCenter: RadarCoordinate? = null,
+            regionRadius: Double? = null
         )
     }
 
@@ -1442,4 +1455,54 @@ internal class RadarApiClient(
         apiHelper.requestImage(context, "GET", finalUrl, headers, callback)
     }
 
+    internal fun fetchSyncRegion(
+        latitude: Double,
+        longitude: Double,
+        callback: RadarSyncRegionApiCallback
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            return
+        }
+
+        val params = JSONObject()
+        try {
+            params.put("latitude", latitude)
+            params.put("longitude", longitude)
+        } catch (e: JSONException) {
+            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            return
+        }
+
+        val path = "v1/sync/region"
+        val headers = headers(publishableKey)
+
+        apiHelper.request(context, "POST", path, headers, params, false, object: RadarApiHelper.RadarApiCallback {
+            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                if (status != RadarStatus.SUCCESS || res == null) {
+                    callback.onComplete(status)
+                    return
+                }
+
+                val geofences = RadarGeofence.fromJson(res.optJSONArray("geofences"))
+                val places = RadarPlace.fromJson(res.optJSONArray("places"))
+                val beacons = RadarBeacon.fromJson(res.optJSONArray("beacons"))
+
+                var regionCenter: RadarCoordinate? = null
+                var regionRadius: Double? = null
+                res.optJSONObject("region")?.let { regionObj ->
+                    val lat = regionObj.optDouble("latitude")
+                    val lng = regionObj.optDouble("longitude")
+                    val radius = regionObj.optDouble("radius")
+                    if (!lat.isNaN() && !lng.isNaN() && !radius.isNaN() && radius > 0) {
+                        regionCenter = RadarCoordinate(lat, lng)
+                        regionRadius = radius
+                    }
+                }
+
+                callback.onComplete(RadarStatus.SUCCESS, geofences, places, beacons, regionCenter, regionRadius)
+            }
+        })
+    }
 }
