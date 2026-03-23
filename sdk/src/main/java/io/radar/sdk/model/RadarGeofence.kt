@@ -42,6 +42,15 @@ class RadarGeofence(
      * The geometry of the geofence.
      */
     val geometry: RadarGeofenceGeometry?,
+    /**
+     * The dwell threshold of the geofence.
+     */
+    val dwellThreshold: Double? = null,
+    /**
+     * The stop detection value of the geofence.
+     */
+    val stopDetection: Boolean? = null,
+
 
     ) {
 
@@ -64,6 +73,8 @@ class RadarGeofence(
 
         private const val TYPE_GEOMETRY_CIRCLE = "Circle"
         private const val TYPE_GEOMETRY_POLYGON = "Polygon"
+        private const val FIELD_DWELL_THRESHOLD = "dwellThreshold"
+        private const val FIELD_STOP_DETECTION = "stopDetection"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarGeofence? {
@@ -122,8 +133,10 @@ class RadarGeofence(
                 }
                 else -> null
             } ?: RadarCircleGeometry(RadarCoordinate(0.0, 0.0), 0.0)
+            val dwellThreshold = if (obj.has(FIELD_DWELL_THRESHOLD)) obj.optDouble(FIELD_DWELL_THRESHOLD) else null
+            val stopDetection = if (obj.has(FIELD_STOP_DETECTION)) obj.optBoolean(FIELD_STOP_DETECTION) else null
 
-            return RadarGeofence(id, description, tag, externalId, metadata, operatingHours, geometry)
+            return RadarGeofence(id, description, tag, externalId, metadata, operatingHours, geometry, dwellThreshold, stopDetection)
         }
 
         @JvmStatic
@@ -194,6 +207,8 @@ class RadarGeofence(
                 }
             }
         }
+        dwellThreshold?.let { obj.put(FIELD_DWELL_THRESHOLD, it) }
+        stopDetection?.let { obj.put(FIELD_STOP_DETECTION, it) }
         
         return obj
     }
