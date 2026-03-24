@@ -132,12 +132,30 @@ fun parseSyncRegionData(file: File): SyncRegionData {
         json.optJSONArray("syncedGeofences")?.let { arr ->
             for (i in 0 until arr.length()) {
                 val gf = arr.optJSONObject(i) ?: continue
-                val center = gf.optJSONObject("geometryCenter") ?: continue
-                val gfRadius = gf.optDouble("geometryRadius", 0.0)
-                if (gfRadius <= 0) continue
-                val coords = center.optJSONArray("coordinates") ?: continue
-                val polygon = createCirclePolygon(coords.getDouble(1), coords.getDouble(0), gfRadius)
-                geofenceFeatures.add(Feature.fromGeometry(polygon))
+                val gfType = gf.optString("type", "")
+
+                if (gfType.equals("Polygon", ignoreCase = true) || gfType.equals("isochrone", ignoreCase = true)) {
+                    val coordsArr = gf.optJSONArray("coordinates")
+                    val ring = coordsArr?.optJSONArray(0)
+                    if (ring != null && ring.length() > 0) {
+                        val points = mutableListOf<Point>()
+                        for (j in 0 until ring.length()) {
+                            val pair = ring.optJSONArray(j) ?: continue
+                            points.add(Point.fromLngLat(pair.getDouble(0), pair.getDouble(1)))
+                        }
+                        if (points.isNotEmpty()) {
+                            if (points.first() != points.last()) points.add(points.first())
+                            geofenceFeatures.add(Feature.fromGeometry(Polygon.fromLngLats(listOf(points))))
+                        }
+                    }
+                } else {
+                    val center = gf.optJSONObject("geometryCenter") ?: continue
+                    val gfRadius = gf.optDouble("geometryRadius", 0.0)
+                    if (gfRadius <= 0) continue
+                    val coords = center.optJSONArray("coordinates") ?: continue
+                    val polygon = createCirclePolygon(coords.getDouble(1), coords.getDouble(0), gfRadius)
+                    geofenceFeatures.add(Feature.fromGeometry(polygon))
+                }
             }
         }
 
@@ -179,15 +197,17 @@ fun parseSyncRegionData(file: File): SyncRegionData {
 fun MapView(disabled: Boolean) {
     val client = LocationServices.getFusedLocationProviderClient(LocalContext.current)
     val radarDir = File(LocalContext.current.filesDir, "RadarSDK")
-    val file = File(radarDir, "offlineData.json")
-    var offlineData by remember { mutableStateOf(getFeatureCollection(file)) }
-    val fileObserver = object : FileObserver(file.absolutePath, (CLOSE_WRITE or MODIFY or CREATE)) {
-        override fun onEvent(event: Int, path: String?) {
-            offlineData = getFeatureCollection(file)
-        }
-    }.apply {
-        startWatching()
-    }
+
+    // TODO: re-enable offline geofences after QA testing
+    // val file = File(radarDir, "offlineData.json")
+    // var offlineData by remember { mutableStateOf(getFeatureCollection(file)) }
+    // val fileObserver = object : FileObserver(file.absolutePath, (CLOSE_WRITE or MODIFY or CREATE)) {
+    //     override fun onEvent(event: Int, path: String?) {
+    //         offlineData = getFeatureCollection(file)
+    //     }
+    // }.apply {
+    //     startWatching()
+    // }
 
     val syncFile = File(radarDir, "radar_sync_state.json")
     var syncData by remember { mutableStateOf(parseSyncRegionData(syncFile)) }
@@ -277,21 +297,22 @@ fun MapView(disabled: Boolean) {
 
                     map.setStyle(styleURL) { style ->
 
-                        val offlineGeofences = GeoJsonSource("offlineGeofences")
-                        offlineGeofences.setGeoJson(offlineData)
-                        style.addSource(offlineGeofences)
-                        style.addLayer(FillLayer("offlineCircles", "offlineGeofences").apply {
-                            setProperties(
-                                PropertyFactory.fillOpacity(0.1f),
-                                PropertyFactory.fillColor(Color.Green.toArgb()),
-                            )
-                        })
-                        style.addLayer(LineLayer("offlineOutline", "offlineGeofences").apply {
-                            setProperties(
-                                PropertyFactory.lineColor(Color.Green.toArgb()),
-                                PropertyFactory.lineWidth(1f)
-                            )
-                        })
+                        // TODO: re-enable offline geofences after QA testing
+                        // val offlineGeofences = GeoJsonSource("offlineGeofences")
+                        // offlineGeofences.setGeoJson(offlineData)
+                        // style.addSource(offlineGeofences)
+                        // style.addLayer(FillLayer("offlineCircles", "offlineGeofences").apply {
+                        //     setProperties(
+                        //         PropertyFactory.fillOpacity(0.1f),
+                        //         PropertyFactory.fillColor(Color.Green.toArgb()),
+                        //     )
+                        // })
+                        // style.addLayer(LineLayer("offlineOutline", "offlineGeofences").apply {
+                        //     setProperties(
+                        //         PropertyFactory.lineColor(Color.Green.toArgb()),
+                        //         PropertyFactory.lineWidth(1f)
+                        //     )
+                        // })
 
                         val syncRegionSource = GeoJsonSource("syncRegion")
                         syncRegionSource.setGeoJson(syncData.region)
@@ -387,7 +408,7 @@ fun MapView(disabled: Boolean) {
                 mapView.getMapAsync { map ->
                     val style = map.style ?: return@getMapAsync
 
-                    (style.getSource("offlineGeofences") as? GeoJsonSource)?.setGeoJson(offlineData)
+                    // (style.getSource("offlineGeofences") as? GeoJsonSource)?.setGeoJson(offlineData)
                     (style.getSource("syncRegion") as? GeoJsonSource)?.setGeoJson(syncData.region)
                     (style.getSource("syncedGeofences") as? GeoJsonSource)?.setGeoJson(syncData.geofences)
                     (style.getSource("syncedPlaces") as? GeoJsonSource)?.setGeoJson(syncData.places)
