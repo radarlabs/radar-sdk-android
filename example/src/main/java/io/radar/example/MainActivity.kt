@@ -1,5 +1,6 @@
 package io.radar.example
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
@@ -7,14 +8,18 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
+import android.location.Location
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.google.firebase.FirebaseApp
@@ -22,9 +27,53 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
-const val PUBLISHABLE_KEY = "prj_test_pk_"
+const val PUBLISHABLE_KEY = "prj_test_pk_cff94457df57a7ac5dcaacea84ab1df7423ea9ac"
 
 class MainActivity : AppCompatActivity() {
+
+    private val backgroundLocationLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        Log.i("MainActivity", "Background location permission ${if (granted) "granted" else "denied"}")
+    }
+
+    private val foregroundLocationLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        Log.i("MainActivity", "Foreground location: fine=$fineGranted, coarse=$coarseGranted")
+        if (fineGranted || coarseGranted) {
+            requestBackgroundLocationIfNeeded()
+        }
+    }
+
+    private fun requestBackgroundLocationIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                != PackageManager.PERMISSION_GRANTED
+        ) {
+            backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        }
+    }
+
+    private fun requestLocationPermissions() {
+        val fineGranted = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!fineGranted) {
+            foregroundLocationLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                )
+            )
+        } else {
+            requestBackgroundLocationIfNeeded()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
@@ -43,7 +92,6 @@ class MainActivity : AppCompatActivity() {
         )
         Radar.initialize(this, PUBLISHABLE_KEY, options)
 
-        Radar.setUserId("android-test-user")
         Radar.sdkVersion().let { Log.i("version", it) }
 
         // We can also set the foreground service options like this:
@@ -62,6 +110,8 @@ class MainActivity : AppCompatActivity() {
 
         val inAppMessageReceiver = MyInAppMessageReceiver()
         Radar.setInAppMessageReceiver(inAppMessageReceiver)
+
+        requestLocationPermissions()
 
         setContent {
             MainView()

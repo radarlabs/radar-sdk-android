@@ -365,7 +365,7 @@ internal object RadarSettings {
     }
 
     internal fun getHost(context: Context): String {
-        return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
+        return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar-staging.com"
     }
 
     internal fun setPermissionsDenied(context: Context, denied: Boolean) {
