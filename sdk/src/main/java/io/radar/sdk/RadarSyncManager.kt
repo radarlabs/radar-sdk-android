@@ -20,7 +20,7 @@ internal class RadarSyncManager(
     private val apiClient: RadarApiClient,
     private val logger: RadarLogger
 ) {
-    private val syncStore = RadarTypedFileStorage<RadarSyncState>(
+    internal val syncStore = RadarTypedFileStorage<RadarSyncState>(
         context,
         "radar_sync_state.json",
         serializer = { it.toJson() },
