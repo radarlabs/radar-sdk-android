@@ -30,8 +30,6 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.net.URLEncoder
 import java.util.EnumSet
-import kotlin.math.ln
-
 internal class RadarApiClient(
     private val context: Context,
     private var logger: RadarLogger,

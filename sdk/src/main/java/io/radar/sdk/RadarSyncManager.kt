@@ -33,6 +33,7 @@ internal class RadarSyncManager(
     private var previousSyncedGeofenceIds: List<String>? = null
     private var previousSyncedPlaceIds: List<String>? = null
     private var previousSyncedBeaconIds: List<String>? = null
+    private var isFetchingSyncRegion = false
 
     companion object {
         private const val PLACE_DETECTION_RADIUS = 100.0
@@ -67,8 +68,12 @@ internal class RadarSyncManager(
     //region API
 
     fun fetchSyncRegion() {
+        if (isFetchingSyncRegion) return
+        isFetchingSyncRegion = true
+
         val lastLocation = RadarState.getLastLocation(context)
         if (lastLocation == null) {
+            isFetchingSyncRegion = false
             logger.d("SyncManager: No last location, skipping sync region fetch")
             return
         }
@@ -85,6 +90,7 @@ internal class RadarSyncManager(
                     regionCenter: RadarCoordinate?,
                     regionRadius: Double?
                 ) {
+                    isFetchingSyncRegion = false
                     if (status != RadarStatus.SUCCESS) {
                         logger.w("SyncManager: Sync region request failed")
                         return
@@ -136,14 +142,14 @@ internal class RadarSyncManager(
             return true
         }
 
-        if (isNearSyncedRegionBoundary(location)) {
-            logger.i("SyncManager: Near synced region boundary, refreshing")
-            fetchSyncRegion()
-        }
-
         if (isOutsideSyncedRegion(location)) {
             logger.i("SyncManager: Outside synced region, should track")
             return true
+        }
+
+        if (isNearSyncedRegionBoundary(location)) {
+            logger.i("SyncManager: Near synced region boundary, refreshing")
+            fetchSyncRegion()
         }
 
         if (Radar.getTripOptions() != null && options.type != RadarTrackingOptions.RadarTrackingOptionsType.ON_TRIP) {
@@ -183,8 +189,9 @@ internal class RadarSyncManager(
             location.latitude, location.longitude,
             center.latitude, center.longitude
         )
-        val distanceFromEdge = radius - distanceFromCenter
+        if (distanceFromCenter > radius) return false
 
+        val distanceFromEdge = radius - distanceFromCenter
         return distanceFromEdge <= (radius * BOUNDARY_THRESHOLD_FRACTION)
     }
 
@@ -289,7 +296,7 @@ internal class RadarSyncManager(
         val sinHalfDLat = sin(deltaLat / 2)
         val sinHalfDLon = sin(deltaLon / 2)
         val h = sinHalfDLat * sinHalfDLat + cos(lat1) * cos(lat2) * sinHalfDLon * sinHalfDLon
-        val angularDistance = 2.0 * atan2(sqrt(h), sqrt(1 -h))
+        val angularDistance = 2.0 * atan2(sqrt(h.coerceIn(0.0, 1.0)), sqrt((1 - h).coerceAtLeast(0.0)))
 
         if (angularDistance < 1e-12) return a
 

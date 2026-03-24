@@ -133,8 +133,12 @@ class RadarGeofence(
                 }
                 else -> null
             } ?: RadarCircleGeometry(RadarCoordinate(0.0, 0.0), 0.0)
-            val dwellThreshold = if (obj.has(FIELD_DWELL_THRESHOLD)) obj.optDouble(FIELD_DWELL_THRESHOLD) else null
-            val stopDetection = if (obj.has(FIELD_STOP_DETECTION)) obj.optBoolean(FIELD_STOP_DETECTION) else null
+            val dwellThreshold = if (obj.has(FIELD_DWELL_THRESHOLD) && !obj.isNull(FIELD_DWELL_THRESHOLD)) {
+                obj.optDouble(FIELD_DWELL_THRESHOLD)
+            } else null
+            val stopDetection = if (obj.has(FIELD_STOP_DETECTION) && !obj.isNull(FIELD_STOP_DETECTION)) {
+                obj.optBoolean(FIELD_STOP_DETECTION)
+            } else null
 
             return RadarGeofence(id, description, tag, externalId, metadata, operatingHours, geometry, dwellThreshold, stopDetection)
         }

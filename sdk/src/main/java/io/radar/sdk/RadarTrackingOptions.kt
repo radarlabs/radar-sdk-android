@@ -123,6 +123,10 @@ data class RadarTrackingOptions(
      * Determines whether to collect pressure data.
      */
     var usePressure: Boolean,
+
+    /**
+     * Specifies the tracking options preset type used to configure this instance.
+     */
     var type: RadarTrackingOptionsType = RadarTrackingOptionsType.DEFAULT,
     ) {
 
