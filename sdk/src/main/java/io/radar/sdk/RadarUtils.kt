@@ -15,7 +15,6 @@ import java.security.MessageDigest
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
-import java.time.Instant
 import java.time.ZonedDateTime
 import kotlin.math.abs
 import android.net.ConnectivityManager
@@ -144,19 +143,33 @@ internal object RadarUtils {
         if (str == null) {
             return null
         }
-    
-        try {
-            return Date.from(ZonedDateTime.parse(str).toInstant())
-        } catch (e: Exception) {
-            // Fall back to old date format
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-            dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-            return try {
-                dateFormat.parse(str)
-            } catch (pe: ParseException) {
-                null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                return Date.from(ZonedDateTime.parse(str).toInstant())
+            } catch (e: Exception) {
+                // failed, or something happened, fall out into the fallback version to try SimpleDateFormat
             }
         }
+        // fallback version
+        val locale = Locale.US
+        val patterns = arrayOf(
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",     // +0530
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",   // Z (literal)
+            "yyyy-MM-dd'T'HH:mm:ssZ",          // no millis, +0530
+            "yyyy-MM-dd'T'HH:mm:ss'Z'"         // no millis, Z
+        )
+
+        // Normalize "+05:00" → "+0500" since SimpleDateFormat Z doesn't handle colon
+        val normalized = str.replace(Regex("([+-]\\d{2}):(\\d{2})$"), "$1$2")
+
+        for (pattern in patterns) {
+            try {
+                val df = SimpleDateFormat(pattern, locale)
+                df.timeZone = TimeZone.getTimeZone("UTC")
+                return df.parse(normalized)
+            } catch (_: ParseException) {}
+        }
+        return null
     }
 
     internal fun dateToISOString(date: Date?): String? {
