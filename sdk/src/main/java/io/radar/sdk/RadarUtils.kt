@@ -146,8 +146,10 @@ internal object RadarUtils {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             try {
                 return Date.from(ZonedDateTime.parse(str).toInstant())
-            } catch (e: Exception) {
-                // failed, or something happened, fall out into the fallback version to try SimpleDateFormat
+            } catch (_: Exception) {
+                // likely parsing error, maybe we don't need to try the fallbacks here, but just do it
+            } catch (_: NoClassDefFoundError) {
+                // class does not exist, try the fallbacks
             }
         }
         // fallback version
