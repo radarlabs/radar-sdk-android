@@ -2515,6 +2515,17 @@ class RadarTest {
     }
 
     fun isoStringToDate() {
+        val date1 = RadarUtils.isoStringToDate("2026-03-24T05:19:13.132+02:00")
+        val date2 = RadarUtils.isoStringToDate("2026-03-24T05:17:13.132Z")
+        val date3 = RadarUtils.isoStringToDate("2026-03-24T05:12:13-05:00")
+        val date4 = RadarUtils.isoStringToDate("2026-03-24T05:17:13Z")
 
+        assertNotNull(date1)
+        assertNotNull(date2)
+        assertNotNull(date3)
+        assertNotNull(date4)
+
+        assertTrue(date1?.time == date2?.time)
+        assertTrue(date3?.time == date4?.time)
     }
 }
