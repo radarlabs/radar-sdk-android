@@ -23,7 +23,11 @@ See an example app in `example/`.
 
 To run the example app, clone this repository, add your publishable API key in `MainActivity.kt`, and build the app.
 
-Setup Radar public key check pre-commit hook with `cp -r hooks .git` to prevent accidental key leak when working with the Example app.
+Setup Radar key commit filters hook to prevent accidental key leak when working with the Example app.
+```
+git config filter.radar-keys.clean hooks/clean-filter
+git config filter.radar-keys.smudge hooks/smudge-filter
+```
 
 ## Support
 

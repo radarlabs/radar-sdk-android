@@ -1,0 +1,23 @@
+#!/bin/sh
+# Radar API key smudge filter - applies saved keys to working tree
+KEYS_FILE="$(git rev-parse --show-toplevel)/.radar-keys"
+ZERO='0000000000000000000000000000000000000000'
+
+if [ ! -f "$KEYS_FILE" ]; then
+    cat
+    exit 0
+fi
+
+# Build sed command to apply all saved keys
+SED_CMD=""
+while IFS= read -r key; do
+    [ -z "$key" ] && continue
+    prefix=$(echo "$key" | sed -E 's/[0-9a-fA-F]{40}$//')
+    SED_CMD="${SED_CMD}s|${prefix}${ZERO}|${key}|g;"
+done < "$KEYS_FILE"
+
+if [ -z "$SED_CMD" ]; then
+    cat
+else
+    sed -E "$SED_CMD"
+fi

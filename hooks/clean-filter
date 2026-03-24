@@ -1,0 +1,33 @@
+#!/bin/sh
+# Radar API key clean filter - sanitizes keys for git storage
+# Also saves real keys to .radar-keys so the smudge filter can restore them
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+KEYS_FILE="$REPO_ROOT/.radar-keys"
+
+# Save stdin to a temp file to preserve exact byte content (command
+# substitution would strip trailing newlines, changing the file).
+TMPFILE=$(mktemp)
+trap 'rm -f "$TMPFILE"' EXIT
+cat > "$TMPFILE"
+
+# Extract real keys (non-zeroed) and upsert into .radar-keys by prefix
+ZERO='0000000000000000000000000000000000000000'
+grep -oE 'prj_(test|live)_(pk|sk)_[0-9a-fA-F]{40}' "$TMPFILE" | while IFS= read -r key; do
+    # Skip placeholder keys
+    suffix=$(echo "$key" | sed -E 's/^prj_(test|live)_(pk|sk)_//')
+    if [ "$suffix" = "$ZERO" ]; then
+        continue
+    fi
+    # Extract prefix (e.g. prj_test_pk_) to match against existing entries
+    prefix=$(echo "$key" | sed -E 's/[0-9a-fA-F]{40}$//')
+    if [ -f "$KEYS_FILE" ] && grep -q "^${prefix}" "$KEYS_FILE"; then
+        # Replace existing key with same prefix
+        sed -i '' "s|^${prefix}[0-9a-fA-F]\{40\}|${key}|" "$KEYS_FILE"
+    else
+        echo "$key" >> "$KEYS_FILE"
+    fi
+done
+
+# Output sanitized content
+sed -E 's/(prj_(test|live)_(pk|sk)_)[0-9a-fA-F]{40}/\10000000000000000000000000000000000000000/g' "$TMPFILE"
