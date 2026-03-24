@@ -22,7 +22,7 @@ import java.util.*
 
 @SuppressLint("MissingPermission")
 internal class RadarLocationManager(
-    private val context: Context,
+    private var context: Context,
     private val apiClient: RadarApiClient,
     private val logger: RadarLogger,
     private val batteryManager: RadarBatteryManager,
@@ -39,6 +39,14 @@ internal class RadarLocationManager(
     private val callbacks = ArrayList<RadarLocationCallback>()
     private val activityManager = RadarActivityManager(context)
     private val sensorsManager = RadarSensorsManager(context)
+
+    // In production, context.applicationContext is always the same Application instance,
+    // so this is effectively a no-op. Under Robolectric test suites, different test classes
+    // can produce distinct Application contexts while this singleton-held LocationManager
+    // persists, causing SharedPreferences reads/writes to diverge.
+    internal fun updateContext(context: Context) {
+        this.context = context
+    }
 
     internal companion object {
         private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"

@@ -632,6 +632,11 @@ object Radar {
             this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager, options.locationProvider)
             RadarSettings.setLocationServicesProvider(this.context, options.locationProvider)
             this.locationManager.updateTracking()
+        } else {
+            // Keep locationManager's context in sync — only meaningful in
+            // Robolectric test suites where the Application context can change
+            // between test classes while this singleton object persists.
+            this.locationManager.updateContext(this.context)
         }
 
         if (!this::inAppMessageManager.isInitialized) {

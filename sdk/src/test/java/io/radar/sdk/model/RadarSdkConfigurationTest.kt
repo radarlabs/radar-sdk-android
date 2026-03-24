@@ -51,6 +51,11 @@ class RadarSdkConfigurationTest {
             "useForegroundLocationUpdatedAtMsDiff":$useForegroundLocationUpdatedAtMsDiff,
             "locationManagerTimeout":$locationManagerTimeout,
             "syncAfterSetUser":$syncAfterSetUser,
+            "useSyncRegion":false,
+            "stopDetection":false,
+            "bufferGeofenceEntries":true,
+            "bufferGeofenceExits":true,
+            "defaultGeofenceDwellThreshold":0
         }""".trimIndent()
     }
 
