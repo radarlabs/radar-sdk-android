@@ -52,6 +52,8 @@ import io.radar.sdk.model.RadarTripLeg
 import org.json.JSONObject
 import java.util.Date
 import java.util.EnumSet
+import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarEvent
 
 @Composable
 fun CustomButton(label: String, onClick: () -> Unit) {
@@ -452,16 +454,18 @@ fun TestView() {
         }
 
         CustomButton("updateCurrentTripLeg → completed") {
-            Radar.updateCurrentTripLeg(RadarTripLeg.RadarTripLegStatus.COMPLETED) { status, trip, leg, events ->
-                Log.v("example", "Update current leg: status = $status; leg = ${leg?._id}; trip.currentLeg = ${trip?.currentLegId}")
-                activity.runOnUiThread {
-                    if (status == Radar.RadarStatus.SUCCESS) {
-                        Toast.makeText(activity, "Leg ${leg?._id} completed", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(activity, "Update leg failed: $status", Toast.LENGTH_SHORT).show()
+            Radar.updateCurrentTripLeg(RadarTripLeg.RadarTripLegStatus.COMPLETED, object : Radar.RadarTripLegCallback {
+                override fun onComplete(status: Radar.RadarStatus, trip: RadarTrip?, leg: RadarTripLeg?, events: Array<RadarEvent>?) {
+                    Log.v("example", "Update current leg: status = $status; leg = ${leg?._id}; trip.currentLeg = ${trip?.currentLegId}")
+                    activity.runOnUiThread {
+                        if (status == Radar.RadarStatus.SUCCESS) {
+                            Toast.makeText(activity, "Leg ${leg?._id} completed", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(activity, "Update leg failed: $status", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
-            }
+            })
         }
 
         CustomButton("Reorder Legs") {
