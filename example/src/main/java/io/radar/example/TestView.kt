@@ -451,6 +451,19 @@ fun TestView() {
             Radar.completeTrip()
         }
 
+        CustomButton("updateCurrentTripLeg → completed") {
+            Radar.updateCurrentTripLeg(RadarTripLeg.RadarTripLegStatus.COMPLETED) { status, trip, leg, events ->
+                Log.v("example", "Update current leg: status = $status; leg = ${leg?._id}; trip.currentLeg = ${trip?.currentLegId}")
+                activity.runOnUiThread {
+                    if (status == Radar.RadarStatus.SUCCESS) {
+                        Toast.makeText(activity, "Leg ${leg?._id} completed", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(activity, "Update leg failed: $status", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+
         CustomButton("Reorder Legs") {
             val trip = Radar.getTrip()
             if (trip == null) {
