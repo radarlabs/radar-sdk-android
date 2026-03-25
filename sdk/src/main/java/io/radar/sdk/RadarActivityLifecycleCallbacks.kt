@@ -63,7 +63,7 @@ internal class RadarActivityLifecycleCallbacks(
 
                                 val updatedConfig = RadarSettings.getSdkConfiguration(activity.applicationContext)
                                 if (updatedConfig.useSyncRegion) {
-                                    Radar.syncManager.start(21600 * 1000L)
+                                    Radar.syncManager.start(86400 * 1000L)
                                 } else {
                                     Radar.syncManager.stop()
                                 }

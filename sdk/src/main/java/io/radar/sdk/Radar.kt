@@ -694,7 +694,7 @@ object Radar {
 
                     val updatedConfig = RadarSettings.getSdkConfiguration(context)
                     if (updatedConfig.useSyncRegion) {
-                        syncManager.start(21600 * 1000L)
+                        syncManager.start(86400 * 1000L)
                     } else {
                         syncManager.stop()
                     }
