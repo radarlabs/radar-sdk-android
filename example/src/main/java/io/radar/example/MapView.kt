@@ -41,6 +41,7 @@ import java.io.File
 import kotlin.math.cos
 import kotlin.math.sin
 
+const val HOST = "https://api.radar.io"
 fun createCirclePolygon(
     lat: Double,
     lng: Double,

@@ -7,19 +7,40 @@ import android.location.Location
 import android.os.Build
 import android.util.Log
 import android.view.Gravity
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.Radar
@@ -27,6 +48,7 @@ import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.RadarTripOptions
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
+import io.radar.sdk.model.RadarTripLeg
 import org.json.JSONObject
 import java.util.Date
 import java.util.EnumSet
@@ -42,9 +64,13 @@ fun CustomButton(label: String, onClick: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TestView() {
     val scrollState = rememberScrollState()
+
+    var showReorderSheet by remember { mutableStateOf(false) }
+    val reorderLegs = remember { mutableStateListOf<ReorderLegItem>() }
 
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
         val activity = LocalContext.current as Activity
@@ -425,6 +451,27 @@ fun TestView() {
             Radar.completeTrip()
         }
 
+        CustomButton("Reorder Legs") {
+            val trip = Radar.getTrip()
+            if (trip == null) {
+                Toast.makeText(activity, "No active trip", Toast.LENGTH_SHORT).show()
+            } else if (trip.legs.isNullOrEmpty()) {
+                Toast.makeText(activity, "Trip has no legs", Toast.LENGTH_SHORT).show()
+            } else {
+                reorderLegs.clear()
+                trip.legs!!.forEach { leg ->
+                    reorderLegs.add(ReorderLegItem(
+                        id = leg._id ?: "unknown",
+                        tag = leg.destinationGeofenceTag,
+                        externalId = leg.destinationGeofenceExternalId,
+                        address = leg.address,
+                        status = RadarTripLeg.stringForStatus(leg.status)
+                    ))
+                }
+                showReorderSheet = true
+            }
+        }
+
         CustomButton("mockTracking") {
             val tripOptions = RadarTripOptions(
                 "299",
@@ -520,6 +567,121 @@ fun TestView() {
                     "Conversion name = ${event?.conversionName}: status = $status; event = $event"
                 )
             }
+        }
+    }
+
+    if (showReorderSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showReorderSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ) {
+            ReorderLegsSheet(
+                legs = reorderLegs,
+                onMoveUp = { index ->
+                    if (index > 0) {
+                        val item = reorderLegs.removeAt(index)
+                        reorderLegs.add(index - 1, item)
+                    }
+                },
+                onMoveDown = { index ->
+                    if (index < reorderLegs.size - 1) {
+                        val item = reorderLegs.removeAt(index)
+                        reorderLegs.add(index + 1, item)
+                    }
+                },
+                onApply = {
+                    val trip = Radar.getTrip()
+                    if (trip != null) {
+                        val legIds = reorderLegs.map { it.id }.toTypedArray()
+                        Radar.reorderTripLegs(trip._id, legIds) { status, resultTrip, events ->
+                            Log.v("example", "Reorder legs: status = $status; trip = ${resultTrip?.toJson()}")
+                        }
+                    }
+                    showReorderSheet = false
+                }
+            )
+        }
+    }
+}
+
+data class ReorderLegItem(
+    val id: String,
+    val tag: String?,
+    val externalId: String?,
+    val address: String?,
+    val status: String
+)
+
+@Composable
+fun ReorderLegsSheet(
+    legs: List<ReorderLegItem>,
+    onMoveUp: (Int) -> Unit,
+    onMoveDown: (Int) -> Unit,
+    onApply: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 32.dp)
+    ) {
+        Text(
+            "Reorder Trip Legs",
+            style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = false)
+        ) {
+            itemsIndexed(legs) { index, leg ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            leg.tag ?: leg.address ?: leg.id,
+                            style = TextStyle(fontWeight = FontWeight.Medium)
+                        )
+                        Text(
+                            "${leg.status} · ${leg.externalId ?: leg.id}",
+                            style = TextStyle(fontSize = 12.sp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { onMoveUp(index) },
+                        enabled = index > 0
+                    ) {
+                        Text("▲")
+                    }
+
+                    IconButton(
+                        onClick = { onMoveDown(index) },
+                        enabled = index < legs.size - 1
+                    ) {
+                        Text("▼")
+                    }
+                }
+
+                if (index < legs.size - 1) {
+                    HorizontalDivider()
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.padding(top = 16.dp))
+
+        Button(
+            onClick = onApply,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Apply")
         }
     }
 }
