@@ -18,37 +18,12 @@ import java.util.Scanner
 import java.util.concurrent.Executors
 import javax.net.ssl.HttpsURLConnection
 
-// // For debugging local development server trackVerified
-// import javax.net.ssl.SSLContext
-// import javax.net.ssl.TrustManager
-// import javax.net.ssl.X509TrustManager
-// import javax.net.ssl.HostnameVerifier
-// import java.security.cert.X509Certificate
-
 internal open class RadarApiHelper(
     private var logger: RadarLogger? = null
 ) {
   
     private val executor = Executors.newSingleThreadExecutor()
     private val handler = Handler(Looper.getMainLooper())
-    
-    // // For debugging local development server trackVerified
-    // // Custom TrustManager that accepts all certificates
-    // private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
-    //     override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-    //     override fun checkClientTrusted(certs: Array<X509Certificate>, authType: String) {}
-    //     override fun checkServerTrusted(certs: Array<X509Certificate>, authType: String) {}
-    // })
-    
-    // // SSLContext that uses the custom TrustManager
-    // private val sslContext: SSLContext by lazy {
-    //     val context = SSLContext.getInstance("TLS")
-    //     context.init(null, trustAllCerts, java.security.SecureRandom())
-    //     context
-    // }
-    
-    // // Custom HostnameVerifier that accepts all hostnames
-    // private val hostnameVerifier = HostnameVerifier { _, _ -> true }
 
     interface RadarApiCallback {
         fun onComplete(status: Radar.RadarStatus, res: JSONObject? = null)
