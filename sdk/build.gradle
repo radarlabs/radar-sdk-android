@@ -76,7 +76,7 @@ dependencies {
     
     // Optional fraud detection module (Git submodule)
     if (findProject(':sdk-fraud') != null) {
-        implementation project(':sdk-fraud')
+        compileOnly project(':sdk-fraud')
     }
     
     testImplementation "androidx.test.ext:junit:1.1.5"
