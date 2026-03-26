@@ -672,38 +672,34 @@ object Radar {
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: RadarStatus, config: RadarConfig?) {
-                if (config == null) {
-                    println("PingClient: Initialize config is bad")
-                    return
-                }
-
-                if (status == RadarStatus.SUCCESS) {
+                if (status == RadarStatus.SUCCESS && config != null) {
                     locationManager.updateTrackingFromMeta(config.meta)
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
                 }
 
                 val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
                 if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(context)) {
-                    Radar.startTracking(Radar.getTrackingOptions())
+                    startTracking(Radar.getTrackingOptions())
                 }
                 if (sdkConfiguration.trackOnceOnAppOpen) {
-                    Radar.trackOnce()
+                    trackOnce()
                 }
 
                 try {
-                    val options = config.meta.raw
-                    if (options != null) {
-                        options.put("installId", RadarSettings.getInstallId(context))
+                    // use config, or if getConfig failed, we can just use the local sdkConfiguration
+                    val options = config?.meta?.raw ?: JSONObject().apply{
+                        put("sdkConfiguration", sdkConfiguration.toJson())
+                   }
+                    options.put("installId", RadarSettings.getInstallId(context))
 
-                        val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
-                        val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
-                        val fraudInstance = sharedInstanceMethod.invoke(null)
+                    val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
+                    val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
+                    val fraudInstance = sharedInstanceMethod.invoke(null)
 
-                        // Create options map
-                        val initializeMethod = fraudClass.getMethod("initialize", JSONObject::class.java)
+                    // Create options map
+                    val initializeMethod = fraudClass.getMethod("initialize", JSONObject::class.java)
 
-                        initializeMethod.invoke(fraudInstance, options)
-                    }
+                    initializeMethod.invoke(fraudInstance, options)
                 } catch (e: Exception) {
                     // failed to initialize fraud
                     println("Failed to initialize fraud SDK $e")

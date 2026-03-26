@@ -24,7 +24,7 @@ import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
 
 const val HOST2 = "https://api-server-dev-jason.use1.radar-staging.com"
-const val PUBLISHABLE_KEY = "prj_test_pk_f8ba81f6b47f2e0043890284c01378be56183a66"
+const val PUBLISHABLE_KEY = "prj_test_pk_0000000000000000000000000000000000000000"
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
