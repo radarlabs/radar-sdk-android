@@ -2858,4 +2858,40 @@ class RadarTest {
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
     }
+
+    @Test
+    fun test_isoStringToDate() {
+        val date1 = RadarUtils.isoStringToDate("2026-03-24T07:17:13.132+02:00")
+        val date2 = RadarUtils.isoStringToDate("2026-03-24T05:17:13.132Z")
+        val date3 = RadarUtils.isoStringToDate("2026-03-24T00:17:13-05:00")
+        val date4 = RadarUtils.isoStringToDate("2026-03-24T05:17:13Z")
+
+        assertNotNull(date1)
+        assertNotNull(date2)
+        assertNotNull(date3)
+        assertNotNull(date4)
+
+        assertEquals(date1?.time, date2?.time)
+        assertEquals(date3?.time, date4?.time)
+    }
+}
+
+@RunWith(AndroidJUnit4::class)
+@Config(sdk=[Build.VERSION_CODES.N_MR1])
+class RadarTestOldSDK {
+    @Test
+    fun test_isoStringToDate() {
+        val date1 = RadarUtils.isoStringToDate("2026-03-24T07:17:13.132+02:00")
+        val date2 = RadarUtils.isoStringToDate("2026-03-24T05:17:13.132Z")
+        val date3 = RadarUtils.isoStringToDate("2026-03-24T00:17:13-05:00")
+        val date4 = RadarUtils.isoStringToDate("2026-03-24T05:17:13Z")
+
+        assertNotNull(date1)
+        assertNotNull(date2)
+        assertNotNull(date3)
+        assertNotNull(date4)
+
+        assertEquals(date1?.time, date2?.time)
+        assertEquals(date3?.time, date4?.time)
+    }
 }
