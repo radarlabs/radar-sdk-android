@@ -155,6 +155,15 @@ fun TestView() {
             }
         }
 
+        CustomButton("trackOnce with beacons") {
+            Radar.trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, true) { status, location, events, user ->
+                Log.v(
+                    "example",
+                    "Track once with beacons: status = ${status}; location = $location; events = $events; user = $user"
+                )
+            }
+        }
+
         CustomButton("startTracking") {
             val options = RadarTrackingOptions.RESPONSIVE
             Radar.startTracking(options)
