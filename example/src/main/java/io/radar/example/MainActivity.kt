@@ -23,7 +23,6 @@ import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
 
-const val HOST2 = "https://api-server-dev-jason.use1.radar-staging.com"
 const val PUBLISHABLE_KEY = "prj_test_pk_0000000000000000000000000000000000000000"
 
 class MainActivity : AppCompatActivity() {
@@ -37,11 +36,6 @@ class MainActivity : AppCompatActivity() {
             null
         }
 
-        getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
-            putString("host", HOST2)
-            putString("verified_host", HOST2)
-        }
-
         val options = RadarInitializeOptions(
             radarReceiver = MyRadarReceiver(),
             fraud = true,
@@ -51,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         Radar.initialize(this, PUBLISHABLE_KEY, options)
 
 
-        Radar.setUserId("ping-server-test-jason")
+        Radar.setUserId("android-test-user")
         Radar.sdkVersion().let { Log.i("version", it) }
 
         // We can also set the foreground service options like this:
