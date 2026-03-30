@@ -689,7 +689,7 @@ object Radar {
                     // use config, or if getConfig failed, we can just use the local sdkConfiguration
                     val options = config?.meta?.raw ?: JSONObject().apply{
                         put("sdkConfiguration", sdkConfiguration.toJson())
-                   }
+                    }
                     options.put("installId", RadarSettings.getInstallId(context))
 
                     val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")

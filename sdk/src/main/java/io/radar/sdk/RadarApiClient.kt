@@ -139,7 +139,6 @@ internal class RadarApiClient(
     }
 
     internal fun getConfig(usage: String? = null, verified: Boolean = false, callback: RadarGetConfigApiCallback? = null) {
-        // TODO(shicheng): !important: update sdk-fraud config when returning from getConfig
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -149,7 +148,7 @@ internal class RadarApiClient(
         val queryParams = StringBuilder()
         queryParams.append("installId=${RadarSettings.getInstallId(context)}")
         queryParams.append("&sessionId=${RadarSettings.getSessionId(context)}")
-        val id = RadarSettings.getId(context);
+        val id = RadarSettings.getId(context)
         if (id != null) {
             queryParams.append("&id=${id}")
         }
