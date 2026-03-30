@@ -63,7 +63,17 @@ class RadarTrip(
     /**
      * The orders associated with the trip.
      */
-    val orders: Array<RadarTripOrder>? = null
+    val orders: Array<RadarTripOrder>? = null,
+
+    /**
+     * For multi-destination trips, the array of trip legs.
+     */
+    val legs: Array<RadarTripLeg>? = null,
+
+    /**
+     * For multi-destination trips, the ID of the current active leg.
+     */
+    val currentLegId: String? = null
 ) {
 
     enum class RadarTripStatus {
@@ -97,6 +107,8 @@ class RadarTrip(
         private const val FIELD_DURATION = "duration"
         private const val FIELD_STATUS = "status"
         private const val FIELD_ORDERS = "orders"
+        private const val FIELD_LEGS = "legs"
+        private const val FIELD_CURRENT_LEG = "currentLeg"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarTrip? {
@@ -141,6 +153,8 @@ class RadarTrip(
             }
 
             val orders: Array<RadarTripOrder>? = RadarTripOrder.fromJson(obj.optJSONArray(FIELD_ORDERS))
+            val legs: Array<RadarTripLeg>? = RadarTripLeg.fromJson(obj.optJSONArray(FIELD_LEGS))
+            val currentLegId: String? = obj.optString(FIELD_CURRENT_LEG).takeIf { it.isNotEmpty() }
 
             return RadarTrip(
                 id,
@@ -153,7 +167,9 @@ class RadarTrip(
                 etaDistance,
                 etaDuration,
                 status,
-                orders
+                orders,
+                legs,
+                currentLegId
             )
         }
 
@@ -184,6 +200,10 @@ class RadarTrip(
         obj.putOpt(FIELD_ETA, etaObj)
         obj.putOpt(FIELD_STATUS, Radar.stringForTripStatus(status))
         obj.putOpt(FIELD_ORDERS, RadarTripOrder.toJson(this.orders))
+        obj.putOpt(FIELD_LEGS, RadarTripLeg.toJson(this.legs))
+        if (this.currentLegId != null) {
+            obj.putOpt(FIELD_CURRENT_LEG, this.currentLegId)
+        }
         return obj
     }
 
