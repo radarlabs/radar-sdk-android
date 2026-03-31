@@ -7,29 +7,19 @@ import android.location.Location
 import android.os.Build
 import android.util.Log
 import android.view.Gravity
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.Radar
@@ -58,32 +48,6 @@ fun TestView() {
 
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
         val activity = LocalContext.current as Activity
-
-        var userIdInput by remember { mutableStateOf(Radar.getUserId() ?: "") }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-        ) {
-            OutlinedTextField(
-                value = userIdInput,
-                onValueChange = { userIdInput = it },
-                label = { Text("User ID") },
-                singleLine = true,
-                modifier = Modifier.weight(1f),
-            )
-            Button(
-                onClick = {
-                    val trimmed = userIdInput.trim()
-                    Radar.setUserId(trimmed.ifBlank { null })
-                    val msg = if (trimmed.isNotBlank()) "User ID set to: $trimmed" else "User ID cleared"
-                    Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
-                    Log.i("example", msg)
-                },
-                modifier = Modifier.padding(start = 8.dp),
-            ) {
-                Text("Set")
-            }
-        }
 
         CustomButton("requestForegroundPermission") {
             if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -151,15 +115,6 @@ fun TestView() {
                 Log.v(
                     "example",
                     "Track once: status = ${status}; location = $location; events = $events; user = $user"
-                )
-            }
-        }
-
-        CustomButton("trackOnce with beacons") {
-            Radar.trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, true) { status, location, events, user ->
-                Log.v(
-                    "example",
-                    "Track once with beacons: status = ${status}; location = $location; events = $events; user = $user"
                 )
             }
         }
