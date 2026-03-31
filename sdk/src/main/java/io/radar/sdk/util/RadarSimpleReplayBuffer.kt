@@ -2,6 +2,7 @@ package io.radar.sdk.util
 
 import io.radar.sdk.RadarSettings
 import io.radar.sdk.model.RadarReplay
+import io.radar.sdk.model.RadarSdkConfiguration
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
@@ -24,11 +25,18 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
     } 
 
     override fun write(replayParams: JSONObject) {
-        if (buffer.size >= MAXIMUM_CAPACITY) {
+        val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+        val maxBufferSize = if (sdkConfiguration.maxReplayBufferSize > 0) {
+            sdkConfiguration.maxReplayBufferSize
+        } else {
+            RadarSdkConfiguration.DEFAULT_MAX_REPLAY_BUFFER_SIZE
+        }
+
+        while (buffer.size >= maxBufferSize) {
             buffer.removeFirst()
         }
+
         buffer.offer(RadarReplay(replayParams))
-        val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
         if (sdkConfiguration.usePersistence) {
             // if buffer length is above 50, remove every fifth replay from the persisted buffer
             if (buffer.size > 50) {

@@ -28,6 +28,7 @@ internal data class RadarSdkConfiguration(
     val bufferGeofenceEntries: Boolean = true,
     val bufferGeofenceExits: Boolean = true,
     val defaultGeofenceDwellThreshold: Int = 0
+    val maxReplayBufferSize: Int = DEFAULT_MAX_REPLAY_BUFFER_SIZE,
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -49,10 +50,19 @@ internal data class RadarSdkConfiguration(
         private const val BUFFER_GEOFENCE_ENTRIES = "bufferGeofenceEntries"
         private const val BUFFER_GEOFENCE_EXITS = "bufferGeofenceExits"
         private const val DEFAULT_GEOFENCE_DWELL_THRESHOLD = "defaultGeofenceDwellThreshold"
+        private const val MAX_REPLAY_BUFFER_SIZE = "maxReplayBufferSize"
+        const val DEFAULT_MAX_REPLAY_BUFFER_SIZE = 120
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             // set json as empty object if json is null, which uses fallback values
             val config = json ?: JSONObject();
+
+            val maxReplayBufferSize = config.optInt(MAX_REPLAY_BUFFER_SIZE, DEFAULT_MAX_REPLAY_BUFFER_SIZE)
+            val validatedMaxReplayBufferSize = if (maxReplayBufferSize > 0 && maxReplayBufferSize <= DEFAULT_MAX_REPLAY_BUFFER_SIZE) {
+                maxReplayBufferSize
+            } else {
+                DEFAULT_MAX_REPLAY_BUFFER_SIZE
+            }
 
             return RadarSdkConfiguration(
                 config.optInt(MAX_CONCURRENT_JOBS, DEFAULT_MAX_CONCURRENT_JOBS),
@@ -73,6 +83,7 @@ internal data class RadarSdkConfiguration(
                 config.optBoolean(BUFFER_GEOFENCE_ENTRIES, true),
                 config.optBoolean(BUFFER_GEOFENCE_EXITS, true),
                 config.optInt(DEFAULT_GEOFENCE_DWELL_THRESHOLD, 0),
+                validatedMaxReplayBufferSize,
             )
         }
 
@@ -109,6 +120,7 @@ internal data class RadarSdkConfiguration(
             putOpt(BUFFER_GEOFENCE_ENTRIES, bufferGeofenceEntries)
             putOpt(BUFFER_GEOFENCE_EXITS, bufferGeofenceExits)
             putOpt(DEFAULT_GEOFENCE_DWELL_THRESHOLD, defaultGeofenceDwellThreshold)
+            putOpt(MAX_REPLAY_BUFFER_SIZE, maxReplayBufferSize)
         }
     }
 }

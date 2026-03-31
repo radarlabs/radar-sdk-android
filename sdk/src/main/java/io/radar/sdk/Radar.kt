@@ -26,6 +26,7 @@ import io.radar.sdk.model.RadarRouteMatrix
 import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarSdkConfiguration
 import io.radar.sdk.model.RadarTrip
+import io.radar.sdk.model.RadarTripLeg
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import io.radar.sdk.util.RadarLogBuffer
@@ -139,6 +140,19 @@ object Radar {
             events: Array<RadarEvent>? = null
         )
 
+    }
+
+    /**
+     * Called when a trip leg update succeeds, fails, or times out.
+     */
+    interface RadarTripLegCallback {
+        /**
+         * @param[status] RadarStatus The request status.
+         * @param[trip] RadarTrip? If successful, the trip.
+         * @param[leg] RadarTripLeg? If successful, the updated leg.
+         * @param[events] Array<RadarEvent>? If successful, an array of the events generated.
+         */
+        fun onComplete(status: RadarStatus, trip: RadarTrip?, leg: RadarTripLeg?, events: Array<RadarEvent>?)
     }
 
     /**
@@ -1912,6 +1926,22 @@ object Radar {
     }
 
     /**
+     * Returns the current trip, including legs for multi-destination trips.
+     *
+     * @see [](https://radar.com/documentation/trip-tracking)
+     *
+     * @return The current trip, or null if no trip is active.
+     */
+    @JvmStatic
+    fun getTrip(): RadarTrip? {
+        if (!initialized) {
+            return null
+        }
+
+        return RadarSettings.getTrip(context)
+    }
+
+    /**
      * Starts a trip.
      *
      * @see [](https://radar.com/documentation/trip-tracking)
@@ -1949,6 +1979,7 @@ object Radar {
             ) {
                 if (status == RadarStatus.SUCCESS) {
                     RadarSettings.setTripOptions(context, options)
+                    RadarSettings.setTrip(context, trip)
 
                     val isTracking = Radar.isTracking()
                     if (isTracking) {
@@ -2103,6 +2134,7 @@ object Radar {
             ) {
                 if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
                     RadarSettings.setTripOptions(context, null)
+                    RadarSettings.setTrip(context, null)
 
                     // return to previous tracking options after trip
                     locationManager.restartPreviousTrackingOptions();
@@ -2162,6 +2194,7 @@ object Radar {
             ) {
                 if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
                     RadarSettings.setTripOptions(context, null)
+                    RadarSettings.setTrip(context, null)
 
                     // return to previous tracking options after trip
                     locationManager.restartPreviousTrackingOptions();
@@ -2192,6 +2225,178 @@ object Radar {
                 trip: RadarTrip?,
                 events: Array<RadarEvent>?
             ) {
+                block(status, trip, events)
+            }
+        })
+    }
+
+    /**
+     * Updates a trip leg status for multi-destination trips.
+     *
+     * @param[tripId] The Radar ID of the trip.
+     * @param[legId] The Radar ID of the leg.
+     * @param[status] The new status for the leg.
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun updateTripLeg(tripId: String, legId: String, status: RadarTripLeg.RadarTripLegStatus, callback: RadarTripLegCallback? = null ) {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("updateTripLeg(tripId=$tripId, legId=$legId)", RadarLogType.SDK_CALL)
+
+        apiClient.updateTripLeg(tripId, legId, status, object: RadarApiClient.RadarTripLegApiCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                trip: RadarTrip?,
+                leg: RadarTripLeg?,
+                events: Array<RadarEvent>?
+            ) {
+                if (status == RadarStatus.SUCCESS && trip != null) {
+                    if (trip.status == RadarTrip.RadarTripStatus.COMPLETED || trip.status == RadarTrip.RadarTripStatus.CANCELED) {
+                        RadarSettings.setTripOptions(context, null)
+                        RadarSettings.setTrip(context, null)
+                        locationManager.restartPreviousTrackingOptions()
+                        locationManager.getLocation(null)
+                    } else {
+                        RadarSettings.setTrip(context, trip)
+                    }
+                }
+
+                handler.post {
+                    callback?.onComplete(status, trip, leg, events)
+                }
+            }
+        })
+    }
+
+    /**
+     *  Updates a trip leg status using the current trip's ID.
+     *
+     *  @param[legId] The Radar ID of the leg.
+     *  @param[status] The new status for the leg.
+     *  @param[callback] An optional
+     */
+    @JvmStatic
+    fun updateTripLeg(legId: String, status: RadarTripLeg.RadarTripLegStatus, callback: RadarTripLegCallback? = null) {
+        val trip = RadarSettings.getTrip(context)
+        if (trip == null) {
+            this.logger.w("updateTripLeg() called with no active trip", RadarLogType.SDK_CALL)
+            handler.post {
+                callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST, null, null, null)
+            }
+            return
+        }
+        updateTripLeg(trip._id, legId, status, callback)
+    }
+
+    /**
+     * Updates the current trip leg status using the current trip's ID and currentLegId.
+     *
+     * @param[status] The new status for the current leg.
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun updateCurrentTripLeg(status: RadarTripLeg.RadarTripLegStatus, callback: RadarTripLegCallback? = null) {
+        val trip = RadarSettings.getTrip(context)
+        if (trip == null) {
+            this.logger.w("updateCurrentTripLeg() called with no active trip", RadarLogType.SDK_CALL)
+            handler.post {
+                callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST, null, null, null)
+            }
+            return
+        }
+        val currentLegId = trip.currentLegId
+        if (currentLegId == null) {
+            this.logger.w("updateCurrentTripLeg() called but trip has no current leg", RadarLogType.SDK_CALL)
+            handler.post {
+                callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST, null, null, null)
+            }
+            return
+        }
+        updateTripLeg(trip._id, currentLegId, status, callback)
+    }
+
+    /**
+     * Updates a trip leg status for multi-destination trips.
+     *
+     * @param[tripId] The Radar ID of the trip.
+     * @param[legId] The Radar ID of the leg.
+     * @param[status] The new status for the leg.
+     * @param[block] An optional block callback.
+     */
+    @JvmStatic
+    fun updateTripLeg(tripId: String, legId: String, status: RadarTripLeg.RadarTripLegStatus, block: (status: RadarStatus, trip: RadarTrip?, leg: RadarTripLeg?, events: Array<RadarEvent>?) -> Unit) {
+        updateTripLeg(tripId, legId, status, object : RadarTripLegCallback {
+            override fun onComplete(status: RadarStatus, trip: RadarTrip?, leg: RadarTripLeg?, events: Array<RadarEvent>?) {
+                block(status, trip, leg, events)
+            }
+        })
+    }
+
+    /**
+     * Reorders the legs of the multi-destination trip.
+     *
+     * @param[tripId] The Radar ID of the trip.
+     * @param[legIds] An array of the leg IDs in the desired new order
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun reorderTripLegs(tripId: String, legIds: Array<String>, callback: RadarTripCallback? = null) {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("reorderTripLegs(tripId=$tripId)", RadarLogType.SDK_CALL)
+
+        apiClient.reorderTripLegs(tripId, legIds, object : RadarApiClient.RadarTripApiCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                trip: RadarTrip?,
+                events: Array<RadarEvent>?
+            ) {
+                if (status == RadarStatus.SUCCESS && trip != null) {
+                    RadarSettings.setTrip(context, trip)
+                }
+
+                handler.post {
+                    callback?.onComplete(status, trip, events)
+                }
+            }
+        })
+    }
+
+    /**
+     * Reorders the legs of the current multi-destination trip.
+     *
+     * @param[legIds] An array of leg IDs in the desired new order.
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun reorderTripLegs(legIds: Array<String>, callback: RadarTripCallback? = null) {
+        val trip = RadarSettings.getTrip(context)
+        if (trip == null) {
+            this.logger.w("reorderTripLegs() called with no active trip", RadarLogType.SDK_CALL)
+            handler.post {
+                callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST, null, null)
+            }
+            return
+        }
+        reorderTripLegs(trip._id, legIds, callback)
+    }
+
+    /**
+     * Reorders the legs of a multi-destination trip
+     *
+     * @param[tripId] The Radar ID  of the trip.
+     * @param[legIds] An array of the leg IDs in the desired new order.
+     * @param[block] An optional block callback.
+     */
+    @JvmStatic
+    fun reorderTripLegs(tripId: String, legIds: Array<String>, block: (status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) -> Unit) {
+        reorderTripLegs(tripId, legIds, object : RadarTripCallback {
+            override  fun onComplete(status: RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) {
                 block(status, trip, events)
             }
         })

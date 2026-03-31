@@ -16,7 +16,6 @@ android {
         versionName "1.0"
     }
     compileOptions {
-        coreLibraryDesugaringEnabled = true
         targetCompatibility = JavaVersion.VERSION_17
         sourceCompatibility = JavaVersion.VERSION_17
     }

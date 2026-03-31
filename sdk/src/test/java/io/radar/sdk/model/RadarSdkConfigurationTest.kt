@@ -31,6 +31,7 @@ class RadarSdkConfigurationTest {
     private var useForegroundLocationUpdatedAtMsDiff = false
     private var locationManagerTimeout = 123456
     private var syncAfterSetUser = false
+    private var maxReplayBufferSize = 120
 
     @Before
     fun setUp() {
@@ -55,7 +56,8 @@ class RadarSdkConfigurationTest {
             "stopDetection":false,
             "bufferGeofenceEntries":true,
             "bufferGeofenceExits":true,
-            "defaultGeofenceDwellThreshold":0
+            "defaultGeofenceDwellThreshold":0,
+            "maxReplayBufferSize":$maxReplayBufferSize,
         }""".trimIndent()
     }
 
@@ -77,6 +79,7 @@ class RadarSdkConfigurationTest {
                 useForegroundLocationUpdatedAtMsDiff,
                 locationManagerTimeout,
                 syncAfterSetUser,
+                maxReplayBufferSize,
             ).toJson().toString()
         )
     }
@@ -97,6 +100,7 @@ class RadarSdkConfigurationTest {
         assertEquals(useForegroundLocationUpdatedAtMsDiff, settings.useForegroundLocationUpdatedAtMsDiff)
         assertEquals(locationManagerTimeout, settings.locationManagerTimeout)
         assertEquals(syncAfterSetUser, settings.syncAfterSetUser)
+        assertEquals(maxReplayBufferSize, settings.maxReplayBufferSize)
     }
 
     @Test
@@ -114,6 +118,7 @@ class RadarSdkConfigurationTest {
         assertTrue(settings.useOpenedAppConversion)
         assertFalse(settings.useForegroundLocationUpdatedAtMsDiff)
         assertEquals(0, settings.locationManagerTimeout)
+        assertEquals(120, settings.maxReplayBufferSize)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")

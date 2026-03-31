@@ -10,7 +10,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 ext {
-    radarVersion = '3.27.0'
+    radarVersion = '3.28.0'
 }
 
 String buildNumber = ".${System.currentTimeMillis()}"
@@ -31,7 +31,6 @@ if (githubRelease) {
 android {
     compileSdkVersion 36
     compileOptions {
-        coreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -66,7 +65,6 @@ android {
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "androidx.appcompat:appcompat:1.4.0"
     implementation "androidx.core:core-ktx:1.7.0"
@@ -78,7 +76,7 @@ dependencies {
     
     // Optional fraud detection module (Git submodule)
     if (findProject(':sdk-fraud') != null) {
-        implementation project(':sdk-fraud')
+        compileOnly project(':sdk-fraud')
     }
     
     testImplementation "androidx.test.ext:junit:1.1.5"
