@@ -27,7 +27,7 @@ internal data class RadarSdkConfiguration(
     val stopDetection: Boolean = false,
     val bufferGeofenceEntries: Boolean = true,
     val bufferGeofenceExits: Boolean = true,
-    val defaultGeofenceDwellThreshold: Int = 0
+    val defaultGeofenceDwellThreshold: Int = 0,
     val maxReplayBufferSize: Int = DEFAULT_MAX_REPLAY_BUFFER_SIZE,
 ) {
     companion object {
