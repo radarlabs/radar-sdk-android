@@ -753,6 +753,10 @@ object Radar {
         if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
             trackOnce()
         }
+
+        if (RadarSettings.getSdkConfiguration(context).useSyncRegion) {
+            syncManager.fetchSyncRegion()
+        }
     }
 
     /**

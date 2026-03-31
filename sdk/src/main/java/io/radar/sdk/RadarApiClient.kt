@@ -1468,6 +1468,7 @@ internal class RadarApiClient(
         try {
             params.put("latitude", latitude)
             params.put("longitude", longitude)
+            RadarSettings.getUserId(context)?.let { params.put("userId", it) }
         } catch (e: JSONException) {
             callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
             return
