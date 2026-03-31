@@ -79,6 +79,11 @@ class RadarSdkConfigurationTest {
                 useForegroundLocationUpdatedAtMsDiff,
                 locationManagerTimeout,
                 syncAfterSetUser,
+                false,
+                false,
+                true,
+                true,
+                0,
                 maxReplayBufferSize,
             ).toJson().toString()
         )
