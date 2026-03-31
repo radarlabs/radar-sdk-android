@@ -515,7 +515,9 @@ internal class RadarLocationManager(
         val wasStopped = RadarState.getStopped(context)
         var stopped: Boolean
 
-        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT)
+        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION)
+                || (options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
+                && (source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT))
         if (!force && location.accuracy >= 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
             logger.d("Skipping location: inaccurate | accuracy = ${location.accuracy}")
 
@@ -591,11 +593,11 @@ internal class RadarLocationManager(
 
         val lastSentAt = RadarState.getLastSentAt(context)
         val ignoreSync =
-            lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed
+            lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT;
         val now = System.currentTimeMillis()
         val lastSyncInterval = (now - lastSentAt) / 1000L
         if (!ignoreSync) {
-            if (!force && stopped && wasStopped && distance < options.stopDistance && (options.desiredStoppedUpdateInterval == 0 || options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.ALL)) {
+            if (!force && stopped && wasStopped && distance < options.stopDistance && (options.desiredStoppedUpdateInterval == 0 || (options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.ALL && options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS))) {
                 logger.d("Skipping sync: already stopped | stopped = $stopped; wasStopped = $wasStopped")
 
                 return
