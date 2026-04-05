@@ -301,26 +301,44 @@ class RadarSyncManagerTest {
 
     @Test
     fun test_beaconStateChanged_entry() {
-        val beacon = makeBeacon("beacon1", TEST_LAT, TEST_LNG)
         setState(RadarSyncState(
-            syncedBeacons = listOf(beacon),
             lastSyncedBeaconIds = emptyList()
         ))
 
-        val location = makeLocation(TEST_LAT, TEST_LNG)
-        assertTrue(syncManager.hasBeaconStateChanged(location))
+        val rangedBeaconIds = setOf("beacon1")
+        assertTrue(syncManager.hasBeaconStateChanged(rangedBeaconIds))
     }
 
     @Test
     fun test_beaconStateChanged_exit() {
-        val beacon = makeBeacon("beacon1", TEST_LAT_FAR, TEST_LNG)
         setState(RadarSyncState(
-            syncedBeacons = listOf(beacon),
             lastSyncedBeaconIds = listOf("beacon1")
         ))
 
-        val location = makeLocation(TEST_LAT, TEST_LNG)
-        assertTrue(syncManager.hasBeaconStateChanged(location))
+        val rangedBeaconIds = emptySet<String>()
+        assertTrue(syncManager.hasBeaconStateChanged(rangedBeaconIds))
+    }
+
+    @Test
+    fun test_beaconStateChanged_noChange() {
+        setState(RadarSyncState(
+            lastSyncedBeaconIds = listOf("beacon1")
+        ))
+
+        val rangedBeaconIds = setOf("beacon1")
+        assertFalse(syncManager.hasBeaconStateChanged(rangedBeaconIds))
+    }
+
+    @Test
+    fun test_saveBeaconState() {
+        setState(RadarSyncState(
+            lastSyncedBeaconIds = listOf("beacon1")
+        ))
+
+        syncManager.saveBeaconState(listOf("beacon2", "beacon3"))
+
+        val state = syncManager.syncStore.read()!!
+        assertEquals(listOf("beacon2", "beacon3"), state.lastSyncedBeaconIds)
     }
 
     // endregion

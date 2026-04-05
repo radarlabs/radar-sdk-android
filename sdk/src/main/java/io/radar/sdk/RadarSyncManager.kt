@@ -159,10 +159,9 @@ internal class RadarSyncManager(
 
         val geofenceChanged = hasGeofenceStateChanged(location)
         val placeChanged = hasPlaceStateChanged(location)
-        val beaconChanged = hasBeaconStateChanged(location)
 
-        if (geofenceChanged || placeChanged || beaconChanged) {
-            logger.i("SyncManager: shouldTrack = YES | reason: state changed (geofence=$geofenceChanged, place=$placeChanged, beacon=$beaconChanged)")
+        if (geofenceChanged || placeChanged) {
+            logger.i("SyncManager: shouldTrack = YES | reason: state changed (geofence=$geofenceChanged, place=$placeChanged)")
             saveAndUpdateSyncState(location)
             return true
         }
@@ -370,7 +369,6 @@ internal class RadarSyncManager(
         }
     }
 
-
     fun getPlaces(location: Location): List<RadarPlace> {
         val places = syncStore.read()?.syncedPlaces ?: return  emptyList()
         return places.filter { place ->
@@ -395,23 +393,22 @@ internal class RadarSyncManager(
         return false
     }
 
-    fun hasBeaconStateChanged(location: Location): Boolean {
+    fun hasBeaconStateChanged(rangedBeaconIds: Set<String>): Boolean {
         val state = syncStore.read() ?: RadarSyncState()
         val lastKnownBeaconIds = state.lastSyncedBeaconIds.toSet()
-        val currentBeacons = getBeacons(location)
-        val currentIds = currentBeacons.mapNotNull { it._id }.toSet()
 
-        val enteredBeaconIds = currentIds - lastKnownBeaconIds
-        val exitedBeaconIds = lastKnownBeaconIds - currentIds
+        val enteredBeaconIds = rangedBeaconIds - lastKnownBeaconIds
+        val exitedBeaconIds = lastKnownBeaconIds - rangedBeaconIds
 
         if (enteredBeaconIds.isNotEmpty()) {
-            logger.i("SyncManager: Detected beacon entry: $enteredBeaconIds")
-        }
-        if (exitedBeaconIds.isNotEmpty()) {
-            logger.i("SyncManager: Detected beacon exit: $exitedBeaconIds")
+            logger.i("SyncManager: Detected beacon entry (BLE confirmed): $enteredBeaconIds")
         }
 
-        return currentIds != lastKnownBeaconIds
+        if (exitedBeaconIds.isNotEmpty()) {
+            logger.i("SyncManager: Detected beacon exit (BLE confirmed): $exitedBeaconIds")
+        }
+
+        return rangedBeaconIds != lastKnownBeaconIds
     }
 
     fun hasPlaceStateChanged(location: Location): Boolean {
@@ -544,15 +541,13 @@ internal class RadarSyncManager(
         val timestamps = syncStore.read()?.geofenceEntryTimestamps ?: emptyMap()
         val acceptedGeofenceIds = timestamps.keys.toList()
         val currentPlaceIds = getPlaces(location).map { it._id }
-        val currentBeaconIds = getBeacons(location).mapNotNull { it._id }
 
-        logger.i("SyncManager: Optimistic update | geofences=$acceptedGeofenceIds places=$currentPlaceIds beacons=$currentBeaconIds")
+        logger.i("SyncManager: Optimistic update | geofences=$acceptedGeofenceIds places=$currentPlaceIds")
 
         syncStore.modify { state ->
             val s = state ?: RadarSyncState()
             s.lastSyncedGeofenceIds = acceptedGeofenceIds
             s.lastSyncedPlaceIds = currentPlaceIds
-            s.lastSyncedBeaconIds = currentBeaconIds
             s
         }
     }
@@ -561,13 +556,11 @@ internal class RadarSyncManager(
         val state = syncStore.read() ?: RadarSyncState()
         previousSyncedGeofenceIds = state.lastSyncedGeofenceIds
         previousSyncedPlaceIds = state.lastSyncedPlaceIds
-        previousSyncedBeaconIds = state.lastSyncedBeaconIds
 
         logger.i(
             "SyncManager: Saving previous state before optimistic update | " +
                     "geofences=${previousSyncedGeofenceIds?.size ?: 0} " +
-                    "places=${previousSyncedPlaceIds?.size ?: 0} " +
-                    "beacons=${previousSyncedBeaconIds?.size ?: 0}"
+                    "places=${previousSyncedPlaceIds?.size ?: 0} "
         )
 
         updateLastKnownSyncState(location)
@@ -628,8 +621,20 @@ internal class RadarSyncManager(
         clearPreviousState()
     }
 
+    fun saveBeaconState(beaconIds: List<String>) {
+        previousSyncedBeaconIds = syncStore.read()?.lastSyncedBeaconIds
+
+        logger.i("SyncManager: Saving beacon state | previous=${previousSyncedBeaconIds?.size ?: 0} new=${beaconIds.size}")
+
+        syncStore.modify { state ->
+            val s = state ?: RadarSyncState()
+            s.lastSyncedBeaconIds = beaconIds
+            s
+        }
+    }
+
     fun rollbackSyncState() {
-        if (previousSyncedGeofenceIds == null) return
+        if (previousSyncedGeofenceIds == null && previousSyncedPlaceIds == null && previousSyncedBeaconIds == null) return
 
         logger.i("SyncManager: Track failed, rolling back to previous sync state")
 

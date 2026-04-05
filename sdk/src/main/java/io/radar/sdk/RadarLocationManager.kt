@@ -632,17 +632,29 @@ internal class RadarLocationManager(
         }
 
         if (source != RadarLocationSource.FOREGROUND_LOCATION && source != RadarLocationSource.MANUAL_LOCATION &&
-           sdkConfiguration.useSyncRegion && options.sync == RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
+            sdkConfiguration.useSyncRegion && options.sync == RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
         ) {
             if (location.accuracy >= 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
                 logger.d("Skipping sync region eval: inaccurate | accuracy = ${location.accuracy}")
                 return
             }
 
-            if (!Radar.syncManager.shouldTrack(location, options)) {
-                logger.i("Skipping track: useSyncRegion - no state change detected | source = $source")
+            val geofenceOrPlaceChanged = Radar.syncManager.shouldTrack(location, options)
+
+            if (geofenceOrPlaceChanged) {
+                RadarState.updateLastSentAt(context)
+                this.sendLocation(sendLocation, stopped, source, replayed, forceTrack = true)
                 return
             }
+
+            if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                && permissionsHelper.bluetoothPermissionsGranted(context)) {
+                this.sendLocation(sendLocation, stopped, source, replayed, forceTrack = false)
+                return
+            }
+
+            logger.i("Skipping track: useSyncRegion - no state change detected | source = $source")
+            return
         }
 
         RadarState.updateLastSentAt(context)
@@ -654,7 +666,7 @@ internal class RadarLocationManager(
         this.sendLocation(sendLocation, stopped, source, replayed)
     }
 
-    private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {
+    private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean, forceTrack: Boolean = true) {
         val options = Radar.getTrackingOptions()
         val foregroundService = RadarSettings.getForegroundService(context)
 
@@ -711,14 +723,35 @@ internal class RadarLocationManager(
                     Radar.beaconManager.rangeBeacons(syncedBeacons, true, object : Radar.RadarBeaconCallback {
                         override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
                             if (status != RadarStatus.SUCCESS || beacons == null) {
-                                callTrackApi(null)
+                                if (forceTrack) {
+                                    callTrackApi(null)
+                                } else if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                                    locationManager.stopForegroundService()
+                                }
                                 return
                             }
-                            callTrackApi(beacons)
+                            if (forceTrack) {
+                                Radar.syncManager.saveBeaconState(beacons.mapNotNull { it._id })
+                                callTrackApi(beacons)
+                            } else {
+                                val rangedIds = beacons.mapNotNull { it._id }.toSet()
+                                if (Radar.syncManager.hasBeaconStateChanged(rangedIds)) {
+                                    RadarState.updateLastSentAt(context)
+                                    Radar.syncManager.saveBeaconState(rangedIds.toList())
+                                    callTrackApi(beacons)
+                                } else {
+                                    logger.i("Skipping track: beacon state unchanged after BLE ranging")
+                                    if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                                        locationManager.stopForegroundService()
+                                    }
+                                }
+                            }
                         }
                     })
                 } else {
-                    callTrackApi(arrayOf())
+                    if (forceTrack) {
+                        callTrackApi(arrayOf())
+                    }
                 }
             } else {
                 this.apiClient.searchBeacons(
