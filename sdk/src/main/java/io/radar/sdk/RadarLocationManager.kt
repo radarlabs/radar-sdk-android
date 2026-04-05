@@ -22,7 +22,7 @@ import java.util.*
 
 @SuppressLint("MissingPermission")
 internal class RadarLocationManager(
-    private val context: Context,
+    private var context: Context,
     private val apiClient: RadarApiClient,
     private val logger: RadarLogger,
     private val batteryManager: RadarBatteryManager,
@@ -39,6 +39,14 @@ internal class RadarLocationManager(
     private val callbacks = ArrayList<RadarLocationCallback>()
     private val activityManager = RadarActivityManager(context)
     private val sensorsManager = RadarSensorsManager(context)
+
+    // In production, context.applicationContext is always the same Application instance,
+    // so this is effectively a no-op. Under Robolectric test suites, different test classes
+    // can produce distinct Application contexts while this singleton-held LocationManager
+    // persists, causing SharedPreferences reads/writes to diverge.
+    internal fun updateContext(context: Context) {
+        this.context = context
+    }
 
     internal companion object {
         private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
@@ -507,7 +515,9 @@ internal class RadarLocationManager(
         val wasStopped = RadarState.getStopped(context)
         var stopped: Boolean
 
-        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT)
+        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION)
+                || (options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
+                && (source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT))
         if (!force && location.accuracy >= 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
             logger.d("Skipping location: inaccurate | accuracy = ${location.accuracy}")
 
@@ -563,6 +573,11 @@ internal class RadarLocationManager(
 
         callCallbacks(RadarStatus.SUCCESS, location)
 
+        val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+        if (sdkConfiguration.useSyncRegion && !Radar.syncManager.hasSyncedRegion()) {
+            Radar.syncManager.fetchSyncRegion()
+        }
+
         var sendLocation = location
 
         val lastFailedStoppedLocation = RadarState.getLastFailedStoppedLocation(context)
@@ -578,11 +593,11 @@ internal class RadarLocationManager(
 
         val lastSentAt = RadarState.getLastSentAt(context)
         val ignoreSync =
-            lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed
+            lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT;
         val now = System.currentTimeMillis()
         val lastSyncInterval = (now - lastSentAt) / 1000L
         if (!ignoreSync) {
-            if (!force && stopped && wasStopped && distance < options.stopDistance && (options.desiredStoppedUpdateInterval == 0 || options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.ALL)) {
+            if (!force && stopped && wasStopped && distance < options.stopDistance && (options.desiredStoppedUpdateInterval == 0 || (options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.ALL && options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS))) {
                 logger.d("Skipping sync: already stopped | stopped = $stopped; wasStopped = $wasStopped")
 
                 return
@@ -615,6 +630,33 @@ internal class RadarLocationManager(
                 return
             }
         }
+
+        if (source != RadarLocationSource.FOREGROUND_LOCATION && source != RadarLocationSource.MANUAL_LOCATION &&
+            sdkConfiguration.useSyncRegion && options.sync == RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
+        ) {
+            if (location.accuracy >= 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
+                logger.d("Skipping sync region eval: inaccurate | accuracy = ${location.accuracy}")
+                return
+            }
+
+            val geofenceOrPlaceChanged = Radar.syncManager.shouldTrack(location, options)
+
+            if (geofenceOrPlaceChanged) {
+                RadarState.updateLastSentAt(context)
+                this.sendLocation(sendLocation, stopped, source, replayed, forceTrack = true)
+                return
+            }
+
+            if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                && permissionsHelper.bluetoothPermissionsGranted(context)) {
+                this.sendLocation(sendLocation, stopped, source, replayed, forceTrack = false)
+                return
+            }
+
+            logger.i("Skipping track: useSyncRegion - no state change detected | source = $source")
+            return
+        }
+
         RadarState.updateLastSentAt(context)
 
         if (source == RadarLocationSource.FOREGROUND_LOCATION) {
@@ -624,7 +666,7 @@ internal class RadarLocationManager(
         this.sendLocation(sendLocation, stopped, source, replayed)
     }
 
-    private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean) {
+    private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean, forceTrack: Boolean = true) {
         val options = Radar.getTrackingOptions()
         val foregroundService = RadarSettings.getForegroundService(context)
 
@@ -647,6 +689,15 @@ internal class RadarLocationManager(
                     config: RadarConfig?,
                     token: RadarVerifiedLocationToken?
                 ) {
+
+                    if (RadarSettings.getSdkConfiguration(context).useSyncRegion) {
+                        if (status == RadarStatus.SUCCESS && user != null) {
+                            Radar.syncManager.reconcileSyncState(user)
+                        } else {
+                            Radar.syncManager.rollbackSyncState()
+                        }
+                    }
+
                     locationManager.replaceSyncedGeofences(nearbyGeofences)
 
                     if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
@@ -661,41 +712,109 @@ internal class RadarLocationManager(
         if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
             && permissionsHelper.bluetoothPermissionsGranted(context)) {
             val cache = stopped || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT
-            this.apiClient.searchBeacons(location, 1000, 10, object : RadarApiClient.RadarSearchBeaconsApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
-                   if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                        Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
-                        Radar.beaconManager.rangeBeaconUUIDs(uuids, uids, true, object : Radar.RadarBeaconCallback {
-                            override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
-                                if (status != RadarStatus.SUCCESS || beacons == null) {
+            if (RadarSettings.getSdkConfiguration(context).useSyncRegion
+                && Radar.syncManager.hasSyncedRegion()
+                && !Radar.syncManager.isOutsideSyncedRegion(location)) {
+
+                val syncedBeacons = Radar.syncManager.getBeacons(location).toTypedArray()
+                if (syncedBeacons.isNotEmpty()) {
+                    Radar.beaconManager.startMonitoringBeacons(syncedBeacons)
+                    Radar.beaconManager.rangeBeacons(syncedBeacons, true, object : Radar.RadarBeaconCallback {
+                        override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                            if (status != RadarStatus.SUCCESS || beacons == null) {
+                                if (forceTrack) {
                                     callTrackApi(null)
-
-                                    return
+                                } else if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                                    locationManager.stopForegroundService()
                                 }
-
-                                callTrackApi(beacons)
+                                return
                             }
-                        })
-                   } else if (beacons != null) {
-                        Radar.beaconManager.startMonitoringBeacons(beacons)
-
-                        Radar.beaconManager.rangeBeacons(beacons, true, object : Radar.RadarBeaconCallback {
-                            override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
-                                if (status != RadarStatus.SUCCESS || beacons == null) {
-                                    callTrackApi(null)
-
-                                    return
+                            if (forceTrack) {
+                                Radar.syncManager.saveBeaconState(beacons.mapNotNull { it._id })
+                                callTrackApi(beacons)
+                            } else {
+                                val rangedIds = beacons.mapNotNull { it._id }.toSet()
+                                if (Radar.syncManager.hasBeaconStateChanged(rangedIds)) {
+                                    RadarState.updateLastSentAt(context)
+                                    Radar.syncManager.saveBeaconState(rangedIds.toList())
+                                    callTrackApi(beacons)
+                                } else {
+                                    logger.i("Skipping track: beacon state unchanged after BLE ranging")
+                                    if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                                        locationManager.stopForegroundService()
+                                    }
                                 }
-
-                                callTrackApi(beacons)
                             }
-                        })
-                   } else {
-                       callTrackApi(arrayOf())
-                   }
+                        }
+                    })
+                } else {
+                    if (forceTrack) {
+                        callTrackApi(arrayOf())
+                    }
                 }
-            }, cache)
+            } else {
+                this.apiClient.searchBeacons(
+                    location,
+                    1000,
+                    10,
+                    object : RadarApiClient.RadarSearchBeaconsApiCallback {
+                        override fun onComplete(
+                            status: RadarStatus,
+                            res: JSONObject?,
+                            beacons: Array<RadarBeacon>?,
+                            uuids: Array<String>?,
+                            uids: Array<String>?
+                        ) {
+                            if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
+                                Radar.beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
+
+                                Radar.beaconManager.rangeBeaconUUIDs(
+                                    uuids,
+                                    uids,
+                                    true,
+                                    object : Radar.RadarBeaconCallback {
+                                        override fun onComplete(
+                                            status: RadarStatus,
+                                            beacons: Array<RadarBeacon>?
+                                        ) {
+                                            if (status != RadarStatus.SUCCESS || beacons == null) {
+                                                callTrackApi(null)
+
+                                                return
+                                            }
+
+                                            callTrackApi(beacons)
+                                        }
+                                    })
+                            } else if (beacons != null) {
+                                Radar.beaconManager.startMonitoringBeacons(beacons)
+
+                                Radar.beaconManager.rangeBeacons(
+                                    beacons,
+                                    true,
+                                    object : Radar.RadarBeaconCallback {
+                                        override fun onComplete(
+                                            status: RadarStatus,
+                                            beacons: Array<RadarBeacon>?
+                                        ) {
+                                            if (status != RadarStatus.SUCCESS || beacons == null) {
+                                                callTrackApi(null)
+
+                                                return
+                                            }
+
+                                            callTrackApi(beacons)
+                                        }
+                                    })
+                            } else {
+                                callTrackApi(arrayOf())
+                            }
+                        }
+                    },
+                    cache
+                )
+            }
         } else {
             callTrackApi(null)
         }

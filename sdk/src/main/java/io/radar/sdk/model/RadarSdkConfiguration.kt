@@ -23,6 +23,11 @@ internal data class RadarSdkConfiguration(
     val useForegroundLocationUpdatedAtMsDiff: Boolean = false,
     val locationManagerTimeout: Int = 0,
     val syncAfterSetUser: Boolean = false,
+    val useSyncRegion: Boolean = false,
+    val stopDetection: Boolean = false,
+    val bufferGeofenceEntries: Boolean = true,
+    val bufferGeofenceExits: Boolean = true,
+    val defaultGeofenceDwellThreshold: Int = 0,
     val maxReplayBufferSize: Int = DEFAULT_MAX_REPLAY_BUFFER_SIZE,
 ) {
     companion object {
@@ -40,6 +45,11 @@ internal data class RadarSdkConfiguration(
         private const val USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF = "useForegroundLocationUpdatedAtMsDiff"
         private const val LOCATION_MANAGER_TIMEOUT = "locationManagerTimeout"
         private const val SYNC_AFTER_SET_USER = "syncAfterSetUser"
+        private const val USE_SYNC_REGION = "useSyncRegion"
+        private const val STOP_DETECTION = "stopDetection"
+        private const val BUFFER_GEOFENCE_ENTRIES = "bufferGeofenceEntries"
+        private const val BUFFER_GEOFENCE_EXITS = "bufferGeofenceExits"
+        private const val DEFAULT_GEOFENCE_DWELL_THRESHOLD = "defaultGeofenceDwellThreshold"
         private const val MAX_REPLAY_BUFFER_SIZE = "maxReplayBufferSize"
         const val DEFAULT_MAX_REPLAY_BUFFER_SIZE = 120
 
@@ -68,6 +78,11 @@ internal data class RadarSdkConfiguration(
                 config.optBoolean(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, false),
                 config.optInt(LOCATION_MANAGER_TIMEOUT, 0),
                 config.optBoolean(SYNC_AFTER_SET_USER, false),
+                config.optBoolean(USE_SYNC_REGION, false),
+                config.optBoolean(STOP_DETECTION, false),
+                config.optBoolean(BUFFER_GEOFENCE_ENTRIES, true),
+                config.optBoolean(BUFFER_GEOFENCE_EXITS, true),
+                config.optInt(DEFAULT_GEOFENCE_DWELL_THRESHOLD, 0),
                 validatedMaxReplayBufferSize,
             )
         }
@@ -100,6 +115,11 @@ internal data class RadarSdkConfiguration(
             putOpt(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, useForegroundLocationUpdatedAtMsDiff)
             putOpt(LOCATION_MANAGER_TIMEOUT, locationManagerTimeout)
             putOpt(SYNC_AFTER_SET_USER, syncAfterSetUser)
+            putOpt(USE_SYNC_REGION, useSyncRegion)
+            putOpt(STOP_DETECTION, stopDetection)
+            putOpt(BUFFER_GEOFENCE_ENTRIES, bufferGeofenceEntries)
+            putOpt(BUFFER_GEOFENCE_EXITS, bufferGeofenceExits)
+            putOpt(DEFAULT_GEOFENCE_DWELL_THRESHOLD, defaultGeofenceDwellThreshold)
             putOpt(MAX_REPLAY_BUFFER_SIZE, maxReplayBufferSize)
         }
     }
