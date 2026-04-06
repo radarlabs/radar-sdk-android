@@ -1255,7 +1255,7 @@ object Radar {
         desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
         callback: RadarTrackVerifiedCallback? = null
     ) {
-        trackVerified(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, null, null, callback)
+        trackVerified(beacons, desiredAccuracy, null, null, callback)
     }
 
     /**
