@@ -718,11 +718,13 @@ internal class RadarLocationManager(
                 && !Radar.syncManager.isOutsideSyncedRegion(location)) {
 
                 val syncedBeacons = Radar.syncManager.getBeacons(location).toTypedArray()
+                logger.i("Sync region beacon ranging | syncedBeacons = ${syncedBeacons.size}, forceTrack = $forceTrack")
                 if (syncedBeacons.isNotEmpty()) {
                     Radar.beaconManager.startMonitoringBeacons(syncedBeacons)
                     Radar.beaconManager.rangeBeacons(syncedBeacons, true, object : Radar.RadarBeaconCallback {
                         override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
-                            if (status != RadarStatus.SUCCESS || beacons == null) {
+                            if (status != RadarStatus.SUCCESS) {
+                                logger.i("Beacon ranging failed | status = $status, forceTrack = $forceTrack")
                                 if (forceTrack) {
                                     callTrackApi(null)
                                 } else if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
@@ -730,12 +732,23 @@ internal class RadarLocationManager(
                                 }
                                 return
                             }
+                            if (beacons == null) {
+                                logger.i("Beacon ranging returned null beacons | forceTrack = $forceTrack")
+                                if (forceTrack) {
+                                    callTrackApi(arrayOf())
+                                } else if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                                    locationManager.stopForegroundService()
+                                }
+                                return
+                            }
                             if (forceTrack) {
+                                logger.i("Beacon ranging complete (forceTrack) | beacons = ${beacons.size}")
                                 Radar.syncManager.saveBeaconState(beacons.mapNotNull { it._id })
                                 callTrackApi(beacons)
                             } else {
                                 val rangedIds = beacons.mapNotNull { it._id }.toSet()
                                 if (Radar.syncManager.hasBeaconStateChanged(rangedIds)) {
+                                    logger.i("Beacon state changed, sending track | rangedIds = $rangedIds")
                                     RadarState.updateLastSentAt(context)
                                     Radar.syncManager.saveBeaconState(rangedIds.toList())
                                     callTrackApi(beacons)
@@ -750,6 +763,7 @@ internal class RadarLocationManager(
                     })
                 } else {
                     if (forceTrack) {
+                        logger.i("No synced beacons nearby, sending empty beacons | forceTrack = $forceTrack")
                         callTrackApi(arrayOf())
                     }
                 }
