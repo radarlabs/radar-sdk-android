@@ -741,12 +741,17 @@ internal class RadarLocationManager(
                                 }
                                 return
                             }
+
+                            val syncedBeaconMap = syncedBeacons.associateBy { Triple(it.uuid, it.major, it.minor) }
+                            val matchedIds = beacons.mapNotNull { ranged ->
+                                syncedBeaconMap[Triple(ranged.uuid, ranged.major, ranged.minor)]?._id
+                            }
                             if (forceTrack) {
-                                logger.i("Beacon ranging complete (forceTrack) | beacons = ${beacons.size}")
-                                Radar.syncManager.saveBeaconState(beacons.mapNotNull { it._id })
+                                logger.i("Beacon ranging complete (forceTrack) | beacons = ${beacons.size}, matchedIds = ${matchedIds.size}")
+                                Radar.syncManager.saveBeaconState(matchedIds)
                                 callTrackApi(beacons)
                             } else {
-                                val rangedIds = beacons.mapNotNull { it._id }.toSet()
+                                val rangedIds = matchedIds.toSet()
                                 if (Radar.syncManager.hasBeaconStateChanged(rangedIds)) {
                                     logger.i("Beacon state changed, sending track | rangedIds = $rangedIds")
                                     RadarState.updateLastSentAt(context)
