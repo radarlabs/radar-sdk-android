@@ -347,6 +347,7 @@ class RadarSyncManagerTest {
 
     @Test
     fun test_getPlaces_withinRadius() {
+        RadarState.setStopped(context, true)
         val place = makePlace("place1", TEST_LAT, TEST_LNG)
         setState(RadarSyncState(syncedPlaces = listOf(place)))
 
@@ -359,6 +360,7 @@ class RadarSyncManagerTest {
 
     @Test
     fun test_getPlaces_outsideRadius() {
+        RadarState.setStopped(context, true)
         val place = makePlace("place1", TEST_LAT_FAR, TEST_LNG)
         setState(RadarSyncState(syncedPlaces = listOf(place)))
 
@@ -374,6 +376,7 @@ class RadarSyncManagerTest {
 
     @Test
     fun test_placeStateChanged_entry() {
+        RadarState.setStopped(context, true)
         val place = makePlace("place1", TEST_LAT, TEST_LNG)
         setState(RadarSyncState(
             syncedPlaces = listOf(place),
@@ -385,7 +388,20 @@ class RadarSyncManagerTest {
     }
 
     @Test
+    fun test_placeStateChanged_entrySkippedWhenNotStopped() {
+        RadarState.setStopped(context, false)
+        val place = makePlace("place1", TEST_LAT, TEST_LNG)
+        setState(RadarSyncState(
+            syncedPlaces = listOf(place),
+            lastSyncedPlaceIds = emptyList()
+        ))
+        val location = makeLocation(TEST_LAT, TEST_LNG)
+        assertFalse(syncManager.hasPlaceStateChanged(location))
+    }
+
+    @Test
     fun test_placeStateChanged_exit() {
+        RadarState.setStopped(context, false)
         val place = makePlace("place1", TEST_LAT_FAR, TEST_LNG)
         setState(RadarSyncState(
             syncedPlaces = listOf(place),

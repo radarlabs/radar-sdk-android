@@ -36,7 +36,7 @@ internal class RadarSyncManager(
     private var isFetchingSyncRegion = false
 
     companion object {
-        private const val PLACE_DETECTION_RADIUS = 100.0
+        private const val PLACE_DETECTION_RADIUS = 75.0
         private const val BEACON_RANGE = 100.0
         private const val BOUNDARY_THRESHOLD_FRACTION = 0.2
     }
@@ -371,6 +371,8 @@ internal class RadarSyncManager(
 
     fun getPlaces(location: Location): List<RadarPlace> {
         val places = syncStore.read()?.syncedPlaces ?: return  emptyList()
+        val isStopped = RadarState.getStopped(context)
+        if (!isStopped) return emptyList()
         return places.filter { place ->
             isPointInsideCircle(location, place.location, PLACE_DETECTION_RADIUS)
         }
