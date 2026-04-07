@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         )
         Radar.initialize(this, PUBLISHABLE_KEY, options)
 
-//        Radar.setUserId("alan-galaxy-4-6_4pm")
+//        Radar.setUserId("alan-galaxy-4-6_7pm")
         Radar.sdkVersion().let { Log.i("version", it) }
 
         // We can also set the foreground service options like this:

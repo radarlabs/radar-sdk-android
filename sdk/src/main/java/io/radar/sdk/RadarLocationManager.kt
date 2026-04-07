@@ -742,10 +742,11 @@ internal class RadarLocationManager(
                                 return
                             }
 
-                            val syncedBeaconMap = syncedBeacons.associateBy { Triple(it.uuid, it.major, it.minor) }
+                            val syncedBeaconMap = syncedBeacons.associateBy { Triple(it.uuid?.lowercase(), it.major, it.minor) }
                             val matchedIds = beacons.mapNotNull { ranged ->
-                                syncedBeaconMap[Triple(ranged.uuid, ranged.major, ranged.minor)]?._id
+                                syncedBeaconMap[Triple(ranged.uuid?.lowercase(), ranged.major, ranged.minor)]?._id
                             }
+                            logger.i("Beacon ID matching | syncedKeys = ${syncedBeaconMap.keys}, rangedKeys = ${beacons.map { Triple(it.uuid?.lowercase(), it.major, it.minor) }}, matchedIds = $matchedIds")
                             if (forceTrack) {
                                 logger.i("Beacon ranging complete (forceTrack) | beacons = ${beacons.size}, matchedIds = ${matchedIds.size}")
                                 Radar.syncManager.saveBeaconState(matchedIds)
