@@ -13,6 +13,7 @@ import io.radar.sdk.model.RadarGeofence
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarPolygonGeometry
 import io.radar.sdk.model.RadarSdkConfiguration
+import io.radar.sdk.model.RadarUser
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -106,6 +107,48 @@ class RadarSyncManagerTest {
     private fun makeEventsOptions(): RadarTrackingOptions {
         return RadarTrackingOptions.RESPONSIVE.copy(
             sync = RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
+        )
+    }
+
+    private fun makeUser(
+        placeId: String? = null,
+        geofenceIds: List<String> = emptyList(),
+        beaconIds: List<String> = emptyList()
+    ): RadarUser {
+        val location = makeLocation(TEST_LAT, TEST_LNG)
+        val place = if (placeId != null) makePlace(placeId, TEST_LAT, TEST_LNG) else null
+        val geofences = geofenceIds.map {
+            makeCircleGeofence(it, TEST_LAT, TEST_LNG, 100.0)
+        }.toTypedArray()
+        val beacons = beaconIds.map {
+            makeBeacon(it, TEST_LAT, TEST_LNG)
+        }.toTypedArray()
+
+        return RadarUser(
+            _id = "test_user",
+            userId = null,
+            deviceId = null,
+            description = null,
+            metadata = null,
+            location = location,
+            geofences = geofences,
+            place = place,
+            beacons = beacons,
+            stopped = false,
+            foreground = false,
+            country = null,
+            state = null,
+            dma = null,
+            postalCode = null,
+            nearbyPlaceChains = null,
+            segments = null,
+            topChains = null,
+            source = Radar.RadarLocationSource.BACKGROUND_LOCATION,
+            trip = null,
+            debug = false,
+            fraud = null,
+            activityType = null,
+            altitude = null
         )
     }
 
@@ -482,6 +525,70 @@ class RadarSyncManagerTest {
         // place1 exit radius = 100 + 50 = 150m, user is ~50m away → still within exit radius
         // Even though user is within place2's entry radius, switch should be blocked
         assertFalse(syncManager.hasPlaceStateChanged(location))
+    }
+
+    @Test
+    fun test_placeStateChanged_rejectedPlaceNotReentered() {
+        RadarState.setStopped(context, true)
+        val place = makePlace("place1", TEST_LAT, TEST_LNG)
+        setState(RadarSyncState(
+            syncedPlaces = listOf(place),
+            lastSyncedPlaceIds = emptyList()
+        ))
+
+        val location = makeLocation(TEST_LAT, TEST_LNG)
+        assertTrue(syncManager.hasPlaceStateChanged(location))
+
+        // Simulate server rejecting the place
+        syncManager.reconcileSyncState(makeUser(placeId = null))
+
+        // Reset lastSyncedPlaceIds to empty (as reconcile would have done)
+        // Same location — rejected place should be suppressed
+        assertFalse(syncManager.hasPlaceStateChanged(location))
+    }
+
+    @Test
+    fun test_placeStateChanged_rejectionsClaredOnMovement() {
+        RadarState.setStopped(context, true)
+        val place = makePlace("place1", TEST_LAT, TEST_LNG)
+        setState(RadarSyncState(
+            syncedPlaces = listOf(place),
+            lastSyncedPlaceIds = emptyList()
+        ))
+
+        val location = makeLocation(TEST_LAT, TEST_LNG)
+        assertTrue(syncManager.hasPlaceStateChanged(location))
+
+        // Server rejects
+        syncManager.reconcileSyncState(makeUser(placeId = null))
+
+        // Move far away — clears rejections (default accuracy is 5m, TEST_LAT_FAR is ~200m away)
+        val farLocation = makeLocation(TEST_LAT_FAR, TEST_LNG)
+        syncManager.hasPlaceStateChanged(farLocation)
+
+        // Restore state so place1 can be re-entered
+        setState(RadarSyncState(
+            syncedPlaces = listOf(place),
+            lastSyncedPlaceIds = emptyList()
+        ))
+
+        // Back at original location — should detect entry again
+        val returnLocation = makeLocation(TEST_LAT, TEST_LNG)
+        assertTrue(syncManager.hasPlaceStateChanged(returnLocation))
+    }
+
+    @Test
+    fun test_getPlaces_returnsSingleClosest() {
+        RadarState.setStopped(context, true)
+        val place1 = makePlace("place1", TEST_LAT, TEST_LNG, geometryRadius = 100.0)
+        val place2 = makePlace("place2", TEST_LAT_NEARBY, TEST_LNG, geometryRadius = 100.0)
+        setState(RadarSyncState(syncedPlaces = listOf(place1, place2)))
+
+        val location = makeLocation(TEST_LAT, TEST_LNG)
+        val places = syncManager.getPlaces(location)
+
+        assertEquals(1, places.size)
+        assertEquals("place1", places.first()._id)
     }
 
     // endregion

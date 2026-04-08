@@ -29,12 +29,13 @@ internal class RadarSyncManager(
 
     private val handler = Handler(Looper.getMainLooper())
     private var syncRunnable: Runnable? = null
-
     private var previousSyncedGeofenceIds: List<String>? = null
     private var previousSyncedPlaceIds: List<String>? = null
     private var previousSyncedBeaconIds: List<String>? = null
     private var isFetchingSyncRegion = false
-
+    private var rejectedPlaceIds: Set<String> = emptySet()
+    private var rejectedAtLocation: Location? = null
+    private var lastPlaceCheckLocation: Location? = null
     companion object {
         private const val PLACE_DETECTION_RADIUS = 75.0
         private const val PLACE_EXIT_BUFFER = 50.0
@@ -374,10 +375,22 @@ internal class RadarSyncManager(
         val places = syncStore.read()?.syncedPlaces ?: return emptyList()
         val isStopped = RadarState.getStopped(context)
         if (!isStopped) return emptyList()
-        return places.filter { place ->
-            val radius = (place.geometryRadius ?: 0.0) + PLACE_DETECTION_RADIUS
-            isPointInsideCircle(location, place.location, radius)
+        val closest = places
+            .mapNotNull { place ->
+                val radius = (place.geometryRadius ?: 0.0) + PLACE_DETECTION_RADIUS
+                val distance = distanceBetween(
+                    location.latitude, location.longitude,
+                    place.location.latitude, place.location.longitude
+                )
+                if (distance <= radius) place to distance else null
+            }
+            .minByOrNull { it.second }
+            ?.first
+        if (closest != null) {
+            logger.d("SyncManager: getPlaces matched ${closest._id} (geoR=${closest.geometryRadius})")
+            return listOf(closest)
         }
+        return emptyList()
     }
 
     // endregion
@@ -416,13 +429,26 @@ internal class RadarSyncManager(
     }
 
     fun hasPlaceStateChanged(location: Location): Boolean {
+        lastPlaceCheckLocation = location
+
+        val rejectedLocation = rejectedAtLocation
+        if (rejectedLocation != null && rejectedPlaceIds.isNotEmpty()) {
+            val moved = location.distanceTo(rejectedLocation) > rejectedLocation.accuracy
+            val accuracyImproved = location.accuracy < rejectedLocation.accuracy * 0.5f
+            if (moved || accuracyImproved) {
+                logger.d("SyncManager: Clearing place rejections | moved=${location.distanceTo(rejectedLocation)} accuracy=${location.accuracy} wasAccuracy=${rejectedLocation.accuracy}")
+                rejectedPlaceIds = emptySet()
+                rejectedAtLocation = null
+            }
+        }
+
         val state = syncStore.read() ?: RadarSyncState()
         val lastKnownPlaceIds = state.lastSyncedPlaceIds.toSet()
         val allPlaces = state.syncedPlaces ?: emptyList()
 
         // Check for exits — user moved beyond geometryRadius + 50m
         if (lastKnownPlaceIds.isNotEmpty()) {
-            val lastPlace = allPlaces.firstOrNull {it._id in lastKnownPlaceIds }
+            val lastPlace = allPlaces.firstOrNull { it._id in lastKnownPlaceIds }
             if (lastPlace != null) {
                 val exitRadius = (lastPlace.geometryRadius ?: 0.0) + PLACE_EXIT_BUFFER
                 if (!isPointInsideCircle(location, lastPlace.location, exitRadius)) {
@@ -432,10 +458,10 @@ internal class RadarSyncManager(
             }
         }
 
-        // Check for entries — stopped + within geometryRadius + 75m
+        // Check for entries — stopped + within geometryRadius + 75m, excluding rejected places
         val currentPlaces = getPlaces(location)
-        val currentIds = currentPlaces.map {it._id}.toSet()
-        val enteredPlaceIds = currentIds - lastKnownPlaceIds
+        val currentIds = currentPlaces.map { it._id }.toSet()
+        val enteredPlaceIds = currentIds - lastKnownPlaceIds - rejectedPlaceIds
 
         if (enteredPlaceIds.isNotEmpty()) {
             if (lastKnownPlaceIds.isNotEmpty()) {
@@ -451,6 +477,7 @@ internal class RadarSyncManager(
             logger.i("SyncManager: Detected place entry: $enteredPlaceIds")
             return true
         }
+
         return false
     }
 
@@ -625,7 +652,11 @@ internal class RadarSyncManager(
                 val serverOnly = serverPlaceIds.toSet() - clientPlaceIds.toSet()
                 val clientOnly = clientPlaceIds.toSet() - serverPlaceIds.toSet()
                 if (serverOnly.isNotEmpty()) logger.i("SyncManager: Server added places: $serverOnly")
-                if (clientOnly.isNotEmpty()) logger.i("SyncManager: Server removed places: $clientOnly")
+                if (clientOnly.isNotEmpty()) {
+                    logger.i("SyncManager: Server removed places: $clientOnly")
+                    rejectedPlaceIds = rejectedPlaceIds + clientOnly
+                    rejectedAtLocation = lastPlaceCheckLocation
+                }
             }
 
             syncStore.modify { state ->
