@@ -146,6 +146,7 @@ internal class RadarSyncManager(
 
         if (isOutsideSyncedRegion(location)) {
             logger.i("SyncManager: Outside synced region, should track")
+            fetchSyncRegion()
             return true
         }
 
