@@ -539,6 +539,11 @@ class RadarSyncManagerTest {
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasPlaceStateChanged(location))
 
+        setState(RadarSyncState(
+            syncedPlaces = listOf(place),
+            lastSyncedPlaceIds = listOf("place1")
+        ))
+
         // Simulate server rejecting the place
         syncManager.reconcileSyncState(makeUser(placeId = null))
 
@@ -548,7 +553,7 @@ class RadarSyncManagerTest {
     }
 
     @Test
-    fun test_placeStateChanged_rejectionsClaredOnMovement() {
+    fun test_placeStateChanged_rejectionsClearedOnMovement() {
         RadarState.setStopped(context, true)
         val place = makePlace("place1", TEST_LAT, TEST_LNG)
         setState(RadarSyncState(
@@ -558,6 +563,11 @@ class RadarSyncManagerTest {
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasPlaceStateChanged(location))
+        
+        setState(RadarSyncState(
+            syncedPlaces = listOf(place),
+            lastSyncedPlaceIds = listOf("place1")
+        ))
 
         // Server rejects
         syncManager.reconcileSyncState(makeUser(placeId = null))
