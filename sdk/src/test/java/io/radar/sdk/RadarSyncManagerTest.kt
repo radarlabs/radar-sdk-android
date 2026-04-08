@@ -563,7 +563,7 @@ class RadarSyncManagerTest {
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasPlaceStateChanged(location))
-        
+
         setState(RadarSyncState(
             syncedPlaces = listOf(place),
             lastSyncedPlaceIds = listOf("place1")

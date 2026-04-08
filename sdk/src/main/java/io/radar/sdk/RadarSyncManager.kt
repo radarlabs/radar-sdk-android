@@ -433,8 +433,8 @@ internal class RadarSyncManager(
 
         val rejectedLocation = rejectedAtLocation
         if (rejectedLocation != null && rejectedPlaceIds.isNotEmpty()) {
-            val moved = location.distanceTo(rejectedLocation) > rejectedLocation.accuracy
-            val accuracyImproved = location.accuracy < rejectedLocation.accuracy * 0.5f
+            val moved = location.distanceTo(rejectedLocation) > max(rejectedLocation.accuracy, 15f)
+            val accuracyImproved = rejectedLocation.accuracy > 100f && location.accuracy < 50f
             if (moved || accuracyImproved) {
                 logger.d("SyncManager: Clearing place rejections | moved=${location.distanceTo(rejectedLocation)} accuracy=${location.accuracy} wasAccuracy=${rejectedLocation.accuracy}")
                 rejectedPlaceIds = emptySet()
