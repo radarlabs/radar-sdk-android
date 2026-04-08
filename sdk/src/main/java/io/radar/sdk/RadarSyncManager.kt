@@ -37,6 +37,7 @@ internal class RadarSyncManager(
 
     companion object {
         private const val PLACE_DETECTION_RADIUS = 75.0
+        private const val PLACE_EXIT_BUFFER = 50.0
         private const val BEACON_RANGE = 100.0
         private const val BOUNDARY_THRESHOLD_FRACTION = 0.2
     }
@@ -370,11 +371,12 @@ internal class RadarSyncManager(
     }
 
     fun getPlaces(location: Location): List<RadarPlace> {
-        val places = syncStore.read()?.syncedPlaces ?: return  emptyList()
+        val places = syncStore.read()?.syncedPlaces ?: return emptyList()
         val isStopped = RadarState.getStopped(context)
         if (!isStopped) return emptyList()
         return places.filter { place ->
-            isPointInsideCircle(location, place.location, PLACE_DETECTION_RADIUS)
+            val radius = (place.geometryRadius ?: 0.0) + PLACE_DETECTION_RADIUS
+            isPointInsideCircle(location, place.location, radius)
         }
     }
 
@@ -416,20 +418,40 @@ internal class RadarSyncManager(
     fun hasPlaceStateChanged(location: Location): Boolean {
         val state = syncStore.read() ?: RadarSyncState()
         val lastKnownPlaceIds = state.lastSyncedPlaceIds.toSet()
-        val currentPlaces = getPlaces(location)
-        val currentIds = currentPlaces.map { it._id }.toSet()
+        val allPlaces = state.syncedPlaces ?: emptyList()
 
+        // Check for exits — user moved beyond geometryRadius + 50m
+        if (lastKnownPlaceIds.isNotEmpty()) {
+            val lastPlace = allPlaces.firstOrNull {it._id in lastKnownPlaceIds }
+            if (lastPlace != null) {
+                val exitRadius = (lastPlace.geometryRadius ?: 0.0) + PLACE_EXIT_BUFFER
+                if (!isPointInsideCircle(location, lastPlace.location, exitRadius)) {
+                    logger.i("SyncManager: Detected place exit: ${lastPlace._id}")
+                    return true
+                }
+            }
+        }
+
+        // Check for entries — stopped + within geometryRadius + 75m
+        val currentPlaces = getPlaces(location)
+        val currentIds = currentPlaces.map {it._id}.toSet()
         val enteredPlaceIds = currentIds - lastKnownPlaceIds
-        val exitedPlaceIds = lastKnownPlaceIds - currentIds
 
         if (enteredPlaceIds.isNotEmpty()) {
+            if (lastKnownPlaceIds.isNotEmpty()) {
+                val lastPlace = allPlaces.firstOrNull { it._id in lastKnownPlaceIds }
+                if (lastPlace != null) {
+                    val exitRadius = (lastPlace.geometryRadius ?: 0.0) + PLACE_EXIT_BUFFER
+                    if (isPointInsideCircle(location, lastPlace.location, exitRadius)) {
+                        logger.d("SyncManager: Skipping place switch (still within exit radius of last place)")
+                        return false
+                    }
+                }
+            }
             logger.i("SyncManager: Detected place entry: $enteredPlaceIds")
+            return true
         }
-        if (exitedPlaceIds.isNotEmpty()) {
-            logger.i("SyncManager: Detected place exit: $exitedPlaceIds")
-        }
-
-        return currentIds != lastKnownPlaceIds
+        return false
     }
 
     private fun checkForGeofenceEntries(

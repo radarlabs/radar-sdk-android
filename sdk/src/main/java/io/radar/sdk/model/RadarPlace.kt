@@ -48,6 +48,11 @@ class RadarPlace(
     * The address of the place.
     */
     val address: RadarAddress?,
+
+    /**
+     * The geometry radius of the place.
+     */
+    val geometryRadius: Double?
 ) {
 
     internal companion object {
@@ -60,6 +65,7 @@ class RadarPlace(
         private const val FIELD_GROUP = "group"
         private const val FIELD_METADATA = "metadata"
         private const val FIELD_ADDRESS = "address"
+        private const val FIELD_GEOMETRY_RADIUS = "geometryRadius"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarPlace? {
@@ -87,6 +93,7 @@ class RadarPlace(
             val address: RadarAddress? = obj.optJSONObject(FIELD_ADDRESS)?.let { addressObj ->
                     RadarAddress.fromJson(addressObj)
                 }
+            val geometryRadius = if (obj.has(FIELD_GEOMETRY_RADIUS)) obj.optDouble(FIELD_GEOMETRY_RADIUS) else null
             return RadarPlace(
                 id,
                 name,
@@ -95,7 +102,8 @@ class RadarPlace(
                 location,
                 group,
                 metadata,
-                address
+                address,
+                geometryRadius
             )
         }
 
@@ -136,6 +144,7 @@ class RadarPlace(
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_LOCATION, this.location.toJson())
         obj.putOpt(FIELD_ADDRESS, this.address?.toJson())
+        obj.putOpt(FIELD_GEOMETRY_RADIUS, this.geometryRadius)
         return obj
     }
 

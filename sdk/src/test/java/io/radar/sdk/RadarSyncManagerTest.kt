@@ -94,11 +94,12 @@ class RadarSyncManagerTest {
         )
     }
 
-    private fun makePlace(id: String, lat: Double, lng: Double): RadarPlace {
+    private fun makePlace(id: String, lat: Double, lng: Double, geometryRadius: Double? = null): RadarPlace {
         return RadarPlace(
             _id = id, name = "Test Place", categories = arrayOf("test"),
             chain = null, location = RadarCoordinate(lat, lng),
-            group = "test", metadata = null, address = null
+            group = "test", metadata = null, address = null,
+            geometryRadius = geometryRadius
         )
     }
 
@@ -410,6 +411,77 @@ class RadarSyncManagerTest {
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasPlaceStateChanged(location))
+    }
+
+    @Test
+    fun test_getPlaces_withinGeometryRadius() {
+        RadarState.setStopped(context, true)
+        val place = makePlace("place1", TEST_LAT_NEARBY, TEST_LNG, geometryRadius = 100.0)
+        setState(RadarSyncState(syncedPlaces =  listOf(place)))
+
+        val location = makeLocation(TEST_LAT, TEST_LNG)
+        val places = syncManager.getPlaces(location)
+
+        assertEquals(1, places.size)
+    }
+
+    @Test
+    fun test_getPlaces_outsideGeometryRadiusPlusDetection() {
+        RadarState.setStopped(context, true)
+        val place = makePlace("place1", TEST_LAT_FAR, TEST_LNG, geometryRadius = 50.0)
+        setState(RadarSyncState(syncedPlaces = listOf(place)))
+
+        val location = makeLocation(TEST_LAT, TEST_LNG)
+        val places = syncManager.getPlaces(location)
+
+        assertEquals(0, places.size)
+    }
+
+    @Test
+    fun test_placeStateChanged_exitWithGeometryRadius() {
+        RadarState.setStopped(context, false)
+        val place = makePlace("place1", TEST_LAT_NEARBY, TEST_LNG, geometryRadius = 20.0)
+        setState(RadarSyncState(
+            syncedPlaces = listOf(place),
+            lastSyncedPlaceIds = listOf("place1")
+        ))
+
+        val location = makeLocation(TEST_LAT, TEST_LNG)
+        // TEST_LAT_NEARBY is ~50m from TEST_LAT, exit radius = 20 + 50 = 70m
+        // User is ~50m away, within exit radius → no exit
+        assertFalse(syncManager.hasPlaceStateChanged(location))
+    }
+
+    @Test
+    fun test_placeStateChanged_exitBeyondBuffer() {
+        RadarState.setStopped(context, false)
+        val place = makePlace("place1", TEST_LAT_FAR, TEST_LNG, geometryRadius = 50.0)
+        setState(RadarSyncState(
+            syncedPlaces = listOf(place),
+            lastSyncedPlaceIds = listOf("place1")
+        ))
+
+        val location = makeLocation(TEST_LAT, TEST_LNG)
+        // TEST_LAT_FAR is ~200m from TEST_LAT, exit radius = 50 + 50 = 100m
+        // User is ~200m away, outside exit radius → exit
+        assertTrue(syncManager.hasPlaceStateChanged(location))
+    }
+
+    @Test
+    fun test_placeStateChanged_switchBlockedWithinExitRadius() {
+        RadarState.setStopped(context, true)
+        val place1 = makePlace("place1", TEST_LAT, TEST_LNG, geometryRadius = 100.0)
+        val place2 = makePlace("place2", TEST_LAT_NEARBY, TEST_LNG, geometryRadius = 100.0)
+        setState(RadarSyncState(
+            syncedPlaces = listOf(place1, place2),
+            lastSyncedPlaceIds = listOf("place1")
+        ))
+
+        val location = makeLocation(TEST_LAT_NEARBY, TEST_LNG)
+        // User is at TEST_LAT_NEARBY (~50m from place1)
+        // place1 exit radius = 100 + 50 = 150m, user is ~50m away → still within exit radius
+        // Even though user is within place2's entry radius, switch should be blocked
+        assertFalse(syncManager.hasPlaceStateChanged(location))
     }
 
     // endregion
