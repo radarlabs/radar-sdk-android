@@ -592,7 +592,7 @@ internal class RadarSyncManager(
     private fun updateLastKnownSyncState(location: Location) {
         val timestamps = syncStore.read()?.geofenceEntryTimestamps ?: emptyMap()
         val acceptedGeofenceIds = timestamps.keys.toList()
-        val currentPlaceIds = getPlaces(location).map { it._id }
+        val currentPlaceIds = getPlaces(location).map { it._id }.filter { it !in rejectedPlaceIds }
 
         logger.i("SyncManager: Optimistic update | geofences=$acceptedGeofenceIds places=$currentPlaceIds")
 
