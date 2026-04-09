@@ -693,6 +693,13 @@ internal class RadarLocationManager(
                     if (RadarSettings.getSdkConfiguration(context).useSyncRegion) {
                         if (status == RadarStatus.SUCCESS && user != null) {
                             Radar.syncManager.reconcileSyncState(user)
+
+                            events?.forEach { event ->
+                                if(event.type == RadarEvent.RadarEventType.USER_DWELLED_IN_GEOFENCE) {
+                                    val geofenceId = event.geofence?._id ?: return@forEach
+                                    Radar.syncManager.markDwellFired(geofenceId)
+                                }
+                            }
                         } else {
                             Radar.syncManager.rollbackSyncState()
                         }

@@ -710,5 +710,15 @@ internal class RadarSyncManager(
         previousSyncedBeaconIds = null
     }
 
+    fun markDwellFired(geofenceId: String) {
+        syncStore.modify { state ->
+            val s = state ?: RadarSyncState()
+            if (geofenceId !in s.dwellEventsFired) {
+                s.dwellEventsFired.add(geofenceId)
+            }
+            s
+        }
+    }
+
     // endregion
 }
