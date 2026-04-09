@@ -52,6 +52,11 @@ class RadarSdkConfigurationTest {
             "useForegroundLocationUpdatedAtMsDiff":$useForegroundLocationUpdatedAtMsDiff,
             "locationManagerTimeout":$locationManagerTimeout,
             "syncAfterSetUser":$syncAfterSetUser,
+            "useSyncRegion":false,
+            "stopDetection":false,
+            "bufferGeofenceEntries":true,
+            "bufferGeofenceExits":true,
+            "defaultGeofenceDwellThreshold":0,
             "maxReplayBufferSize":$maxReplayBufferSize,
         }""".trimIndent()
     }
@@ -74,6 +79,11 @@ class RadarSdkConfigurationTest {
                 useForegroundLocationUpdatedAtMsDiff,
                 locationManagerTimeout,
                 syncAfterSetUser,
+                false,
+                false,
+                true,
+                true,
+                0,
                 maxReplayBufferSize,
             ).toJson().toString()
         )

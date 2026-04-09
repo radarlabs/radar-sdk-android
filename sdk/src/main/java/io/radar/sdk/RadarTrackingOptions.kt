@@ -123,7 +123,12 @@ data class RadarTrackingOptions(
      * Determines whether to collect pressure data.
      */
     var usePressure: Boolean,
-) {
+
+    /**
+     * Specifies the tracking options preset type used to configure this instance.
+     */
+    var type: RadarTrackingOptionsType = RadarTrackingOptionsType.DEFAULT,
+    ) {
 
     /**
      * The location accuracy options.
@@ -224,12 +229,15 @@ data class RadarTrackingOptions(
         /** Syncs only stops and exits to the server. */
         STOPS_AND_EXITS(1),
         /** Syncs all location updates to the server. */
-        ALL(2);
+        ALL(2),
+        /** Syncs location updates to the server when an event is generated */
+        EVENTS(3);
 
         internal companion object {
             internal const val NONE_STR = "none"
             internal const val STOPS_AND_EXITS_STR = "stopsAndExits"
             internal const val ALL_STR = "all"
+            internal const val EVENTS_STR = "events"
 
             fun fromInt(sync: Int?): RadarTrackingOptionsSync {
                 for (value in values()) {
@@ -245,6 +253,7 @@ data class RadarTrackingOptions(
                     ALL_STR -> ALL
                     STOPS_AND_EXITS_STR -> STOPS_AND_EXITS
                     NONE_STR -> NONE
+                    EVENTS_STR -> EVENTS
                     else -> STOPS_AND_EXITS
                 }
             }
@@ -255,6 +264,7 @@ data class RadarTrackingOptions(
                 ALL -> ALL_STR
                 STOPS_AND_EXITS -> STOPS_AND_EXITS_STR
                 NONE -> NONE_STR
+                EVENTS -> EVENTS_STR
             }
         }
     }
@@ -295,6 +305,38 @@ data class RadarTrackingOptions(
                 NEAREST -> NEAREST_STR
                 CAMPAIGN -> CAMPAIGN_STR
                 NONE -> NONE_STR
+            }
+        }
+    }
+
+    enum class RadarTrackingOptionsType(internal val type: Int) {
+        DEFAULT(0),
+        ON_TRIP(1),
+        IN_GEOFENCE(2),
+        IS_USER(3);
+
+        internal companion object {
+            internal const val DEFAULT_STR = "default"
+            internal const val ON_TRIP_STR = "on-trip"
+            internal const val IN_GEOFENCE_STR = "in-geofence"
+            internal const val IS_USER_STR = "is-user"
+
+            fun fromRadarString(type: String?): RadarTrackingOptionsType {
+                return when (type) {
+                    ON_TRIP_STR -> ON_TRIP
+                    IN_GEOFENCE_STR -> IN_GEOFENCE
+                    IS_USER_STR -> IS_USER
+                    else -> DEFAULT
+                }
+            }
+        }
+
+        fun toRadarString(): String {
+            return when (this) {
+                DEFAULT -> DEFAULT_STR
+                ON_TRIP -> ON_TRIP_STR
+                IN_GEOFENCE -> IN_GEOFENCE_STR
+                IS_USER -> IS_USER_STR
             }
         }
     }
@@ -520,6 +562,7 @@ data class RadarTrackingOptions(
         internal const val KEY_BEACONS = "beacons"
         internal const val KEY_USE_MOTION = "useMotion"
         internal const val KEY_USE_PRESSURE = "usePressure"
+        internal const val KEY_TYPE = "type"
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTrackingOptions {
             val desiredAccuracy = if (obj.has(KEY_DESIRED_ACCURACY) && obj.get(KEY_DESIRED_ACCURACY) is String) {
@@ -538,6 +581,12 @@ data class RadarTrackingOptions(
                 RadarTrackingOptionsSync.fromRadarString(obj.optString(KEY_SYNC))
             } else {
                 RadarTrackingOptionsSync.fromInt(obj.optInt(KEY_SYNC))
+            }
+
+            val type = if (obj.has(KEY_TYPE) && obj.get(KEY_TYPE) is String) {
+                RadarTrackingOptionsType.fromRadarString(obj.optString(KEY_TYPE))
+            } else {
+                RadarTrackingOptionsType.DEFAULT
             }
 
             return RadarTrackingOptions(
@@ -590,7 +639,8 @@ data class RadarTrackingOptions(
                 foregroundServiceEnabled = obj.optBoolean(KEY_FOREGROUND_SERVICE_ENABLED, false),
                 beacons = obj.optBoolean(KEY_BEACONS),
                 useMotion = obj.optBoolean(KEY_USE_MOTION),
-                usePressure = obj.optBoolean(KEY_USE_PRESSURE)
+                usePressure = obj.optBoolean(KEY_USE_PRESSURE),
+                type = type
             )
         }
     }
@@ -619,6 +669,7 @@ data class RadarTrackingOptions(
         obj.put(KEY_BEACONS, beacons)
         obj.put(KEY_USE_MOTION, useMotion)
         obj.put(KEY_USE_PRESSURE, usePressure)
+        obj.put(KEY_TYPE, type.toRadarString())
         return obj
     }
 

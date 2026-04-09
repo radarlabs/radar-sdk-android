@@ -60,6 +60,13 @@ internal class RadarActivityLifecycleCallbacks(
                             if (status == Radar.RadarStatus.SUCCESS) {
                                 Radar.locationManager.updateTrackingFromMeta(config.meta)
                                 RadarSettings.setSdkConfiguration(activity.applicationContext, config.meta.sdkConfiguration)
+
+                                val updatedConfig = RadarSettings.getSdkConfiguration(activity.applicationContext)
+                                if (updatedConfig.useSyncRegion) {
+                                    Radar.syncManager.start(86400 * 1000L)
+                                } else {
+                                    Radar.syncManager.stop()
+                                }
                             }
 
                             val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)

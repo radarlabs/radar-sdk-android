@@ -507,6 +507,7 @@ object Radar {
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
     private lateinit var inAppMessageManager: RadarInAppMessageManager
+    internal lateinit var syncManager: RadarSyncManager
     private var activityLifecycleCallbacks: RadarActivityLifecycleCallbacks? = null
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -645,6 +646,11 @@ object Radar {
             this.locationManager = RadarLocationManager(this.context, apiClient, logger, batteryManager, options.locationProvider)
             RadarSettings.setLocationServicesProvider(this.context, options.locationProvider)
             this.locationManager.updateTracking()
+        } else {
+            // Keep locationManager's context in sync — only meaningful in
+            // Robolectric test suites where the Application context can change
+            // between test classes while this singleton object persists.
+            this.locationManager.updateContext(this.context)
         }
 
         if (!this::inAppMessageManager.isInitialized) {
@@ -655,6 +661,10 @@ object Radar {
             } else {
                 this.logger.e("Provided context is not an activity and optional currentActivity parameter was not provided, cannot initialize inAppMessageManager")
             }
+        }
+
+        if (!this::syncManager.isInitialized) {
+            this.syncManager = RadarSyncManager(this.context, apiClient, logger)
         }
 
         this.logger.i("initialize()", RadarLogType.SDK_CALL)
@@ -695,6 +705,13 @@ object Radar {
                 if (status == RadarStatus.SUCCESS) {
                     locationManager.updateTrackingFromMeta(config.meta)
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+
+                    val updatedConfig = RadarSettings.getSdkConfiguration(context)
+                    if (updatedConfig.useSyncRegion) {
+                        syncManager.start(86400 * 1000L)
+                    } else {
+                        syncManager.stop()
+                    }
                 }
 
                 val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
@@ -749,6 +766,10 @@ object Radar {
 
         if (RadarSettings.getSdkConfiguration(context).syncAfterSetUser) {
             trackOnce()
+        }
+
+        if (RadarSettings.getSdkConfiguration(context).useSyncRegion) {
+            syncManager.fetchSyncRegion()
         }
     }
 

@@ -214,8 +214,10 @@ class RadarLocationReceiver : BroadcastReceiver() {
                 RadarState.setLastMotionActivity(context, motionActivity)
                 Radar.logger.i("Activity detected and initiating trackOnce for: $eventType")
             }
-            
-            Radar.trackOnce()
+
+            if (Radar.getTrackingOptions().sync != RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS) {
+                Radar.trackOnce()
+            }
         }
     }
 
