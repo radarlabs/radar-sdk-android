@@ -77,25 +77,6 @@ fun TestView() {
             }
         }
 
-        CustomButton("requestBluetoothPermissions") {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val needed = mutableListOf<String>()
-                if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                    needed.add(Manifest.permission.BLUETOOTH_SCAN)
-                }
-                if (ContextCompat.checkSelfPermission(activity, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    needed.add(Manifest.permission.BLUETOOTH_CONNECT)
-                }
-                if (needed.isNotEmpty()) {
-                    ActivityCompat.requestPermissions(activity, needed.toTypedArray(), 4)
-                } else {
-                    Log.v("example", "Bluetooth permissions already granted")
-                }
-            } else {
-                Log.v("example", "Bluetooth runtime permissions not required below Android 12")
-            }
-        }
-
         CustomButton("getLocation") {
             Radar.getLocation { status, location, stopped ->
                 Log.v(

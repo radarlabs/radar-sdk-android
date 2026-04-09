@@ -22,7 +22,7 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
-const val PUBLISHABLE_KEY = "prj_test_pk_cff94457df57a7ac5dcaacea84ab1df7423ea9ac"
+const val PUBLISHABLE_KEY = "prj_test_pk_"
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         )
         Radar.initialize(this, PUBLISHABLE_KEY, options)
 
-//        Radar.setUserId("alan-galaxy-4-8_2_30pm")
+        Radar.setUserId("android-test-user")
         Radar.sdkVersion().let { Log.i("version", it) }
 
         // We can also set the foreground service options like this:
