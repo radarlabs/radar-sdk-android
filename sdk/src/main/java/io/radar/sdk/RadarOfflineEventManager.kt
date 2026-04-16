@@ -14,11 +14,11 @@ internal class RadarOfflineEventManager(
     private val logger: RadarLogger
 ) {
     private val lock = Any()
-    private var offlineGeofenceIds: Set<String> = emptySet()
+    private var offlineGeofenceIds: Set<String>? = null
 
     fun reset() {
         synchronized(lock) {
-            offlineGeofenceIds = emptySet()
+            offlineGeofenceIds = null
         }
     }
 
@@ -33,7 +33,7 @@ internal class RadarOfflineEventManager(
 
 
        val effectiveIds = synchronized(lock) {
-           offlineGeofenceIds.ifEmpty { baselineIds }
+           offlineGeofenceIds ?: baselineIds
        }
 
         val entries = syncManager.getGeofenceEntries(location, effectiveIds)

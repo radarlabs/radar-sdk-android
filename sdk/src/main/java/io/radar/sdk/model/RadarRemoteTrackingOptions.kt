@@ -11,12 +11,15 @@ internal data class RadarRemoteTrackingOptions(
 ) {
     companion object {
         fun fromJson(json: JSONObject): RadarRemoteTrackingOptions? {
-            val type = json.optString("type") ?: return null
+            val type = json.optString("type")
+            if (type.isBlank()) return null
             val trackingOptionsJson = json.optJSONObject("trackingOptions") ?: return  null
             val trackingOptions = RadarTrackingOptions.fromJson(trackingOptionsJson)
 
             val geofenceTags = json.optJSONArray("geofenceTags")?.let { arr ->
-                (0 until arr.length()).mapNotNull { arr.optString(it) }
+                (0 until arr.length())
+                    .map { arr.optString(it) }
+                    .filter { it.isNotBlank() }
             }
 
             return RadarRemoteTrackingOptions(type, trackingOptions, geofenceTags)
