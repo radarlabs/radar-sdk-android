@@ -364,8 +364,6 @@ object Radar {
         BEACON_ENTER,
         /** Beacon exit */
         BEACON_EXIT,
-        /** Offline detection*/
-        OFFLINE,
         /** Unknown */
         UNKNOWN
     }
@@ -4040,7 +4038,6 @@ object Radar {
             RadarLocationSource.MOCK_LOCATION -> "MOCK_LOCATION"
             RadarLocationSource.BEACON_ENTER -> "BEACON_ENTER"
             RadarLocationSource.BEACON_EXIT -> "BEACON_EXIT"
-            RadarLocationSource.OFFLINE -> "OFFLINE_DETECTION"
             else -> "UNKNOWN"
         }
     }

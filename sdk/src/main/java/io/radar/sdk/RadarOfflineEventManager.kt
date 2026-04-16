@@ -174,18 +174,12 @@ internal class RadarOfflineEventManager(
             put("geofences", RadarGeofence.toJson(geofences.toTypedArray()))
             put("stopped", RadarState.getStopped(context))
             put("foreground", RadarActivityLifecycleCallbacks.foreground)
-            put("source", "OFFLINE_DETECTION")
 
             cachedUser?._id?.let { put("_id", it) }
             cachedUser?.userId?.let { put("userId", it) }
             cachedUser?.deviceId?.let { put("deviceId", it) }
             cachedUser?.description?.let { put("description", it) }
             cachedUser?.metadata?.let { put("metadata", it) }
-            cachedUser?.country?.let { put("country", it.toJson()) }
-            cachedUser?.state?.let { put("state", it.toJson()) }
-            cachedUser?.dma?.let { put("dma", it.toJson()) }
-            cachedUser?.postalCode?.let { put("postalCode", it.toJson()) }
-            cachedUser?.trip?.let { put("trip", it.toJson()) }
         }
         return RadarUser.fromJson(userJson)
     }
