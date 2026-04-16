@@ -620,6 +620,41 @@ internal class RadarSyncManager(
 
     // endregion
 
+    // region Geofence Diff
+
+    fun getGeofenceEntries(location: Location, against: Set<String>): List<RadarGeofence> {
+        val currentGeofences = getGeofences(location)
+        val currentGeofenceIds = currentGeofences.map { it._id }.toSet()
+        val enteredIds = currentGeofenceIds - against
+        if (enteredIds.isEmpty()) return emptyList()
+
+        val sdkConfig = RadarSettings.getSdkConfiguration(context)
+        val projectStopDetection = sdkConfig.stopDetection
+        val isStopped = RadarState.getStopped(context)
+
+        return currentGeofences.filter { geofence ->
+            if (geofence._id !in enteredIds) return@filter false
+            val requireStop = geofence.stopDetection ?: projectStopDetection
+            if (requireStop && !isStopped) {
+                logger.d("SyncManager: Skipping geofence entry (stop detection, not stopped): ${geofence._id}")
+                return@filter false
+            }
+            true
+        }
+    }
+
+    fun getGeofenceExits(location: Location, against: Set<String>): List<RadarGeofence> {
+        val exitCheckGeofences = getGeofences(location, checkingForExit = true)
+        val exitCheckIds = exitCheckGeofences.map { it._id }.toSet()
+        val exitedIds = against - exitCheckIds
+        if (exitedIds.isEmpty()) return emptyList()
+
+        val allSynced = syncStore.read()?.syncedGeofences ?: return emptyList()
+        return allSynced.filter { it._id in exitedIds }
+    }
+
+    // endregion
+
     // region Server Reconciliation
 
     fun reconcileSyncState(user: RadarUser) {

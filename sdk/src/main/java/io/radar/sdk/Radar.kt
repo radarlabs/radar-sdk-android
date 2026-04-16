@@ -508,6 +508,7 @@ object Radar {
     private lateinit var verificationManager: RadarVerificationManager
     private lateinit var inAppMessageManager: RadarInAppMessageManager
     internal lateinit var syncManager: RadarSyncManager
+    internal lateinit var offlineEventManager: RadarOfflineEventManager
     private var activityLifecycleCallbacks: RadarActivityLifecycleCallbacks? = null
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -665,6 +666,10 @@ object Radar {
 
         if (!this::syncManager.isInitialized) {
             this.syncManager = RadarSyncManager(this.context, apiClient, logger)
+        }
+
+        if (!this::offlineEventManager.isInitialized) {
+            this.offlineEventManager = RadarOfflineEventManager(this.context, syncManager, logger)
         }
 
         this.logger.i("initialize()", RadarLogType.SDK_CALL)

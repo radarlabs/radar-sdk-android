@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.model.RadarUser
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -42,6 +43,7 @@ internal object RadarState {
     private const val KEY_LAST_MOTION_ACTIVITY = "last_motion_activity"
     private const val KEY_LAST_PRESSURE = "last_pressure"
     private const val KEY_ALTITUDE_ADJUSTMENTS = "altitude_adjustments"
+    private const val KEY_LAST_USER = "last_user"
 
     private fun getSharedPreferences(context: Context): SharedPreferences {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -313,4 +315,22 @@ internal object RadarState {
             putString(KEY_ALTITUDE_ADJUSTMENTS, jsonString)
         }
     }
+
+    internal fun getLastUser(context: Context): RadarUser? {
+        val jsonString = getSharedPreferences(context).getString(KEY_LAST_USER, null)
+        val userJson = stringToJsonObject(jsonString) ?: return null
+        return RadarUser.fromJson(userJson)
+    }
+
+    internal fun setLastUser(context: Context, user: RadarUser?) {
+        val jsonString = user?.toJson()?.toString()
+        getSharedPreferences(context).edit {
+            if (jsonString != null) {
+                putString(KEY_LAST_USER, jsonString)
+            } else {
+                remove(KEY_LAST_USER)
+            }
+        }
+    }
+
 }

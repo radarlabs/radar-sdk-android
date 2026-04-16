@@ -29,6 +29,9 @@ internal data class RadarSdkConfiguration(
     val bufferGeofenceExits: Boolean = true,
     val defaultGeofenceDwellThreshold: Int = 0,
     val maxReplayBufferSize: Int = DEFAULT_MAX_REPLAY_BUFFER_SIZE,
+    val offlineEventGenerationEnabled: Boolean = false,
+    val useOfflineRTOUpdates: Boolean = false,
+    val remoteTrackingOptions: List<RadarRemoteTrackingOptions>? = null,
 ) {
     companion object {
         private const val MAX_CONCURRENT_JOBS = "maxConcurrentJobs"
@@ -52,6 +55,9 @@ internal data class RadarSdkConfiguration(
         private const val DEFAULT_GEOFENCE_DWELL_THRESHOLD = "defaultGeofenceDwellThreshold"
         private const val MAX_REPLAY_BUFFER_SIZE = "maxReplayBufferSize"
         const val DEFAULT_MAX_REPLAY_BUFFER_SIZE = 120
+        private const val OFFLINE_EVENT_GENERATION_ENABLED = "offlineEventGenerationEnabled"
+        private const val USE_OFFLINE_RTO_UPDATES = "useOfflineRTOUpdates"
+        private const val REMOTE_TRACKING_OPTIONS = "remoteTrackingOptions"
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             // set json as empty object if json is null, which uses fallback values
@@ -84,7 +90,10 @@ internal data class RadarSdkConfiguration(
                 config.optBoolean(BUFFER_GEOFENCE_EXITS, true),
                 config.optInt(DEFAULT_GEOFENCE_DWELL_THRESHOLD, 0),
                 validatedMaxReplayBufferSize,
-            )
+                config.optBoolean(OFFLINE_EVENT_GENERATION_ENABLED, false),
+                config.optBoolean(USE_OFFLINE_RTO_UPDATES, false),
+                RadarRemoteTrackingOptions.fromJsonArray(config.optJSONArray(REMOTE_TRACKING_OPTIONS)),
+                )
         }
 
         fun updateSdkConfigurationFromServer(context: Context) {
@@ -121,6 +130,9 @@ internal data class RadarSdkConfiguration(
             putOpt(BUFFER_GEOFENCE_EXITS, bufferGeofenceExits)
             putOpt(DEFAULT_GEOFENCE_DWELL_THRESHOLD, defaultGeofenceDwellThreshold)
             putOpt(MAX_REPLAY_BUFFER_SIZE, maxReplayBufferSize)
+            putOpt(OFFLINE_EVENT_GENERATION_ENABLED, offlineEventGenerationEnabled)
+            putOpt(USE_OFFLINE_RTO_UPDATES, useOfflineRTOUpdates)
+            putOpt(REMOTE_TRACKING_OPTIONS, RadarRemoteTrackingOptions.toJsonArray(remoteTrackingOptions))
         }
     }
 }
