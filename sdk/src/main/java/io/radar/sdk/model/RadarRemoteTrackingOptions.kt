@@ -1,9 +1,5 @@
 package io.radar.sdk.model
 
-import androidx.core.graphics.component1
-import androidx.core.graphics.component2
-import androidx.core.graphics.component3
-import androidx.core.graphics.component4
 import io.radar.sdk.RadarTrackingOptions
 import org.json.JSONArray
 import org.json.JSONObject
@@ -19,7 +15,7 @@ internal data class RadarRemoteTrackingOptions(
             val trackingOptionsJson = json.optJSONObject("trackingOptions") ?: return  null
             val trackingOptions = RadarTrackingOptions.fromJson(trackingOptionsJson)
 
-            val geofenceTags = json.optJSONObject("geofenceTags")?.let { arr ->
+            val geofenceTags = json.optJSONArray("geofenceTags")?.let { arr ->
                 (0 until arr.length()).mapNotNull { arr.optString(it) }
             }
 
