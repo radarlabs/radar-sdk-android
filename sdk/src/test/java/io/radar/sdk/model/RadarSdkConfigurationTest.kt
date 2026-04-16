@@ -58,6 +58,8 @@ class RadarSdkConfigurationTest {
             "bufferGeofenceExits":true,
             "defaultGeofenceDwellThreshold":0,
             "maxReplayBufferSize":$maxReplayBufferSize,
+            "offlineEventGenerationEnabled":false,
+            "useOfflineRTOUpdates":false,
         }""".trimIndent()
     }
 
@@ -85,6 +87,9 @@ class RadarSdkConfigurationTest {
                 true,
                 0,
                 maxReplayBufferSize,
+                false,
+                false,
+                null
             ).toJson().toString()
         )
     }
@@ -106,6 +111,9 @@ class RadarSdkConfigurationTest {
         assertEquals(locationManagerTimeout, settings.locationManagerTimeout)
         assertEquals(syncAfterSetUser, settings.syncAfterSetUser)
         assertEquals(maxReplayBufferSize, settings.maxReplayBufferSize)
+        assertFalse(settings.offlineEventGenerationEnabled)
+        assertFalse(settings.useOfflineRTOUpdates)
+        assertEquals(null, settings.remoteTrackingOptions)
     }
 
     @Test
@@ -124,6 +132,9 @@ class RadarSdkConfigurationTest {
         assertFalse(settings.useForegroundLocationUpdatedAtMsDiff)
         assertEquals(0, settings.locationManagerTimeout)
         assertEquals(120, settings.maxReplayBufferSize)
+        assertFalse(settings.offlineEventGenerationEnabled)
+        assertFalse(settings.useOfflineRTOUpdates)
+        assertEquals(null, settings.remoteTrackingOptions)
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")
