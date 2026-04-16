@@ -25,6 +25,7 @@ import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import io.radar.sdk.model.RadarCoordinate
+import io.radar.sdk.model.RadarMeta
 import io.radar.sdk.model.RadarTripLeg
 import org.json.JSONArray
 import org.json.JSONException
@@ -506,6 +507,18 @@ internal class RadarApiClient(
                         RadarState.setLastFailedStoppedLocation(context, location)
                     }
 
+                    // Generate offline events (gated internally by offlineEventGenerationEnabled)
+                    Radar.offlineEventManager.handleTrackFailure(location)
+
+                    // Apply offline remote tracking options if useOfflineRTOUpdates is enabled
+                    if (RadarSettings.getSdkConfiguration(context).useOfflineRTOUpdates) {
+                        val offlineOptions = Radar.offlineEventManager.updateTrackingOptions(location)
+                        if (offlineOptions != null) {
+                            val offlineMeta = RadarMeta(offlineOptions, null)
+                            locationManager.updateTrackingFromMeta(offlineMeta)
+                        }
+                    }
+
                     Radar.sendError(status)
 
                     callback?.onComplete(status)
@@ -537,6 +550,7 @@ internal class RadarApiClient(
                 val token = RadarVerifiedLocationToken.fromJson(res)
 
                 if (user != null) {
+                    RadarState.setLastUser(context, user)
                     val inGeofences = user.geofences != null && user.geofences.isNotEmpty()
                     val atPlace = user.place != null
                     val canExit = inGeofences || atPlace

@@ -574,10 +574,16 @@ internal class RadarLocationManager(
         callCallbacks(RadarStatus.SUCCESS, location)
 
         val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
-        if (sdkConfiguration.useSyncRegion && !Radar.syncManager.hasSyncedRegion()) {
-            Radar.syncManager.fetchSyncRegion()
+        if (sdkConfiguration.useSyncRegion) {
+            if (!Radar.syncManager.hasSyncedRegion()) {
+                Radar.syncManager.fetchSyncRegion()
+            } else if (sdkConfiguration.offlineEventGenerationEnabled
+                && (Radar.syncManager.isOutsideSyncedRegion(location) ||
+                        Radar.syncManager.isNearSyncedRegionBoundary(location))) {
+                Radar.syncManager.fetchSyncRegion()
+            }
         }
-
+        
         var sendLocation = location
 
         val lastFailedStoppedLocation = RadarState.getLastFailedStoppedLocation(context)

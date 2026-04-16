@@ -364,6 +364,8 @@ object Radar {
         BEACON_ENTER,
         /** Beacon exit */
         BEACON_EXIT,
+        /** Offline detection*/
+        OFFLINE,
         /** Unknown */
         UNKNOWN
     }
@@ -508,6 +510,7 @@ object Radar {
     private lateinit var verificationManager: RadarVerificationManager
     private lateinit var inAppMessageManager: RadarInAppMessageManager
     internal lateinit var syncManager: RadarSyncManager
+    internal lateinit var offlineEventManager: RadarOfflineEventManager
     private var activityLifecycleCallbacks: RadarActivityLifecycleCallbacks? = null
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -665,6 +668,10 @@ object Radar {
 
         if (!this::syncManager.isInitialized) {
             this.syncManager = RadarSyncManager(this.context, apiClient, logger)
+        }
+
+        if (!this::offlineEventManager.isInitialized) {
+            this.offlineEventManager = RadarOfflineEventManager(this.context, syncManager, logger)
         }
 
         this.logger.i("initialize()", RadarLogType.SDK_CALL)
@@ -4033,6 +4040,7 @@ object Radar {
             RadarLocationSource.MOCK_LOCATION -> "MOCK_LOCATION"
             RadarLocationSource.BEACON_ENTER -> "BEACON_ENTER"
             RadarLocationSource.BEACON_EXIT -> "BEACON_EXIT"
+            RadarLocationSource.OFFLINE -> "OFFLINE_DETECTION"
             else -> "UNKNOWN"
         }
     }
