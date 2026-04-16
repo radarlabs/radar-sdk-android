@@ -583,7 +583,7 @@ internal class RadarLocationManager(
                 Radar.syncManager.fetchSyncRegion()
             }
         }
-        
+
         var sendLocation = location
 
         val lastFailedStoppedLocation = RadarState.getLastFailedStoppedLocation(context)
