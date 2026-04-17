@@ -1,5 +1,6 @@
 package io.radar.example
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
@@ -7,6 +8,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
@@ -14,7 +16,9 @@ import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.google.firebase.FirebaseApp
@@ -22,7 +26,7 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
-const val PUBLISHABLE_KEY = "prj_test_pk_"
+const val PUBLISHABLE_KEY = "prj_test_pk_cff94457df57a7ac5dcaacea84ab1df7423ea9ac"
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +47,13 @@ class MainActivity : AppCompatActivity() {
         )
         Radar.initialize(this, PUBLISHABLE_KEY, options)
 
-        Radar.setUserId("android-test-user")
+        // Surface offline-event / offline-RTO debug traces (e.g. "OfflineEventManager:
+        // Ramping up tracking options") through RadarReceiver.onLog for the QA demo.
+        Radar.setLogLevel(Radar.RadarLogLevel.DEBUG)
+
+        requestPostNotificationsPermissionIfNeeded()
+
+        Radar.setUserId("name_offline_android_date")
         Radar.sdkVersion().let { Log.i("version", it) }
 
         // We can also set the foreground service options like this:
@@ -66,6 +76,24 @@ class MainActivity : AppCompatActivity() {
         setContent {
             MainView()
         }
+    }
+
+    private fun requestPostNotificationsPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val granted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+        if (granted) return
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+            POST_NOTIFICATIONS_REQUEST_CODE
+        )
+    }
+
+    companion object {
+        private const val POST_NOTIFICATIONS_REQUEST_CODE = 4242
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
