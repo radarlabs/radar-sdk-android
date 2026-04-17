@@ -10,8 +10,6 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import androidx.annotation.RequiresApi
-import androidx.core.content.edit
-import com.google.firebase.messaging.FirebaseMessaging
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
@@ -698,11 +696,7 @@ object Radar {
         val usage = "initialize"
         this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: RadarStatus, config: RadarConfig?) {
-                if (config == null) {
-                    return
-                }
-
-                if (status == RadarStatus.SUCCESS) {
+                if (status == RadarStatus.SUCCESS && config != null) {
                     locationManager.updateTrackingFromMeta(config.meta)
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
 
@@ -716,10 +710,30 @@ object Radar {
 
                 val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
                 if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(context)) {
-                    Radar.startTracking(Radar.getTrackingOptions())
+                    startTracking(Radar.getTrackingOptions())
                 }
                 if (sdkConfiguration.trackOnceOnAppOpen) {
-                    Radar.trackOnce()
+                    trackOnce()
+                }
+
+                try {
+                    // use config, or if getConfig failed, we can just use the local sdkConfiguration
+                    val options = config?.meta?.raw ?: JSONObject().apply{
+                        put("sdkConfiguration", sdkConfiguration.toJson())
+                    }
+                    options.put("installId", RadarSettings.getInstallId(context))
+
+                    val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
+                    val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
+                    val fraudInstance = sharedInstanceMethod.invoke(null)
+
+                    // Create options map
+                    val initializeMethod = fraudClass.getMethod("initialize", JSONObject::class.java)
+
+                    initializeMethod.invoke(fraudInstance, options)
+                } catch (e: Exception) {
+                    // failed to initialize fraud
+                    println("Failed to initialize fraud SDK $e")
                 }
             }
         })

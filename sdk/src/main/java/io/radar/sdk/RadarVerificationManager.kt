@@ -68,6 +68,20 @@ internal class RadarVerificationManager(
                     return
                 }
 
+                // update fraud lib configuration
+                val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+                val options = config.meta.raw ?: JSONObject().apply{
+                    put("sdkConfiguration", sdkConfiguration.toJson())
+                }
+                options.put("installId", RadarSettings.getInstallId(context))
+                val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
+                val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
+                val fraudInstance = sharedInstanceMethod.invoke(null)
+
+                val updateMethod = fraudClass.getMethod("update", JSONObject::class.java)
+                updateMethod.invoke(fraudInstance, options)
+
+
                 val googlePlayProjectNumber = config.googlePlayProjectNumber
 
                 Radar.locationManager.getLocation(

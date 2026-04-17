@@ -7,6 +7,8 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
@@ -14,11 +16,12 @@ import androidx.core.hardware.display.DisplayManagerCompat
 import java.security.MessageDigest
 import java.text.ParseException
 import java.text.SimpleDateFormat
-import java.util.*
 import java.time.ZonedDateTime
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import kotlin.math.abs
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 
 enum class ConnectionType {
     cellular, unknown, wifi
