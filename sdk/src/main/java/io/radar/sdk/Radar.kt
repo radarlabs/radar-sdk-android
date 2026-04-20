@@ -1766,6 +1766,17 @@ object Radar {
     }
 
     /**
+     * Set the publishable key used for Radar API requests
+     */
+    @JvmStatic
+    fun setPublishableKey(key: String) {
+        if (!initialized) {
+            return // do nothing if not initialized, because we need this.context
+        }
+        RadarSettings.setPublishableKey(this.context, key)
+    }
+
+    /**
      * Returns the current tracking options.
      *
      * @see [](https://radar.com/documentation/sdk/tracking)
@@ -4134,20 +4145,6 @@ object Radar {
         return RadarUtils.sdkVersion
     }
 
-    internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>) {
-        if (!initialized || !this::inAppMessageManager.isInitialized) {
-            return
-        }
-        inAppMessageManager.showInAppMessages(inAppMessages)
-    }
-
-    internal fun dismissInAppMessage() {
-        if (!initialized || !this::inAppMessageManager.isInitialized) {
-            return
-        }
-        inAppMessageManager.dismiss()
-    }
-
     /**
      * Loads an image from a URL using the existing API pattern.
      *
@@ -4184,6 +4181,20 @@ object Radar {
     @JvmStatic
     fun setPushNotificationToken(token: String?) {
         RadarSettings.pushNotificationToken = token
+    }
+
+    internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>) {
+        if (!initialized || !this::inAppMessageManager.isInitialized) {
+            return
+        }
+        inAppMessageManager.showInAppMessages(inAppMessages)
+    }
+
+    internal fun dismissInAppMessage() {
+        if (!initialized || !this::inAppMessageManager.isInitialized) {
+            return
+        }
+        inAppMessageManager.dismiss()
     }
 
     internal fun handleLocation(context: Context, location: Location, source: RadarLocationSource) {
