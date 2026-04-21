@@ -20,4 +20,5 @@ internal interface RadarReplayBuffer {
     fun cancelBatchTimer()
     fun flushBatch()
     fun batchCount(): Int
+    fun shutdown()
 }

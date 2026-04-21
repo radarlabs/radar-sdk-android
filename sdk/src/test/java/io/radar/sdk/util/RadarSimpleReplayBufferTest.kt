@@ -29,7 +29,7 @@ class RadarSimpleReplayBufferTest {
 
     @After
     fun tearDown() {
-        buffer.cancelBatchTimer()
+        buffer.shutdown()
     }
 
     private fun options(batchSize: Int, batchInterval: Int): RadarTrackingOptions {

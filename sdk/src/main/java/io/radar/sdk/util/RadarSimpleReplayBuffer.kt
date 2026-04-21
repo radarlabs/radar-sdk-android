@@ -13,7 +13,6 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import android.os.Handler
 import android.os.HandlerThread
-import java.util.Date
 
 internal class RadarSimpleReplayBuffer(private val context: Context) : RadarReplayBuffer {
 
@@ -24,10 +23,9 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
     }
 
     private val buffer = LinkedBlockingDeque<RadarReplay>(MAXIMUM_CAPACITY)
-    private val batchHandlerThread = HandlerThread("RadarBatchTimer").apply { start() }
-    private val batchHandler = Handler(batchHandlerThread.looper)
+    private var batchHandlerThread: HandlerThread? = null
+    private var batchHandler: Handler? = null
     private var batchTimerRunnable: Runnable? = null
-    private var batchStartTime: Date? = null
 
     override fun getSize(): Int {
         return buffer.size
@@ -98,6 +96,16 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
 
     // region Batch methods
 
+    private fun ensureBatchHandler(): Handler {
+        return synchronized(this) {
+            batchHandler ?: run {
+                val thread = HandlerThread("RadarBatchTimer").apply { start() }
+                batchHandlerThread = thread
+                Handler(thread.looper).also { batchHandler = it }
+            }
+        }
+    }
+
     override fun addToBatch(batchParams: JSONObject, options: RadarTrackingOptions) {
         val params = JSONObject(batchParams.toString())
         params.put("replayed", true)
@@ -107,10 +115,6 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
         write(params)
 
         synchronized(this) {
-            if (batchStartTime == null) {
-                batchStartTime = Date()
-            }
-
             if (options.batchInterval > 0 && batchTimerRunnable == null) {
                 scheduleBatchTimer(options.batchInterval)
             }
@@ -136,16 +140,19 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
         if (interval <= 0) return
 
         synchronized(this) {
-            batchTimerRunnable?.let { batchHandler.removeCallbacks(it) }
+            val handler = ensureBatchHandler()
+            batchTimerRunnable?.let { handler.removeCallbacks(it) }
 
             Radar.logger.d("Scheduling batch timer | interval = $interval")
 
             val runnable = Runnable {
                 Radar.logger.d("Batch timer fired")
+                synchronized(this) { batchTimerRunnable = null }
                 flushBatch()
             }
+
             batchTimerRunnable = runnable
-            batchHandler.postDelayed(runnable, interval * 1000L)
+            handler.postDelayed(runnable, interval * 1000L)
         }
     }
 
@@ -153,22 +160,32 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
         synchronized(this) {
             batchTimerRunnable?.let { runnable ->
                 Radar.logger.d("Canceling batch timer")
-                batchHandler.removeCallbacks(runnable)
+                batchHandler?.removeCallbacks(runnable)
                 batchTimerRunnable = null
             }
         }
     }
 
     override fun flushBatch() {
-        cancelBatchTimer()
-        synchronized(this) {
-            batchStartTime = null
+        if (Radar.isFlushingReplays) {
+            Radar.logger.d("Skipping batch flush; already flushing replays")
+            return  // keep the timer alive so we retry later
         }
+        cancelBatchTimer()
         Radar.flushReplays()
     }
 
     override fun batchCount(): Int {
         return buffer.size
+    }
+
+    override fun shutdown() {
+        cancelBatchTimer()
+        synchronized(this) {
+            batchHandlerThread?.quit()
+            batchHandlerThread = null
+            batchHandler = null
+        }
     }
 
     // endregion

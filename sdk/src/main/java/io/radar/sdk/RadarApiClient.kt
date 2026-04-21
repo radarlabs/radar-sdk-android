@@ -475,6 +475,11 @@ internal class RadarApiClient(
         val path = "v1/track"
         val headers = headers(publishableKey)
 
+        if (anonymous) {
+            val usage = "track"
+            this.getConfig(usage)
+        }
+
         val batchingEnabled = (options.batchSize > 0 || options.batchInterval > 0)
 
         if (batchingEnabled &&
@@ -489,13 +494,9 @@ internal class RadarApiClient(
                 Radar.flushBatch()
             }
 
+            RadarSettings.updateLastTrackedTime(context)
             callback?.onComplete(RadarStatus.SUCCESS)
             return
-        }
-
-        if (anonymous) {
-            val usage = "track"
-            this.getConfig(usage)
         }
 
         val hasReplays = Radar.hasReplays()
