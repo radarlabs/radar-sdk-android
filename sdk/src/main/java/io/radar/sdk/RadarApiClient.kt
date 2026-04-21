@@ -475,6 +475,24 @@ internal class RadarApiClient(
         val path = "v1/track"
         val headers = headers(publishableKey)
 
+        val batchingEnabled = (options.batchSize > 0 || options.batchInterval > 0)
+
+        if (batchingEnabled &&
+            source != RadarLocationSource.MANUAL_LOCATION &&
+            source != RadarLocationSource.FOREGROUND_LOCATION) {
+            val batchParams = JSONObject(params.toString())
+
+            Radar.addToBatch(batchParams, options)
+
+            if (Radar.shouldFlushBatch(options)) {
+                logger.d("Flushing batch: size limit reached")
+                Radar.flushBatch()
+            }
+
+            callback?.onComplete(RadarStatus.SUCCESS)
+            return
+        }
+
         if (anonymous) {
             val usage = "track"
             this.getConfig(usage)

@@ -4004,6 +4004,19 @@ object Radar {
     }
 
     @JvmStatic
+    internal fun addToBatch(batchParams: JSONObject, options: RadarTrackingOptions) {
+        replayBuffer.addToBatch(batchParams, options)
+    }
+    @JvmStatic
+    internal fun shouldFlushBatch(options: RadarTrackingOptions): Boolean {
+        return replayBuffer.shouldFlushBatch(options)
+    }
+    @JvmStatic
+    internal fun flushBatch() {
+        replayBuffer.flushBatch()
+    }
+
+    @JvmStatic
     internal fun isTestKey(): Boolean {
         val key = RadarSettings.getPublishableKey(this.context)
         val userDebug = RadarSettings.getUserDebug(this.context)

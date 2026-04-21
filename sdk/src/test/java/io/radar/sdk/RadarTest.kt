@@ -304,6 +304,7 @@ class RadarTest {
         
         // Clear captured parameters from previous tests
         apiHelperMock.clearCapturedParams()
+        Radar.flushBatch()
     }
 
     @Test
@@ -1151,6 +1152,18 @@ class RadarTest {
     }
 
     @Test
+    fun test_RadarTrackingOptions_presetDefaults_haveZeroBatching() {
+        for (preset in listOf(
+            RadarTrackingOptions.CONTINUOUS,
+            RadarTrackingOptions.RESPONSIVE,
+            RadarTrackingOptions.EFFICIENT
+        )) {
+            assertEquals(0, preset.batchInterval)
+            assertEquals(0, preset.batchSize)
+        }
+    }
+
+    @Test
     fun test_Radar_startTracking_continuous() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
 
@@ -1254,6 +1267,22 @@ class RadarTest {
         assertEquals(newOptions, Radar.getTrackingOptions())
         assertEquals(newOptions, options)
         assertTrue(Radar.isTracking())
+    }
+
+    @Test
+    fun test_RadarTrackingOptions_batching_serializeRoundTrip() {
+        val options = RadarTrackingOptions.RESPONSIVE
+        options.batchInterval = 30
+        options.batchSize = 5
+
+        val json = options.toJson()
+        assertEquals(30, json.getInt("batchInterval"))
+        assertEquals(5, json.getInt("batchSize"))
+
+        val decoded = RadarTrackingOptions.fromJson(json)
+        assertEquals(30, decoded.batchInterval)
+        assertEquals(5, decoded.batchSize)
+        assertEquals(options, decoded)
     }
 
     @Test
