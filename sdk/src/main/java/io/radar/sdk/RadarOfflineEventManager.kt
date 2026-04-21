@@ -7,6 +7,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Date
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
 internal class RadarOfflineEventManager(
     private val context: Context,
@@ -14,12 +15,10 @@ internal class RadarOfflineEventManager(
     private val logger: RadarLogger
 ) {
     private val lock = Any()
-    private var offlineGeofenceIds: Set<String>? = null
+    val offlineGeofenceIds = AtomicReference<Set<String>?>()
 
     fun reset() {
-        synchronized(lock) {
-            offlineGeofenceIds = null
-        }
+        offlineGeofenceIds.set(null)
     }
 
     // region Event generation
@@ -32,9 +31,7 @@ internal class RadarOfflineEventManager(
         val baselineIds = state.lastSyncedGeofenceIds.toSet()
 
 
-       val effectiveIds = synchronized(lock) {
-           offlineGeofenceIds ?: baselineIds
-       }
+        val effectiveIds = offlineGeofenceIds.get() ?: baselineIds
 
         val entries = syncManager.getGeofenceEntries(location, effectiveIds)
         val exits = syncManager.getGeofenceExits(location, effectiveIds)
@@ -59,9 +56,7 @@ internal class RadarOfflineEventManager(
         }
 
         val currentGeofences = syncManager.getGeofences(location)
-        synchronized(lock) {
-            offlineGeofenceIds = currentGeofences.map { it._id }.toSet()
-        }
+        offlineGeofenceIds.set(currentGeofences.map { it._id }.toSet())
 
         val user = buildSyntheticUser(location, currentGeofences)
         callback(events, user, location)
@@ -88,11 +83,7 @@ internal class RadarOfflineEventManager(
         val remoteOptions = sdkConfig.remoteTrackingOptions
 
         val rampUpTags = RadarRemoteTrackingOptions.geofenceTags("inGeofence", remoteOptions)
-        val inRampedUpGeofences = if (rampUpTags != null) {
-            rampUpTags.toSet().intersect(geofenceTags.toSet()).isNotEmpty()
-        } else {
-            false
-        }
+        val inRampedUpGeofences = rampUpTags?.toSet()?.intersect(geofenceTags.toSet())?.isNotEmpty() ?: false
 
         return when {
             inRampedUpGeofences -> {
