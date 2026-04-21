@@ -1271,9 +1271,10 @@ class RadarTest {
 
     @Test
     fun test_RadarTrackingOptions_batching_serializeRoundTrip() {
-        val options = RadarTrackingOptions.RESPONSIVE
-        options.batchInterval = 30
-        options.batchSize = 5
+        val options = RadarTrackingOptions.RESPONSIVE.copy(
+            batchInterval = 30,
+            batchSize = 5
+        )
 
         val json = options.toJson()
         assertEquals(30, json.getInt("batchInterval"))

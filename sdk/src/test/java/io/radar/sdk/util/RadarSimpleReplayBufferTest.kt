@@ -33,10 +33,10 @@ class RadarSimpleReplayBufferTest {
     }
 
     private fun options(batchSize: Int, batchInterval: Int): RadarTrackingOptions {
-        val options = RadarTrackingOptions.RESPONSIVE
-        options.batchSize = batchSize
-        options.batchInterval = batchInterval
-        return options
+        return RadarTrackingOptions.RESPONSIVE.copy(
+            batchSize = batchSize,
+            batchInterval = batchInterval
+        )
     }
 
     @Test
