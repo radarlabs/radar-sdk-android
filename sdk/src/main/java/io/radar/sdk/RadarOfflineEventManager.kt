@@ -7,7 +7,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Date
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicReference
 
 internal class RadarOfflineEventManager(
     private val context: Context,
@@ -15,10 +14,12 @@ internal class RadarOfflineEventManager(
     private val logger: RadarLogger
 ) {
     private val lock = Any()
-    val offlineGeofenceIds = AtomicReference<Set<String>?>()
-
+    private var _offlineGeofenceIds: Set<String>? = null
+    private var offlineGeofenceIds: Set<String>?
+        get() = synchronized(lock) { _offlineGeofenceIds }
+        set(value) = synchronized(lock) { _offlineGeofenceIds = value }
     fun reset() {
-        offlineGeofenceIds.set(null)
+        offlineGeofenceIds = null
     }
 
     // region Event generation
@@ -31,7 +32,7 @@ internal class RadarOfflineEventManager(
         val baselineIds = state.lastSyncedGeofenceIds.toSet()
 
 
-        val effectiveIds = offlineGeofenceIds.get() ?: baselineIds
+        val effectiveIds = offlineGeofenceIds ?: baselineIds
 
         val entries = syncManager.getGeofenceEntries(location, effectiveIds)
         val exits = syncManager.getGeofenceExits(location, effectiveIds)
@@ -56,7 +57,7 @@ internal class RadarOfflineEventManager(
         }
 
         val currentGeofences = syncManager.getGeofences(location)
-        offlineGeofenceIds.set(currentGeofences.map { it._id }.toSet())
+        offlineGeofenceIds = currentGeofences.map { it._id }.toSet()
 
         val user = buildSyntheticUser(location, currentGeofences)
         callback(events, user, location)

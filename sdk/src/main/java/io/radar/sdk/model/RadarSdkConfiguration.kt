@@ -93,7 +93,7 @@ internal data class RadarSdkConfiguration(
                 config.optBoolean(OFFLINE_EVENT_GENERATION_ENABLED, false),
                 config.optBoolean(USE_OFFLINE_RTO_UPDATES, false),
                 RadarRemoteTrackingOptions.fromJsonArray(config.optJSONArray(REMOTE_TRACKING_OPTIONS)),
-                )
+            )
         }
 
         fun updateSdkConfigurationFromServer(context: Context) {
