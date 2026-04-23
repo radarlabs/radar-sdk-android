@@ -169,7 +169,9 @@ internal class RadarSimpleReplayBuffer(private val context: Context) : RadarRepl
     override fun flushBatch() {
         if (Radar.isFlushingReplays) {
             Radar.logger.d("Skipping batch flush; already flushing replays")
-            return  // keep the timer alive so we retry later
+            // another flush is in progress; bail without canceling the timer
+            // so the next size-check or timer fire gets a chance
+            return
         }
         cancelBatchTimer()
         Radar.flushReplays()

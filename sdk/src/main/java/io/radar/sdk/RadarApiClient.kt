@@ -482,7 +482,14 @@ internal class RadarApiClient(
 
         val batchingEnabled = (options.batchSize > 0 || options.batchInterval > 0)
 
+        // Batching short-circuit: when batching is enabled and this track
+        // call came from a source that can tolerate deferred delivery,
+        // buffer the params instead of making the network call. We return
+        // SUCCESS immediately; the buffered items will be flushed later,
+        // either when batchSize is reached or when the batch timer fires.
         if (batchingEnabled &&
+            // Skip batching for user-initiated (MANUAL) and in-app (FOREGROUND)
+            // tracks, which need immediate network delivery and populated callbacks.
             source != RadarLocationSource.MANUAL_LOCATION &&
             source != RadarLocationSource.FOREGROUND_LOCATION) {
             val batchParams = JSONObject(params.toString())
