@@ -78,7 +78,6 @@ When adding a public API, surface it via `Radar.kt` and keep the implementation 
 
 - Language: Kotlin (idiomatic / modern). Some legacy Java may exist; new code should be Kotlin.
 - `compileSdk` 36, `minSdk` 16, Java 8 target — see [sdk/build.gradle](sdk/build.gradle).
-- Public API surface is documented via Dokka (HTML + Javadoc). Keep KDoc on public types/methods accurate.
 - Lint is strict (warnings = errors). Fix at the source rather than suppressing.
 
 ## Release
