@@ -165,7 +165,7 @@ internal class RadarApiClient(
         val queryParams = StringBuilder()
         queryParams.append("installId=${RadarSettings.getInstallId(context)}")
         queryParams.append("&sessionId=${RadarSettings.getSessionId(context)}")
-        val id = RadarSettings.getId(context);
+        val id = RadarSettings.getId(context)
         if (id != null) {
             queryParams.append("&id=${id}")
         }

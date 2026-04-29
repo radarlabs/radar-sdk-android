@@ -22,7 +22,8 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
-const val PUBLISHABLE_KEY = "prj_test_pk_"
+
+const val PUBLISHABLE_KEY = "prj_test_pk_0000000000000000000000000000000000000000"
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +43,7 @@ class MainActivity : AppCompatActivity() {
             silentPush = true,
         )
         Radar.initialize(this, PUBLISHABLE_KEY, options)
+
 
         Radar.setUserId("android-test-user")
         Radar.sdkVersion().let { Log.i("version", it) }
