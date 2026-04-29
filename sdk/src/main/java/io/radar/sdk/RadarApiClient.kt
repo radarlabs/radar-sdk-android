@@ -291,7 +291,7 @@ internal class RadarApiClient(
         expectedStateCode: String? = null,
         reason: String? = null,
         transactionId: String? = null,
-        fraudPayload: String? = null,
+        fraudOptions: Map<String, Any?>? = null,
         callback: RadarTrackApiCallback? = null
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -411,9 +411,6 @@ internal class RadarApiClient(
             params.putOpt("verified", verified)
             if (verified) {
                 params.putOpt("encrypted", encrypted)
-                if (fraudPayload != null) {
-                    params.putOpt("fraudPayload", fraudPayload)
-                }
                 if (expectedCountryCode != null) {
                     params.putOpt("expectedCountryCode", expectedCountryCode)
                 }
@@ -643,7 +640,7 @@ internal class RadarApiClient(
 
                 callback?.onComplete(RadarStatus.ERROR_SERVER)
             }
-        }, replaying, false, !replaying, verified)
+        }, replaying, false, !replaying, verified, fraudOptions)
     }
 
     internal fun verifyEvent(eventId: String, verification: RadarEventVerification, verifiedPlaceId: String? = null) {
