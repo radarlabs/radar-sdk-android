@@ -13,10 +13,14 @@ import org.json.JSONObject
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStreamWriter
+import java.net.ConnectException
+import java.net.SocketTimeoutException
 import java.net.URL
+import java.net.UnknownHostException
 import java.util.Scanner
 import java.util.concurrent.Executors
 import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLException
 
 // // For debugging local development server trackVerified
 // import javax.net.ssl.SSLContext
@@ -87,6 +91,7 @@ internal open class RadarApiHelper(
         }
         
         executor.execute {
+            val startMs = SystemClock.elapsedRealtime()
             try {
                 val urlConnection = url.openConnection() as HttpsURLConnection
                 // // For debugging local development server trackVerified
@@ -210,23 +215,44 @@ internal open class RadarApiHelper(
                 }
 
                 urlConnection.disconnect()
-            } catch (e: IOException) {
+            } catch (e: UnknownHostException) {
+                logNetworkError(host, e, startMs, "DNS_FAILURE")
                 handler.post {
-                    logger?.d("Error calling API | e = ${e.localizedMessage}")
-
+                    callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                    imageCallback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                }
+            } catch (e: SocketTimeoutException) {
+                logNetworkError(host, e, startMs, "TIMEOUT")
+                handler.post {
+                    callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                    imageCallback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                }
+            } catch (e: SSLException) {
+                logNetworkError(host, e, startMs, "SSL_FAILURE")
+                handler.post {
+                    callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                    imageCallback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                }
+            } catch (e: ConnectException) {
+                logNetworkError(host, e, startMs, "CONNECT_REFUSED")
+                handler.post {
+                    callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                    imageCallback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                }
+            } catch (e: IOException) {
+                logNetworkError(host, e, startMs, "IO_OTHER")
+                handler.post {
                     callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
                 }
             } catch (e: JSONException) {
-                logger?.d("Error calling API | e = ${e.localizedMessage}")
-
+                logNetworkError(host, e, startMs, "JSON_PARSE")
                 handler.post {
                     callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
                 }
             } catch (e: Exception) {
-                logger?.d("Error calling API | e = ${e.localizedMessage}")
-
+                logNetworkError(host, e, startMs, "UNKNOWN")
                 handler.post {
                     callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
@@ -237,6 +263,14 @@ internal open class RadarApiHelper(
                 Thread.sleep(1000)
             }
         }
+    }
+
+    private fun logNetworkError(host: String, e: Exception, startMs: Long, kind: String) {
+        val elapsedMs = SystemClock.elapsedRealtime() - startMs
+        logger?.e(
+            "📍 Radar API network error | host = $host; kind = $kind; exception = ${e.javaClass.simpleName}; message = ${e.localizedMessage}; elapsedMs = $elapsedMs",
+            RadarLogType.SDK_ERROR
+        )
     }
 
     private fun InputStream.readAll(): String? {
