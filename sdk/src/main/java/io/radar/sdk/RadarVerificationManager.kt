@@ -54,20 +54,18 @@ internal class RadarVerificationManager(
         val lastTokenBeacons = beacons
 
         val usage = "trackVerified"
-        Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                if (status != Radar.RadarStatus.SUCCESS || config == null) {
-                    Radar.handler.post {
-                        if (status != Radar.RadarStatus.SUCCESS) {
-                            Radar.sendError(status)
-                        }
+        val autoFailover = RadarSettings.getTrackVerifiedAutoFailover(context)
 
-                        callback?.onComplete(status)
+        val continueWithConfig = { status: Radar.RadarStatus, config: RadarConfig?, chosenVerifiedHost: String? ->
+            if (status != Radar.RadarStatus.SUCCESS || config == null) {
+                Radar.handler.post {
+                    if (status != Radar.RadarStatus.SUCCESS) {
+                        Radar.sendError(status)
                     }
 
-                    return
+                    callback?.onComplete(status)
                 }
-
+            } else {
                 val googlePlayProjectNumber = config.googlePlayProjectNumber
 
                 Radar.locationManager.getLocation(
@@ -147,7 +145,8 @@ internal class RadarVerificationManager(
                                                         callback?.onComplete(status, token)
                                                     }
                                                 }
-                                            })
+                                            },
+                                        verifiedHostOverride = chosenVerifiedHost)
                                     }
 
                                     if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -222,8 +221,34 @@ internal class RadarVerificationManager(
                             }
                         }
                     })
+            }
+        }
+
+        if (autoFailover) {
+            Radar.apiClient.getConfig(usage, true, null, object : RadarApiClient.RadarGetConfigApiCallback {
+                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                    if (status == Radar.RadarStatus.SUCCESS && config != null) {
+                        continueWithConfig(status, config, null)
+                        return
+                    }
+
+                    val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
+                    logger.d("trackVerified: primary verified host returned non-Radar response, retrying on secondary | secondary = $secondary")
+
+                    Radar.apiClient.getConfig(usage, true, secondary, object : RadarApiClient.RadarGetConfigApiCallback {
+                        override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                            continueWithConfig(status, config, secondary)
+                        }
+                    })
                 }
-        })
+            })
+        } else {
+            Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
+                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                    continueWithConfig(status, config, null)
+                }
+            })
+        }
     }
 
     private fun callTrackVerified(reason: String?) {

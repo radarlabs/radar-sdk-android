@@ -69,9 +69,10 @@ internal open class RadarApiHelper(
                               stream: Boolean = false,
                               logPayload: Boolean = true,
                               verified: Boolean = false,
-                              imageCallback: RadarImageApiCallback? = null) {
+                              imageCallback: RadarImageApiCallback? = null,
+                              verifiedHostOverride: String? = null) {
         val host = if (verified) {
-            RadarSettings.getVerifiedHost(context)
+            verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
         } else {
             RadarSettings.getHost(context)
         }

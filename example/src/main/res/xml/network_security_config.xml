@@ -23,4 +23,12 @@
             <pin digest="SHA-256">09MICn++JSUz2tk36fH+5qiuUAbbxx4JzrAHR3QHu/I=</pin>
         </pin-set>
     </domain-config>
+    <!-- Secondary verified host used by trackVerifiedAutoFailover. TODO: replace with real Amazon Trust Services SPKI pin hashes from infra. -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api-verified.radar.com</domain>
+        <pin-set>
+            <pin digest="SHA-256">REPLACE_WITH_REAL_PIN_HASH</pin>
+            <pin digest="SHA-256">REPLACE_WITH_BACKUP_PIN_HASH</pin>
+        </pin-set>
+    </domain-config>
 </network-security-config>

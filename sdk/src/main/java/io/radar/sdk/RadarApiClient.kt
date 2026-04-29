@@ -156,6 +156,15 @@ internal class RadarApiClient(
     }
 
     internal fun getConfig(usage: String? = null, verified: Boolean = false, callback: RadarGetConfigApiCallback? = null) {
+        getConfig(usage, verified, null, callback)
+    }
+
+    internal fun getConfig(
+        usage: String?,
+        verified: Boolean,
+        verifiedHostOverride: String?,
+        callback: RadarGetConfigApiCallback?
+    ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -186,9 +195,10 @@ internal class RadarApiClient(
                 if (status == RadarStatus.SUCCESS) {
                     Radar.flushLogs()
                 }
-                callback?.onComplete(status, RadarConfig.fromJson(res))
+                val config = if (res?.has("meta") == true) RadarConfig.fromJson(res) else null
+                callback?.onComplete(status, config)
             }
-        }, false, true, verified)
+        }, false, true, verified = verified, verifiedHostOverride = verifiedHostOverride)
     }
 
     internal fun log(logs: List<RadarLog>, callback: RadarLogCallback?) {
@@ -292,7 +302,8 @@ internal class RadarApiClient(
         reason: String? = null,
         transactionId: String? = null,
         fraudPayload: String? = null,
-        callback: RadarTrackApiCallback? = null
+        callback: RadarTrackApiCallback? = null,
+        verifiedHostOverride: String? = null,
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -643,7 +654,7 @@ internal class RadarApiClient(
 
                 callback?.onComplete(RadarStatus.ERROR_SERVER)
             }
-        }, replaying, false, !replaying, verified)
+        }, replaying, false, !replaying, verified, verifiedHostOverride = verifiedHostOverride)
     }
 
     internal fun verifyEvent(eventId: String, verification: RadarEventVerification, verifiedPlaceId: String? = null) {

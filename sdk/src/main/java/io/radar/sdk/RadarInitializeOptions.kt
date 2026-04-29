@@ -15,6 +15,7 @@ import android.app.Activity
  * @param[publishableKey] The project publishable key, if set, authToken should not be set.
  * @param[authToken] A JWT auth token, if set, publishableKey should not be set.
  * @param[activity] An optional activity that overwrites the activity from context.
+ * @param[trackVerifiedAutoFailover] A boolean indicating whether `trackVerified()` should retry against a secondary verified host if the primary returns a non-Radar response. Defaults to false.
  *
  */
 data class RadarInitializeOptions(
@@ -27,6 +28,7 @@ data class RadarInitializeOptions(
     val publishableKey: String? = null,
     val authToken: String? = null,
     val activity: Activity? = null,
+    val trackVerifiedAutoFailover: Boolean = false,
 ) {
     class Builder {
         private var radarReceiver: RadarReceiver? = null
@@ -38,6 +40,7 @@ data class RadarInitializeOptions(
         private var publishableKey: String? = null
         private var authToken: String? = null
         private var activity: Activity? = null
+        private var trackVerifiedAutoFailover: Boolean = false
 
         fun radarReceiver(radarReceiver: RadarReceiver) = apply { this.radarReceiver = radarReceiver }
         fun locationProvider(locationProvider: Radar.RadarLocationServicesProvider) = apply { this.locationProvider = locationProvider }
@@ -48,6 +51,7 @@ data class RadarInitializeOptions(
         fun publishableKey(publishableKey: String) = apply { this.publishableKey = publishableKey }
         fun authToken(authToken: String) = apply { this.authToken = authToken }
         fun activity(activity: Activity) = apply { this.activity = activity }
+        fun trackVerifiedAutoFailover(trackVerifiedAutoFailover: Boolean) = apply { this.trackVerifiedAutoFailover = trackVerifiedAutoFailover }
 
         fun build() = RadarInitializeOptions(
             radarReceiver = radarReceiver,
@@ -59,6 +63,7 @@ data class RadarInitializeOptions(
             publishableKey = publishableKey,
             authToken = authToken,
             activity = activity,
+            trackVerifiedAutoFailover = trackVerifiedAutoFailover,
         )
     }
 

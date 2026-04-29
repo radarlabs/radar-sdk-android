@@ -683,7 +683,9 @@ object Radar {
         val application = this.context as? Application
 
         RadarSettings.setFraudEnabled(this.context, options.fraud)
-        
+
+        RadarSettings.setTrackVerifiedAutoFailover(this.context, options.trackVerifiedAutoFailover)
+
         if (options.fraud) {
             RadarSettings.setSharing(this.context, false)
         }
