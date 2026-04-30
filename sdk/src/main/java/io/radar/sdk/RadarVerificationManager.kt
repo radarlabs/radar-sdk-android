@@ -227,7 +227,7 @@ internal class RadarVerificationManager(
         if (autoFailover) {
             Radar.apiClient.getConfig(usage, true, null, object : RadarApiClient.RadarGetConfigApiCallback {
                 override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                    if (status == Radar.RadarStatus.SUCCESS && config != null) {
+                    if (config != null) {
                         continueWithConfig(status, config, null)
                         return
                     }
