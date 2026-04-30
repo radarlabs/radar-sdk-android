@@ -205,7 +205,7 @@ internal open class RadarApiHelper(
                     logger?.e("📍 Radar API response | method = ${method}; url = ${url}; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
                     
                     handler.post {
-                        callback?.onComplete(status)
+                        callback?.onComplete(status, res)
                         imageCallback?.onComplete(status)
                     }
                 }
