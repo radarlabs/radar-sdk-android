@@ -26,6 +26,7 @@ internal class RadarApiHelperMock : RadarApiHelper() {
     internal var lastCapturedMethod: String? = null
     internal var lastCapturedVerified: Boolean = false
     internal var lastCapturedVerifiedHostOverride: String? = null
+    internal var lastUrl: String? = null
 
     /**
      * Sequential responses to return for repeated requests against the same path. When set,
@@ -50,6 +51,12 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         verifiedHostOverride: String?,
     ) {
         if (path != "v1/logs") {
+            val host = if (verified) {
+                verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
+            } else {
+                RadarSettings.getHost(context)
+            }
+            lastUrl = "$host/$path"
             lastCapturedPath = path
             lastCapturedMethod = method
             lastCapturedParams = params

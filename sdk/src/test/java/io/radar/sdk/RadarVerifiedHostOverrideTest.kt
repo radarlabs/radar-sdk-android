@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONObject
+import android.location.Location
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -35,6 +36,7 @@ class RadarVerifiedHostOverrideTest {
         apiHelperMock.clearCapturedParams()
         apiHelperMock.lastCapturedVerified = false
         apiHelperMock.lastCapturedVerifiedHostOverride = null
+        apiHelperMock.lastUrl = null
     }
 
     @Test
@@ -116,5 +118,72 @@ class RadarVerifiedHostOverrideTest {
         })
 
         assertTrue(observedConfig != null)
+    }
+
+    @Test
+    fun test_getConfig_nonVerified_ignoresOverride() {
+        val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
+        Radar.apiClient.getConfig("verify", false, secondary, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: io.radar.sdk.model.RadarConfig?) {}
+        })
+
+        assertFalse(apiHelperMock.lastCapturedVerified)
+        assertFalse(apiHelperMock.lastUrl?.startsWith(secondary) ?: false)
+        assertTrue(apiHelperMock.lastUrl?.startsWith("https://api.radar.io") ?: false)
+    }
+
+    @Test
+    fun test_track_verified_withOverride_propagatesToHelper() {
+        val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
+        Radar.apiClient.track(
+            location = Location("test"),
+            stopped = false,
+            foreground = true,
+            source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
+            replayed = false,
+            beacons = null,
+            verified = true,
+            verifiedHostOverride = secondary,
+        )
+
+        assertTrue(apiHelperMock.lastCapturedVerified)
+        assertEquals(secondary, apiHelperMock.lastCapturedVerifiedHostOverride)
+        assertTrue(apiHelperMock.lastUrl?.startsWith(secondary) ?: false)
+    }
+
+    @Test
+    fun test_track_verified_noOverride_passesNullThrough() {
+        Radar.apiClient.track(
+            location = Location("test"),
+            stopped = false,
+            foreground = true,
+            source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
+            replayed = false,
+            beacons = null,
+            verified = true,
+        )
+
+        assertTrue(apiHelperMock.lastCapturedVerified)
+        assertNull(apiHelperMock.lastCapturedVerifiedHostOverride)
+        assertTrue(apiHelperMock.lastUrl?.startsWith("https://api-verified.radar.io") ?: false)
+    }
+
+    @Test
+    fun test_track_nonVerified_ignoresOverride() {
+        val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
+        Radar.apiClient.track(
+            location = Location("test"),
+            stopped = false,
+            foreground = true,
+            source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
+            replayed = false,
+            beacons = null,
+            verified = false,
+            verifiedHostOverride = secondary,
+        )
+
+        assertFalse(apiHelperMock.lastCapturedVerified)
+        assertFalse(apiHelperMock.lastUrl?.startsWith(secondary) ?: false)
+        assertTrue(apiHelperMock.lastUrl?.startsWith("https://api.radar.io") ?: false)
     }
 }
