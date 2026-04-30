@@ -121,6 +121,22 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
+    fun test_getConfig_radarErrorResponse_yieldsNonNullConfig() {
+        // A non-200 response that still contains "meta" is a Radar response and must not trigger failover.
+        apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_SERVER
+        apiHelperMock.mockResponse = JSONObject().put("meta", JSONObject().put("code", 503))
+
+        var observedConfig: io.radar.sdk.model.RadarConfig? = null
+        Radar.apiClient.getConfig("verify", true, null, object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: io.radar.sdk.model.RadarConfig?) {
+                observedConfig = config
+            }
+        })
+
+        assertTrue(observedConfig != null)
+    }
+
+    @Test
     fun test_getConfig_nonVerified_ignoresOverride() {
         val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
         Radar.apiClient.getConfig("verify", false, secondary, object : RadarApiClient.RadarGetConfigApiCallback {
