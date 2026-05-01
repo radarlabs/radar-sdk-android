@@ -8,9 +8,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Initialize submodules
-          command: git submodule update --init
-      - run:
           name: Accept licenses
           command: yes | sdkmanager --licenses || true
       - run:
