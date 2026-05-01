@@ -155,15 +155,11 @@ internal class RadarApiClient(
         return headers
     }
 
-    internal fun getConfig(usage: String? = null, verified: Boolean = false, callback: RadarGetConfigApiCallback? = null) {
-        getConfig(usage, verified, null, callback)
-    }
-
     internal fun getConfig(
-        usage: String?,
-        verified: Boolean,
-        verifiedHostOverride: String?,
-        callback: RadarGetConfigApiCallback?
+        usage: String,
+        verified: Boolean  = false,
+        verifiedHostOverride: String? = null,
+        callback: RadarGetConfigApiCallback?  = null
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -181,9 +177,7 @@ internal class RadarApiClient(
         queryParams.append("&locationAuthorization=${RadarUtils.getLocationAuthorization(context)}")
         queryParams.append("&locationAccuracyAuthorization=${RadarUtils.getLocationAccuracyAuthorization(context)}")
         queryParams.append("&verified=$verified")
-        if (usage != null) {
-            queryParams.append("&usage=${usage}")
-        }
+        queryParams.append("&usage=${usage}")
         val clientSdkConfiguration = RadarSettings.getClientSdkConfiguration(context).toString()
         queryParams.append("&clientSdkConfiguration=${URLEncoder.encode(clientSdkConfiguration, "utf-8")}")
 
@@ -198,7 +192,7 @@ internal class RadarApiClient(
                 val config = if (res?.has("meta") == true) RadarConfig.fromJson(res) else null
                 callback?.onComplete(status, config)
             }
-        }, false, true, verified = verified, verifiedHostOverride = verifiedHostOverride)
+        }, extendedTimeout = false, stream = true, verified = verified, verifiedHostOverride = verifiedHostOverride)
     }
 
     internal fun log(logs: List<RadarLog>, callback: RadarLogCallback?) {

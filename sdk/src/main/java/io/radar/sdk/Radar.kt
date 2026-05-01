@@ -703,7 +703,7 @@ object Radar {
         }
 
         val usage = "initialize"
-        this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
+        this.apiClient.getConfig(usage = usage, callback = object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: RadarStatus, config: RadarConfig?) {
                 if (config == null) {
                     return
