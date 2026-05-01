@@ -115,37 +115,35 @@ internal class RadarVerificationManager(
                                         reason ?: "manual",
                                         transactionId,
                                         fraudPayload,
-                                        // -- payload encryption --
-                                        // fraudKeyVersion,
                                         callback = object : RadarApiClient.RadarTrackApiCallback {
-                                                override fun onComplete(
-                                                    status: Radar.RadarStatus,
-                                                    res: JSONObject?,
-                                                    events: Array<RadarEvent>?,
-                                                    user: RadarUser?,
-                                                    nearbyGeofences: Array<RadarGeofence>?,
-                                                    config: RadarConfig?,
-                                                    token: RadarVerifiedLocationToken?
-                                                ) {
-                                                    if (status == Radar.RadarStatus.SUCCESS) {
-                                                        Radar.locationManager.updateTrackingFromMeta(
-                                                            config?.meta
-                                                        )
-                                                    }
-                                                    if (token != null) {
-                                                        verificationManager.lastToken = token
-                                                        verificationManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
-                                                        verificationManager.lastTokenBeacons = lastTokenBeacons
-                                                    }
-                                                    Radar.handler.post {
-                                                        if (status != Radar.RadarStatus.SUCCESS) {
-                                                            Radar.sendError(status)
-                                                        }
-
-                                                        callback?.onComplete(status, token)
-                                                    }
+                                            override fun onComplete(
+                                                status: Radar.RadarStatus,
+                                                res: JSONObject?,
+                                                events: Array<RadarEvent>?,
+                                                user: RadarUser?,
+                                                nearbyGeofences: Array<RadarGeofence>?,
+                                                config: RadarConfig?,
+                                                token: RadarVerifiedLocationToken?
+                                            ) {
+                                                if (status == Radar.RadarStatus.SUCCESS) {
+                                                    Radar.locationManager.updateTrackingFromMeta(
+                                                        config?.meta
+                                                    )
                                                 }
-                                            },
+                                                if (token != null) {
+                                                    verificationManager.lastToken = token
+                                                    verificationManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
+                                                    verificationManager.lastTokenBeacons = lastTokenBeacons
+                                                }
+                                                Radar.handler.post {
+                                                    if (status != Radar.RadarStatus.SUCCESS) {
+                                                        Radar.sendError(status)
+                                                    }
+
+                                                    callback?.onComplete(status, token)
+                                                }
+                                            }
+                                        },
                                         verifiedHostOverride = chosenVerifiedHost)
                                     }
 
@@ -225,25 +223,32 @@ internal class RadarVerificationManager(
         }
 
         if (autoFailover) {
-            Radar.apiClient.getConfig(usage, true, null, object : RadarApiClient.RadarGetConfigApiCallback {
-                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                    if (config != null) {
-                        continueWithConfig(status, config, null)
-                        return
-                    }
-
-                    val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
-                    logger.d("trackVerified: primary verified host returned non-Radar response, retrying on secondary | secondary = $secondary")
-
-                    Radar.apiClient.getConfig(usage, true, secondary, object : RadarApiClient.RadarGetConfigApiCallback {
-                        override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                            continueWithConfig(status, config, secondary)
+            Radar.apiClient.getConfig(
+                usage = usage,
+                verified = true,
+                callback = object : RadarApiClient.RadarGetConfigApiCallback {
+                    override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                        if (config != null) {
+                            continueWithConfig(status, config, null)
+                            return
                         }
-                    })
-                }
-            })
+
+                        val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
+                        logger.d("trackVerified: primary verified host returned non-Radar response, retrying on secondary | secondary = $secondary")
+
+                        Radar.apiClient.getConfig(
+                            usage = usage,
+                            verified = true,
+                            verifiedHostOverride = secondary,
+                            callback = object : RadarApiClient.RadarGetConfigApiCallback {
+                                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                                    continueWithConfig(status, config, secondary)
+                                }
+                            })
+                    }
+                })
         } else {
-            Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
+            Radar.apiClient.getConfig(usage = usage, verified = true, callback = object : RadarApiClient.RadarGetConfigApiCallback {
                 override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
                     continueWithConfig(status, config, null)
                 }
