@@ -19,11 +19,9 @@ import org.robolectric.annotation.Config
 @Config(sdk = [Build.VERSION_CODES.P])
 class RadarVerifiedHostOverrideTest {
 
-    companion object {
-        private const val publishableKey = "prj_test_pk_0000000000000000000000000000000000000000"
-        private val context: Context = ApplicationProvider.getApplicationContext()
-        private val apiHelperMock = RadarApiHelperMock()
-    }
+    private val publishableKey = "prj_test_pk_0000000000000000000000000000000000000000"
+    private val context: Context = ApplicationProvider.getApplicationContext()
+    private val apiHelperMock = RadarApiHelperMock()
 
     @Before
     fun setUp() {
@@ -40,13 +38,13 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun test_initializeOptions_trackVerifiedAutoFailover_defaultsFalse() {
+    fun `trackVerifiedAutoFailover defaults to false`() {
         val options = RadarInitializeOptions()
         assertFalse(options.trackVerifiedAutoFailover)
     }
 
     @Test
-    fun test_initializeOptions_trackVerifiedAutoFailover_persistsThroughInitialize() {
+    fun `trackVerifiedAutoFailover persists through initialize`() {
         Radar.initialize(
             context,
             publishableKey,
@@ -63,12 +61,12 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun test_defaultVerifiedHostSecondary_isExpected() {
+    fun `default verified host secondary is expected`() {
         assertEquals("https://api-verified.radar.com", RadarSettings.getDefaultVerifiedHostSecondary())
     }
 
     @Test
-    fun test_getConfig_verified_noOverride_passesNullThrough() {
+    fun `getConfig verified with no override passes null through`() {
         Radar.apiClient.getConfig("verify", true, null, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: Radar.RadarStatus, config: io.radar.sdk.model.RadarConfig?) {}
         })
@@ -78,7 +76,7 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun test_getConfig_verified_withOverride_propagatesToHelper() {
+    fun `getConfig verified with override propagates to helper`() {
         val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
         Radar.apiClient.getConfig("verify", true, secondary, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: Radar.RadarStatus, config: io.radar.sdk.model.RadarConfig?) {}
@@ -89,7 +87,7 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun test_getConfig_nonRadarResponse_yieldsNullConfig() {
+    fun `getConfig with non-Radar response yields null config`() {
         // Response missing top-level "meta" — i.e. not a Radar response.
         apiHelperMock.mockResponse = JSONObject().put("error", "not a radar response")
 
@@ -107,7 +105,7 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun test_getConfig_radarResponse_yieldsNonNullConfig() {
+    fun `getConfig with Radar response yields non-null config`() {
         apiHelperMock.mockResponse = JSONObject().put("meta", JSONObject())
 
         var observedConfig: io.radar.sdk.model.RadarConfig? = null
@@ -121,7 +119,7 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun test_getConfig_radarErrorResponse_yieldsNonNullConfig() {
+    fun `getConfig with Radar error response yields non-null config`() {
         // A non-200 response that still contains "meta" is a Radar response and must not trigger failover.
         apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_SERVER
         apiHelperMock.mockResponse = JSONObject().put("meta", JSONObject().put("code", 503))
@@ -137,7 +135,7 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun test_getConfig_nonVerified_ignoresOverride() {
+    fun `getConfig non-verified ignores override`() {
         val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
         Radar.apiClient.getConfig("verify", false, secondary, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: Radar.RadarStatus, config: io.radar.sdk.model.RadarConfig?) {}
@@ -149,7 +147,7 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun test_track_verified_withOverride_propagatesToHelper() {
+    fun `track verified with override propagates to helper`() {
         val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
         Radar.apiClient.track(
             location = Location("test"),
@@ -168,7 +166,7 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun test_track_verified_noOverride_passesNullThrough() {
+    fun `track verified with no override passes null through`() {
         Radar.apiClient.track(
             location = Location("test"),
             stopped = false,
@@ -185,7 +183,7 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun test_track_nonVerified_ignoresOverride() {
+    fun `track non-verified ignores override`() {
         val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
         Radar.apiClient.track(
             location = Location("test"),
