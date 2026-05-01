@@ -228,13 +228,13 @@ internal class RadarVerificationManager(
                 verified = true,
                 callback = object : RadarApiClient.RadarGetConfigApiCallback {
                     override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                        if (config != null) {
+                        config?.let {
                             continueWithConfig(status, config, null)
                             return
                         }
 
                         val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
-                        logger.d("trackVerified: primary verified host returned non-Radar response, retrying on secondary | secondary = $secondary")
+                        logger.d("trackVerified: primary verified host returned non-Radar response, retrying on secondary=$secondary")
 
                         Radar.apiClient.getConfig(
                             usage = usage,
