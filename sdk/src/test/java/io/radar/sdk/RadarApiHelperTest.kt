@@ -2,8 +2,6 @@ package io.radar.sdk
 
 import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.radar.sdk.RadarApiHelper.Companion.classifyNetworkException
-import io.radar.sdk.RadarApiHelper.Companion.networkErrorMessage
 import org.json.JSONException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -21,7 +19,7 @@ import javax.net.ssl.SSLHandshakeException
  * Unit tests for the diagnostic classification + log formatting added in FENCE-2793.
  *
  * The catch dispatch in [RadarApiHelper.request] routes every IOException through
- * [classifyNetworkException] to assign a stable kind label, then formats the structured
+ * [NetworkErrorKind.from] to assign a stable kind label, then formats the structured
  * error log via [networkErrorMessage]. Both are pure functions and can be tested without
  * standing up a real network call.
  */
@@ -31,34 +29,34 @@ class RadarApiHelperTest {
 
     @Test
     fun classifyNetworkException_unknownHost_returnsDnsFailure() {
-        assertEquals("DNS_FAILURE", classifyNetworkException(UnknownHostException("nodename nor servname provided")))
+        assertEquals(NetworkErrorKind.DNS_FAILURE, NetworkErrorKind.from(UnknownHostException("nodename nor servname provided")))
     }
 
     @Test
     fun classifyNetworkException_socketTimeout_returnsTimeout() {
-        assertEquals("TIMEOUT", classifyNetworkException(SocketTimeoutException("connect timed out")))
+        assertEquals(NetworkErrorKind.TIMEOUT, NetworkErrorKind.from(SocketTimeoutException("connect timed out")))
     }
 
     @Test
     fun classifyNetworkException_sslException_returnsSslFailure() {
-        assertEquals("SSL_FAILURE", classifyNetworkException(SSLException("Connection closed by peer")))
+        assertEquals(NetworkErrorKind.SSL_FAILURE, NetworkErrorKind.from(SSLException("Connection closed by peer")))
     }
 
     @Test
     fun classifyNetworkException_sslHandshake_returnsSslFailure() {
         // SSLHandshakeException is a common subclass of SSLException; ensure the catch
         // hierarchy covers it (e.g. self-signed cert, TLS interception by some blockers).
-        assertEquals("SSL_FAILURE", classifyNetworkException(SSLHandshakeException("certificate verify failed")))
+        assertEquals(NetworkErrorKind.SSL_FAILURE, NetworkErrorKind.from(SSLHandshakeException("certificate verify failed")))
     }
 
     @Test
     fun classifyNetworkException_connectException_returnsConnectRefused() {
-        assertEquals("CONNECT_REFUSED", classifyNetworkException(ConnectException("Connection refused")))
+        assertEquals(NetworkErrorKind.CONNECT_REFUSED, NetworkErrorKind.from(ConnectException("Connection refused")))
     }
 
     @Test
     fun classifyNetworkException_genericIo_returnsIoOther() {
-        assertEquals("IO_OTHER", classifyNetworkException(IOException("unexpected end of stream")))
+        assertEquals(NetworkErrorKind.IO_OTHER, NetworkErrorKind.from(IOException("unexpected end of stream")))
     }
 
     @Test

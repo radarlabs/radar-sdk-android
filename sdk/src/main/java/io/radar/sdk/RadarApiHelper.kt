@@ -29,6 +29,27 @@ import javax.net.ssl.SSLException
 // import javax.net.ssl.HostnameVerifier
 // import java.security.cert.X509Certificate
 
+internal enum class NetworkErrorKind {
+    DNS_FAILURE,
+    TIMEOUT,
+    SSL_FAILURE,
+    CONNECT_REFUSED,
+    IO_OTHER;
+
+    companion object {
+        fun from(e: IOException): NetworkErrorKind = when (e) {
+            is UnknownHostException -> DNS_FAILURE
+            is SocketTimeoutException -> TIMEOUT
+            is SSLException -> SSL_FAILURE
+            is ConnectException -> CONNECT_REFUSED
+            else -> IO_OTHER
+        }
+    }
+}
+
+internal fun networkErrorMessage(host: String, e: Exception, elapsedMs: Long, kind: String): String =
+    "📍 Radar API network error | host = $host; kind = $kind; exception = ${e.javaClass.simpleName}; message = ${e.localizedMessage}; elapsedMs = $elapsedMs"
+
 internal open class RadarApiHelper(
     private var logger: RadarLogger? = null
 ) {
@@ -216,7 +237,7 @@ internal open class RadarApiHelper(
 
                 urlConnection.disconnect()
             } catch (e: IOException) {
-                logNetworkError(host, e, startMs, classifyNetworkException(e))
+                logNetworkError(host, e, startMs, NetworkErrorKind.from(e).name)
                 handler.post {
                     callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
@@ -244,28 +265,6 @@ internal open class RadarApiHelper(
     private fun logNetworkError(host: String, e: Exception, startMs: Long, kind: String) {
         val elapsedMs = SystemClock.elapsedRealtime() - startMs
         logger?.e(networkErrorMessage(host, e, elapsedMs, kind), RadarLogType.SDK_ERROR)
-    }
-
-    internal companion object {
-        /**
-         * Classify an IOException thrown from a Radar HTTP request into a stable diagnostic
-         * label so we can distinguish DNS failures (likely on-device blocker) from timeouts,
-         * TLS issues, and other network errors in logs and telemetry. Visible for testing.
-         */
-        internal fun classifyNetworkException(e: IOException): String = when (e) {
-            is UnknownHostException -> "DNS_FAILURE"
-            is SocketTimeoutException -> "TIMEOUT"
-            is SSLException -> "SSL_FAILURE"
-            is ConnectException -> "CONNECT_REFUSED"
-            else -> "IO_OTHER"
-        }
-
-        /**
-         * Build the structured log message for a network error. Pure function, visible for
-         * testing the message format independently of the logger / network.
-         */
-        internal fun networkErrorMessage(host: String, e: Exception, elapsedMs: Long, kind: String): String =
-            "📍 Radar API network error | host = $host; kind = $kind; exception = ${e.javaClass.simpleName}; message = ${e.localizedMessage}; elapsedMs = $elapsedMs"
     }
 
     private fun InputStream.readAll(): String? {
