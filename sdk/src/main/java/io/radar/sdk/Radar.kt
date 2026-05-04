@@ -687,7 +687,7 @@ object Radar {
 
         options.networkTimeout?.let { desiredTimeout ->
             if (!desiredTimeout.isFinite() || desiredTimeout.isNegative()) {
-                this.logger.d("networkTimeout ignored: must be finite and non-negative | value = $requested")
+                this.logger.d("networkTimeout ignored: must be finite and non-negative | value = $desiredTimeout")
                 return@let
             }
             val ms = desiredTimeout.inWholeMilliseconds
