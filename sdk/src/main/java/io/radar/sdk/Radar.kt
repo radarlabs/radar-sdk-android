@@ -685,6 +685,8 @@ object Radar {
 
         RadarSettings.setFraudEnabled(this.context, options.fraud)
 
+        RadarSettings.setTrackVerifiedAutoFailover(this.context, options.trackVerifiedAutoFailover)
+
         options.networkTimeout?.let { desiredTimeout ->
             if (!desiredTimeout.isFinite() || desiredTimeout.isNegative()) {
                 this.logger.d("networkTimeout ignored: must be finite and non-negative | value = $desiredTimeout")
@@ -715,7 +717,7 @@ object Radar {
         }
 
         val usage = "initialize"
-        this.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
+        this.apiClient.getConfig(usage = usage, callback = object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: RadarStatus, config: RadarConfig?) {
                 if (config == null) {
                     return

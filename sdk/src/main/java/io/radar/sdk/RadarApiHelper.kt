@@ -69,9 +69,10 @@ internal open class RadarApiHelper(
                               stream: Boolean = false,
                               logPayload: Boolean = true,
                               verified: Boolean = false,
-                              imageCallback: RadarImageApiCallback? = null) {
+                              imageCallback: RadarImageApiCallback? = null,
+                              verifiedHostOverride: String? = null) {
         val host = if (verified) {
-            RadarSettings.getVerifiedHost(context)
+            verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
         } else {
             RadarSettings.getHost(context)
         }
@@ -206,7 +207,7 @@ internal open class RadarApiHelper(
                     logger?.e("📍 Radar API response | method = ${method}; url = ${url}; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
                     
                     handler.post {
-                        callback?.onComplete(status)
+                        callback?.onComplete(status, res)
                         imageCallback?.onComplete(status)
                     }
                 }

@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
             fraud = true,
             customForegroundNotification = customNotification,
             silentPush = true,
+            trackVerifiedAutoFailover = true,
         )
         Radar.initialize(this, PUBLISHABLE_KEY, options)
 
