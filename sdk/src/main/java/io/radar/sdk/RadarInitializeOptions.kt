@@ -16,8 +16,8 @@ import kotlin.time.Duration
  * @param[publishableKey] The project publishable key, if set, authToken should not be set.
  * @param[authToken] A JWT auth token, if set, publishableKey should not be set.
  * @param[activity] An optional activity that overwrites the activity from context.
- * @param[networkTimeout] Connect and base read timeout for Radar API requests (e.g. `10.seconds` from `kotlin.time`).
- * If set, the value is persisted. If null, a previously saved value or the default (10 seconds) is used.
+ * @param[networkTimeout] Connect and base read timeout for Radar API requests.
+ *                        If set, the value is persisted. If null, a previously saved value or default (10 seconds) is used.
  *
  */
 data class RadarInitializeOptions(
