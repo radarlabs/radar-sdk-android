@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.app.Notification
 import android.app.Activity
+import kotlin.time.Duration
 
 /**
  * Initialize options for Radar
@@ -15,6 +16,8 @@ import android.app.Activity
  * @param[publishableKey] The project publishable key, if set, authToken should not be set.
  * @param[authToken] A JWT auth token, if set, publishableKey should not be set.
  * @param[activity] An optional activity that overwrites the activity from context.
+ * @param[networkTimeout] Connect and base read timeout for Radar API requests (e.g. `10.seconds` from `kotlin.time`).
+ * If set, the value is persisted. If null, a previously saved value or the default (10 seconds) is used.
  *
  */
 data class RadarInitializeOptions(
@@ -27,6 +30,7 @@ data class RadarInitializeOptions(
     val publishableKey: String? = null,
     val authToken: String? = null,
     val activity: Activity? = null,
+    val networkTimeout: Duration? = null,
 ) {
     class Builder {
         private var radarReceiver: RadarReceiver? = null
@@ -38,6 +42,7 @@ data class RadarInitializeOptions(
         private var publishableKey: String? = null
         private var authToken: String? = null
         private var activity: Activity? = null
+        private var networkTimeout: Duration? = null
 
         fun radarReceiver(radarReceiver: RadarReceiver) = apply { this.radarReceiver = radarReceiver }
         fun locationProvider(locationProvider: Radar.RadarLocationServicesProvider) = apply { this.locationProvider = locationProvider }
@@ -48,6 +53,7 @@ data class RadarInitializeOptions(
         fun publishableKey(publishableKey: String) = apply { this.publishableKey = publishableKey }
         fun authToken(authToken: String) = apply { this.authToken = authToken }
         fun activity(activity: Activity) = apply { this.activity = activity }
+        fun networkTimeout(networkTimeout: Duration) = apply { this.networkTimeout = networkTimeout }
 
         fun build() = RadarInitializeOptions(
             radarReceiver = radarReceiver,
@@ -59,6 +65,7 @@ data class RadarInitializeOptions(
             publishableKey = publishableKey,
             authToken = authToken,
             activity = activity,
+            networkTimeout = networkTimeout,
         )
     }
 

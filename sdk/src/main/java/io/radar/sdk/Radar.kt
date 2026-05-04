@@ -36,6 +36,7 @@ import io.radar.sdk.util.RadarSimpleReplayBuffer
 import org.json.JSONObject
 import java.util.Date
 import java.util.EnumSet
+import kotlin.time.Duration
 
 /**
  * The main class used to interact with the Radar SDK.
@@ -320,7 +321,7 @@ object Radar {
         ERROR_LOCATION,
         /** Beacon ranging error or timeout (5 seconds) */
         ERROR_BLUETOOTH,
-        /** Network error or timeout (10 seconds) */
+        /** Network error or timeout (10 seconds by default, configurable via [RadarOptions.networkTimeout]) */
         ERROR_NETWORK,
         /** Bad request (missing or invalid params) */
         ERROR_BAD_REQUEST,
@@ -536,10 +537,10 @@ object Radar {
      */
     @JvmStatic
     fun initialize(
-        context: Context?, 
-        publishableKey: String? = null, 
-        receiver: RadarReceiver? = null, 
-        provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE, 
+        context: Context?,
+        publishableKey: String? = null,
+        receiver: RadarReceiver? = null,
+        provider: RadarLocationServicesProvider = RadarLocationServicesProvider.GOOGLE,
         fraud: Boolean = false,
         customForegroundNotification: Notification? = null,
         inAppMessageReceiver: RadarInAppMessageReceiver? = null,
@@ -683,7 +684,20 @@ object Radar {
         val application = this.context as? Application
 
         RadarSettings.setFraudEnabled(this.context, options.fraud)
-        
+
+        options.networkTimeout?.let { desiredTimeout ->
+            if (!desiredTimeout.isFinite() || desiredTimeout.isNegative()) {
+                this.logger.d("networkTimeout ignored: must be finite and non-negative | value = $requested")
+                return@let
+            }
+            val ms = desiredTimeout.inWholeMilliseconds
+            val clamped = ms.coerceIn(1_000L, 300_000L).toInt()
+            if (clamped.toLong() != ms) {
+                this.logger.d("networkTimeout coerced to valid range | requested=${ms}ms; using=${clamped}ms")
+            }
+            RadarSettings.setNetworkTimeoutMs(this.context, clamped)
+        }
+
         if (options.fraud) {
             RadarSettings.setSharing(this.context, false)
         }
@@ -694,7 +708,7 @@ object Radar {
 
         activityLifecycleCallbacks = RadarActivityLifecycleCallbacks(options.fraud)
         application?.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
-        
+
         val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
         if (sdkConfiguration.usePersistence) {
             loadReplayBufferFromSharedPreferences()
@@ -929,7 +943,7 @@ object Radar {
             return
         }
 
-        RadarSettings.setTags(context, tags) 
+        RadarSettings.setTags(context, tags)
     }
 
     /**
@@ -1569,7 +1583,7 @@ object Radar {
             return
         }
         this.logger.i("startTracking()", RadarLogType.SDK_CALL)
-        
+
         locationManager.startTracking(options)
     }
 
@@ -1742,7 +1756,7 @@ object Radar {
     }
 
 
-   /** 
+   /**
     *  Returns a string of the radar host.
     *
     *  @return A string of the radar host.
@@ -1817,7 +1831,7 @@ object Radar {
     /**
      * Sets a custom notification for the foreground service.
      * This notification will be used instead of the default SDK notification.
-     * 
+     *
      * @param[notification] The custom notification to use, or null to use the default
      */
     @JvmStatic
@@ -1879,7 +1893,7 @@ object Radar {
         }
 
         inAppMessageManager.setInAppMessageReceiver(inAppMessageReceiver)
-    }   
+    }
 
     /**
      * Accepts an event. Events can be accepted after user check-ins or other forms of verification. Event verifications will be used to improve the accuracy and confidence level of future events.
@@ -2523,7 +2537,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -2563,7 +2577,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[callback] A callback.
      */
@@ -2635,7 +2649,7 @@ object Radar {
      * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
      * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries) 
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -2664,7 +2678,7 @@ object Radar {
      * @param[chainMetadata] A map of metadata keys and values. Values can be strings, numerics, or booleans.
      * @param[categories] An array of categories to filter. See [](https://radar.io/documentation/places/categories)
      * @param[groups] An array of groups to filter. See [](https://radar.io/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)     
+     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
      * @param[limit] The max number of places to return. A number between 1 and 100.
      * @param[block] A block callback.
      */
@@ -3074,12 +3088,12 @@ object Radar {
 
     /**
      * Validates an address, attaching to a verification status, property type, and plus4.
-     * 
+     *
      * @see [](https://radar.com/documentation/api#validate-an-address)
-     * 
+     *
      * @param[address] The address to validate.
      * @param[callback] A callback.
-     * 
+     *
      */
 
     @JvmStatic
@@ -3110,12 +3124,12 @@ object Radar {
 
     /**
      * Validates an address, attaching to a verification status, property type, and plus4.
-     * 
+     *
      * @see [](https://radar.com/documentation/api#validate-an-address)
-     * 
+     *
      * @param[address] The address to validate.
      * @param[block] A block callback.
-     * 
+     *
      */
 
     fun validateAddress(
@@ -3293,7 +3307,7 @@ object Radar {
      * @see [](https://radar.com/documentation/api#reverse-geocode)
      *
      * @param[location] The location to geocode.
-     * @param[layers] Optional 
+     * @param[layers] Optional
      * @param[block] A block callback.
      */
     fun reverseGeocode(
@@ -3843,7 +3857,7 @@ object Radar {
                 override fun onComplete(status: RadarStatus, event: RadarEvent?) {
                     logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
                 }
-            }) 
+            })
         }
     }
 
@@ -3951,7 +3965,7 @@ object Radar {
             this.logger.d("No replays to flush")
             return
         }
-    
+
         this.isFlushingReplays = true
 
         // get a copy of the replays so we can safely clear what was synced up
@@ -4073,7 +4087,7 @@ object Radar {
             else -> "car"
         }
     }
-   
+
     /**
      * Returns a display string for a verification status value.
      *
