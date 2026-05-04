@@ -103,11 +103,13 @@ internal open class RadarApiHelper(
                     }
                 }
                 urlConnection.requestMethod = method
-                urlConnection.connectTimeout = 10000
-                if (extendedTimeout) {
-                    urlConnection.readTimeout = 25000
+                val timeoutMs = RadarSettings.getNetworkTimeoutMs(context)
+                urlConnection.connectTimeout = timeoutMs
+                // Preserve historical 2.5x read timeout for long-running requests (was 25s vs 10s)
+                urlConnection.readTimeout = if (extendedTimeout) {
+                    (timeoutMs * 2.5).toInt()
                 } else {
-                    urlConnection.readTimeout = 10000
+                    timeoutMs
                 }
                 if (stream) {
                     urlConnection.setChunkedStreamingMode(1024)

@@ -43,6 +43,9 @@ internal object RadarSettings {
     private const val KEY_X_PLATFORM_SDK_VERSION = "x_platform_sdk_version"
     private const val KEY_USER_TAGS = "user_tags"
     private const val KEY_FRAUD_ENABLED = "fraudEnabled"
+    private const val KEY_NETWORK_TIMEOUT_MS = "network_timeout_ms"
+
+    private const val DEFAULT_NETWORK_TIMEOUT_MS = 10000
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -171,6 +174,14 @@ internal object RadarSettings {
 
     internal fun setFraudEnabled(context: Context, enabled: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_FRAUD_ENABLED, enabled) }
+    }
+
+    internal fun getNetworkTimeoutMs(context: Context): Int {
+        return getSharedPreferences(context).getInt(KEY_NETWORK_TIMEOUT_MS, DEFAULT_NETWORK_TIMEOUT_MS)
+    }
+
+    internal fun setNetworkTimeoutMs(context: Context, timeoutMs: Int) {
+        getSharedPreferences(context).edit { putInt(KEY_NETWORK_TIMEOUT_MS, timeoutMs) }
     }
 
     internal fun getTracking(context: Context): Boolean {
