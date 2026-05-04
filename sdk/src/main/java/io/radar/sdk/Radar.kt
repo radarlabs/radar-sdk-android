@@ -321,7 +321,7 @@ object Radar {
         ERROR_LOCATION,
         /** Beacon ranging error or timeout (5 seconds) */
         ERROR_BLUETOOTH,
-        /** Network error or timeout (10 seconds by default, configurable via [RadarOptions.networkTimeout]) */
+        /** Network error or timeout (10 seconds by default, configurable via [RadarInitializeOptions.networkTimeout]) */
         ERROR_NETWORK,
         /** Bad request (missing or invalid params) */
         ERROR_BAD_REQUEST,
