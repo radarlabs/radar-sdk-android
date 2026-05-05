@@ -24,6 +24,16 @@ internal class RadarApiHelperMock : RadarApiHelper() {
     internal var lastCapturedParams: JSONObject? = null
     internal var lastCapturedPath: String? = null
     internal var lastCapturedMethod: String? = null
+    internal var lastCapturedVerified: Boolean = false
+    internal var lastCapturedVerifiedHostOverride: String? = null
+    internal var lastUrl: String? = null
+
+    /**
+     * Sequential responses to return for repeated requests against the same path. When set,
+     * each call to `request()` for that path consumes the head of the queue. Useful for
+     * exercising failover flows where the primary and retry hit the same path.
+     */
+    internal var mockResponseQueues: MutableMap<String, ArrayDeque<JSONObject?>> = mutableMapOf()
 
     override fun request(
         context: Context,
@@ -37,12 +47,29 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         stream: Boolean,
         logPayload: Boolean,
         verified: Boolean,
-        imageCallback: RadarImageApiCallback?
+        imageCallback: RadarImageApiCallback?,
+        verifiedHostOverride: String?,
     ) {
         if (path != "v1/logs") {
+            val host = if (verified) {
+                verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
+            } else {
+                RadarSettings.getHost(context)
+            }
+            lastUrl = "$host/$path"
             lastCapturedPath = path
             lastCapturedMethod = method
             lastCapturedParams = params
+            lastCapturedVerified = verified
+            lastCapturedVerifiedHostOverride = verifiedHostOverride
+        }
+
+        val queueKey = mockResponseQueues.keys.firstOrNull { path.startsWith(it) }
+        if (queueKey != null) {
+            val queue = mockResponseQueues[queueKey]!!
+            val head = if (queue.isNotEmpty()) queue.removeFirst() else null
+            callback?.onComplete(mockStatus, head)
+            return
         }
 
         if (mockResponses.containsKey(path)) {
@@ -50,6 +77,10 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         } else {
             callback?.onComplete(mockStatus, mockResponse)
         }
+    }
+
+    fun queueMockResponses(path: String, responses: List<JSONObject?>) {
+        mockResponseQueues[path] = ArrayDeque(responses)
     }
 
     /**

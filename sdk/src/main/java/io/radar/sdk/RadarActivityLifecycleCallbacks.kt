@@ -51,7 +51,7 @@ internal class RadarActivityLifecycleCallbacks(
                 val updated = RadarSettings.updateSessionId(activity.applicationContext)
                 if (updated) {
                     val usage = "resume"
-                    Radar.apiClient.getConfig(usage, false, object : RadarApiClient.RadarGetConfigApiCallback {
+                    Radar.apiClient.getConfig(usage = usage, callback = object : RadarApiClient.RadarGetConfigApiCallback {
                         override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
                             if (config == null) {
                                 return
