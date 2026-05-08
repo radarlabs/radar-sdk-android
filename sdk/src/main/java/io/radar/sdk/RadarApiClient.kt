@@ -618,11 +618,51 @@ internal class RadarApiClient(
                         RadarState.setBeaconIds(context, beaconIds)
                     }
 
-                    if (events != null && user != null) {
-                        RadarSettings.setId(context, user._id)
+                    val successUser = if (verified) token?.user ?: user else user
+                    val successEvents = if (verified) token?.events ?: events else events
 
-                        if (user.trip != null) {
-                            RadarSettings.setTrip(context, user.trip)
+                    if (verified && token != null) {
+                        successUser?.let { verifiedUser ->
+                            RadarSettings.setId(context, verifiedUser._id)
+
+                            if (verifiedUser.trip != null) {
+                                RadarSettings.setTrip(context, verifiedUser.trip)
+                            } else {
+                                RadarSettings.setTrip(context, null)
+                                val tripOptions = RadarSettings.getTripOptions(context)
+                                if (tripOptions != null) {
+                                    locationManager.restartPreviousTrackingOptions()
+                                    RadarSettings.setTripOptions(context, null)
+                                }
+                            }
+
+                            RadarSettings.setUserDebug(context, verifiedUser.debug)
+                            Radar.sendLocation(location, verifiedUser)
+                        }
+
+                        if (!successEvents.isNullOrEmpty()) {
+                            Radar.sendEvents(successEvents, successUser)
+                        }
+
+                        Radar.sendToken(token)
+
+                        val inAppMessages = res.optJSONArray("inAppMessages")?.let { inAppMessageObj ->
+                            RadarInAppMessage.fromJsonArray(inAppMessageObj)
+                        }
+                        if (inAppMessages != null) {
+                            Radar.showInAppMessages(inAppMessages)
+                        }
+
+                        callback?.onComplete(RadarStatus.SUCCESS, res, successEvents, successUser, nearbyGeofences, config, token)
+
+                        return
+                    }
+
+                    if (!verified && successEvents != null && successUser != null) {
+                        RadarSettings.setId(context, successUser._id)
+
+                        if (successUser.trip != null) {
+                            RadarSettings.setTrip(context, successUser.trip)
                         } else {
                             RadarSettings.setTrip(context, null)
                             val tripOptions = RadarSettings.getTripOptions(context)
@@ -632,16 +672,12 @@ internal class RadarApiClient(
                             }
                         }
 
-                        RadarSettings.setUserDebug(context, user.debug)
+                        RadarSettings.setUserDebug(context, successUser.debug)
 
-                        Radar.sendLocation(location, user)
+                        Radar.sendLocation(location, successUser)
 
-                        if (events.isNotEmpty()) {
-                            Radar.sendEvents(events, user)
-                        }
-
-                        if (token != null) {
-                            Radar.sendToken(token)
+                        if (successEvents.isNotEmpty()) {
+                            Radar.sendEvents(successEvents, successUser)
                         }
 
                         val inAppMessages = res.optJSONArray("inAppMessages")?.let { inAppMessageObj ->
@@ -651,7 +687,7 @@ internal class RadarApiClient(
                             Radar.showInAppMessages(inAppMessages)
                         }
 
-                        callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config, token)
+                        callback?.onComplete(RadarStatus.SUCCESS, res, successEvents, successUser, nearbyGeofences, config, token)
 
                         return
                     }
