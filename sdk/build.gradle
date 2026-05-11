@@ -59,6 +59,7 @@ android {
     }
     lintOptions {
         warningsAsErrors true
+        disable 'AndroidGradlePluginVersion'
     }
     namespace 'io.radar.sdk'
 }
