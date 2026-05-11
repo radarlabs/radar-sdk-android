@@ -59,6 +59,8 @@ android {
     }
     lintOptions {
         warningsAsErrors true
+        disable 'GradleDependency'
+        disable 'NewerVersionAvailable'
     }
     namespace 'io.radar.sdk'
 }
