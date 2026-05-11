@@ -1029,12 +1029,13 @@ class RadarTest {
             }
         }
         
-        // Initialize Radar with the mock Activity to ensure inAppMessageManager is created
+        // Re-initialize with the mock Activity so its activity reference is seeded into the
+        // inAppMessageManager (the manager itself was already created in setUp with applicationContext).
         Radar.initialize(mockActivity, publishableKey)
-        
+
         // Set the mock receiver
         Radar.setInAppMessageReceiver(mockInAppMessageReceiver)
-        
+
         // Set up permissions and location
         permissionsHelperMock.mockFineLocationPermissionGranted = true
         val mockLocation = Location("RadarSDK")
@@ -1043,34 +1044,34 @@ class RadarTest {
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         locationClientMock.mockLocation = mockLocation
-        
+
         // Mock API response with inAppMessages
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
-        
+
         // Create a track response with inAppMessages field
         val trackResponse = RadarTestUtils.jsonObjectFromResource("/track.json")!!
         val inAppMessagesArray = JSONArray()
         val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"},\"metadata\":{\"test\":\"test\"}}")
         inAppMessagesArray.put(inAppMessageJson)
         trackResponse.put("inAppMessages", inAppMessagesArray)
-        
+
         apiHelperMock.addMockResponse("v1/track", trackResponse)
-        
+
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
-        
+
         // Call the main track method
         Radar.trackOnce { status, _, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
-        
+
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
-        
+
         // Verify the track call was successful
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        
+
         // Verify that the in-app message receiver methods were called
         assertTrue("onNewInAppMessage should have been called", mockInAppMessageReceiver.onNewInAppMessageCalled)
         assertTrue("createInAppMessageView should have been called", mockInAppMessageReceiver.createInAppMessageViewCalled)
@@ -1080,20 +1081,20 @@ class RadarTest {
     fun test_Radar_inAppMessaging_discard_operation() {
         // Create a mock Activity for testing
         val mockActivity = Robolectric.buildActivity(Activity::class.java).create().get()
-        
+
         // Create a mock in-app message receiver that returns DISCARD
         val mockInAppMessageReceiver = object : RadarInAppMessageReceiver {
             var onNewInAppMessageCalled = false
             var createInAppMessageViewCalled = false
-            
+
             override fun onNewInAppMessage(inAppMessage: RadarInAppMessage) {
                 onNewInAppMessageCalled = true
             }
-            
+
             override fun createInAppMessageView(
-                context: Context, 
-                inAppMessage: RadarInAppMessage, 
-                onDismissListener: (() -> Unit)?, 
+                context: Context,
+                inAppMessage: RadarInAppMessage,
+                onDismissListener: (() -> Unit)?,
                 onInAppMessageButtonClicked: (() -> Unit)?,
                 onViewReady: (View) -> Unit
             ) {
@@ -1103,8 +1104,9 @@ class RadarTest {
                 onViewReady(view)
             }
         }
-        
-        // Initialize Radar with the mock Activity to ensure inAppMessageManager is created
+
+        // Re-initialize with the mock Activity so its activity reference is seeded into the
+        // inAppMessageManager (the manager itself was already created in setUp with applicationContext).
         Radar.initialize(mockActivity, publishableKey)
         
         // Set the mock receiver
@@ -1149,6 +1151,100 @@ class RadarTest {
         // Verify that onNewInAppMessage was called but createInAppMessageView was not (due to DISCARD)
         assertTrue("onNewInAppMessage should have been called", mockInAppMessageReceiver.onNewInAppMessageCalled)
         assertFalse("createInAppMessageView should not have been called when DISCARD is returned", mockInAppMessageReceiver.createInAppMessageViewCalled)
+    }
+
+    @Test
+    fun test_inAppMessaging_initWithApplicationContext_managerFunctional() {
+        // setUp() already called Radar.initialize(context, publishableKey) where context is
+        // ApplicationProvider.getApplicationContext() — an Application, not an Activity.
+        // Before the fix this logged an error and left the manager uninitialized.
+        // After the fix the manager is always created; we verify it by exercising its API
+        // without crashing, and confirm showInAppMessage gracefully no-ops when no activity
+        // is set yet (i.e. before any lifecycle resume event).
+
+        val inAppMessageJson = "{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"test\",\"color\":\"#000000\"},\"button\":{\"text\":\"ok\",\"color\":\"#000000\",\"backgroundColor\":\"#FF0000\",\"url\":\"https://radar.com\"},\"metadata\":{}}"
+        val message = RadarInAppMessage.fromJson(inAppMessageJson)!!
+
+        var createViewCalled = false
+        Radar.setInAppMessageReceiver(object : RadarInAppMessageReceiver {
+            override fun createInAppMessageView(
+                context: Context,
+                inAppMessage: RadarInAppMessage,
+                onDismissListener: (() -> Unit)?,
+                onInAppMessageButtonClicked: (() -> Unit)?,
+                onViewReady: (View) -> Unit
+            ) {
+                createViewCalled = true
+            }
+        })
+
+        // No foreground activity set — showInAppMessage should log and return without crashing
+        Radar.showInAppMessage(message)
+
+        assertFalse("createInAppMessageView should not be called when no activity is set", createViewCalled)
+    }
+
+    @Test
+    fun test_inAppMessaging_showMessage_afterActivitySet_callsReceiver() {
+        // After setInAppMessageActivity provides a foreground activity, showInAppMessage
+        // should proceed and invoke createInAppMessageView on the receiver.
+        val mockActivity = Robolectric.buildActivity(Activity::class.java).create().resume().get()
+        Radar.setInAppMessageActivity(mockActivity)
+
+        val inAppMessageJson = "{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"test\",\"color\":\"#000000\"},\"button\":{\"text\":\"ok\",\"color\":\"#000000\",\"backgroundColor\":\"#FF0000\",\"url\":\"https://radar.com\"},\"metadata\":{}}"
+        val message = RadarInAppMessage.fromJson(inAppMessageJson)!!
+
+        var createViewCalled = false
+        Radar.setInAppMessageReceiver(object : RadarInAppMessageReceiver {
+            override fun createInAppMessageView(
+                context: Context,
+                inAppMessage: RadarInAppMessage,
+                onDismissListener: (() -> Unit)?,
+                onInAppMessageButtonClicked: (() -> Unit)?,
+                onViewReady: (View) -> Unit
+            ) {
+                createViewCalled = true
+                onViewReady(View(context))
+            }
+        })
+
+        Radar.showInAppMessage(message)
+
+        assertTrue("createInAppMessageView should be called when a foreground activity is set", createViewCalled)
+    }
+
+    @Test
+    fun test_inAppMessaging_activityClearedAfterPause_preventsShow() {
+        // Simulates the lifecycle: activity resumes (activity set), then pauses (activity cleared).
+        // After pause, showInAppMessage should no-op — mirrors what RadarActivityLifecycleCallbacks
+        // does via onActivityResumed / onActivityPaused.
+        val mockActivity = Robolectric.buildActivity(Activity::class.java).create().resume().get()
+
+        // Simulate resume
+        Radar.setInAppMessageActivity(mockActivity)
+
+        // Simulate pause
+        Radar.setInAppMessageActivity(null)
+
+        val inAppMessageJson = "{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"test\",\"color\":\"#000000\"},\"button\":{\"text\":\"ok\",\"color\":\"#000000\",\"backgroundColor\":\"#FF0000\",\"url\":\"https://radar.com\"},\"metadata\":{}}"
+        val message = RadarInAppMessage.fromJson(inAppMessageJson)!!
+
+        var createViewCalled = false
+        Radar.setInAppMessageReceiver(object : RadarInAppMessageReceiver {
+            override fun createInAppMessageView(
+                context: Context,
+                inAppMessage: RadarInAppMessage,
+                onDismissListener: (() -> Unit)?,
+                onInAppMessageButtonClicked: (() -> Unit)?,
+                onViewReady: (View) -> Unit
+            ) {
+                createViewCalled = true
+            }
+        })
+
+        Radar.showInAppMessage(message)
+
+        assertFalse("createInAppMessageView should not be called after activity is cleared on pause", createViewCalled)
     }
 
     @Test
