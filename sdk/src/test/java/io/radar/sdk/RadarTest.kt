@@ -2705,7 +2705,7 @@ class RadarTest {
 
         val latch = CountDownLatch(1)
 
-        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
+        Radar.apiClient.getConfig(usage = "sdkConfigUpdate", verified = false, callback = object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
                 if (config != null) {
                     RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)

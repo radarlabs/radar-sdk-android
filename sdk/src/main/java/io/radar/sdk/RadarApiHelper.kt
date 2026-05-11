@@ -13,10 +13,14 @@ import org.json.JSONObject
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStreamWriter
+import java.net.ConnectException
+import java.net.SocketTimeoutException
 import java.net.URL
+import java.net.UnknownHostException
 import java.util.Scanner
 import java.util.concurrent.Executors
 import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLException
 
 // // For debugging local development server trackVerified
 // import javax.net.ssl.SSLContext
@@ -24,6 +28,27 @@ import javax.net.ssl.HttpsURLConnection
 // import javax.net.ssl.X509TrustManager
 // import javax.net.ssl.HostnameVerifier
 // import java.security.cert.X509Certificate
+
+internal enum class NetworkErrorKind {
+    DNS_FAILURE,
+    TIMEOUT,
+    SSL_FAILURE,
+    CONNECT_REFUSED,
+    IO_OTHER;
+
+    companion object {
+        fun from(e: IOException): NetworkErrorKind = when (e) {
+            is UnknownHostException -> DNS_FAILURE
+            is SocketTimeoutException -> TIMEOUT
+            is SSLException -> SSL_FAILURE
+            is ConnectException -> CONNECT_REFUSED
+            else -> IO_OTHER
+        }
+    }
+}
+
+internal fun networkErrorMessage(host: String, e: Exception, elapsedMs: Long, kind: String): String =
+    "📍 Radar API network error | host = $host; kind = $kind; exception = ${e.javaClass.simpleName}; message = ${e.localizedMessage}; elapsedMs = $elapsedMs"
 
 internal open class RadarApiHelper(
     private var logger: RadarLogger? = null
@@ -69,9 +94,10 @@ internal open class RadarApiHelper(
                               stream: Boolean = false,
                               logPayload: Boolean = true,
                               verified: Boolean = false,
-                              imageCallback: RadarImageApiCallback? = null) {
+                              imageCallback: RadarImageApiCallback? = null,
+                              verifiedHostOverride: String? = null) {
         val host = if (verified) {
-            RadarSettings.getVerifiedHost(context)
+            verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
         } else {
             RadarSettings.getHost(context)
         }
@@ -87,6 +113,7 @@ internal open class RadarApiHelper(
         }
         
         executor.execute {
+            val startMs = SystemClock.elapsedRealtime()
             try {
                 val urlConnection = url.openConnection() as HttpsURLConnection
                 // // For debugging local development server trackVerified
@@ -103,11 +130,13 @@ internal open class RadarApiHelper(
                     }
                 }
                 urlConnection.requestMethod = method
-                urlConnection.connectTimeout = 10000
-                if (extendedTimeout) {
-                    urlConnection.readTimeout = 25000
+                val timeoutMs = RadarSettings.getNetworkTimeoutMs(context)
+                urlConnection.connectTimeout = timeoutMs
+                // Preserve historical 2.5x read timeout for long-running requests (was 25s vs 10s)
+                urlConnection.readTimeout = if (extendedTimeout) {
+                    (timeoutMs * 2.5).toInt()
                 } else {
-                    urlConnection.readTimeout = 10000
+                    timeoutMs
                 }
                 if (stream) {
                     urlConnection.setChunkedStreamingMode(1024)
@@ -204,29 +233,26 @@ internal open class RadarApiHelper(
                     logger?.e("📍 Radar API response | method = ${method}; url = ${url}; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
                     
                     handler.post {
-                        callback?.onComplete(status)
+                        callback?.onComplete(status, res)
                         imageCallback?.onComplete(status)
                     }
                 }
 
                 urlConnection.disconnect()
             } catch (e: IOException) {
+                logNetworkError(host, e, startMs, NetworkErrorKind.from(e).name)
                 handler.post {
-                    logger?.d("Error calling API | e = ${e.localizedMessage}")
-
                     callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
                 }
             } catch (e: JSONException) {
-                logger?.d("Error calling API | e = ${e.localizedMessage}")
-
+                logNetworkError(host, e, startMs, "JSON_PARSE")
                 handler.post {
                     callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
                 }
             } catch (e: Exception) {
-                logger?.d("Error calling API | e = ${e.localizedMessage}")
-
+                logNetworkError(host, e, startMs, "UNKNOWN")
                 handler.post {
                     callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
@@ -237,6 +263,11 @@ internal open class RadarApiHelper(
                 Thread.sleep(1000)
             }
         }
+    }
+
+    private fun logNetworkError(host: String, e: Exception, startMs: Long, kind: String) {
+        val elapsedMs = SystemClock.elapsedRealtime() - startMs
+        logger?.e(networkErrorMessage(host, e, elapsedMs, kind), RadarLogType.SDK_ERROR)
     }
 
     private fun InputStream.readAll(): String? {
