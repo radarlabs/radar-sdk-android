@@ -95,6 +95,7 @@ internal class RadarActivityLifecycleCallbacks(
         isFirstOnResume = false
         foreground = count > 0
         activity.intent?.let { Radar.logOpenedAppConversion(it) } ?: Radar.logOpenedAppConversion()
+        Radar.setInAppMessageActivity(activity)
 
         updatePermissionsDenied(activity)
 
@@ -126,6 +127,7 @@ internal class RadarActivityLifecycleCallbacks(
         updatePermissionsDenied(activity)
         Radar.logResigningActive()
         Radar.dismissInAppMessage()
+        Radar.setInAppMessageActivity(null)
     }
 
     override fun onActivityStarted(activity: Activity) {

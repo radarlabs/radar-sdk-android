@@ -12,7 +12,8 @@ import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarInAppMessage
 import org.json.JSONObject
 
-class RadarInAppMessageManager(private val activity: Activity, private val context: Context) {
+class RadarInAppMessageManager(private val context: Context) {
+    internal var activity: Activity? = null
     private var currentView: View? = null
     private var inAppMessageReceiver: RadarInAppMessageReceiver? = null
 
@@ -41,6 +42,11 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
     }
 
     internal fun showInAppMessage(payload: RadarInAppMessage) {
+        val activity = this.activity
+        if (activity == null) {
+            Radar.logger.e("No foreground activity available, cannot show in-app message")
+            return
+        }
         inAppMessageReceiver?.createInAppMessageView(
             context,
             payload,

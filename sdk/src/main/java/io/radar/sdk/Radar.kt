@@ -656,14 +656,13 @@ object Radar {
         }
 
         if (!this::inAppMessageManager.isInitialized) {
-            val appActivity = this.activity
-            if (appActivity != null) {
-                this.inAppMessageManager = RadarInAppMessageManager(appActivity, this.context)
-                this.inAppMessageManager.setInAppMessageReceiver(options.inAppMessageReceiver ?: object : RadarInAppMessageReceiver {})
-            } else {
-                this.logger.e("Provided context is not an activity and optional currentActivity parameter was not provided, cannot initialize inAppMessageManager")
-            }
+            this.inAppMessageManager = RadarInAppMessageManager(this.context)
+            this.inAppMessageManager.setInAppMessageReceiver(options.inAppMessageReceiver ?: object : RadarInAppMessageReceiver {})
         }
+        // Seed the current activity if one is already known (e.g. passed via options.activity or
+        // because initialize() was called directly with an Activity context). Lifecycle callbacks
+        // will keep this up-to-date as the user navigates.
+        this.activity?.let { this.inAppMessageManager.activity = it }
 
         if (!this::syncManager.isInitialized) {
             this.syncManager = RadarSyncManager(this.context, apiClient, logger)
@@ -4180,6 +4179,13 @@ object Radar {
             return
         }
         inAppMessageManager.dismiss()
+    }
+
+    internal fun setInAppMessageActivity(activity: Activity?) {
+        if (!this::inAppMessageManager.isInitialized) {
+            return
+        }
+        inAppMessageManager.activity = activity
     }
 
     /**
