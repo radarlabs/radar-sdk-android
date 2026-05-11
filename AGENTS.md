@@ -4,7 +4,7 @@ This file orients AI coding agents (Claude Code, Cursor, Aider, etc.) working on
 
 ## Project
 
-Radar's Android SDK for geofencing, location tracking, trips, geocoding, beacons, and verification. Published as a library to Maven Central. Public docs: https://radar.io/documentation.
+Radar's Android SDK for geofencing, location tracking, trips, geocoding, beacons, and verification. Published as a library to Maven Central. Public docs: https://docs.radar.com/.
 
 - Current version: see `version` in [sdk/build.gradle](sdk/build.gradle)
 - Migration history: [MIGRATION.md](MIGRATION.md)
