@@ -700,10 +700,6 @@ object Radar {
             RadarSettings.setNetworkTimeoutMs(this.context, clamped)
         }
 
-        if (options.fraud) {
-            RadarSettings.setSharing(this.context, false)
-        }
-
         activityLifecycleCallbacks?.let {
             application?.unregisterActivityLifecycleCallbacks(it)
         }
