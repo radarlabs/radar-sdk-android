@@ -10,9 +10,9 @@ jobs:
     steps:
       # Prepare Environment
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
       - name: Configure Java
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'microsoft'
