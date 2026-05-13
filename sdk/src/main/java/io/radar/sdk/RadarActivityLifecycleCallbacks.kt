@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
 import io.radar.sdk.model.RadarConfig
 import java.util.WeakHashMap
 import kotlin.math.max
@@ -100,8 +101,7 @@ internal class RadarActivityLifecycleCallbacks(
         updatePermissionsDenied(activity)
 
         Log.d(TAG, "resumed=${activity.javaClass.simpleName} fraud=$fraud instrumented=${instrumentedActivities[activity] == true} count=$count")
-
-        if (fraud && instrumentedActivities[activity] != true) {
+        if (fraud && activity.findViewById<View>(R.id.radar_touch_view_id) == null) {
             val touchView = object: View(activity.applicationContext) {
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     try {
@@ -115,13 +115,11 @@ internal class RadarActivityLifecycleCallbacks(
                     }
                     return super.dispatchTouchEvent(event)
                 }
-            }
-
+            }.also { it.id = R.id.radar_touch_view_id }
             activity.addContentView(touchView, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
             instrumentedActivities[activity] = true
             Log.d(TAG, "touchView attached to=${activity.javaClass.simpleName}")
         }
-
     }
 
     override fun onActivityPaused(activity: Activity) {
