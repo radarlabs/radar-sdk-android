@@ -8,8 +8,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.InputDevice
 import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
+import android.view.Window
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
@@ -21,7 +20,7 @@ internal class RadarActivityLifecycleCallbacks(
 ) : Application.ActivityLifecycleCallbacks {
     private var count = 0
     private var isFirstOnResume = true
-    private var touchViewAdded = false
+    private val wrappedActivities = mutableSetOf<Activity>()
 
     companion object {
         var foreground: Boolean = false
@@ -98,23 +97,29 @@ internal class RadarActivityLifecycleCallbacks(
 
         updatePermissionsDenied(activity)
 
-        if (fraud && !touchViewAdded) {
-            val touchView = object: View(activity.applicationContext) {
+        if (fraud && !wrappedActivities.contains(activity)) {
+            val window = activity.window
+            val originalCallback = window.callback
+
+            window.callback = object : Window.Callback by originalCallback {
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     try {
                         val inputDevice = InputDevice.getDevice(event.deviceId)
-                        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN || inputDevice?.isVirtual == true) {
+                        if (
+                            event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN ||
+                            inputDevice?.isVirtual == true
+                        ) {
                             RadarSettings.setSharing(activity.applicationContext, true)
                         }
-                    }  catch (e: Exception) {
+                    } catch (e: Exception) {
                         Log.e(TAG, e.message, e)
                     }
-                    return super.dispatchTouchEvent(event)
+
+                    return originalCallback.dispatchTouchEvent(event)
                 }
             }
 
-            activity.addContentView(touchView, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
-            touchViewAdded = true
+            wrappedActivities.add(activity)
         }
 
     }
@@ -138,6 +143,7 @@ internal class RadarActivityLifecycleCallbacks(
     }
 
     override fun onActivityDestroyed(activity: Activity) {
+        wrappedActivities.remove(activity)
         updatePermissionsDenied(activity)
     }
 
