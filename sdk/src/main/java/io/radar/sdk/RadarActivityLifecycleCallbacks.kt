@@ -13,6 +13,7 @@ import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
+import java.util.WeakHashMap
 import kotlin.math.max
 
 
@@ -21,7 +22,7 @@ internal class RadarActivityLifecycleCallbacks(
 ) : Application.ActivityLifecycleCallbacks {
     private var count = 0
     private var isFirstOnResume = true
-    private var touchViewAdded = false
+    private val instrumentedActivities = WeakHashMap<Activity, Boolean>()
 
     companion object {
         var foreground: Boolean = false
@@ -98,7 +99,7 @@ internal class RadarActivityLifecycleCallbacks(
 
         updatePermissionsDenied(activity)
 
-        if (fraud && !touchViewAdded) {
+        if (fraud && instrumentedActivities[activity] != true) {
             val touchView = object: View(activity.applicationContext) {
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     try {
@@ -114,7 +115,7 @@ internal class RadarActivityLifecycleCallbacks(
             }
 
             activity.addContentView(touchView, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
-            touchViewAdded = true
+            instrumentedActivities[activity] = true
         }
 
     }
@@ -139,6 +140,7 @@ internal class RadarActivityLifecycleCallbacks(
 
     override fun onActivityDestroyed(activity: Activity) {
         updatePermissionsDenied(activity)
+        instrumentedActivities.remove(activity)
     }
 
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
