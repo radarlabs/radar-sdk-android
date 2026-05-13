@@ -97,6 +97,8 @@ internal class RadarActivityLifecycleCallbacks(
 
         updatePermissionsDenied(activity)
 
+        Log.d(TAG, "resumed=${activity.javaClass.simpleName} fraud=$fraud count=$count")
+
         if (fraud && !wrappedActivities.contains(activity)) {
             val window = activity.window
             val originalCallback = window.callback
@@ -105,6 +107,9 @@ internal class RadarActivityLifecycleCallbacks(
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     try {
                         val inputDevice = InputDevice.getDevice(event.deviceId)
+
+                        Log.d(TAG, "touch on=${activity.javaClass.simpleName} action=${event.actionMasked} toolType=${event.getToolType(0)} deviceId=${event.deviceId} isVirtual=${inputDevice?.isVirtual}")
+
                         if (
                             event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN ||
                             inputDevice?.isVirtual == true
