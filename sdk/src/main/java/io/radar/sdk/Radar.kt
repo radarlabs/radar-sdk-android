@@ -9,9 +9,11 @@ import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.Handler
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import com.google.firebase.messaging.FirebaseMessaging
+import io.radar.sdk.RadarActivityLifecycleCallbacks.Companion.TAG
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
@@ -704,12 +706,13 @@ object Radar {
             application?.unregisterActivityLifecycleCallbacks(it)
         }
 
+        Log.d("RadarActivityLifecycle", "registering activityLifecycleCallbacks=$activityLifecycleCallbacks")
         activityLifecycleCallbacks = RadarActivityLifecycleCallbacks(options.fraud)
         application?.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
         options.activity?.let {
-            logger.i("currentActivity=${it.javaClass.simpleName}")
+            Log.d("RadarActivityLifecycle", "currentActivity=$it")
             if (options.fraud) {
-                logger.i("wrapping activity")
+                Log.d("RadarActivityLifecycle", "wrapping activity activityLifecycleCallbacks=$activityLifecycleCallbacks currentActivity=$it")
                 activityLifecycleCallbacks?.wrapActivity(it)
             }
         }
