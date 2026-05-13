@@ -1457,6 +1457,23 @@ object Radar {
     }
 
     /**
+     * Returns a boolean indicating whether screen sharing is active.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @return A boolean indicating whether screen sharing is active.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun isSharing(): Boolean {
+        if (!initialized) {
+            return false
+        }
+
+        return RadarSettings.getSharing(context)
+    }
+
+    /**
      * Returns the user's last verified location token if still valid, or requests a fresh token if not.
      *
      * Note that you must configure SSL pinning before calling this method.
