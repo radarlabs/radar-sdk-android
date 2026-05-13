@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import android.view.Window
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import io.radar.sdk.Radar.logger
 import io.radar.sdk.model.RadarConfig
 import kotlin.math.max
 
@@ -45,6 +46,8 @@ internal class RadarActivityLifecycleCallbacks(
     }
 
     internal fun wrapActivity(activity: Activity) {
+        logger.d("wrapped activity=${activity.javaClass.simpleName}")
+
         val window = activity.window
         val originalCallback = window.callback
 
