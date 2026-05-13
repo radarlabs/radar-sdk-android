@@ -9,6 +9,7 @@ import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.Handler
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import com.google.firebase.messaging.FirebaseMessaging
@@ -700,16 +701,19 @@ object Radar {
             RadarSettings.setNetworkTimeoutMs(this.context, clamped)
         }
 
-        if (options.fraud) {
-            RadarSettings.setSharing(this.context, false)
-        }
-
         activityLifecycleCallbacks?.let {
             application?.unregisterActivityLifecycleCallbacks(it)
         }
 
+        this.logger.d("Registering activity lifecycle callbacks")
         activityLifecycleCallbacks = RadarActivityLifecycleCallbacks(options.fraud)
         application?.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
+        options.activity?.let {
+            if (options.fraud) {
+                this.logger.d("Wrapping activity")
+                activityLifecycleCallbacks?.wrapActivity(it)
+            }
+        }
 
         val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
         if (sdkConfiguration.usePersistence) {

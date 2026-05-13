@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
             customForegroundNotification = customNotification,
             silentPush = true,
             trackVerifiedAutoFailover = true,
+            activity = this,
         )
         Radar.initialize(this, PUBLISHABLE_KEY, options)
 
