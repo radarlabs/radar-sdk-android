@@ -705,6 +705,10 @@ object Radar {
             application?.unregisterActivityLifecycleCallbacks(it)
         }
 
+        if (activityLifecycleCallbacks == null && options.fraud) {
+            RadarSettings.setSharing(context, false)
+        }
+
         this.logger.d("Registering activity lifecycle callbacks")
         activityLifecycleCallbacks = RadarActivityLifecycleCallbacks(options.fraud)
         application?.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
