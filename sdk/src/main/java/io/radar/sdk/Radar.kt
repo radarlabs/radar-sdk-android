@@ -13,7 +13,6 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import com.google.firebase.messaging.FirebaseMessaging
-import io.radar.sdk.RadarActivityLifecycleCallbacks.Companion.TAG
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
