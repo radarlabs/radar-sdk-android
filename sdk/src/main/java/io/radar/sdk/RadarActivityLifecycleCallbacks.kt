@@ -46,7 +46,7 @@ internal class RadarActivityLifecycleCallbacks(
     }
 
     internal fun wrapActivity(activity: Activity) {
-        logger.d("wrapped activity=${activity.javaClass.simpleName}")
+        Log.d(TAG, "wrapped activity=${activity.javaClass.simpleName}")
 
         val window = activity.window
         val originalCallback = window.callback

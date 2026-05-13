@@ -707,9 +707,9 @@ object Radar {
         activityLifecycleCallbacks = RadarActivityLifecycleCallbacks(options.fraud)
         application?.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
         options.activity?.let {
-            logger.d("currentActivity=${it.javaClass.simpleName}")
+            logger.i("currentActivity=${it.javaClass.simpleName}")
             if (options.fraud) {
-                logger.d("wrapping activity")
+                logger.i("wrapping activity")
                 activityLifecycleCallbacks?.wrapActivity(it)
             }
         }
