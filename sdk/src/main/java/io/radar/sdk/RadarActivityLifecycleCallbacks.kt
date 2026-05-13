@@ -44,6 +44,34 @@ internal class RadarActivityLifecycleCallbacks(
         }
     }
 
+    internal fun wrapActivity(activity: Activity) {
+        val window = activity.window
+        val originalCallback = window.callback
+
+        window.callback = object : Window.Callback by originalCallback {
+            override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+                try {
+                    val inputDevice = InputDevice.getDevice(event.deviceId)
+
+                    Log.d(TAG, "touch on=${activity.javaClass.simpleName} action=${event.actionMasked} toolType=${event.getToolType(0)} deviceId=${event.deviceId} isVirtual=${inputDevice?.isVirtual}")
+
+                    if (
+                        event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN ||
+                        inputDevice?.isVirtual == true
+                    ) {
+                        RadarSettings.setSharing(activity.applicationContext, true)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, e.message, e)
+                }
+
+                return originalCallback.dispatchTouchEvent(event)
+            }
+        }
+
+        wrappedActivities.add(activity)
+    }
+
     override fun onActivityResumed(activity: Activity) {
         if (count == 0 && !isFirstOnResume) {
             try {
@@ -100,31 +128,7 @@ internal class RadarActivityLifecycleCallbacks(
         Log.d(TAG, "resumed=${activity.javaClass.simpleName} fraud=$fraud count=$count")
 
         if (fraud && !wrappedActivities.contains(activity)) {
-            val window = activity.window
-            val originalCallback = window.callback
-
-            window.callback = object : Window.Callback by originalCallback {
-                override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-                    try {
-                        val inputDevice = InputDevice.getDevice(event.deviceId)
-
-                        Log.d(TAG, "touch on=${activity.javaClass.simpleName} action=${event.actionMasked} toolType=${event.getToolType(0)} deviceId=${event.deviceId} isVirtual=${inputDevice?.isVirtual}")
-
-                        if (
-                            event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN ||
-                            inputDevice?.isVirtual == true
-                        ) {
-                            RadarSettings.setSharing(activity.applicationContext, true)
-                        }
-                    } catch (e: Exception) {
-                        Log.e(TAG, e.message, e)
-                    }
-
-                    return originalCallback.dispatchTouchEvent(event)
-                }
-            }
-
-            wrappedActivities.add(activity)
+            wrapActivity(activity)
         }
 
     }

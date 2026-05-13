@@ -706,6 +706,11 @@ object Radar {
 
         activityLifecycleCallbacks = RadarActivityLifecycleCallbacks(options.fraud)
         application?.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
+        options.activity?.let {
+            if (options.fraud) {
+                activityLifecycleCallbacks?.wrapActivity(it)
+            }
+        }
 
         val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
         if (sdkConfiguration.usePersistence) {
