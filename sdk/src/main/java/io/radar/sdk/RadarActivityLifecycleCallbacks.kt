@@ -99,11 +99,14 @@ internal class RadarActivityLifecycleCallbacks(
 
         updatePermissionsDenied(activity)
 
+        Log.d(TAG, "resumed=${activity.javaClass.simpleName} fraud=$fraud instrumented=${instrumentedActivities[activity] == true} count=$count")
+
         if (fraud && instrumentedActivities[activity] != true) {
             val touchView = object: View(activity.applicationContext) {
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                     try {
                         val inputDevice = InputDevice.getDevice(event.deviceId)
+                        Log.d(TAG, "touch on=${activity.javaClass.simpleName} action=${event.actionMasked} toolType=${event.getToolType(0)} deviceId=${event.deviceId} isVirtual=${inputDevice?.isVirtual}")
                         if (event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN || inputDevice?.isVirtual == true) {
                             RadarSettings.setSharing(activity.applicationContext, true)
                         }
@@ -116,6 +119,7 @@ internal class RadarActivityLifecycleCallbacks(
 
             activity.addContentView(touchView, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
             instrumentedActivities[activity] = true
+            Log.d(TAG, "touchView attached to=${activity.javaClass.simpleName}")
         }
 
     }
