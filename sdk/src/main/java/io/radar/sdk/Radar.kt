@@ -700,12 +700,14 @@ object Radar {
             RadarSettings.setNetworkTimeoutMs(this.context, clamped)
         }
 
-        activityLifecycleCallbacks?.let {
-            application?.unregisterActivityLifecycleCallbacks(it)
+        val existingCallbacks = activityLifecycleCallbacks
+        if (existingCallbacks == null) {
+            val callbacks = RadarActivityLifecycleCallbacks(options.fraud)
+            activityLifecycleCallbacks = callbacks
+            application?.registerActivityLifecycleCallbacks(callbacks)
+        } else {
+            existingCallbacks.fraud = options.fraud
         }
-
-        activityLifecycleCallbacks = RadarActivityLifecycleCallbacks(options.fraud)
-        application?.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
 
         val sdkConfiguration = RadarSettings.getSdkConfiguration(this.context)
         if (sdkConfiguration.usePersistence) {

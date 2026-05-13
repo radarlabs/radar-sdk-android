@@ -19,7 +19,7 @@ import kotlin.math.max
 
 
 internal class RadarActivityLifecycleCallbacks(
-    private val fraud: Boolean = false
+    @Volatile var fraud: Boolean = false
 ) : Application.ActivityLifecycleCallbacks {
     private var count = 0
     private var isFirstOnResume = true
@@ -104,14 +104,16 @@ internal class RadarActivityLifecycleCallbacks(
         if (fraud && activity.findViewById<View>(R.id.radar_touch_view_id) == null) {
             val touchView = object: View(activity.applicationContext) {
                 override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-                    try {
-                        val inputDevice = InputDevice.getDevice(event.deviceId)
-                        Log.d(TAG, "touch on=${activity.javaClass.simpleName} action=${event.actionMasked} toolType=${event.getToolType(0)} deviceId=${event.deviceId} isVirtual=${inputDevice?.isVirtual}")
-                        if (event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN || inputDevice?.isVirtual == true) {
-                            RadarSettings.setSharing(activity.applicationContext, true)
+                    if (fraud) {
+                        try {
+                            val inputDevice = InputDevice.getDevice(event.deviceId)
+                            Log.d(TAG, "touch on=${activity.javaClass.simpleName} action=${event.actionMasked} toolType=${event.getToolType(0)} deviceId=${event.deviceId} isVirtual=${inputDevice?.isVirtual}")
+                            if (event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN || inputDevice?.isVirtual == true) {
+                                RadarSettings.setSharing(activity.applicationContext, true)
+                            }
+                        }  catch (e: Exception) {
+                            Log.e(TAG, e.message, e)
                         }
-                    }  catch (e: Exception) {
-                        Log.e(TAG, e.message, e)
                     }
                     return super.dispatchTouchEvent(event)
                 }
