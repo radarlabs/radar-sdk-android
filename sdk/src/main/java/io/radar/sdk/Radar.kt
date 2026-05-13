@@ -705,13 +705,12 @@ object Radar {
             application?.unregisterActivityLifecycleCallbacks(it)
         }
 
-        Log.d("RadarActivityLifecycle", "registering activityLifecycleCallbacks=$activityLifecycleCallbacks")
+        this.logger.d("Registering activity lifecycle callbacks")
         activityLifecycleCallbacks = RadarActivityLifecycleCallbacks(options.fraud)
         application?.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
         options.activity?.let {
-            Log.d("RadarActivityLifecycle", "currentActivity=$it")
             if (options.fraud) {
-                Log.d("RadarActivityLifecycle", "wrapping activity activityLifecycleCallbacks=$activityLifecycleCallbacks currentActivity=$it")
+                this.logger.d("Wrapping activity")
                 activityLifecycleCallbacks?.wrapActivity(it)
             }
         }

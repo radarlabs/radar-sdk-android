@@ -11,7 +11,6 @@ import android.view.MotionEvent
 import android.view.Window
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import io.radar.sdk.Radar.logger
 import io.radar.sdk.model.RadarConfig
 import kotlin.math.max
 
@@ -46,8 +45,6 @@ internal class RadarActivityLifecycleCallbacks(
     }
 
     internal fun wrapActivity(activity: Activity) {
-        Log.d(TAG, "wrapped activity=${activity.javaClass.simpleName}")
-
         val window = activity.window
         val originalCallback = window.callback
 
@@ -55,8 +52,6 @@ internal class RadarActivityLifecycleCallbacks(
             override fun dispatchTouchEvent(event: MotionEvent): Boolean {
                 try {
                     val inputDevice = InputDevice.getDevice(event.deviceId)
-
-                    Log.d(TAG, "touch on=${activity.javaClass.simpleName} action=${event.actionMasked} toolType=${event.getToolType(0)} deviceId=${event.deviceId} isVirtual=${inputDevice?.isVirtual}")
 
                     if (
                         event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN ||
@@ -128,12 +123,9 @@ internal class RadarActivityLifecycleCallbacks(
 
         updatePermissionsDenied(activity)
 
-        Log.d(TAG, "resumed=${activity.javaClass.simpleName} fraud=$fraud count=$count")
-
         if (fraud && !wrappedActivities.contains(activity)) {
             wrapActivity(activity)
         }
-
     }
 
     override fun onActivityPaused(activity: Activity) {
