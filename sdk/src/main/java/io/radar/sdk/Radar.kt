@@ -705,6 +705,10 @@ object Radar {
             application?.unregisterActivityLifecycleCallbacks(it)
         }
 
+        if (activityLifecycleCallbacks == null && options.fraud) {
+            RadarSettings.setSharing(context, false)
+        }
+
         this.logger.d("Registering activity lifecycle callbacks")
         activityLifecycleCallbacks = RadarActivityLifecycleCallbacks(options.fraud)
         application?.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
@@ -1454,6 +1458,38 @@ object Radar {
         }
 
         return this.verificationManager.started
+    }
+
+    /**
+     * Returns the current screen sharing state.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @return A boolean indicating the current screen sharing state.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun isSharing(): Boolean {
+        if (!initialized) {
+            return false
+        }
+
+        return RadarSettings.getSharing(context)
+    }
+
+    /**
+     * Clears the last screen sharing state.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun clearSharing() {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setSharing(context, false)
     }
 
     /**
