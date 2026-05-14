@@ -9,7 +9,7 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 
 [*.{kt,kts}]
-ktlint_code_style = ktlint_official
+ktlint_code_style = android_studio
 max_line_length = off
 ktlint_standard_no-unused-imports = enabled
 
