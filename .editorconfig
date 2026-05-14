@@ -11,6 +11,7 @@ trim_trailing_whitespace = true
 [*.{kt,kts}]
 ktlint_code_style = ktlint_official
 max_line_length = off
+ktlint_standard_no-unused-imports = enabled
 
 [*.gradle]
 indent_size = 4
