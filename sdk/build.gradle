@@ -67,6 +67,7 @@ android {
 }
 
 ktlint {
+    version.set("1.8.0")
     android.set(true)
     baseline.set(file("ktlint-baseline.xml"))
 }
