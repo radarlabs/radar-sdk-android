@@ -167,6 +167,7 @@
         <error line="1130" column="63" source="standard:trailing-comma-on-declaration-site" />
         <error line="1132" column="62" source="standard:paren-spacing" />
         <error line="1132" column="64" source="standard:curly-spacing" />
+        <error line="1132" column="64" source="standard:then-spacing" />
         <error line="1139" column="21" source="standard:wrapping" />
         <error line="1143" column="45" source="standard:wrapping" />
         <error line="1143" column="64" source="standard:wrapping" />
@@ -218,6 +219,7 @@
         <error line="1227" column="51" source="standard:trailing-comma-on-declaration-site" />
         <error line="1229" column="50" source="standard:paren-spacing" />
         <error line="1229" column="52" source="standard:curly-spacing" />
+        <error line="1229" column="52" source="standard:then-spacing" />
         <error line="1236" column="9" source="standard:wrapping" />
         <error line="1248" column="19" source="standard:function-signature" />
         <error line="1248" column="39" source="standard:function-signature" />
@@ -757,7 +759,6 @@
         <error line="3696" column="103" source="standard:function-signature" />
         <error line="3709" column="1" source="standard:indent" />
         <error line="3709" column="21" source="standard:chain-wrapping" />
-        <error line="3709" column="24" source="standard:condition-wrapping" />
         <error line="3717" column="19" source="standard:multiline-expression-wrapping" />
         <error line="3718" column="37" source="standard:function-signature" />
         <error line="3718" column="58" source="standard:function-signature" />
@@ -1353,6 +1354,7 @@
         <error line="114" column="1" source="standard:no-trailing-spaces" />
         <error line="136" column="45" source="standard:multiline-expression-wrapping" />
         <error line="153" column="77" source="standard:curly-spacing" />
+        <error line="153" column="77" source="standard:then-spacing" />
         <error line="195" column="1" source="standard:no-trailing-spaces" />
         <error line="206" column="1" source="standard:no-trailing-spaces" />
         <error line="210" column="22" source="standard:no-trailing-spaces" />
@@ -1393,7 +1395,6 @@
         <error line="36" column="35" source="standard:multiline-expression-wrapping" />
         <error line="37" column="1" source="standard:indent" />
         <error line="37" column="17" source="standard:chain-wrapping" />
-        <error line="37" column="20" source="standard:condition-wrapping" />
         <error line="39" column="34" source="standard:multiline-expression-wrapping" />
         <error line="50" column="50" source="standard:trailing-comma-on-call-site" />
         <error line="84" column="1" source="standard:no-blank-line-before-rbrace" />
@@ -1607,20 +1608,19 @@
         <error line="12" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="16" column="1" source="standard:no-trailing-spaces" />
         <error line="17" column="5" source="standard:blank-line-before-declaration" />
+        <error line="17" column="5" source="standard:spacing-between-declarations-with-comments" />
         <error line="24" column="1" source="standard:no-trailing-spaces" />
         <error line="25" column="5" source="standard:blank-line-before-declaration" />
+        <error line="25" column="5" source="standard:spacing-between-declarations-with-comments" />
         <error line="27" column="7" source="standard:no-trailing-spaces" />
         <error line="31" column="15" source="standard:no-trailing-spaces" />
         <error line="32" column="1" source="standard:no-trailing-spaces" />
         <error line="32" column="9" source="standard:no-blank-line-before-rbrace" />
         <error line="36" column="26" source="standard:no-trailing-spaces" />
-        <error line="36" column="26" source="standard:parameter-list-spacing" />
         <error line="37" column="9" source="standard:function-signature" />
         <error line="37" column="41" source="standard:no-trailing-spaces" />
-        <error line="37" column="41" source="standard:parameter-list-spacing" />
         <error line="38" column="9" source="standard:function-signature" />
         <error line="38" column="49" source="standard:no-trailing-spaces" />
-        <error line="38" column="49" source="standard:parameter-list-spacing" />
         <error line="39" column="9" source="standard:function-signature" />
         <error line="40" column="36" source="standard:trailing-comma-on-declaration-site" />
         <error line="44" column="26" source="standard:no-trailing-spaces" />
@@ -1819,24 +1819,17 @@
         <error line="518" column="21" source="standard:multiline-expression-wrapping" />
         <error line="519" column="1" source="standard:indent" />
         <error line="519" column="17" source="standard:chain-wrapping" />
-        <error line="519" column="20" source="standard:condition-wrapping" />
         <error line="519" column="21" source="standard:wrapping" />
         <error line="520" column="17" source="standard:chain-wrapping" />
-        <error line="520" column="20" source="standard:condition-wrapping" />
         <error line="520" column="108" source="standard:wrapping" />
         <error line="581" column="17" source="standard:chain-wrapping" />
-        <error line="581" column="20" source="standard:condition-wrapping" />
         <error line="581" column="21" source="standard:wrapping" />
         <error line="582" column="1" source="standard:indent" />
         <error line="582" column="78" source="standard:wrapping" />
         <error line="582" column="79" source="standard:wrapping" />
         <error line="602" column="177" source="standard:no-semi" />
         <error line="615" column="120" source="standard:string-template" />
-        <error line="640" column="66" source="standard:condition-wrapping" />
-        <error line="641" column="47" source="standard:condition-wrapping" />
-        <error line="656" column="36" source="standard:condition-wrapping" />
         <error line="657" column="17" source="standard:chain-wrapping" />
-        <error line="657" column="20" source="standard:condition-wrapping" />
         <error line="657" column="73" source="standard:wrapping" />
         <error line="675" column="30" source="standard:function-signature" />
         <error line="675" column="50" source="standard:function-signature" />
@@ -1851,14 +1844,10 @@
         <error line="698" column="1" source="standard:no-empty-first-line-in-method-block" />
         <error line="704" column="35" source="standard:keyword-spacing" />
         <error line="722" column="13" source="standard:wrapping" />
-        <error line="725" column="32" source="standard:condition-wrapping" />
         <error line="726" column="13" source="standard:chain-wrapping" />
-        <error line="726" column="16" source="standard:condition-wrapping" />
         <error line="726" column="69" source="standard:wrapping" />
         <error line="730" column="17" source="standard:chain-wrapping" />
-        <error line="730" column="20" source="standard:condition-wrapping" />
         <error line="731" column="17" source="standard:chain-wrapping" />
-        <error line="731" column="20" source="standard:condition-wrapping" />
         <error line="731" column="69" source="standard:wrapping" />
         <error line="732" column="1" source="standard:no-empty-first-line-in-method-block" />
         <error line="737" column="54" source="standard:wrapping" />
@@ -1906,6 +1895,10 @@
         <error line="141" column="28" source="standard:function-signature" />
         <error line="141" column="46" source="standard:function-signature" />
         <error line="141" column="60" source="standard:function-signature" />
+        <error line="161" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="175" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="190" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="193" column="1" source="standard:blank-line-between-when-conditions" />
         <error line="223" column="1" source="standard:no-blank-line-before-rbrace" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarLogger.kt">
@@ -1945,9 +1938,11 @@
         <error line="26" column="1" source="standard:spacing-between-declarations-with-annotations" />
         <error line="28" column="1" source="standard:no-trailing-spaces" />
         <error line="29" column="9" source="standard:blank-line-before-declaration" />
+        <error line="29" column="9" source="standard:spacing-between-declarations-with-comments" />
         <error line="32" column="11" source="standard:no-trailing-spaces" />
         <error line="38" column="1" source="standard:no-trailing-spaces" />
         <error line="39" column="9" source="standard:blank-line-before-declaration" />
+        <error line="39" column="9" source="standard:spacing-between-declarations-with-comments" />
         <error line="41" column="11" source="standard:no-trailing-spaces" />
         <error line="44" column="71" source="standard:function-expression-body" />
         <error line="49" column="40" source="standard:function-signature" />
@@ -2006,6 +2001,8 @@
         <error line="29" column="67" source="standard:trailing-comma-on-declaration-site" />
         <error line="34" column="1" source="standard:no-consecutive-blank-lines" />
         <error line="79" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="94" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="104" column="1" source="standard:blank-line-between-when-conditions" />
         <error line="119" column="1" source="standard:no-consecutive-blank-lines" />
         <error line="127" column="22" source="standard:trailing-comma-on-declaration-site" />
         <error line="129" column="25" source="standard:multiline-expression-wrapping" />
@@ -2361,6 +2358,9 @@
         <error line="306" column="32" source="standard:paren-spacing" />
         <error line="313" column="48" source="standard:paren-spacing" />
         <error line="327" column="33" source="standard:trailing-comma-on-declaration-site" />
+        <error line="338" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="354" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="354" column="21" source="standard:when-entry-bracing" />
         <error line="358" column="22" source="standard:function-signature" />
         <error line="358" column="42" source="standard:function-signature" />
         <error line="358" column="74" source="standard:function-signature" />
@@ -2515,6 +2515,8 @@
         <error line="638" column="24" source="standard:if-else-wrapping" />
         <error line="638" column="24" source="standard:multiline-if-else" />
         <error line="645" column="33" source="standard:multiline-expression-wrapping" />
+        <error line="654" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="654" column="29" source="standard:when-entry-bracing" />
         <error line="663" column="28" source="standard:trailing-comma-on-call-site" />
         <error line="697" column="1" source="standard:no-blank-line-before-rbrace" />
     </file>
@@ -2578,49 +2580,34 @@
         <error line="110" column="62" source="standard:no-semi" />
         <error line="116" column="1" source="standard:indent" />
         <error line="116" column="17" source="standard:chain-wrapping" />
-        <error line="116" column="20" source="standard:condition-wrapping" />
         <error line="117" column="1" source="standard:indent" />
         <error line="117" column="17" source="standard:chain-wrapping" />
-        <error line="117" column="20" source="standard:condition-wrapping" />
         <error line="118" column="1" source="standard:indent" />
         <error line="118" column="17" source="standard:chain-wrapping" />
-        <error line="118" column="20" source="standard:condition-wrapping" />
         <error line="119" column="1" source="standard:indent" />
         <error line="119" column="17" source="standard:chain-wrapping" />
-        <error line="119" column="20" source="standard:condition-wrapping" />
         <error line="120" column="1" source="standard:indent" />
         <error line="120" column="17" source="standard:chain-wrapping" />
-        <error line="120" column="20" source="standard:condition-wrapping" />
         <error line="121" column="1" source="standard:indent" />
         <error line="121" column="17" source="standard:chain-wrapping" />
-        <error line="121" column="20" source="standard:condition-wrapping" />
         <error line="122" column="1" source="standard:indent" />
         <error line="122" column="17" source="standard:chain-wrapping" />
-        <error line="122" column="20" source="standard:condition-wrapping" />
         <error line="123" column="1" source="standard:indent" />
         <error line="123" column="17" source="standard:chain-wrapping" />
-        <error line="123" column="20" source="standard:condition-wrapping" />
         <error line="124" column="1" source="standard:indent" />
         <error line="124" column="17" source="standard:chain-wrapping" />
-        <error line="124" column="20" source="standard:condition-wrapping" />
         <error line="125" column="1" source="standard:indent" />
         <error line="125" column="17" source="standard:chain-wrapping" />
-        <error line="125" column="20" source="standard:condition-wrapping" />
         <error line="126" column="1" source="standard:indent" />
         <error line="126" column="17" source="standard:chain-wrapping" />
-        <error line="126" column="20" source="standard:condition-wrapping" />
         <error line="127" column="1" source="standard:indent" />
         <error line="127" column="17" source="standard:chain-wrapping" />
-        <error line="127" column="20" source="standard:condition-wrapping" />
         <error line="128" column="1" source="standard:indent" />
         <error line="128" column="17" source="standard:chain-wrapping" />
-        <error line="128" column="20" source="standard:condition-wrapping" />
         <error line="129" column="1" source="standard:indent" />
         <error line="129" column="17" source="standard:chain-wrapping" />
-        <error line="129" column="20" source="standard:condition-wrapping" />
         <error line="130" column="1" source="standard:indent" />
         <error line="130" column="17" source="standard:chain-wrapping" />
-        <error line="130" column="20" source="standard:condition-wrapping" />
         <error line="130" column="55" source="standard:no-semi" />
         <error line="138" column="67" source="standard:function-expression-body" />
         <error line="157" column="24" source="standard:multiline-expression-wrapping" />
@@ -3017,6 +3004,7 @@
         <error line="96" column="44" source="standard:trailing-comma-on-call-site" />
         <error line="100" column="28" source="standard:multiline-expression-wrapping" />
         <error line="104" column="31" source="standard:trailing-comma-on-call-site" />
+        <error line="107" column="1" source="standard:blank-line-between-when-conditions" />
         <error line="108" column="1" source="standard:indent" />
         <error line="109" column="1" source="standard:indent" />
         <error line="110" column="1" source="standard:indent" />
@@ -3046,6 +3034,8 @@
         <error line="130" column="31" source="standard:trailing-comma-on-call-site" />
         <error line="131" column="1" source="standard:indent" />
         <error line="132" column="1" source="standard:indent" />
+        <error line="134" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="134" column="25" source="standard:when-entry-bracing" />
         <error line="136" column="34" source="standard:multiline-expression-wrapping" />
         <error line="138" column="15" source="standard:if-else-wrapping" />
         <error line="138" column="20" source="standard:if-else-bracing" />
@@ -3058,6 +3048,7 @@
         <error line="141" column="20" source="standard:multiline-if-else" />
         <error line="158" column="51" source="standard:nullable-type-spacing" />
         <error line="171" column="63" source="standard:nullable-type-spacing" />
+        <error line="202" column="1" source="standard:blank-line-between-when-conditions" />
         <error line="216" column="1" source="standard:no-trailing-spaces" />
         <error line="219" column="1" source="standard:no-blank-line-before-rbrace" />
     </file>
@@ -3098,12 +3089,14 @@
         <error line="95" column="1" source="standard:no-trailing-spaces" />
         <error line="103" column="1" source="standard:no-trailing-spaces" />
         <error line="104" column="9" source="standard:blank-line-before-declaration" />
+        <error line="104" column="9" source="standard:spacing-between-declarations-with-comments" />
         <error line="106" column="11" source="standard:no-trailing-spaces" />
         <error line="110" column="75" source="standard:function-expression-body" />
         <error line="113" column="1" source="standard:no-trailing-spaces" />
         <error line="119" column="1" source="standard:no-trailing-spaces" />
         <error line="126" column="1" source="standard:no-trailing-spaces" />
         <error line="127" column="5" source="standard:blank-line-before-declaration" />
+        <error line="127" column="5" source="standard:spacing-between-declarations-with-comments" />
         <error line="129" column="7" source="standard:no-trailing-spaces" />
         <error line="132" column="26" source="standard:function-expression-body" />
         <error line="133" column="28" source="standard:chain-method-continuation" />
@@ -3345,13 +3338,16 @@
         <error line="92" column="9" source="standard:spacing-between-declarations-with-comments" />
         <error line="93" column="17" source="standard:trailing-comma-on-declaration-site" />
         <error line="122" column="51" source="standard:multiline-expression-wrapping" />
+        <error line="122" column="65" source="standard:paren-spacing" />
         <error line="123" column="46" source="standard:wrapping" />
         <error line="123" column="47" source="standard:argument-list-wrapping" />
         <error line="124" column="58" source="standard:multiline-expression-wrapping" />
+        <error line="124" column="72" source="standard:paren-spacing" />
         <error line="125" column="54" source="standard:wrapping" />
         <error line="125" column="55" source="standard:argument-list-wrapping" />
         <error line="126" column="57" source="standard:multiline-expression-wrapping" />
         <error line="126" column="60" source="standard:chain-method-continuation" />
+        <error line="126" column="75" source="standard:paren-spacing" />
         <error line="127" column="42" source="standard:wrapping" />
         <error line="127" column="43" source="standard:argument-list-wrapping" />
         <error line="127" column="44" source="standard:chain-method-continuation" />
@@ -3397,7 +3393,15 @@
         <error line="134" column="81" source="standard:multiline-expression-wrapping" />
         <error line="134" column="81" source="standard:function-signature" />
         <error line="136" column="63" source="standard:trailing-comma-on-call-site" />
+        <error line="189" column="1" source="standard:blank-line-between-when-conditions" />
         <error line="216" column="39" source="standard:multiline-expression-wrapping" />
+        <error line="218" column="29" source="standard:when-entry-bracing" />
+        <error line="219" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="219" column="44" source="standard:when-entry-bracing" />
+        <error line="220" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="220" column="48" source="standard:when-entry-bracing" />
+        <error line="221" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="221" column="33" source="standard:when-entry-bracing" />
         <error line="241" column="61" source="standard:trailing-comma-on-call-site" />
         <error line="248" column="24" source="standard:multiline-expression-wrapping" />
         <error line="322" column="66" source="standard:wrapping" />
@@ -3483,7 +3487,9 @@
         <error line="12" column="34" source="standard:trailing-comma-on-declaration-site" />
         <error line="14" column="1" source="standard:no-empty-first-line-in-class-body" />
         <error line="23" column="40" source="standard:multiline-expression-wrapping" />
+        <error line="33" column="1" source="standard:blank-line-between-when-conditions" />
         <error line="34" column="40" source="standard:multiline-expression-wrapping" />
+        <error line="40" column="1" source="standard:blank-line-between-when-conditions" />
         <error line="49" column="46" source="standard:function-return-type-spacing" />
         <error line="49" column="47" source="standard:colon-spacing" />
         <error line="49" column="56" source="standard:function-expression-body" />
@@ -3653,7 +3659,6 @@
         <error line="132" column="38" source="standard:trailing-comma-on-call-site" />
         <error line="140" column="1" source="standard:no-blank-line-before-rbrace" />
         <error line="163" column="21" source="standard:chain-wrapping" />
-        <error line="163" column="24" source="standard:condition-wrapping" />
     </file>
     <file name="src/test/java/io/radar/sdk/RadarMockLocationProvider.kt">
         <error line="7" column="41" source="standard:class-signature" />
@@ -4078,13 +4083,10 @@
         <error line="1017" column="1" source="standard:no-trailing-spaces" />
         <error line="1018" column="13" source="standard:blank-line-before-declaration" />
         <error line="1019" column="34" source="standard:no-trailing-spaces" />
-        <error line="1019" column="34" source="standard:parameter-list-spacing" />
         <error line="1020" column="17" source="standard:function-signature" />
         <error line="1020" column="49" source="standard:no-trailing-spaces" />
-        <error line="1020" column="49" source="standard:parameter-list-spacing" />
         <error line="1021" column="17" source="standard:function-signature" />
         <error line="1021" column="50" source="standard:no-trailing-spaces" />
-        <error line="1021" column="50" source="standard:parameter-list-spacing" />
         <error line="1022" column="17" source="standard:function-signature" />
         <error line="1023" column="44" source="standard:trailing-comma-on-declaration-site" />
         <error line="1031" column="1" source="standard:no-trailing-spaces" />
@@ -4105,13 +4107,10 @@
         <error line="1092" column="1" source="standard:no-trailing-spaces" />
         <error line="1093" column="13" source="standard:blank-line-before-declaration" />
         <error line="1094" column="34" source="standard:no-trailing-spaces" />
-        <error line="1094" column="34" source="standard:parameter-list-spacing" />
         <error line="1095" column="17" source="standard:function-signature" />
         <error line="1095" column="49" source="standard:no-trailing-spaces" />
-        <error line="1095" column="49" source="standard:parameter-list-spacing" />
         <error line="1096" column="17" source="standard:function-signature" />
         <error line="1096" column="50" source="standard:no-trailing-spaces" />
-        <error line="1096" column="50" source="standard:parameter-list-spacing" />
         <error line="1097" column="17" source="standard:function-signature" />
         <error line="1098" column="44" source="standard:trailing-comma-on-declaration-site" />
         <error line="1106" column="1" source="standard:no-trailing-spaces" />
@@ -4314,8 +4313,13 @@
         <error line="23" column="58" source="standard:function-expression-body" />
         <error line="31" column="35" source="standard:trailing-comma-on-declaration-site" />
         <error line="33" column="51" source="standard:function-expression-body" />
+        <error line="38" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="45" column="1" source="standard:blank-line-between-when-conditions" />
         <error line="58" column="27" source="standard:trailing-comma-on-declaration-site" />
         <error line="60" column="51" source="standard:function-expression-body" />
+        <error line="65" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="72" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="79" column="1" source="standard:blank-line-between-when-conditions" />
         <error line="90" column="56" source="standard:function-expression-body" />
         <error line="91" column="20" source="standard:keyword-spacing" />
         <error line="101" column="1" source="standard:final-newline" />
