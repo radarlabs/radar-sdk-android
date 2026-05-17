@@ -819,7 +819,7 @@ object Radar {
     }
 
     /**
-     * Sets the user's preferred language. Pass a BCP-47 language tag like `"en"`, `"es"`, or `"es-MX"`.
+     * Sets the user's preferred language. Pass a BCP-47 language tag like `"en"` or `"es-PR"`.
      *
      * @param[userLanguage] The user's preferred language. If null, the previous `userLanguage` will be cleared.
      */
