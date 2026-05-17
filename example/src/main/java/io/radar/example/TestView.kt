@@ -94,6 +94,14 @@ fun TestView() {
             Radar.stopTrackingVerified()
         }
 
+        CustomButton("startMonitoringIpChanges") {
+            Radar.startMonitoringIpChanges()
+        }
+
+        CustomButton("stopMonitoringIpChanges") {
+            Radar.stopMonitoringIpChanges()
+        }
+
         CustomButton("getVerifiedLocationToken") {
             Radar.getVerifiedLocationToken { status, token ->
                 Log.v("example", "GetVerifiedLocationToken: status = $status; token = ${token?.toJson()}")
