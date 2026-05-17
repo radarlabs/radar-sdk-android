@@ -17,6 +17,7 @@ internal object RadarSettings {
     private const val KEY_SESSION_ID = "session_id"
     private const val KEY_ID = "radar_user_id"
     private const val KEY_USER_ID = "user_id"
+    private const val KEY_USER_LANGUAGE = "user_language"
     private const val KEY_DESCRIPTION = "user_description"
     private const val KEY_PRODUCT = "product"
     private const val KEY_METADATA = "user_metadata"
@@ -125,6 +126,14 @@ internal object RadarSettings {
 
     internal fun setUserId(context: Context, userId: String?) {
         getSharedPreferences(context).edit { putString(KEY_USER_ID, userId) }
+    }
+
+    internal fun getUserLanguage(context: Context): String? {
+        return getSharedPreferences(context).getString(KEY_USER_LANGUAGE, null)
+    }
+
+    internal fun setUserLanguage(context: Context, userLanguage: String?) {
+        getSharedPreferences(context).edit { putString(KEY_USER_LANGUAGE, userLanguage) }
     }
 
     internal fun getDescription(context: Context): String? {

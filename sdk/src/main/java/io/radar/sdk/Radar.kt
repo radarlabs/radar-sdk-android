@@ -819,6 +819,34 @@ object Radar {
     }
 
     /**
+     * Sets the user's preferred language. Pass a BCP-47 language tag like `"en"`, `"es"`, or `"es-MX"`.
+     *
+     * @param[userLanguage] The user's preferred language. If null, the previous `userLanguage` will be cleared.
+     */
+    @JvmStatic
+    fun setUserLanguage(userLanguage: String?) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setUserLanguage(context, userLanguage)
+    }
+
+    /**
+     * Returns the current `userLanguage`.
+     *
+     * @return The current `userLanguage`.
+     */
+    @JvmStatic
+    fun getUserLanguage(): String? {
+        if (!initialized) {
+            return null
+        }
+
+        return RadarSettings.getUserLanguage(context)
+    }
+
+    /**
      * Sets an optional description for the user, displayed in the dashboard.
      *
      * @see [](https://radar.com/documentation/sdk/android#identify-user)
@@ -1437,6 +1465,48 @@ object Radar {
         }
 
         this.verificationManager.stopTrackingVerified()
+    }
+
+    /**
+     * Starts monitoring for changes to the device's IP address. When the IP changes, `onIpChanged` is delivered to the verified receiver. If verified tracking is started, an IP change will also trigger a `trackVerified` call.
+     *
+     * `startTrackingVerified` automatically starts IP change monitoring, and `stopTrackingVerified` stops it.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun startMonitoringIpChanges() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("startMonitoringIpChanges()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.startMonitoringIpChanges()
+    }
+
+    /**
+     * Stops monitoring for changes to the device's IP address.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun stopMonitoringIpChanges() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("stopMonitoringIpChanges()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        this.verificationManager.stopMonitoringIpChanges()
     }
 
     /**
@@ -4336,6 +4406,12 @@ object Radar {
         verifiedReceiver?.onTokenUpdated(context, token)
 
         logger.i("📍️ Radar token updated | passed = ${token.passed}; expiresAt = ${token.expiresAt}; expiresIn = ${token.expiresIn}; token = ${token.token}")
+    }
+
+    internal fun sendIpChanged() {
+        verifiedReceiver?.onIpChanged(context)
+
+        logger.i("📍️ Radar IP changed")
     }
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {

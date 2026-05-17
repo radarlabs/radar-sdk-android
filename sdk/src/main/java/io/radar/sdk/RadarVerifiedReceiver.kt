@@ -17,4 +17,11 @@ abstract class RadarVerifiedReceiver {
      */
     abstract fun onTokenUpdated(context: Context, token: RadarVerifiedLocationToken)
 
+    /**
+     * Tells the receiver that the device's IP address changed while IP change monitoring is active.
+     *
+     * @param[context] The context.
+     */
+    open fun onIpChanged(context: Context) {}
+
 }

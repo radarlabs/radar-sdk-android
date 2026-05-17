@@ -152,6 +152,10 @@ internal class RadarApiClient(
         if (product != null) {
             headers["X-Radar-Product"] = product
         }
+        val userLanguage = RadarSettings.getUserLanguage(context)
+        if (userLanguage != null) {
+            headers["X-Radar-User-Language"] = userLanguage
+        }
         return headers
     }
 

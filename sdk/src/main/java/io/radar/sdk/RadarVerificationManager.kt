@@ -325,6 +325,44 @@ internal class RadarVerificationManager(
         verificationManager.startedInterval = interval
         verificationManager.startedBeacons = beacons
 
+        startMonitoringIpChanges()
+
+        if (startedInterval < 20) {
+            Radar.locationManager.locationClient.requestLocationUpdates(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, 0, 0, RadarLocationReceiver.getVerifiedLocationPendingIntent(context))
+        }
+
+        if (this.isLastTokenValid()) {
+            this.scheduleNextIntervalWithLastToken()
+        } else {
+            callTrackVerified("start")
+        }
+    }
+
+    fun stopTrackingVerified() {
+        this.started = false
+
+        try {
+            if (startedInterval < 20) {
+                Radar.locationManager.locationClient.removeLocationUpdates(RadarLocationReceiver.getVerifiedLocationPendingIntent(context))
+            }
+
+            stopMonitoringIpChanges()
+
+            runnable?.let {
+                handler.removeCallbacks(it)
+            }
+        } catch (e: Exception) {
+            Radar.logger.e("Error unregistering callbacks", Radar.RadarLogType.SDK_EXCEPTION, e)
+        }
+    }
+
+    fun startMonitoringIpChanges() {
+        val verificationManager = this
+
+        if (networkCallback != null) {
+            return
+        }
+
         val request = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_ETHERNET)
             .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
@@ -336,11 +374,12 @@ internal class RadarVerificationManager(
         val handleNetworkChange = {
             val ips = verificationManager.getIPs()
             var changed = false
+            val ipsValid = ips != "error"
 
             if (verificationManager.lastIPs == null) {
                 verificationManager.logger.d("First time getting IPs")
                 changed = false
-            } else if (ips == "error") {
+            } else if (!ipsValid) {
                 verificationManager.logger.d("Error getting IPs")
                 changed = true
             } else if (ips != verificationManager.lastIPs) {
@@ -351,7 +390,11 @@ internal class RadarVerificationManager(
             }
             verificationManager.lastIPs = ips
 
-            if (changed) {
+            if (changed && ipsValid) {
+                Radar.sendIpChanged()
+            }
+
+            if (changed && verificationManager.started) {
                 callTrackVerified("ip_change")
             }
         }
@@ -373,36 +416,17 @@ internal class RadarVerificationManager(
         networkCallback?.let {
             connectivityManager.registerNetworkCallback(request, it)
         }
-
-        if (startedInterval < 20) {
-            Radar.locationManager.locationClient.requestLocationUpdates(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, 0, 0, RadarLocationReceiver.getVerifiedLocationPendingIntent(context))
-        }
-
-        if (this.isLastTokenValid()) {
-            this.scheduleNextIntervalWithLastToken()
-        } else {
-            callTrackVerified("start")
-        }
     }
 
-    fun stopTrackingVerified() {
-        this.started = false
-
+    fun stopMonitoringIpChanges() {
         try {
-            if (startedInterval < 20) {
-                Radar.locationManager.locationClient.removeLocationUpdates(RadarLocationReceiver.getVerifiedLocationPendingIntent(context))
-            }
-
             networkCallback?.let {
                 connectivityManager.unregisterNetworkCallback(it)
             }
-
-            runnable?.let {
-                handler.removeCallbacks(it)
-            }
         } catch (e: Exception) {
-            Radar.logger.e("Error unregistering callbacks", Radar.RadarLogType.SDK_EXCEPTION, e)
+            Radar.logger.e("Error unregistering network callback", Radar.RadarLogType.SDK_EXCEPTION, e)
         }
+        networkCallback = null
     }
 
     fun getVerifiedLocationToken(beacons: Boolean, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, callback: Radar.RadarTrackVerifiedCallback? = null) {
