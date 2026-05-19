@@ -152,10 +152,6 @@ internal class RadarApiClient(
         if (product != null) {
             headers["X-Radar-Product"] = product
         }
-        val userLanguage = RadarSettings.getUserLanguage(context)
-        if (userLanguage != null) {
-            headers["X-Radar-User-Language"] = userLanguage
-        }
         return headers
     }
 
@@ -388,6 +384,7 @@ internal class RadarApiClient(
             params.putOpt("country", RadarUtils.country)
             params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
             params.putOpt("source", Radar.stringForSource(source))
+            params.putOpt("lang", RadarSettings.getUserLanguage(context))
             if (RadarSettings.isXPlatform(context)) {
                 params.putOpt("xPlatformType", RadarSettings.getXPlatformSDKType(context))
                 params.putOpt("xPlatformSDKVersion", RadarSettings.getXPlatformSDKVersion(context))
