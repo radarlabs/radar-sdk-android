@@ -701,6 +701,14 @@ object Radar {
             RadarSettings.setNetworkTimeoutMs(this.context, clamped)
         }
 
+        options.ipChangeDebounceInterval?.let { desiredInterval ->
+            if (!desiredInterval.isFinite() || desiredInterval.isNegative()) {
+                this.logger.d("ipChangeDebounceInterval ignored: must be finite and non-negative | value = $desiredInterval")
+                return@let
+            }
+            RadarSettings.setIpChangeDebounceIntervalMs(this.context, desiredInterval.inWholeMilliseconds)
+        }
+
         activityLifecycleCallbacks?.let {
             application?.unregisterActivityLifecycleCallbacks(it)
         }
@@ -816,6 +824,34 @@ object Radar {
         }
 
         return RadarSettings.getUserId(context)
+    }
+
+    /**
+     * Sets the user's preferred language. Pass a BCP-47 language tag like `"en"` or `"es-PR"`.
+     *
+     * @param[userLanguage] The user's preferred language. If null, the previous `userLanguage` will be cleared.
+     */
+    @JvmStatic
+    fun setUserLanguage(userLanguage: String?) {
+        if (!initialized) {
+            return
+        }
+
+        RadarSettings.setUserLanguage(context, userLanguage)
+    }
+
+    /**
+     * Returns the current `userLanguage`.
+     *
+     * @return The current `userLanguage`.
+     */
+    @JvmStatic
+    fun getUserLanguage(): String? {
+        if (!initialized) {
+            return null
+        }
+
+        return RadarSettings.getUserLanguage(context)
     }
 
     /**
@@ -1909,6 +1945,7 @@ object Radar {
      *
      * @param[verifiedReceiver] A delegate for client-side delivery of of verified location tokens. If `null`, the previous receiver will be cleared.
      */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun setVerifiedReceiver(verifiedReceiver: RadarVerifiedReceiver?) {
         if (!initialized) {
@@ -1916,6 +1953,17 @@ object Radar {
         }
 
         this.verifiedReceiver = verifiedReceiver
+
+        if (this::verificationManager.isInitialized) {
+            this.verificationManager.updateMonitoringState()
+        } else if (verifiedReceiver != null) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+            this.verificationManager.updateMonitoringState()
+        }
+    }
+
+    internal fun hasVerifiedReceiver(): Boolean {
+        return this.verifiedReceiver != null
     }
 
     /**
@@ -4336,6 +4384,18 @@ object Radar {
         verifiedReceiver?.onTokenUpdated(context, token)
 
         logger.i("📍️ Radar token updated | passed = ${token.passed}; expiresAt = ${token.expiresAt}; expiresIn = ${token.expiresIn}; token = ${token.token}")
+    }
+
+    internal fun sendIpChanged() {
+        verifiedReceiver?.onIpChanged(context)
+
+        logger.i("📍️ Radar IP changed")
+    }
+
+    internal fun sendSharingChanged(sharing: Boolean) {
+        verifiedReceiver?.onSharingChanged(context, sharing)
+
+        logger.i("📍️ Radar sharing changed | sharing = $sharing")
     }
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {

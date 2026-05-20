@@ -384,6 +384,7 @@ internal class RadarApiClient(
             params.putOpt("country", RadarUtils.country)
             params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
             params.putOpt("source", Radar.stringForSource(source))
+            params.putOpt("lang", RadarSettings.getUserLanguage(context))
             if (RadarSettings.isXPlatform(context)) {
                 params.putOpt("xPlatformType", RadarSettings.getXPlatformSDKType(context))
                 params.putOpt("xPlatformSDKVersion", RadarSettings.getXPlatformSDKVersion(context))

@@ -19,6 +19,7 @@ import kotlin.time.Duration
  * @param[networkTimeout] Connect and base read timeout for Radar API requests.
  *                        If set, the value is persisted. If null, a previously saved value or default (10 seconds) is used.
  * @param[trackVerifiedAutoFailover] A boolean indicating whether `trackVerified()` should retry against a secondary verified host if the primary returns a non-Radar response. Defaults to false.
+ * @param[ipChangeDebounceInterval] Minimum interval between deliveries of `RadarVerifiedReceiver.onIpChanged`. If set, the value is persisted. If null, a previously saved value or default (10 seconds) is used. Pass `Duration.ZERO` to disable throttling (deliver every detected change).
  *
  */
 data class RadarInitializeOptions(
@@ -33,6 +34,7 @@ data class RadarInitializeOptions(
     val activity: Activity? = null,
     val networkTimeout: Duration? = null,
     val trackVerifiedAutoFailover: Boolean = false,
+    val ipChangeDebounceInterval: Duration? = null,
 ) {
     class Builder {
         private var radarReceiver: RadarReceiver? = null
@@ -46,6 +48,7 @@ data class RadarInitializeOptions(
         private var activity: Activity? = null
         private var networkTimeout: Duration? = null
         private var trackVerifiedAutoFailover: Boolean = false
+        private var ipChangeDebounceInterval: Duration? = null
 
         fun radarReceiver(radarReceiver: RadarReceiver) = apply { this.radarReceiver = radarReceiver }
         fun locationProvider(locationProvider: Radar.RadarLocationServicesProvider) = apply { this.locationProvider = locationProvider }
@@ -58,6 +61,7 @@ data class RadarInitializeOptions(
         fun activity(activity: Activity) = apply { this.activity = activity }
         fun networkTimeout(networkTimeout: Duration) = apply { this.networkTimeout = networkTimeout }
         fun trackVerifiedAutoFailover(trackVerifiedAutoFailover: Boolean) = apply { this.trackVerifiedAutoFailover = trackVerifiedAutoFailover }
+        fun ipChangeDebounceInterval(ipChangeDebounceInterval: Duration) = apply { this.ipChangeDebounceInterval = ipChangeDebounceInterval }
 
         fun build() = RadarInitializeOptions(
             radarReceiver = radarReceiver,
@@ -71,6 +75,7 @@ data class RadarInitializeOptions(
             activity = activity,
             networkTimeout = networkTimeout,
             trackVerifiedAutoFailover = trackVerifiedAutoFailover,
+            ipChangeDebounceInterval = ipChangeDebounceInterval,
         )
     }
 

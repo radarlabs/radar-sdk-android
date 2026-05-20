@@ -17,6 +17,7 @@ internal object RadarSettings {
     private const val KEY_SESSION_ID = "session_id"
     private const val KEY_ID = "radar_user_id"
     private const val KEY_USER_ID = "user_id"
+    private const val KEY_USER_LANGUAGE = "user_language"
     private const val KEY_DESCRIPTION = "user_description"
     private const val KEY_PRODUCT = "product"
     private const val KEY_METADATA = "user_metadata"
@@ -45,8 +46,10 @@ internal object RadarSettings {
     private const val KEY_FRAUD_ENABLED = "fraudEnabled"
     private const val KEY_TRACK_VERIFIED_AUTO_FAILOVER = "track_verified_auto_failover"
     private const val KEY_NETWORK_TIMEOUT_MS = "network_timeout_ms"
+    private const val KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS = "ip_change_debounce_interval_ms"
 
     private const val DEFAULT_NETWORK_TIMEOUT_MS = 10000
+    private const val DEFAULT_IP_CHANGE_DEBOUNCE_INTERVAL_MS = 10000L
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -127,6 +130,14 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putString(KEY_USER_ID, userId) }
     }
 
+    internal fun getUserLanguage(context: Context): String? {
+        return getSharedPreferences(context).getString(KEY_USER_LANGUAGE, null)
+    }
+
+    internal fun setUserLanguage(context: Context, userLanguage: String?) {
+        getSharedPreferences(context).edit { putString(KEY_USER_LANGUAGE, userLanguage) }
+    }
+
     internal fun getDescription(context: Context): String? {
         return getSharedPreferences(context).getString(KEY_DESCRIPTION, null)
     }
@@ -184,6 +195,14 @@ internal object RadarSettings {
     internal fun setNetworkTimeoutMs(context: Context, timeoutMs: Int) {
         getSharedPreferences(context).edit { putInt(KEY_NETWORK_TIMEOUT_MS, timeoutMs) }
 	}
+
+    internal fun getIpChangeDebounceIntervalMs(context: Context): Long {
+        return getSharedPreferences(context).getLong(KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS, DEFAULT_IP_CHANGE_DEBOUNCE_INTERVAL_MS)
+    }
+
+    internal fun setIpChangeDebounceIntervalMs(context: Context, intervalMs: Long) {
+        getSharedPreferences(context).edit { putLong(KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS, intervalMs) }
+    }
 
     internal fun getTrackVerifiedAutoFailover(context: Context): Boolean {
         return getSharedPreferences(context).getBoolean(KEY_TRACK_VERIFIED_AUTO_FAILOVER, false)
@@ -454,7 +473,11 @@ internal object RadarSettings {
     }
 
     internal fun setSharing(context: Context, sharing: Boolean) {
+        val previous = getSharedPreferences(context).getBoolean(KEY_SHARING, false)
         getSharedPreferences(context).edit { putBoolean(KEY_SHARING, sharing) }
+        if (previous != sharing) {
+            Radar.sendSharingChanged(sharing)
+        }
     }
 
     internal fun isXPlatform(context: Context): Boolean {

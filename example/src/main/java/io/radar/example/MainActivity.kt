@@ -59,6 +59,14 @@ class MainActivity : AppCompatActivity() {
         val verifiedReceiver = object : RadarVerifiedReceiver() {
             override fun onTokenUpdated(context: Context, token: RadarVerifiedLocationToken) {
             }
+
+            override fun onIpChanged(context: Context) {
+                Log.v("example", "RadarVerifiedReceiver: onIpChanged")
+            }
+
+            override fun onSharingChanged(context: Context, sharing: Boolean) {
+                Log.v("example", "RadarVerifiedReceiver: onSharingChanged | sharing = $sharing")
+            }
         }
         Radar.setVerifiedReceiver(verifiedReceiver)
 
