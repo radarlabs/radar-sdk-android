@@ -1,0 +1,21 @@
+name: linear-require-ticket
+
+on:
+  pull_request_target:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, edited]
+
+permissions: {}
+
+jobs:
+  require_linear_ticket:
+    name: Require Linear ticket to merge
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Linear ticket
+        uses: radarlabs/linear-require-ticket-action@main
+        with:
+          linear_key: ${{ secrets.LINEAR_KEY }}
+          title: ${{ github.event.pull_request.title }}
+          branch: ${{ github.head_ref }}
