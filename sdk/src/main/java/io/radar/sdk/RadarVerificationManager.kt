@@ -40,8 +40,13 @@ internal class RadarVerificationManager(
     private var lastTokenElapsedRealtime: Long = 0L
     private var lastTokenBeacons: Boolean = false
     private var lastIPs: String? = null
+    private var lastIpChangedDeliveredAtMs: Long = 0L
     private var expectedCountryCode: String? = null
     private var expectedStateCode: String? = null
+
+    companion object {
+        private const val IP_CHANGE_DELIVERY_INTERVAL_MS = 10_000L
+    }
 
     fun trackVerified(
         beacons: Boolean = false,
@@ -400,7 +405,11 @@ internal class RadarVerificationManager(
             verificationManager.lastIPs = ips
 
             if (changed && ipsValid) {
-                Radar.sendIpChanged()
+                val now = SystemClock.elapsedRealtime()
+                if (now - verificationManager.lastIpChangedDeliveredAtMs >= IP_CHANGE_DELIVERY_INTERVAL_MS) {
+                    verificationManager.lastIpChangedDeliveredAtMs = now
+                    Radar.sendIpChanged()
+                }
             }
 
             if (changed && verificationManager.started) {
