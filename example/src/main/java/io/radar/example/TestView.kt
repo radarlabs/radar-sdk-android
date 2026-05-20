@@ -94,12 +94,12 @@ fun TestView() {
             Radar.stopTrackingVerified()
         }
 
-        CustomButton("startMonitoringIpChanges") {
-            Radar.startMonitoringIpChanges()
+        CustomButton("startVerifiedChangeListeners") {
+            Radar.startVerifiedChangeListeners()
         }
 
-        CustomButton("stopMonitoringIpChanges") {
-            Radar.stopMonitoringIpChanges()
+        CustomButton("stopVerifiedChangeListeners") {
+            Radar.stopVerifiedChangeListeners()
         }
 
         CustomButton("getVerifiedLocationToken") {
@@ -109,6 +109,7 @@ fun TestView() {
         }
 
         CustomButton("trackVerified") {
+            Log.v("example", "screen sharing: ${Radar.isSharing()}")
             Radar.trackVerified(false) { status, token ->
                 Log.v("example", "TrackVerified: status = $status; token = ${token?.toJson()}")
             }

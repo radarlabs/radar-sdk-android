@@ -463,7 +463,11 @@ internal object RadarSettings {
     }
 
     internal fun setSharing(context: Context, sharing: Boolean) {
+        val previous = getSharedPreferences(context).getBoolean(KEY_SHARING, false)
         getSharedPreferences(context).edit { putBoolean(KEY_SHARING, sharing) }
+        if (previous != sharing) {
+            Radar.sendSharingChanged(sharing)
+        }
     }
 
     internal fun isXPlatform(context: Context): Boolean {

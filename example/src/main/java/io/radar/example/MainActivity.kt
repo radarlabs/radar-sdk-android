@@ -63,6 +63,10 @@ class MainActivity : AppCompatActivity() {
             override fun onIpChanged(context: Context) {
                 Log.v("example", "RadarVerifiedReceiver: onIpChanged")
             }
+
+            override fun onSharingChanged(context: Context, sharing: Boolean) {
+                Log.v("example", "RadarVerifiedReceiver: onSharingChanged | sharing = $sharing")
+            }
         }
         Radar.setVerifiedReceiver(verifiedReceiver)
 

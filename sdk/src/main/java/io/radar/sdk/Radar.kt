@@ -1468,19 +1468,17 @@ object Radar {
     }
 
     /**
-     * Starts monitoring for changes to the device's IP address. When the IP changes, `onIpChanged` is delivered to the verified receiver. If verified tracking is started, an IP change will also trigger a `trackVerified` call.
-     *
-     * `startTrackingVerified` automatically starts IP change monitoring, and `stopTrackingVerified` stops it.
+     * Starts listeners for `RadarVerifiedReceiver`.
      *
      * @see [](https://radar.com/documentation/fraud)
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun startMonitoringIpChanges() {
+    fun startVerifiedChangeListeners() {
         if (!initialized) {
             return
         }
-        this.logger.i("startMonitoringIpChanges()", RadarLogType.SDK_CALL)
+        this.logger.i("startVerifiedChangeListeners()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
@@ -1490,17 +1488,17 @@ object Radar {
     }
 
     /**
-     * Stops monitoring for changes to the device's IP address.
+     * Stops listeners for `RadarVerifiedReceiver`.
      *
      * @see [](https://radar.com/documentation/fraud)
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
-    fun stopMonitoringIpChanges() {
+    fun stopVerifiedChangeListeners() {
         if (!initialized) {
             return
         }
-        this.logger.i("stopMonitoringIpChanges()", RadarLogType.SDK_CALL)
+        this.logger.i("stopVerifiedChangeListeners()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
@@ -4412,6 +4410,12 @@ object Radar {
         verifiedReceiver?.onIpChanged(context)
 
         logger.i("📍️ Radar IP changed")
+    }
+
+    internal fun sendSharingChanged(sharing: Boolean) {
+        verifiedReceiver?.onSharingChanged(context, sharing)
+
+        logger.i("📍️ Radar sharing changed | sharing = $sharing")
     }
 
     internal fun setLogPersistenceFeatureFlag(enabled: Boolean) {
