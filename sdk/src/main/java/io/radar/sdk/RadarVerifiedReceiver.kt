@@ -25,7 +25,7 @@ abstract class RadarVerifiedReceiver {
     open fun onIpChanged(context: Context) {}
 
     /**
-     * Tells the receiver that the value of `Radar.isSharing()` changed.
+     * Tells the receiver that the device's screen sharing state changed.
      *
      * @param[context] The context.
      * @param[sharing] The current screen sharing state.
