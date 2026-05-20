@@ -46,8 +46,10 @@ internal object RadarSettings {
     private const val KEY_FRAUD_ENABLED = "fraudEnabled"
     private const val KEY_TRACK_VERIFIED_AUTO_FAILOVER = "track_verified_auto_failover"
     private const val KEY_NETWORK_TIMEOUT_MS = "network_timeout_ms"
+    private const val KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS = "ip_change_debounce_interval_ms"
 
     private const val DEFAULT_NETWORK_TIMEOUT_MS = 10000
+    private const val DEFAULT_IP_CHANGE_DEBOUNCE_INTERVAL_MS = 10000L
 
     private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
     private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
@@ -193,6 +195,14 @@ internal object RadarSettings {
     internal fun setNetworkTimeoutMs(context: Context, timeoutMs: Int) {
         getSharedPreferences(context).edit { putInt(KEY_NETWORK_TIMEOUT_MS, timeoutMs) }
 	}
+
+    internal fun getIpChangeDebounceIntervalMs(context: Context): Long {
+        return getSharedPreferences(context).getLong(KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS, DEFAULT_IP_CHANGE_DEBOUNCE_INTERVAL_MS)
+    }
+
+    internal fun setIpChangeDebounceIntervalMs(context: Context, intervalMs: Long) {
+        getSharedPreferences(context).edit { putLong(KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS, intervalMs) }
+    }
 
     internal fun getTrackVerifiedAutoFailover(context: Context): Boolean {
         return getSharedPreferences(context).getBoolean(KEY_TRACK_VERIFIED_AUTO_FAILOVER, false)

@@ -701,6 +701,14 @@ object Radar {
             RadarSettings.setNetworkTimeoutMs(this.context, clamped)
         }
 
+        options.ipChangeDebounceInterval?.let { desiredInterval ->
+            if (!desiredInterval.isFinite() || desiredInterval.isNegative()) {
+                this.logger.d("ipChangeDebounceInterval ignored: must be finite and non-negative | value = $desiredInterval")
+                return@let
+            }
+            RadarSettings.setIpChangeDebounceIntervalMs(this.context, desiredInterval.inWholeMilliseconds)
+        }
+
         activityLifecycleCallbacks?.let {
             application?.unregisterActivityLifecycleCallbacks(it)
         }

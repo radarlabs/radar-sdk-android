@@ -44,10 +44,6 @@ internal class RadarVerificationManager(
     private var expectedCountryCode: String? = null
     private var expectedStateCode: String? = null
 
-    companion object {
-        private const val IP_CHANGE_DELIVERY_INTERVAL_MS = 10_000L
-    }
-
     fun trackVerified(
         beacons: Boolean = false,
         desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
@@ -405,8 +401,9 @@ internal class RadarVerificationManager(
             verificationManager.lastIPs = ips
 
             if (changed && ipsValid) {
+                val debounceMs = RadarSettings.getIpChangeDebounceIntervalMs(verificationManager.context)
                 val now = SystemClock.elapsedRealtime()
-                if (now - verificationManager.lastIpChangedDeliveredAtMs >= IP_CHANGE_DELIVERY_INTERVAL_MS) {
+                if (now - verificationManager.lastIpChangedDeliveredAtMs >= debounceMs) {
                     verificationManager.lastIpChangedDeliveredAtMs = now
                     Radar.sendIpChanged()
                 }
