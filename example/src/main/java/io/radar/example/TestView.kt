@@ -94,14 +94,6 @@ fun TestView() {
             Radar.stopTrackingVerified()
         }
 
-        CustomButton("startVerifiedChangeListeners") {
-            Radar.startVerifiedChangeListeners()
-        }
-
-        CustomButton("stopVerifiedChangeListeners") {
-            Radar.stopVerifiedChangeListeners()
-        }
-
         CustomButton("getVerifiedLocationToken") {
             Radar.getVerifiedLocationToken { status, token ->
                 Log.v("example", "GetVerifiedLocationToken: status = $status; token = ${token?.toJson()}")

@@ -325,7 +325,7 @@ internal class RadarVerificationManager(
         verificationManager.startedInterval = interval
         verificationManager.startedBeacons = beacons
 
-        startMonitoringIpChanges()
+        updateMonitoringState()
 
         if (startedInterval < 20) {
             Radar.locationManager.locationClient.requestLocationUpdates(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH, 0, 0, RadarLocationReceiver.getVerifiedLocationPendingIntent(context))
@@ -346,7 +346,7 @@ internal class RadarVerificationManager(
                 Radar.locationManager.locationClient.removeLocationUpdates(RadarLocationReceiver.getVerifiedLocationPendingIntent(context))
             }
 
-            stopMonitoringIpChanges()
+            updateMonitoringState()
 
             runnable?.let {
                 handler.removeCallbacks(it)
@@ -356,7 +356,16 @@ internal class RadarVerificationManager(
         }
     }
 
-    fun startMonitoringIpChanges() {
+    fun updateMonitoringState() {
+        val shouldMonitor = this.started || Radar.hasVerifiedReceiver()
+        if (shouldMonitor) {
+            startMonitoringIpChanges()
+        } else {
+            stopMonitoringIpChanges()
+        }
+    }
+
+    private fun startMonitoringIpChanges() {
         val verificationManager = this
 
         if (networkCallback != null) {
@@ -418,7 +427,7 @@ internal class RadarVerificationManager(
         }
     }
 
-    fun stopMonitoringIpChanges() {
+    private fun stopMonitoringIpChanges() {
         try {
             networkCallback?.let {
                 connectivityManager.unregisterNetworkCallback(it)

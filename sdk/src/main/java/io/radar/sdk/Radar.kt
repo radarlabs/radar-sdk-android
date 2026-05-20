@@ -1468,46 +1468,6 @@ object Radar {
     }
 
     /**
-     * Starts listeners for `RadarVerifiedReceiver`.
-     *
-     * @see [](https://radar.com/documentation/fraud)
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @JvmStatic
-    fun startVerifiedChangeListeners() {
-        if (!initialized) {
-            return
-        }
-        this.logger.i("startVerifiedChangeListeners()", RadarLogType.SDK_CALL)
-
-        if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
-        }
-
-        this.verificationManager.startMonitoringIpChanges()
-    }
-
-    /**
-     * Stops listeners for `RadarVerifiedReceiver`.
-     *
-     * @see [](https://radar.com/documentation/fraud)
-     */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @JvmStatic
-    fun stopVerifiedChangeListeners() {
-        if (!initialized) {
-            return
-        }
-        this.logger.i("stopVerifiedChangeListeners()", RadarLogType.SDK_CALL)
-
-        if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
-        }
-
-        this.verificationManager.stopMonitoringIpChanges()
-    }
-
-    /**
      * Returns a boolean indicating whether verified tracking has been started.
      *
      * @see [](https://radar.com/documentation/fraud)
@@ -1984,6 +1944,17 @@ object Radar {
         }
 
         this.verifiedReceiver = verifiedReceiver
+
+        if (this::verificationManager.isInitialized) {
+            this.verificationManager.updateMonitoringState()
+        } else if (verifiedReceiver != null) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+            this.verificationManager.updateMonitoringState()
+        }
+    }
+
+    internal fun hasVerifiedReceiver(): Boolean {
+        return this.verifiedReceiver != null
     }
 
     /**
