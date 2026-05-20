@@ -1937,6 +1937,7 @@ object Radar {
      *
      * @param[verifiedReceiver] A delegate for client-side delivery of of verified location tokens. If `null`, the previous receiver will be cleared.
      */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun setVerifiedReceiver(verifiedReceiver: RadarVerifiedReceiver?) {
         if (!initialized) {
