@@ -107,6 +107,10 @@ fun TestView() {
             }
         }
 
+        CustomButton("clearSharing") {
+            Radar.clearSharing()
+        }
+
         CustomButton("setExpectedJurisdiction") {
             Radar.setExpectedJurisdiction("US", "CA")
         }
