@@ -1,5 +1,36 @@
 # Migration guides
 
+## 3.33.x to 3.34.x
+- `RadarIpGeocodeCallback.onComplete` now receives a trailing nullable `Throwable` so integrators can forward the underlying exception (when one exists) to error collectors such as Sentry or Crashlytics. The lambda overload of `Radar.ipGeocode` likewise gains a 4th `Throwable?` parameter. The `Throwable` will be non-null only when `status` is not `SUCCESS`, and only for failures originating from a caught exception (network/parse/unknown) — server-side error statuses still surface with a null `Throwable`.
+
+```kotlin
+// 3.34.x
+Radar.ipGeocode { status, address, proxy, throwable ->
+  if (status != Radar.RadarStatus.SUCCESS) {
+    throwable?.let { Firebase.crashlytics.recordException(it) }
+  }
+}
+
+// 3.33.x
+Radar.ipGeocode { status, address, proxy ->
+  // No access to the underlying exception
+}
+```
+
+```java
+// 3.34.x
+Radar.ipGeocode(new Radar.RadarIpGeocodeCallback() {
+    @Override
+    public void onComplete(Radar.RadarStatus status, RadarAddress address, boolean proxy, Throwable throwable) {
+        if (status != Radar.RadarStatus.SUCCESS && throwable != null) {
+            FirebaseCrashlytics.getInstance().recordException(throwable);
+        }
+    }
+});
+```
+
+Integrators implementing `RadarIpGeocodeCallback` directly must update their `onComplete` override to include the new `throwable: Throwable?` parameter.
+
 ## 3.20.x to 3.21.x
 - The `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, limit, callback)` is now  `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, countryCodes, limit, callback)`. See [documentation](https://radar.com/documentation/sdk/android#search).
 
