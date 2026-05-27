@@ -7,9 +7,6 @@ import android.os.Looper
 import android.os.SystemClock
 import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogType
-import org.json.JSONArray
-import org.json.JSONException
-import org.json.JSONObject
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStreamWriter
@@ -21,6 +18,9 @@ import java.util.Scanner
 import java.util.concurrent.Executors
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLException
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 
 // // For debugging local development server trackVerified
 // import javax.net.ssl.SSLContext
@@ -47,16 +47,15 @@ internal enum class NetworkErrorKind {
     }
 }
 
-internal fun networkErrorMessage(host: String, e: Exception, elapsedMs: Long, kind: String): String =
-    "📍 Radar API network error | host = $host; kind = $kind; exception = ${e.javaClass.simpleName}; message = ${e.localizedMessage}; elapsedMs = $elapsedMs"
+internal fun networkErrorMessage(host: String, e: Exception, elapsedMs: Long, kind: String): String = "📍 Radar API network error | host = $host; kind = $kind; exception = ${e.javaClass.simpleName}; message = ${e.localizedMessage}; elapsedMs = $elapsedMs"
 
 internal open class RadarApiHelper(
     private var logger: RadarLogger? = null
 ) {
-  
+
     private val executor = Executors.newSingleThreadExecutor()
     private val handler = Handler(Looper.getMainLooper())
-    
+
     // // For debugging local development server trackVerified
     // // Custom TrustManager that accepts all certificates
     // private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
@@ -64,14 +63,14 @@ internal open class RadarApiHelper(
     //     override fun checkClientTrusted(certs: Array<X509Certificate>, authType: String) {}
     //     override fun checkServerTrusted(certs: Array<X509Certificate>, authType: String) {}
     // })
-    
+
     // // SSLContext that uses the custom TrustManager
     // private val sslContext: SSLContext by lazy {
     //     val context = SSLContext.getInstance("TLS")
     //     context.init(null, trustAllCerts, java.security.SecureRandom())
     //     context
     // }
-    
+
     // // Custom HostnameVerifier that accepts all hostnames
     // private val hostnameVerifier = HostnameVerifier { _, _ -> true }
 
@@ -83,19 +82,21 @@ internal open class RadarApiHelper(
         fun onComplete(status: Radar.RadarStatus, bitmap: android.graphics.Bitmap? = null)
     }
 
-    internal open fun request(context: Context,
-                              method: String,
-                              path: String,
-                              headers: Map<String, String>?,
-                              params: JSONObject?,
-                              sleep: Boolean,
-                              callback: RadarApiCallback? = null,
-                              extendedTimeout: Boolean = false,
-                              stream: Boolean = false,
-                              logPayload: Boolean = true,
-                              verified: Boolean = false,
-                              imageCallback: RadarImageApiCallback? = null,
-                              verifiedHostOverride: String? = null) {
+    internal open fun request(
+        context: Context,
+        method: String,
+        path: String,
+        headers: Map<String, String>?,
+        params: JSONObject?,
+        sleep: Boolean,
+        callback: RadarApiCallback? = null,
+        extendedTimeout: Boolean = false,
+        stream: Boolean = false,
+        logPayload: Boolean = true,
+        verified: Boolean = false,
+        imageCallback: RadarImageApiCallback? = null,
+        verifiedHostOverride: String? = null
+    ) {
         val host = if (verified) {
             verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
         } else {
@@ -111,7 +112,7 @@ internal open class RadarApiHelper(
         } else {
             logger?.d("📍 Radar API request | method = $method; url = $url; headers = $headers")
         }
-        
+
         executor.execute {
             val startMs = SystemClock.elapsedRealtime()
             try {
@@ -150,7 +151,7 @@ internal open class RadarApiHelper(
                         val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
                         val locationMs = params.optLong("locationMs", -1L)
 
-                        if (prevUpdatedAtMsDiff != -1L && locationMs != -1L){
+                        if (prevUpdatedAtMsDiff != -1L && locationMs != -1L) {
                             val updatedAtMsDiff = nowMs - locationMs
                             params.put("updatedAtMsDiff", updatedAtMsDiff)
                         }
@@ -192,7 +193,7 @@ internal open class RadarApiHelper(
                         val res = JSONObject(body)
 
                         logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res")
-                        
+
                         handler.post {
                             callback.onComplete(Radar.RadarStatus.SUCCESS, res)
                         }
@@ -203,11 +204,11 @@ internal open class RadarApiHelper(
                         inputStream.close()
 
                         logger?.d("📍 Radar API image response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}")
-                        
+
                         handler.post {
                             imageCallback.onComplete(Radar.RadarStatus.SUCCESS, bitmap)
                         }
-                    }  
+                    }
                 } else {
                     val status = when (urlConnection.responseCode) {
                         400 -> Radar.RadarStatus.ERROR_BAD_REQUEST
@@ -230,8 +231,8 @@ internal open class RadarApiHelper(
 
                     val res = JSONObject(body)
 
-                    logger?.e("📍 Radar API response | method = ${method}; url = ${url}; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
-                    
+                    logger?.e("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
+
                     handler.post {
                         callback?.onComplete(status, res)
                         imageCallback?.onComplete(status)
@@ -282,11 +283,13 @@ internal open class RadarApiHelper(
         return body
     }
 
-    internal open fun requestImage(context: Context,
-                               method: String,
-                               urlString: String,
-                               headers: Map<String, String>?,
-                               callback: RadarImageApiCallback? = null) {
-        request(context, method, urlString, headers, null, false, imageCallback=callback)
+    internal open fun requestImage(
+        context: Context,
+        method: String,
+        urlString: String,
+        headers: Map<String, String>?,
+        callback: RadarImageApiCallback? = null
+    ) {
+        request(context, method, urlString, headers, null, false, imageCallback = callback)
     }
 }
