@@ -17,7 +17,10 @@ All commands run from the repo root:
 - `./gradlew build` — full build
 - `./gradlew test` — unit tests (Robolectric + JUnit 4)
 - `./gradlew lint` — Android lint. Warnings are errors (`lintOptions { warningsAsErrors true }` in [sdk/build.gradle](sdk/build.gradle)) — a lint warning will fail the build.
+- `./gradlew :sdk:ktlintCheck` — Kotlin style check
 - `./gradlew :sdk:assembleRelease` — SDK-only release build
+
+Lint and ktlint both use baselines ([sdk/lint-baseline.xml](sdk/lint-baseline.xml), [sdk/ktlint-baseline.xml](sdk/ktlint-baseline.xml)) to suppress pre-existing violations. **Only fix lint/ktlint errors on lines you changed** — do not run repo-wide formatters (`./gradlew :sdk:ktlintFormat` reformats every file and will produce a sprawling, unreviewable diff). Fix the specific issues CI reports on your diff, leave the rest to the baseline.
 
 The example app requires an API key set in its `MainActivity`. A pre-commit hook validates that real API keys aren't committed in the example.
 
