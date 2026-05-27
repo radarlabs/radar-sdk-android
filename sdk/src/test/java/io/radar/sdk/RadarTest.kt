@@ -2498,11 +2498,13 @@ class RadarTest {
         var callbackStatus: Radar.RadarStatus? = null
         var callbackAddress: RadarAddress? = null
         var callbackProxy = false
+        var callbackThrowable: Throwable? = null
 
-        Radar.ipGeocode { status, address, proxy ->
+        Radar.ipGeocode { status, address, proxy, throwable ->
             callbackStatus = status
             callbackAddress = address
             callbackProxy = proxy
+            callbackThrowable = throwable
             latch.countDown()
         }
 
@@ -2512,6 +2514,7 @@ class RadarTest {
         assertEquals(Radar.RadarStatus.ERROR_SERVER, callbackStatus)
         assertNull(callbackAddress)
         assertFalse(callbackProxy)
+        assertNull(callbackThrowable)
     }
 
     @Test
@@ -2525,11 +2528,13 @@ class RadarTest {
         var callbackStatus: Radar.RadarStatus? = null
         var callbackAddress: RadarAddress? = null
         var callbackProxy = false
+        var callbackThrowable: Throwable? = null
 
-        Radar.ipGeocode { status, address, proxy ->
+        Radar.ipGeocode { status, address, proxy, throwable ->
             callbackStatus = status
             callbackAddress = address
             callbackProxy = proxy
+            callbackThrowable = throwable
             latch.countDown()
         }
 
@@ -2541,6 +2546,32 @@ class RadarTest {
         assertNotNull(callbackAddress?.dma)
         assertNotNull(callbackAddress?.dmaCode)
         assertTrue(callbackProxy)
+        assertNull(callbackThrowable)
+    }
+
+    @Test
+    fun test_Radar_ipGeocode_onComplete_receives_throwable() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
+        val expectedThrowable = java.io.IOException("simulated network failure")
+        apiHelperMock.mockThrowable = expectedThrowable
+
+        val latch = CountDownLatch(1)
+
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackThrowable: Throwable? = null
+
+        Radar.ipGeocode { status, _, _, throwable ->
+            callbackStatus = status
+            callbackThrowable = throwable
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_NETWORK, callbackStatus)
+        assertEquals(expectedThrowable, callbackThrowable)
     }
 
     @Test

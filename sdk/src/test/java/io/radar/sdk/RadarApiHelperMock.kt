@@ -12,6 +12,8 @@ internal class RadarApiHelperMock : RadarApiHelper() {
      */
     internal var mockResponse: JSONObject? = null
 
+    internal var mockThrowable: Throwable? = null
+
     /**
      * The JSON responses that are expected to be returned by various URL requests. Call
      * `setMockResponse()` to associate a response with a URL.
@@ -68,14 +70,14 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         if (queueKey != null) {
             val queue = mockResponseQueues[queueKey]!!
             val head = if (queue.isNotEmpty()) queue.removeFirst() else null
-            callback?.onComplete(mockStatus, head)
+            callback?.onComplete(mockStatus, head, mockThrowable)
             return
         }
 
         if (mockResponses.containsKey(path)) {
-            callback?.onComplete(mockStatus, mockResponses[path])
+            callback?.onComplete(mockStatus, mockResponses[path], mockThrowable)
         } else {
-            callback?.onComplete(mockStatus, mockResponse)
+            callback?.onComplete(mockStatus, mockResponse, mockThrowable)
         }
     }
 

@@ -87,7 +87,7 @@ internal class RadarApiClient(
     }
 
     interface RadarIpGeocodeApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null, proxy: Boolean = false)
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null, proxy: Boolean = false, throwable: Throwable? = null)
     }
 
     interface RadarDistanceApiCallback {
@@ -185,7 +185,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status == RadarStatus.SUCCESS) {
                     Radar.flushLogs()
                 }
@@ -223,7 +223,7 @@ internal class RadarApiClient(
             params = params,
             sleep = false,
             callback = object : RadarApiHelper.RadarApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     callback?.onComplete(status, res)
                 }
             },
@@ -257,7 +257,7 @@ internal class RadarApiClient(
             params = params,
             sleep = false,
             callback = object : RadarApiHelper.RadarApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                      if (status != RadarStatus.SUCCESS) {
                         Radar.sendError(status)
                      }
@@ -542,7 +542,7 @@ internal class RadarApiClient(
             verified = verified,
             verifiedHostOverride = verifiedHostOverride,
             callback = object : RadarApiHelper.RadarApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?) {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status != RadarStatus.SUCCESS || res == null) {
                         if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
                             params.putOpt("replayed", true)
@@ -722,7 +722,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "POST", path, headers, params, false, object: RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback?.onComplete(status)
 
@@ -790,7 +790,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "PATCH", path, headers, params, false, object: RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback?.onComplete(status)
 
@@ -832,7 +832,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "PATCH", path, headers, params, false, object: RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback?.onComplete(status)
                     return
@@ -872,7 +872,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "PUT", path, headers, params, false, object: RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback?.onComplete(status)
                     return
@@ -908,7 +908,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object: RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback.onComplete(status)
 
@@ -974,7 +974,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback.onComplete(status)
 
@@ -1033,7 +1033,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback.onComplete(status)
 
@@ -1090,7 +1090,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     var lastBeacons: Array<RadarBeacon>? = null
                     var lastBeaconUUIDs: Array<String>? = null
@@ -1170,7 +1170,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback.onComplete(status)
 
@@ -1225,7 +1225,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback.onComplete(status)
 
@@ -1282,7 +1282,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object: RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback.onComplete(status)
 
@@ -1326,7 +1326,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object: RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback.onComplete(status)
 
@@ -1361,9 +1361,9 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object: RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
-                    callback.onComplete(status)
+                    callback.onComplete(status, throwable = throwable)
 
                     return
                 }
@@ -1433,7 +1433,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback.onComplete(status)
 
@@ -1504,7 +1504,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "GET", path, headers, null, false, object : RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback.onComplete(status)
 
@@ -1557,7 +1557,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "POST", path, headers, params, false, object : RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback.onComplete(status)
 
@@ -1633,7 +1633,7 @@ internal class RadarApiClient(
         val headers = headers(publishableKey)
 
         apiHelper.request(context, "POST", path, headers, params, false, object: RadarApiHelper.RadarApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                 if (status != RadarStatus.SUCCESS || res == null) {
                     callback.onComplete(status)
                     return

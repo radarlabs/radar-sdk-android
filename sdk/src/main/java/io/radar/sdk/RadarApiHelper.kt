@@ -76,7 +76,7 @@ internal open class RadarApiHelper(
     // private val hostnameVerifier = HostnameVerifier { _, _ -> true }
 
     interface RadarApiCallback {
-        fun onComplete(status: Radar.RadarStatus, res: JSONObject? = null)
+        fun onComplete(status: Radar.RadarStatus, res: JSONObject? = null, throwable: Throwable? = null)
     }
 
     interface RadarImageApiCallback {
@@ -242,19 +242,19 @@ internal open class RadarApiHelper(
             } catch (e: IOException) {
                 logNetworkError(host, e, startMs, NetworkErrorKind.from(e).name)
                 handler.post {
-                    callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
+                    callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK, throwable = e)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
                 }
             } catch (e: JSONException) {
                 logNetworkError(host, e, startMs, "JSON_PARSE")
                 handler.post {
-                    callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                    callback?.onComplete(Radar.RadarStatus.ERROR_SERVER, throwable = e)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
                 }
             } catch (e: Exception) {
                 logNetworkError(host, e, startMs, "UNKNOWN")
                 handler.post {
-                    callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
+                    callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN, throwable = e)
                     imageCallback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
                 }
             }
@@ -267,7 +267,7 @@ internal open class RadarApiHelper(
 
     private fun logNetworkError(host: String, e: Exception, startMs: Long, kind: String) {
         val elapsedMs = SystemClock.elapsedRealtime() - startMs
-        logger?.e(networkErrorMessage(host, e, elapsedMs, kind), RadarLogType.SDK_ERROR)
+        logger?.e(networkErrorMessage(host, e, elapsedMs, kind), RadarLogType.SDK_ERROR, e)
     }
 
     private fun InputStream.readAll(): String? {
