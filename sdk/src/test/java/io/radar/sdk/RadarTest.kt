@@ -2522,7 +2522,7 @@ class RadarTest {
         var callbackAddress: RadarAddress? = null
         var callbackProxy = false
 
-        Radar.ipGeocode { status, address, proxy ->
+        Radar.ipGeocode { status, address, proxy, _ ->
             callbackStatus = status
             callbackAddress = address
             callbackProxy = proxy
@@ -2549,7 +2549,7 @@ class RadarTest {
         var callbackAddress: RadarAddress? = null
         var callbackProxy = false
 
-        Radar.ipGeocode { status, address, proxy ->
+        Radar.ipGeocode { status, address, proxy, _ ->
             callbackStatus = status
             callbackAddress = address
             callbackProxy = proxy
@@ -2564,6 +2564,31 @@ class RadarTest {
         assertNotNull(callbackAddress?.dma)
         assertNotNull(callbackAddress?.dmaCode)
         assertTrue(callbackProxy)
+    }
+
+    @Test
+    fun test_Radar_ipGeocode_onComplete_receives_throwable() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
+        val mockException = java.io.IOException("simulated network failure")
+        apiHelperMock.mockThrowable = mockException
+
+        val latch = CountDownLatch(1)
+
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackThrowable: Throwable? = null
+
+        Radar.ipGeocode { status, _, _, throwable ->
+            callbackStatus = status
+            callbackThrowable = throwable
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_NETWORK, callbackStatus)
+        assertEquals(mockException, callbackThrowable)
     }
 
     @Test

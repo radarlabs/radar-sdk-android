@@ -243,11 +243,13 @@ object Radar {
          * @param[status] RadarStatus The request status.
          * @param[address] RadarAddress? If successful, the geocoding result (a partial address).
          * @param[proxy] Boolean A boolean indicating whether the IP address is a known proxy.
+         * @param[throwable] Throwable? The underlying exception when the failure originated from a caught network/parse/unknown error. Null on success or for server-side error statuses. Forward this to your error collector (Sentry, Crashlytics, etc.) to capture stack traces.
          */
         fun onComplete(
             status: RadarStatus,
             address: RadarAddress? = null,
-            proxy: Boolean = false
+            proxy: Boolean = false,
+            throwable: Throwable? = null
         )
     }
 
@@ -3638,9 +3640,9 @@ object Radar {
         this.logger.i("ipGeocode()", RadarLogType.SDK_CALL)
 
         apiClient.ipGeocode(object : RadarApiClient.RadarIpGeocodeApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?, proxy: Boolean) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?, proxy: Boolean, throwable: Throwable?) {
                 handler.post {
-                    callback.onComplete(status, address, proxy)
+                    callback.onComplete(status, address, proxy, throwable)
                 }
             }
         })
@@ -3654,12 +3656,12 @@ object Radar {
      * @param[block] A block callback.
      */
     fun ipGeocode(
-        block: (status: RadarStatus, address: RadarAddress?, proxy: Boolean) -> Unit
+        block: (status: RadarStatus, address: RadarAddress?, proxy: Boolean, throwable: Throwable?) -> Unit
     ) {
         ipGeocode(
             object : RadarIpGeocodeCallback {
-                override fun onComplete(status: RadarStatus, address: RadarAddress?, proxy: Boolean) {
-                    block(status, address, proxy)
+                override fun onComplete(status: RadarStatus, address: RadarAddress?, proxy: Boolean, throwable: Throwable?) {
+                    block(status, address, proxy, throwable)
                 }
             }
         )
