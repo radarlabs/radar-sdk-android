@@ -244,10 +244,10 @@ fun TestView() {
         }
 
         CustomButton("ipGeocode") {
-            Radar.ipGeocode { status, address, proxy ->
+            Radar.ipGeocode { status, address, proxy, throwable ->
                 Log.v(
                     "example",
-                    "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}; proxy = $proxy ${address?.toJson()}"
+                    "IP geocode: status = $status; country = ${address?.countryCode}; city = ${address?.city}; proxy = $proxy ${address?.toJson()}; throwable = ${throwable?.message}"
                 )
             }
         }
