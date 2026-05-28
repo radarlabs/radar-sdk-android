@@ -48,7 +48,7 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         logPayload: Boolean,
         verified: Boolean,
         imageCallback: RadarImageApiCallback?,
-        verifiedHostOverride: String?,
+        verifiedHostOverride: String?
     ) {
         if (path != "v1/logs") {
             val host = if (verified) {
@@ -100,5 +100,4 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         lastCapturedPath = null
         lastCapturedMethod = null
     }
-
 }

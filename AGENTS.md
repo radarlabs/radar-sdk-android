@@ -17,7 +17,12 @@ All commands run from the repo root:
 - `./gradlew build` — full build
 - `./gradlew test` — unit tests (Robolectric + JUnit 4)
 - `./gradlew lint` — Android lint. Warnings are errors (`lintOptions { warningsAsErrors true }` in [sdk/build.gradle](sdk/build.gradle)) — a lint warning will fail the build.
+- `./gradlew :sdk:ktlintCheck` — Kotlin style check
 - `./gradlew :sdk:assembleRelease` — SDK-only release build
+
+Lint and ktlint both use baselines ([sdk/lint-baseline.xml](sdk/lint-baseline.xml), [sdk/ktlint-baseline.xml](sdk/ktlint-baseline.xml)) to suppress pre-existing violations. **Only fix lint/ktlint errors on lines you changed** — do not run repo-wide formatters (`./gradlew :sdk:ktlintFormat` reformats every file and will produce a sprawling, unreviewable diff). Fix the specific issues CI reports on your diff, leave the rest to the baseline.
+
+**When you do fix violations in a file (by formatting it or editing the offending lines), remove that file's entries from the relevant baseline** so the baseline only reflects what's still being suppressed. Stale baseline entries point at line numbers that no longer match real violations — they're dead weight and obscure what's actually suppressed. After deleting a file's `<file name="…">…</file>` block from the baseline, re-run `./gradlew :sdk:ktlintCheck` (or `:sdk:lint`); if any genuine violations remain (e.g. a non-auto-fixable rule like `property-naming`), add just those entries back rather than restoring the whole block.
 
 The example app requires an API key set in its `MainActivity`. A pre-commit hook validates that real API keys aren't committed in the example.
 
