@@ -2522,7 +2522,7 @@ class RadarTest {
         var callbackAddress: RadarAddress? = null
         var callbackProxy = false
 
-        Radar.ipGeocode { status, address, proxy, _ ->
+        Radar.ipGeocode { status, address, proxy ->
             callbackStatus = status
             callbackAddress = address
             callbackProxy = proxy
@@ -2549,7 +2549,7 @@ class RadarTest {
         var callbackAddress: RadarAddress? = null
         var callbackProxy = false
 
-        Radar.ipGeocode { status, address, proxy, _ ->
+        Radar.ipGeocode { status, address, proxy ->
             callbackStatus = status
             callbackAddress = address
             callbackProxy = proxy
@@ -2589,6 +2589,32 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.ERROR_NETWORK, callbackStatus)
         assertEquals(mockException, callbackThrowable)
+    }
+
+    @Test
+    fun test_Radar_ipGeocode_legacy_three_arg_override_still_called() {
+        // Backward-compat: an implementor that overrides only the legacy three-arg
+        // onComplete (the previously-published signature) must still receive callbacks.
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
+        apiHelperMock.mockThrowable = java.io.IOException("simulated network failure")
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.ipGeocode(
+            object : Radar.RadarIpGeocodeCallback {
+                override fun onComplete(status: Radar.RadarStatus, address: RadarAddress?, proxy: Boolean) {
+                    callbackStatus = status
+                    latch.countDown()
+                }
+            }
+        )
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_NETWORK, callbackStatus)
     }
 
     @Test
