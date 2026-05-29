@@ -253,8 +253,6 @@ object Radar {
         /**
          * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a partial address) and a boolean indicating whether the IP address is a known proxy. Also receives the underlying exception when the failure originated from a caught network or parse error.
          *
-         * Override this method (instead of the three-argument overload) to inspect the throwable — for example, to forward it to an error collector like Sentry, Crashlytics, or Datadog. The default implementation delegates to the three-argument overload, so existing implementors remain source- and binary-compatible.
-         *
          * @param[status] RadarStatus The request status.
          * @param[address] RadarAddress? If successful, the geocoding result (a partial address).
          * @param[proxy] Boolean A boolean indicating whether the IP address is a known proxy.
@@ -262,9 +260,9 @@ object Radar {
          */
         fun onComplete(
             status: RadarStatus,
-            address: RadarAddress?,
-            proxy: Boolean,
-            throwable: Throwable?
+            address: RadarAddress? = null,
+            proxy: Boolean = false,
+            throwable: Throwable? = null,
         ) {
             onComplete(status, address, proxy)
         }
