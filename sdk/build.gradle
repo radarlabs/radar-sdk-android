@@ -37,13 +37,6 @@ android {
     }
     kotlinOptions {
         jvmTarget = "1.8"
-        // Compile Kotlin interface default methods to real Java default methods (instead of
-        // routing through $DefaultImpls only). Required so Java implementors of public
-        // callback interfaces don't have to implement every default-bodied overload — e.g.
-        // RadarIpGeocodeCallback's four-arg onComplete with the trailing Throwable.
-        // "all-compatibility" also keeps the $DefaultImpls stubs for binary backwards-compat
-        // with downstream code compiled against earlier SDK versions.
-        freeCompilerArgs += ["-Xjvm-default=all-compatibility"]
     }
     defaultConfig {
         minSdkVersion 16
