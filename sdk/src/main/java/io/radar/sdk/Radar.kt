@@ -248,7 +248,7 @@ object Radar {
             status: RadarStatus,
             address: RadarAddress? = null,
             proxy: Boolean = false
-        )
+        ) {}
 
         /**
          * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a partial address) and a boolean indicating whether the IP address is a known proxy. Also receives the underlying exception when the failure originated from a caught network or parse error.
@@ -3694,13 +3694,6 @@ object Radar {
     ) {
         ipGeocode(
             object : RadarIpGeocodeCallback {
-                // The three-arg overload is abstract on the interface so we have to implement
-                // it, but Radar.ipGeocode(callback) always invokes the four-arg overload below
-                // — funnel the three-arg through it so `block` is only invoked from one place.
-                override fun onComplete(status: RadarStatus, address: RadarAddress?, proxy: Boolean) {
-                    onComplete(status, address, proxy, null)
-                }
-
                 override fun onComplete(status: RadarStatus, address: RadarAddress?, proxy: Boolean, throwable: Throwable?) {
                     block(status, address, proxy, throwable)
                 }
