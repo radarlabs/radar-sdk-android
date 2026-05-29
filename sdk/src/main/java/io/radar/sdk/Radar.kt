@@ -268,8 +268,6 @@ object Radar {
             proxy: Boolean = false,
             throwable: Throwable? = null
         ) {
-            // Bridge to the deprecated three-arg overload so existing implementors keep
-            // receiving callbacks. Will be removed when the three-arg overload is removed.
             @Suppress("DEPRECATION")
             onComplete(status, address, proxy)
         }
