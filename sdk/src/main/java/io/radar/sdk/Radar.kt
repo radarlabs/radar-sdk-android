@@ -244,6 +244,10 @@ object Radar {
          * @param[address] RadarAddress? If successful, the geocoding result (a partial address).
          * @param[proxy] Boolean A boolean indicating whether the IP address is a known proxy.
          */
+        @Deprecated(
+            "Override the four-arg onComplete(status, address, proxy, throwable) instead to also receive the underlying exception on network/parse errors.",
+            ReplaceWith("onComplete(status, address, proxy, throwable)")
+        )
         fun onComplete(
             status: RadarStatus,
             address: RadarAddress? = null,
@@ -264,6 +268,9 @@ object Radar {
             proxy: Boolean = false,
             throwable: Throwable? = null
         ) {
+            // Bridge to the deprecated three-arg overload so existing implementors keep
+            // receiving callbacks. Will be removed when the three-arg overload is removed.
+            @Suppress("DEPRECATION")
             onComplete(status, address, proxy)
         }
     }

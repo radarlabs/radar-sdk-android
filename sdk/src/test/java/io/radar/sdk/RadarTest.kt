@@ -2592,6 +2592,7 @@ class RadarTest {
     }
 
     @Test
+    @Suppress("DEPRECATION")
     fun test_Radar_ipGeocode_legacy_three_arg_override_still_called() {
         // Backward-compat: an implementor that overrides only the legacy three-arg
         // onComplete (the previously-published signature) must still receive callbacks.
