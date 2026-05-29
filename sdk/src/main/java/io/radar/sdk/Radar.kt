@@ -3694,8 +3694,11 @@ object Radar {
     ) {
         ipGeocode(
             object : RadarIpGeocodeCallback {
+                // The three-arg overload is abstract on the interface so we have to implement
+                // it, but Radar.ipGeocode(callback) always invokes the four-arg overload below
+                // — funnel the three-arg through it so `block` is only invoked from one place.
                 override fun onComplete(status: RadarStatus, address: RadarAddress?, proxy: Boolean) {
-                    block(status, address, proxy, null)
+                    onComplete(status, address, proxy, null)
                 }
 
                 override fun onComplete(status: RadarStatus, address: RadarAddress?, proxy: Boolean, throwable: Throwable?) {
