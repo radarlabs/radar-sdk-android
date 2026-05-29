@@ -262,7 +262,7 @@ object Radar {
             status: RadarStatus,
             address: RadarAddress? = null,
             proxy: Boolean = false,
-            throwable: Throwable? = null,
+            throwable: Throwable? = null
         ) {
             onComplete(status, address, proxy)
         }
