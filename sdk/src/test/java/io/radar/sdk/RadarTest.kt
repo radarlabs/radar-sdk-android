@@ -1597,6 +1597,12 @@ class RadarTest {
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = tripWithLegsResponse()
 
+        // completeTrip() flushes a trackOnce() after completing. The track response should
+        // reflect that the trip is over (no active trip), so the cleared trip stays cleared.
+        val trackResponse = RadarTestUtils.jsonObjectFromResource("/track.json")!!
+        trackResponse.getJSONObject("user").remove("trip")
+        apiHelperMock.addMockResponse("v1/track", trackResponse)
+
         val latch = CountDownLatch(1)
 
         Radar.completeTrip { _, _, _ ->
@@ -1622,6 +1628,12 @@ class RadarTest {
 
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = tripWithLegsResponse()
+
+        // cancelTrip() flushes a trackOnce() after canceling. The track response should
+        // reflect that the trip is over (no active trip), so the cleared trip stays cleared.
+        val trackResponse = RadarTestUtils.jsonObjectFromResource("/track.json")!!
+        trackResponse.getJSONObject("user").remove("trip")
+        apiHelperMock.addMockResponse("v1/track", trackResponse)
 
         val latch = CountDownLatch(1)
 
