@@ -244,11 +244,33 @@ object Radar {
          * @param[address] RadarAddress? If successful, the geocoding result (a partial address).
          * @param[proxy] Boolean A boolean indicating whether the IP address is a known proxy.
          */
+        @Deprecated(
+            "Override the four-arg onComplete(status, address, proxy, throwable) instead to also receive the underlying exception on network/parse errors.",
+            ReplaceWith("onComplete(status, address, proxy, throwable)")
+        )
         fun onComplete(
             status: RadarStatus,
             address: RadarAddress? = null,
             proxy: Boolean = false
-        )
+        ) {}
+
+        /**
+         * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a partial address) and a boolean indicating whether the IP address is a known proxy. Also receives the underlying exception when the failure originated from a caught network or parse error.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[address] RadarAddress? If successful, the geocoding result (a partial address).
+         * @param[proxy] Boolean A boolean indicating whether the IP address is a known proxy.
+         * @param[throwable] Throwable? The underlying exception when the failure originated from a caught network/parse/unknown error. Null on success or for server-side error statuses.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            address: RadarAddress? = null,
+            proxy: Boolean = false,
+            throwable: Throwable? = null
+        ) {
+            @Suppress("DEPRECATION")
+            onComplete(status, address, proxy)
+        }
     }
 
     /**
@@ -3644,9 +3666,9 @@ object Radar {
         this.logger.i("ipGeocode()", RadarLogType.SDK_CALL)
 
         apiClient.ipGeocode(object : RadarApiClient.RadarIpGeocodeApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?, proxy: Boolean) {
+            override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?, proxy: Boolean, throwable: Throwable?) {
                 handler.post {
-                    callback.onComplete(status, address, proxy)
+                    callback.onComplete(status, address, proxy, throwable)
                 }
             }
         })
@@ -3666,6 +3688,25 @@ object Radar {
             object : RadarIpGeocodeCallback {
                 override fun onComplete(status: RadarStatus, address: RadarAddress?, proxy: Boolean) {
                     block(status, address, proxy)
+                }
+            }
+        )
+    }
+
+    /**
+     * Geocodes the device's current IP address, converting IP address to partial address. The block also receives the underlying exception when the failure originated from a caught network or parse error — forward it to an error collector (Sentry, Crashlytics, etc.) to capture stack traces.
+     *
+     * @see [](https://radar.com/documentation/api#ip-geocode)
+     *
+     * @param[block] A block callback.
+     */
+    fun ipGeocode(
+        block: (status: RadarStatus, address: RadarAddress?, proxy: Boolean, throwable: Throwable?) -> Unit
+    ) {
+        ipGeocode(
+            object : RadarIpGeocodeCallback {
+                override fun onComplete(status: RadarStatus, address: RadarAddress?, proxy: Boolean, throwable: Throwable?) {
+                    block(status, address, proxy, throwable)
                 }
             }
         )

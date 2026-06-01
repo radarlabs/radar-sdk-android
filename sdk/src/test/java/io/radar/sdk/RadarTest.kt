@@ -2579,6 +2579,58 @@ class RadarTest {
     }
 
     @Test
+    fun test_Radar_ipGeocode_onComplete_receives_throwable() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
+        val mockException = java.io.IOException("simulated network failure")
+        apiHelperMock.mockThrowable = mockException
+
+        val latch = CountDownLatch(1)
+
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackThrowable: Throwable? = null
+
+        Radar.ipGeocode { status, _, _, throwable ->
+            callbackStatus = status
+            callbackThrowable = throwable
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_NETWORK, callbackStatus)
+        assertEquals(mockException, callbackThrowable)
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun test_Radar_ipGeocode_legacy_three_arg_override_still_called() {
+        // Backward-compat: an implementor that overrides only the legacy three-arg
+        // onComplete (the previously-published signature) must still receive callbacks.
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_NETWORK
+        apiHelperMock.mockThrowable = java.io.IOException("simulated network failure")
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.ipGeocode(
+            object : Radar.RadarIpGeocodeCallback {
+                override fun onComplete(status: Radar.RadarStatus, address: RadarAddress?, proxy: Boolean) {
+                    callbackStatus = status
+                    latch.countDown()
+                }
+            }
+        )
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_NETWORK, callbackStatus)
+    }
+
+    @Test
     fun test_Radar_getDistance_success() {
         permissionsHelperMock.mockFineLocationPermissionGranted = true
         val mockLocation = Location("RadarSDK")
