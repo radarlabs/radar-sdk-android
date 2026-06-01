@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.11.2" type="baseline" client="gradle" dependencies="false" name="AGP (8.11.2)" variant="all" version="8.11.2">
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="                .put(ByteArray(2) { 0x00.toByte() })"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="90"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="                .put(ByteArray(1) { 0x00.toByte() } )"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="97"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="                .put(ByteArray(2) { 0x00.toByte() })"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="111"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="                .put(ByteArray(1) { 0x00.toByte() })"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="118"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="                .put(ByteArray(2) { 0x00.toByte() })"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="122"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="                .put(ByteArray(1) { 0x00.toByte() })"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="124"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="            .put(ByteArray(2) { 0x00.toByte() })"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="139"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="            .put(ByteArray(5) { 0x00.toByte() })"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="142"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="            .put(ByteArray(2) { 0x00.toByte() })"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="146"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="            .put(ByteArray(5) { 0x00.toByte() })"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="148"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="            .put(ByteArray(2) { 0x00.toByte() })"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="158"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="            .put(ByteArray(6) { 0x00.toByte() })"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="160"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="            .put(ByteArray(1) { 0x00.toByte() } )"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="165"
+            column="31"/>
+    </issue>
+
+    <issue
+        id="UnnecessaryArrayInit"
+        message="This initialization lambda (`{ 0x00.toByte() }`) is unnecessary and is less efficient"
+        errorLine1="            .put(ByteArray(6) { 0x00.toByte() } )"
+        errorLine2="                              ~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/io/radar/sdk/RadarBeaconUtils.kt"
+            line="167"
+            column="31"/>
+    </issue>
+
+</issues>

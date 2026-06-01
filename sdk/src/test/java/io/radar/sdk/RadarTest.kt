@@ -23,8 +23,14 @@ import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarSdkConfiguration
 import io.radar.sdk.model.RadarSegment
 import io.radar.sdk.model.RadarTrip
-import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarTripLeg
+import io.radar.sdk.model.RadarUser
+import java.util.Calendar
+import java.util.Date
+import java.util.EnumSet
+import java.util.TimeZone
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -39,15 +45,9 @@ import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
-import java.util.Calendar
-import java.util.Date
-import java.util.EnumSet
-import java.util.TimeZone
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk=[Build.VERSION_CODES.P])
+@Config(sdk = [Build.VERSION_CODES.P])
 class RadarTest {
 
     companion object {
@@ -301,7 +301,7 @@ class RadarTest {
 
         // Clear any existing tags to ensure clean state
         RadarSettings.removeTags(context, arrayOf("premium", "beta_user", "vip", "test_tag_1", "test_tag_2", "nonexistent_tag"))
-        
+
         // Clear captured parameters from previous tests
         apiHelperMock.clearCapturedParams()
         Radar.flushBatch()
@@ -353,47 +353,56 @@ class RadarTest {
             "bar",
             "blue",
             "hello",
-            "white")
+            "white"
+        )
         Radar.setNotificationOptions(notificationOptions)
         assertEquals(notificationOptions, RadarSettings.getNotificationOptions(context))
     }
 
-
     @Test
     fun test_Radar_notificationSettingDefaults() {
-        Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-            text = "Text",
-            title = "Title",
-            icon = 1337,
-            updatesOnly = true,
-        ))
-        // Radar.setNotificationOptions has side effects on foregroundServiceOptions. 
-        Radar.setNotificationOptions(RadarNotificationOptions(
-            "foo",
-            "red",
-            "bar",
-            "blue",
-            "hello",
-            "white"))
+        Radar.setForegroundServiceOptions(
+            RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+                text = "Text",
+                title = "Title",
+                icon = 1337,
+                updatesOnly = true
+            )
+        )
+        // Radar.setNotificationOptions has side effects on foregroundServiceOptions.
+        Radar.setNotificationOptions(
+            RadarNotificationOptions(
+                "foo",
+                "red",
+                "bar",
+                "blue",
+                "hello",
+                "white"
+            )
+        )
         assertEquals("bar", RadarSettings.getForegroundService(context).iconString)
         assertEquals("blue", RadarSettings.getForegroundService(context).iconColor)
         // We do not clear existing values of iconString and iconColor with null values.
-        Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-            text = "Text",
-            title = "Title",
-            icon = 1337,
-            updatesOnly = true,
-        ))
+        Radar.setForegroundServiceOptions(
+            RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+                text = "Text",
+                title = "Title",
+                icon = 1337,
+                updatesOnly = true
+            )
+        )
         assertEquals("bar", RadarSettings.getForegroundService(context).iconString)
         assertEquals("blue", RadarSettings.getForegroundService(context).iconColor)
-        Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-            text = "Text",
-            title = "Title",
-            iconString = "test",
-            iconColor = "red",
-            icon = 1337,
-            updatesOnly = true,
-        ))
+        Radar.setForegroundServiceOptions(
+            RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+                text = "Text",
+                title = "Title",
+                iconString = "test",
+                iconColor = "red",
+                icon = 1337,
+                updatesOnly = true
+            )
+        )
         assertEquals("test", RadarSettings.getForegroundService(context).iconString)
         assertEquals("red", RadarSettings.getForegroundService(context).iconColor)
     }
@@ -408,13 +417,13 @@ class RadarTest {
     fun test_Radar_addTags() {
         val tags = arrayOf("premium", "beta_user")
         Radar.addTags(tags)
-        
+
         val retrievedTags = Radar.getTags()
         assertNotNull(retrievedTags)
         assertEquals(2, retrievedTags!!.size)
         assertTrue(retrievedTags.contains("premium"))
         assertTrue(retrievedTags.contains("beta_user"))
-        
+
         // Clean up
         Radar.removeTags(tags)
     }
@@ -423,16 +432,16 @@ class RadarTest {
     fun test_Radar_removeTags() {
         // Add tags first
         Radar.addTags(arrayOf("premium", "beta_user"))
-        
+
         // Remove some tags
         Radar.removeTags(arrayOf("beta_user"))
-        
+
         val retrievedTags = Radar.getTags()
         assertNotNull(retrievedTags)
         assertEquals(1, retrievedTags!!.size)
         assertTrue(retrievedTags.contains("premium"))
         assertFalse(retrievedTags.contains("beta_user"))
-        
+
         // Clean up
         Radar.removeTags(arrayOf("premium"))
     }
@@ -441,7 +450,7 @@ class RadarTest {
     fun test_Radar_getTags_initial() {
         // Clear any existing tags
         Radar.removeTags(arrayOf("premium", "beta_user"))
-        
+
         // Initially should be null
         assertNull(Radar.getTags())
     }
@@ -450,16 +459,16 @@ class RadarTest {
     fun test_Radar_addTags_duplicates() {
         // Add tags first time
         Radar.addTags(arrayOf("premium", "beta_user"))
-        
+
         // Add same tags again (should not create duplicates)
         Radar.addTags(arrayOf("premium", "beta_user"))
-        
+
         val retrievedTags = Radar.getTags()
         assertNotNull(retrievedTags)
         assertEquals(2, retrievedTags!!.size)
         assertTrue(retrievedTags.contains("premium"))
         assertTrue(retrievedTags.contains("beta_user"))
-        
+
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
     }
@@ -468,17 +477,17 @@ class RadarTest {
     fun test_Radar_addTags_additional() {
         // Add initial tags
         Radar.addTags(arrayOf("premium"))
-        
+
         // Add additional tags
         Radar.addTags(arrayOf("beta_user", "vip"))
-        
+
         val retrievedTags = Radar.getTags()
         assertNotNull(retrievedTags)
         assertEquals(3, retrievedTags!!.size)
         assertTrue(retrievedTags.contains("premium"))
         assertTrue(retrievedTags.contains("beta_user"))
         assertTrue(retrievedTags.contains("vip"))
-        
+
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user", "vip"))
     }
@@ -487,13 +496,13 @@ class RadarTest {
     fun test_Radar_removeTags_all() {
         // Add tags first
         Radar.addTags(arrayOf("premium", "beta_user"))
-        
+
         // Remove all tags
         Radar.removeTags(arrayOf("premium", "beta_user"))
-        
+
         val retrievedTags = Radar.getTags()
         assertNull(retrievedTags)
-        
+
         // No cleanup needed since all tags were removed
     }
 
@@ -501,15 +510,15 @@ class RadarTest {
     fun test_Radar_removeTags_nonexistent() {
         // Add some tags
         Radar.addTags(arrayOf("premium"))
-        
+
         // Try to remove tags that don't exist
         Radar.removeTags(arrayOf("nonexistent_tag"))
-        
+
         val retrievedTags = Radar.getTags()
         assertNotNull(retrievedTags)
         assertEquals(1, retrievedTags!!.size)
         assertTrue(retrievedTags.contains("premium"))
-        
+
         // Clean up
         Radar.removeTags(arrayOf("premium"))
     }
@@ -518,19 +527,19 @@ class RadarTest {
     fun test_Radar_tags_persistence() {
         // Add tags
         Radar.addTags(arrayOf("premium", "beta_user"))
-        
+
         // Verify they are stored
         val retrievedTags = Radar.getTags()
         assertNotNull(retrievedTags)
         assertEquals(2, retrievedTags!!.size)
-        
+
         // Verify they are stored in RadarSettings directly
         val settingsTags = RadarSettings.getTags(context)
         assertNotNull(settingsTags)
         assertEquals(2, settingsTags!!.size)
         assertTrue(settingsTags.contains("premium"))
         assertTrue(settingsTags.contains("beta_user"))
-        
+
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
     }
@@ -590,7 +599,7 @@ class RadarTest {
 
         assertTrue(userTagsList.contains("premium"))
         assertTrue(userTagsList.contains("beta_user"))
-        
+
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
     }
@@ -640,7 +649,6 @@ class RadarTest {
 
         val userTagsArray = capturedParams!!.optJSONArray("userTags")
         assertNull(userTagsArray)
-
     }
 
     @Test
@@ -667,7 +675,7 @@ class RadarTest {
         // Verify that a track request was made due to syncAfterSetUser
         Radar.trackOnce { status, _, _, _ ->
             assertEquals(Radar.RadarStatus.SUCCESS, status)
-        }   
+        }
         // We can verify this by checking if the last captured path is "v1/track"
         // Note: This test assumes syncAfterSetUser is enabled in the test configuration
         val capturedPath = apiHelperMock.lastCapturedPath
@@ -677,13 +685,13 @@ class RadarTest {
         // Verify that user tags were included in the sync request
         val capturedParams = apiHelperMock.lastCapturedParams
         assertNotNull(capturedParams)
-        
+
         val userTagsArray = capturedParams!!.optJSONArray("userTags")
         assertNotNull(userTagsArray)
         assertEquals(2, userTagsArray!!.length())
         assertTrue(userTagsArray.toString().contains("premium"))
         assertTrue(userTagsArray.toString().contains("beta_user"))
-        
+
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
     }
@@ -725,23 +733,22 @@ class RadarTest {
         // Verify user tags were included in the request
         val capturedParams = apiHelperMock.lastCapturedParams
         assertNotNull(capturedParams)
-        
+
         val userTagsArray = capturedParams!!.optJSONArray("userTags")
         assertNotNull(userTagsArray)
         assertEquals(2, userTagsArray!!.length())
-        
+
         val userTagsList = mutableListOf<String>()
         for (i in 0 until userTagsArray.length()) {
             userTagsList.add(userTagsArray.getString(i))
         }
-        
+
         assertTrue(userTagsList.contains("premium"))
         assertTrue(userTagsList.contains("beta_user"))
-        
+
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
     }
-
 
     @Test
     fun test_Radar_altitudeAdjustments_included_in_track_request() {
@@ -880,7 +887,6 @@ class RadarTest {
         var callbackStatus: Radar.RadarStatus? = null
         var callbackLocation: Location? = null
 
-
         Radar.getLocation { status, location, _ ->
             callbackStatus = status
             callbackLocation = location
@@ -1001,11 +1007,11 @@ class RadarTest {
         assertUserOk(callbackUser)
     }
 
-        @Test
+    @Test
     fun test_Radar_inAppMessaging_flow() {
         // Create a mock Activity for testing
         val mockActivity = Robolectric.buildActivity(Activity::class.java).create().get()
-        
+
         // Create a mock in-app message receiver that tracks method calls
         val mockInAppMessageReceiver = object : RadarInAppMessageReceiver {
             var onNewInAppMessageCalled = false
@@ -1014,11 +1020,11 @@ class RadarTest {
                 onNewInAppMessageCalled = true
                 Radar.showInAppMessage(inAppMessage)
             }
-            
+
             override fun createInAppMessageView(
-                context: Context, 
-                inAppMessage: RadarInAppMessage, 
-                onDismissListener: (() -> Unit)?, 
+                context: Context,
+                inAppMessage: RadarInAppMessage,
+                onDismissListener: (() -> Unit)?,
                 onInAppMessageButtonClicked: (() -> Unit)?,
                 onViewReady: (View) -> Unit
             ) {
@@ -1028,13 +1034,13 @@ class RadarTest {
                 onViewReady(view)
             }
         }
-        
+
         // Initialize Radar with the mock Activity to ensure inAppMessageManager is created
         Radar.initialize(mockActivity, publishableKey)
-        
+
         // Set the mock receiver
         Radar.setInAppMessageReceiver(mockInAppMessageReceiver)
-        
+
         // Set up permissions and location
         permissionsHelperMock.mockFineLocationPermissionGranted = true
         val mockLocation = Location("RadarSDK")
@@ -1043,34 +1049,34 @@ class RadarTest {
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         locationClientMock.mockLocation = mockLocation
-        
+
         // Mock API response with inAppMessages
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
-        
+
         // Create a track response with inAppMessages field
         val trackResponse = RadarTestUtils.jsonObjectFromResource("/track.json")!!
         val inAppMessagesArray = JSONArray()
         val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"},\"metadata\":{\"test\":\"test\"}}")
         inAppMessagesArray.put(inAppMessageJson)
         trackResponse.put("inAppMessages", inAppMessagesArray)
-        
+
         apiHelperMock.addMockResponse("v1/track", trackResponse)
-        
+
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
-        
+
         // Call the main track method
         Radar.trackOnce { status, _, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
-        
+
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
-        
+
         // Verify the track call was successful
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        
+
         // Verify that the in-app message receiver methods were called
         assertTrue("onNewInAppMessage should have been called", mockInAppMessageReceiver.onNewInAppMessageCalled)
         assertTrue("createInAppMessageView should have been called", mockInAppMessageReceiver.createInAppMessageViewCalled)
@@ -1080,20 +1086,20 @@ class RadarTest {
     fun test_Radar_inAppMessaging_discard_operation() {
         // Create a mock Activity for testing
         val mockActivity = Robolectric.buildActivity(Activity::class.java).create().get()
-        
+
         // Create a mock in-app message receiver that returns DISCARD
         val mockInAppMessageReceiver = object : RadarInAppMessageReceiver {
             var onNewInAppMessageCalled = false
             var createInAppMessageViewCalled = false
-            
+
             override fun onNewInAppMessage(inAppMessage: RadarInAppMessage) {
                 onNewInAppMessageCalled = true
             }
-            
+
             override fun createInAppMessageView(
-                context: Context, 
-                inAppMessage: RadarInAppMessage, 
-                onDismissListener: (() -> Unit)?, 
+                context: Context,
+                inAppMessage: RadarInAppMessage,
+                onDismissListener: (() -> Unit)?,
                 onInAppMessageButtonClicked: (() -> Unit)?,
                 onViewReady: (View) -> Unit
             ) {
@@ -1103,13 +1109,13 @@ class RadarTest {
                 onViewReady(view)
             }
         }
-        
+
         // Initialize Radar with the mock Activity to ensure inAppMessageManager is created
         Radar.initialize(mockActivity, publishableKey)
-        
+
         // Set the mock receiver
         Radar.setInAppMessageReceiver(mockInAppMessageReceiver)
-        
+
         // Set up permissions and location
         permissionsHelperMock.mockFineLocationPermissionGranted = true
         val mockLocation = Location("RadarSDK")
@@ -1118,34 +1124,34 @@ class RadarTest {
         mockLocation.accuracy = 65f
         mockLocation.time = System.currentTimeMillis()
         locationClientMock.mockLocation = mockLocation
-        
+
         // Mock API response with inAppMessages
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
-        
+
         // Create a track response with inAppMessages field
         val trackResponse = RadarTestUtils.jsonObjectFromResource("/track.json")!!
         val inAppMessagesArray = JSONArray()
         val inAppMessageJson = JSONObject("{\"title\":{\"text\":\"hello\",\"color\":\"#000000\"},\"body\":{\"text\":\"I'm a test message\",\"color\":\"#000000\"},\"button\":{\"text\":\"press me\",\"color\":\"#000000\",\"backgroundColor\":\"#FF6B8D\",\"url\":\"https://www.google.com\"},\"metadata\":{\"test\":\"test\"}}")
         inAppMessagesArray.put(inAppMessageJson)
         trackResponse.put("inAppMessages", inAppMessagesArray)
-        
+
         apiHelperMock.addMockResponse("v1/track", trackResponse)
-        
+
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
-        
+
         // Call the main track method
         Radar.trackOnce { status, _, _, _ ->
             callbackStatus = status
             latch.countDown()
         }
-        
+
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
-        
+
         // Verify the track call was successful
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        
+
         // Verify that onNewInAppMessage was called but createInAppMessageView was not (due to DISCARD)
         assertTrue("onNewInAppMessage should have been called", mockInAppMessageReceiver.onNewInAppMessageCalled)
         assertFalse("createInAppMessageView should not have been called when DISCARD is returned", mockInAppMessageReceiver.createInAppMessageViewCalled)
@@ -1205,14 +1211,16 @@ class RadarTest {
 
         Radar.stopTracking()
 
-        Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-            text="Text",
-            title = "Title",
-            icon = 1337,
-            iconString = "test",
-            updatesOnly = true,
-            iconColor = "#FF0000"
-        ))
+        Radar.setForegroundServiceOptions(
+            RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+                text = "Text",
+                title = "Title",
+                icon = 1337,
+                iconString = "test",
+                updatesOnly = true,
+                iconColor = "#FF0000"
+            )
+        )
 
         val options = RadarTrackingOptions.EFFICIENT
         options.desiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW
@@ -1374,7 +1382,7 @@ class RadarTest {
         val latch2 = CountDownLatch(1)
 
         // returns back to responsive mode after trip
-        Radar.completeTrip() { _, _, _ ->
+        Radar.completeTrip { _, _, _ ->
             assertEquals(null, RadarSettings.getPreviousTrackingOptions(context))
             assertEquals(responsive, Radar.getTrackingOptions())
             assertTrue(Radar.isTracking())
@@ -1421,7 +1429,7 @@ class RadarTest {
 
         val latch2 = CountDownLatch(1)
         // returns back to not tracking after trip
-        Radar.completeTrip() { _, _, _ ->
+        Radar.completeTrip { _, _, _ ->
             assertEquals(null, RadarSettings.getPreviousTrackingOptions(context))
             assertEquals(continuous, Radar.getTrackingOptions())
             assertFalse(Radar.isTracking())
@@ -1434,7 +1442,7 @@ class RadarTest {
     @Test
     fun test_Radar_completeTrip() {
         val latch = CountDownLatch(1)
-        Radar.completeTrip() {_, _, _ ->
+        Radar.completeTrip { _, _, _ ->
             assertNull(Radar.getTripOptions())
             latch.countDown()
         }
@@ -1445,7 +1453,7 @@ class RadarTest {
     @Test
     fun test_Radar_cancelTrip() {
         val latch = CountDownLatch(1)
-        Radar.cancelTrip() {_, _, _ ->
+        Radar.cancelTrip { _, _, _ ->
             assertNull(Radar.getTripOptions())
             latch.countDown()
         }
@@ -1682,14 +1690,18 @@ class RadarTest {
 
         val latch = CountDownLatch(1)
 
-        Radar.updateTripLeg("leg_001", RadarTripLeg.RadarTripLegStatus.COMPLETED, object : Radar.RadarTripLegCallback {
-            override fun onComplete(status: Radar.RadarStatus, trip: RadarTrip?, leg: RadarTripLeg?, events: Array<RadarEvent>?) {
-                assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
-                assertNull(trip)
-                assertNull(leg)
-                latch.countDown()
+        Radar.updateTripLeg(
+            "leg_001",
+            RadarTripLeg.RadarTripLegStatus.COMPLETED,
+            object : Radar.RadarTripLegCallback {
+                override fun onComplete(status: Radar.RadarStatus, trip: RadarTrip?, leg: RadarTripLeg?, events: Array<RadarEvent>?) {
+                    assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
+                    assertNull(trip)
+                    assertNull(leg)
+                    latch.countDown()
+                }
             }
-        })
+        )
 
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
@@ -1720,12 +1732,15 @@ class RadarTest {
         RadarSettings.setTrip(context, trip)
         assertNull(trip!!.currentLegId)
         val latch = CountDownLatch(1)
-        Radar.updateCurrentTripLeg(RadarTripLeg.RadarTripLegStatus.COMPLETED, object : Radar.RadarTripLegCallback {
-            override fun onComplete(status: Radar.RadarStatus, trip: RadarTrip?, leg: RadarTripLeg?, events: Array<RadarEvent>?) {
-                assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
-                latch.countDown()
+        Radar.updateCurrentTripLeg(
+            RadarTripLeg.RadarTripLegStatus.COMPLETED,
+            object : Radar.RadarTripLegCallback {
+                override fun onComplete(status: Radar.RadarStatus, trip: RadarTrip?, leg: RadarTripLeg?, events: Array<RadarEvent>?) {
+                    assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
+                    latch.countDown()
+                }
             }
-        })
+        )
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
         RadarSettings.setTrip(context, null)
@@ -1762,13 +1777,16 @@ class RadarTest {
 
         val latch = CountDownLatch(1)
 
-        Radar.reorderTripLegs(arrayOf("leg_001", "leg_002"), object : Radar.RadarTripCallback {
-            override fun onComplete(status: Radar.RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) {
-                assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
-                assertNull(trip)
-                latch.countDown()
+        Radar.reorderTripLegs(
+            arrayOf("leg_001", "leg_002"),
+            object : Radar.RadarTripCallback {
+                override fun onComplete(status: Radar.RadarStatus, trip: RadarTrip?, events: Array<RadarEvent>?) {
+                    assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
+                    assertNull(trip)
+                    latch.countDown()
+                }
             }
-        })
+        )
 
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
@@ -1982,7 +2000,7 @@ class RadarTest {
         var callbackPlaces: Array<RadarPlace>? = null
         val chainMetadata = mapOf("orderActive" to "true")
 
-        Radar.searchPlaces(1000, arrayOf("walmart"), chainMetadata,  null, null, null, 100) { status, location, places ->
+        Radar.searchPlaces(1000, arrayOf("walmart"), chainMetadata, null, null, null, 100) { status, location, places ->
             callbackStatus = status
             callbackLocation = location
             callbackPlaces = places
@@ -2115,7 +2133,6 @@ class RadarTest {
         assertTrue(geofenceJson.has("geometryCenter"))
 
         assertTrue(geofenceJson.has("operatingHours"))
-
     }
 
     @Test
@@ -2356,7 +2373,7 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertAddressesOk(callbackAddresses)
-        
+
         // Add timezone verification
         val address = callbackAddresses?.get(0)
         assertNotNull(address?.timeZone)
@@ -2365,7 +2382,7 @@ class RadarTest {
         assertEquals("EST", address?.timeZone?.code)
         assertEquals(-18000, address?.timeZone?.utcOffset)
         assertEquals(0, address?.timeZone?.dstOffset)
-        
+
         // Test the Date object
         val timeZoneDate = address?.timeZone?.currentTime
         assertNotNull(timeZoneDate)
@@ -2375,13 +2392,15 @@ class RadarTest {
             set(Calendar.MILLISECOND, 0)
         }.time
         assertEquals(expectedTime, timeZoneDate)
-        
+
         // Test the formatted string representation
         val timeZoneJson = address?.timeZone?.toJson()
         val formattedTime = timeZoneJson?.optString("currentTime")
         assertNotNull(formattedTime)
-        assertTrue("NYC time should end with -05:00 offset but was: $formattedTime", 
-            formattedTime != null && formattedTime.toString().endsWith("-05:00"))
+        assertTrue(
+            "NYC time should end with -05:00 offset but was: $formattedTime",
+            formattedTime != null && formattedTime.toString().endsWith("-05:00")
+        )
     }
 
     @Test
@@ -2408,7 +2427,7 @@ class RadarTest {
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        
+
         // Add timezone verification
         val address = callbackAddresses?.get(0)
         assertNotNull(address?.timeZone)
@@ -2417,7 +2436,7 @@ class RadarTest {
         assertEquals("GMT", address?.timeZone?.code)
         assertEquals(0, address?.timeZone?.utcOffset)
         assertEquals(0, address?.timeZone?.dstOffset)
-        
+
         // Test the Date object
         val timeZoneDate = address?.timeZone?.currentTime
         assertNotNull(timeZoneDate)
@@ -2427,13 +2446,15 @@ class RadarTest {
             set(Calendar.MILLISECOND, 0)
         }.time
         assertEquals(expectedTime, timeZoneDate)
-        
+
         // Test the formatted string representation
         val timeZoneJson = address?.timeZone?.toJson()
         val formattedTime = timeZoneJson?.optString("currentTime")
         assertNotNull(formattedTime)
-        assertTrue("London time should end with Z but was: $formattedTime", 
-            formattedTime != null && formattedTime.toString().endsWith("Z"))
+        assertTrue(
+            "London time should end with Z but was: $formattedTime",
+            formattedTime != null && formattedTime.toString().endsWith("Z")
+        )
     }
 
     @Test
@@ -2447,7 +2468,7 @@ class RadarTest {
         mockLocation.longitude = 130.844064
 
         val latch = CountDownLatch(1)
-        var callbackStatus: Radar.RadarStatus? = null 
+        var callbackStatus: Radar.RadarStatus? = null
         var callbackAddresses: Array<RadarAddress>? = null
 
         Radar.reverseGeocode(mockLocation) { status, addresses ->
@@ -2460,7 +2481,7 @@ class RadarTest {
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        
+
         // Add timezone verification
         val address = callbackAddresses?.get(0)
         assertNotNull(address?.timeZone)
@@ -2469,7 +2490,7 @@ class RadarTest {
         assertEquals("ACST", address?.timeZone?.code)
         assertEquals(34200, address?.timeZone?.utcOffset)
         assertEquals(0, address?.timeZone?.dstOffset)
-        
+
         // Test the Date object
         val timeZoneDate = address?.timeZone?.currentTime
         assertNotNull(timeZoneDate)
@@ -2479,13 +2500,15 @@ class RadarTest {
             set(Calendar.MILLISECOND, 0)
         }.time
         assertEquals(expectedTime, timeZoneDate)
-        
+
         // Test the formatted string representation
         val timeZoneJson = address?.timeZone?.toJson()
         val formattedTime = timeZoneJson?.optString("currentTime")
         assertNotNull(formattedTime)
-        assertTrue("Darwin time should end with +09:30 but was: $formattedTime", 
-            formattedTime != null && formattedTime.toString().endsWith("+09:30"))
+        assertTrue(
+            "Darwin time should end with +09:30 but was: $formattedTime",
+            formattedTime != null && formattedTime.toString().endsWith("+09:30")
+        )
     }
 
     @Test
@@ -2603,6 +2626,7 @@ class RadarTest {
         val eventsPath = "v1/events"
         apiHelperMock.addMockResponse(eventsPath, RadarTestUtils.jsonObjectFromResource("/conversion_event.json")!!)
     }
+
     @Test
     fun test_Radar_logConversionWithBlock_success() {
         setUpLogConversionTest()
@@ -2687,9 +2711,7 @@ class RadarTest {
         return tripOptions
     }
 
-    private fun tripWithLegsResponse(): JSONObject? {
-        return RadarTestUtils.jsonObjectFromResource("/trip_with_legs.json")
-    }
+    private fun tripWithLegsResponse(): JSONObject? = RadarTestUtils.jsonObjectFromResource("/trip_with_legs.json")
 
     @Test
     fun test_Radar_setSdkConfiguration() {
@@ -2705,18 +2727,22 @@ class RadarTest {
 
         val latch = CountDownLatch(1)
 
-        Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                if (config != null) {
-                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+        Radar.apiClient.getConfig(
+            usage = "sdkConfigUpdate",
+            verified = false,
+            callback = object : RadarApiClient.RadarGetConfigApiCallback {
+                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                    if (config != null) {
+                        RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
+                    }
+
+                    assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
+
+                    latch.countDown()
                 }
-
-                assertEquals(RadarSettings.getLogLevel(context), Radar.RadarLogLevel.INFO)
-
-                latch.countDown()
             }
-        })
-        
+        )
+
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
@@ -2736,14 +2762,14 @@ class RadarTest {
         // Set tags
         val tags = arrayOf("premium", "beta_user", "vip")
         Radar.setTags(tags)
-        
+
         val retrievedTags = Radar.getTags()
         assertNotNull(retrievedTags)
         assertEquals(3, retrievedTags!!.size)
         assertTrue(retrievedTags.contains("premium"))
         assertTrue(retrievedTags.contains("beta_user"))
         assertTrue(retrievedTags.contains("vip"))
-        
+
         // Clean up
         Radar.removeTags(tags)
     }
@@ -2752,10 +2778,10 @@ class RadarTest {
     fun test_Radar_setTags_replaces_existing() {
         // Add initial tags
         Radar.addTags(arrayOf("premium", "beta_user"))
-        
+
         // Set new tags (should replace existing ones)
         Radar.setTags(arrayOf("vip", "admin"))
-        
+
         val retrievedTags = Radar.getTags()
         assertNotNull(retrievedTags)
         assertEquals(2, retrievedTags!!.size)
@@ -2763,7 +2789,7 @@ class RadarTest {
         assertTrue(retrievedTags.contains("admin"))
         assertFalse(retrievedTags.contains("premium"))
         assertFalse(retrievedTags.contains("beta_user"))
-        
+
         // Clean up
         Radar.removeTags(arrayOf("vip", "admin"))
     }
@@ -2772,10 +2798,10 @@ class RadarTest {
     fun test_Radar_setTags_empty_array() {
         // Add some tags first
         Radar.addTags(arrayOf("premium", "beta_user"))
-        
+
         // Set empty array (should clear all tags)
         Radar.setTags(arrayOf())
-        
+
         val retrievedTags = Radar.getTags()
         assertNull(retrievedTags)
     }
@@ -2784,10 +2810,10 @@ class RadarTest {
     fun test_Radar_setTags_null_array() {
         // Add some tags first
         Radar.addTags(arrayOf("premium", "beta_user"))
-        
+
         // Set null array (should clear all tags)
         Radar.setTags(arrayOf<String>())
-        
+
         val retrievedTags = Radar.getTags()
         assertNull(retrievedTags)
     }
@@ -2796,13 +2822,13 @@ class RadarTest {
     fun test_Radar_setTags_duplicates() {
         // Set tags with duplicates
         Radar.setTags(arrayOf("premium", "premium", "beta_user"))
-        
+
         val retrievedTags = Radar.getTags()
         assertNotNull(retrievedTags)
         assertEquals(2, retrievedTags!!.size) // Duplicates should be removed
         assertTrue(retrievedTags.contains("premium"))
         assertTrue(retrievedTags.contains("beta_user"))
-        
+
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
     }
@@ -2811,19 +2837,19 @@ class RadarTest {
     fun test_Radar_setTags_persistence() {
         // Set tags
         Radar.setTags(arrayOf("premium", "beta_user"))
-        
+
         // Verify they are stored
         val retrievedTags = Radar.getTags()
         assertNotNull(retrievedTags)
         assertEquals(2, retrievedTags!!.size)
-        
+
         // Verify they are stored in RadarSettings directly
         val settingsTags = RadarSettings.getTags(context)
         assertNotNull(settingsTags)
         assertEquals(2, settingsTags!!.size)
         assertTrue(settingsTags.contains("premium"))
         assertTrue(settingsTags.contains("beta_user"))
-        
+
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
     }
@@ -2876,15 +2902,15 @@ class RadarTest {
         val userTagsArray = capturedParams!!.optJSONArray("userTags")
         assertNotNull(userTagsArray)
         assertEquals(2, userTagsArray!!.length())
-        
+
         val userTagsList = mutableListOf<String>()
         for (i in 0 until userTagsArray.length()) {
             userTagsList.add(userTagsArray.getString(i))
         }
-        
+
         assertTrue(userTagsList.contains("premium"))
         assertTrue(userTagsList.contains("beta_user"))
-        
+
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
     }
@@ -2907,7 +2933,7 @@ class RadarTest {
 }
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk=[Build.VERSION_CODES.N_MR1])
+@Config(sdk = [Build.VERSION_CODES.N_MR1])
 class RadarTestOldSDK {
     @Test
     fun test_isoStringToDate() {

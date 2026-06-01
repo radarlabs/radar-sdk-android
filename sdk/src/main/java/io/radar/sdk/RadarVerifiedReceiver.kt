@@ -17,4 +17,19 @@ abstract class RadarVerifiedReceiver {
      */
     abstract fun onTokenUpdated(context: Context, token: RadarVerifiedLocationToken)
 
+    /**
+     * Tells the receiver that the device's IP address changed while IP change monitoring is active.
+     *
+     * @param[context] The context.
+     */
+    open fun onIpChanged(context: Context) {}
+
+    /**
+     * Tells the receiver that the device's screen sharing state changed.
+     *
+     * @param[context] The context.
+     * @param[sharing] The current screen sharing state.
+     */
+    open fun onSharingChanged(context: Context, sharing: Boolean) {}
+
 }

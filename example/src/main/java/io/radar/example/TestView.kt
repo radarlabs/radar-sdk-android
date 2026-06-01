@@ -101,9 +101,14 @@ fun TestView() {
         }
 
         CustomButton("trackVerified") {
+            Log.v("example", "screen sharing: ${Radar.isSharing()}")
             Radar.trackVerified(false) { status, token ->
                 Log.v("example", "TrackVerified: status = $status; token = ${token?.toJson()}")
             }
+        }
+
+        CustomButton("clearSharing") {
+            Radar.clearSharing()
         }
 
         CustomButton("setExpectedJurisdiction") {
