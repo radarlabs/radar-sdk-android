@@ -2373,7 +2373,7 @@ object Radar {
                     locationManager.restartPreviousTrackingOptions()
 
                     // flush location update to generate events
-                    locationManager.getLocation(null)
+                    trackOnce()
 
                     handler.post {
                         callback?.onComplete(status, trip, events)
@@ -2440,7 +2440,7 @@ object Radar {
                     locationManager.restartPreviousTrackingOptions()
 
                     // flush location update to generate events
-                    locationManager.getLocation(null)
+                    trackOnce()
 
                     handler.post {
                         callback?.onComplete(status, trip, events)
