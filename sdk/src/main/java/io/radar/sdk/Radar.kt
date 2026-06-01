@@ -2361,16 +2361,19 @@ object Radar {
                     trip: RadarTrip?,
                     events: Array<RadarEvent>?
                 ) {
+                    // Only clear trip state when the server confirms the trip ended
+                    // (or it no longer exists), so a failed request can be retried.
                     if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
                         RadarSettings.setTripOptions(context, null)
                         RadarSettings.setTrip(context, null)
-
-                        // return to previous tracking options after trip
-                        locationManager.restartPreviousTrackingOptions()
-
-                        // flush location update to generate events
-                        locationManager.getLocation(null)
                     }
+
+                    // Always return to previous tracking options after a trip, even on
+                    // failure, so we don't stay stuck on trip tracking options.
+                    locationManager.restartPreviousTrackingOptions()
+
+                    // flush location update to generate events
+                    trackOnce()
 
                     handler.post {
                         callback?.onComplete(status, trip, events)
@@ -2425,16 +2428,19 @@ object Radar {
                     trip: RadarTrip?,
                     events: Array<RadarEvent>?
                 ) {
+                    // Only clear trip state when the server confirms the trip ended
+                    // (or it no longer exists), so a failed request can be retried.
                     if (status == RadarStatus.SUCCESS || status == RadarStatus.ERROR_NOT_FOUND) {
                         RadarSettings.setTripOptions(context, null)
                         RadarSettings.setTrip(context, null)
-
-                        // return to previous tracking options after trip
-                        locationManager.restartPreviousTrackingOptions()
-
-                        // flush location update to generate events
-                        locationManager.getLocation(null)
                     }
+
+                    // Always return to previous tracking options after a trip, even on
+                    // failure, so we don't stay stuck on trip tracking options.
+                    locationManager.restartPreviousTrackingOptions()
+
+                    // flush location update to generate events
+                    trackOnce()
 
                     handler.post {
                         callback?.onComplete(status, trip, events)

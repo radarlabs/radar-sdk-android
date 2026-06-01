@@ -60,6 +60,7 @@ class RadarSdkConfigurationTest {
             "maxReplayBufferSize":$maxReplayBufferSize,
             "offlineEventGenerationEnabled":false,
             "useOfflineRTOUpdates":false,
+            "startUpdatesWhileInUse":false,
         }""".trimIndent()
     }
 
@@ -89,6 +90,7 @@ class RadarSdkConfigurationTest {
                 maxReplayBufferSize,
                 false,
                 false,
+                false,
                 null
             ).toJson().toString()
         )
@@ -113,6 +115,7 @@ class RadarSdkConfigurationTest {
         assertEquals(maxReplayBufferSize, settings.maxReplayBufferSize)
         assertFalse(settings.offlineEventGenerationEnabled)
         assertFalse(settings.useOfflineRTOUpdates)
+        assertFalse(settings.startUpdatesWhileInUse)
         assertEquals(null, settings.remoteTrackingOptions)
     }
 
@@ -134,6 +137,7 @@ class RadarSdkConfigurationTest {
         assertEquals(120, settings.maxReplayBufferSize)
         assertFalse(settings.offlineEventGenerationEnabled)
         assertFalse(settings.useOfflineRTOUpdates)
+        assertFalse(settings.startUpdatesWhileInUse)
         assertEquals(null, settings.remoteTrackingOptions)
     }
 

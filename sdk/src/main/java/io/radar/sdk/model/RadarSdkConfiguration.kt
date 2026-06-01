@@ -31,6 +31,7 @@ internal data class RadarSdkConfiguration(
     val maxReplayBufferSize: Int = DEFAULT_MAX_REPLAY_BUFFER_SIZE,
     val offlineEventGenerationEnabled: Boolean = false,
     val useOfflineRTOUpdates: Boolean = false,
+    val startUpdatesWhileInUse: Boolean = false,
     val remoteTrackingOptions: List<RadarRemoteTrackingOptions>? = null,
 ) {
     companion object {
@@ -57,6 +58,7 @@ internal data class RadarSdkConfiguration(
         const val DEFAULT_MAX_REPLAY_BUFFER_SIZE = 120
         private const val OFFLINE_EVENT_GENERATION_ENABLED = "offlineEventGenerationEnabled"
         private const val USE_OFFLINE_RTO_UPDATES = "useOfflineRTOUpdates"
+        private const val START_UPDATES_WHILE_IN_USE = "startUpdatesWhileInUse"
         private const val REMOTE_TRACKING_OPTIONS = "remoteTrackingOptions"
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
@@ -92,6 +94,7 @@ internal data class RadarSdkConfiguration(
                 validatedMaxReplayBufferSize,
                 config.optBoolean(OFFLINE_EVENT_GENERATION_ENABLED, false),
                 config.optBoolean(USE_OFFLINE_RTO_UPDATES, false),
+                config.optBoolean(START_UPDATES_WHILE_IN_USE, false),
                 RadarRemoteTrackingOptions.fromJsonArray(config.optJSONArray(REMOTE_TRACKING_OPTIONS)),
             )
         }
@@ -132,6 +135,7 @@ internal data class RadarSdkConfiguration(
             putOpt(MAX_REPLAY_BUFFER_SIZE, maxReplayBufferSize)
             putOpt(OFFLINE_EVENT_GENERATION_ENABLED, offlineEventGenerationEnabled)
             putOpt(USE_OFFLINE_RTO_UPDATES, useOfflineRTOUpdates)
+            putOpt(START_UPDATES_WHILE_IN_USE, startUpdatesWhileInUse)
             putOpt(REMOTE_TRACKING_OPTIONS, RadarRemoteTrackingOptions.toJsonArray(remoteTrackingOptions))
         }
     }
