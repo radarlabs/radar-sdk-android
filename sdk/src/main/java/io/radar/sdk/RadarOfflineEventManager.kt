@@ -89,21 +89,29 @@ internal class RadarOfflineEventManager(
         return when {
             inRampedUpGeofences -> {
                 logger.d("OfflineEventManager: Ramping up tracking options")
-                RadarRemoteTrackingOptions.trackingOptions("inGeofence", remoteOptions)
+                RadarRemoteTrackingOptions.trackingOptions("inGeofence", remoteOptions)?.apply {
+                    type = RadarTrackingOptions.RadarTrackingOptionsType.IN_GEOFENCE
+                }
             }
             Radar.getTripOptions() != null -> {
                 val onTripOptions = RadarRemoteTrackingOptions.trackingOptions("onTrip", remoteOptions)
                 if (onTripOptions != null) {
                     logger.d("OfflineEventManager: Using on-trip tracking options")
-                    onTripOptions
+                    onTripOptions.apply {
+                        type = RadarTrackingOptions.RadarTrackingOptionsType.ON_TRIP
+                    }
                 } else {
                     logger.d("OfflineEventManager: Using default tracking options")
-                    RadarRemoteTrackingOptions.trackingOptions("default", remoteOptions)
+                    RadarRemoteTrackingOptions.trackingOptions("default", remoteOptions)?.apply {
+                        type = RadarTrackingOptions.RadarTrackingOptionsType.DEFAULT
+                    }
                 }
             }
             else -> {
                 logger.d("OfflineEventManager: Using default tracking options")
-                RadarRemoteTrackingOptions.trackingOptions("default", remoteOptions)
+                RadarRemoteTrackingOptions.trackingOptions("default", remoteOptions)?.apply {
+                    type = RadarTrackingOptions.RadarTrackingOptionsType.DEFAULT
+                }
             }
         }
     }
