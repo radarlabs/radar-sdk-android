@@ -316,22 +316,22 @@
         <error line="5" column="1" source="standard:no-wildcard-imports" />
         <error line="34" column="1" source="standard:no-consecutive-blank-lines" />
         <error line="79" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="94" column="1" source="standard:blank-line-between-when-conditions" />
-        <error line="104" column="1" source="standard:blank-line-between-when-conditions" />
-        <error line="119" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="139" column="17" source="standard:wrapping" />
-        <error line="139" column="28" source="standard:wrapping" />
-        <error line="140" column="21" source="standard:wrapping" />
-        <error line="140" column="35" source="standard:wrapping" />
-        <error line="143" column="17" source="standard:wrapping" />
-        <error line="144" column="13" source="standard:wrapping" />
-        <error line="159" column="17" source="standard:wrapping" />
-        <error line="159" column="28" source="standard:wrapping" />
-        <error line="160" column="21" source="standard:wrapping" />
-        <error line="160" column="35" source="standard:wrapping" />
-        <error line="163" column="17" source="standard:wrapping" />
-        <error line="164" column="13" source="standard:wrapping" />
-        <error line="180" column="1" source="standard:final-newline" />
+        <error line="96" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="110" column="1" source="standard:blank-line-between-when-conditions" />
+        <error line="127" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="147" column="17" source="standard:wrapping" />
+        <error line="147" column="28" source="standard:wrapping" />
+        <error line="148" column="21" source="standard:wrapping" />
+        <error line="148" column="35" source="standard:wrapping" />
+        <error line="151" column="17" source="standard:wrapping" />
+        <error line="152" column="13" source="standard:wrapping" />
+        <error line="167" column="17" source="standard:wrapping" />
+        <error line="167" column="28" source="standard:wrapping" />
+        <error line="168" column="21" source="standard:wrapping" />
+        <error line="168" column="35" source="standard:wrapping" />
+        <error line="171" column="17" source="standard:wrapping" />
+        <error line="172" column="13" source="standard:wrapping" />
+        <error line="188" column="1" source="standard:final-newline" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarPermissionsHelper.kt">
         <error line="8" column="1" source="standard:no-unused-imports" />
@@ -1166,19 +1166,22 @@
         <error line="281" column="43" source="standard:wrapping" />
         <error line="281" column="51" source="standard:wrapping" />
         <error line="287" column="9" source="standard:wrapping" />
-        <error line="296" column="43" source="standard:wrapping" />
-        <error line="296" column="51" source="standard:wrapping" />
-        <error line="302" column="9" source="standard:wrapping" />
-        <error line="317" column="43" source="standard:wrapping" />
-        <error line="317" column="51" source="standard:wrapping" />
-        <error line="323" column="9" source="standard:wrapping" />
-        <error line="338" column="43" source="standard:wrapping" />
-        <error line="338" column="51" source="standard:wrapping" />
-        <error line="344" column="9" source="standard:wrapping" />
-        <error line="356" column="43" source="standard:wrapping" />
-        <error line="356" column="51" source="standard:wrapping" />
-        <error line="362" column="9" source="standard:wrapping" />
-        <error line="370" column="1" source="standard:final-newline" />
+        <error line="299" column="43" source="standard:wrapping" />
+        <error line="299" column="51" source="standard:wrapping" />
+        <error line="305" column="9" source="standard:wrapping" />
+        <error line="322" column="43" source="standard:wrapping" />
+        <error line="322" column="51" source="standard:wrapping" />
+        <error line="328" column="9" source="standard:wrapping" />
+        <error line="343" column="43" source="standard:wrapping" />
+        <error line="343" column="51" source="standard:wrapping" />
+        <error line="349" column="9" source="standard:wrapping" />
+        <error line="364" column="43" source="standard:wrapping" />
+        <error line="364" column="51" source="standard:wrapping" />
+        <error line="370" column="9" source="standard:wrapping" />
+        <error line="385" column="43" source="standard:wrapping" />
+        <error line="385" column="51" source="standard:wrapping" />
+        <error line="391" column="9" source="standard:wrapping" />
+        <error line="399" column="1" source="standard:final-newline" />
     </file>
     <file name="src/test/java/io/radar/sdk/RadarPermissionsHelperMock.kt">
         <error line="9" column="75" source="standard:function-expression-body" />

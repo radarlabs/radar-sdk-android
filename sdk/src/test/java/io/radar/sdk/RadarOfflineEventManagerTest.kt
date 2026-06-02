@@ -288,7 +288,33 @@ class RadarOfflineEventManagerTest {
 
         val result = offlineEventManager.updateTrackingOptions(listOf("neighborhood"))
         assertNotNull(result)
-        assertEquals(RadarTrackingOptions.CONTINUOUS, result)
+        assertEquals(
+            RadarTrackingOptions.CONTINUOUS.copy(type = RadarTrackingOptions.RadarTrackingOptionsType.IN_GEOFENCE),
+            result
+        )
+    }
+
+    @Test
+    fun test_updateTrackingOptions_returnsOnTrip_whenOnActiveTrip() {
+        RadarSettings.setSdkConfiguration(context, makeSdkConfig(
+            useOfflineRTOUpdates = true,
+            remoteTrackingOptions = listOf(
+                makeRemoteTrackingOptionsJson("default", "responsive"),
+                makeRemoteTrackingOptionsJson("onTrip", "continuous")
+            )
+        ))
+        RadarSettings.setTripOptions(context, RadarTripOptions("order-456"))
+
+        try {
+            val result = offlineEventManager.updateTrackingOptions(emptyList<String>())
+            assertNotNull(result)
+            assertEquals(
+                RadarTrackingOptions.CONTINUOUS.copy(type = RadarTrackingOptions.RadarTrackingOptionsType.ON_TRIP),
+                result
+            )
+        } finally {
+            RadarSettings.setTripOptions(context, null)
+        }
     }
 
     @Test
@@ -345,7 +371,10 @@ class RadarOfflineEventManagerTest {
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         val result = offlineEventManager.updateTrackingOptions(location)
-        assertEquals(RadarTrackingOptions.CONTINUOUS, result)
+        assertEquals(
+            RadarTrackingOptions.CONTINUOUS.copy(type = RadarTrackingOptions.RadarTrackingOptionsType.IN_GEOFENCE),
+            result
+        )
     }
 
     @Test
