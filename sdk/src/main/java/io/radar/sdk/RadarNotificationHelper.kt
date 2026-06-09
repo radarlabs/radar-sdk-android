@@ -15,6 +15,8 @@ import androidx.core.app.NotificationCompat
 import io.radar.sdk.model.RadarEvent
 import androidx.core.net.toUri
 import androidx.core.graphics.toColorInt
+import org.json.JSONObject
+import java.util.Date
 
 class RadarNotificationHelper {
 
@@ -43,6 +45,22 @@ class RadarNotificationHelper {
          */
         internal fun getCustomForegroundNotification(): Notification? {
             return customForegroundNotification
+        }
+
+        private fun isWithinSchedulingWindow(metadata: JSONObject?): Boolean {
+            if (metadata == null) return true
+            val now = Date()
+            val startsAtStr = metadata.optString("radar:startsAt").takeIf { it.isNotEmpty() }
+            val endsAtStr = metadata.optString("radar:endsAt").takeIf { it.isNotEmpty() }
+            if (startsAtStr != null) {
+                val startsAt = RadarUtils.naiveLocalIsoStringToDate(startsAtStr) ?: return true
+                if (now.before(startsAt)) return false
+            }
+            if (endsAtStr != null) {
+                val endsAt = RadarUtils.naiveLocalIsoStringToDate(endsAtStr) ?: return true
+                if (now.after(endsAt)) return false
+            }
+            return true
         }
 
         @SuppressLint("DiscouragedApi", "LaunchActivityFromNotification")
@@ -119,8 +137,10 @@ class RadarNotificationHelper {
                 }
 
                 if (event.type == RadarEvent.RadarEventType.USER_ENTERED_GEOFENCE) {
+                    if (!isWithinSchedulingWindow(event.geofence?.metadata)) continue
                     notificationText = event.geofence?.metadata?.optString("radar:entryNotificationText")
                 } else if (event.type == RadarEvent.RadarEventType.USER_EXITED_GEOFENCE) {
+                    if (!isWithinSchedulingWindow(event.geofence?.metadata)) continue
                     notificationText = event.geofence?.metadata?.optString("radar:exitNotificationText")
                 } else if (event.type == RadarEvent.RadarEventType.USER_ENTERED_BEACON) {
                     notificationText = event.beacon?.metadata?.optString("radar:entryNotificationText")

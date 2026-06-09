@@ -274,28 +274,28 @@
         <error line="3" column="1" source="standard:import-ordering" />
         <error line="11" column="1" source="standard:no-unused-imports" />
         <error line="12" column="1" source="standard:no-unused-imports" />
-        <error line="26" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="28" column="1" source="standard:no-trailing-spaces" />
-        <error line="29" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="32" column="11" source="standard:no-trailing-spaces" />
-        <error line="38" column="1" source="standard:no-trailing-spaces" />
-        <error line="39" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="41" column="11" source="standard:no-trailing-spaces" />
-        <error line="44" column="71" source="standard:function-expression-body" />
-        <error line="55" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="55" column="1" source="standard:no-trailing-spaces" />
-        <error line="58" column="1" source="standard:no-trailing-spaces" />
-        <error line="68" column="88" source="standard:no-semi" />
-        <error line="104" column="35" source="standard:wrapping" />
-        <error line="104" column="35" source="standard:argument-list-wrapping" />
-        <error line="107" column="53" source="standard:wrapping" />
-        <error line="107" column="54" source="standard:argument-list-wrapping" />
-        <error line="110" column="1" source="standard:no-trailing-spaces" />
-        <error line="115" column="1" source="standard:no-trailing-spaces" />
-        <error line="136" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="136" column="1" source="standard:no-trailing-spaces" />
-        <error line="148" column="1" source="standard:no-trailing-spaces" />
-        <error line="154" column="1" source="standard:no-blank-line-before-rbrace" />
+        <error line="28" column="1" source="standard:spacing-between-declarations-with-annotations" />
+        <error line="30" column="1" source="standard:no-trailing-spaces" />
+        <error line="31" column="9" source="standard:spacing-between-declarations-with-comments" />
+        <error line="34" column="11" source="standard:no-trailing-spaces" />
+        <error line="40" column="1" source="standard:no-trailing-spaces" />
+        <error line="41" column="9" source="standard:spacing-between-declarations-with-comments" />
+        <error line="43" column="11" source="standard:no-trailing-spaces" />
+        <error line="46" column="71" source="standard:function-expression-body" />
+        <error line="73" column="1" source="standard:no-empty-first-line-in-method-block" />
+        <error line="73" column="1" source="standard:no-trailing-spaces" />
+        <error line="76" column="1" source="standard:no-trailing-spaces" />
+        <error line="86" column="88" source="standard:no-semi" />
+        <error line="122" column="35" source="standard:wrapping" />
+        <error line="122" column="35" source="standard:argument-list-wrapping" />
+        <error line="125" column="53" source="standard:wrapping" />
+        <error line="125" column="54" source="standard:argument-list-wrapping" />
+        <error line="128" column="1" source="standard:no-trailing-spaces" />
+        <error line="133" column="1" source="standard:no-trailing-spaces" />
+        <error line="156" column="1" source="standard:no-empty-first-line-in-method-block" />
+        <error line="156" column="1" source="standard:no-trailing-spaces" />
+        <error line="168" column="1" source="standard:no-trailing-spaces" />
+        <error line="174" column="1" source="standard:no-blank-line-before-rbrace" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarNotificationOptions.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -587,7 +587,6 @@
         <error line="159" column="45" source="standard:no-multi-spaces" />
         <error line="160" column="39" source="standard:no-multi-spaces" />
         <error line="161" column="40" source="standard:no-multi-spaces" />
-        <error line="271" column="1" source="standard:final-newline" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarVerificationManager.kt">
         <error line="3" column="1" source="standard:import-ordering" />

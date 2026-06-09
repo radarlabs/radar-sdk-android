@@ -174,6 +174,15 @@ internal object RadarUtils {
         return null
     }
 
+    internal fun naiveLocalIsoStringToDate(str: String?): Date? {
+        if (str == null) return null
+        return try {
+            SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).parse(str)
+        } catch (_: ParseException) {
+            null
+        }
+    }
+
     internal fun dateToISOString(date: Date?): String? {
         if (date == null) {
             return null
