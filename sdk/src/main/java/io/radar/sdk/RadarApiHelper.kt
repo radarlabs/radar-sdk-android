@@ -21,6 +21,8 @@ import javax.net.ssl.SSLException
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.security.MessageDigest
+import java.security.cert.X509Certificate
 
 // // For debugging local development server trackVerified
 // import javax.net.ssl.SSLContext
@@ -73,6 +75,41 @@ internal open class RadarApiHelper(
 
     // // Custom HostnameVerifier that accepts all hostnames
     // private val hostnameVerifier = HostnameVerifier { _, _ -> true }
+
+    private fun logServerCertificateChain(urlConnection: HttpsURLConnection, host: String) {
+        try {
+            val certs = urlConnection.serverCertificates
+                .filterIsInstance<X509Certificate>()
+
+            if (certs.isEmpty()) {
+                logger?.d("📍 Radar API TLS chain | host = $host; no X509 certificates")
+                return
+            }
+
+            val chain = certs.mapIndexed { index, cert ->
+                val sha256 = cert.encoded.sha256Hex()
+                """
+            [$index]
+              subject = ${cert.subjectX500Principal.name}
+              issuer = ${cert.issuerX500Principal.name}
+              notBefore = ${cert.notBefore}
+              notAfter = ${cert.notAfter}
+              serial = ${cert.serialNumber}
+              sha256 = $sha256
+            """.trimIndent()
+            }.joinToString("\n")
+
+            logger?.d("📍 Radar API TLS chain | host = $host\n$chain")
+        } catch (e: Exception) {
+            logger?.d("📍 Radar API TLS chain unavailable | host = $host; exception = ${e.javaClass.simpleName}; message = ${e.localizedMessage}")
+        }
+    }
+
+    private fun ByteArray.sha256Hex(): String {
+        return MessageDigest.getInstance("SHA-256")
+            .digest(this)
+            .joinToString(":") { "%02X".format(it) }
+    }
 
     interface RadarApiCallback {
         fun onComplete(status: Radar.RadarStatus, res: JSONObject? = null, throwable: Throwable? = null)
@@ -141,6 +178,11 @@ internal open class RadarApiHelper(
                 }
                 if (stream) {
                     urlConnection.setChunkedStreamingMode(1024)
+                }
+
+                if (verified) {
+                    urlConnection.connect()
+                    logServerCertificateChain(urlConnection, host)
                 }
 
                 if (params != null) {

@@ -333,10 +333,10 @@ internal object RadarSettings {
         // previous values of iconColor and iconString are preserved if new fields are null
         val previousValue = getForegroundService(context)
         if (foregroundService.iconString == null) {
-           foregroundService.iconString = previousValue.iconString 
+           foregroundService.iconString = previousValue.iconString
         }
         if (foregroundService.iconColor == null) {
-           foregroundService.iconColor = previousValue.iconColor 
+           foregroundService.iconColor = previousValue.iconColor
         }
         val foregroundJson = foregroundService.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_FOREGROUND_SERVICE, foregroundJson) }
@@ -423,7 +423,7 @@ internal object RadarSettings {
     }
 
     internal fun getHost(context: Context): String {
-        return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
+        return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar-staging.com"
     }
 
     internal fun setPermissionsDenied(context: Context, denied: Boolean) {
@@ -444,7 +444,7 @@ internal object RadarSettings {
     }
 
     internal fun getVerifiedHost(context: Context): String {
-        return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api-verified.radar.io"
+        return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api-verified.radar-staging.com"
     }
 
     internal fun getDefaultVerifiedHostSecondary(): String {
