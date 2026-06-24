@@ -1,28 +1,38 @@
 package io.radar.sdk
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogType
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStreamWriter
 import java.net.ConnectException
+import java.net.Socket
 import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.UnknownHostException
+import java.security.KeyStore
+import java.security.MessageDigest
+import java.security.cert.X509Certificate
 import java.util.Scanner
 import java.util.concurrent.Executors
 import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLEngine
 import javax.net.ssl.SSLException
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.TrustManager
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509ExtendedTrustManager
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
-import java.security.MessageDigest
-import java.security.cert.X509Certificate
 
 // // For debugging local development server trackVerified
 // import javax.net.ssl.SSLContext
@@ -76,40 +86,89 @@ internal open class RadarApiHelper(
     // // Custom HostnameVerifier that accepts all hostnames
     // private val hostnameVerifier = HostnameVerifier { _, _ -> true }
 
-    private fun logServerCertificateChain(urlConnection: HttpsURLConnection, host: String) {
-        try {
-            val certs = urlConnection.serverCertificates
-                .filterIsInstance<X509Certificate>()
+    /**
+     * Builds an [SSLSocketFactory] that logs the server's presented certificate chain during the
+     * TLS handshake and then delegates to the platform default trust manager so real validation is
+     * preserved. Unlike reading [HttpsURLConnection.getServerCertificates] after the fact, this
+     * captures the chain even when the handshake ultimately fails (untrusted root, expired cert,
+     * etc.) — which is the case worth debugging. Intended for verified requests only.
+     *
+     * Extends [X509ExtendedTrustManager] (API 24+) and forwards every overload, including the
+     * hostname-aware `Socket`/`SSLEngine` variants. Android's Network Security Config
+     * (`RootTrustManager`) rejects a plain [X509TrustManager] with "Domain specific configurations
+     * require that hostname aware checkServerTrusted(...) is used", so the extended variants must be
+     * delegated for validation to pass.
+     */
+    // Delegates every check to the platform default trust manager, so validation is preserved;
+    // the custom trust manager exists only to log the presented chain mid-handshake.
+    @SuppressLint("CustomX509TrustManager")
+    @RequiresApi(Build.VERSION_CODES.N)
+    private fun loggingSslSocketFactory(host: String): SSLSocketFactory {
+        val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+        tmf.init(null as KeyStore?)
+        val defaultTrustManager = tmf.trustManagers.filterIsInstance<X509ExtendedTrustManager>().first()
 
+        val loggingTrustManager = object : X509ExtendedTrustManager() {
+            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) = defaultTrustManager.checkClientTrusted(chain, authType)
+
+            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String, socket: Socket?) = defaultTrustManager.checkClientTrusted(chain, authType, socket)
+
+            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String, engine: SSLEngine?) = defaultTrustManager.checkClientTrusted(chain, authType, engine)
+
+            // Log the presented chain, then delegate to the platform's hostname-aware validation so a
+            // bad chain still throws CertificateException — but only after we've logged it.
+            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
+                logServerCertificateChain(chain, host)
+                defaultTrustManager.checkServerTrusted(chain, authType)
+            }
+
+            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String, socket: Socket?) {
+                logServerCertificateChain(chain, host)
+                defaultTrustManager.checkServerTrusted(chain, authType, socket)
+            }
+
+            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String, engine: SSLEngine?) {
+                logServerCertificateChain(chain, host)
+                defaultTrustManager.checkServerTrusted(chain, authType, engine)
+            }
+
+            override fun getAcceptedIssuers(): Array<X509Certificate> = defaultTrustManager.acceptedIssuers
+        }
+
+        val sslContext = SSLContext.getInstance("TLS")
+        sslContext.init(null, arrayOf<TrustManager>(loggingTrustManager), null)
+        return sslContext.socketFactory
+    }
+
+    private fun logServerCertificateChain(certs: Array<X509Certificate>, host: String) {
+        try {
             if (certs.isEmpty()) {
-                logger?.d("📍 Radar API TLS chain | host = $host; no X509 certificates")
+                logger?.i("📍 Radar API TLS chain | host = $host; no X509 certificates")
                 return
             }
 
             val chain = certs.mapIndexed { index, cert ->
                 val sha256 = cert.encoded.sha256Hex()
-                """
-            [$index]
-              subject = ${cert.subjectX500Principal.name}
-              issuer = ${cert.issuerX500Principal.name}
-              notBefore = ${cert.notBefore}
-              notAfter = ${cert.notAfter}
-              serial = ${cert.serialNumber}
-              sha256 = $sha256
-            """.trimIndent()
+                listOf(
+                    "[$index]",
+                    "  subject = ${cert.subjectX500Principal.name}",
+                    "  issuer = ${cert.issuerX500Principal.name}",
+                    "  notBefore = ${cert.notBefore}",
+                    "  notAfter = ${cert.notAfter}",
+                    "  serial = ${cert.serialNumber}",
+                    "  sha256 = $sha256"
+                ).joinToString("\n")
             }.joinToString("\n")
 
-            logger?.d("📍 Radar API TLS chain | host = $host\n$chain")
+            logger?.i("📍 Radar API TLS chain | host = $host\n$chain")
         } catch (e: Exception) {
-            logger?.d("📍 Radar API TLS chain unavailable | host = $host; exception = ${e.javaClass.simpleName}; message = ${e.localizedMessage}")
+            logger?.i("📍 Radar API TLS chain unavailable | host = $host; exception = ${e.javaClass.simpleName}; message = ${e.localizedMessage}")
         }
     }
 
-    private fun ByteArray.sha256Hex(): String {
-        return MessageDigest.getInstance("SHA-256")
-            .digest(this)
-            .joinToString(":") { "%02X".format(it) }
-    }
+    private fun ByteArray.sha256Hex(): String = MessageDigest.getInstance("SHA-256")
+        .digest(this)
+        .joinToString(":") { "%02X".format(it) }
 
     interface RadarApiCallback {
         fun onComplete(status: Radar.RadarStatus, res: JSONObject? = null, throwable: Throwable? = null)
@@ -154,10 +213,10 @@ internal open class RadarApiHelper(
             val startMs = SystemClock.elapsedRealtime()
             try {
                 val urlConnection = url.openConnection() as HttpsURLConnection
-                // // For debugging local development server trackVerified
-                // // Configure SSL to accept any certificate and hostname
-                // urlConnection.sslSocketFactory = sslContext.socketFactory
-                // urlConnection.hostnameVerifier = hostnameVerifier
+                if (verified && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    // Log the server's certificate chain during the TLS handshake (validation preserved).
+                    urlConnection.sslSocketFactory = loggingSslSocketFactory(host)
+                }
                 if (headers != null) {
                     for ((key, value) in headers) {
                         try {
@@ -178,11 +237,6 @@ internal open class RadarApiHelper(
                 }
                 if (stream) {
                     urlConnection.setChunkedStreamingMode(1024)
-                }
-
-                if (verified) {
-                    urlConnection.connect()
-                    logServerCertificateChain(urlConnection, host)
                 }
 
                 if (params != null) {
@@ -216,9 +270,9 @@ internal open class RadarApiHelper(
                     }
 
                     urlConnection.doOutput = true
-                    val outputStreamWriter = OutputStreamWriter(urlConnection.outputStream)
-                    outputStreamWriter.write(params.toString())
-                    outputStreamWriter.close()
+                    OutputStreamWriter(urlConnection.outputStream).use { writer ->
+                        writer.write(params.toString())
+                    }
                 }
 
                 if (urlConnection.responseCode in 200 until 400) {
