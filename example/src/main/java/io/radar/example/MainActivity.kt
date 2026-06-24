@@ -22,7 +22,7 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
-const val PUBLISHABLE_KEY = "prj_test_pk_"
+const val PUBLISHABLE_KEY = "org_test_pk_e6d0bb91ac41b187b84f21ba18ca4e5794401997"
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
