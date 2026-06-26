@@ -9,23 +9,31 @@ import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ARRIVED_AT_WRONG_TRIP_D
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_DWELLED_IN_GEOFENCE
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_BEACON
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_GEOFENCE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_HOME
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_PLACE
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_REGION_COUNTRY
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_REGION_DMA
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_REGION_POSTAL_CODE
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_REGION_STATE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_ENTERED_WORK
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_BEACON
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_GEOFENCE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_HOME
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_PLACE
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_COUNTRY
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_DMA
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_POSTAL_CODE
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_REGION_STATE
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_EXITED_WORK
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_FAILED_FRAUD
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_FIRED_TRIP_ORDERS
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_NEARBY_PLACE_CHAIN
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STARTED_COMMUTING
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STARTED_TRIP
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STARTED_TRAVELING
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STOPPED_COMMUTING
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STOPPED_TRIP
+import io.radar.sdk.model.RadarEvent.RadarEventType.USER_STOPPED_TRAVELING
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_UPDATED_TRIP
 import org.json.JSONArray
 import org.json.JSONObject
@@ -176,34 +184,69 @@ class RadarEvent(
         USER_ENTERED_BEACON,
         /** `user.exited_beacon` */
         USER_EXITED_BEACON,
+
         /** `user.started_trip` */
         USER_STARTED_TRIP,
+
         /** `user.updated_trip` */
         USER_UPDATED_TRIP,
+
         /** `user.stopped_trip` */
         USER_STOPPED_TRIP,
+
         /** `user.approaching_trip_destination` */
         USER_APPROACHING_TRIP_DESTINATION,
+
         /** `user.arrived_at_trip_destination` */
         USER_ARRIVED_AT_TRIP_DESTINATION,
+
         /** user.arrived_at_wrong_trip_destination */
         USER_ARRIVED_AT_WRONG_TRIP_DESTINATION,
+
         /** `user.fired_trip_orders` */
         USER_FIRED_TRIP_ORDERS,
+
         /** `user.failed_fraud` */
         USER_FAILED_FRAUD,
+
+        /** `user.entered_home` */
+        USER_ENTERED_HOME,
+
+        /** `user.exited_home` */
+        USER_EXITED_HOME,
+
+        /** `user.entered_work` */
+        USER_ENTERED_WORK,
+
+        /** `user.exited_work` */
+        USER_EXITED_WORK,
+
+        /** `user.started_traveling` */
+        USER_STARTED_TRAVELING,
+
+        /** `user.stopped_traveling` */
+        USER_STOPPED_TRAVELING,
+
+        /** `user.started_commuting` */
+        USER_STARTED_COMMUTING,
+
+        /** `user.stopped_commuting` */
+        USER_STOPPED_COMMUTING
     }
 
     /**
      * The confidence levels for events.
      */
-    enum class RadarEventConfidence(val value: Int)  {
+    enum class RadarEventConfidence(val value: Int) {
         /** Unknown confidence */
         NONE(0),
+
         /** Low confidence */
         LOW(1),
+
         /** Medium confidence */
         MEDIUM(2),
+
         /** High confidence */
         HIGH(3)
     }
@@ -214,8 +257,10 @@ class RadarEvent(
     enum class RadarEventVerification {
         /** Accept event */
         ACCEPT,
+
         /** Unverify event */
         UNVERIFY,
+
         /** Reject event */
         REJECT
     }
@@ -278,6 +323,14 @@ class RadarEvent(
                 "user.arrived_at_wrong_trip_destination" -> USER_ARRIVED_AT_WRONG_TRIP_DESTINATION
                 "user.fired_trip_orders" -> USER_FIRED_TRIP_ORDERS
                 "user.failed_fraud" -> USER_FAILED_FRAUD
+                "user.entered_home" -> USER_ENTERED_HOME
+                "user.exited_home" -> USER_EXITED_HOME
+                "user.entered_work" -> USER_ENTERED_WORK
+                "user.exited_work" -> USER_EXITED_WORK
+                "user.started_traveling" -> USER_STARTED_TRAVELING
+                "user.stopped_traveling" -> USER_STOPPED_TRAVELING
+                "user.started_commuting" -> USER_STARTED_COMMUTING
+                "user.stopped_commuting" -> USER_STOPPED_COMMUTING
                 else -> CONVERSION
             }
             var conversionName: String? = null
@@ -317,7 +370,7 @@ class RadarEvent(
             }
 
             val replayed = obj.optBoolean(FIELD_REPLAYED)
-            
+
             val metadataStr = obj.optString(FIELD_METADATA)
             val metadataJson = if (!metadataStr.isNullOrEmpty()) {
                 try {
@@ -349,7 +402,7 @@ class RadarEvent(
         }
 
         @JvmStatic
-        fun toJson(events: Array<RadarEvent> ?): JSONArray? {
+        fun toJson(events: Array<RadarEvent>?): JSONArray? {
             if (events == null) {
                 return null
             }
@@ -362,34 +415,40 @@ class RadarEvent(
         }
 
         @JvmStatic
-        fun stringForType(type: RadarEventType): String? {
-            return when (type) {
-                USER_ENTERED_GEOFENCE -> "user.entered_geofence"
-                USER_EXITED_GEOFENCE -> "user.exited_geofence"
-                USER_DWELLED_IN_GEOFENCE -> "user.dwelled_in_geofence"
-                USER_ENTERED_PLACE -> "user.entered_place"
-                USER_EXITED_PLACE -> "user.exited_place"
-                USER_ENTERED_REGION_COUNTRY -> "user.entered_region_country"
-                USER_EXITED_REGION_COUNTRY -> "user.exited_region_country"
-                USER_ENTERED_REGION_DMA -> "user.entered_region_dma"
-                USER_EXITED_REGION_DMA -> "user.exited_region_dma"
-                USER_ENTERED_REGION_STATE -> "user.entered_region_state"
-                USER_EXITED_REGION_STATE -> "user.exited_region_state"
-                USER_ENTERED_REGION_POSTAL_CODE -> "user.entered_region_postal_code"
-                USER_EXITED_REGION_POSTAL_CODE -> "user.exited_region_postal_code"
-                USER_NEARBY_PLACE_CHAIN -> "user.nearby_place_chain"
-                USER_ENTERED_BEACON -> "user.entered_beacon"
-                USER_EXITED_BEACON -> "user.exited_beacon"
-                USER_STARTED_TRIP -> "user.started_trip"
-                USER_UPDATED_TRIP -> "user.updated_trip"
-                USER_STOPPED_TRIP -> "user.stopped_trip"
-                USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
-                USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
-                USER_ARRIVED_AT_WRONG_TRIP_DESTINATION -> "user.arrived_at_wrong_trip_destination"
-                USER_FIRED_TRIP_ORDERS -> "user.fired_trip_orders"
-                USER_FAILED_FRAUD -> "user.failed_fraud"
-                else -> null
-            }
+        fun stringForType(type: RadarEventType): String? = when (type) {
+            USER_ENTERED_GEOFENCE -> "user.entered_geofence"
+            USER_EXITED_GEOFENCE -> "user.exited_geofence"
+            USER_DWELLED_IN_GEOFENCE -> "user.dwelled_in_geofence"
+            USER_ENTERED_PLACE -> "user.entered_place"
+            USER_EXITED_PLACE -> "user.exited_place"
+            USER_ENTERED_REGION_COUNTRY -> "user.entered_region_country"
+            USER_EXITED_REGION_COUNTRY -> "user.exited_region_country"
+            USER_ENTERED_REGION_DMA -> "user.entered_region_dma"
+            USER_EXITED_REGION_DMA -> "user.exited_region_dma"
+            USER_ENTERED_REGION_STATE -> "user.entered_region_state"
+            USER_EXITED_REGION_STATE -> "user.exited_region_state"
+            USER_ENTERED_REGION_POSTAL_CODE -> "user.entered_region_postal_code"
+            USER_EXITED_REGION_POSTAL_CODE -> "user.exited_region_postal_code"
+            USER_NEARBY_PLACE_CHAIN -> "user.nearby_place_chain"
+            USER_ENTERED_BEACON -> "user.entered_beacon"
+            USER_EXITED_BEACON -> "user.exited_beacon"
+            USER_STARTED_TRIP -> "user.started_trip"
+            USER_UPDATED_TRIP -> "user.updated_trip"
+            USER_STOPPED_TRIP -> "user.stopped_trip"
+            USER_APPROACHING_TRIP_DESTINATION -> "user.approaching_trip_destination"
+            USER_ARRIVED_AT_TRIP_DESTINATION -> "user.arrived_at_trip_destination"
+            USER_ARRIVED_AT_WRONG_TRIP_DESTINATION -> "user.arrived_at_wrong_trip_destination"
+            USER_FIRED_TRIP_ORDERS -> "user.fired_trip_orders"
+            USER_FAILED_FRAUD -> "user.failed_fraud"
+            USER_ENTERED_HOME -> "user.entered_home"
+            USER_EXITED_HOME -> "user.exited_home"
+            USER_ENTERED_WORK -> "user.entered_work"
+            USER_EXITED_WORK -> "user.exited_work"
+            USER_STARTED_TRAVELING -> "user.started_traveling"
+            USER_STOPPED_TRAVELING -> "user.stopped_traveling"
+            USER_STARTED_COMMUTING -> "user.started_commuting"
+            USER_STOPPED_COMMUTING -> "user.stopped_commuting"
+            else -> null
         }
     }
 
@@ -421,5 +480,4 @@ class RadarEvent(
 
         return obj
     }
-
 }
