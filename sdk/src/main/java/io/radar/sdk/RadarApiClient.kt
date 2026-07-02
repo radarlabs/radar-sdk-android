@@ -21,18 +21,19 @@ import io.radar.sdk.model.RadarLog
 import io.radar.sdk.model.RadarMeta
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarReplay
+import io.radar.sdk.model.RadarRevealRiskToken
 import io.radar.sdk.model.RadarRouteMatrix
 import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarTripLeg
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
-import io.radar.sdk.model.RadarRevealRiskToken
 import java.net.URLEncoder
 import java.util.EnumSet
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+
 internal class RadarApiClient(
     private val context: Context,
     private var logger: RadarLogger,
@@ -370,7 +371,7 @@ internal class RadarApiClient(
                 params.putOpt("locationMs", locationMs)
             }
 
-            putDevidParameters(params, foreground, stopped, replayed, source);
+            putDevidParameters(params, foreground, stopped, replayed, source)
 
             if (tripOptions != null) {
                 val tripOptionsObj = JSONObject()
@@ -1938,10 +1939,10 @@ internal class RadarApiClient(
         expectedCountryCode: String?,
         expectedStateCode: String?,
         reason: String?,
-        transactionId: String?) {
+        transactionId: String?
+    ) {
         params.putOpt("verified", verified)
         if (verified) {
-
             encrypted?.let {
                 params.putOpt("encrypted", encrypted)
             }

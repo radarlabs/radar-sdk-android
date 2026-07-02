@@ -2,27 +2,21 @@ package io.radar.sdk
 
 import android.content.Context
 import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import android.os.Build
 import android.os.Handler
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarEvent
-import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarRevealRiskToken
-import org.json.JSONObject
-import java.net.InetAddress
-import java.net.NetworkInterface
-import java.util.Enumeration
+import io.radar.sdk.model.RadarUser
 import kotlin.jvm.functions.Function1
+import org.json.JSONObject
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarRevealRiskManager(
     private val context: Context,
-    private val logger: RadarLogger,
+    private val logger: RadarLogger
 ) {
 
     var started = false
@@ -101,18 +95,22 @@ internal class RadarRevealRiskManager(
                                         callback?.onComplete(status, token)
                                     }
                                 }
-                            },
+                            }
                         )
                     }
                 }
             }
         }
 
-        Radar.apiClient.getConfig(usage = usage, verified = true, callback = object : RadarApiClient.RadarGetConfigApiCallback {
-            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                continueWithConfig(status, config, null)
+        Radar.apiClient.getConfig(
+            usage = usage,
+            verified = true,
+            callback = object : RadarApiClient.RadarGetConfigApiCallback {
+                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                    continueWithConfig(status, config, null)
+                }
             }
-        })
+        )
     }
 
     private fun callRevealRisk(reason: String?) {
@@ -122,13 +120,17 @@ internal class RadarRevealRiskManager(
             return
         }
 
-        revealRiskManager.revealRisk(  reason, null, object : Radar.RadarRevealRiskCallback {
-            override fun onComplete(
-                status: Radar.RadarStatus,
-                token: RadarRevealRiskToken?
-            ) {
+        revealRiskManager.revealRisk(
+            reason,
+            null,
+            object : Radar.RadarRevealRiskCallback {
+                override fun onComplete(
+                    status: Radar.RadarStatus,
+                    token: RadarRevealRiskToken?
+                ) {
+                }
             }
-        })
+        )
     }
 
     fun setExpectedJurisdiction(countryCode: String?, stateCode: String?) {
@@ -144,7 +146,7 @@ internal class RadarRevealRiskManager(
 
             // Create adapter callback that matches getFraudPayload's Function1 signature
             val getFraudPayloadCallback = object : Function1<Map<String, Any?>?, Unit> {
-                override fun invoke(result: Map<String, Any?>?): Unit {
+                override fun invoke(result: Map<String, Any?>?) {
                     callback(result)
                 }
             }
@@ -159,9 +161,11 @@ internal class RadarRevealRiskManager(
                 options["googlePlayProjectNumber"] = googlePlayProjectNumber
             }
 
-            val getFraudPayloadMethod = fraudClass.getMethod("getFraudPayload",
+            val getFraudPayloadMethod = fraudClass.getMethod(
+                "getFraudPayload",
                 java.util.Map::class.java,
-                Function1::class.java)
+                Function1::class.java
+            )
 
             getFraudPayloadMethod.invoke(fraudInstance, options, getFraudPayloadCallback)
         } catch (e: ClassNotFoundException) {

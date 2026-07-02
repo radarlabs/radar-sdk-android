@@ -1,8 +1,8 @@
 package io.radar.sdk.model
 
 import io.radar.sdk.RadarUtils
-import org.json.JSONObject
 import java.util.Date
+import org.json.JSONObject
 
 /**
  * Represents a user's reveal risk information.
@@ -53,7 +53,7 @@ class RadarRevealRiskToken(
     /**
      * The full JSON value of the token.
      */
-    val fullJson: JSONObject,
+    val fullJson: JSONObject
 ) {
     internal companion object {
         private const val FIELD_USER = "user"
@@ -91,8 +91,5 @@ class RadarRevealRiskToken(
         }
     }
 
-    fun toJson(): JSONObject {
-        return fullJson
-    }
-
+    fun toJson(): JSONObject = fullJson
 }

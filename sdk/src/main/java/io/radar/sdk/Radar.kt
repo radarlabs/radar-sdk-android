@@ -20,6 +20,7 @@ import io.radar.sdk.model.RadarGeofence
 import io.radar.sdk.model.RadarInAppMessage
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarReplay
+import io.radar.sdk.model.RadarRevealRiskToken
 import io.radar.sdk.model.RadarRouteMatrix
 import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarSdkConfiguration
@@ -27,7 +28,6 @@ import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarTripLeg
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
-import io.radar.sdk.model.RadarRevealRiskToken
 import io.radar.sdk.util.RadarLogBuffer
 import io.radar.sdk.util.RadarReplayBuffer
 import io.radar.sdk.util.RadarSimpleLogBuffer
