@@ -27,6 +27,7 @@ import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarTripLeg
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
+import io.radar.sdk.model.RadarRevealRiskToken
 import java.net.URLEncoder
 import java.util.EnumSet
 import org.json.JSONArray
@@ -123,6 +124,17 @@ internal class RadarApiClient(
 
     internal interface RadarReplayApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null)
+    }
+
+    interface RadarRevealRiskApiCallback {
+        fun onComplete(
+            status: RadarStatus,
+            res: JSONObject? = null,
+            events: Array<RadarEvent>? = null,
+            user: RadarUser? = null,
+            config: RadarConfig? = null,
+            token: RadarRevealRiskToken? = null
+        )
     }
 
     private fun headers(publishableKey: String): Map<String, String> {
@@ -316,26 +328,8 @@ internal class RadarApiClient(
         val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
         val locationMetadata = JSONObject()
         try {
-            params.putOpt("anonymous", anonymous)
-            if (anonymous) {
-                params.putOpt("deviceId", "anonymous")
-                params.putOpt("geofenceIds", JSONArray(RadarState.getGeofenceIds(context)))
-                params.putOpt("placeId", RadarState.getPlaceId(context))
-                params.putOpt("regionIds", JSONArray(RadarState.getRegionIds(context)))
-                params.putOpt("beaconIds", JSONArray(RadarState.getBeaconIds(context)))
-            } else {
-                params.putOpt("id", RadarSettings.getId(context))
-                params.putOpt("installId", RadarSettings.getInstallId(context))
-                params.putOpt("userId", RadarSettings.getUserId(context))
-                params.putOpt("deviceId", RadarUtils.getDeviceId(context))
-                params.putOpt("description", RadarSettings.getDescription(context))
-                params.putOpt("metadata", RadarSettings.getMetadata(context))
-                params.putOpt("sessionId", RadarSettings.getSessionId(context))
-                val tags = RadarSettings.getTags(context)
-                if (tags != null && tags.isNotEmpty()) {
-                    params.putOpt("userTags", JSONArray(tags.toList()))
-                }
-            }
+            putUserParameters(params, anonymous)
+
             params.putOpt("latitude", location.latitude)
             params.putOpt("longitude", location.longitude)
             var accuracy = location.accuracy
@@ -354,6 +348,7 @@ internal class RadarApiClient(
                 params.putOpt("altitude", location.getAltitude())
                 locationMetadata.putOpt("altitude", location.getAltitude())
             }
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (location.hasVerticalAccuracy() && !location.verticalAccuracyMeters.isNaN()) {
                     params.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
@@ -374,26 +369,9 @@ internal class RadarApiClient(
                 }
                 params.putOpt("locationMs", locationMs)
             }
-            params.putOpt("foreground", foreground)
-            params.putOpt("stopped", stopped)
-            params.putOpt("replayed", replayed)
-            params.putOpt("deviceType", "Android")
-            params.putOpt("deviceMake", RadarUtils.deviceMake)
-            params.putOpt("sdkVersion", RadarUtils.sdkVersion)
-            params.putOpt("deviceModel", RadarUtils.deviceModel)
-            params.putOpt("deviceOS", RadarUtils.deviceOS)
-            params.putOpt("deviceType", RadarUtils.deviceType)
-            params.putOpt("deviceMake", RadarUtils.deviceMake)
-            params.putOpt("country", RadarUtils.country)
-            params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
-            params.putOpt("source", Radar.stringForSource(source))
-            params.putOpt("lang", RadarSettings.getUserLanguage(context))
-            if (RadarSettings.isXPlatform(context)) {
-                params.putOpt("xPlatformType", RadarSettings.getXPlatformSDKType(context))
-                params.putOpt("xPlatformSDKVersion", RadarSettings.getXPlatformSDKVersion(context))
-            } else {
-                params.putOpt("xPlatformType", "Native")
-            }
+
+            putDevidParameters(params, foreground, stopped, replayed, source);
+
             if (tripOptions != null) {
                 val tripOptionsObj = JSONObject()
                 tripOptionsObj.putOpt("version", "2")
@@ -417,33 +395,9 @@ internal class RadarApiClient(
             val usingRemoteTrackingOptions = RadarSettings.getTracking(context) && RadarSettings.getRemoteTrackingOptions(context) != null
             params.putOpt("usingRemoteTrackingOptions", usingRemoteTrackingOptions)
             params.putOpt("locationServicesProvider", RadarSettings.getLocationServicesProvider(context))
-            params.putOpt("verified", verified)
-            if (verified) {
-                params.putOpt("encrypted", encrypted)
-                if (fraudPayload != null) {
-                    params.putOpt("fraudPayload", fraudPayload)
-                }
-                if (expectedCountryCode != null) {
-                    params.putOpt("expectedCountryCode", expectedCountryCode)
-                }
-                if (expectedStateCode != null) {
-                    params.putOpt("expectedStateCode", expectedStateCode)
-                }
-                if (reason != null) {
-                    params.putOpt("reason", reason)
-                }
-                if (transactionId != null) {
-                    params.putOpt("transactionId", transactionId)
-                }
-            }
-            params.putOpt("appId", context.packageName)
-            try {
-                params.putOpt("appName", context.applicationInfo.loadLabel(context.packageManager).toString())
-                val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                params.putOpt("appVersion", packageInfo.versionName)
-                params.putOpt("appBuild", packageInfo.versionCode)
-            } catch (_: Exception) {
-            }
+
+            putVerifiedParameters(params, verified, encrypted, fraudPayload, expectedCountryCode, expectedStateCode, reason, transactionId)
+            putApplicationParameters(params)
 
             if (Radar.getTrackingOptions().useMotion) {
                 locationMetadata.putOpt("motionActivityData", RadarState.getLastMotionActivity(context))
@@ -654,6 +608,130 @@ internal class RadarApiClient(
                         }
 
                         callback?.onComplete(RadarStatus.SUCCESS, res, events, user, nearbyGeofences, config, token)
+
+                        return
+                    }
+
+                    Radar.sendError(status)
+
+                    callback?.onComplete(RadarStatus.ERROR_SERVER)
+                }
+            }
+        )
+    }
+
+    internal fun revealRisk(
+        foreground: Boolean,
+        encrypted: Boolean? = false,
+        expectedCountryCode: String? = null,
+        expectedStateCode: String? = null,
+        reason: String? = null,
+        transactionId: String? = null,
+        fraudPayload: String? = null,
+        callback: RadarRevealRiskApiCallback? = null,
+        verifiedHostOverride: String? = null
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val params = JSONObject()
+        val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
+
+        try {
+            putUserParameters(params, anonymous)
+            putDevidParameters(params, foreground, null, null, null)
+            putVerifiedParameters(params, verified = true, encrypted, fraudPayload, expectedCountryCode, expectedStateCode, reason, transactionId)
+            putApplicationParameters(params)
+        } catch (e: JSONException) {
+            logger.e("Error while processing RevealRisk parameters", Radar.RadarLogType.SDK_ERROR, e)
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            return
+        }
+
+        val path = "/v1/reveal/risk"
+        val headers = headers(publishableKey)
+
+        if (anonymous) {
+            val usage = "revealRisk"
+            this.getConfig(usage)
+        }
+
+        apiHelper.request(
+            context = context,
+            method = "POST",
+            path = path,
+            headers = headers,
+            params = params,
+            sleep = true,
+            extendedTimeout = false,
+            stream = false,
+            logPayload = true,
+            verifiedHostOverride = verifiedHostOverride,
+            callback = object : RadarApiHelper.RadarApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
+                    if (status != RadarStatus.SUCCESS || res == null) {
+                        Radar.sendError(status)
+                        callback?.onComplete(status)
+                        return
+                    }
+
+                    RadarState.setLastFailedStoppedLocation(context, null)
+                    Radar.flushLogs()
+                    RadarSettings.updateLastTrackedTime(context)
+
+                    val config = RadarConfig.fromJson(res)
+
+                    val events = res.optJSONArray("events")?.let { eventsArr ->
+                        RadarEvent.fromJson(eventsArr)
+                    }
+
+                    val user = res.optJSONObject("user")?.let { userObj ->
+                        // Extract and store altitudeAdjustments from user object
+                        val altitudeAdjustmentsObj = userObj.optJSONArray("altitudeAdjustments")
+                        if (altitudeAdjustmentsObj != null) {
+                            logger.d("Stored ${altitudeAdjustmentsObj.length()} altitude adjustments from track response")
+                        }
+                        RadarState.setAltitudeAdjustments(context, altitudeAdjustmentsObj)
+                        RadarUser.fromJson(userObj)
+                    }
+
+                    val token = RadarRevealRiskToken.fromJson(res)
+
+                    user?.let {
+                        RadarState.setLastUser(context, user)
+
+                        val placeId = user.place?._id
+                        RadarState.setPlaceId(context, placeId)
+
+                        val regionIds = mutableSetOf<String>()
+                        user.country?.let { country -> regionIds.add(country._id) }
+                        user.state?.let { state -> regionIds.add(state._id) }
+                        user.dma?.let { dma -> regionIds.add(dma._id) }
+                        user.postalCode?.let { postalCode -> regionIds.add(postalCode._id) }
+                        RadarState.setRegionIds(context, regionIds)
+                    }
+
+                    if (events != null && user != null) {
+                        RadarSettings.setId(context, user._id)
+                        RadarSettings.setUserDebug(context, user.debug)
+
+                        if (events.isNotEmpty()) {
+                            Radar.sendEvents(events, user)
+                        }
+
+                        val inAppMessages = res.optJSONArray("inAppMessages")?.let { inAppMessageObj ->
+                            RadarInAppMessage.fromJsonArray(inAppMessageObj)
+                        }
+
+                        inAppMessages?.let {
+                            Radar.showInAppMessages(inAppMessages)
+                        }
+
+                        callback?.onComplete(RadarStatus.SUCCESS, res, events, user, config, token)
 
                         return
                     }
@@ -1794,5 +1872,111 @@ internal class RadarApiClient(
                 }
             }
         )
+    }
+
+    private fun putUserParameters(params: JSONObject, anonymous: Boolean) {
+        params.putOpt("anonymous", anonymous)
+        if (anonymous) {
+            params.putOpt("deviceId", "anonymous")
+            params.putOpt("geofenceIds", JSONArray(RadarState.getGeofenceIds(context)))
+            params.putOpt("placeId", RadarState.getPlaceId(context))
+            params.putOpt("regionIds", JSONArray(RadarState.getRegionIds(context)))
+            params.putOpt("beaconIds", JSONArray(RadarState.getBeaconIds(context)))
+        } else {
+            params.putOpt("id", RadarSettings.getId(context))
+            params.putOpt("installId", RadarSettings.getInstallId(context))
+            params.putOpt("userId", RadarSettings.getUserId(context))
+            params.putOpt("deviceId", RadarUtils.getDeviceId(context))
+            params.putOpt("description", RadarSettings.getDescription(context))
+            params.putOpt("metadata", RadarSettings.getMetadata(context))
+            params.putOpt("sessionId", RadarSettings.getSessionId(context))
+            val tags = RadarSettings.getTags(context)
+            if (tags != null && tags.isNotEmpty()) {
+                params.putOpt("userTags", JSONArray(tags.toList()))
+            }
+        }
+    }
+
+    private fun putDevidParameters(params: JSONObject, foreground: Boolean?, stopped: Boolean?, replayed: Boolean?, source: RadarLocationSource?) {
+        params.putOpt("foreground", foreground)
+
+        stopped?.let {
+            params.putOpt("stopped", stopped)
+        }
+
+        replayed?.let {
+            params.putOpt("replayed", replayed)
+        }
+
+        params.putOpt("deviceType", "Android")
+        params.putOpt("deviceMake", RadarUtils.deviceMake)
+        params.putOpt("sdkVersion", RadarUtils.sdkVersion)
+        params.putOpt("deviceModel", RadarUtils.deviceModel)
+        params.putOpt("deviceOS", RadarUtils.deviceOS)
+        params.putOpt("deviceType", RadarUtils.deviceType)
+        params.putOpt("deviceMake", RadarUtils.deviceMake)
+        params.putOpt("country", RadarUtils.country)
+        params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
+
+        source?.let {
+            params.putOpt("source", Radar.stringForSource(source))
+        }
+        params.putOpt("lang", RadarSettings.getUserLanguage(context))
+        if (RadarSettings.isXPlatform(context)) {
+            params.putOpt("xPlatformType", RadarSettings.getXPlatformSDKType(context))
+            params.putOpt("xPlatformSDKVersion", RadarSettings.getXPlatformSDKVersion(context))
+        } else {
+            params.putOpt("xPlatformType", "Native")
+        }
+    }
+
+    private fun putVerifiedParameters(
+        params: JSONObject,
+        verified: Boolean,
+        encrypted: Boolean?,
+        fraudPayload: String?,
+        expectedCountryCode: String?,
+        expectedStateCode: String?,
+        reason: String?,
+        transactionId: String?) {
+        params.putOpt("verified", verified)
+        if (verified) {
+
+            encrypted?.let {
+                params.putOpt("encrypted", encrypted)
+            }
+
+            fraudPayload?.let {
+                params.putOpt("fraudPayload", fraudPayload)
+            }
+
+            expectedCountryCode?.let {
+                params.putOpt("expectedCountryCode", expectedCountryCode)
+            }
+
+            expectedStateCode?.let {
+                params.putOpt("expectedStateCode", expectedStateCode)
+            }
+
+            reason?.let {
+                params.putOpt("reason", reason)
+            }
+
+            transactionId?.let {
+                params.putOpt("transactionId", transactionId)
+            }
+        }
+    }
+
+    private fun putApplicationParameters(params: JSONObject) {
+        params.putOpt("appId", context.packageName)
+        try {
+            params.putOpt("appName", context.applicationInfo.loadLabel(context.packageManager).toString())
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            params.putOpt("appVersion", packageInfo.versionName)
+            params.putOpt("appBuild", packageInfo.versionCode)
+        } catch (error: Exception) {
+            logger.e("Error putting application information into parameters.", Radar.RadarLogType.NONE, error)
+        }
     }
 }

@@ -27,6 +27,7 @@ import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarTripLeg
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
+import io.radar.sdk.model.RadarRevealRiskToken
 import io.radar.sdk.util.RadarLogBuffer
 import io.radar.sdk.util.RadarReplayBuffer
 import io.radar.sdk.util.RadarSimpleLogBuffer
@@ -114,6 +115,23 @@ object Radar {
         fun onComplete(
             status: RadarStatus,
             token: RadarVerifiedLocationToken? = null
+        )
+    }
+
+    /**
+     * Called when a track verified request succeeds, fails, or times out.
+     */
+    interface RadarRevealRiskCallback {
+
+        /**
+         * Called when a reveal risk request succeeds, fails, or times out. Receives the request status and, if successful, the user's reveal risk fraud information. Verify the token server-side using your secret key.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[token] RadarRevealRiskToken? If successful, the user's fraud risk information.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            token: RadarRevealRiskToken? = null
         )
     }
 
