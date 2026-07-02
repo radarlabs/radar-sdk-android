@@ -47,7 +47,6 @@ internal class RadarRevealRiskManager(
     ) {
         val revealRiskManager = this
         val usage = "revealRisk"
-        val autoFailover = RadarSettings.getRevealRiskAutoFailover(context)
 
         val continueWithConfig = { status: Radar.RadarStatus, config: RadarConfig?, chosenVerifiedHost: String? ->
             if (status != Radar.RadarStatus.SUCCESS || config == null) {
@@ -71,36 +70,24 @@ internal class RadarRevealRiskManager(
                         return@getFraudPayload
                     }
 
-                    val callTrackApi = { beacons: Array<RadarBeacon>? ->
-                        Radar.apiClient.track(
-                            location,
-                            RadarState.getStopped(revealRiskManager.context),
+                    val callRevealRiskApi = {
+                        Radar.apiClient.revealRisk(
                             RadarActivityLifecycleCallbacks.foreground,
-                            Radar.RadarLocationSource.FOREGROUND_LOCATION,
-                            false,
-                            beacons,
-                            true,
                             false,
                             revealRiskManager.expectedCountryCode,
                             revealRiskManager.expectedStateCode,
                             reason ?: "manual",
                             transactionId,
                             fraudPayload,
-                            callback = object : RadarApiClient.RadarTrackApiCallback {
+                            callback = object : RadarApiClient.RadarRevealRiskApiCallback {
                                 override fun onComplete(
                                     status: Radar.RadarStatus,
                                     res: JSONObject?,
                                     events: Array<RadarEvent>?,
                                     user: RadarUser?,
-                                    nearbyGeofences: Array<RadarGeofence>?,
                                     config: RadarConfig?,
                                     token: RadarRevealRiskToken?
                                 ) {
-                                    if (status == Radar.RadarStatus.SUCCESS) {
-                                        Radar.locationManager.updateTrackingFromMeta(
-                                            config?.meta
-                                        )
-                                    }
                                     if (token != null) {
                                         revealRiskManager.lastToken = token
                                         revealRiskManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
@@ -115,45 +102,17 @@ internal class RadarRevealRiskManager(
                                     }
                                 }
                             },
-                            verifiedHostOverride = chosenVerifiedHost
                         )
                     }
                 }
             }
         }
 
-        if (autoFailover) {
-            Radar.apiClient.getConfig(
-                usage = usage,
-                verified = true,
-                callback = object : RadarApiClient.RadarGetConfigApiCallback {
-                    override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                        config?.let {
-                            continueWithConfig(status, config, null)
-                            return
-                        }
-
-                        val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
-                        logger.d("trackVerified: primary verified host returned non-Radar response, retrying on secondary=$secondary")
-
-                        Radar.apiClient.getConfig(
-                            usage = usage,
-                            verified = true,
-                            verifiedHostOverride = secondary,
-                            callback = object : RadarApiClient.RadarGetConfigApiCallback {
-                                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                                    continueWithConfig(status, config, secondary)
-                                }
-                            })
-                    }
-                })
-        } else {
-            Radar.apiClient.getConfig(usage = usage, verified = true, callback = object : RadarApiClient.RadarGetConfigApiCallback {
-                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                    continueWithConfig(status, config, null)
-                }
-            })
-        }
+        Radar.apiClient.getConfig(usage = usage, verified = true, callback = object : RadarApiClient.RadarGetConfigApiCallback {
+            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                continueWithConfig(status, config, null)
+            }
+        })
     }
 
     private fun callRevealRisk(reason: String?) {
