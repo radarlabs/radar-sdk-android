@@ -11,16 +11,6 @@ import org.json.JSONObject
  */
 class RadarRevealRiskToken(
     /**
-     * The user.
-     */
-    val user: RadarUser,
-
-    /**
-     * An array of events.
-     */
-    val events: Array<RadarEvent>,
-
-    /**
      * A signed JSON Web Token (JWT) containing the user and array of events. Verify the token server-side using your secret key.
      */
     val token: String,
@@ -56,8 +46,6 @@ class RadarRevealRiskToken(
     val fullJson: JSONObject
 ) {
     internal companion object {
-        private const val FIELD_USER = "user"
-        private const val FIELD_EVENTS = "events"
         private const val FIELD_TOKEN = "token"
         private const val FIELD_EXPIRES_AT = "expiresAt"
         private const val FIELD_EXPIRES_IN = "expiresIn"
@@ -70,8 +58,6 @@ class RadarRevealRiskToken(
                 return null
             }
 
-            val user: RadarUser? = RadarUser.fromJson(obj.optJSONObject(FIELD_USER))
-            val events: Array<RadarEvent>? = RadarEvent.fromJson(obj.optJSONArray(FIELD_EVENTS))
             val token: String? = obj.optString(FIELD_TOKEN)
             val expiresAt: Date? = RadarUtils.isoStringToDate(obj.optString(FIELD_EXPIRES_AT))
             val expiresIn: Int = obj.optInt(FIELD_EXPIRES_IN)
@@ -83,11 +69,11 @@ class RadarRevealRiskToken(
             } ?: emptyArray()
             val id = obj.optString(FIELD_ID) ?: ""
 
-            if (user == null || events == null || token == null || expiresAt == null) {
+            if (token == null || expiresAt == null) {
                 return null
             }
 
-            return RadarRevealRiskToken(user, events, token, expiresAt, expiresIn, passed, failureReasons, id, obj)
+            return RadarRevealRiskToken(token, expiresAt, expiresIn, passed, failureReasons, id, obj)
         }
     }
 

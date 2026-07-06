@@ -371,7 +371,7 @@ internal class RadarApiClient(
                 params.putOpt("locationMs", locationMs)
             }
 
-            putDevidParameters(params, foreground, stopped, replayed, source)
+            putDevicParameters(params, foreground, stopped, replayed, source)
 
             if (tripOptions != null) {
                 val tripOptionsObj = JSONObject()
@@ -644,7 +644,7 @@ internal class RadarApiClient(
 
         try {
             putUserParameters(params, anonymous)
-            putDevidParameters(params, foreground, null, null, null)
+            putDevicParameters(params, foreground, null, null, null)
             putVerifiedParameters(params, verified = true, encrypted, fraudPayload, expectedCountryCode, expectedStateCode, reason, transactionId)
             putApplicationParameters(params)
         } catch (e: JSONException) {
@@ -1898,7 +1898,7 @@ internal class RadarApiClient(
         }
     }
 
-    private fun putDevidParameters(params: JSONObject, foreground: Boolean?, stopped: Boolean?, replayed: Boolean?, source: RadarLocationSource?) {
+    private fun putDevicParameters(params: JSONObject, foreground: Boolean?, stopped: Boolean?, replayed: Boolean?, source: RadarLocationSource?) {
         params.putOpt("foreground", foreground)
 
         stopped?.let {

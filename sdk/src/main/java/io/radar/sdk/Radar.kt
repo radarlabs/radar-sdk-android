@@ -566,6 +566,7 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
+    private lateinit var revealRiskManager: RadarRevealRiskManager
     private lateinit var inAppMessageManager: RadarInAppMessageManager
     internal lateinit var syncManager: RadarSyncManager
     internal lateinit var offlineEventManager: RadarOfflineEventManager
@@ -1610,6 +1611,36 @@ object Radar {
         }
 
         return this.verificationManager.started
+    }
+
+    /**
+     * Runs reveal risk for the user with device integrity information for non-location based verification use cases.
+     *
+     * @see [](https://radar.com/documentation/reveal/risk)
+     *
+     * @param[reason] An optional reason, displayed in the dashboard and reports.
+     * @param[transactionId] An optional transaction ID, displayed in the dashboard and reports.
+     * @param[callback] An optional callback.
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun revealRisk(
+        reason: String? = null,
+        transactionId: String? = null,
+        callback: RadarRevealRiskCallback? = null
+    ) {
+        if (!initialized) {
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+        this.logger.i("revealRisk()", RadarLogType.SDK_CALL)
+
+        if (!this::revealRiskManager.isInitialized) {
+            this.revealRiskManager = RadarRevealRiskManager(this.context, this.logger)
+        }
+
+        this.revealRiskManager.revealRisk(reason, transactionId, callback)
     }
 
     /**

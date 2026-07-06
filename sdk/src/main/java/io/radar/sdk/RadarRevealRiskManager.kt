@@ -18,19 +18,11 @@ internal class RadarRevealRiskManager(
     private val context: Context,
     private val logger: RadarLogger
 ) {
-
     var started = false
 
-    private val handler = Handler(this.context.mainLooper)
-    private val connectivityManager = this.context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    private var networkCallback: ConnectivityManager.NetworkCallback? = null
-    private var startedInterval = 0
-    private var runnable: Runnable? = null
     private var lastToken: RadarRevealRiskToken? = null
     private var lastTokenElapsedRealtime: Long = 0L
     private var lastTokenBeacons: Boolean = false
-    private var lastIPs: String? = null
-    private var lastIpChangedDeliveredAtMs: Long = 0L
     private var expectedCountryCode: String? = null
     private var expectedStateCode: String? = null
 
@@ -40,77 +32,52 @@ internal class RadarRevealRiskManager(
         callback: Radar.RadarRevealRiskCallback? = null
     ) {
         val revealRiskManager = this
-        val usage = "revealRisk"
 
-        val continueWithConfig = { status: Radar.RadarStatus, config: RadarConfig?, chosenVerifiedHost: String? ->
-            if (status != Radar.RadarStatus.SUCCESS || config == null) {
-                Radar.handler.post {
-                    if (status != Radar.RadarStatus.SUCCESS) {
-                        Radar.sendError(status)
-                    }
+        revealRiskManager.getFraudPayload { result ->
+            val fraudPayload = result?.get("payload") as? String
 
-                    callback?.onComplete(status)
-                }
-            } else {
-                val googlePlayProjectNumber = config.googlePlayProjectNumber
+            if (result?.containsKey("error") == true || fraudPayload == null) {
+                val error = result?.get("error") as? String ?: "Unknown error"
+                logger.e("Error getting fraud payload: $error", Radar.RadarLogType.SDK_ERROR)
+                callback?.onComplete(Radar.RadarStatus.ERROR_PLUGIN)
+                return@getFraudPayload
+            }
 
-                revealRiskManager.getFraudPayload(googlePlayProjectNumber) { result ->
-                    val fraudPayload = result?.get("payload") as? String
-
-                    if (result?.containsKey("error") == true || fraudPayload == null) {
-                        val error = result?.get("error") as? String ?: "Unknown error"
-                        logger.e("Error getting fraud payload: $error", Radar.RadarLogType.SDK_ERROR)
-                        callback?.onComplete(Radar.RadarStatus.ERROR_PLUGIN)
-                        return@getFraudPayload
-                    }
-
-                    val callRevealRiskApi = {
-                        Radar.apiClient.revealRisk(
-                            RadarActivityLifecycleCallbacks.foreground,
-                            false,
-                            revealRiskManager.expectedCountryCode,
-                            revealRiskManager.expectedStateCode,
-                            reason ?: "manual",
-                            transactionId,
-                            fraudPayload,
-                            callback = object : RadarApiClient.RadarRevealRiskApiCallback {
-                                override fun onComplete(
-                                    status: Radar.RadarStatus,
-                                    res: JSONObject?,
-                                    events: Array<RadarEvent>?,
-                                    user: RadarUser?,
-                                    config: RadarConfig?,
-                                    token: RadarRevealRiskToken?
-                                ) {
-                                    if (token != null) {
-                                        revealRiskManager.lastToken = token
-                                        revealRiskManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
-                                        revealRiskManager.lastTokenBeacons = lastTokenBeacons
-                                    }
-                                    Radar.handler.post {
-                                        if (status != Radar.RadarStatus.SUCCESS) {
-                                            Radar.sendError(status)
-                                        }
-
-                                        callback?.onComplete(status, token)
-                                    }
-                                }
+            val callRevealRiskApi = {
+                Radar.apiClient.revealRisk(
+                    RadarActivityLifecycleCallbacks.foreground,
+                    false,
+                    revealRiskManager.expectedCountryCode,
+                    revealRiskManager.expectedStateCode,
+                    reason ?: "manual",
+                    transactionId,
+                    fraudPayload,
+                    callback = object : RadarApiClient.RadarRevealRiskApiCallback {
+                        override fun onComplete(
+                            status: Radar.RadarStatus,
+                            res: JSONObject?,
+                            events: Array<RadarEvent>?,
+                            user: RadarUser?,
+                            config: RadarConfig?,
+                            token: RadarRevealRiskToken?
+                        ) {
+                            if (token != null) {
+                                revealRiskManager.lastToken = token
+                                revealRiskManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
+                                revealRiskManager.lastTokenBeacons = lastTokenBeacons
                             }
-                        )
+                            Radar.handler.post {
+                                if (status != Radar.RadarStatus.SUCCESS) {
+                                    Radar.sendError(status)
+                                }
+
+                                callback?.onComplete(status, token)
+                            }
+                        }
                     }
-                }
+                )
             }
         }
-
-        Radar.apiClient.getConfig(
-            usage = usage,
-            verified = true,
-            callback = object : RadarApiClient.RadarGetConfigApiCallback {
-                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                    continueWithConfig(status, config, null)
-                }
-            }
-        )
     }
 
     private fun callRevealRisk(reason: String?) {
@@ -138,7 +105,7 @@ internal class RadarRevealRiskManager(
         this.expectedStateCode = stateCode
     }
 
-    private fun getFraudPayload(googlePlayProjectNumber: Long?, callback: (Map<String, Any?>?) -> Unit) {
+    private fun getFraudPayload(callback: (Map<String, Any?>?) -> Unit) {
         try {
             val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
             val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
@@ -155,11 +122,6 @@ internal class RadarRevealRiskManager(
             val options = mutableMapOf<String, Any?>(
                 "context" to context
             )
-
-            // Add integrity-related parameters if available
-            if (googlePlayProjectNumber != null) {
-                options["googlePlayProjectNumber"] = googlePlayProjectNumber
-            }
 
             val getFraudPayloadMethod = fraudClass.getMethod(
                 "getFraudPayload",
