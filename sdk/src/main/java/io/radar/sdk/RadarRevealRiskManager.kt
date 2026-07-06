@@ -1,9 +1,7 @@
 package io.radar.sdk
 
 import android.content.Context
-import android.net.ConnectivityManager
 import android.os.Build
-import android.os.Handler
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.RadarConfig
