@@ -1,7 +1,5 @@
 package io.radar.sdk.model
 
-import io.radar.sdk.RadarUtils
-import java.util.Date
 import org.json.JSONObject
 
 /**
