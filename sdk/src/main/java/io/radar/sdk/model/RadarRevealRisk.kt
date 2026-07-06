@@ -31,17 +31,17 @@ data class RadarRevealRisk(
     val expiresIn: Int,
 
     /**
-    The details risk information for the device
+     * The details risk information for the device
      */
     val risk: Risk,
 
     /**
-    The information collected about the network
+     * The information collected about the network
      */
     val network: Network,
 
     /**
-    The information collected about the device
+     * The information collected about the device
      */
     val device: Device,
 
@@ -131,21 +131,24 @@ data class RadarRevealRisk(
         private const val PRIVACY_TITLE = "privacy"
         private const val DEVICE_TITLE = "device"
         private const val ASN_TITLE = "asn"
+
         // base constant
         private const val FIELD_ID = "_id"
         private const val FIELD_TOKEN = "token"
         private const val FIELD_EXPIRES_IN = "expiresIn"
         private const val FIELD_EXPIRES_AT = "expiresAt"
+
         // risk constants
         private const val FIELD_FRAUD_LEVEL = "level"
         private const val FIELD_FRAUD_SCORE = "score"
         private const val FIELD_FAILURE_REASONS = "failureReasons"
+
         // networking constants
         // ip address constants
         private const val FIELD_COUNTRY_CODE = "countryCode"
         private const val FIELD_COUNTRY = "country"
         private const val FIELD_COUNTRY_FLAG = "countryFlag"
-        private const val FIELD_STATE ="state"
+        private const val FIELD_STATE = "state"
         private const val FIELD_CITY = "city"
         private const val FIELD_POSTAL_CODE = "postalCode"
         private const val FIELD_LATITUDE = "latitude"
@@ -159,9 +162,11 @@ data class RadarRevealRisk(
         private const val FIELD_STATE_ALLOWED = "stateAllowed"
         private const val FIELD_COUNTRY_ALLOWED = "countryAllowed"
         private const val FIELD_LAYER = "layer"
+
         // geometry constants
         private const val FIELD_TYPE = "type"
         private const val FIELD_COORDINATES = "coordinates"
+
         // privacy constants
         private const val FIELD_HOSTING = "hosting"
         private const val FIELD_PROXY = "proxy"
@@ -170,11 +175,13 @@ data class RadarRevealRisk(
         private const val FIELD_TOR = "tor"
         private const val FIELD_VPN = "vpn"
         private const val FIELD_RESIDENTIAL_PROXY = "residentialProxy"
+
         // asn constants
         private const val FIELD_ASN = "asn"
         private const val FIELD_DOMAIN = "domain"
         private const val FIELD_NAME = "name"
         private const val FIELD_NETWORK = "network"
+
         // device constants
         private const val FIELD_DEVICE_ID = "deviceId"
         private const val FIELD_DEVICE_TYPE = "deviceType"
@@ -244,7 +251,7 @@ data class RadarRevealRisk(
 
             val privacy = Privacy(
                 hosting = privacyJson!!.optBoolean(FIELD_HOSTING),
-                proxy =  privacyJson.optBoolean(FIELD_PROXY),
+                proxy = privacyJson.optBoolean(FIELD_PROXY),
                 relay = privacyJson.optBoolean(FIELD_RELAY),
                 service = privacyJson.optString(FIELD_SERVICE),
                 tor = privacyJson.optBoolean(FIELD_TOR),
