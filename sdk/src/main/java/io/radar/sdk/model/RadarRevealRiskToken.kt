@@ -16,19 +16,14 @@ class RadarRevealRiskToken(
     val token: String,
 
     /**
-     * The datetime when the token expires.
+     * A String indicating the current fraud level, none, low, medium, or high
      */
-    val expiresAt: Date,
+    val level: String,
 
     /**
-     * The number of seconds until the token expires.
+     * A double indicating the fraud score, this is a number from 0 to 100
      */
-    val expiresIn: Int,
-
-    /**
-     * A boolean indicating whether the user passed all jurisdiction and fraud detection checks.
-     */
-    val passed: Boolean,
+    val score: Double,
 
     /**
      * An array of failure reasons for jurisdiction and fraud detection checks.
@@ -47,9 +42,8 @@ class RadarRevealRiskToken(
 ) {
     internal companion object {
         private const val FIELD_TOKEN = "token"
-        private const val FIELD_EXPIRES_AT = "expiresAt"
-        private const val FIELD_EXPIRES_IN = "expiresIn"
-        private const val FIELD_PASSED = "passed"
+        private const val FIELD_FRAUD_LEVEL = "level"
+        private const val FIELD_FRAUD_SCORE = "score"
         private const val FIELD_FAILURE_REASONS = "failureReasons"
         private const val FIELD_ID = "_id"
 
@@ -59,9 +53,8 @@ class RadarRevealRiskToken(
             }
 
             val token: String? = obj.optString(FIELD_TOKEN)
-            val expiresAt: Date? = RadarUtils.isoStringToDate(obj.optString(FIELD_EXPIRES_AT))
-            val expiresIn: Int = obj.optInt(FIELD_EXPIRES_IN)
-            val passed: Boolean = obj.optBoolean(FIELD_PASSED)
+            val level: String = obj.optString(FIELD_FRAUD_LEVEL)
+            val score: Double = obj.optDouble(FIELD_FRAUD_SCORE)
             val failureReasons = obj.optJSONArray(FIELD_FAILURE_REASONS)?.let { failureReasons ->
                 Array<String>(failureReasons.length()) {
                     failureReasons.optString(it)
@@ -69,11 +62,11 @@ class RadarRevealRiskToken(
             } ?: emptyArray()
             val id = obj.optString(FIELD_ID) ?: ""
 
-            if (token == null || expiresAt == null) {
+            if (token == null) {
                 return null
             }
 
-            return RadarRevealRiskToken(token, expiresAt, expiresIn, passed, failureReasons, id, obj)
+            return RadarRevealRiskToken(token, level, score, failureReasons, id, obj)
         }
     }
 
