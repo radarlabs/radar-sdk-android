@@ -21,7 +21,7 @@ import io.radar.sdk.model.RadarLog
 import io.radar.sdk.model.RadarMeta
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarReplay
-import io.radar.sdk.model.RadarRevealRiskToken
+import io.radar.sdk.model.RadarRevealRisk
 import io.radar.sdk.model.RadarRouteMatrix
 import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarTrip
@@ -618,7 +618,7 @@ internal class RadarApiClient(
         reason: String? = null,
         transactionId: String? = null,
         fraudPayload: String? = null,
-        callback: (status: Radar.RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, config: RadarConfig?, token: RadarRevealRiskToken?) -> Unit,
+        callback: (status: Radar.RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, config: RadarConfig?, token: RadarRevealRisk?) -> Unit,
         verifiedHostOverride: String? = null
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -689,7 +689,7 @@ internal class RadarApiClient(
                         RadarUser.fromJson(userObj)
                     }
 
-                    val token = RadarRevealRiskToken.fromJson(res)
+                    val token = RadarRevealRisk.fromJson(res)
 
                     user?.let {
                         RadarState.setLastUser(context, user)

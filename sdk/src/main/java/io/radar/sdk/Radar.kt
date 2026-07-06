@@ -20,7 +20,7 @@ import io.radar.sdk.model.RadarGeofence
 import io.radar.sdk.model.RadarInAppMessage
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarReplay
-import io.radar.sdk.model.RadarRevealRiskToken
+import io.radar.sdk.model.RadarRevealRisk
 import io.radar.sdk.model.RadarRouteMatrix
 import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarSdkConfiguration
@@ -131,7 +131,7 @@ object Radar {
          */
         fun onComplete(
             status: RadarStatus,
-            token: RadarRevealRiskToken? = null
+            token: RadarRevealRisk? = null
         )
     }
 

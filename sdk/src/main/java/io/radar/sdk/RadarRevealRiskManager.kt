@@ -6,7 +6,7 @@ import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarEvent
-import io.radar.sdk.model.RadarRevealRiskToken
+import io.radar.sdk.model.RadarRevealRisk
 import io.radar.sdk.model.RadarUser
 import kotlin.jvm.functions.Function1
 import org.json.JSONObject
@@ -18,7 +18,7 @@ internal class RadarRevealRiskManager(
 ) {
     var started = false
 
-    private var lastToken: RadarRevealRiskToken? = null
+    private var lastToken: RadarRevealRisk? = null
     private var lastTokenElapsedRealtime: Long = 0L
     private var lastTokenBeacons: Boolean = false
     private var expectedCountryCode: String? = null
@@ -42,7 +42,7 @@ internal class RadarRevealRiskManager(
             }
 
             val callRevealRiskApi = {
-                val revealRiskCallback = fun (status: Radar.RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, config: RadarConfig?, token: RadarRevealRiskToken?) {
+                val revealRiskCallback = fun (status: Radar.RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, config: RadarConfig?, token: RadarRevealRisk?) {
                     if (token != null) {
                         revealRiskManager.lastToken = token
                         revealRiskManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
@@ -84,7 +84,7 @@ internal class RadarRevealRiskManager(
             object : Radar.RadarRevealRiskCallback {
                 override fun onComplete(
                     status: Radar.RadarStatus,
-                    token: RadarRevealRiskToken?
+                    token: RadarRevealRisk?
                 ) {
                 }
             }
