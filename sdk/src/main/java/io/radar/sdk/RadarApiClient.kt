@@ -127,17 +127,6 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null)
     }
 
-    interface RadarRevealRiskApiCallback {
-        fun onComplete(
-            status: RadarStatus,
-            res: JSONObject? = null,
-            events: Array<RadarEvent>? = null,
-            user: RadarUser? = null,
-            config: RadarConfig? = null,
-            token: RadarRevealRiskToken? = null
-        )
-    }
-
     private fun headers(publishableKey: String): Map<String, String> {
         val networkType = RadarUtils.getConnectionType(context)
         val applicationInfo = RadarUtils.getApplicationInfo(context)
@@ -629,12 +618,12 @@ internal class RadarApiClient(
         reason: String? = null,
         transactionId: String? = null,
         fraudPayload: String? = null,
-        callback: RadarRevealRiskApiCallback? = null,
+        callback: (status: Radar.RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, config: RadarConfig?, token: RadarRevealRiskToken?) -> Unit,
         verifiedHostOverride: String? = null
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null, null, null, null)
 
             return
         }
@@ -649,7 +638,7 @@ internal class RadarApiClient(
             putApplicationParameters(params)
         } catch (e: JSONException) {
             logger.e("Error while processing RevealRisk parameters", Radar.RadarLogType.SDK_ERROR, e)
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            callback(RadarStatus.ERROR_BAD_REQUEST, null, null, null, null, null)
             return
         }
 
@@ -676,7 +665,7 @@ internal class RadarApiClient(
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status != RadarStatus.SUCCESS || res == null) {
                         Radar.sendError(status)
-                        callback?.onComplete(status)
+                        callback(status, res, null, null, null, null)
                         return
                     }
 
@@ -732,14 +721,14 @@ internal class RadarApiClient(
                             Radar.showInAppMessages(inAppMessages)
                         }
 
-                        callback?.onComplete(RadarStatus.SUCCESS, res, events, user, config, token)
+                        callback(RadarStatus.SUCCESS, res, events, user, config, token)
 
                         return
                     }
 
                     Radar.sendError(status)
 
-                    callback?.onComplete(RadarStatus.ERROR_SERVER)
+                    callback(RadarStatus.ERROR_SERVER, null, null, null, null, null)
                 }
             }
         )

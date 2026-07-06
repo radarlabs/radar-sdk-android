@@ -42,6 +42,21 @@ internal class RadarRevealRiskManager(
             }
 
             val callRevealRiskApi = {
+                val revealRiskCallback = fun (status: Radar.RadarStatus, res: JSONObject?, events: Array<RadarEvent>?, user: RadarUser?, config: RadarConfig?, token: RadarRevealRiskToken?) {
+                    if (token != null) {
+                        revealRiskManager.lastToken = token
+                        revealRiskManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
+                        revealRiskManager.lastTokenBeacons = lastTokenBeacons
+                    }
+                    Radar.handler.post {
+                        if (status != Radar.RadarStatus.SUCCESS) {
+                            Radar.sendError(status)
+                        }
+
+                        callback?.onComplete(status, token)
+                    }
+                }
+
                 Radar.apiClient.revealRisk(
                     RadarActivityLifecycleCallbacks.foreground,
                     false,
@@ -50,29 +65,7 @@ internal class RadarRevealRiskManager(
                     reason ?: "manual",
                     transactionId,
                     fraudPayload,
-                    callback = object : RadarApiClient.RadarRevealRiskApiCallback {
-                        override fun onComplete(
-                            status: Radar.RadarStatus,
-                            res: JSONObject?,
-                            events: Array<RadarEvent>?,
-                            user: RadarUser?,
-                            config: RadarConfig?,
-                            token: RadarRevealRiskToken?
-                        ) {
-                            if (token != null) {
-                                revealRiskManager.lastToken = token
-                                revealRiskManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
-                                revealRiskManager.lastTokenBeacons = lastTokenBeacons
-                            }
-                            Radar.handler.post {
-                                if (status != Radar.RadarStatus.SUCCESS) {
-                                    Radar.sendError(status)
-                                }
-
-                                callback?.onComplete(status, token)
-                            }
-                        }
-                    }
+                    revealRiskCallback
                 )
             }
         }
