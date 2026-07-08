@@ -1,19 +1,23 @@
 package io.radar.example
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import com.google.firebase.FirebaseApp
 import io.radar.example.map.overlays.MapOverlayRegistry
@@ -39,6 +43,14 @@ import io.radar.sdk.model.RadarVerifiedLocationToken
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var permissionsStore: PermissionsStore
+
+    // Registered before STARTED per the Activity Result contract; refreshes the store on result.
+    private val startupPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            permissionsStore.refresh(this)
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
@@ -46,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         // Stores — instantiated once and injected app-wide via CompositionLocals.
         val logStore = LogStore()
         val settingsStore = SettingsStore(this)
-        val permissionsStore = PermissionsStore()
+        permissionsStore = PermissionsStore()
         val mapOverlayRegistry = MapOverlayRegistry(this)
         val tripBuilderStore = TripBuilderStore()
 
@@ -114,7 +126,39 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        requestStartupPermissions()
     }
+
+    /**
+     * Requests foreground location + notifications + activity recognition on launch, mirroring
+     * iOS. Background location ("allow all the time") is intentionally left to the settings
+     * sheet — Android 11+ requires it to follow a granted foreground request and routes to
+     * system settings, which makes for a poor first-launch experience.
+     */
+    private fun requestStartupPermissions() {
+        val needed = mutableListOf<String>()
+        if (!isGranted(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            needed += Manifest.permission.ACCESS_FINE_LOCATION
+            needed += Manifest.permission.ACCESS_COARSE_LOCATION
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !isGranted(Manifest.permission.POST_NOTIFICATIONS)
+        ) {
+            needed += Manifest.permission.POST_NOTIFICATIONS
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+            !isGranted(Manifest.permission.ACTIVITY_RECOGNITION)
+        ) {
+            needed += Manifest.permission.ACTIVITY_RECOGNITION
+        }
+        if (needed.isNotEmpty()) {
+            startupPermissionLauncher.launch(needed.toTypedArray())
+        }
+    }
+
+    private fun isGranted(permission: String): Boolean =
+        ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createCustomNotification(): Notification {
