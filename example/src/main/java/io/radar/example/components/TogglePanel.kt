@@ -28,8 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * A collapsible titled section. The chevron rotates 90° when expanded. Mirrors the iOS
- * `TogglePanel`.
+ * A collapsible titled section. The chevron rotates 90° when expanded.
  */
 @Composable
 fun TogglePanel(

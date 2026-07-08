@@ -24,8 +24,7 @@ enum class ActionButtonStyle { PRIMARY, SECONDARY, DESTRUCTIVE }
 
 /**
  * A full-width action button that fires haptic feedback and **auto-logs its own tap** to
- * the console before running [action] — making the Tests tab self-documenting. Mirrors the
- * iOS `ActionButton`.
+ * the console before running [action] — making the Tests tab self-documenting.
  */
 @Composable
 fun ActionButton(

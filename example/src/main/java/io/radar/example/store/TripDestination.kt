@@ -5,8 +5,8 @@ import org.maplibre.android.geometry.LatLng
 /**
  * A destination selected on the map (by tapping a geofence) and staged for a trip.
  *
- * Mirrors the iOS `TripDestination` enum. [TripBuilderStore] turns these into
- * `RadarTripOptions` / `RadarTripLeg`s when a trip is started.
+ * [TripBuilderStore] turns these into `RadarTripOptions` / `RadarTripLeg`s when a trip is
+ * started.
  */
 sealed class TripDestination {
     /** Stable identifier used for dedupe/selection. */

@@ -16,8 +16,8 @@ import org.maplibre.geojson.FeatureCollection
 
 /**
  * Renders the SDK's synced offline geofences from `filesDir/RadarSDK/offlineData.json` as
- * purple tappable shapes. The Android analog of iOS's `SyncedRegionSource` (which reads the
- * internal `RadarSyncManager`, not accessible from the example module).
+ * purple tappable shapes. (The internal `RadarSyncManager` isn't accessible from the example
+ * module, so this reads the offline data file directly.)
  */
 class SyncedGeofencesSource : MapOverlaySource() {
     override val id = "syncedGeofences"

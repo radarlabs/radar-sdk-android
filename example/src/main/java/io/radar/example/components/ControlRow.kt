@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-/** A settings-cell-style labeled row with trailing content. Mirrors the iOS `ControlRow`. */
+/** A settings-cell-style labeled row with trailing content. */
 @Composable
 fun ControlRow(
     label: String,

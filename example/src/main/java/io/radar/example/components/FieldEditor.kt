@@ -11,9 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 /**
- * A single-line editable text field with a trailing clear button. Mirrors the iOS
- * `FieldEditor`. State is hoisted — [onValueChange] receives every edit; [onCommit] is
- * invoked when the user is done (imeAction / focus loss handled by the caller if needed).
+ * A single-line editable text field with a trailing clear button. State is hoisted —
+ * [onValueChange] receives every edit.
  */
 @Composable
 fun FieldEditor(

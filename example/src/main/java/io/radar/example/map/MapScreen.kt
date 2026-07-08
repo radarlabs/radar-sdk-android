@@ -61,8 +61,8 @@ private const val HOST = "https://api.radar.io"
  * builder, a layer picker, and long-press mock-location. Rewrite of the original `MapView`,
  * reusing [MockableLocationEngine] and the offline-data circle helpers.
  *
- * [active] mirrors the original `disabled` toggle — the map stays composed under the other
- * tabs (alpha 0, gestures off) so it doesn't reload when switching tabs.
+ * [active] toggles gestures + visibility — the map stays composed under the other tabs
+ * (alpha 0, gestures off) so it doesn't reload when switching tabs.
  */
 @Composable
 fun MapScreen(active: Boolean, modifier: Modifier = Modifier) {

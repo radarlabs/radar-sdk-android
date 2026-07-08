@@ -1,8 +1,8 @@
 # Radar SDK Android example app — architecture
 
 This is the sample app demonstrating the Radar Android SDK. It's a Jetpack Compose +
-Material3 app, ported from the overhauled iOS example, and organized into a store/service
-layer, a pluggable map-overlay registry, and feature-per-folder UI.
+Material3 app organized into a store/service layer, a pluggable map-overlay registry, and
+feature-per-folder UI.
 
 ## Package organization
 
@@ -23,7 +23,7 @@ store/                 # Observable stores (one per concern) + value types
   TripBuilderStore.kt  # Map-driven trip selection + active-trip mirror + visualization
   TestPreset.kt        # Bundled tracking presets
   TripDestination.kt / TripEventMarker.kt  # Cross-cutting value types
-  AppStores.kt         # CompositionLocals + ProvideStores (the @EnvironmentObject analog)
+  AppStores.kt         # CompositionLocals + ProvideStores (app-wide store injection)
 
 components/            # Reusable primitives: ActionButton, TogglePanel, ControlRow, FieldEditor
 console/               # Debug tab: ConsoleView, ConsoleEntryRow, ConsoleKindUi (icon/tint)
@@ -51,17 +51,17 @@ theme/                 # Radar-branded Material3 theme
 - **Trip lifecycle lives in `TripBuilderStore`.** New trip features hang off that store
   rather than mirroring `Radar.getTrip()` elsewhere.
 
-## Platform adaptations vs. the iOS example
+## Platform notes
 
-- **Map:** MapLibre (Radar vector tiles) instead of MapKit; overlays use GeoJSON
-  sources + layers + `queryRenderedFeatures` hit-testing.
-- **No CSGN tab** (relies on iOS-only pending-notification APIs) — 3 tabs, not 4.
+- **Map:** MapLibre with Radar vector tiles; overlays use GeoJSON sources + layers +
+  `queryRenderedFeatures` hit-testing.
+- **3 tabs:** Map / Debug / Tests.
 - **Synced data** comes from `filesDir/RadarSDK/offlineData.json` (the internal
   `RadarSyncManager` isn't visible to the example module).
-- **SDK-config breakdown** is replaced by the public `Radar.getTrackingOptions()` JSON
+- **Tracking-options breakdown** uses the public `Radar.getTrackingOptions()` JSON
   (the server-driven `RadarSdkConfiguration` is `internal`).
-- **No Live Activity / Dynamic Island** — the custom foreground-service notification in
-  `MainActivity` stands in.
+- **Trip progress** surfaces through the custom foreground-service notification configured in
+  `MainActivity`.
 
 ## Setup
 

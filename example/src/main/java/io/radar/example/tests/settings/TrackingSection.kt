@@ -22,9 +22,8 @@ import io.radar.example.components.ControlRow
 import io.radar.example.store.LocalSettingsStore
 
 /**
- * Tracking status + configured tracking-options breakdown. On Android the SDK's server-driven
- * configuration is `internal`, so this shows the public `Radar.getTrackingOptions()` JSON
- * instead of the iOS SDK-config disclosure.
+ * Tracking status + configured tracking-options breakdown. The SDK's server-driven
+ * configuration is `internal`, so this shows the public `Radar.getTrackingOptions()` JSON.
  */
 @Composable
 fun TrackingSection() {

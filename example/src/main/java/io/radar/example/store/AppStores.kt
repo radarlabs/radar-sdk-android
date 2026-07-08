@@ -7,7 +7,7 @@ import io.radar.example.map.overlays.MapOverlayRegistry
 
 /**
  * The app's observable stores, instantiated once in `MainActivity` and injected app-wide
- * via [CompositionLocal]s — the Android analog of the iOS `@EnvironmentObject` pattern.
+ * via [CompositionLocal]s.
  */
 class AppStores(
     val logStore: LogStore,

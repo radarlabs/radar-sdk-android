@@ -16,7 +16,7 @@ import io.radar.sdk.model.RadarTripLeg
 import org.maplibre.android.geometry.LatLng
 
 /**
- * Map-driven trip selection + active-trip mirror. Mirrors the iOS `TripBuilderStore`.
+ * Map-driven trip selection + active-trip mirror.
  *
  * Selection state ([selectedDestinations], [pendingHit]) is populated by tapping geofences
  * on the map. Starting a trip turns the selection into a `RadarTripOptions` (single

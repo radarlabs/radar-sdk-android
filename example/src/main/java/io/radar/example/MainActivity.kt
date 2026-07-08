@@ -131,8 +131,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Requests foreground location + notifications + activity recognition on launch, mirroring
-     * iOS. Background location ("allow all the time") is intentionally left to the settings
+     * Requests foreground location + notifications + activity recognition on launch.
+     * Background location ("allow all the time") is intentionally left to the settings
      * sheet — Android 11+ requires it to follow a granted foreground request and routes to
      * system settings, which makes for a poor first-launch experience.
      */

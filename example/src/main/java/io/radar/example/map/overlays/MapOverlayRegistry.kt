@@ -11,8 +11,7 @@ import org.maplibre.android.geometry.LatLng
 
 /**
  * Central registry of map overlay sources. `MapScreen` observes [renderVersion] to know when
- * to re-apply sources to the style. Enabled-state persists across launches. Mirrors the iOS
- * `MapOverlayRegistry`.
+ * to re-apply sources to the style. Enabled-state persists across launches.
  *
  * During an active trip ([isInTripMode] = true), only [MapOverlaySource.isTripModeWhitelisted]
  * sources render — the map focuses on the trip.

@@ -10,8 +10,8 @@ import org.maplibre.android.style.layers.PropertyFactory
 import org.maplibre.geojson.Feature
 
 /**
- * A single producer of map content that can be toggled on/off independently. Mirrors the
- * iOS `MapOverlaySource` protocol, adapted to MapLibre's source+layer model.
+ * A single producer of map content that can be toggled on/off independently, built on
+ * MapLibre's source+layer model.
  *
  * Each source owns a set of [GeoJsonSource][org.maplibre.android.style.sources.GeoJsonSource]s
  * and layers on the map [Style]. The lifecycle:

@@ -23,7 +23,7 @@ val ConsoleKind.icon: ImageVector
         ConsoleKind.ERROR -> Icons.Filled.Warning
     }
 
-/** Tint per console kind — mirrors the iOS console color language. */
+/** Tint per console kind. */
 val ConsoleKind.tint: Color
     get() = when (this) {
         ConsoleKind.ACTION -> RadarColors.Blue

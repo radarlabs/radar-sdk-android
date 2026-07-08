@@ -13,8 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 
 /**
- * Runtime-permission status snapshot for the settings sheet. Mirrors the iOS
- * `PermissionsStore` (minus the iOS-only pending-notification count).
+ * Runtime-permission status snapshot for the settings sheet.
  */
 class PermissionsStore {
 

@@ -5,8 +5,7 @@ import androidx.compose.ui.graphics.Color
 /**
  * Radar-branded color palette for the example app.
  *
- * The brand accent is Radar "twilight" (#2A1688). Semantic colors mirror the iOS
- * example's console/overlay color language and are reused by [io.radar.example.store.ConsoleEntry]
+ * The brand accent is Radar "twilight" (#2A1688). Semantic colors are reused by the console
  * and the map overlay sources.
  */
 object RadarColors {

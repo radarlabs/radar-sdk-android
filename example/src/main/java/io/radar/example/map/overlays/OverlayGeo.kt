@@ -12,7 +12,7 @@ import kotlin.coroutines.resume
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** Shared ARGB colors for map overlays, mirroring the iOS overlay color language. */
+/** Shared ARGB colors for map overlays. */
 object OverlayColors {
     val Green = 0xFF16A34A.toInt() // nearby geofences
     val Teal = 0xFF0D9488.toInt() // nearby places

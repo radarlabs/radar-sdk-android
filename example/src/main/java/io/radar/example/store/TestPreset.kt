@@ -4,8 +4,7 @@ import io.radar.sdk.RadarTrackingOptions
 
 /**
  * A bundled scenario for functional testing. Applying one writes identity + tracking
- * state through to the SDK in a single tap (see [SettingsStore.apply]). Mirrors the iOS
- * `TestPreset`.
+ * state through to the SDK in a single tap (see [SettingsStore.apply]).
  */
 data class TestPreset(
     val id: String,
