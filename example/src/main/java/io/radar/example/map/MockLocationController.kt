@@ -1,5 +1,6 @@
 package io.radar.example.map
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.os.SystemClock
@@ -23,6 +24,8 @@ class MockLocationController(context: Context) {
     var mocking by mutableStateOf(false)
         private set
 
+    // Callers gate this behind a location-permission check (see MapScreen's long-press handler).
+    @SuppressLint("MissingPermission")
     fun setMock(latLng: LatLng, onSuccess: (Location) -> Unit = {}) {
         client.setMockMode(true).addOnSuccessListener {
             val mock = Location("mock").apply {
@@ -39,6 +42,7 @@ class MockLocationController(context: Context) {
         }
     }
 
+    @SuppressLint("MissingPermission")
     fun clear() {
         client.setMockMode(false).addOnSuccessListener {
             engine.mockedLocation = null
