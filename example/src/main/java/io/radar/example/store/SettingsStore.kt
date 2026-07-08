@@ -92,7 +92,7 @@ class SettingsStore(context: Context) {
     }
 
     companion object {
-        /** Placeholder — replace or override at runtime. Safe to commit (no real key). */
+        /** Placeholder — replace or override at runtime. */
         const val DEFAULT_PUBLISHABLE_KEY = "prj_test_pk_"
 
         private const val PREFS = "radar_example_settings"
