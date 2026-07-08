@@ -10,7 +10,6 @@ import org.json.JSONObject
 
 /**
  * SDK-backed identity + tracking snapshot, plus a persisted publishable-key override.
- * Mirrors the iOS `SettingsStore`.
  *
  * The default publishable key is a placeholder — set a real test key at runtime via the
  * settings sheet (persisted to SharedPreferences), or replace [DEFAULT_PUBLISHABLE_KEY].
