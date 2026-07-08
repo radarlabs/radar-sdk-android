@@ -49,6 +49,13 @@ fun TestView() {
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(scrollState)) {
         val activity = LocalContext.current as Activity
 
+        CustomButton("revealRisk") {
+            Radar.revealRisk { status, token ->
+                println(status)
+                println(token)
+            }
+        }
+
         CustomButton("requestForegroundPermission") {
             if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)

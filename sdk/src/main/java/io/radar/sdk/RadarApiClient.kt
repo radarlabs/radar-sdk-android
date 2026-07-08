@@ -34,6 +34,12 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
+internal typealias RadarRevealRiskApiCallback = (
+    status: RadarStatus,
+    res: JSONObject?,
+    token: RadarRevealRiskToken?
+) -> Unit
+
 internal class RadarApiClient(
     private val context: Context,
     private var logger: RadarLogger,
@@ -125,17 +131,6 @@ internal class RadarApiClient(
 
     internal interface RadarReplayApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null)
-    }
-
-    interface RadarRevealRiskApiCallback {
-        fun onComplete(
-            status: RadarStatus,
-            res: JSONObject? = null,
-            events: Array<RadarEvent>? = null,
-            user: RadarUser? = null,
-            config: RadarConfig? = null,
-            token: RadarRevealRiskToken? = null
-        )
     }
 
     private fun headers(publishableKey: String): Map<String, String> {
@@ -629,12 +624,12 @@ internal class RadarApiClient(
         reason: String? = null,
         transactionId: String? = null,
         fraudPayload: String? = null,
-        callback: RadarRevealRiskApiCallback? = null,
-        verifiedHostOverride: String? = null
+        verifiedHostOverride: String? = null,
+        callback: RadarRevealRiskApiCallback,
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null)
 
             return
         }
@@ -649,11 +644,11 @@ internal class RadarApiClient(
             putApplicationParameters(params)
         } catch (e: JSONException) {
             logger.e("Error while processing RevealRisk parameters", Radar.RadarLogType.SDK_ERROR, e)
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            callback(RadarStatus.ERROR_BAD_REQUEST, null, null)
             return
         }
 
-        val path = "/v1/reveal/risk"
+        val path = "v1/reveal/risk"
         val headers = headers(publishableKey)
 
         if (anonymous) {
@@ -676,7 +671,7 @@ internal class RadarApiClient(
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status != RadarStatus.SUCCESS || res == null) {
                         Radar.sendError(status)
-                        callback?.onComplete(status)
+                        callback(status, null, null)
                         return
                     }
 
@@ -686,60 +681,14 @@ internal class RadarApiClient(
 
                     val config = RadarConfig.fromJson(res)
 
-                    val events = res.optJSONArray("events")?.let { eventsArr ->
-                        RadarEvent.fromJson(eventsArr)
-                    }
-
-                    val user = res.optJSONObject("user")?.let { userObj ->
-                        // Extract and store altitudeAdjustments from user object
-                        val altitudeAdjustmentsObj = userObj.optJSONArray("altitudeAdjustments")
-                        if (altitudeAdjustmentsObj != null) {
-                            logger.d("Stored ${altitudeAdjustmentsObj.length()} altitude adjustments from track response")
-                        }
-                        RadarState.setAltitudeAdjustments(context, altitudeAdjustmentsObj)
-                        RadarUser.fromJson(userObj)
-                    }
-
                     val token = RadarRevealRiskToken.fromJson(res)
 
-                    user?.let {
-                        RadarState.setLastUser(context, user)
+                    callback(RadarStatus.SUCCESS, res,  token)
 
-                        val placeId = user.place?._id
-                        RadarState.setPlaceId(context, placeId)
-
-                        val regionIds = mutableSetOf<String>()
-                        user.country?.let { country -> regionIds.add(country._id) }
-                        user.state?.let { state -> regionIds.add(state._id) }
-                        user.dma?.let { dma -> regionIds.add(dma._id) }
-                        user.postalCode?.let { postalCode -> regionIds.add(postalCode._id) }
-                        RadarState.setRegionIds(context, regionIds)
-                    }
-
-                    if (events != null && user != null) {
-                        RadarSettings.setId(context, user._id)
-                        RadarSettings.setUserDebug(context, user.debug)
-
-                        if (events.isNotEmpty()) {
-                            Radar.sendEvents(events, user)
-                        }
-
-                        val inAppMessages = res.optJSONArray("inAppMessages")?.let { inAppMessageObj ->
-                            RadarInAppMessage.fromJsonArray(inAppMessageObj)
-                        }
-
-                        inAppMessages?.let {
-                            Radar.showInAppMessages(inAppMessages)
-                        }
-
-                        callback?.onComplete(RadarStatus.SUCCESS, res, events, user, config, token)
-
-                        return
-                    }
 
                     Radar.sendError(status)
 
-                    callback?.onComplete(RadarStatus.ERROR_SERVER)
+                    callback(RadarStatus.ERROR_SERVER, null,null)
                 }
             }
         )
