@@ -1,22 +1,24 @@
 package io.radar.example
 
-import android.util.Log
+import io.radar.example.store.ConsoleKind
+import io.radar.example.store.LogStore
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarInAppMessageReceiver
 import io.radar.sdk.model.RadarInAppMessage
 
-class MyInAppMessageReceiver() : RadarInAppMessageReceiver {
-   override fun onNewInAppMessage(inAppMessage: RadarInAppMessage) {
-       Log.d("MyInAppMessageReceiver", "beforeInAppMessageDisplayed: ${inAppMessage.title}")
-       Radar.showInAppMessage(inAppMessage)
-   }
+/** Routes in-app message callbacks into the unified [LogStore] console. */
+class MyInAppMessageReceiver(private val logStore: LogStore) : RadarInAppMessageReceiver {
+
+    override fun onNewInAppMessage(inAppMessage: RadarInAppMessage) {
+        logStore.write(ConsoleKind.EVENT, "in-app message: ${inAppMessage.title.text}")
+        Radar.showInAppMessage(inAppMessage)
+    }
 
     override fun onInAppMessageDismissed(inAppMessage: RadarInAppMessage) {
-        Log.d("MyInAppMessageReceiver", "onInAppMessageDismissed: ${inAppMessage.title}")
+        logStore.write(ConsoleKind.LOG, "in-app message dismissed: ${inAppMessage.title.text}")
     }
 
     override fun onInAppMessageButtonClicked(inAppMessage: RadarInAppMessage) {
-        Log.d("MyInAppMessageReceiver", "onInAppMessageButtonClicked: ${inAppMessage.title}")
-        super.onInAppMessageButtonClicked(inAppMessage)
+        logStore.write(ConsoleKind.LOG, "in-app message button clicked: ${inAppMessage.title.text}")
     }
 }

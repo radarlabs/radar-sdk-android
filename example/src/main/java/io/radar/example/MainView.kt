@@ -1,76 +1,48 @@
 package io.radar.example
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import io.radar.sdk.Radar
-import org.json.JSONObject
-import java.io.File
+import io.radar.example.console.ConsoleView
+import io.radar.example.map.MapScreen
+import io.radar.example.tests.TestsView
 
+/**
+ * App shell: a 3-tab bottom bar (Map / Debug / Tests). The map stays composed under the other
+ * tabs (alpha 0, gestures off) so switching tabs doesn't reload it.
+ */
 @Composable
 fun MainView() {
-    val myRadarReceiver = MyRadarReceiver().apply {
-        Radar.setReceiver(this)
-    }
-    val tabs = listOf("Map", "Logs", "Custom", "Tests")
-    var tabIndex by remember { mutableIntStateOf(0) }
-
-    val file = File(File(LocalContext.current.filesDir, "RadarSDK"), "offlineData.json")
-    var fileData by remember { mutableStateOf("") }
-    val fileScrollState = rememberScrollState()
+    val tabs = listOf("Map", "Debug", "Tests")
+    var tabIndex by remember { mutableIntStateOf(2) }
 
     Scaffold(bottomBar = {
         PrimaryTabRow(selectedTabIndex = tabIndex, modifier = Modifier.navigationBarsPadding()) {
-            tabs.forEachIndexed { idx, tab ->
+            tabs.forEachIndexed { index, title ->
                 Tab(
-                    selected = (idx == tabIndex),
-                    onClick = { tabIndex = idx },
-                    text = { Text(tab) }
+                    selected = index == tabIndex,
+                    onClick = { tabIndex = index },
+                    text = { Text(title) },
                 )
             }
         }
     }) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            MapView(disabled = tabIndex != 0)
-
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            MapScreen(active = tabIndex == 0)
             when (tabIndex) {
-                1 -> LogsView(myRadarReceiver)
-                2 -> Column {
-                    Row {
-                        Text("Logs:", style = TextStyle(fontWeight = FontWeight.Bold))
-                        Button(onClick = {
-                            try {
-                                if (!file.exists()) throw Exception()
-                                val json = JSONObject(file.readBytes().toString(Charsets.UTF_8))
-                                fileData = json.toString(2)
-                            } catch (e: Exception) {
-                                fileData = "Error: $e"
-                            }
-                        }) { Text("Refresh") }
-                    }
-                    Text(fileData, Modifier.fillMaxWidth().verticalScroll(fileScrollState))
-                }
-                3 -> TestView()
+                1 -> ConsoleView()
+                2 -> TestsView(onViewAllLogs = { tabIndex = 1 })
             }
         }
     }

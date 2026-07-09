@@ -333,10 +333,10 @@ internal object RadarSettings {
         // previous values of iconColor and iconString are preserved if new fields are null
         val previousValue = getForegroundService(context)
         if (foregroundService.iconString == null) {
-           foregroundService.iconString = previousValue.iconString 
+           foregroundService.iconString = previousValue.iconString
         }
         if (foregroundService.iconColor == null) {
-           foregroundService.iconColor = previousValue.iconColor 
+           foregroundService.iconColor = previousValue.iconColor
         }
         val foregroundJson = foregroundService.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_FOREGROUND_SERVICE, foregroundJson) }
