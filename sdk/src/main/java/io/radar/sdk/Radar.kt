@@ -1618,19 +1618,28 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/reveal/risk)
      *
-     * @param[reason] An optional reason, displayed in the dashboard and reports.
-     * @param[transactionId] An optional transaction ID, displayed in the dashboard and reports.
      * @param[callback] An optional callback.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun revealRisk(
-        reason: String? = null,
-        transactionId: String? = null,
         callback: RadarRevealRiskCallback? = null
     ) {
+        revealRisk { status, token ->
+            callback?.onComplete(status, token)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun revealRisk(
+        callback: ((
+            status: RadarStatus,
+            token: RadarRevealRiskToken?
+        ) -> Unit)
+    ) {
         if (!initialized) {
-            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
+            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
 
             return
         }
@@ -1640,9 +1649,7 @@ object Radar {
             this.revealRiskManager = RadarRevealRiskManager(this.context, this.logger)
         }
 
-        this.revealRiskManager.revealRisk(reason, transactionId) { status, token ->
-            callback?.onComplete(status, token)
-        }
+        this.revealRiskManager.revealRisk(callback)
     }
 
     /**

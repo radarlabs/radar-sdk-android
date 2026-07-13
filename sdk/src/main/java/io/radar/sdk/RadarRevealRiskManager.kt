@@ -5,7 +5,7 @@ import android.location.Location
 import android.os.Build
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarStatus
-import io.radar.sdk.model.RadarRevealRisk
+import io.radar.sdk.model.RadarRevealRiskToken
 import kotlin.jvm.functions.Function1
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -14,11 +14,9 @@ internal class RadarRevealRiskManager(
     private val logger: RadarLogger
 ) {
     fun revealRisk(
-        reason: String? = null,
-        transactionId: String? = null,
         callback: ((
             status: RadarStatus,
-            result: RadarRevealRisk?
+            result: RadarRevealRiskToken?
         ) -> Unit)
     ) {
         val revealRiskManager = this

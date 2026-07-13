@@ -8,7 +8,7 @@ import org.json.JSONObject
  *
  * @see [](https://radar.com/documentation/fraud)
  */
-class RadarRevealRisk(
+class RadarRevealRiskToken(
     /**
      * The Radar ID of the reveal risk check.
      */
@@ -360,7 +360,7 @@ class RadarRevealRisk(
             return Array(arr.length()) { arr.optString(it) }
         }
 
-        fun fromJson(obj: JSONObject?): RadarRevealRisk? {
+        fun fromJson(obj: JSONObject?): RadarRevealRiskToken? {
             if (obj == null) {
                 return null
             }
@@ -377,7 +377,7 @@ class RadarRevealRisk(
                 null
             }
 
-            return RadarRevealRisk(id, risk, network, device, token, expiresAt, expiresIn, obj)
+            return RadarRevealRiskToken(id, risk, network, device, token, expiresAt, expiresIn, obj)
         }
     }
 

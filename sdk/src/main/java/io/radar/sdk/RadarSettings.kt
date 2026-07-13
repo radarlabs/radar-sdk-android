@@ -423,7 +423,7 @@ internal object RadarSettings {
     }
 
     internal fun getHost(context: Context): String {
-        return "https://bailey-nonnebulous-nonaccidentally.ngrok-free.dev"
+        return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
     }
 
     internal fun setPermissionsDenied(context: Context, denied: Boolean) {
@@ -444,11 +444,11 @@ internal object RadarSettings {
     }
 
     internal fun getVerifiedHost(context: Context): String {
-        return "https://bailey-nonnebulous-nonaccidentally.ngrok-free.dev"
+        return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api-verified.radar.io"
     }
 
     internal fun getDefaultVerifiedHostSecondary(): String {
-        return "https://bailey-nonnebulous-nonaccidentally.ngrok-free.dev"
+        return "https://api-verified.radar.com"
     }
 
     internal fun getUserDebug(context: Context): Boolean {

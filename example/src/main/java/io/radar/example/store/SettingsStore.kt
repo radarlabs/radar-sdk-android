@@ -93,7 +93,7 @@ class SettingsStore(context: Context) {
 
     companion object {
         /** Placeholder — replace or override at runtime. */
-        const val DEFAULT_PUBLISHABLE_KEY = "prj_test_pk_3508428416f485c5f54d8e8bb1f616ee405b1995"
+        const val DEFAULT_PUBLISHABLE_KEY = "prj_test_pk_c0ebf059d9895f428fac2295dbe83568507938e3"
 
         private const val PREFS = "radar_example_settings"
         private const val KEY_PK = "publishableKeyOverride"

@@ -21,7 +21,7 @@ import io.radar.sdk.model.RadarLog
 import io.radar.sdk.model.RadarMeta
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarReplay
-import io.radar.sdk.model.RadarRevealRisk
+import io.radar.sdk.model.RadarRevealRiskToken
 import io.radar.sdk.model.RadarRouteMatrix
 import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarTrip
@@ -616,7 +616,7 @@ internal class RadarApiClient(
         verifiedHostOverride: String? = null,
         callback: ((
             status: RadarStatus,
-            result: RadarRevealRisk?
+            result: RadarRevealRiskToken?
         ) -> Unit),
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -667,7 +667,7 @@ internal class RadarApiClient(
                         return
                     }
 
-                    val result = RadarRevealRisk.fromJson(res)
+                    val result = RadarRevealRiskToken.fromJson(res)
 
                     if (result != null) {
                         callback(RadarStatus.SUCCESS,  result)
