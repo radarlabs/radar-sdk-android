@@ -21,7 +21,7 @@ import io.radar.sdk.model.RadarLog
 import io.radar.sdk.model.RadarMeta
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarReplay
-import io.radar.sdk.model.RadarRevealRiskToken
+import io.radar.sdk.model.RadarRevealRisk
 import io.radar.sdk.model.RadarRouteMatrix
 import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarTrip
@@ -34,11 +34,6 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
-internal typealias RadarRevealRiskApiCallback = (
-    status: RadarStatus,
-    res: JSONObject?,
-    token: RadarRevealRiskToken?
-) -> Unit
 
 internal class RadarApiClient(
     private val context: Context,
@@ -617,19 +612,16 @@ internal class RadarApiClient(
     }
 
     internal fun revealRisk(
-        foreground: Boolean,
-        encrypted: Boolean? = false,
-        expectedCountryCode: String? = null,
-        expectedStateCode: String? = null,
-        reason: String? = null,
-        transactionId: String? = null,
         fraudPayload: String? = null,
         verifiedHostOverride: String? = null,
-        callback: RadarRevealRiskApiCallback,
+        callback: ((
+            status: RadarStatus,
+            result: RadarRevealRisk?
+        ) -> Unit),
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
-            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null, null)
+            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
 
             return
         }
@@ -639,12 +631,11 @@ internal class RadarApiClient(
 
         try {
             putUserParameters(params, anonymous)
-            putDevicParameters(params, foreground, null, null, null)
-            putVerifiedParameters(params, verified = true, encrypted, fraudPayload, expectedCountryCode, expectedStateCode, reason, transactionId)
+            putVerifiedParameters(params, verified = true, null, fraudPayload, null, null, null, null)
             putApplicationParameters(params)
         } catch (e: JSONException) {
             logger.e("Error while processing RevealRisk parameters", Radar.RadarLogType.SDK_ERROR, e)
-            callback(RadarStatus.ERROR_BAD_REQUEST, null, null)
+            callback(RadarStatus.ERROR_BAD_REQUEST, null)
             return
         }
 
@@ -662,33 +653,27 @@ internal class RadarApiClient(
             path = path,
             headers = headers,
             params = params,
-            sleep = true,
+            sleep = false,
             extendedTimeout = false,
             stream = false,
             logPayload = true,
+            verified = true,
             verifiedHostOverride = verifiedHostOverride,
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status != RadarStatus.SUCCESS || res == null) {
                         Radar.sendError(status)
-                        callback(status, null, null)
+                        callback(status, null)
                         return
                     }
 
-                    RadarState.setLastFailedStoppedLocation(context, null)
-                    Radar.flushLogs()
-                    RadarSettings.updateLastTrackedTime(context)
+                    val result = RadarRevealRisk.fromJson(res)
 
-                    val config = RadarConfig.fromJson(res)
-
-                    val token = RadarRevealRiskToken.fromJson(res)
-
-                    callback(RadarStatus.SUCCESS, res,  token)
-
-
-                    Radar.sendError(status)
-
-                    callback(RadarStatus.ERROR_SERVER, null,null)
+                    if (result != null) {
+                        callback(RadarStatus.SUCCESS,  result)
+                    } else {
+                        callback(RadarStatus.ERROR_SERVER,  null)
+                    }
                 }
             }
         )

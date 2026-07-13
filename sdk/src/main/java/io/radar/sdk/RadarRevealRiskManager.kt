@@ -3,36 +3,23 @@ package io.radar.sdk
 import android.content.Context
 import android.location.Location
 import android.os.Build
-import android.os.SystemClock
 import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarStatus
-import io.radar.sdk.model.RadarConfig
-import io.radar.sdk.model.RadarEvent
-import io.radar.sdk.model.RadarRevealRiskToken
-import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarRevealRisk
 import kotlin.jvm.functions.Function1
-import org.json.JSONObject
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarRevealRiskManager(
     private val context: Context,
     private val logger: RadarLogger
 ) {
-    var started = false
-
-    private var lastToken: RadarRevealRiskToken? = null
-    private var lastTokenElapsedRealtime: Long = 0L
-    private var lastTokenBeacons: Boolean = false
-    private var expectedCountryCode: String? = null
-    private var expectedStateCode: String? = null
-
     fun revealRisk(
         reason: String? = null,
         transactionId: String? = null,
         callback: ((
             status: RadarStatus,
-            token: RadarRevealRiskToken?
-        ) -> Unit)? = null
+            result: RadarRevealRisk?
+        ) -> Unit)
     ) {
         val revealRiskManager = this
 
@@ -42,41 +29,14 @@ internal class RadarRevealRiskManager(
             if (result?.containsKey("error") == true || fraudPayload == null) {
                 val error = result?.get("error") as? String ?: "Unknown error"
                 logger.e("Error getting fraud payload: $error", Radar.RadarLogType.SDK_ERROR)
-                callback?.invoke(Radar.RadarStatus.ERROR_PLUGIN, null)
+                callback(Radar.RadarStatus.ERROR_PLUGIN, null)
                 return@getFraudPayload
             }
 
             Radar.apiClient.revealRisk(
-                RadarActivityLifecycleCallbacks.foreground,
-                false,
-                revealRiskManager.expectedCountryCode,
-                revealRiskManager.expectedStateCode,
-                reason ?: "manual",
-                transactionId,
                 fraudPayload,
-                callback = {
-                        status: Radar.RadarStatus,
-                        res: JSONObject?,
-                        token: RadarRevealRiskToken?
-                    ->
-                    if (token != null) {
-                        revealRiskManager.lastToken = token
-                        revealRiskManager.lastTokenElapsedRealtime = SystemClock.elapsedRealtime()
-                        revealRiskManager.lastTokenBeacons = lastTokenBeacons
-                    }
-                    Radar.handler.post {
-                        if (status != Radar.RadarStatus.SUCCESS) {
-                            Radar.sendError(status)
-                        }
-                        callback?.invoke(status, token)
-                    }
-                })
+                callback = callback)
         }
-    }
-
-    fun setExpectedJurisdiction(countryCode: String?, stateCode: String?) {
-        this.expectedCountryCode = countryCode
-        this.expectedStateCode = stateCode
     }
 
     private fun getFraudPayload(callback: (Map<String, Any?>?) -> Unit) {

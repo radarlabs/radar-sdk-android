@@ -1629,20 +1629,8 @@ object Radar {
         transactionId: String? = null,
         callback: RadarRevealRiskCallback? = null
     ) {
-        revealRisk(reason, transactionId) { status, token ->
-            callback?.onComplete(status, token)
-        }
-    }
-
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    @JvmStatic
-    fun revealRisk(
-        reason: String? = null,
-        transactionId: String? = null,
-        callback: ((RadarStatus, RadarRevealRiskToken?) -> Unit)? = null
-    ) {
         if (!initialized) {
-            callback?.invoke(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
 
             return
         }
@@ -1652,7 +1640,9 @@ object Radar {
             this.revealRiskManager = RadarRevealRiskManager(this.context, this.logger)
         }
 
-        this.revealRiskManager.revealRisk(reason, transactionId, callback)
+        this.revealRiskManager.revealRisk(reason, transactionId) { status, token ->
+            callback?.onComplete(status, token)
+        }
     }
 
     /**
