@@ -373,7 +373,7 @@ internal class RadarApiClient(
             params.putOpt("stopped", stopped)
             params.putOpt("replayed", replayed)
             params.putOpt("source", Radar.stringForSource(source))
-            putDevicParameters(params)
+            putDeviceParameters(params)
 
             if (tripOptions != null) {
                 val tripOptionsObj = JSONObject()
@@ -659,7 +659,7 @@ internal class RadarApiClient(
         val params = JSONObject()
 
         try {
-            putDevicParameters(params)
+            putDeviceParameters(params)
             putUserParameters(params)
             putApplicationParameters(params)
         } catch (e: JSONException) {
@@ -1847,7 +1847,7 @@ internal class RadarApiClient(
         }
     }
 
-    private fun putDevicParameters(params: JSONObject) {
+    private fun putDeviceParameters(params: JSONObject) {
         params.putOpt("deviceType", "Android")
         params.putOpt("deviceMake", RadarUtils.deviceMake)
         params.putOpt("sdkVersion", RadarUtils.sdkVersion)
