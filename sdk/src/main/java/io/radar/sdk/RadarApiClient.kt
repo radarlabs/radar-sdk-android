@@ -34,7 +34,6 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
-
 internal class RadarApiClient(
     private val context: Context,
     private var logger: RadarLogger,
@@ -319,7 +318,6 @@ internal class RadarApiClient(
         val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
         val locationMetadata = JSONObject()
         try {
-
             params.putOpt("anonymous", anonymous)
             if (anonymous) {
                 params.putOpt("deviceId", "anonymous")
@@ -646,10 +644,10 @@ internal class RadarApiClient(
     internal fun revealRisk(
         fraudPayload: String? = null,
         verifiedHostOverride: String? = null,
-        callback: ((
+        callback: (
             status: RadarStatus,
             result: RadarRevealRiskToken?
-        ) -> Unit),
+        ) -> Unit
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -696,9 +694,9 @@ internal class RadarApiClient(
                     val result = RadarRevealRiskToken.fromJson(res)
 
                     if (result != null) {
-                        callback(RadarStatus.SUCCESS,  result)
+                        callback(RadarStatus.SUCCESS, result)
                     } else {
-                        callback(RadarStatus.ERROR_SERVER,  null)
+                        callback(RadarStatus.ERROR_SERVER, null)
                     }
                 }
             }

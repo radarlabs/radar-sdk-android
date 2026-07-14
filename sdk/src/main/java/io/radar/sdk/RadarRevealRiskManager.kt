@@ -14,10 +14,10 @@ internal class RadarRevealRiskManager(
     private val logger: RadarLogger
 ) {
     fun revealRisk(
-        callback: ((
+        callback: (
             status: RadarStatus,
             result: RadarRevealRiskToken?
-        ) -> Unit)
+        ) -> Unit
     ) {
         val revealRiskManager = this
 
@@ -33,7 +33,8 @@ internal class RadarRevealRiskManager(
 
             Radar.apiClient.revealRisk(
                 fraudPayload,
-                callback = callback)
+                callback = callback
+            )
         }
     }
 

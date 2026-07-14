@@ -1633,10 +1633,10 @@ object Radar {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun revealRisk(
-        callback: ((
+        callback: (
             status: RadarStatus,
             token: RadarRevealRiskToken?
-        ) -> Unit)
+        ) -> Unit
     ) {
         if (!initialized) {
             callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
