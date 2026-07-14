@@ -103,7 +103,7 @@ class RadarRevealRiskToken(
         /**
          * The IP address geocode information.
          */
-        val ipAddress: GeocodeAddress? = null,
+        val ipAddress: IpInfoAddress? = null,
 
         /**
          * The IP privacy information.
@@ -125,7 +125,7 @@ class RadarRevealRiskToken(
                     return null
                 }
 
-                val ipAddress = GeocodeAddress.fromJson(obj.optJSONObject(FIELD_IP_ADDRESS))
+                val ipAddress = IpInfoAddress.fromJson(obj.optJSONObject(FIELD_IP_ADDRESS))
                 val privacy = IpInfoPrivacy.fromJson(obj.optJSONObject(FIELD_PRIVACY))
                 val asn = IpInfoAsn.fromJson(obj.optJSONObject(FIELD_ASN))
 
@@ -190,7 +190,8 @@ class RadarRevealRiskToken(
     /**
      * Represents a geocode address.
      */
-    class GeocodeAddress(
+    class IpInfoAddress(
+        val ip: String? = null,
         val addressLabel: String? = null,
         val borough: String? = null,
         val city: String? = null,
@@ -214,7 +215,7 @@ class RadarRevealRiskToken(
         val dmaCode: String? = null,
         val street: String? = null,
         val debug: String? = null,
-        val layer: String,
+        val layer: String? = null,
         val stateAllowed: Boolean? = null,
         val countryAllowed: Boolean? = null,
         val timeZone: String? = null,
@@ -227,12 +228,13 @@ class RadarRevealRiskToken(
         val bssid: String? = null
     ) {
         internal companion object {
-            fun fromJson(obj: JSONObject?): GeocodeAddress? {
+            fun fromJson(obj: JSONObject?): IpInfoAddress? {
                 if (obj == null) {
                     return null
                 }
 
-                return GeocodeAddress(
+                return IpInfoAddress(
+                    obj.optStringOrNull("ip"),
                     obj.optStringOrNull("addressLabel"),
                     obj.optStringOrNull("borough"),
                     obj.optStringOrNull("city"),
@@ -256,7 +258,7 @@ class RadarRevealRiskToken(
                     obj.optStringOrNull("dmaCode"),
                     obj.optStringOrNull("street"),
                     obj.optStringOrNull("debug"),
-                    obj.optString("layer"),
+                    obj.optStringOrNull("layer"),
                     obj.optBooleanOrNull("stateAllowed"),
                     obj.optBooleanOrNull("countryAllowed"),
                     obj.optStringOrNull("timeZone"),
@@ -373,6 +375,8 @@ class RadarRevealRiskToken(
             } else {
                 null
             }
+
+            obj.remove("meta")
 
             return RadarRevealRiskToken(id, risk, network, device, token, expiresAt, expiresIn, obj)
         }
