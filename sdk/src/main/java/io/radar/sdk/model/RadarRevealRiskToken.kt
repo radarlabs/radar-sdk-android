@@ -4,9 +4,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Represents a user's reveal risk information.
+ * Represents device and network risk signals.
  *
- * @see [](https://radar.com/documentation/fraud)
+ * @see [](https://radar.com/documentation/sdk/fraud)
  */
 class RadarRevealRiskToken(
     /**
