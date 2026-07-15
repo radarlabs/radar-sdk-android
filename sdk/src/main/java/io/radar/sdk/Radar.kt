@@ -119,7 +119,7 @@ object Radar {
     }
 
     /**
-     * Called when a track verified request succeeds, fails, or times out.
+     * Called when a reveal risk request succeeds, fails, or times out.
      */
     interface RadarRevealRiskCallback {
 
