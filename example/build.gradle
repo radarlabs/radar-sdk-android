@@ -41,8 +41,9 @@ android {
 
 dependencies {
     implementation project(':sdk')
-    implementation project(':sdk-fraud')
-
+    if (findProject(':sdk-fraud') != null) {
+        implementation project(':sdk-fraud')
+    }
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'com.google.android.gms:play-services-location:21.3.0'
