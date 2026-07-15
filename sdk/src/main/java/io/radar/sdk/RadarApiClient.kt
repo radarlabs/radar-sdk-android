@@ -652,7 +652,6 @@ internal class RadarApiClient(
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
-
             return
         }
 
@@ -662,6 +661,9 @@ internal class RadarApiClient(
             putDeviceParameters(params)
             putUserParameters(params)
             putApplicationParameters(params)
+            if (fraudPayload != null) {
+                params.put("fraudPayload", fraudPayload)
+            }
         } catch (e: JSONException) {
             logger.e("Error while processing RevealRisk parameters", Radar.RadarLogType.SDK_ERROR, e)
             callback(RadarStatus.ERROR_BAD_REQUEST, null)
@@ -1848,8 +1850,6 @@ internal class RadarApiClient(
     }
 
     private fun putDeviceParameters(params: JSONObject) {
-        params.putOpt("deviceType", "Android")
-        params.putOpt("deviceMake", RadarUtils.deviceMake)
         params.putOpt("sdkVersion", RadarUtils.sdkVersion)
         params.putOpt("deviceModel", RadarUtils.deviceModel)
         params.putOpt("deviceOS", RadarUtils.deviceOS)

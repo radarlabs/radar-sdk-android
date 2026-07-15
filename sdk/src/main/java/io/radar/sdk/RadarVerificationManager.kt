@@ -93,7 +93,7 @@ internal class RadarVerificationManager(
                             }
 
                             RadarSDKFraud.getFraudPayload(context, logger, location, googlePlayProjectNumber) { status, fraudPayload ->
-                                if (status !== RadarStatus.SUCCESS) {
+                                if (status != RadarStatus.SUCCESS) {
                                     callback?.onComplete(RadarStatus.ERROR_PLUGIN)
                                     return@getFraudPayload
                                 }
