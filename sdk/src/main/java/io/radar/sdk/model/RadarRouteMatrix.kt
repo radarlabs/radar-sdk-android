@@ -11,7 +11,7 @@ class RadarRouteMatrix(
     /**
      * The routes between multiple origins and destinations.
      */
-    val matrix: Array<Array<RadarRoute?>?>?,
+    val matrix: Array<Array<RadarRoute?>?>?
 ) {
 
     internal companion object {
