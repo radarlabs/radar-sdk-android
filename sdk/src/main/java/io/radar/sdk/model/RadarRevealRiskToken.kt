@@ -4,7 +4,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Represents a user's reveal risk information.
+ * Represents device and network risk signals for a reveal risk check.
  *
  * @see [](https://radar.com/documentation/fraud)
  */
@@ -15,7 +15,7 @@ class RadarRevealRiskToken(
     val id: String,
 
     /**
-     * The risk assessment for the reveal risk check.
+     * The risk information for the reveal risk check.
      */
     val risk: Risk,
 
@@ -30,7 +30,7 @@ class RadarRevealRiskToken(
     val device: Device,
 
     /**
-     * A signed JSON Web Token (JWT) containing the user and array of events. Verify the token server-side using your secret key.
+     * A signed JSON Web Token (JWT) containing the risk, network, and device information. Verify the token server-side using your secret key.
      */
     val token: String? = null,
 
@@ -51,7 +51,7 @@ class RadarRevealRiskToken(
 ) {
 
     /**
-     * The risk level of the reveal risk check.
+     * Represents the risk level for a reveal risk check.
      */
     enum class RiskLevel {
         NONE,
@@ -61,16 +61,16 @@ class RadarRevealRiskToken(
     }
 
     /**
-     * Represents the risk assessment for a reveal risk check.
+     * Represents the risk information for a reveal risk check.
      */
     class Risk(
         /**
-         * The overall risk level.
+         * The risk level.
          */
         val level: RiskLevel,
 
         /**
-         * An array of fraud failure reasons.
+         * An array of risk signals.
          */
         val reasons: Array<String>
     ) {
@@ -101,19 +101,19 @@ class RadarRevealRiskToken(
      */
     class Network(
         /**
-         * The IP address geocode information.
+         * The IP address and IP geolocation for the reveal risk check.
          */
-        val ipAddress: IpInfoAddress? = null,
+        val ipAddress: IpAddress? = null,
 
         /**
-         * The IP privacy information.
+         * The IP privacy information for the reveal risk check.
          */
-        val privacy: IpInfoPrivacy? = null,
+        val privacy: Privacy? = null,
 
         /**
-         * The IP ASN information.
+         * The IP ASN information for the reveal risk check.
          */
-        val asn: IpInfoAsn? = null
+        val asn: Asn? = null
     ) {
         internal companion object {
             private const val FIELD_IP_ADDRESS = "ipAddress"
@@ -125,9 +125,9 @@ class RadarRevealRiskToken(
                     return null
                 }
 
-                val ipAddress = IpInfoAddress.fromJson(obj.optJSONObject(FIELD_IP_ADDRESS))
-                val privacy = IpInfoPrivacy.fromJson(obj.optJSONObject(FIELD_PRIVACY))
-                val asn = IpInfoAsn.fromJson(obj.optJSONObject(FIELD_ASN))
+                val ipAddress = IpAddress.fromJson(obj.optJSONObject(FIELD_IP_ADDRESS))
+                val privacy = Privacy.fromJson(obj.optJSONObject(FIELD_PRIVACY))
+                val asn = Asn.fromJson(obj.optJSONObject(FIELD_ASN))
 
                 return Network(ipAddress, privacy, asn)
             }
@@ -188,9 +188,9 @@ class RadarRevealRiskToken(
     }
 
     /**
-     * Represents a geocode address.
+     * Represents the IP address and IP geolocation for a reveal risk check.
      */
-    class IpInfoAddress(
+    class IpAddress(
         val ip: String? = null,
         val addressLabel: String? = null,
         val borough: String? = null,
@@ -228,12 +228,12 @@ class RadarRevealRiskToken(
         val bssid: String? = null
     ) {
         internal companion object {
-            fun fromJson(obj: JSONObject?): IpInfoAddress? {
+            fun fromJson(obj: JSONObject?): IpAddress? {
                 if (obj == null) {
                     return null
                 }
 
-                return IpInfoAddress(
+                return IpAddress(
                     obj.optStringOrNull("ip"),
                     obj.optStringOrNull("addressLabel"),
                     obj.optStringOrNull("borough"),
@@ -275,9 +275,9 @@ class RadarRevealRiskToken(
     }
 
     /**
-     * Represents IP privacy information.
+     * Represents the IP privacy information for a reveal risk check.
      */
-    class IpInfoPrivacy(
+    class Privacy(
         val vpn: Boolean? = null,
         val proxy: Boolean? = null,
         val tor: Boolean? = null,
@@ -287,12 +287,12 @@ class RadarRevealRiskToken(
         val residentialProxy: Boolean? = null
     ) {
         internal companion object {
-            fun fromJson(obj: JSONObject?): IpInfoPrivacy? {
+            fun fromJson(obj: JSONObject?): Privacy? {
                 if (obj == null) {
                     return null
                 }
 
-                return IpInfoPrivacy(
+                return Privacy(
                     obj.optBooleanOrNull("vpn"),
                     obj.optBooleanOrNull("proxy"),
                     obj.optBooleanOrNull("tor"),
@@ -306,9 +306,9 @@ class RadarRevealRiskToken(
     }
 
     /**
-     * Represents IP ASN information.
+     * Represents the IP ASN information for a reveal risk check.
      */
-    class IpInfoAsn(
+    class Asn(
         val asn: String? = null,
         val name: String? = null,
         val domain: String? = null,
@@ -318,12 +318,12 @@ class RadarRevealRiskToken(
         val network: String? = null
     ) {
         internal companion object {
-            fun fromJson(obj: JSONObject?): IpInfoAsn? {
+            fun fromJson(obj: JSONObject?): Asn? {
                 if (obj == null) {
                     return null
                 }
 
-                return IpInfoAsn(
+                return Asn(
                     obj.optStringOrNull("asn"),
                     obj.optStringOrNull("name"),
                     obj.optStringOrNull("domain"),
