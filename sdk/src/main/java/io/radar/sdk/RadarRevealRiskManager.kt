@@ -1,12 +1,9 @@
 package io.radar.sdk
 
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarRevealRiskToken
 
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarRevealRiskManager(
     private val context: Context,
     private val logger: RadarLogger

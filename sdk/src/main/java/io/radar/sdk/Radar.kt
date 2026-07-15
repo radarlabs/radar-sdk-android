@@ -566,7 +566,9 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
-    private lateinit var revealRiskManager: RadarRevealRiskManager
+    private val revealRiskManager: RadarRevealRiskManager by lazy {
+        RadarRevealRiskManager(this.context, this.logger)
+    }
     private lateinit var inAppMessageManager: RadarInAppMessageManager
     internal lateinit var syncManager: RadarSyncManager
     internal lateinit var offlineEventManager: RadarOfflineEventManager
@@ -1620,7 +1622,6 @@ object Radar {
      *
      * @param[callback] An optional callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun revealRisk(
         callback: RadarRevealRiskCallback? = null
@@ -1630,7 +1631,6 @@ object Radar {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun revealRisk(
         callback: (
@@ -1644,10 +1644,6 @@ object Radar {
             return
         }
         this.logger.i("revealRisk()", RadarLogType.SDK_CALL)
-
-        if (!this::revealRiskManager.isInitialized) {
-            this.revealRiskManager = RadarRevealRiskManager(this.context, this.logger)
-        }
 
         this.revealRiskManager.revealRisk(callback)
     }

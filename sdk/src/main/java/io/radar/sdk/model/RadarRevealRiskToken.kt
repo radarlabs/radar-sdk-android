@@ -359,6 +359,7 @@ class RadarRevealRiskToken(
             return Array(arr.length()) { arr.optString(it) }
         }
 
+        @JvmStatic
         fun fromJson(obj: JSONObject?): RadarRevealRiskToken? {
             if (obj == null) {
                 return null
