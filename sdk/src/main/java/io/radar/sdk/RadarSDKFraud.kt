@@ -13,7 +13,7 @@ internal class RadarSDKFraud {
 
                 // Create adapter callback that matches getFraudPayload's Function1 signature
                 val getFraudPayloadCallback = object : Function1<Map<String, Any?>?, Unit> {
-                    override fun invoke(result: Map<String, Any?>?): Unit {
+                    override fun invoke(result: Map<String, Any?>?) {
                         val fraudPayload = result?.get("payload") as? String
 
                         if (result?.containsKey("error") == true || fraudPayload == null) {
@@ -37,9 +37,11 @@ internal class RadarSDKFraud {
                     options["googlePlayProjectNumber"] = googlePlayProjectNumber
                 }
 
-                val getFraudPayloadMethod = fraudClass.getMethod("getFraudPayload",
+                val getFraudPayloadMethod = fraudClass.getMethod(
+                    "getFraudPayload",
                     java.util.Map::class.java,
-                    Function1::class.java)
+                    Function1::class.java
+                )
 
                 getFraudPayloadMethod.invoke(fraudInstance, options, getFraudPayloadCallback)
             } catch (e: ClassNotFoundException) {
