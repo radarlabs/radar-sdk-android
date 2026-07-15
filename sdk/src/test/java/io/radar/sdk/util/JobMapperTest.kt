@@ -1,13 +1,13 @@
 package io.radar.sdk.util
 
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import kotlin.random.Random
 
 @RunWith(JUnit4::class)
 class JobMapperTest {
@@ -86,6 +86,5 @@ class JobMapperTest {
         assertEquals(n + 1, jobMapper.incAndGet(jobId))
         jobMapper.clear(jobId)
         assertEquals(0, jobMapper.get(jobId))
-
     }
 }

@@ -1,7 +1,6 @@
 package io.radar.sdk.model
 
 import org.json.JSONArray
-import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -53,5 +52,4 @@ class RadarRouteGeometry(
         obj.putOpt(FIELD_COORDINATES, coordinatesArr)
         return obj
     }
-
 }

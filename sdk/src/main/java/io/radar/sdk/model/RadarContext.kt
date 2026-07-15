@@ -77,5 +77,4 @@ class RadarContext(
         obj.putOpt(FIELD_POSTAL_CODE, this.postalCode?.toJson())
         return obj
     }
-
 }

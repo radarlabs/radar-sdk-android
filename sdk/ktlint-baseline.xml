@@ -400,9 +400,7 @@
         <error line="310" column="84" source="standard:curly-spacing" />
         <error line="310" column="84" source="standard:function-start-of-body-spacing" />
         <error line="336" column="1" source="standard:indent" />
-        <error line="336" column="67" source="standard:no-trailing-spaces" />
         <error line="339" column="1" source="standard:indent" />
-        <error line="339" column="65" source="standard:no-trailing-spaces" />
         <error line="393" column="116" source="standard:no-semi" />
         <error line="425" column="52" source="standard:function-expression-body" />
         <error line="433" column="66" source="standard:function-expression-body" />
@@ -589,10 +587,6 @@
         <error line="161" column="40" source="standard:no-multi-spaces" />
         <error line="271" column="1" source="standard:final-newline" />
     </file>
-    <file name="src/main/java/io/radar/sdk/RadarVerifiedReceiver.kt">
-        <error line="34" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="35" column="1" source="standard:final-newline" />
-    </file>
     <file name="src/main/java/io/radar/sdk/model/RadarAddress.kt">
         <error line="21" column="1" source="standard:indent" />
         <error line="22" column="1" source="standard:indent" />
@@ -621,16 +615,6 @@
     <file name="src/main/java/io/radar/sdk/model/RadarChain.kt">
         <error line="91" column="1" source="standard:no-blank-line-before-rbrace" />
         <error line="92" column="1" source="standard:final-newline" />
-    </file>
-    <file name="src/main/java/io/radar/sdk/model/RadarConfig.kt">
-        <error line="22" column="1" source="standard:final-newline" />
-    </file>
-    <file name="src/main/java/io/radar/sdk/model/RadarContext.kt">
-        <error line="80" column="1" source="standard:no-blank-line-before-rbrace" />
-    </file>
-    <file name="src/main/java/io/radar/sdk/model/RadarCoordinate.kt">
-        <error line="52" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="53" column="1" source="standard:final-newline" />
     </file>
     <file name="src/main/java/io/radar/sdk/model/RadarEvent.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -801,7 +785,6 @@
     </file>
     <file name="src/main/java/io/radar/sdk/model/RadarRegion.kt">
         <error line="65" column="34" source="standard:trailing-comma-on-declaration-site" />
-        <error line="131" column="1" source="standard:no-blank-line-before-rbrace" />
     </file>
     <file name="src/main/java/io/radar/sdk/model/RadarRemoteTrackingOptions.kt">
         <error line="16" column="87" source="standard:no-multi-spaces" />
@@ -820,32 +803,11 @@
         <error line="40" column="53" source="standard:function-expression-body" />
         <error line="43" column="1" source="standard:final-newline" />
     </file>
-    <file name="src/main/java/io/radar/sdk/model/RadarRoute.kt">
-        <error line="53" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="54" column="1" source="standard:final-newline" />
-    </file>
-    <file name="src/main/java/io/radar/sdk/model/RadarRouteDistance.kt">
-        <error line="43" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="44" column="1" source="standard:final-newline" />
-    </file>
-    <file name="src/main/java/io/radar/sdk/model/RadarRouteDuration.kt">
-        <error line="43" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="44" column="1" source="standard:final-newline" />
-    </file>
-    <file name="src/main/java/io/radar/sdk/model/RadarRouteGeometry.kt">
-        <error line="4" column="1" source="standard:no-unused-imports" />
-        <error line="56" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="57" column="1" source="standard:final-newline" />
-    </file>
     <file name="src/main/java/io/radar/sdk/model/RadarRouteMatrix.kt">
-        <error line="68" column="1" source="standard:no-blank-line-before-rbrace" />
-    </file>
-    <file name="src/main/java/io/radar/sdk/model/RadarRoutes.kt">
-        <error line="77" column="1" source="standard:no-blank-line-before-rbrace" />
+        <error line="14" column="44" source="standard:trailing-comma-on-declaration-site" />
     </file>
     <file name="src/main/java/io/radar/sdk/model/RadarSdkConfiguration.kt">
         <error line="35" column="72" source="standard:trailing-comma-on-declaration-site" />
-        <error line="66" column="46" source="standard:no-semi" />
         <error line="98" column="103" source="standard:trailing-comma-on-call-site" />
         <error line="103" column="39" source="standard:wrapping" />
         <error line="103" column="83" source="standard:wrapping" />
@@ -1192,199 +1154,194 @@
     <file name="src/test/java/io/radar/sdk/RadarTest.kt">
         <error line="56" column="19" source="standard:property-naming" />
     </file>
-    <file name="src/test/java/io/radar/sdk/RadarTestUtils.kt">
-        <error line="13" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="15" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="16" column="1" source="standard:final-newline" />
-    </file>
     <file name="src/test/java/io/radar/sdk/RadarVerifiedHostOverrideTest.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="70" column="35" source="standard:wrapping" />
-        <error line="70" column="56" source="standard:wrapping" />
-        <error line="72" column="9" source="standard:wrapping" />
-        <error line="81" column="35" source="standard:wrapping" />
-        <error line="81" column="61" source="standard:wrapping" />
-        <error line="83" column="9" source="standard:wrapping" />
-        <error line="96" column="35" source="standard:wrapping" />
-        <error line="96" column="56" source="standard:wrapping" />
-        <error line="101" column="9" source="standard:wrapping" />
-        <error line="112" column="35" source="standard:wrapping" />
-        <error line="112" column="56" source="standard:wrapping" />
-        <error line="116" column="9" source="standard:wrapping" />
-        <error line="128" column="35" source="standard:wrapping" />
-        <error line="128" column="56" source="standard:wrapping" />
-        <error line="132" column="9" source="standard:wrapping" />
-        <error line="140" column="35" source="standard:wrapping" />
-        <error line="140" column="62" source="standard:wrapping" />
-        <error line="142" column="9" source="standard:wrapping" />
-        <error line="160" column="45" source="standard:trailing-comma-on-call-site" />
-        <error line="177" column="28" source="standard:trailing-comma-on-call-site" />
-        <error line="196" column="45" source="standard:trailing-comma-on-call-site" />
-    </file>
-    <file name="src/test/java/io/radar/sdk/matchers/RangeMatcher.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="14" column="92" source="standard:function-expression-body" />
-        <error line="17" column="98" source="standard:function-expression-body" />
-        <error line="20" column="63" source="standard:function-expression-body" />
-        <error line="23" column="58" source="standard:function-expression-body" />
-        <error line="33" column="51" source="standard:function-expression-body" />
-        <error line="38" column="1" source="standard:blank-line-between-when-conditions" />
-        <error line="45" column="1" source="standard:blank-line-between-when-conditions" />
-        <error line="60" column="51" source="standard:function-expression-body" />
-        <error line="65" column="1" source="standard:blank-line-between-when-conditions" />
-        <error line="72" column="1" source="standard:blank-line-between-when-conditions" />
-        <error line="79" column="1" source="standard:blank-line-between-when-conditions" />
-        <error line="90" column="56" source="standard:function-expression-body" />
-        <error line="91" column="20" source="standard:keyword-spacing" />
-        <error line="101" column="1" source="standard:final-newline" />
-    </file>
-    <file name="src/test/java/io/radar/sdk/model/RadarMetaTest.kt">
-        <error line="48" column="2" source="standard:final-newline" />
-        <error line="48" column="2" source="standard:no-trailing-spaces" />
-    </file>
-    <file name="src/test/java/io/radar/sdk/model/RadarSdkConfigurationTest.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="64" column="10" source="standard:wrapping" />
-        <error line="145" column="1" source="standard:no-blank-line-before-rbrace" />
+        <error line="49" column="22" source="standard:argument-list-wrapping" />
+        <error line="49" column="38" source="standard:argument-list-wrapping" />
+        <error line="54" column="22" source="standard:argument-list-wrapping" />
+        <error line="54" column="38" source="standard:argument-list-wrapping" />
+        <error line="66" column="35" source="standard:paren-spacing" />
+        <error line="67" column="23" source="standard:argument-list-wrapping" />
+        <error line="67" column="29" source="standard:argument-list-wrapping" />
+        <error line="67" column="34" source="standard:wrapping" />
+        <error line="67" column="35" source="standard:argument-list-wrapping" />
+        <error line="69" column="13" source="standard:wrapping" />
+        <error line="69" column="14" source="standard:argument-list-wrapping" />
+        <error line="78" column="35" source="standard:paren-spacing" />
+        <error line="79" column="23" source="standard:argument-list-wrapping" />
+        <error line="79" column="29" source="standard:argument-list-wrapping" />
+        <error line="79" column="39" source="standard:wrapping" />
+        <error line="79" column="40" source="standard:argument-list-wrapping" />
+        <error line="81" column="13" source="standard:wrapping" />
+        <error line="81" column="14" source="standard:argument-list-wrapping" />
+        <error line="94" column="35" source="standard:paren-spacing" />
+        <error line="95" column="23" source="standard:argument-list-wrapping" />
+        <error line="95" column="29" source="standard:argument-list-wrapping" />
+        <error line="95" column="34" source="standard:wrapping" />
+        <error line="95" column="35" source="standard:argument-list-wrapping" />
+        <error line="100" column="13" source="standard:wrapping" />
+        <error line="100" column="14" source="standard:argument-list-wrapping" />
+        <error line="111" column="35" source="standard:paren-spacing" />
+        <error line="112" column="23" source="standard:argument-list-wrapping" />
+        <error line="112" column="29" source="standard:argument-list-wrapping" />
+        <error line="112" column="34" source="standard:wrapping" />
+        <error line="112" column="35" source="standard:argument-list-wrapping" />
+        <error line="116" column="13" source="standard:wrapping" />
+        <error line="116" column="14" source="standard:argument-list-wrapping" />
+        <error line="128" column="35" source="standard:paren-spacing" />
+        <error line="129" column="23" source="standard:argument-list-wrapping" />
+        <error line="129" column="29" source="standard:argument-list-wrapping" />
+        <error line="129" column="34" source="standard:wrapping" />
+        <error line="129" column="35" source="standard:argument-list-wrapping" />
+        <error line="133" column="13" source="standard:wrapping" />
+        <error line="133" column="14" source="standard:argument-list-wrapping" />
+        <error line="141" column="35" source="standard:paren-spacing" />
+        <error line="142" column="23" source="standard:argument-list-wrapping" />
+        <error line="142" column="30" source="standard:argument-list-wrapping" />
+        <error line="142" column="40" source="standard:wrapping" />
+        <error line="142" column="41" source="standard:argument-list-wrapping" />
+        <error line="144" column="13" source="standard:wrapping" />
+        <error line="144" column="14" source="standard:argument-list-wrapping" />
+        <error line="155" column="42" source="standard:argument-list-wrapping" />
+        <error line="155" column="59" source="standard:argument-list-wrapping" />
+        <error line="155" column="78" source="standard:argument-list-wrapping" />
+        <error line="155" column="134" source="standard:argument-list-wrapping" />
+        <error line="155" column="152" source="standard:argument-list-wrapping" />
+        <error line="155" column="168" source="standard:argument-list-wrapping" />
+        <error line="155" column="185" source="standard:argument-list-wrapping" />
+        <error line="166" column="42" source="standard:argument-list-wrapping" />
+        <error line="166" column="59" source="standard:argument-list-wrapping" />
+        <error line="166" column="78" source="standard:argument-list-wrapping" />
+        <error line="166" column="134" source="standard:argument-list-wrapping" />
+        <error line="166" column="152" source="standard:argument-list-wrapping" />
+        <error line="166" column="168" source="standard:argument-list-wrapping" />
+        <error line="178" column="42" source="standard:argument-list-wrapping" />
+        <error line="178" column="59" source="standard:argument-list-wrapping" />
+        <error line="178" column="78" source="standard:argument-list-wrapping" />
+        <error line="178" column="134" source="standard:argument-list-wrapping" />
+        <error line="178" column="152" source="standard:argument-list-wrapping" />
+        <error line="178" column="168" source="standard:argument-list-wrapping" />
+        <error line="178" column="186" source="standard:argument-list-wrapping" />
     </file>
     <file name="src/test/java/io/radar/sdk/model/RadarTripLegTest.kt">
-        <error line="7" column="1" source="standard:no-wildcard-imports" />
-        <error line="141" column="17" source="standard:wrapping" />
-        <error line="141" column="31" source="standard:wrapping" />
-        <error line="144" column="13" source="standard:wrapping" />
-        <error line="160" column="17" source="standard:wrapping" />
-        <error line="160" column="31" source="standard:wrapping" />
-        <error line="162" column="13" source="standard:wrapping" />
-        <error line="173" column="17" source="standard:wrapping" />
-        <error line="173" column="31" source="standard:wrapping" />
-        <error line="174" column="21" source="standard:wrapping" />
-        <error line="174" column="35" source="standard:wrapping" />
+        <error line="145" column="17" source="standard:wrapping" />
+        <error line="145" column="31" source="standard:wrapping" />
+        <error line="148" column="13" source="standard:wrapping" />
+        <error line="164" column="17" source="standard:wrapping" />
+        <error line="164" column="31" source="standard:wrapping" />
+        <error line="166" column="13" source="standard:wrapping" />
         <error line="177" column="17" source="standard:wrapping" />
-        <error line="179" column="13" source="standard:wrapping" />
-        <error line="193" column="17" source="standard:wrapping" />
-        <error line="193" column="31" source="standard:wrapping" />
-        <error line="195" column="13" source="standard:wrapping" />
-        <error line="212" column="17" source="standard:wrapping" />
-        <error line="212" column="23" source="standard:wrapping" />
-        <error line="215" column="13" source="standard:wrapping" />
+        <error line="177" column="31" source="standard:wrapping" />
+        <error line="178" column="21" source="standard:wrapping" />
+        <error line="178" column="35" source="standard:wrapping" />
+        <error line="181" column="17" source="standard:wrapping" />
+        <error line="183" column="13" source="standard:wrapping" />
+        <error line="197" column="17" source="standard:wrapping" />
+        <error line="197" column="31" source="standard:wrapping" />
+        <error line="199" column="13" source="standard:wrapping" />
         <error line="216" column="17" source="standard:wrapping" />
-        <error line="216" column="31" source="standard:wrapping" />
-        <error line="218" column="21" source="standard:wrapping" />
-        <error line="218" column="30" source="standard:wrapping" />
-        <error line="220" column="25" source="standard:wrapping" />
-        <error line="220" column="32" source="standard:wrapping" />
-        <error line="223" column="21" source="standard:wrapping" />
-        <error line="224" column="17" source="standard:wrapping" />
-        <error line="225" column="21" source="standard:wrapping" />
-        <error line="225" column="32" source="standard:wrapping" />
-        <error line="226" column="25" source="standard:wrapping" />
-        <error line="226" column="39" source="standard:wrapping" />
+        <error line="216" column="23" source="standard:wrapping" />
+        <error line="219" column="13" source="standard:wrapping" />
+        <error line="220" column="17" source="standard:wrapping" />
+        <error line="220" column="31" source="standard:wrapping" />
+        <error line="222" column="21" source="standard:wrapping" />
+        <error line="222" column="30" source="standard:wrapping" />
+        <error line="224" column="25" source="standard:wrapping" />
+        <error line="224" column="32" source="standard:wrapping" />
+        <error line="227" column="21" source="standard:wrapping" />
+        <error line="228" column="17" source="standard:wrapping" />
         <error line="229" column="21" source="standard:wrapping" />
-        <error line="230" column="17" source="standard:wrapping" />
-        <error line="231" column="13" source="standard:wrapping" />
-        <error line="257" column="17" source="standard:wrapping" />
-        <error line="257" column="31" source="standard:wrapping" />
-        <error line="259" column="21" source="standard:wrapping" />
-        <error line="259" column="30" source="standard:wrapping" />
+        <error line="229" column="32" source="standard:wrapping" />
+        <error line="230" column="25" source="standard:wrapping" />
+        <error line="230" column="39" source="standard:wrapping" />
+        <error line="233" column="21" source="standard:wrapping" />
+        <error line="234" column="17" source="standard:wrapping" />
+        <error line="235" column="13" source="standard:wrapping" />
         <error line="261" column="17" source="standard:wrapping" />
-        <error line="262" column="21" source="standard:wrapping" />
-        <error line="262" column="32" source="standard:wrapping" />
-        <error line="263" column="25" source="standard:wrapping" />
-        <error line="263" column="39" source="standard:wrapping" />
+        <error line="261" column="31" source="standard:wrapping" />
+        <error line="263" column="21" source="standard:wrapping" />
+        <error line="263" column="30" source="standard:wrapping" />
+        <error line="265" column="17" source="standard:wrapping" />
         <error line="266" column="21" source="standard:wrapping" />
-        <error line="267" column="17" source="standard:wrapping" />
-        <error line="269" column="13" source="standard:wrapping" />
-        <error line="285" column="17" source="standard:wrapping" />
-        <error line="285" column="31" source="standard:wrapping" />
-        <error line="287" column="21" source="standard:wrapping" />
-        <error line="287" column="30" source="standard:wrapping" />
-        <error line="288" column="25" source="standard:wrapping" />
-        <error line="288" column="32" source="standard:wrapping" />
+        <error line="266" column="32" source="standard:wrapping" />
+        <error line="267" column="25" source="standard:wrapping" />
+        <error line="267" column="39" source="standard:wrapping" />
+        <error line="270" column="21" source="standard:wrapping" />
+        <error line="271" column="17" source="standard:wrapping" />
+        <error line="273" column="13" source="standard:wrapping" />
+        <error line="289" column="17" source="standard:wrapping" />
+        <error line="289" column="31" source="standard:wrapping" />
         <error line="291" column="21" source="standard:wrapping" />
-        <error line="292" column="17" source="standard:wrapping" />
-        <error line="293" column="21" source="standard:wrapping" />
-        <error line="293" column="32" source="standard:wrapping" />
-        <error line="294" column="25" source="standard:wrapping" />
-        <error line="294" column="39" source="standard:wrapping" />
+        <error line="291" column="30" source="standard:wrapping" />
+        <error line="292" column="25" source="standard:wrapping" />
+        <error line="292" column="32" source="standard:wrapping" />
+        <error line="295" column="21" source="standard:wrapping" />
+        <error line="296" column="17" source="standard:wrapping" />
         <error line="297" column="21" source="standard:wrapping" />
-        <error line="298" column="17" source="standard:wrapping" />
-        <error line="300" column="13" source="standard:wrapping" />
-        <error line="361" column="17" source="standard:wrapping" />
-        <error line="361" column="23" source="standard:wrapping" />
-        <error line="364" column="13" source="standard:wrapping" />
+        <error line="297" column="32" source="standard:wrapping" />
+        <error line="298" column="25" source="standard:wrapping" />
+        <error line="298" column="39" source="standard:wrapping" />
+        <error line="301" column="21" source="standard:wrapping" />
+        <error line="302" column="17" source="standard:wrapping" />
+        <error line="304" column="13" source="standard:wrapping" />
         <error line="365" column="17" source="standard:wrapping" />
-        <error line="365" column="31" source="standard:wrapping" />
-        <error line="367" column="21" source="standard:wrapping" />
-        <error line="367" column="30" source="standard:wrapping" />
-        <error line="369" column="25" source="standard:wrapping" />
-        <error line="369" column="32" source="standard:wrapping" />
-        <error line="372" column="21" source="standard:wrapping" />
-        <error line="373" column="17" source="standard:wrapping" />
-        <error line="374" column="21" source="standard:wrapping" />
-        <error line="374" column="32" source="standard:wrapping" />
-        <error line="375" column="25" source="standard:wrapping" />
-        <error line="375" column="39" source="standard:wrapping" />
+        <error line="365" column="23" source="standard:wrapping" />
+        <error line="368" column="13" source="standard:wrapping" />
+        <error line="369" column="17" source="standard:wrapping" />
+        <error line="369" column="31" source="standard:wrapping" />
+        <error line="371" column="21" source="standard:wrapping" />
+        <error line="371" column="30" source="standard:wrapping" />
+        <error line="373" column="25" source="standard:wrapping" />
+        <error line="373" column="32" source="standard:wrapping" />
+        <error line="376" column="21" source="standard:wrapping" />
+        <error line="377" column="17" source="standard:wrapping" />
         <error line="378" column="21" source="standard:wrapping" />
-        <error line="379" column="17" source="standard:wrapping" />
-        <error line="380" column="13" source="standard:wrapping" />
-        <error line="399" column="17" source="standard:wrapping" />
-        <error line="400" column="21" source="standard:wrapping" />
-        <error line="400" column="35" source="standard:wrapping" />
+        <error line="378" column="32" source="standard:wrapping" />
+        <error line="379" column="25" source="standard:wrapping" />
+        <error line="379" column="39" source="standard:wrapping" />
+        <error line="382" column="21" source="standard:wrapping" />
+        <error line="383" column="17" source="standard:wrapping" />
+        <error line="384" column="13" source="standard:wrapping" />
         <error line="403" column="17" source="standard:wrapping" />
-        <error line="404" column="13" source="standard:wrapping" />
-        <error line="405" column="17" source="standard:wrapping" />
-        <error line="406" column="21" source="standard:wrapping" />
-        <error line="406" column="35" source="standard:wrapping" />
+        <error line="404" column="21" source="standard:wrapping" />
+        <error line="404" column="35" source="standard:wrapping" />
+        <error line="407" column="17" source="standard:wrapping" />
+        <error line="408" column="13" source="standard:wrapping" />
         <error line="409" column="17" source="standard:wrapping" />
-        <error line="410" column="13" source="standard:wrapping" />
-        <error line="449" column="68" source="standard:paren-spacing" />
-        <error line="449" column="70" source="standard:curly-spacing" />
-        <error line="526" column="1" source="standard:final-newline" />
+        <error line="410" column="21" source="standard:wrapping" />
+        <error line="410" column="35" source="standard:wrapping" />
+        <error line="413" column="17" source="standard:wrapping" />
+        <error line="414" column="13" source="standard:wrapping" />
+        <error line="431" column="49" source="standard:argument-list-wrapping" />
     </file>
     <file name="src/test/java/io/radar/sdk/model/RadarTripOptionsTest.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="5" column="1" source="standard:no-unused-imports" />
-        <error line="7" column="1" source="standard:no-unused-imports" />
-        <error line="8" column="1" source="standard:no-unused-imports" />
-        <error line="9" column="1" source="standard:no-wildcard-imports" />
-        <error line="112" column="76" source="standard:trailing-comma-on-call-site" />
-        <error line="143" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="144" column="1" source="standard:final-newline" />
-    </file>
-    <file name="src/test/java/io/radar/sdk/util/JobMapperTest.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="89" column="1" source="standard:no-blank-line-before-rbrace" />
-    </file>
-    <file name="src/test/java/io/radar/sdk/util/RadarFileStorageTest.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="8" column="1" source="standard:no-wildcard-imports" />
-        <error line="14" column="12" source="standard:op-spacing" />
-        <error line="19" column="30" source="standard:colon-spacing" />
-        <error line="30" column="36" source="standard:paren-spacing" />
-        <error line="31" column="36" source="standard:paren-spacing" />
-        <error line="31" column="48" source="standard:no-multi-spaces" />
-        <error line="32" column="54" source="standard:paren-spacing" />
-        <error line="32" column="66" source="standard:no-multi-spaces" />
-        <error line="33" column="54" source="standard:no-multi-spaces" />
-        <error line="34" column="65" source="standard:no-multi-spaces" />
-        <error line="35" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="36" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="40" column="34" source="standard:curly-spacing" />
-        <error line="40" column="34" source="standard:function-start-of-body-spacing" />
-        <error line="51" column="47" source="standard:comma-spacing" />
-        <error line="52" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="54" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="55" column="1" source="standard:final-newline" />
-    </file>
-    <file name="src/test/java/io/radar/sdk/util/RadarSimpleLogBufferTest.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="23" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="29" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="71" column="28" source="standard:op-spacing" />
-        <error line="97" column="1" source="standard:no-consecutive-blank-lines" />
+        <error line="20" column="40" source="standard:argument-list-wrapping" />
+        <error line="20" column="91" source="standard:argument-list-wrapping" />
+        <error line="20" column="156" source="standard:argument-list-wrapping" />
+        <error line="40" column="40" source="standard:argument-list-wrapping" />
+        <error line="40" column="91" source="standard:argument-list-wrapping" />
+        <error line="40" column="156" source="standard:argument-list-wrapping" />
+        <error line="60" column="40" source="standard:argument-list-wrapping" />
+        <error line="60" column="91" source="standard:argument-list-wrapping" />
+        <error line="60" column="156" source="standard:argument-list-wrapping" />
+        <error line="80" column="40" source="standard:argument-list-wrapping" />
+        <error line="80" column="91" source="standard:argument-list-wrapping" />
+        <error line="80" column="156" source="standard:argument-list-wrapping" />
+        <error line="84" column="40" source="standard:argument-list-wrapping" />
+        <error line="84" column="91" source="standard:argument-list-wrapping" />
+        <error line="84" column="156" source="standard:argument-list-wrapping" />
+        <error line="93" column="40" source="standard:argument-list-wrapping" />
+        <error line="93" column="91" source="standard:argument-list-wrapping" />
+        <error line="97" column="40" source="standard:argument-list-wrapping" />
+        <error line="97" column="91" source="standard:argument-list-wrapping" />
+        <error line="97" column="156" source="standard:argument-list-wrapping" />
+        <error line="106" column="40" source="standard:argument-list-wrapping" />
+        <error line="106" column="91" source="standard:argument-list-wrapping" />
+        <error line="106" column="156" source="standard:argument-list-wrapping" />
+        <error line="110" column="40" source="standard:argument-list-wrapping" />
+        <error line="110" column="91" source="standard:argument-list-wrapping" />
+        <error line="110" column="156" source="standard:argument-list-wrapping" />
     </file>
     <file name="src/test/java/io/radar/sdk/util/RadarSimpleReplayBufferTest.kt">
-        <error line="35" column="83" source="standard:function-expression-body" />
-        <error line="80" column="1" source="standard:final-newline" />
+        <error line="36" column="32" source="standard:argument-list-wrapping" />
     </file>
 </baseline>

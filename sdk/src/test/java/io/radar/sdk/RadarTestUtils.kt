@@ -10,7 +10,5 @@ internal class RadarTestUtils {
             val str = RadarTest::class.java.getResource(resource)!!.readText()
             return JSONObject(str)
         }
-
     }
-
 }
