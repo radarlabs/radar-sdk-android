@@ -16,7 +16,7 @@ internal class RadarRevealRiskManager(
     ) {
         RadarSDKFraud.getFraudPayload(context, logger) { status, fraudPayload ->
             if (status != RadarStatus.SUCCESS) {
-                callback(RadarStatus.ERROR_PLUGIN, null)
+                callback(status, null)
                 return@getFraudPayload
             }
             Radar.apiClient.revealRisk(
