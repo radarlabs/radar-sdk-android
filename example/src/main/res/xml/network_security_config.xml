@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- For debugging local development server trackVerified -->
-    <!-- Allow connections to local development server without certificate validation -->
-    <!-- <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">192.168.68.112</domain>
-        <trust-anchors>
-            <certificates src="system"/>
-            <certificates src="user"/>
-        </trust-anchors>
-    </domain-config> -->
+    <!--
+        Production (release) config: strict certificate pinning for the verified hosts.
+        To test trackVerified against a local dev server, build the debug variant instead —
+        see src/debug/res/xml/network_security_config.xml, which overlays this file for debug
+        builds. No need to edit or uncomment anything here.
+    -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">api-verified.radar.io</domain>
         <pin-set>

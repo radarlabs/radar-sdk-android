@@ -25,6 +25,15 @@ To run the example app, clone this repository, add your publishable API key in `
 
 Setup Radar public key check pre-commit hook with `cp -r hooks .git` to prevent accidental key leak when working with the Example app.
 
+### Testing against a local server
+
+Debug builds of the example app can point the SDK at a locally hosted server (e.g. for testing `trackVerified` against a self-signed HTTPS dev server):
+
+1. Set `LOCAL_DEV_HOST` in `MainActivity.kt` to your machine's LAN IP and port, e.g. `"https://192.168.X.X"` (use your LAN IP, not `localhost`). This overrides both the regular host and the verified host.
+2. Run a **debug** build. Debug builds automatically trust self-signed certificates and allow the local host — no extra flags or config needed. Release builds are unaffected: none of the certificate-bypass code is compiled into the published SDK.
+
+Leave `LOCAL_DEV_HOST` blank to use Radar's production hosts.
+
 ## Contributing
 
 Interested in contributing? See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and submit changes.

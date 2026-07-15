@@ -18,6 +18,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.core.net.toUri
 import com.google.firebase.FirebaseApp
 import io.radar.example.map.overlays.MapOverlayRegistry
@@ -89,6 +90,7 @@ class MainActivity : AppCompatActivity() {
             trackVerifiedAutoFailover = true,
             activity = this,
         )
+        applyLocalDevHostOverrides()
         Radar.initialize(this, settingsStore.resolvedPublishableKey, options)
 
         Radar.setUserId("android-test-user")
@@ -157,6 +159,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Debug-only: point the SDK at a locally hosted dev server. In a debug build the SDK already
+     * trusts self-signed certs (see RadarInsecureVerifiedTls + the debug network_security_config),
+     * so setting [LOCAL_DEV_HOST] is all that's needed to route traffic (including trackVerified) to
+     * your machine.
+     *
+     * The overridden host values are persisted in the SDK's SharedPreferences, so when
+     * [LOCAL_DEV_HOST] is blank we clear them again to fall back to the production hosts (otherwise a
+     * previously set override would stick around).
+     */
+    private fun applyLocalDevHostOverrides() {
+        if (!BuildConfig.DEBUG) {
+            return
+        }
+        getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
+            if (LOCAL_DEV_HOST.isBlank()) {
+                remove("host")
+                remove("verified_host")
+            } else {
+                putString("host", LOCAL_DEV_HOST)
+                putString("verified_host", LOCAL_DEV_HOST)
+            }
+        }
+        if (LOCAL_DEV_HOST.isBlank()) {
+            Log.i("radar-dev", "Cleared local dev host override; using production hosts")
+        } else {
+            Log.i("radar-dev", "Overriding host + verified host with local dev server: $LOCAL_DEV_HOST")
+        }
+    }
+
     private fun isGranted(permission: String): Boolean =
         ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
@@ -201,5 +233,10 @@ class MainActivity : AppCompatActivity() {
                     .setSummaryText("Background location tracking is enabled"),
             )
             .build()
+    }
+
+    companion object {
+        // Set local server's LAN IP here for local server testing (used for host + verified host).
+        private const val LOCAL_DEV_HOST = ""
     }
 }

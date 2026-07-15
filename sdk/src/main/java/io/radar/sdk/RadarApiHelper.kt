@@ -22,13 +22,6 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
-// // For debugging local development server trackVerified
-// import javax.net.ssl.SSLContext
-// import javax.net.ssl.TrustManager
-// import javax.net.ssl.X509TrustManager
-// import javax.net.ssl.HostnameVerifier
-// import java.security.cert.X509Certificate
-
 internal enum class NetworkErrorKind {
     DNS_FAILURE,
     TIMEOUT,
@@ -55,24 +48,6 @@ internal open class RadarApiHelper(
 
     private val executor = Executors.newSingleThreadExecutor()
     private val handler = Handler(Looper.getMainLooper())
-
-    // // For debugging local development server trackVerified
-    // // Custom TrustManager that accepts all certificates
-    // private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
-    //     override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
-    //     override fun checkClientTrusted(certs: Array<X509Certificate>, authType: String) {}
-    //     override fun checkServerTrusted(certs: Array<X509Certificate>, authType: String) {}
-    // })
-
-    // // SSLContext that uses the custom TrustManager
-    // private val sslContext: SSLContext by lazy {
-    //     val context = SSLContext.getInstance("TLS")
-    //     context.init(null, trustAllCerts, java.security.SecureRandom())
-    //     context
-    // }
-
-    // // Custom HostnameVerifier that accepts all hostnames
-    // private val hostnameVerifier = HostnameVerifier { _, _ -> true }
 
     interface RadarApiCallback {
         fun onComplete(status: Radar.RadarStatus, res: JSONObject? = null, throwable: Throwable? = null)
@@ -117,10 +92,10 @@ internal open class RadarApiHelper(
             val startMs = SystemClock.elapsedRealtime()
             try {
                 val urlConnection = url.openConnection() as HttpsURLConnection
-                // // For debugging local development server trackVerified
-                // // Configure SSL to accept any certificate and hostname
-                // urlConnection.sslSocketFactory = sslContext.socketFactory
-                // urlConnection.hostnameVerifier = hostnameVerifier
+                // Debug-only hook for testing trackVerified against a locally hosted dev server.
+                // The release source set provides a no-op implementation, so no certificate- or
+                // hostname-bypass code ships in the published (release) SDK.
+                RadarInsecureVerifiedTls.applyIfEnabled(urlConnection)
                 if (headers != null) {
                     for ((key, value) in headers) {
                         try {
