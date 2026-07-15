@@ -119,7 +119,7 @@ object Radar {
     }
 
     /**
-     * Called when a track verified request succeeds, fails, or times out.
+     * Called when a reveal risk request succeeds, fails, or times out.
      */
     interface RadarRevealRiskCallback {
 
@@ -1614,9 +1614,9 @@ object Radar {
     }
 
     /**
-     * Runs reveal risk for the user with device integrity information for non-location based verification use cases.
+     * Reveals device and network risk signals for this device.
      *
-     * @see [](https://radar.com/documentation/reveal/risk)
+     * @see [](https://radar.com/documentation/sdk/fraud)
      *
      * @param[callback] An optional callback.
      */
