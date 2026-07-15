@@ -6,7 +6,7 @@ import org.json.JSONObject
 /**
  * Represents device and network risk signals for a reveal risk check.
  *
- * @see [](https://radar.com/documentation/fraud)
+ * @see [](https://radar.com/documentation/sdk/fraud)
  */
 class RadarRevealRiskToken(
     /**
