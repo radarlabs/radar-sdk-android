@@ -20,6 +20,7 @@ import io.radar.sdk.model.RadarGeofence
 import io.radar.sdk.model.RadarInAppMessage
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarReplay
+import io.radar.sdk.model.RadarRevealRiskToken
 import io.radar.sdk.model.RadarRouteMatrix
 import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarSdkConfiguration
@@ -114,6 +115,23 @@ object Radar {
         fun onComplete(
             status: RadarStatus,
             token: RadarVerifiedLocationToken? = null
+        )
+    }
+
+    /**
+     * Called when a reveal risk request succeeds, fails, or times out.
+     */
+    interface RadarRevealRiskCallback {
+
+        /**
+         * Called when a reveal risk request succeeds, fails, or times out. Receives the request status and, if successful, the user's reveal risk fraud information. Verify the token server-side using your secret key.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[token] RadarRevealRiskToken? If successful, the user's fraud risk information.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            token: RadarRevealRiskToken? = null
         )
     }
 
@@ -548,6 +566,9 @@ object Radar {
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
+    private val revealRiskManager: RadarRevealRiskManager by lazy {
+        RadarRevealRiskManager(this.context, this.logger)
+    }
     private lateinit var inAppMessageManager: RadarInAppMessageManager
     internal lateinit var syncManager: RadarSyncManager
     internal lateinit var offlineEventManager: RadarOfflineEventManager
@@ -1592,6 +1613,39 @@ object Radar {
         }
 
         return this.verificationManager.started
+    }
+
+    /**
+     * Reveals device and network risk signals for this device.
+     *
+     * @see [](https://radar.com/documentation/sdk/fraud)
+     *
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun revealRisk(
+        callback: RadarRevealRiskCallback? = null
+    ) {
+        revealRisk { status, token ->
+            callback?.onComplete(status, token)
+        }
+    }
+
+    @JvmStatic
+    fun revealRisk(
+        callback: (
+            status: RadarStatus,
+            token: RadarRevealRiskToken?
+        ) -> Unit
+    ) {
+        if (!initialized) {
+            callback(RadarStatus.ERROR_PUBLISHABLE_KEY, null)
+
+            return
+        }
+        this.logger.i("revealRisk()", RadarLogType.SDK_CALL)
+
+        this.revealRiskManager.revealRisk(callback)
     }
 
     /**

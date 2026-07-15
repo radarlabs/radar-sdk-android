@@ -56,6 +56,14 @@ android {
     testOptions {
         unitTests {
             includeAndroidResources = true
+            all {
+                // Robolectric loads the full Android framework per test class, so the
+                // forked test JVM's heap creeps across the suite. Bound it and recycle
+                // the JVM periodically so it doesn't grow unbounded and trigger the OS
+                // OOM-killer (which was killing the Gradle daemon in CI mid-test).
+                maxHeapSize = "2048m"
+                forkEvery = 80
+            }
         }
     }
     lintOptions {
