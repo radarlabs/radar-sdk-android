@@ -128,5 +128,4 @@ class RadarRegion(
         obj.putOpt(FIELD_EXPECTED, this.expected)
         return obj
     }
-
 }

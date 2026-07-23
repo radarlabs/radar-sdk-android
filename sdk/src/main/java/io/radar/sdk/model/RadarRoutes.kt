@@ -74,5 +74,4 @@ class RadarRoutes(
         obj.putOpt(FIELD_MOTORBIKE, this.motorbike?.toJson())
         return obj
     }
-
 }

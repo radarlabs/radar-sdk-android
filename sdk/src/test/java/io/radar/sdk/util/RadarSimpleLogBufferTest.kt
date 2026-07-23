@@ -6,13 +6,13 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.Radar
 import io.radar.sdk.matchers.RangeMatcher.Companion.isBetween
+import java.util.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
-import java.util.*
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.P])
@@ -20,12 +20,10 @@ class RadarSimpleLogBufferTest {
 
     @Test
     fun testLifecycle() {
-
         // Create the log buffer
         val context: Context = ApplicationProvider.getApplicationContext()
         val logBuffer = RadarSimpleLogBuffer(context)
         logBuffer.setPersistentLogFeatureFlag(true)
-
 
         // Preconditions
         var flushable = logBuffer.getFlushableLogs()
@@ -68,7 +66,7 @@ class RadarSimpleLogBufferTest {
         // contents should return to the log buffer.
         repeat(250) {
             val level = Radar.RadarLogLevel.fromInt(it % 5)
-            val newVal = it+250
+            val newVal = it + 250
             val message = "$newVal"
             logBuffer.write(level, null, message)
             logs += level to message
@@ -93,7 +91,6 @@ class RadarSimpleLogBufferTest {
         }
         assertEquals(message, contents[250].message)
         assertEquals("----- purged oldest logs -----", contents[251].message)
-
 
         // Test behavior of successful log flush
         message = UUID.randomUUID().toString()

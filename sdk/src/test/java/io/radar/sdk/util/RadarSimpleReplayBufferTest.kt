@@ -32,12 +32,9 @@ class RadarSimpleReplayBufferTest {
         buffer.shutdown()
     }
 
-    private fun options(batchSize: Int, batchInterval: Int): RadarTrackingOptions {
-        return RadarTrackingOptions.RESPONSIVE.copy(
-            batchSize = batchSize,
-            batchInterval = batchInterval
-        )
-    }
+    private fun options(batchSize: Int, batchInterval: Int): RadarTrackingOptions = RadarTrackingOptions.RESPONSIVE.copy(
+        batchSize = batchSize, batchInterval = batchInterval
+    )
 
     @Test
     fun test_addToBatch_incrementsCount() {

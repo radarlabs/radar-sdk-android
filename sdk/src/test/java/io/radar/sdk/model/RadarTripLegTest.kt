@@ -4,7 +4,11 @@ import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -424,8 +428,7 @@ class RadarTripLegTest {
     @Test
     fun test_toJson_array() {
         val legs = arrayOf(
-            RadarTripLeg.forGeofence("a", "1"),
-            RadarTripLeg.forAddress("456 St")
+            RadarTripLeg.forGeofence("a", "1"), RadarTripLeg.forAddress("456 St")
         )
         val arr = RadarTripLeg.toJson(legs)
         assertNotNull(arr)
@@ -446,7 +449,7 @@ class RadarTripLegTest {
     fun test_roundTrip_geofenceLeg() {
         val original = RadarTripLeg.forGeofence("store", "store-1")
         original.stopDuration = 15
-        original.metadata = JSONObject().apply { put("key", "value" )}
+        original.metadata = JSONObject().apply { put("key", "value") }
 
         val json = original.toJson()
         val restored = RadarTripLeg.fromJson(json)

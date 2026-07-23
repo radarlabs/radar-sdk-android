@@ -63,7 +63,7 @@ internal data class RadarSdkConfiguration(
 
         fun fromJson(json: JSONObject?): RadarSdkConfiguration {
             // set json as empty object if json is null, which uses fallback values
-            val config = json ?: JSONObject();
+            val config = json ?: JSONObject()
 
             val maxReplayBufferSize = config.optInt(MAX_REPLAY_BUFFER_SIZE, DEFAULT_MAX_REPLAY_BUFFER_SIZE)
             val validatedMaxReplayBufferSize = if (maxReplayBufferSize > 0 && maxReplayBufferSize <= DEFAULT_MAX_REPLAY_BUFFER_SIZE) {

@@ -50,5 +50,4 @@ class RadarRoute(
         obj.putOpt(FIELD_GEOMETRY, this.geometry?.toJson())
         return obj
     }
-
 }

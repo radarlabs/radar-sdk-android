@@ -49,5 +49,4 @@ class RadarCoordinate(
         obj.putOpt(FIELD_COORDINATES, coordinatesObj)
         return obj
     }
-
 }

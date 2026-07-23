@@ -4,19 +4,20 @@ import android.content.Context
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import java.io.File
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Test
-import org.junit.Assert.*
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
-import java.io.File
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk=[Build.VERSION_CODES.P])
+@Config(sdk = [Build.VERSION_CODES.P])
 class RadarFileStorageTest {
     companion object {
         private val context: Context = ApplicationProvider.getApplicationContext()
         private val radarFileStorage: RadarFileStorage = RadarFileStorage(context)
-        private val testPath:String = "Test.txt"
+        private val testPath: String = "Test.txt"
     }
 
     @Test
@@ -27,17 +28,15 @@ class RadarFileStorageTest {
         radarFileStorage.deleteFileAtPath("test1", testPath)
         assertEquals(radarFileStorage.readFileAtPath("test1", testPath), "")
 
-        radarFileStorage.writeData( filename = testPath, content = "testing text1")
-        radarFileStorage.writeData( filename =  testPath, content = "testing text3")
-        assertEquals(radarFileStorage.readFileAtPath( filePath =  testPath), "testing text3")
-        radarFileStorage.deleteFileAtPath(filePath =  testPath)
-        assertEquals(radarFileStorage.readFileAtPath(filePath =  testPath), "")
-
-
+        radarFileStorage.writeData(filename = testPath, content = "testing text1")
+        radarFileStorage.writeData(filename = testPath, content = "testing text3")
+        assertEquals(radarFileStorage.readFileAtPath(filePath = testPath), "testing text3")
+        radarFileStorage.deleteFileAtPath(filePath = testPath)
+        assertEquals(radarFileStorage.readFileAtPath(filePath = testPath), "")
     }
 
     @Test
-    fun testAllFilesInDirectory(){
+    fun testAllFilesInDirectory() {
         radarFileStorage.writeData("testDir", "578", "testing text1")
         radarFileStorage.writeData("testDir", "456", "testing text2")
         val comparator = Comparator<File> { file1, file2 ->
@@ -48,8 +47,6 @@ class RadarFileStorageTest {
         val files = radarFileStorage.sortedFilesInDirectory("testDir", comparator)
         assertNotNull(files)
         assertEquals(files?.size, 2)
-        assertEquals(files?.get(0)?.name ?: "" , "456")
-
+        assertEquals(files?.get(0)?.name ?: "", "456")
     }
-
 }
