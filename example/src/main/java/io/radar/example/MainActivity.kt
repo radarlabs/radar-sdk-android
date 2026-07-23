@@ -44,6 +44,13 @@ import io.radar.sdk.model.RadarVerifiedLocationToken
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        // Set local server's http:// URL here for local server testing (used for host + verified host),
+        // e.g. "http://192.168.68.112:8081". Use your LAN IP (not localhost), or 10.0.2.2 on the emulator.
+        // Leave blank to use Radar's production hosts.
+        private const val TARGET_HOST = ""
+    }
+
     private lateinit var permissionsStore: PermissionsStore
 
     // Registered before STARTED per the Activity Result contract; refreshes the store on result.
@@ -160,32 +167,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Debug-only: point the SDK at a locally hosted dev server. In a debug build the SDK already
-     * trusts self-signed certs (see RadarInsecureVerifiedTls + the debug network_security_config),
-     * so setting [LOCAL_DEV_HOST] is all that's needed to route traffic (including trackVerified) to
-     * your machine.
+     * Point the SDK at a locally hosted dev server. The example permits cleartext (HTTP) traffic
+     * (see network_security_config), so setting [TARGET_HOST] to an http:// URL is all that's needed
+     * to route traffic (including trackVerified) to your machine.
      *
      * The overridden host values are persisted in the SDK's SharedPreferences, so when
-     * [LOCAL_DEV_HOST] is blank we clear them again to fall back to the production hosts (otherwise a
+     * [TARGET_HOST] is blank we clear them again to fall back to the production hosts (otherwise a
      * previously set override would stick around).
      */
     private fun applyLocalDevHostOverrides() {
-        if (!BuildConfig.DEBUG) {
-            return
-        }
         getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
-            if (LOCAL_DEV_HOST.isBlank()) {
+            if (TARGET_HOST.isBlank()) {
                 remove("host")
                 remove("verified_host")
             } else {
-                putString("host", LOCAL_DEV_HOST)
-                putString("verified_host", LOCAL_DEV_HOST)
+                putString("host", TARGET_HOST)
+                putString("verified_host", TARGET_HOST)
             }
         }
-        if (LOCAL_DEV_HOST.isBlank()) {
-            Log.i("radar-dev", "Cleared local dev host override; using production hosts")
+        if (TARGET_HOST.isBlank()) {
+            Log.i("radar-dev", "Cleared host override; using production hosts")
         } else {
-            Log.i("radar-dev", "Overriding host + verified host with local dev server: $LOCAL_DEV_HOST")
+            Log.i("radar-dev", "Overriding host + verified host with local dev server: $TARGET_HOST")
         }
     }
 
@@ -233,10 +236,5 @@ class MainActivity : AppCompatActivity() {
                     .setSummaryText("Background location tracking is enabled"),
             )
             .build()
-    }
-
-    companion object {
-        // Set local server's LAN IP here for local server testing (used for host + verified host).
-        private const val LOCAL_DEV_HOST = ""
     }
 }

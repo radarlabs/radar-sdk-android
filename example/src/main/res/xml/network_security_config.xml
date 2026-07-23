@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <!--
-        Production (release) config: strict certificate pinning for the verified hosts.
-        To test trackVerified against a local dev server, build the debug variant instead —
-        see src/debug/res/xml/network_security_config.xml, which overlays this file for debug
-        builds. No need to edit or uncomment anything here.
+        Permit cleartext (HTTP) traffic so the app can be pointed at a locally hosted dev server
+        (see TARGET_HOST in MainActivity). The verified hosts below keep strict certificate pinning,
+        so production trackVerified traffic stays validated.
     -->
+    <base-config cleartextTrafficPermitted="true"/>
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">api-verified.radar.io</domain>
         <pin-set>

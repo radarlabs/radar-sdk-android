@@ -27,12 +27,12 @@ Setup Radar public key check pre-commit hook with `cp -r hooks .git` to prevent 
 
 ### Testing against a local server
 
-Debug builds of the example app can point the SDK at a locally hosted server (e.g. for testing `trackVerified` against a self-signed HTTPS dev server):
+The example app can point the SDK at a locally hosted HTTP server (e.g. for testing `trackVerified` against a local dev server):
 
-1. Set `LOCAL_DEV_HOST` in `MainActivity.kt` to your machine's LAN IP and port, e.g. `"https://192.168.X.X"` (use your LAN IP, not `localhost`). This overrides both the regular host and the verified host.
-2. Run a **debug** build. Debug builds automatically trust self-signed certificates and allow the local host — no extra flags or config needed. Release builds are unaffected: none of the certificate-bypass code is compiled into the published SDK.
+1. Set `TARGET_HOST` in `MainActivity.kt` to your machine's `http://` URL, e.g. `"http://192.168.X.X:8081"` (use your LAN IP, not `localhost`; use `10.0.2.2` on the emulator). This overrides both the regular host and the verified host.
+2. Run the app. The example permits cleartext (HTTP) traffic to the local host — no extra flags or config needed. The production verified hosts keep strict certificate pinning.
 
-Leave `LOCAL_DEV_HOST` blank to use Radar's production hosts.
+Leave `TARGET_HOST` blank to use Radar's production hosts.
 
 ## Contributing
 

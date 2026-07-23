@@ -11,12 +11,12 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStreamWriter
 import java.net.ConnectException
+import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.UnknownHostException
 import java.util.Scanner
 import java.util.concurrent.Executors
-import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLException
 import org.json.JSONArray
 import org.json.JSONException
@@ -91,11 +91,7 @@ internal open class RadarApiHelper(
         executor.execute {
             val startMs = SystemClock.elapsedRealtime()
             try {
-                val urlConnection = url.openConnection() as HttpsURLConnection
-                // Debug-only hook for testing trackVerified against a locally hosted dev server.
-                // The release source set provides a no-op implementation, so no certificate- or
-                // hostname-bypass code ships in the published (release) SDK.
-                RadarInsecureVerifiedTls.applyIfEnabled(urlConnection)
+                val urlConnection = url.openConnection() as HttpURLConnection
                 if (headers != null) {
                     for ((key, value) in headers) {
                         try {
