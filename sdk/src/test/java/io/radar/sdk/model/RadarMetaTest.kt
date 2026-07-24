@@ -45,4 +45,4 @@ class RadarMetaTest {
         assertEquals(trackingOptions.foregroundServiceEnabled, obj.remoteTrackingOptions.foregroundServiceEnabled)
         assertEquals(trackingOptions.beacons, obj.remoteTrackingOptions.beacons)
     }
-} 
+}

@@ -31,5 +31,4 @@ abstract class RadarVerifiedReceiver {
      * @param[sharing] The current screen sharing state.
      */
     open fun onSharingChanged(context: Context, sharing: Boolean) {}
-
 }

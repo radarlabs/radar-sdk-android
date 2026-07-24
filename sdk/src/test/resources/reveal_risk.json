@@ -1,0 +1,53 @@
+{
+  "_id": "risk-token-123",
+  "token": "signed-jwt-token",
+  "expiresAt": "2026-07-14T12:00:00.000Z",
+  "expiresIn": 3600,
+  "risk": {
+    "level": "medium",
+    "reasons": ["proxy_detected", "vpn_detected"]
+  },
+  "network": {
+    "ipAddress": {
+      "countryCode": "US",
+      "country": "United States",
+      "city": "New York",
+      "stateCode": "NY",
+      "postalCode": "10001",
+      "connectionType": "wifi",
+      "countryAllowed": true,
+      "stateAllowed": true
+    },
+    "privacy": {
+      "hosting": false,
+      "proxy": true,
+      "relay": false,
+      "service": "SomeVPN",
+      "tor": false,
+      "vpn": true,
+      "residentialProxy": false
+    },
+    "asn": {
+      "asn": "AS13335",
+      "country": "US",
+      "domain": "cloudflare.com",
+      "name": "CLOUDFLARENET",
+      "network": "104.16.0.0/12",
+      "type": "hosting"
+    }
+  },
+  "device": {
+    "deviceId": "device-abc",
+    "deviceType": "Android",
+    "deviceMake": "Google",
+    "deviceModel": "Pixel 9",
+    "deviceOSName": "Android",
+    "deviceOSVersion": "15",
+    "sdkVersion": "3.0.0",
+    "installId": "install-xyz",
+    "appId": "com.radar.example",
+    "appName": "Example",
+    "appVersion": "1.2.3",
+    "appBuild": "42"
+  }
+}

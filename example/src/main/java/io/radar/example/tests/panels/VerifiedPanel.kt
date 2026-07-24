@@ -42,5 +42,10 @@ fun VerifiedPanel() {
             Radar.setExpectedJurisdiction("US", "CA")
             log.writeResult("setExpectedJurisdiction(US, CA)")
         }
+        ActionButton("revealRisk") {
+            Radar.revealRisk { status, token ->
+                log.writeStatus(status, token?.toJson().toString())
+            }
+        }
     }
 }

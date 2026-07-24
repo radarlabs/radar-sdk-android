@@ -65,5 +65,4 @@ class RadarRouteMatrix(
         }
         return rows
     }
-
 }

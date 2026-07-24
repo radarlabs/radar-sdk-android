@@ -40,5 +40,4 @@ class RadarRouteDistance(
         obj.putOpt(FIELD_TEXT, this.text)
         return obj
     }
-
 }

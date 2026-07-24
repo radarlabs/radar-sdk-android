@@ -1,6 +1,7 @@
 package io.radar.sdk.model
 
 import io.radar.sdk.Radar
+import kotlin.random.Random
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -9,7 +10,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import kotlin.random.Random
 
 /**
  * Unit test [RadarFeatureSettings]
@@ -61,7 +61,8 @@ class RadarSdkConfigurationTest {
             "offlineEventGenerationEnabled":false,
             "useOfflineRTOUpdates":false,
             "startUpdatesWhileInUse":false,
-        }""".trimIndent()
+        }
+        """.trimIndent()
     }
 
     @Test
@@ -142,5 +143,4 @@ class RadarSdkConfigurationTest {
     }
 
     private fun String.removeWhitespace(): String = replace("\\s".toRegex(), "")
-
 }
