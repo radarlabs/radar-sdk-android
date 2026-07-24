@@ -34,6 +34,8 @@ The example app can point the SDK at a locally hosted HTTP server (e.g. for test
 
 Leave `TARGET_HOST` blank to use Radar's production hosts.
 
+> **Note:** the example enables cleartext (HTTP) traffic (`cleartextTrafficPermitted="true"` in `network_security_config.xml`) purely to support local testing. This is a convenience for the sample app only — do not enable cleartext in a real app, as it weakens your app's network security. Production apps should use HTTPS and leave cleartext disabled (the Android default).
+
 ## Contributing
 
 Interested in contributing? See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and submit changes.
