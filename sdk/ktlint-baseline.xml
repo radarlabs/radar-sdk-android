@@ -616,46 +616,6 @@
         <error line="91" column="1" source="standard:no-blank-line-before-rbrace" />
         <error line="92" column="1" source="standard:final-newline" />
     </file>
-    <file name="src/main/java/io/radar/sdk/model/RadarEvent.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="145" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="147" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="149" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="151" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="153" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="155" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="157" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="159" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="161" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="163" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="165" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="167" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="169" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="171" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="173" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="175" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="177" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="179" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="181" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="183" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="185" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="187" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="189" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="191" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="193" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="194" column="26" source="standard:trailing-comma-on-declaration-site" />
-        <error line="200" column="53" source="standard:no-multi-spaces" />
-        <error line="200" column="54" source="standard:class-signature" />
-        <error line="203" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="205" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="207" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="217" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="219" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="320" column="1" source="standard:no-trailing-spaces" />
-        <error line="352" column="45" source="standard:nullable-type-spacing" />
-        <error line="365" column="58" source="standard:function-expression-body" />
-        <error line="424" column="1" source="standard:no-blank-line-before-rbrace" />
-    </file>
     <file name="src/main/java/io/radar/sdk/model/RadarFraud.kt">
         <error line="64" column="25" source="standard:trailing-comma-on-declaration-site" />
         <error line="79" column="53" source="standard:function-expression-body" />
