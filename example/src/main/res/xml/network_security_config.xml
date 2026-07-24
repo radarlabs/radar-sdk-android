@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- For debugging local development server trackVerified -->
-    <!-- Allow connections to local development server without certificate validation -->
-    <!-- <domain-config cleartextTrafficPermitted="false">
-        <domain includeSubdomains="true">192.168.68.112</domain>
-        <trust-anchors>
-            <certificates src="system"/>
-            <certificates src="user"/>
-        </trust-anchors>
-    </domain-config> -->
+    <!--
+        Permit cleartext (HTTP) traffic so this sample app can be pointed at a locally hosted dev
+        server (see TARGET_HOST in MainActivity). The verified hosts below keep strict certificate
+        pinning, so production trackVerified traffic stays validated.
+
+        WARNING: this is a convenience for the Radar sample app only. Do NOT enable cleartext
+        (`cleartextTrafficPermitted="true"`) in a real app — it lets any HTTP traffic through and
+        weakens your app's network security. Production apps should leave cleartext disabled (the
+        Android default) and use HTTPS.
+    -->
+    <base-config cleartextTrafficPermitted="true"/>
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">api-verified.radar.io</domain>
         <pin-set>

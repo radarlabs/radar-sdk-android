@@ -25,6 +25,17 @@ To run the example app, clone this repository, add your publishable API key in `
 
 Setup Radar public key check pre-commit hook with `cp -r hooks .git` to prevent accidental key leak when working with the Example app.
 
+### Testing against a local server
+
+The example app can point the SDK at a locally hosted HTTP server (e.g. for testing `trackVerified` against a local dev server):
+
+1. Set `TARGET_HOST` in `MainActivity.kt` to your machine's `http://` URL, e.g. `"http://192.168.X.X:8081"` (use your LAN IP, not `localhost`; use `10.0.2.2` on the emulator). This overrides both the regular host and the verified host.
+2. Run the app. The example permits cleartext (HTTP) traffic to the local host — no extra flags or config needed. The production verified hosts keep strict certificate pinning.
+
+Leave `TARGET_HOST` blank to use Radar's production hosts.
+
+> **Note:** the example enables cleartext (HTTP) traffic (`cleartextTrafficPermitted="true"` in `network_security_config.xml`) purely to support local testing. This is a convenience for the sample app only — do not enable cleartext in a real app, as it weakens your app's network security. Production apps should use HTTPS and leave cleartext disabled (the Android default).
+
 ## Contributing
 
 Interested in contributing? See [CONTRIBUTING.md](CONTRIBUTING.md) for how to build, test, and submit changes.
