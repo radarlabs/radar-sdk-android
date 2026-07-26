@@ -6,7 +6,8 @@ import io.radar.sdk.model.RadarRevealRiskToken
 
 internal class RadarRevealRiskManager(
     private val context: Context,
-    private val logger: RadarLogger
+    private val logger: RadarLogger,
+    private val fraudSDK: RadarSDKFraud,
 ) {
     fun revealRisk(
         callback: (
@@ -14,7 +15,7 @@ internal class RadarRevealRiskManager(
             result: RadarRevealRiskToken?
         ) -> Unit
     ) {
-        RadarSDKFraud.getFraudPayload(context, logger) { status, fraudPayload ->
+        fraudSDK.getFraudPayload(context, logger) { status, fraudPayload ->
             if (status != RadarStatus.SUCCESS) {
                 callback(status, null)
                 return@getFraudPayload

@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.content.Context
+import android.location.Location
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -20,6 +21,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
+
+internal class MockRadarSDKFraud: RadarSDKFraud() {
+    override fun getFraudPayload(context: Context, logger: RadarLogger, location: Location?, googlePlayProjectNumber: Long?, callback: (Radar.RadarStatus, String) -> Unit) {
+        callback(Radar.RadarStatus.SUCCESS, "")
+    }
+}
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.P])

@@ -567,7 +567,7 @@ object Radar {
     internal lateinit var batteryManager: RadarBatteryManager
     private lateinit var verificationManager: RadarVerificationManager
     private val revealRiskManager: RadarRevealRiskManager by lazy {
-        RadarRevealRiskManager(this.context, this.logger)
+        RadarRevealRiskManager(this.context, this.logger, RadarSDKFraud.shared)
     }
     private lateinit var inAppMessageManager: RadarInAppMessageManager
     internal lateinit var syncManager: RadarSyncManager
