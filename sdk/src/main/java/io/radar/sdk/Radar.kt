@@ -842,7 +842,8 @@ object Radar {
         this.initialized = true
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
-            verifiedReceiver != null) {
+            verifiedReceiver != null
+        ) {
             updateVerifiedReceiverMonitoringState()
         }
 
@@ -2139,7 +2140,7 @@ object Radar {
 
         updateVerifiedReceiverMonitoringState()
     }
-    
+
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun updateVerifiedReceiverMonitoringState() {
         if (this::verificationManager.isInitialized) {
