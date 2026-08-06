@@ -1109,7 +1109,7 @@
         <error line="864" column="1" source="standard:final-newline" />
     </file>
     <file name="src/test/java/io/radar/sdk/RadarTest.kt">
-        <error line="56" column="19" source="standard:property-naming" />
+        <error line="59" column="19" source="standard:property-naming" />
     </file>
     <file name="src/test/java/io/radar/sdk/RadarVerifiedHostOverrideTest.kt">
         <error line="49" column="22" source="standard:argument-list-wrapping" />
