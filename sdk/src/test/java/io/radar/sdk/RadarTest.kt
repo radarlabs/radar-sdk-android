@@ -3,6 +3,7 @@ package io.radar.sdk
 import android.app.Activity
 import android.content.Context
 import android.location.Location
+import android.net.ConnectivityManager
 import android.os.Build
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
@@ -25,6 +26,7 @@ import io.radar.sdk.model.RadarSegment
 import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarTripLeg
 import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import java.util.Calendar
 import java.util.Date
 import java.util.EnumSet
@@ -43,6 +45,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
 
@@ -287,6 +290,51 @@ class RadarTest {
         assertNotEquals(route?.duration?.value, 0)
     }
 
+    private class RecordingReceiver : RadarReceiver() {
+        var error: Radar.RadarStatus? = null
+
+        override fun onEventsReceived(
+            context: Context,
+            events: Array<RadarEvent>,
+            user: RadarUser?
+        ) {}
+
+        override fun onLocationUpdated(
+            context: Context,
+            location: Location,
+            user: RadarUser
+        ) {}
+
+        override fun onClientLocationUpdated(
+            context: Context,
+            location: Location,
+            stopped: Boolean,
+            source: Radar.RadarLocationSource
+        ) {}
+
+        override fun onError(
+            context: Context,
+            status: Radar.RadarStatus
+        ) {
+            error = status
+        }
+
+        override fun onLog(context: Context, message: String) {}
+    }
+
+    private class RecordingVerifiedReceiver : RadarVerifiedReceiver() {
+        var ipChanged = false
+
+        override fun onTokenUpdated(
+            context: Context,
+            token: RadarVerifiedLocationToken
+        ) {}
+
+        override fun onIpChanged(context: Context) {
+            ipChanged = true
+        }
+    }
+
     @Before
     fun setUp() {
         Radar.logger = RadarLogger(context)
@@ -310,6 +358,132 @@ class RadarTest {
     @Test
     fun test_Radar_initialize() {
         assertEquals(publishableKey, RadarSettings.getPublishableKey(context))
+    }
+
+    @Test
+    fun test_Radar_setReceiver_beforeInitialize() {
+        val receiver = RecordingReceiver()
+        Radar.initialized = false
+
+        try {
+            Radar.setReceiver(receiver)
+
+            assertNull(receiver.error)
+
+            Radar.initialize(context, publishableKey)
+            Radar.sendError(Radar.RadarStatus.ERROR_UNKNOWN)
+
+            assertEquals(Radar.RadarStatus.ERROR_UNKNOWN, receiver.error)
+        } finally {
+            Radar.setReceiver(null)
+        }
+    }
+
+    @Test
+    fun test_Radar_initialize_receiverOverridesPreinitializedReceiver() {
+        val preinitializedReceiver = RecordingReceiver()
+        val initializationReceiver = RecordingReceiver()
+        Radar.initialized = false
+
+        try {
+            Radar.setReceiver(preinitializedReceiver)
+
+            Radar.initialize(
+                context,
+                publishableKey,
+                RadarInitializeOptions(
+                    radarReceiver = initializationReceiver
+                )
+            )
+            Radar.sendError(Radar.RadarStatus.ERROR_UNKNOWN)
+
+            assertNull(preinitializedReceiver.error)
+            assertEquals(
+                Radar.RadarStatus.ERROR_UNKNOWN,
+                initializationReceiver.error
+            )
+        } finally {
+            Radar.setReceiver(null)
+        }
+    }
+
+    @Test
+    fun test_Radar_setReceiver_nullBeforeInitialize() {
+        val receiver = RecordingReceiver()
+        Radar.initialized = false
+
+        try {
+            Radar.setReceiver(receiver)
+            Radar.setReceiver(null)
+
+            Radar.initialize(context, publishableKey)
+            Radar.sendError(Radar.RadarStatus.ERROR_UNKNOWN)
+
+            assertNull(receiver.error)
+        } finally {
+            Radar.setReceiver(null)
+        }
+    }
+
+    @Test
+    fun test_Radar_setVerifiedReceiver_beforeInitialize() {
+        val receiver = RecordingVerifiedReceiver()
+        val connectivityManager =
+            context.getSystemService(
+                Context.CONNECTIVITY_SERVICE
+            ) as ConnectivityManager
+        val shadowConnectivityManager = shadowOf(connectivityManager)
+        val initialCallbackCount =
+            shadowConnectivityManager.networkCallbacks.size
+
+        Radar.initialized = false
+
+        try {
+            Radar.setVerifiedReceiver(receiver)
+
+            assertTrue(Radar.hasVerifiedReceiver())
+            assertFalse(receiver.ipChanged)
+            assertEquals(
+                initialCallbackCount,
+                shadowConnectivityManager.networkCallbacks.size
+            )
+
+            Radar.initialize(context, publishableKey)
+
+            assertEquals(
+                initialCallbackCount + 1,
+                shadowConnectivityManager.networkCallbacks.size
+            )
+
+            Radar.sendIpChanged()
+            assertTrue(receiver.ipChanged)
+        } finally {
+            Radar.setVerifiedReceiver(null)
+        }
+        assertEquals(
+            initialCallbackCount,
+            shadowConnectivityManager.networkCallbacks.size
+        )
+    }
+
+    @Test
+    fun test_Radar_setVerifiedReceiver_nullBeforeInitialize() {
+        val receiver = RecordingVerifiedReceiver()
+        Radar.initialized = false
+
+        try {
+            Radar.setVerifiedReceiver(receiver)
+            Radar.setVerifiedReceiver(null)
+
+            assertFalse(Radar.hasVerifiedReceiver())
+
+            Radar.initialize(context, publishableKey)
+            Radar.sendIpChanged()
+
+            assertFalse(receiver.ipChanged)
+        } finally {
+            Radar.setVerifiedReceiver(null)
+        }
     }
 
     @Test
