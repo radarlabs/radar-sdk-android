@@ -841,6 +841,10 @@ object Radar {
 
         this.initialized = true
 
+        if (verifiedReceiver != null) {
+            updateVerifiedReceiverMonitoringState()
+        }
+
         logger.i("📍️ Radar initialized")
     }
 
@@ -2101,39 +2105,46 @@ object Radar {
     /**
      * Sets a receiver for client-side delivery of events, location updates, and debug logs.
      *
+     * May be called before initialization. The receiver will be retained and used
+     * when the SDK initializes.
+     *
      * @see [](https://radar.com/documentation/sdk/android#listening-for-events-with-a-receiver)
      *
      * @param[receiver] A delegate for client-side delivery of events, location updates, and debug logs. If `null`, the previous receiver will be cleared.
      */
     @JvmStatic
     fun setReceiver(receiver: RadarReceiver?) {
-        if (!initialized) {
-            return
-        }
-
         this.receiver = receiver
     }
 
     /**
      * Sets a receiver for client-side delivery of verified location tokens.
      *
+     * May be called before initialization. The receiver will be retained and used
+     * when the SDK initializes.
+     *
      * @see [](https://radar.com/documentation/sdk/fraud)
      *
-     * @param[verifiedReceiver] A delegate for client-side delivery of of verified location tokens. If `null`, the previous receiver will be cleared.
+     * @param[verifiedReceiver] A delegate for client-side delivery of verified location tokens. If `null`, the previous receiver will be cleared.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun setVerifiedReceiver(verifiedReceiver: RadarVerifiedReceiver?) {
+        this.verifiedReceiver = verifiedReceiver
+
         if (!initialized) {
             return
         }
 
-        this.verifiedReceiver = verifiedReceiver
+        updateVerifiedReceiverMonitoringState()
+    }
 
+    private fun updateVerifiedReceiverMonitoringState() {
         if (this::verificationManager.isInitialized) {
             this.verificationManager.updateMonitoringState()
         } else if (verifiedReceiver != null) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+            this.verificationManager =
+                RadarVerificationManager(this.context, this.logger)
             this.verificationManager.updateMonitoringState()
         }
     }
