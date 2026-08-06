@@ -1784,6 +1784,26 @@ object Radar {
     }
 
     /**
+     * Clears the user's last reveal Risk ID.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun clearRevealRiskId() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("clearVerifiedLocationToken()", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+        }
+
+        RadarSDKFraud.setRevealRiskId(null, logger)
+    }
+
+    /**
      * Optionally sets the user's expected country and state for jurisdiction checks.
      *
      * @param[countryCode] The user's expected country code.

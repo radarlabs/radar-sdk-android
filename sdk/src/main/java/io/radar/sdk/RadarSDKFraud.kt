@@ -52,5 +52,24 @@ internal class RadarSDKFraud {
                 callback(Radar.RadarStatus.ERROR_PLUGIN, "")
             }
         }
+
+        fun setRevealRiskId(revealRiskId: String?, logger: RadarLogger) {
+            try {
+                val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
+                val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
+                val fraudInstance = sharedInstanceMethod.invoke(null)
+
+                val setRevealRiskMethod = fraudClass.getMethod(
+                    "setRevealRiskId",
+                    String::class.java
+                )
+
+                setRevealRiskMethod.invoke(fraudInstance, revealRiskId)
+            } catch (e: ClassNotFoundException) {
+                logger.d("Skipping fraud checks: RadarSDKFraud submodule not available")
+            } catch (e: Exception) {
+                logger.e("Error calling fraud detection ${e.message ?: ""}", Radar.RadarLogType.SDK_EXCEPTION, e)
+            }
+        }
     }
 }

@@ -126,6 +126,7 @@ internal class RadarVerificationManager(
                                                     Radar.locationManager.updateTrackingFromMeta(
                                                         config?.meta
                                                     )
+                                                    RadarSDKFraud.setRevealRiskId(null, logger)
                                                 }
                                                 if (token != null) {
                                                     verificationManager.lastToken = token

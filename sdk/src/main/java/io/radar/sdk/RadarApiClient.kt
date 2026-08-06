@@ -696,6 +696,7 @@ internal class RadarApiClient(
                     val result = RadarRevealRiskToken.fromJson(res)
 
                     if (result != null) {
+                        RadarSDKFraud.setRevealRiskId(result.id, logger)
                         callback(RadarStatus.SUCCESS, result)
                     } else {
                         callback(RadarStatus.ERROR_SERVER, null)
