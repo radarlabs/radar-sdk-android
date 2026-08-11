@@ -25,7 +25,8 @@ import org.json.JSONObject
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarVerificationManager(
     private val context: Context,
-    private val logger: RadarLogger
+    private val logger: RadarLogger,
+    private val revealRiskManager: RadarRevealRiskManager
 ) {
 
     var started = false
@@ -49,8 +50,6 @@ internal class RadarVerificationManager(
         desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
         reason: String? = null,
         transactionId: String? = null,
-        revealRiskId: String? = null,
-        clearRevealRiskId: () -> Unit,
         callback: Radar.RadarTrackVerifiedCallback? = null
     ) {
         val verificationManager = this
@@ -113,7 +112,7 @@ internal class RadarVerificationManager(
                                         verificationManager.expectedStateCode,
                                         reason ?: "manual",
                                         transactionId,
-                                        revealRiskId,
+                                        revealRiskManager.getRevealRiskId(),
                                         fraudPayload,
                                         callback = object : RadarApiClient.RadarTrackApiCallback {
                                             override fun onComplete(
@@ -126,7 +125,8 @@ internal class RadarVerificationManager(
                                                 token: RadarVerifiedLocationToken?
                                             ) {
                                                 if (status == Radar.RadarStatus.SUCCESS) {
-                                                    clearRevealRiskId()
+                                                    revealRiskManager.clearRevealRiskId()
+
                                                     Radar.locationManager.updateTrackingFromMeta(
                                                         config?.meta
                                                     )
@@ -274,15 +274,11 @@ internal class RadarVerificationManager(
             return
         }
 
-        val clearRevealRiskId: () -> Unit = { logger.e("Nothing to clear at this point") }
-
         verificationManager.trackVerified(
             this.startedBeacons,
             RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH,
             reason,
             null,
-            null,
-            clearRevealRiskId,
             object : Radar.RadarTrackVerifiedCallback {
                 override fun onComplete(
                     status: Radar.RadarStatus,
@@ -473,9 +469,7 @@ internal class RadarVerificationManager(
             return
         }
 
-        val clearRevealRiskId: () -> Unit = { logger.e("Nothing to clear at this point") }
-
-        this.trackVerified(beacons, desiredAccuracy, "last_token_invalid", null, null, clearRevealRiskId, callback)
+        this.trackVerified(beacons, desiredAccuracy, "last_token_invalid", null, callback)
     }
 
     fun clearVerifiedLocationToken() {

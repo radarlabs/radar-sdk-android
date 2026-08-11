@@ -1514,17 +1514,15 @@ object Radar {
         this.logger.i("trackVerified()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+            this.verificationManager = RadarVerificationManager(this.context, this.logger, this.revealRiskManager)
         }
 
         this.verificationManager.trackVerified(
-            beacons,
-            desiredAccuracy,
-            reason,
-            transactionId,
-            revealRiskManager.getRevealRiskId(),
-            { revealRiskManager.clearRevealRiskId() },
-            callback
+            beacons = beacons,
+            desiredAccuracy = desiredAccuracy,
+            reason = reason,
+            transactionId = transactionId,
+            callback = callback
         )
     }
 
@@ -1582,7 +1580,7 @@ object Radar {
         this.logger.i("startTrackingVerified()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+            this.verificationManager = RadarVerificationManager(this.context, this.logger, this.revealRiskManager)
         }
 
         this.verificationManager.startTrackingVerified(interval, beacons)
@@ -1602,7 +1600,7 @@ object Radar {
         this.logger.i("stopTrackingVerified()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+            this.verificationManager = RadarVerificationManager(this.context, this.logger, this.revealRiskManager)
         }
 
         this.verificationManager.stopTrackingVerified()
@@ -1623,7 +1621,7 @@ object Radar {
         }
 
         if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+            this.verificationManager = RadarVerificationManager(this.context, this.logger, this.revealRiskManager)
         }
 
         return this.verificationManager.started
@@ -1746,7 +1744,7 @@ object Radar {
         this.logger.i("getVerifiedLocationToken()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+            this.verificationManager = RadarVerificationManager(this.context, this.logger, this.revealRiskManager)
         }
 
         this.verificationManager.getVerifiedLocationToken(beacons, desiredAccuracy, callback)
@@ -1791,7 +1789,7 @@ object Radar {
         this.logger.i("clearVerifiedLocationToken()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+            this.verificationManager = RadarVerificationManager(this.context, this.logger, this.revealRiskManager)
         }
 
         this.verificationManager.clearVerifiedLocationToken()
@@ -1802,7 +1800,6 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun clearRevealRiskId() {
         if (!initialized) {
@@ -1828,7 +1825,7 @@ object Radar {
         this.logger.i("setExpectedJurisdiction()", RadarLogType.SDK_CALL)
 
         if (!this::verificationManager.isInitialized) {
-            this.verificationManager = RadarVerificationManager(this.context, this.logger)
+            this.verificationManager = RadarVerificationManager(this.context, this.logger, this.revealRiskManager)
         }
 
         this.verificationManager.setExpectedJurisdiction(countryCode, stateCode)
@@ -2171,7 +2168,7 @@ object Radar {
             this.verificationManager.updateMonitoringState()
         } else if (verifiedReceiver != null) {
             this.verificationManager =
-                RadarVerificationManager(this.context, this.logger)
+                RadarVerificationManager(this.context, this.logger, this.revealRiskManager)
             this.verificationManager.updateMonitoringState()
         }
     }
