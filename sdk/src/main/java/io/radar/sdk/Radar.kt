@@ -1517,7 +1517,15 @@ object Radar {
             this.verificationManager = RadarVerificationManager(this.context, this.logger)
         }
 
-        this.verificationManager.trackVerified(beacons, desiredAccuracy, reason, transactionId, callback)
+        this.verificationManager.trackVerified(
+            beacons,
+            desiredAccuracy,
+            reason,
+            transactionId,
+            revealRiskManager.getRevealRiskId(),
+            { revealRiskManager.clearRevealRiskId() },
+            callback
+        )
     }
 
     /**
@@ -1787,6 +1795,22 @@ object Radar {
         }
 
         this.verificationManager.clearVerifiedLocationToken()
+    }
+
+    /**
+     * Clears the user's last reveal risk ID.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun clearRevealRiskId() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("clearRevealRiskId()", RadarLogType.SDK_CALL)
+
+        this.revealRiskManager.clearRevealRiskId()
     }
 
     /**

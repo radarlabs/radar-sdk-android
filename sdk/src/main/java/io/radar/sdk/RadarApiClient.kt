@@ -301,6 +301,7 @@ internal class RadarApiClient(
         expectedStateCode: String? = null,
         reason: String? = null,
         transactionId: String? = null,
+        revealRiskId: String? = null,
         fraudPayload: String? = null,
         callback: RadarTrackApiCallback? = null,
         verifiedHostOverride: String? = null
@@ -416,6 +417,9 @@ internal class RadarApiClient(
                 }
                 if (transactionId != null) {
                     params.putOpt("transactionId", transactionId)
+                }
+                if (revealRiskId != null) {
+                    params.put("revealRiskId", revealRiskId)
                 }
             }
             putApplicationParameters(params)
