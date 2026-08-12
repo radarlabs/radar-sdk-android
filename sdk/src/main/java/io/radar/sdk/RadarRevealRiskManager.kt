@@ -8,6 +8,18 @@ internal class RadarRevealRiskManager(
     private val context: Context,
     private val logger: RadarLogger
 ) {
+    private var revealRiskId: String? = null
+
+    fun setRevealRiskId(revealRiskId: String?) {
+        this.revealRiskId = revealRiskId
+    }
+
+    fun getRevealRiskId(): String? = revealRiskId
+
+    fun clearRevealRiskId() {
+        this.revealRiskId = null
+    }
+
     fun revealRisk(
         callback: (
             status: RadarStatus,
@@ -19,9 +31,15 @@ internal class RadarRevealRiskManager(
                 callback(status, null)
                 return@getFraudPayload
             }
+
             Radar.apiClient.revealRisk(
                 fraudPayload,
-                callback = callback
+                callback = { status, token ->
+                    run {
+                        setRevealRiskId(token?.id)
+                        callback(status, token)
+                    }
+                }
             )
         }
     }

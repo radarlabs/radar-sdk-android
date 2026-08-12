@@ -25,7 +25,8 @@ import org.json.JSONObject
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarVerificationManager(
     private val context: Context,
-    private val logger: RadarLogger
+    private val logger: RadarLogger,
+    private val revealRiskManager: RadarRevealRiskManager
 ) {
 
     var started = false
@@ -111,6 +112,7 @@ internal class RadarVerificationManager(
                                         verificationManager.expectedStateCode,
                                         reason ?: "manual",
                                         transactionId,
+                                        revealRiskManager.getRevealRiskId(),
                                         fraudPayload,
                                         callback = object : RadarApiClient.RadarTrackApiCallback {
                                             override fun onComplete(
@@ -123,6 +125,8 @@ internal class RadarVerificationManager(
                                                 token: RadarVerifiedLocationToken?
                                             ) {
                                                 if (status == Radar.RadarStatus.SUCCESS) {
+                                                    revealRiskManager.clearRevealRiskId()
+
                                                     Radar.locationManager.updateTrackingFromMeta(
                                                         config?.meta
                                                     )
