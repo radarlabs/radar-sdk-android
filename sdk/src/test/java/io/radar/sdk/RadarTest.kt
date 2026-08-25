@@ -33,6 +33,7 @@ import java.util.EnumSet
 import java.util.TimeZone
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -56,7 +57,7 @@ class RadarTest {
     companion object {
         const val LATCH_TIMEOUT = 5L
 
-        const val publishableKey = "prj_test_pk_0000000000000000000000000000000000000000"
+        const val PUBLISHABLE_KEY = "prj_test_pk_0000000000000000000000000000000000000000"
 
         private val context: Context = ApplicationProvider.getApplicationContext()
         private val apiHelperMock = RadarApiHelperMock()
@@ -292,6 +293,7 @@ class RadarTest {
 
     private class RecordingReceiver : RadarReceiver() {
         var error: Radar.RadarStatus? = null
+        val logs = mutableListOf<String>()
 
         override fun onEventsReceived(
             context: Context,
@@ -319,7 +321,9 @@ class RadarTest {
             error = status
         }
 
-        override fun onLog(context: Context, message: String) {}
+        override fun onLog(context: Context, message: String) {
+            logs += message
+        }
     }
 
     private class RecordingVerifiedReceiver : RadarVerifiedReceiver() {
@@ -335,14 +339,44 @@ class RadarTest {
         }
     }
 
+    private class BlockingLogApiHelper(
+        private val entered: CountDownLatch,
+        private val release: CountDownLatch,
+        private val uploadCount: AtomicInteger
+    ) : RadarApiHelper() {
+        override fun request(
+            context: Context,
+            method: String,
+            path: String,
+            headers: Map<String, String>?,
+            params: JSONObject?,
+            sleep: Boolean,
+            callback: RadarApiHelper.RadarApiCallback?,
+            extendedTimeout: Boolean,
+            stream: Boolean,
+            logPayload: Boolean,
+            verified: Boolean,
+            imageCallback: RadarApiHelper.RadarImageApiCallback?,
+            verifiedHostOverride: String?
+        ) {
+            if (path == "v1/logs") {
+                uploadCount.incrementAndGet()
+                entered.countDown()
+                release.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+            }
+            callback?.onComplete(Radar.RadarStatus.SUCCESS)
+        }
+    }
+
     @Before
     fun setUp() {
+        context.applicationInfo.processName = context.packageName
         Radar.logger = RadarLogger(context)
         Radar.apiClient = RadarApiClient(context, Radar.logger)
         Radar.apiClient.apiHelper = apiHelperMock
         setUpLogConversionTest()
 
-        Radar.initialize(context, publishableKey)
+        Radar.initialize(context, PUBLISHABLE_KEY)
 
         Radar.locationManager.locationClient = locationClientMock
         Radar.locationManager.permissionsHelper = permissionsHelperMock
@@ -357,7 +391,112 @@ class RadarTest {
 
     @Test
     fun test_Radar_initialize() {
-        assertEquals(publishableKey, RadarSettings.getPublishableKey(context))
+        assertEquals(PUBLISHABLE_KEY, RadarSettings.getPublishableKey(context))
+    }
+
+    @Test
+    fun foregroundProcessFallbackLogsOnceForActiveTrip() {
+        val receiver = RecordingReceiver()
+        Radar.setReceiver(receiver)
+        RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
+        RadarSettings.setTripOptions(context, RadarTripOptions("foreground-trip"))
+        setRadarPrivateField("pendingUncleanPreviousProcess", true)
+        setRadarPrivateField("didEvaluateForegroundProcess", false)
+        Radar.initialized = true
+
+        try {
+            Radar.handleForegroundProcessStart()
+            Radar.handleForegroundProcessStart()
+
+            assertEquals(1, receiver.logs.count { it == "App terminating" })
+        } finally {
+            Radar.setReceiver(null)
+            RadarSettings.setTripOptions(context, null)
+        }
+    }
+
+    @Test
+    fun foregroundProcessFallbackRequiresTripOptions() {
+        val receiver = RecordingReceiver()
+        Radar.setReceiver(receiver)
+        RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
+        RadarSettings.setTripOptions(context, null)
+        setRadarPrivateField("pendingUncleanPreviousProcess", true)
+        setRadarPrivateField("didEvaluateForegroundProcess", false)
+        Radar.initialized = true
+
+        try {
+            Radar.handleForegroundProcessStart()
+
+            assertTrue(receiver.logs.none { it == "App terminating" })
+        } finally {
+            Radar.setReceiver(null)
+        }
+    }
+
+    @Test
+    fun backgroundInitializationDoesNotEmitTerminationFallback() {
+        val receiver = RecordingReceiver()
+        Radar.setReceiver(receiver)
+        Radar.initialized = false
+        setActivityForegroundForTest(false)
+        RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
+        RadarSettings.setTripOptions(context, RadarTripOptions("background-trip"))
+        setRadarPrivateField("pendingUncleanPreviousProcess", true)
+        setRadarPrivateField("didEvaluateForegroundProcess", false)
+
+        try {
+            Radar.handleBootCompleted(context)
+            val location = Location("RadarSDK")
+            location.latitude = 40.0
+            location.longitude = -74.0
+            Radar.handleLocation(context, location, Radar.RadarLocationSource.UNKNOWN)
+
+            assertTrue(receiver.logs.none { it == "App terminating" })
+        } finally {
+            Radar.setReceiver(null)
+            RadarSettings.setTripOptions(context, null)
+        }
+    }
+
+    @Test
+    fun concurrentLogFlushUploadsOnlyOneSnapshot() {
+        val entered = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val uploadCount = AtomicInteger()
+        val receiver = RecordingReceiver()
+        Radar.setReceiver(receiver)
+        Radar.apiClient = RadarApiClient(
+            context,
+            Radar.logger,
+            BlockingLogApiHelper(entered, release, uploadCount)
+        )
+        Radar.initialized = true
+        Radar.sendLog(Radar.RadarLogLevel.DEBUG, "concurrent flush", null)
+
+        val firstFlush = Thread { Radar.flushLogs() }
+        firstFlush.start()
+        assertTrue(entered.await(LATCH_TIMEOUT, TimeUnit.SECONDS))
+
+        Radar.flushLogs()
+        release.countDown()
+        firstFlush.join(TimeUnit.SECONDS.toMillis(LATCH_TIMEOUT))
+
+        assertEquals(1, uploadCount.get())
+        Radar.setReceiver(null)
+    }
+
+    private fun setRadarPrivateField(name: String, value: Any) {
+        Radar::class.java.getDeclaredField(name).apply {
+            isAccessible = true
+            set(Radar, value)
+        }
+    }
+    private fun setActivityForegroundForTest(value: Boolean) {
+        RadarActivityLifecycleCallbacks::class.java.getDeclaredField("foreground").apply {
+            isAccessible = true
+            setBoolean(null, value)
+        }
     }
 
     @Test
@@ -370,7 +509,7 @@ class RadarTest {
 
             assertNull(receiver.error)
 
-            Radar.initialize(context, publishableKey)
+            Radar.initialize(context, PUBLISHABLE_KEY)
             Radar.sendError(Radar.RadarStatus.ERROR_UNKNOWN)
 
             assertEquals(Radar.RadarStatus.ERROR_UNKNOWN, receiver.error)
@@ -390,7 +529,7 @@ class RadarTest {
 
             Radar.initialize(
                 context,
-                publishableKey,
+                PUBLISHABLE_KEY,
                 RadarInitializeOptions(
                     radarReceiver = initializationReceiver
                 )
@@ -416,7 +555,7 @@ class RadarTest {
             Radar.setReceiver(receiver)
             Radar.setReceiver(null)
 
-            Radar.initialize(context, publishableKey)
+            Radar.initialize(context, PUBLISHABLE_KEY)
             Radar.sendError(Radar.RadarStatus.ERROR_UNKNOWN)
 
             assertNull(receiver.error)
@@ -448,7 +587,7 @@ class RadarTest {
                 shadowConnectivityManager.networkCallbacks.size
             )
 
-            Radar.initialize(context, publishableKey)
+            Radar.initialize(context, PUBLISHABLE_KEY)
 
             assertEquals(
                 initialCallbackCount + 1,
@@ -477,7 +616,7 @@ class RadarTest {
 
             assertFalse(Radar.hasVerifiedReceiver())
 
-            Radar.initialize(context, publishableKey)
+            Radar.initialize(context, PUBLISHABLE_KEY)
             Radar.sendIpChanged()
 
             assertFalse(receiver.ipChanged)
@@ -1210,7 +1349,7 @@ class RadarTest {
         }
 
         // Initialize Radar with the mock Activity to ensure inAppMessageManager is created
-        Radar.initialize(mockActivity, publishableKey)
+        Radar.initialize(mockActivity, PUBLISHABLE_KEY)
 
         // Set the mock receiver
         Radar.setInAppMessageReceiver(mockInAppMessageReceiver)
@@ -1285,7 +1424,7 @@ class RadarTest {
         }
 
         // Initialize Radar with the mock Activity to ensure inAppMessageManager is created
-        Radar.initialize(mockActivity, publishableKey)
+        Radar.initialize(mockActivity, PUBLISHABLE_KEY)
 
         // Set the mock receiver
         Radar.setInAppMessageReceiver(mockInAppMessageReceiver)
