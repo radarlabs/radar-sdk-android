@@ -20,6 +20,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import androidx.core.view.WindowCompat
 import com.google.firebase.FirebaseApp
 import io.radar.example.map.overlays.MapOverlayRegistry
 import io.radar.example.map.overlays.NearbyGeofencesSource
@@ -61,6 +62,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Android 15 makes the status bar transparent, so the light app background needs dark icons.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = true
+        }
+
         FirebaseApp.initializeApp(this)
 
         // Stores — instantiated once and injected app-wide via CompositionLocals.
