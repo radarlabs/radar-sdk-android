@@ -34,6 +34,7 @@ import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import java.util.Date
 import java.util.EnumSet
+import java.util.concurrent.atomic.AtomicBoolean
 import org.json.JSONObject
 
 /**
@@ -557,8 +558,7 @@ object Radar {
     private lateinit var lifecycleMarker: RadarLifecycleMarker
     private var pendingUncleanPreviousProcess = false
     private var didEvaluateForegroundProcess = false
-    private val logFlushLock = Any()
-    private var isFlushingLogs = false
+    private val isFlushingLogs = AtomicBoolean(false)
     private var activity: Activity? = null
     internal lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
@@ -4443,42 +4443,27 @@ object Radar {
             return
         }
 
-        synchronized(logFlushLock) {
-            if (isFlushingLogs) {
-                return
-            }
-            isFlushingLogs = true
+        if (!isFlushingLogs.compareAndSet(false, true)) {
+            return
         }
 
         val flushable = try {
             logBuffer.getFlushableLogs()
         } catch (e: Exception) {
-            synchronized(logFlushLock) {
-                isFlushingLogs = false
-            }
+            isFlushingLogs.set(false)
             return
         }
 
-        var didFinish = false
+        val didFinish = AtomicBoolean(false)
         fun finish(success: Boolean) {
-            val shouldFinish = synchronized(logFlushLock) {
-                if (didFinish) {
-                    false
-                } else {
-                    didFinish = true
-                    true
-                }
-            }
-            if (!shouldFinish) {
+            if (!didFinish.compareAndSet(false, true)) {
                 return
             }
 
             try {
                 flushable.onFlush(success)
             } finally {
-                synchronized(logFlushLock) {
-                    isFlushingLogs = false
-                }
+                isFlushingLogs.set(false)
             }
         }
 

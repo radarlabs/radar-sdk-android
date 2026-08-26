@@ -92,7 +92,7 @@ internal class RadarSimpleLogBuffer(override val context: Context) : RadarLogBuf
     override fun persistLogs() {
         synchronized(lock) {
             if (persistentLogFeatureFlag) {
-                if (logBuffer.size > 0) {
+                if (logBuffer.isNotEmpty()) {
                     writeToFileStorage(logBuffer)
                     logBuffer.clear()
                 }
