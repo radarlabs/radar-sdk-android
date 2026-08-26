@@ -41,7 +41,6 @@ android {
 
 dependencies {
     implementation project(':sdk')
-    testImplementation 'junit:junit:4.13.2'
     if (findProject(':sdk-fraud') != null) {
         implementation project(':sdk-fraud')
     }
