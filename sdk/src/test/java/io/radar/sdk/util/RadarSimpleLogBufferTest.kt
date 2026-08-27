@@ -101,4 +101,20 @@ class RadarSimpleLogBufferTest {
         assertEquals(1, contents.size)
         assertEquals(message, contents[0].message)
     }
+
+    @Test
+    fun flushSnapshotDeduplicatesIdenticalLogs() {
+        val context: Context = ApplicationProvider.getApplicationContext()
+        val logBuffer = RadarSimpleLogBuffer(context)
+        logBuffer.setPersistentLogFeatureFlag(false)
+        val createdAt = Date(1234L)
+
+        logBuffer.write(Radar.RadarLogLevel.DEBUG, Radar.RadarLogType.SDK_CALL, "duplicate", createdAt)
+        logBuffer.write(Radar.RadarLogLevel.DEBUG, Radar.RadarLogType.SDK_CALL, "duplicate", createdAt)
+
+        val flushable = logBuffer.getFlushableLogs()
+
+        assertEquals(1, flushable.get().size)
+        flushable.onFlush(true)
+    }
 }

@@ -34,6 +34,7 @@ import io.radar.sdk.util.RadarSimpleLogBuffer
 import io.radar.sdk.util.RadarSimpleReplayBuffer
 import java.util.Date
 import java.util.EnumSet
+import java.util.concurrent.atomic.AtomicBoolean
 import org.json.JSONObject
 
 /**
@@ -554,6 +555,10 @@ object Radar {
     internal var initialized = false
     internal var isFlushingReplays = false
     private lateinit var context: Context
+    private lateinit var lifecycleMarker: RadarLifecycleMarker
+    private var pendingUncleanPreviousProcessWithActiveTrip = false
+    private var didEvaluateForegroundProcess = false
+    private val isFlushingLogs = AtomicBoolean(false)
     private var activity: Activity? = null
     internal lateinit var handler: Handler
     private var receiver: RadarReceiver? = null
@@ -573,6 +578,8 @@ object Radar {
     internal lateinit var syncManager: RadarSyncManager
     internal lateinit var offlineEventManager: RadarOfflineEventManager
     private var activityLifecycleCallbacks: RadarActivityLifecycleCallbacks? = null
+
+    private fun isMainProcess(context: Context): Boolean = context.applicationInfo.processName == context.packageName
 
     /**
      * Initializes the Radar SDK. Call this method from the main thread in `Application.onCreate()` before calling any other Radar methods.
@@ -654,6 +661,16 @@ object Radar {
         this.context = context.applicationContext
         this.handler = Handler(this.context.mainLooper)
         RadarSettings.setContext(this.context)
+
+        if (isMainProcess(this.context)) {
+            if (!this::lifecycleMarker.isInitialized) {
+                lifecycleMarker = RadarLifecycleMarker(this.context)
+            }
+            val uncleanPreviousProcess = lifecycleMarker.beginProcess()
+            if (uncleanPreviousProcess && RadarSettings.getTripOptions(this.context) != null) {
+                pendingUncleanPreviousProcessWithActiveTrip = true
+            }
+        }
 
         if (context is Activity) {
             this.activity = context
@@ -827,10 +844,6 @@ object Radar {
             }
         )
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            this.logger.logPastTermination()
-        }
-
         if (options.silentPush) {
             try {
                 RadarFirebaseMessagingService.initialize()
@@ -840,6 +853,10 @@ object Radar {
         }
 
         this.initialized = true
+
+        if (RadarActivityLifecycleCallbacks.foreground) {
+            handleForegroundProcessStart()
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
             verifiedReceiver != null
@@ -855,6 +872,24 @@ object Radar {
      */
     @JvmStatic
     fun isInitialized(): Boolean = initialized
+
+    internal fun handleForegroundProcessStart() {
+        if (didEvaluateForegroundProcess || !initialized || !isMainProcess(context)) {
+            return
+        }
+
+        didEvaluateForegroundProcess = true
+        if (!pendingUncleanPreviousProcessWithActiveTrip) {
+            return
+        }
+
+        val didLogDetailedTermination =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && logger.logPastTerminationIfNeeded()
+        if (!didLogDetailedTermination) {
+            logger.d(RadarLifecycleMarker.APP_TERMINATING_MESSAGE)
+        }
+        pendingUncleanPreviousProcessWithActiveTrip = false
+    }
 
     /**
      * Identifies the user. Until you identify the user, Radar will automatically identify the user by `deviceId` (Android ID).
@@ -4405,21 +4440,56 @@ object Radar {
      */
     @JvmStatic
     internal fun flushLogs() {
-        if (!initialized || !isTestKey()) {
+        if (!initialized) {
             return
         }
 
-        val flushable = logBuffer.getFlushableLogs()
-        val logs = flushable.get()
-        if (logs.isNotEmpty()) {
+        if (!isFlushingLogs.compareAndSet(false, true)) {
+            return
+        }
+
+        val flushable = try {
+            logBuffer.getFlushableLogs()
+        } catch (e: Exception) {
+            isFlushingLogs.set(false)
+            return
+        }
+
+        val didFinish = AtomicBoolean(false)
+        fun finish(success: Boolean) {
+            if (!didFinish.compareAndSet(false, true)) {
+                return
+            }
+
+            try {
+                flushable.onFlush(success)
+            } finally {
+                isFlushingLogs.set(false)
+            }
+        }
+
+        val logs = try {
+            flushable.get()
+        } catch (e: Exception) {
+            finish(false)
+            return
+        }
+        if (logs.isEmpty()) {
+            finish(true)
+            return
+        }
+
+        try {
             apiClient.log(
                 logs,
                 object : RadarApiClient.RadarLogCallback {
                     override fun onComplete(status: RadarStatus, res: JSONObject?) {
-                        flushable.onFlush(status == RadarStatus.SUCCESS)
+                        finish(status == RadarStatus.SUCCESS)
                     }
                 }
             )
+        } catch (e: Exception) {
+            finish(false)
         }
     }
 

@@ -60,17 +60,17 @@ internal class RadarLogger(
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
-    fun logPastTermination(){
+    fun logPastTerminationIfNeeded(): Boolean {
         val level = RadarSettings.getLogLevel(this.context)
-        if (level != RadarLogLevel.DEBUG) {
-            return
+        if (level != RadarLogLevel.DEBUG || RadarSettings.getTripOptions(this.context) == null) {
+            return false
         }
         val activityManager = this.context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         // only run in foreground
         val appProcesses = activityManager.runningAppProcesses
         val isForeground = appProcesses?.any { it.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND && it.processName == context.packageName } ?: false
         if (!isForeground) {
-            return
+            return false
         }
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         val sharedPreferences = this.context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -80,16 +80,17 @@ internal class RadarLogger(
             putLong("last_timestamp", currentTimestamp)
         }
         val batteryLevel = this.getBatteryLevel()
-        
+
         val crashLists = activityManager.getHistoricalProcessExitReasons(null, 0, 10)
         if (crashLists.isNotEmpty()) {
-            for (crashInfo in crashLists) {                
+            for (crashInfo in crashLists) {
                 if (crashInfo.timestamp > previousTimestamp) {
-                    Radar.sendLog(RadarLogLevel.DEBUG, "App terminating | with reason: ${crashInfo.getDescription()} | at ${dateFormat.format(Date(crashInfo.timestamp))} | with ${batteryLevel * 100}% battery", null, Date(crashInfo.timestamp))
-                    break
+                    Radar.sendLog(RadarLogLevel.DEBUG, "${RadarLifecycleMarker.APP_TERMINATING_MESSAGE} | with reason: ${crashInfo.getDescription()} | at ${dateFormat.format(Date(crashInfo.timestamp))} | with ${batteryLevel * 100}% battery", null, Date(crashInfo.timestamp))
+                    return true
                 }
             }
         }
+        return false
     }
 
     fun getBatteryLevel(): Float {
@@ -108,10 +109,9 @@ internal class RadarLogger(
         this.d("App entering background | at ${dateFormat.format(Date())} | with ${batteryLevel * 100}% battery")
     }
 
-     fun logResigningActive() {
+    fun logResigningActive() {
         val batteryLevel = this.getBatteryLevel()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         this.d("App resigning active | at ${dateFormat.format(Date())} | with ${batteryLevel * 100}% battery")
     }
-
 }

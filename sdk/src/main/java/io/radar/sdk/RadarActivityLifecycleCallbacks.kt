@@ -71,38 +71,42 @@ internal class RadarActivityLifecycleCallbacks(
     }
 
     override fun onActivityResumed(activity: Activity) {
+        val wasBackgrounded = count == 0
         if (count == 0 && !isFirstOnResume) {
             try {
                 val updated = RadarSettings.updateSessionId(activity.applicationContext)
                 if (updated) {
                     val usage = "resume"
-                    Radar.apiClient.getConfig(usage = usage, callback = object : RadarApiClient.RadarGetConfigApiCallback {
-                        override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                            if (config == null) {
-                                return
-                            }
-
-                            if (status == Radar.RadarStatus.SUCCESS) {
-                                Radar.locationManager.updateTrackingFromMeta(config.meta)
-                                RadarSettings.setSdkConfiguration(activity.applicationContext, config.meta.sdkConfiguration)
-
-                                val updatedConfig = RadarSettings.getSdkConfiguration(activity.applicationContext)
-                                if (updatedConfig.useSyncRegion) {
-                                    Radar.syncManager.start(86400 * 1000L)
-                                } else {
-                                    Radar.syncManager.stop()
+                    Radar.apiClient.getConfig(
+                        usage = usage,
+                        callback = object : RadarApiClient.RadarGetConfigApiCallback {
+                            override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
+                                if (config == null) {
+                                    return
                                 }
-                            }
 
-                            val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
-                            if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
-                                Radar.trackOnce()
-                                if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(activity.applicationContext)) {
-                                    Radar.startTracking(Radar.getTrackingOptions())
+                                if (status == Radar.RadarStatus.SUCCESS) {
+                                    Radar.locationManager.updateTrackingFromMeta(config.meta)
+                                    RadarSettings.setSdkConfiguration(activity.applicationContext, config.meta.sdkConfiguration)
+
+                                    val updatedConfig = RadarSettings.getSdkConfiguration(activity.applicationContext)
+                                    if (updatedConfig.useSyncRegion) {
+                                        Radar.syncManager.start(86400 * 1000L)
+                                    } else {
+                                        Radar.syncManager.stop()
+                                    }
+                                }
+
+                                val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
+                                if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
+                                    Radar.trackOnce()
+                                    if (sdkConfiguration.startTrackingOnInitialize && !RadarSettings.getTracking(activity.applicationContext)) {
+                                        Radar.startTracking(Radar.getTrackingOptions())
+                                    }
                                 }
                             }
                         }
-                    })
+                    )
                 } else {
                     val sdkConfiguration = RadarSettings.getSdkConfiguration(activity.applicationContext)
                     if (sdkConfiguration.trackOnceOnAppOpen || sdkConfiguration.startTrackingOnInitialize) {
@@ -119,6 +123,9 @@ internal class RadarActivityLifecycleCallbacks(
         count++
         isFirstOnResume = false
         foreground = count > 0
+        if (wasBackgrounded) {
+            Radar.handleForegroundProcessStart()
+        }
         activity.intent?.let { Radar.logOpenedAppConversion(it) } ?: Radar.logOpenedAppConversion()
 
         updatePermissionsDenied(activity)
