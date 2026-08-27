@@ -3,6 +3,7 @@ package io.radar.sdk
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -22,12 +23,31 @@ class RadarLifecycleMarkerTest {
     }
 
     @Test
-    fun beginProcessTracksPreviousProcessAndPersistsMarker() {
+    fun appTerminatingMessageMatchesServerContract() {
+        assertEquals("App terminating", RadarLifecycleMarker.APP_TERMINATING_MESSAGE)
+    }
+
+    @Test
+    fun freshProcessPersistsMarkerWithoutReportingPreviousTermination() {
         val marker = RadarLifecycleMarker(preferences)
 
         assertFalse(marker.beginProcess())
         assertTrue(preferences.getBoolean("app_lifecycle_marker", false))
-        assertFalse(marker.beginProcess())
+    }
+
+    @Test
+    fun subsequentProcessFindsDurableMarker() {
+        RadarLifecycleMarker(preferences).beginProcess()
+
         assertTrue(RadarLifecycleMarker(preferences).beginProcess())
+    }
+
+    @Test
+    fun repeatedInitializationInOneProcessIsIdempotent() {
+        val marker = RadarLifecycleMarker(preferences)
+
+        assertFalse(marker.beginProcess())
+        assertFalse(marker.beginProcess())
+        assertTrue(preferences.getBoolean("app_lifecycle_marker", false))
     }
 }

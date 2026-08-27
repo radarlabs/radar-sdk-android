@@ -3,16 +3,18 @@ package io.radar.sdk
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal class RadarLifecycleMarker(
     private val preferences: SharedPreferences
 ) {
-    private companion object {
+    internal companion object {
+        const val APP_TERMINATING_MESSAGE = "App terminating"
+
         private const val KEY_APP_LIFECYCLE_MARKER = "app_lifecycle_marker"
     }
 
-    private val lock = Any()
-    private var didBeginProcess = false
+    private val didBeginProcess = AtomicBoolean(false)
 
     constructor(context: Context) : this(
         context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -20,18 +22,20 @@ internal class RadarLifecycleMarker(
 
     @Suppress("ApplySharedPref")
     fun beginProcess(): Boolean {
-        synchronized(lock) {
-            if (didBeginProcess) {
-                return false
-            }
+        if (!didBeginProcess.compareAndSet(false, true)) {
+            return false
+        }
 
+        try {
             val previousValue = preferences.getBoolean(KEY_APP_LIFECYCLE_MARKER, false)
-            // The next process must see this marker before this method returns.
+            // Android may kill a background app without a callback, so this marker stays set.
             preferences.edit(commit = true) {
                 putBoolean(KEY_APP_LIFECYCLE_MARKER, true)
             }
-            didBeginProcess = true
             return previousValue
+        } catch (exception: RuntimeException) {
+            didBeginProcess.set(false)
+            throw exception
         }
     }
 }

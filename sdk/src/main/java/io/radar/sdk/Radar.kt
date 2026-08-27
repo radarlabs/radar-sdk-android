@@ -556,7 +556,7 @@ object Radar {
     internal var isFlushingReplays = false
     private lateinit var context: Context
     private lateinit var lifecycleMarker: RadarLifecycleMarker
-    private var pendingUncleanPreviousProcess = false
+    private var pendingUncleanPreviousProcessWithActiveTrip = false
     private var didEvaluateForegroundProcess = false
     private val isFlushingLogs = AtomicBoolean(false)
     private var activity: Activity? = null
@@ -664,9 +664,12 @@ object Radar {
 
         if (isMainProcess(this.context)) {
             if (!this::lifecycleMarker.isInitialized) {
-                this.lifecycleMarker = RadarLifecycleMarker(this.context)
+                lifecycleMarker = RadarLifecycleMarker(this.context)
             }
-            pendingUncleanPreviousProcess = pendingUncleanPreviousProcess || lifecycleMarker.beginProcess()
+            val uncleanPreviousProcess = lifecycleMarker.beginProcess()
+            if (uncleanPreviousProcess && RadarSettings.getTripOptions(this.context) != null) {
+                pendingUncleanPreviousProcessWithActiveTrip = true
+            }
         }
 
         if (context is Activity) {
@@ -876,18 +879,16 @@ object Radar {
         }
 
         didEvaluateForegroundProcess = true
-        val didLogPastTermination = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            logger.logPastTerminationIfNeeded()
-        } else {
-            false
+        if (!pendingUncleanPreviousProcessWithActiveTrip) {
+            return
         }
-        if (!didLogPastTermination &&
-            pendingUncleanPreviousProcess &&
-            RadarSettings.getTripOptions(context) != null
-        ) {
-            logger.d("App terminating")
+
+        val didLogDetailedTermination =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && logger.logPastTerminationIfNeeded()
+        if (!didLogDetailedTermination) {
+            logger.d(RadarLifecycleMarker.APP_TERMINATING_MESSAGE)
         }
-        pendingUncleanPreviousProcess = false
+        pendingUncleanPreviousProcessWithActiveTrip = false
     }
 
     /**
@@ -4439,7 +4440,7 @@ object Radar {
      */
     @JvmStatic
     internal fun flushLogs() {
-        if (!initialized || !isTestKey()) {
+        if (!initialized) {
             return
         }
 

@@ -395,67 +395,74 @@ class RadarTest {
     }
 
     @Test
-    fun foregroundProcessFallbackLogsOnceForActiveTrip() {
+    fun persistedTripAndPreviousProcessMarkerEmitTerminationOnceOnForeground() {
         val receiver = RecordingReceiver()
         Radar.setReceiver(receiver)
         RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
         RadarSettings.setTripOptions(context, RadarTripOptions("foreground-trip"))
-        setRadarPrivateField("pendingUncleanPreviousProcess", true)
+        setLifecycleMarkerForTest(previousProcessMarker = true)
+        setRadarPrivateField("pendingUncleanPreviousProcessWithActiveTrip", false)
         setRadarPrivateField("didEvaluateForegroundProcess", false)
-        Radar.initialized = true
+        setActivityForegroundForTest(false)
 
         try {
+            Radar.initialize(context, PUBLISHABLE_KEY)
+
+            assertTrue(receiver.logs.none { it == RadarLifecycleMarker.APP_TERMINATING_MESSAGE })
+            assertTrue(getRadarPrivateBoolean("pendingUncleanPreviousProcessWithActiveTrip"))
+
+            setActivityForegroundForTest(true)
+            RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
+            setRadarPrivateField("didEvaluateForegroundProcess", false)
             Radar.handleForegroundProcessStart()
             Radar.handleForegroundProcessStart()
 
-            assertEquals(1, receiver.logs.count { it == "App terminating" })
+            assertEquals(1, receiver.logs.count { it == RadarLifecycleMarker.APP_TERMINATING_MESSAGE })
         } finally {
             Radar.setReceiver(null)
             RadarSettings.setTripOptions(context, null)
+            setActivityForegroundForTest(true)
         }
     }
 
     @Test
-    fun foregroundProcessFallbackRequiresTripOptions() {
+    fun tripStartedAfterInitializationDoesNotEmitTerminationFallback() {
         val receiver = RecordingReceiver()
         Radar.setReceiver(receiver)
         RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
         RadarSettings.setTripOptions(context, null)
-        setRadarPrivateField("pendingUncleanPreviousProcess", true)
+        setLifecycleMarkerForTest(previousProcessMarker = true)
+        setRadarPrivateField("pendingUncleanPreviousProcessWithActiveTrip", false)
         setRadarPrivateField("didEvaluateForegroundProcess", false)
-        Radar.initialized = true
+        setActivityForegroundForTest(false)
 
         try {
+            Radar.initialize(context, PUBLISHABLE_KEY)
+            RadarSettings.setTripOptions(context, RadarTripOptions("later-trip"))
+            setActivityForegroundForTest(true)
             Radar.handleForegroundProcessStart()
 
-            assertTrue(receiver.logs.none { it == "App terminating" })
+            assertTrue(receiver.logs.none { it == RadarLifecycleMarker.APP_TERMINATING_MESSAGE })
         } finally {
             Radar.setReceiver(null)
+            RadarSettings.setTripOptions(context, null)
+            setActivityForegroundForTest(true)
         }
     }
 
     @Test
-    fun backgroundInitializationDoesNotEmitTerminationFallback() {
-        val receiver = RecordingReceiver()
-        Radar.setReceiver(receiver)
-        Radar.initialized = false
-        setActivityForegroundForTest(false)
-        RadarSettings.setLogLevel(context, Radar.RadarLogLevel.DEBUG)
-        RadarSettings.setTripOptions(context, RadarTripOptions("background-trip"))
-        setRadarPrivateField("pendingUncleanPreviousProcess", true)
-        setRadarPrivateField("didEvaluateForegroundProcess", false)
+    fun secondaryProcessDoesNotOwnLifecycleMarker() {
+        val preferences = context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
+        preferences.edit().remove("app_lifecycle_marker").commit()
+        setRadarPrivateField("lifecycleMarker", RadarLifecycleMarker(preferences))
+        context.applicationInfo.processName = "${context.packageName}:secondary"
 
         try {
-            Radar.handleBootCompleted(context)
-            val location = Location("RadarSDK")
-            location.latitude = 40.0
-            location.longitude = -74.0
-            Radar.handleLocation(context, location, Radar.RadarLocationSource.UNKNOWN)
+            Radar.initialize(context, PUBLISHABLE_KEY)
 
-            assertTrue(receiver.logs.none { it == "App terminating" })
+            assertFalse(preferences.getBoolean("app_lifecycle_marker", false))
         } finally {
-            Radar.setReceiver(null)
-            RadarSettings.setTripOptions(context, null)
+            context.applicationInfo.processName = context.packageName
         }
     }
 
@@ -486,12 +493,47 @@ class RadarTest {
         Radar.setReceiver(null)
     }
 
+    @Test
+    fun livePublishableKeyFlushesLogs() {
+        val previousApiClient = Radar.apiClient
+        val uploadCount = AtomicInteger()
+        Radar.apiClient = RadarApiClient(
+            context,
+            Radar.logger,
+            BlockingLogApiHelper(CountDownLatch(1), CountDownLatch(0), uploadCount)
+        )
+        RadarSettings.setPublishableKey(context, "prj_live_pk_0000000000000000000000000000000000000000")
+        Radar.initialized = true
+        Radar.sendLog(Radar.RadarLogLevel.DEBUG, "live key flush", null)
+
+        try {
+            Radar.flushLogs()
+
+            assertEquals(1, uploadCount.get())
+        } finally {
+            Radar.apiClient = previousApiClient
+            RadarSettings.setPublishableKey(context, PUBLISHABLE_KEY)
+        }
+    }
+
     private fun setRadarPrivateField(name: String, value: Any) {
         Radar::class.java.getDeclaredField(name).apply {
             isAccessible = true
             set(Radar, value)
         }
     }
+
+    private fun getRadarPrivateBoolean(name: String): Boolean = Radar::class.java.getDeclaredField(name).run {
+        isAccessible = true
+        getBoolean(Radar)
+    }
+
+    private fun setLifecycleMarkerForTest(previousProcessMarker: Boolean) {
+        val preferences = context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
+        preferences.edit().putBoolean("app_lifecycle_marker", previousProcessMarker).commit()
+        setRadarPrivateField("lifecycleMarker", RadarLifecycleMarker(preferences))
+    }
+
     private fun setActivityForegroundForTest(value: Boolean) {
         RadarActivityLifecycleCallbacks::class.java.getDeclaredField("foreground").apply {
             isAccessible = true
