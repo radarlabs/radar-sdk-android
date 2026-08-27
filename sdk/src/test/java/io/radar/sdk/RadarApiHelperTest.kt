@@ -3,7 +3,9 @@ package io.radar.sdk
 import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONException
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -91,5 +93,46 @@ class RadarApiHelperTest {
         assertTrue(message.contains("kind = JSON_PARSE"))
         assertTrue(message.contains("exception = JSONException"))
         assertTrue(message.contains("Unterminated string"))
+    }
+
+    @Test
+    fun attachRequestIdToMeta_setsRequestId_whenMetaPresent() {
+        val res = JSONObject("""{"meta":{"code":200},"user":{"_id":"abc"}}""")
+
+        attachRequestIdToMeta(res, "01a01c2e-7512-704c-aa02-81253218d810")
+
+        assertEquals("01a01c2e-7512-704c-aa02-81253218d810", res.getJSONObject("meta").getString("requestId"))
+        assertEquals(200, res.getJSONObject("meta").getInt("code"))
+    }
+
+    @Test
+    fun attachRequestIdToMeta_setsRequestId_onErrorMeta() {
+        val res = JSONObject("""{"meta":{"code":400,"error":"ERROR_BAD_REQUEST"}}""")
+
+        attachRequestIdToMeta(res, "01a01c2e-7512-704c-aa02-81253218d810")
+
+        assertEquals("01a01c2e-7512-704c-aa02-81253218d810", res.getJSONObject("meta").getString("requestId"))
+        assertEquals("ERROR_BAD_REQUEST", res.getJSONObject("meta").getString("error"))
+    }
+
+    @Test
+    fun attachRequestIdToMeta_doesNotCreateMeta_whenAbsent() {
+        // RadarApiClient gates config handling on res.has("meta") — synthesizing a meta here
+        // would flow a RadarMeta with no trackingOptions into updateTrackingFromMeta, which
+        // removes remote tracking options. A response without meta must stay without meta.
+        val res = JSONObject("""{"user":{"_id":"abc"}}""")
+
+        attachRequestIdToMeta(res, "01a01c2e-7512-704c-aa02-81253218d810")
+
+        assertFalse(res.has("meta"))
+    }
+
+    @Test
+    fun attachRequestIdToMeta_leavesMetaUntouched_whenHeaderMissing() {
+        val res = JSONObject("""{"meta":{"code":200}}""")
+
+        attachRequestIdToMeta(res, null)
+
+        assertFalse(res.getJSONObject("meta").has("requestId"))
     }
 }

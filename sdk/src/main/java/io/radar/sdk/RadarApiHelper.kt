@@ -42,6 +42,18 @@ internal enum class NetworkErrorKind {
 
 internal fun networkErrorMessage(host: String, e: Exception, elapsedMs: Long, kind: String): String = "📍 Radar API network error | host = $host; kind = $kind; exception = ${e.javaClass.simpleName}; message = ${e.localizedMessage}; elapsedMs = $elapsedMs"
 
+internal const val REQUEST_ID_HEADER = "x-radar-request-id"
+
+internal fun attachRequestIdToMeta(res: JSONObject, requestId: String?) {
+    if (requestId == null) {
+        return
+    }
+
+    // only attach to an existing meta: synthesizing one would flip downstream res.has("meta")
+    // checks (e.g. remote tracking options handling in RadarApiClient)
+    res.optJSONObject("meta")?.put("requestId", requestId)
+}
+
 internal open class RadarApiHelper(
     private var logger: RadarLogger? = null
 ) {
@@ -162,6 +174,7 @@ internal open class RadarApiHelper(
                         }
 
                         val res = JSONObject(body)
+                        attachRequestIdToMeta(res, urlConnection.getHeaderField(REQUEST_ID_HEADER))
 
                         logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res")
 
@@ -201,6 +214,7 @@ internal open class RadarApiHelper(
                     }
 
                     val res = JSONObject(body)
+                    attachRequestIdToMeta(res, urlConnection.getHeaderField(REQUEST_ID_HEADER))
 
                     logger?.e("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
 
