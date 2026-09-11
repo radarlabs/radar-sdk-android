@@ -1867,6 +1867,25 @@ object Radar {
     }
 
     /**
+     * Optionally sets the user's expected address, check is skipped if either param is null
+     *
+     * @param[address] The user's expected address
+     * @param[radius] The distance between user's GPS location to address where the location is considered expected.
+     */
+    fun setExpectedAddress(address: String?, radius: Double?) {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("setExpectedAddress", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger, this.revealRiskManager)
+        }
+
+        this.verificationManager.setExpectedAddress(address, radius)
+    }
+
+    /**
      * Starts tracking the user's location in the background.
      *
      * @see [](https://radar.com/documentation/sdk/android#background-tracking-for-geofencing)

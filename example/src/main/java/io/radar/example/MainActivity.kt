@@ -50,8 +50,10 @@ class MainActivity : AppCompatActivity() {
         // e.g. "http://192.168.68.112:8081". Use your LAN IP (not localhost), or 10.0.2.2 on the emulator.
         // Leave blank to use Radar's production hosts.
         private const val TARGET_HOST = ""
-    }
 
+        /** Placeholder — replace or override at runtime. */
+        const val DEFAULT_PUBLISHABLE_KEY = "prj_test_pk_0000000000000000000000000000000000000000"
+    }
     private lateinit var permissionsStore: PermissionsStore
 
     // Registered before STARTED per the Activity Result contract; refreshes the store on result.
