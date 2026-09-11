@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity() {
         /** Placeholder — replace or override at runtime. */
         const val DEFAULT_PUBLISHABLE_KEY = "prj_test_pk_0000000000000000000000000000000000000000"
     }
+
     private lateinit var permissionsStore: PermissionsStore
 
     // Registered before STARTED per the Activity Result contract; refreshes the store on result.
