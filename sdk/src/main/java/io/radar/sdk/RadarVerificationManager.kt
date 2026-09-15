@@ -45,7 +45,6 @@ internal class RadarVerificationManager(
     private var expectedCountryCode: String? = null
     private var expectedStateCode: String? = null
     private var expectedAddress: String? = null
-    private var expectedAddressRadius: Double? = null
     fun trackVerified(
         beacons: Boolean = false,
         desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
@@ -112,7 +111,6 @@ internal class RadarVerificationManager(
                                         verificationManager.expectedCountryCode,
                                         verificationManager.expectedStateCode,
                                         verificationManager.expectedAddress,
-                                        verificationManager.expectedAddressRadius,
                                         reason ?: "manual",
                                         transactionId,
                                         revealRiskManager.getRevealRiskId(),
@@ -501,9 +499,8 @@ internal class RadarVerificationManager(
         this.expectedStateCode = stateCode
     }
 
-    fun setExpectedAddress(address: String?, radius: Double?) {
+    fun setExpectedAddress(address: String?) {
         this.expectedAddress = address
-        this.expectedAddressRadius = radius
     }
 
     fun getIPs(): String {

@@ -1872,7 +1872,9 @@ object Radar {
      * @param[address] The user's expected address
      * @param[radius] The distance between user's GPS location to address where the location is considered expected.
      */
-    fun setExpectedAddress(address: String?, radius: Double?) {
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun setExpectedAddress(address: String?) {
         if (!initialized) {
             return
         }
@@ -1882,7 +1884,7 @@ object Radar {
             this.verificationManager = RadarVerificationManager(this.context, this.logger, this.revealRiskManager)
         }
 
-        this.verificationManager.setExpectedAddress(address, radius)
+        this.verificationManager.setExpectedAddress(address)
     }
 
     /**

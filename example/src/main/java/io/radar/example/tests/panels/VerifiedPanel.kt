@@ -48,7 +48,7 @@ fun VerifiedPanel() {
             }
         }
         ActionButton("setExpectedAddress") {
-            Radar.setExpectedAddress("111 5th Ave, NY", 1.0)
+            Radar.setExpectedAddress("111 5th Ave, NY")
         }
     }
 }

@@ -300,7 +300,6 @@ internal class RadarApiClient(
         expectedCountryCode: String? = null,
         expectedStateCode: String? = null,
         expectedAddress: String? = null,
-        expectedAddressRadius: Double? = null,
         reason: String? = null,
         transactionId: String? = null,
         revealRiskId: String? = null,
@@ -416,9 +415,6 @@ internal class RadarApiClient(
                 }
                 if (expectedAddress != null) {
                     params.putOpt("expectedAddress", expectedAddress)
-                }
-                if (expectedAddressRadius != null) {
-                    params.putOpt("expectedAddressRadius", expectedAddressRadius)
                 }
                 if (reason != null) {
                     params.putOpt("reason", reason)
