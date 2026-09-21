@@ -8,16 +8,17 @@ class RadarExpectedAddress(
     val latitude: Double?,
     val longitude: Double?,
     val atAddress: Boolean,
-    val confidence: Confidence?,
+    val confidence: Confidence,
     val distance: Double?
 ) {
     enum class Confidence(val value: String) {
         HIGH("high"),
         MEDIUM("medium"),
-        LOW("low");
+        LOW("low"),
+        UNKNOWN("unknown");
 
         companion object {
-            fun fromString(value: String): Confidence? = entries.find { it.value == value }
+            fun fromString(value: String): Confidence = entries.find { it.value == value } ?: UNKNOWN
         }
     }
 
@@ -63,7 +64,7 @@ class RadarExpectedAddress(
         obj.putOpt(FIELD_LATITUDE, this.latitude)
         obj.putOpt(FIELD_LONGITUDE, this.longitude)
         obj.putOpt(FIELD_AT_ADDRESS, this.atAddress)
-        obj.putOpt(FIELD_CONFIDENCE, this.confidence?.value)
+        obj.putOpt(FIELD_CONFIDENCE, this.confidence.value)
         obj.putOpt(FIELD_DISTANCE, this.distance)
         return obj
     }
