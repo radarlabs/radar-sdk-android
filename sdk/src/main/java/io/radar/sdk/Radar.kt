@@ -1870,7 +1870,6 @@ object Radar {
      * Optionally sets the user's expected address, check is skipped if either param is null
      *
      * @param[address] The user's expected address
-     * @param[radius] The distance between user's GPS location to address where the location is considered expected.
      */
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
