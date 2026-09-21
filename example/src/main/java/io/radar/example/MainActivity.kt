@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
         private const val TARGET_HOST = ""
 
         /** Placeholder — replace or override at runtime. */
-        const val DEFAULT_PUBLISHABLE_KEY = "prj_test_pk_3508428416f485c5f54d8e8bb1f616ee405b1995"
+        const val DEFAULT_PUBLISHABLE_KEY = "prj_test_pk_"
     }
 
     private lateinit var permissionsStore: PermissionsStore
