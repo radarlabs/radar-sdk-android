@@ -9,22 +9,19 @@ class RadarExpectedAddress(
     val longitude: Double?,
     val atAddress: Boolean,
     val confidence: Confidence?,
-    val distance: Double?,
+    val distance: Double?
 ) {
     enum class Confidence(val value: String) {
         HIGH("high"),
         MEDIUM("medium"),
-        LOW("low"),
-        ;
+        LOW("low");
+
         companion object {
-            fun fromString(value: String): Confidence? {
-                return entries.find { it.value == value }
-            }
+            fun fromString(value: String): Confidence? = entries.find { it.value == value }
         }
     }
 
     internal companion object {
-
         private const val FIELD_EXPECTED_ADDRESS = "expectedAddress"
         private const val FIELD_FORMATTED_ADDRESS = "formattedAddress"
         private const val FIELD_LATITUDE = "latitude"

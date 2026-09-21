@@ -131,7 +131,7 @@ class RadarUser(
     /**
      * Optional description of the user's expected address.
      */
-    val expectedAddress: RadarExpectedAddress?,
+    val expectedAddress: RadarExpectedAddress?
 ) {
     internal companion object {
         private const val FIELD_ID = "_id"
@@ -280,7 +280,7 @@ class RadarUser(
         obj.putOpt(FIELD_TRIP, this.trip?.toJson())
         obj.putOpt(FIELD_DEBUG, this.debug)
         obj.putOpt(FIELD_FRAUD, this.fraud?.toJson())
-        obj.putOpt(FIELD_ACTIVITY_TYPE,this.activityType?.toString())
+        obj.putOpt(FIELD_ACTIVITY_TYPE, this.activityType?.toString())
         if (this.altitude != null) {
             obj.putOpt(FIELD_ALTITUDE, this.altitude)
         }
