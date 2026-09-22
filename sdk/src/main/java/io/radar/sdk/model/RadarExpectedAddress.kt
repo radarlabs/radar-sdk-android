@@ -52,7 +52,7 @@ class RadarExpectedAddress(
                 longitude,
                 atAddress,
                 confidence,
-                distance,
+                distance
             )
         }
     }
