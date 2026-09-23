@@ -70,7 +70,8 @@ internal open class RadarApiHelper(
         logPayload: Boolean = true,
         verified: Boolean = false,
         imageCallback: RadarImageApiCallback? = null,
-        verifiedHostOverride: String? = null
+        verifiedHostOverride: String? = null,
+        prepareRequest: (() -> Unit)? = null
     ) {
         val host = if (verified) {
             verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
@@ -91,6 +92,15 @@ internal open class RadarApiHelper(
         executor.execute {
             val startMs = SystemClock.elapsedRealtime()
             try {
+                try {
+                    prepareRequest?.invoke()
+                } catch (e: Exception) {
+                    logger?.e("Failed to prepare Radar API request", RadarLogType.SDK_ERROR, e)
+                    handler.post {
+                        callback?.onComplete(Radar.RadarStatus.ERROR_PLUGIN, throwable = e)
+                    }
+                    return@execute
+                }
                 val urlConnection = url.openConnection() as HttpURLConnection
                 if (headers != null) {
                     for ((key, value) in headers) {

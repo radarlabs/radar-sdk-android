@@ -2,6 +2,9 @@ package io.radar.sdk
 
 import android.content.Context
 import android.location.Location
+import android.util.Base64
+import java.security.SecureRandom
+import org.json.JSONObject
 
 internal class RadarSDKFraud {
     companion object {
@@ -111,5 +114,32 @@ internal class RadarPreparedFraudPayload(private val handle: Any) {
             ?: throw IllegalStateException(
                 result?.get("error") as? String ?: "Failed to encrypt fraud payload"
             )
+    }
+
+    fun sealForRequest(
+        path: String,
+        params: JSONObject,
+        headers: Map<String, String>
+    ): String {
+        val bytes = ByteArray(16)
+        SecureRandom().nextBytes(bytes)
+        val attemptId = Base64.encodeToString(
+            bytes,
+            Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP
+        )
+
+        return seal(
+            mapOf(
+                "method" to "POST",
+                "canonicalRoute" to "/$path",
+                "encryptionAttemptId" to attemptId,
+                "issuedAt" to System.currentTimeMillis() / 1000L,
+                "installId" to params.getString("installId"),
+                "origin" to headers["X-Radar-Mobile-Origin"],
+                "product" to headers["X-Radar-Product"],
+                "sdkVersion" to headers["X-Radar-SDK-Version"],
+                "authorization" to headers["Authorization"]
+            )
+        )
     }
 }

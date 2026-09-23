@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.content.Context
 import android.os.Build
+import android.util.Base64
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.model.RadarRevealRiskToken
@@ -28,6 +29,18 @@ class RadarRevealRiskTest {
     companion object {
         const val LATCH_TIMEOUT = 5L
         const val PUBLISHABLE_KEY = "prj_test_pk_0000000000000000000000000000000000000000"
+        const val SEALED_FRAUD_PAYLOAD = """{"encv":1}"""
+    }
+
+    class RecordingFraudHandle(
+        private val result: Map<String, Any?> = mapOf("payload" to SEALED_FRAUD_PAYLOAD)
+    ) {
+        val sealOptions = mutableListOf<Map<String, Any?>>()
+
+        fun seal(options: Map<String, Any?>): Map<String, Any?> {
+            sealOptions.add(options.toMap())
+            return result
+        }
     }
 
     private val context: Context = ApplicationProvider.getApplicationContext()
@@ -52,12 +65,13 @@ class RadarRevealRiskTest {
     fun test_revealRisk_parsesFullyPopulatedToken() {
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/reveal_risk.json")
+        val fraudHandle = RecordingFraudHandle()
 
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
         var callbackToken: RadarRevealRiskToken? = null
 
-        Radar.apiClient.revealRisk("mock-fraud-payload") { status, token ->
+        Radar.apiClient.revealRisk(RadarPreparedFraudPayload(fraudHandle)) { status, token ->
             callbackStatus = status
             callbackToken = token
             latch.countDown()
@@ -71,6 +85,20 @@ class RadarRevealRiskTest {
         assertEquals("POST", apiHelperMock.lastCapturedMethod)
         assertEquals("v1/reveal/risk", apiHelperMock.lastCapturedPath)
         assertTrue(apiHelperMock.lastCapturedVerified)
+        assertEquals(SEALED_FRAUD_PAYLOAD, apiHelperMock.lastCapturedParams?.getString("fraudPayload"))
+
+        val sealOptions = fraudHandle.sealOptions.single()
+        assertEquals("POST", sealOptions["method"])
+        assertEquals("/v1/reveal/risk", sealOptions["canonicalRoute"])
+        assertEquals(apiHelperMock.lastCapturedParams?.getString("installId"), sealOptions["installId"])
+        assertEquals(context.packageName, sealOptions["origin"])
+        assertEquals(RadarUtils.sdkVersion, sealOptions["sdkVersion"])
+        assertEquals(PUBLISHABLE_KEY, sealOptions["authorization"])
+        val attemptId = sealOptions["encryptionAttemptId"] as String
+        assertTrue(attemptId.matches(Regex("[A-Za-z0-9_-]{22}")))
+        assertEquals(16, Base64.decode(attemptId, Base64.URL_SAFE or Base64.NO_WRAP).size)
+        val nowSeconds = System.currentTimeMillis() / 1000L
+        assertTrue((sealOptions["issuedAt"] as Long) in (nowSeconds - 5)..(nowSeconds + 5))
 
         // The response was parsed into a fully-populated token.
         val token = callbackToken!!
@@ -143,7 +171,7 @@ class RadarRevealRiskTest {
         var callbackStatus: Radar.RadarStatus? = null
         var callbackToken: RadarRevealRiskToken? = null
 
-        Radar.apiClient.revealRisk("mock-fraud-payload") { status, token ->
+        Radar.apiClient.revealRisk(RadarPreparedFraudPayload(RecordingFraudHandle())) { status, token ->
             callbackStatus = status
             callbackToken = token
             latch.countDown()
@@ -154,6 +182,23 @@ class RadarRevealRiskTest {
 
         assertEquals(Radar.RadarStatus.ERROR_SERVER, callbackStatus)
         assertNull(callbackToken)
+    }
+
+    @Test
+    fun test_revealRisk_doesNotSendWhenSealingFails() {
+        val fraudHandle = RecordingFraudHandle(mapOf("error" to "Failed to encrypt fraud payload"))
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackToken: RadarRevealRiskToken? = null
+
+        Radar.apiClient.revealRisk(RadarPreparedFraudPayload(fraudHandle)) { status, token ->
+            callbackStatus = status
+            callbackToken = token
+        }
+
+        assertEquals(1, fraudHandle.sealOptions.size)
+        assertEquals(Radar.RadarStatus.ERROR_PLUGIN, callbackStatus)
+        assertNull(callbackToken)
+        assertNotEquals("v1/reveal/risk", apiHelperMock.lastCapturedPath)
     }
 
     @Test
