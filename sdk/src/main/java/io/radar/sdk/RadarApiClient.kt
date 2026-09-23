@@ -650,7 +650,7 @@ internal class RadarApiClient(
     }
 
     internal fun revealRisk(
-        fraudPayload: String? = null,
+        preparedFraudPayload: RadarPreparedFraudPayload,
         verifiedHostOverride: String? = null,
         callback: (
             status: RadarStatus,
@@ -669,9 +669,6 @@ internal class RadarApiClient(
             putDeviceParameters(params)
             putUserParameters(params)
             putApplicationParameters(params)
-            if (fraudPayload != null) {
-                params.put("fraudPayload", fraudPayload)
-            }
         } catch (e: JSONException) {
             logger.e("Error while processing RevealRisk parameters", Radar.RadarLogType.SDK_ERROR, e)
             callback(RadarStatus.ERROR_BAD_REQUEST, null)
@@ -693,6 +690,12 @@ internal class RadarApiClient(
             logPayload = true,
             verified = true,
             verifiedHostOverride = verifiedHostOverride,
+            prepareRequest = {
+                params.put(
+                    "fraudPayload",
+                    preparedFraudPayload.sealForRequest(path, params, headers)
+                )
+            },
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status != RadarStatus.SUCCESS || res == null) {
