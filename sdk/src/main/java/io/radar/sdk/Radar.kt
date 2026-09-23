@@ -2353,7 +2353,7 @@ object Radar {
                         }
 
                         // flush location update to generate events
-                        locationManager.getLocation(null)
+                        Radar.trackOnce()
                     }
 
                     handler.post {
