@@ -936,24 +936,6 @@
         <error line="140" column="1" source="standard:no-blank-line-before-rbrace" />
         <error line="163" column="21" source="standard:chain-wrapping" />
     </file>
-    <file name="src/test/java/io/radar/sdk/RadarMockLocationProvider.kt">
-        <error line="7" column="41" source="standard:class-signature" />
-        <error line="24" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="24" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="28" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="28" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="32" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="32" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="41" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="41" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="45" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="45" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="48" column="74" source="standard:function-expression-body" />
-        <error line="52" column="89" source="standard:function-expression-body" />
-        <error line="56" column="74" source="standard:function-expression-body" />
-        <error line="59" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="60" column="1" source="standard:final-newline" />
-    </file>
     <file name="src/test/java/io/radar/sdk/RadarOfflineEventManagerTest.kt">
         <error line="73" column="21" source="standard:parameter-list-wrapping" />
         <error line="73" column="21" source="standard:function-signature" />
@@ -1005,81 +987,8 @@
         <error line="391" column="9" source="standard:wrapping" />
         <error line="399" column="1" source="standard:final-newline" />
     </file>
-    <file name="src/test/java/io/radar/sdk/RadarPermissionsHelperMock.kt">
-        <error line="9" column="75" source="standard:function-expression-body" />
-        <error line="12" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="13" column="1" source="standard:final-newline" />
-    </file>
     <file name="src/test/java/io/radar/sdk/RadarTest.kt">
         <error line="59" column="19" source="standard:property-naming" />
-    </file>
-    <file name="src/test/java/io/radar/sdk/RadarVerifiedHostOverrideTest.kt">
-        <error line="49" column="22" source="standard:argument-list-wrapping" />
-        <error line="49" column="38" source="standard:argument-list-wrapping" />
-        <error line="54" column="22" source="standard:argument-list-wrapping" />
-        <error line="54" column="38" source="standard:argument-list-wrapping" />
-        <error line="66" column="35" source="standard:paren-spacing" />
-        <error line="67" column="23" source="standard:argument-list-wrapping" />
-        <error line="67" column="29" source="standard:argument-list-wrapping" />
-        <error line="67" column="34" source="standard:wrapping" />
-        <error line="67" column="35" source="standard:argument-list-wrapping" />
-        <error line="69" column="13" source="standard:wrapping" />
-        <error line="69" column="14" source="standard:argument-list-wrapping" />
-        <error line="78" column="35" source="standard:paren-spacing" />
-        <error line="79" column="23" source="standard:argument-list-wrapping" />
-        <error line="79" column="29" source="standard:argument-list-wrapping" />
-        <error line="79" column="39" source="standard:wrapping" />
-        <error line="79" column="40" source="standard:argument-list-wrapping" />
-        <error line="81" column="13" source="standard:wrapping" />
-        <error line="81" column="14" source="standard:argument-list-wrapping" />
-        <error line="94" column="35" source="standard:paren-spacing" />
-        <error line="95" column="23" source="standard:argument-list-wrapping" />
-        <error line="95" column="29" source="standard:argument-list-wrapping" />
-        <error line="95" column="34" source="standard:wrapping" />
-        <error line="95" column="35" source="standard:argument-list-wrapping" />
-        <error line="100" column="13" source="standard:wrapping" />
-        <error line="100" column="14" source="standard:argument-list-wrapping" />
-        <error line="111" column="35" source="standard:paren-spacing" />
-        <error line="112" column="23" source="standard:argument-list-wrapping" />
-        <error line="112" column="29" source="standard:argument-list-wrapping" />
-        <error line="112" column="34" source="standard:wrapping" />
-        <error line="112" column="35" source="standard:argument-list-wrapping" />
-        <error line="116" column="13" source="standard:wrapping" />
-        <error line="116" column="14" source="standard:argument-list-wrapping" />
-        <error line="128" column="35" source="standard:paren-spacing" />
-        <error line="129" column="23" source="standard:argument-list-wrapping" />
-        <error line="129" column="29" source="standard:argument-list-wrapping" />
-        <error line="129" column="34" source="standard:wrapping" />
-        <error line="129" column="35" source="standard:argument-list-wrapping" />
-        <error line="133" column="13" source="standard:wrapping" />
-        <error line="133" column="14" source="standard:argument-list-wrapping" />
-        <error line="141" column="35" source="standard:paren-spacing" />
-        <error line="142" column="23" source="standard:argument-list-wrapping" />
-        <error line="142" column="30" source="standard:argument-list-wrapping" />
-        <error line="142" column="40" source="standard:wrapping" />
-        <error line="142" column="41" source="standard:argument-list-wrapping" />
-        <error line="144" column="13" source="standard:wrapping" />
-        <error line="144" column="14" source="standard:argument-list-wrapping" />
-        <error line="155" column="42" source="standard:argument-list-wrapping" />
-        <error line="155" column="59" source="standard:argument-list-wrapping" />
-        <error line="155" column="78" source="standard:argument-list-wrapping" />
-        <error line="155" column="134" source="standard:argument-list-wrapping" />
-        <error line="155" column="152" source="standard:argument-list-wrapping" />
-        <error line="155" column="168" source="standard:argument-list-wrapping" />
-        <error line="155" column="185" source="standard:argument-list-wrapping" />
-        <error line="166" column="42" source="standard:argument-list-wrapping" />
-        <error line="166" column="59" source="standard:argument-list-wrapping" />
-        <error line="166" column="78" source="standard:argument-list-wrapping" />
-        <error line="166" column="134" source="standard:argument-list-wrapping" />
-        <error line="166" column="152" source="standard:argument-list-wrapping" />
-        <error line="166" column="168" source="standard:argument-list-wrapping" />
-        <error line="178" column="42" source="standard:argument-list-wrapping" />
-        <error line="178" column="59" source="standard:argument-list-wrapping" />
-        <error line="178" column="78" source="standard:argument-list-wrapping" />
-        <error line="178" column="134" source="standard:argument-list-wrapping" />
-        <error line="178" column="152" source="standard:argument-list-wrapping" />
-        <error line="178" column="168" source="standard:argument-list-wrapping" />
-        <error line="178" column="186" source="standard:argument-list-wrapping" />
     </file>
     <file name="src/test/java/io/radar/sdk/model/RadarTripLegTest.kt">
         <error line="145" column="17" source="standard:wrapping" />

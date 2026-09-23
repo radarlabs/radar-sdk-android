@@ -1,5 +1,6 @@
-package io.radar.sdk
+package io.radar.sdk.helpers
 
+import io.radar.sdk.RadarTest
 import org.json.JSONObject
 
 internal class RadarTestUtils {
