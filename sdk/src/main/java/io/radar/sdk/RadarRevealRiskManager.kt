@@ -26,19 +26,20 @@ internal class RadarRevealRiskManager(
             result: RadarRevealRiskToken?
         ) -> Unit
     ) {
-        RadarSDKFraud.getFraudPayload(context, logger) { status, fraudPayload ->
-            if (status != RadarStatus.SUCCESS) {
-                callback(status, null)
-                return@getFraudPayload
+        RadarSDKFraud.prepareFraudPayload(context, logger) { status, preparedPayload ->
+            if (status != RadarStatus.SUCCESS || preparedPayload == null) {
+                callback(
+                    if (status == RadarStatus.SUCCESS) RadarStatus.ERROR_PLUGIN else status,
+                    null
+                )
+                return@prepareFraudPayload
             }
 
             Radar.apiClient.revealRisk(
-                fraudPayload,
-                callback = { status, token ->
-                    run {
-                        setRevealRiskId(token?.id)
-                        callback(status, token)
-                    }
+                preparedFraudPayload = preparedPayload,
+                callback = { apiStatus, token ->
+                    setRevealRiskId(token?.id)
+                    callback(apiStatus, token)
                 }
             )
         }
