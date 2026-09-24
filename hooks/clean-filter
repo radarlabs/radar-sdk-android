@@ -1,0 +1,46 @@
+#!/bin/sh
+# Radar example clean filter - sanitizes TARGET_HOST and DEFAULT_PUBLISHABLE_KEY for git storage
+# Also saves the real values to .radar-env (as radar_host=... and publishable_key=...) so the smudge filter can restore them
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+KEYS_FILE="$REPO_ROOT/.radar-env"
+
+HOST_PLACEHOLDER=''
+KEY_PLACEHOLDER='prj_live_pk_...'
+
+# Save stdin to a temp file to preserve exact byte content (command
+# substitution would strip trailing newlines, changing the file).
+TMPFILE=$(mktemp)
+trap 'rm -f "$TMPFILE" "$TMPFILE.keys"' EXIT
+cat > "$TMPFILE"
+
+# Print the string content of `const val <name> = "<content>"`
+extract() {
+    sed -nE "s/.*const val $1 = \"([^\"]*)\".*/\1/p" "$TMPFILE" | head -n 1
+}
+
+# Upsert <name>=<value> into .radar-env, skipping placeholder values
+save() {
+    name=$1
+    value=$2
+    placeholder=$3
+    if [ -z "$value" ] || [ "$value" = "$placeholder" ]; then
+        return
+    fi
+    if [ -f "$KEYS_FILE" ]; then
+        grep -v "^${name}=" "$KEYS_FILE" > "$TMPFILE.keys"
+    else
+        : > "$TMPFILE.keys"
+    fi
+    echo "${name}=${value}" >> "$TMPFILE.keys"
+    mv "$TMPFILE.keys" "$KEYS_FILE"
+}
+
+save radar_host "$(extract TARGET_HOST)" "$HOST_PLACEHOLDER"
+save publishable_key "$(extract DEFAULT_PUBLISHABLE_KEY)" "$KEY_PLACEHOLDER"
+
+# Output sanitized content
+sed -E \
+    -e "s/(const val TARGET_HOST = \")[^\"]*\"/\1${HOST_PLACEHOLDER}\"/" \
+    -e "s/(const val DEFAULT_PUBLISHABLE_KEY = \")[^\"]*\"/\1${KEY_PLACEHOLDER}\"/" \
+    "$TMPFILE"
