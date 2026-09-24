@@ -92,10 +92,12 @@ internal class RadarVerificationManager(
                                 return
                             }
 
-                            RadarSDKFraud.getFraudPayload(context, logger, location, googlePlayProjectNumber) { status, fraudPayload ->
-                                if (status != RadarStatus.SUCCESS) {
-                                    callback?.onComplete(status)
-                                    return@getFraudPayload
+                            RadarSDKFraud.prepareFraudPayload(context, logger, location, googlePlayProjectNumber) { status, preparedPayload ->
+                                if (status != RadarStatus.SUCCESS || preparedPayload == null) {
+                                    callback?.onComplete(
+                                        if (status == RadarStatus.SUCCESS) RadarStatus.ERROR_PLUGIN else status
+                                    )
+                                    return@prepareFraudPayload
                                 }
 
                                 val callTrackApi = { beacons: Array<RadarBeacon>? ->
@@ -113,7 +115,7 @@ internal class RadarVerificationManager(
                                         reason ?: "manual",
                                         transactionId,
                                         revealRiskManager.getRevealRiskId(),
-                                        fraudPayload,
+                                        preparedPayload,
                                         callback = object : RadarApiClient.RadarTrackApiCallback {
                                             override fun onComplete(
                                                 status: Radar.RadarStatus,
