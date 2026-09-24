@@ -47,5 +47,8 @@ fun VerifiedPanel() {
                 log.writeStatus(status, token?.toJson().toString())
             }
         }
+        ActionButton("setExpectedAddress") {
+            Radar.setExpectedAddress("111 5th Ave, NY")
+        }
     }
 }

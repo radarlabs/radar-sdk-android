@@ -39,6 +39,7 @@ import io.radar.example.store.SettingsStore
 import io.radar.example.store.TripBuilderStore
 import io.radar.example.theme.RadarExampleTheme
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarForegroundService
 import io.radar.sdk.RadarInitializeOptions
 import io.radar.sdk.RadarVerifiedReceiver
 import io.radar.sdk.model.RadarVerifiedLocationToken
@@ -49,7 +50,10 @@ class MainActivity : AppCompatActivity() {
         // Set local server's http:// URL here for local server testing (used for host + verified host),
         // e.g. "http://192.168.68.112:8081". Use your LAN IP (not localhost), or 10.0.2.2 on the emulator.
         // Leave blank to use Radar's production hosts.
-        private const val TARGET_HOST = ""
+        const val TARGET_HOST = ""
+
+        /** Placeholder — replace or override at runtime. */
+        const val DEFAULT_PUBLISHABLE_KEY = "prj_test_pk_"
     }
 
     private lateinit var permissionsStore: PermissionsStore
@@ -183,7 +187,7 @@ class MainActivity : AppCompatActivity() {
      * previously set override would stick around).
      */
     private fun applyLocalDevHostOverrides() {
-        getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit {
+        getSharedPreferences("RadarSDK", MODE_PRIVATE).edit {
             if (TARGET_HOST.isBlank()) {
                 remove("host")
                 remove("verified_host")
@@ -223,7 +227,7 @@ class MainActivity : AppCompatActivity() {
         }
         val googlePendingIntent = PendingIntent.getActivity(this, 1, googleIntent, PendingIntent.FLAG_IMMUTABLE)
 
-        val stopIntent = Intent(this, io.radar.sdk.RadarForegroundService::class.java).apply { action = "stop" }
+        val stopIntent = Intent(this, RadarForegroundService::class.java).apply { action = "stop" }
         val stopPendingIntent = PendingIntent.getService(this, 2, stopIntent, PendingIntent.FLAG_IMMUTABLE)
 
         val icon = BitmapFactory.decodeResource(resources, android.R.drawable.ic_menu_mylocation)

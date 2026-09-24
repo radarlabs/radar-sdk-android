@@ -5,7 +5,6 @@ import android.location.Location
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.robolectric.shadows.ShadowLooper
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarCircleGeometry
 import io.radar.sdk.model.RadarCoordinate
@@ -23,8 +22,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowLooper
 
-@RunWith(AndroidJUnit4:: class)
+@RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.P])
 class RadarSyncManagerTest {
 
@@ -65,50 +65,55 @@ class RadarSyncManagerTest {
     }
 
     private fun makeCircleGeofence(
-        id: String, lat: Double, lng: Double, radius: Double,
-        dwellThreshold: Double? = null, stopDetection: Boolean? = null
-    ): RadarGeofence {
-        return RadarGeofence(
-            id, "Test Geofence", "test", id, null, null,
-            RadarCircleGeometry(RadarCoordinate(lat, lng), radius),
-            dwellThreshold, stopDetection
-        )
-    }
+        id: String,
+        lat: Double,
+        lng: Double,
+        radius: Double,
+        dwellThreshold: Double? = null,
+        stopDetection: Boolean? = null
+    ): RadarGeofence = RadarGeofence(
+        id, "Test Geofence", "test", id, null, null,
+        RadarCircleGeometry(RadarCoordinate(lat, lng), radius),
+        dwellThreshold, stopDetection
+    )
 
     private fun makePolygonGeofence(
-        id: String, coords: Array<RadarCoordinate>,
-        center: RadarCoordinate, radius: Double
-    ): RadarGeofence {
-        return RadarGeofence(
-            id, "Test Polygon", "test", id, null, null,
-            RadarPolygonGeometry(coords, center, radius),
-            null, null
-        )
-    }
+        id: String,
+        coords: Array<RadarCoordinate>,
+        center: RadarCoordinate,
+        radius: Double
+    ): RadarGeofence = RadarGeofence(
+        id, "Test Polygon", "test", id, null, null,
+        RadarPolygonGeometry(coords, center, radius),
+        null, null
+    )
 
-    private fun makeBeacon(id: String, lat: Double, lng: Double): RadarBeacon {
-        return RadarBeacon(
-            _id = id, description = "Test Beacon", tag = "test", externalId = id,
-            uuid = "test-uuid", major = "1", minor = "1",
-            location = RadarCoordinate(lat, lng),
-            type = RadarBeacon.RadarBeaconType.IBEACON
-        )
-    }
+    private fun makeBeacon(
+        id: String,
+        lat: Double,
+        lng: Double
+    ): RadarBeacon = RadarBeacon(
+        _id = id, description = "Test Beacon", tag = "test", externalId = id,
+        uuid = "test-uuid", major = "1", minor = "1",
+        location = RadarCoordinate(lat, lng),
+        type = RadarBeacon.RadarBeaconType.IBEACON
+    )
 
-    private fun makePlace(id: String, lat: Double, lng: Double, geometryRadius: Double? = null): RadarPlace {
-        return RadarPlace(
-            _id = id, name = "Test Place", categories = arrayOf("test"),
-            chain = null, location = RadarCoordinate(lat, lng),
-            group = "test", metadata = null, address = null,
-            geometryRadius = geometryRadius
-        )
-    }
+    private fun makePlace(
+        id: String,
+        lat: Double,
+        lng: Double,
+        geometryRadius: Double? = null
+    ): RadarPlace = RadarPlace(
+        _id = id, name = "Test Place", categories = arrayOf("test"),
+        chain = null, location = RadarCoordinate(lat, lng),
+        group = "test", metadata = null, address = null,
+        geometryRadius = geometryRadius
+    )
 
-    private fun makeEventsOptions(): RadarTrackingOptions {
-        return RadarTrackingOptions.RESPONSIVE.copy(
-            sync = RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
-        )
-    }
+    private fun makeEventsOptions(): RadarTrackingOptions = RadarTrackingOptions.RESPONSIVE.copy(
+        sync = RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
+    )
 
     private fun makeUser(
         placeId: String? = null,
@@ -148,7 +153,8 @@ class RadarSyncManagerTest {
             debug = false,
             fraud = null,
             activityType = null,
-            altitude = null
+            altitude = null,
+            expectedAddress = null
         )
     }
 
@@ -188,7 +194,7 @@ class RadarSyncManagerTest {
         val state = RadarSyncState(
             syncedRegionCenter = RadarCoordinate(TEST_LAT, TEST_LNG),
             syncedRegionRadius = 500.0,
-            syncedGeofences =  listOf(geofence),
+            syncedGeofences = listOf(geofence),
             lastSyncedGeofenceIds = emptyList()
         )
         setState(state)
@@ -221,7 +227,7 @@ class RadarSyncManagerTest {
         val geofence = makeCircleGeofence("geofence1", TEST_LAT, TEST_LNG, 100.0)
         val state = RadarSyncState(
             syncedRegionCenter = RadarCoordinate(TEST_LAT, TEST_LNG),
-            syncedRegionRadius =  500.0,
+            syncedRegionRadius = 500.0,
             syncedGeofences = listOf(geofence),
             lastSyncedGeofenceIds = listOf("geofence1"),
             geofenceEntryTimestamps = mutableMapOf("geofence1" to System.currentTimeMillis() / 1000.0)
@@ -253,7 +259,7 @@ class RadarSyncManagerTest {
     @Test
     fun test_getGeofences_outsideCircle() {
         val geofence = makeCircleGeofence("geofence1", TEST_LAT_FAR, TEST_LNG, 50.0)
-        setState(RadarSyncState(syncedGeofences =  listOf(geofence)))
+        setState(RadarSyncState(syncedGeofences = listOf(geofence)))
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         val geofences = syncManager.getGeofences(location)
@@ -276,10 +282,12 @@ class RadarSyncManagerTest {
     @Test
     fun test_geofenceStateChanged_entry() {
         val geofence = makeCircleGeofence("geofence1", TEST_LAT, TEST_LNG, 100.0)
-        setState(RadarSyncState(
-            syncedGeofences = listOf(geofence),
-            lastSyncedGeofenceIds = emptyList()
-        ))
+        setState(
+            RadarSyncState(
+                syncedGeofences = listOf(geofence),
+                lastSyncedGeofenceIds = emptyList()
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasGeofenceStateChanged(location))
@@ -288,11 +296,13 @@ class RadarSyncManagerTest {
     @Test
     fun test_geofenceStateChanged_exit() {
         val geofence = makeCircleGeofence("geofence1", TEST_LAT_FAR, TEST_LNG, 50.0)
-        setState(RadarSyncState(
-            syncedGeofences = listOf(geofence),
-            lastSyncedGeofenceIds = listOf("geofence1"),
-            geofenceEntryTimestamps = mutableMapOf("geofence1" to System.currentTimeMillis() / 1000.0)
-        ))
+        setState(
+            RadarSyncState(
+                syncedGeofences = listOf(geofence),
+                lastSyncedGeofenceIds = listOf("geofence1"),
+                geofenceEntryTimestamps = mutableMapOf("geofence1" to System.currentTimeMillis() / 1000.0)
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasGeofenceStateChanged(location))
@@ -301,16 +311,17 @@ class RadarSyncManagerTest {
     @Test
     fun test_geofenceStateChanged_noChange() {
         val geofence = makeCircleGeofence("geofence1", TEST_LAT, TEST_LNG, 100.0)
-        setState(RadarSyncState(
-            syncedGeofences = listOf(geofence),
-            lastSyncedGeofenceIds = listOf("geofence1"),
-            geofenceEntryTimestamps = mutableMapOf("geofence1" to System.currentTimeMillis() / 1000.0)
-        ))
+        setState(
+            RadarSyncState(
+                syncedGeofences = listOf(geofence),
+                lastSyncedGeofenceIds = listOf("geofence1"),
+                geofenceEntryTimestamps = mutableMapOf("geofence1" to System.currentTimeMillis() / 1000.0)
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertFalse(syncManager.hasGeofenceStateChanged(location))
     }
-
 
     // endregion
 
@@ -345,9 +356,11 @@ class RadarSyncManagerTest {
 
     @Test
     fun test_beaconStateChanged_entry() {
-        setState(RadarSyncState(
-            lastSyncedBeaconIds = emptyList()
-        ))
+        setState(
+            RadarSyncState(
+                lastSyncedBeaconIds = emptyList()
+            )
+        )
 
         val rangedBeaconIds = setOf("beacon1")
         assertTrue(syncManager.hasBeaconStateChanged(rangedBeaconIds))
@@ -355,9 +368,11 @@ class RadarSyncManagerTest {
 
     @Test
     fun test_beaconStateChanged_exit() {
-        setState(RadarSyncState(
-            lastSyncedBeaconIds = listOf("beacon1")
-        ))
+        setState(
+            RadarSyncState(
+                lastSyncedBeaconIds = listOf("beacon1")
+            )
+        )
 
         val rangedBeaconIds = emptySet<String>()
         assertTrue(syncManager.hasBeaconStateChanged(rangedBeaconIds))
@@ -365,9 +380,11 @@ class RadarSyncManagerTest {
 
     @Test
     fun test_beaconStateChanged_noChange() {
-        setState(RadarSyncState(
-            lastSyncedBeaconIds = listOf("beacon1")
-        ))
+        setState(
+            RadarSyncState(
+                lastSyncedBeaconIds = listOf("beacon1")
+            )
+        )
 
         val rangedBeaconIds = setOf("beacon1")
         assertFalse(syncManager.hasBeaconStateChanged(rangedBeaconIds))
@@ -375,9 +392,11 @@ class RadarSyncManagerTest {
 
     @Test
     fun test_saveBeaconState() {
-        setState(RadarSyncState(
-            lastSyncedBeaconIds = listOf("beacon1")
-        ))
+        setState(
+            RadarSyncState(
+                lastSyncedBeaconIds = listOf("beacon1")
+            )
+        )
 
         syncManager.saveBeaconState(listOf("beacon2", "beacon3"))
 
@@ -422,10 +441,12 @@ class RadarSyncManagerTest {
     fun test_placeStateChanged_entry() {
         RadarState.setStopped(context, true)
         val place = makePlace("place1", TEST_LAT, TEST_LNG)
-        setState(RadarSyncState(
-            syncedPlaces = listOf(place),
-            lastSyncedPlaceIds = emptyList()
-        ))
+        setState(
+            RadarSyncState(
+                syncedPlaces = listOf(place),
+                lastSyncedPlaceIds = emptyList()
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasPlaceStateChanged(location))
@@ -435,10 +456,12 @@ class RadarSyncManagerTest {
     fun test_placeStateChanged_entrySkippedWhenNotStopped() {
         RadarState.setStopped(context, false)
         val place = makePlace("place1", TEST_LAT, TEST_LNG)
-        setState(RadarSyncState(
-            syncedPlaces = listOf(place),
-            lastSyncedPlaceIds = emptyList()
-        ))
+        setState(
+            RadarSyncState(
+                syncedPlaces = listOf(place),
+                lastSyncedPlaceIds = emptyList()
+            )
+        )
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertFalse(syncManager.hasPlaceStateChanged(location))
     }
@@ -447,10 +470,12 @@ class RadarSyncManagerTest {
     fun test_placeStateChanged_exit() {
         RadarState.setStopped(context, false)
         val place = makePlace("place1", TEST_LAT_FAR, TEST_LNG)
-        setState(RadarSyncState(
-            syncedPlaces = listOf(place),
-            lastSyncedPlaceIds = listOf("place1")
-        ))
+        setState(
+            RadarSyncState(
+                syncedPlaces = listOf(place),
+                lastSyncedPlaceIds = listOf("place1")
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasPlaceStateChanged(location))
@@ -460,7 +485,7 @@ class RadarSyncManagerTest {
     fun test_getPlaces_withinGeometryRadius() {
         RadarState.setStopped(context, true)
         val place = makePlace("place1", TEST_LAT_NEARBY, TEST_LNG, geometryRadius = 100.0)
-        setState(RadarSyncState(syncedPlaces =  listOf(place)))
+        setState(RadarSyncState(syncedPlaces = listOf(place)))
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         val places = syncManager.getPlaces(location)
@@ -484,10 +509,12 @@ class RadarSyncManagerTest {
     fun test_placeStateChanged_exitWithGeometryRadius() {
         RadarState.setStopped(context, false)
         val place = makePlace("place1", TEST_LAT_NEARBY, TEST_LNG, geometryRadius = 20.0)
-        setState(RadarSyncState(
-            syncedPlaces = listOf(place),
-            lastSyncedPlaceIds = listOf("place1")
-        ))
+        setState(
+            RadarSyncState(
+                syncedPlaces = listOf(place),
+                lastSyncedPlaceIds = listOf("place1")
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         // TEST_LAT_NEARBY is ~50m from TEST_LAT, exit radius = 20 + 50 = 70m
@@ -499,10 +526,12 @@ class RadarSyncManagerTest {
     fun test_placeStateChanged_exitBeyondBuffer() {
         RadarState.setStopped(context, false)
         val place = makePlace("place1", TEST_LAT_FAR, TEST_LNG, geometryRadius = 50.0)
-        setState(RadarSyncState(
-            syncedPlaces = listOf(place),
-            lastSyncedPlaceIds = listOf("place1")
-        ))
+        setState(
+            RadarSyncState(
+                syncedPlaces = listOf(place),
+                lastSyncedPlaceIds = listOf("place1")
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         // TEST_LAT_FAR is ~200m from TEST_LAT, exit radius = 50 + 50 = 100m
@@ -515,10 +544,12 @@ class RadarSyncManagerTest {
         RadarState.setStopped(context, true)
         val place1 = makePlace("place1", TEST_LAT, TEST_LNG, geometryRadius = 100.0)
         val place2 = makePlace("place2", TEST_LAT_NEARBY, TEST_LNG, geometryRadius = 100.0)
-        setState(RadarSyncState(
-            syncedPlaces = listOf(place1, place2),
-            lastSyncedPlaceIds = listOf("place1")
-        ))
+        setState(
+            RadarSyncState(
+                syncedPlaces = listOf(place1, place2),
+                lastSyncedPlaceIds = listOf("place1")
+            )
+        )
 
         val location = makeLocation(TEST_LAT_NEARBY, TEST_LNG)
         // User is at TEST_LAT_NEARBY (~50m from place1)
@@ -531,18 +562,22 @@ class RadarSyncManagerTest {
     fun test_placeStateChanged_rejectedPlaceNotReentered() {
         RadarState.setStopped(context, true)
         val place = makePlace("place1", TEST_LAT, TEST_LNG)
-        setState(RadarSyncState(
-            syncedPlaces = listOf(place),
-            lastSyncedPlaceIds = emptyList()
-        ))
+        setState(
+            RadarSyncState(
+                syncedPlaces = listOf(place),
+                lastSyncedPlaceIds = emptyList()
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasPlaceStateChanged(location))
 
-        setState(RadarSyncState(
-            syncedPlaces = listOf(place),
-            lastSyncedPlaceIds = listOf("place1")
-        ))
+        setState(
+            RadarSyncState(
+                syncedPlaces = listOf(place),
+                lastSyncedPlaceIds = listOf("place1")
+            )
+        )
 
         // Simulate server rejecting the place
         syncManager.reconcileSyncState(makeUser(placeId = null))
@@ -556,18 +591,22 @@ class RadarSyncManagerTest {
     fun test_placeStateChanged_rejectionsClearedOnMovement() {
         RadarState.setStopped(context, true)
         val place = makePlace("place1", TEST_LAT, TEST_LNG)
-        setState(RadarSyncState(
-            syncedPlaces = listOf(place),
-            lastSyncedPlaceIds = emptyList()
-        ))
+        setState(
+            RadarSyncState(
+                syncedPlaces = listOf(place),
+                lastSyncedPlaceIds = emptyList()
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasPlaceStateChanged(location))
 
-        setState(RadarSyncState(
-            syncedPlaces = listOf(place),
-            lastSyncedPlaceIds = listOf("place1")
-        ))
+        setState(
+            RadarSyncState(
+                syncedPlaces = listOf(place),
+                lastSyncedPlaceIds = listOf("place1")
+            )
+        )
 
         // Server rejects
         syncManager.reconcileSyncState(makeUser(placeId = null))
@@ -577,10 +616,12 @@ class RadarSyncManagerTest {
         syncManager.hasPlaceStateChanged(farLocation)
 
         // Restore state so place1 can be re-entered
-        setState(RadarSyncState(
-            syncedPlaces = listOf(place),
-            lastSyncedPlaceIds = emptyList()
-        ))
+        setState(
+            RadarSyncState(
+                syncedPlaces = listOf(place),
+                lastSyncedPlaceIds = emptyList()
+            )
+        )
 
         // Back at original location — should detect entry again
         val returnLocation = makeLocation(TEST_LAT, TEST_LNG)
@@ -613,10 +654,12 @@ class RadarSyncManagerTest {
 
     @Test
     fun test_isOutsideSyncedRegion_inside() {
-        setState(RadarSyncState(
-            syncedRegionCenter = RadarCoordinate(TEST_LAT, TEST_LNG),
-            syncedRegionRadius = 100.0
-        ))
+        setState(
+            RadarSyncState(
+                syncedRegionCenter = RadarCoordinate(TEST_LAT, TEST_LNG),
+                syncedRegionRadius = 100.0
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertFalse(syncManager.isOutsideSyncedRegion(location))
@@ -624,10 +667,12 @@ class RadarSyncManagerTest {
 
     @Test
     fun test_isOutsideSyncedRegion_outside() {
-        setState(RadarSyncState(
-            syncedRegionCenter = RadarCoordinate(TEST_LAT, TEST_LNG),
-            syncedRegionRadius =  100.0
-        ))
+        setState(
+            RadarSyncState(
+                syncedRegionCenter = RadarCoordinate(TEST_LAT, TEST_LNG),
+                syncedRegionRadius = 100.0
+            )
+        )
 
         val location = makeLocation(TEST_LAT_FAR, TEST_LNG)
         assertTrue(syncManager.isOutsideSyncedRegion(location))
@@ -639,10 +684,12 @@ class RadarSyncManagerTest {
 
     @Test
     fun test_isNearSyncedRegionBoundary_near() {
-        setState(RadarSyncState(
-            syncedRegionCenter = RadarCoordinate(TEST_LAT, TEST_LNG),
-            syncedRegionRadius = 1000.0
-        ))
+        setState(
+            RadarSyncState(
+                syncedRegionCenter = RadarCoordinate(TEST_LAT, TEST_LNG),
+                syncedRegionRadius = 1000.0
+            )
+        )
 
         val location = makeLocation(TEST_LAT + 0.0081, TEST_LNG)
         assertTrue(syncManager.isNearSyncedRegionBoundary(location))
@@ -650,10 +697,12 @@ class RadarSyncManagerTest {
 
     @Test
     fun test_isNearSyncedRegionBoundary_notNear() {
-        setState(RadarSyncState(
-            syncedRegionCenter = RadarCoordinate(TEST_LAT, TEST_LNG),
-            syncedRegionRadius = 1000.0
-        ))
+        setState(
+            RadarSyncState(
+                syncedRegionCenter = RadarCoordinate(TEST_LAT, TEST_LNG),
+                syncedRegionRadius = 1000.0
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertFalse(syncManager.isNearSyncedRegionBoundary(location))
@@ -667,12 +716,14 @@ class RadarSyncManagerTest {
     fun test_multipleGeofences_shouldTrackWhenCrossingNearestBoundary() {
         val geofenceA = makeCircleGeofence("geofenceA", TEST_LAT_NEARBY, TEST_LNG, 100.0)
         val geofenceB = makeCircleGeofence("geofenceB", TEST_LAT_FAR, TEST_LNG, 50.0)
-        setState(RadarSyncState(
-            syncedRegionCenter = RadarCoordinate(TEST_LAT, TEST_LNG),
-            syncedRegionRadius = 500.0,
-            syncedGeofences = listOf(geofenceA, geofenceB),
-            lastSyncedGeofenceIds = emptyList()
-        ))
+        setState(
+            RadarSyncState(
+                syncedRegionCenter = RadarCoordinate(TEST_LAT, TEST_LNG),
+                syncedRegionRadius = 500.0,
+                syncedGeofences = listOf(geofenceA, geofenceB),
+                lastSyncedGeofenceIds = emptyList()
+            )
+        )
 
         val location = makeLocation(TEST_LAT_NEARBY, TEST_LNG)
         val options = makeEventsOptions()
@@ -758,7 +809,7 @@ class RadarSyncManagerTest {
         val geofences = syncManager.getGeofences(location)
         assertEquals(2, geofences.size)
 
-        val ids = geofences.map { it._id}.toSet()
+        val ids = geofences.map { it._id }.toSet()
         assertTrue(ids.contains("circle1"))
         assertTrue(ids.contains("poly1"))
     }
@@ -771,10 +822,12 @@ class RadarSyncManagerTest {
     fun test_geofenceEntry_stopDetectionBlocks() {
         RadarState.setStopped(context, false)
         val geofence = makeCircleGeofence("geofence1", TEST_LAT, TEST_LNG, 100.0, stopDetection = true)
-        setState(RadarSyncState(
-            syncedGeofences = listOf(geofence),
-            lastSyncedGeofenceIds = emptyList()
-        ))
+        setState(
+            RadarSyncState(
+                syncedGeofences = listOf(geofence),
+                lastSyncedGeofenceIds = emptyList()
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertFalse(syncManager.hasGeofenceStateChanged(location))
@@ -784,10 +837,12 @@ class RadarSyncManagerTest {
     fun test_geofenceEntry_stopDetectionAllows() {
         RadarState.setStopped(context, true)
         val geofence = makeCircleGeofence("geofence1", TEST_LAT, TEST_LNG, 100.0, stopDetection = true)
-        setState(RadarSyncState(
-            syncedGeofences = listOf(geofence),
-            lastSyncedGeofenceIds = emptyList()
-        ))
+        setState(
+            RadarSyncState(
+                syncedGeofences = listOf(geofence),
+                lastSyncedGeofenceIds = emptyList()
+            )
+        )
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasGeofenceStateChanged(location))
     }
@@ -799,14 +854,19 @@ class RadarSyncManagerTest {
     @Test
     fun test_geofenceDwell_thresholdReached() {
         val geofence = makeCircleGeofence("geofence1", TEST_LAT, TEST_LNG, 100.0)
-        setState(RadarSyncState(
-            syncedGeofences = listOf(geofence),
-            lastSyncedGeofenceIds = listOf("geofence1"),
-            geofenceEntryTimestamps = mutableMapOf("geofence1" to (System.currentTimeMillis() / 1000.0 - 600))
-        ))
-        RadarSettings.setSdkConfiguration(context, RadarSdkConfiguration.fromJson(
-            JSONObject().put("defaultGeofenceDwellThreshold", 5)
-        ))
+        setState(
+            RadarSyncState(
+                syncedGeofences = listOf(geofence),
+                lastSyncedGeofenceIds = listOf("geofence1"),
+                geofenceEntryTimestamps = mutableMapOf("geofence1" to (System.currentTimeMillis() / 1000.0 - 600))
+            )
+        )
+        RadarSettings.setSdkConfiguration(
+            context,
+            RadarSdkConfiguration.fromJson(
+                JSONObject().put("defaultGeofenceDwellThreshold", 5)
+            )
+        )
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasGeofenceStateChanged(location))
     }
@@ -814,15 +874,20 @@ class RadarSyncManagerTest {
     @Test
     fun test_geofenceDwell_thresholdNotReached() {
         val geofence = makeCircleGeofence("geofence1", TEST_LAT, TEST_LNG, 100.0)
-        setState(RadarSyncState(
-            syncedGeofences = listOf(geofence),
-            lastSyncedGeofenceIds = listOf("geofence1"),
-            geofenceEntryTimestamps = mutableMapOf("geofence1" to (System.currentTimeMillis() / 1000.0 - 60))
-        ))
+        setState(
+            RadarSyncState(
+                syncedGeofences = listOf(geofence),
+                lastSyncedGeofenceIds = listOf("geofence1"),
+                geofenceEntryTimestamps = mutableMapOf("geofence1" to (System.currentTimeMillis() / 1000.0 - 60))
+            )
+        )
 
-        RadarSettings.setSdkConfiguration(context, RadarSdkConfiguration.fromJson(
-            JSONObject().put("defaultGeofenceDwellThreshold", 5)
-        ))
+        RadarSettings.setSdkConfiguration(
+            context,
+            RadarSdkConfiguration.fromJson(
+                JSONObject().put("defaultGeofenceDwellThreshold", 5)
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertFalse(syncManager.hasGeofenceStateChanged(location))
@@ -831,11 +896,13 @@ class RadarSyncManagerTest {
     @Test
     fun test_geofenceDwell_perGeofenceOverride() {
         val geofence = makeCircleGeofence("geofence1", TEST_LAT, TEST_LNG, 100.0, dwellThreshold = 2.0)
-        setState(RadarSyncState(
-            syncedGeofences = listOf(geofence),
-            lastSyncedGeofenceIds = listOf("geofence1"),
-            geofenceEntryTimestamps = mutableMapOf("geofence1" to (System.currentTimeMillis() / 1000.0 - 180))
-        ))
+        setState(
+            RadarSyncState(
+                syncedGeofences = listOf(geofence),
+                lastSyncedGeofenceIds = listOf("geofence1"),
+                geofenceEntryTimestamps = mutableMapOf("geofence1" to (System.currentTimeMillis() / 1000.0 - 180))
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertTrue(syncManager.hasGeofenceStateChanged(location))
@@ -844,21 +911,25 @@ class RadarSyncManagerTest {
     @Test
     fun test_geofenceDwell_alreadyFired() {
         val geofence = makeCircleGeofence("geofence1", TEST_LAT, TEST_LNG, 100.0)
-        setState(RadarSyncState(
-            syncedGeofences = listOf(geofence),
-            lastSyncedGeofenceIds = listOf("geofence1"),
-            geofenceEntryTimestamps = mutableMapOf("geofence1" to (System.currentTimeMillis() / 1000.0 -600)),
-            dwellEventsFired = mutableListOf("geofence1")
-        ))
+        setState(
+            RadarSyncState(
+                syncedGeofences = listOf(geofence),
+                lastSyncedGeofenceIds = listOf("geofence1"),
+                geofenceEntryTimestamps = mutableMapOf("geofence1" to (System.currentTimeMillis() / 1000.0 - 600)),
+                dwellEventsFired = mutableListOf("geofence1")
+            )
+        )
 
-        RadarSettings.setSdkConfiguration(context, RadarSdkConfiguration.fromJson(
-            JSONObject().put("defaultGeofenceDwellThreshold", 5)
-        ))
+        RadarSettings.setSdkConfiguration(
+            context,
+            RadarSdkConfiguration.fromJson(
+                JSONObject().put("defaultGeofenceDwellThreshold", 5)
+            )
+        )
 
         val location = makeLocation(TEST_LAT, TEST_LNG)
         assertFalse(syncManager.hasGeofenceStateChanged(location))
     }
 
     // end region
-
 }
