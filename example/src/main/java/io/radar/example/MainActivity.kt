@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
         // Set local server's http:// URL here for local server testing (used for host + verified host),
         // e.g. "http://192.168.68.112:8081". Use your LAN IP (not localhost), or 10.0.2.2 on the emulator.
         // Leave blank to use Radar's production hosts.
-        const val TARGET_HOST = "https://bailey-nonnebulous-nonaccidentally.ngrok-free.dev"
+        const val TARGET_HOST = ""
 
         /** Placeholder — replace or override at runtime. */
         const val DEFAULT_PUBLISHABLE_KEY = "prj_test_pk_"
