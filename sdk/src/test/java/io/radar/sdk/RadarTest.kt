@@ -395,6 +395,8 @@ class RadarTest {
 
         // Clear captured parameters from previous tests
         apiHelperMock.clearCapturedParams()
+        apiHelperMock.mockResponses.clear()
+        apiHelperMock.mockResponseQueues.clear()
         Radar.flushBatch()
     }
 
@@ -1760,6 +1762,62 @@ class RadarTest {
         }
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
         latch2.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+    }
+
+    @Test
+    fun test_Radar_startTrip_appliesRemoteTrackingOptions() {
+        try {
+            // Start with responsive tracking and no previously cached remote options.
+            RadarSettings.removeRemoteTrackingOptions(context)
+            Radar.startTracking(RadarTrackingOptions.RESPONSIVE)
+            assertEquals(RadarTrackingOptions.RESPONSIVE, Radar.getTrackingOptions())
+
+            // Set up permissions and location
+            permissionsHelperMock.mockFineLocationPermissionGranted = true
+            val mockLocation = Location("RadarSDK")
+            mockLocation.latitude = 40.78382
+            mockLocation.longitude = -73.97536
+            mockLocation.accuracy = 65f
+            mockLocation.time = System.currentTimeMillis()
+            locationClientMock.mockLocation = mockLocation
+
+            // Set up track call to at the end of startTrip to return remote "on-trip" settings of Continuous
+            apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+            apiHelperMock.addMockResponse("v1/track", trackResponseWithTrackingOptions(RadarTrackingOptions.CONTINUOUS))
+
+            val startLatch = CountDownLatch(1)
+            Radar.startTrip(getTestTripOptions()) { status, _, _ ->
+                assertEquals(Radar.RadarStatus.SUCCESS, status)
+                assertEquals(RadarTrackingOptions.CONTINUOUS, Radar.getTrackingOptions())
+                assertTrue(Radar.isTracking())
+                startLatch.countDown()
+            }
+
+            ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+            assertTrue(startLatch.await(LATCH_TIMEOUT, TimeUnit.SECONDS))
+
+            // Set up /track call to return default remote settings of Responsive once trip is completed
+            apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+            apiHelperMock.addMockResponse("v1/track", trackResponseWithTrackingOptions(RadarTrackingOptions.RESPONSIVE))
+
+            val completeLatch = CountDownLatch(1)
+            Radar.completeTrip { status, _, _ ->
+                assertEquals(Radar.RadarStatus.SUCCESS, status)
+                assertEquals(RadarTrackingOptions.RESPONSIVE, Radar.getTrackingOptions())
+                assertTrue(Radar.isTracking())
+                completeLatch.countDown()
+            }
+
+            ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+            assertTrue(completeLatch.await(LATCH_TIMEOUT, TimeUnit.SECONDS))
+        } finally {
+            apiHelperMock.mockResponseQueues.clear()
+            RadarSettings.setTrip(context, null)
+            RadarSettings.setTripOptions(context, null)
+            RadarSettings.removeRemoteTrackingOptions(context)
+            RadarSettings.removePreviousTrackingOptions(context)
+            Radar.stopTracking()
+        }
     }
 
     @Test
@@ -3146,6 +3204,10 @@ class RadarTest {
     }
 
     private fun tripWithLegsResponse(): JSONObject? = RadarTestUtils.jsonObjectFromResource("/trip_with_legs.json")
+
+    private fun trackResponseWithTrackingOptions(options: RadarTrackingOptions): JSONObject = RadarTestUtils.jsonObjectFromResource("/track.json")!!.apply {
+        getJSONObject("meta").put("trackingOptions", options.toJson())
+    }
 
     @Test
     fun test_Radar_setSdkConfiguration() {
