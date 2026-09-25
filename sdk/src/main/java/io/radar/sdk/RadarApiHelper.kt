@@ -7,11 +7,13 @@ import android.os.Looper
 import android.os.SystemClock
 import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogType
+import java.io.EOFException
 import java.io.IOException
 import java.io.InputStream
-import java.io.OutputStreamWriter
 import java.net.ConnectException
 import java.net.HttpURLConnection
+import java.net.NoRouteToHostException
+import java.net.SocketException
 import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.UnknownHostException
@@ -40,10 +42,14 @@ internal enum class NetworkErrorKind {
     }
 }
 
+internal fun isRetryableConnectionFailure(e: IOException): Boolean = e is EOFException ||
+    (e is SocketException && e !is ConnectException && e !is NoRouteToHostException)
+
 internal fun networkErrorMessage(host: String, e: Exception, elapsedMs: Long, kind: String): String = "📍 Radar API network error | host = $host; kind = $kind; exception = ${e.javaClass.simpleName}; message = ${e.localizedMessage}; elapsedMs = $elapsedMs"
 
 internal open class RadarApiHelper(
-    private var logger: RadarLogger? = null
+    private var logger: RadarLogger? = null,
+    private val connectionFactory: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection }
 ) {
 
     private val executor = Executors.newSingleThreadExecutor()
@@ -70,7 +76,8 @@ internal open class RadarApiHelper(
         logPayload: Boolean = true,
         verified: Boolean = false,
         imageCallback: RadarImageApiCallback? = null,
-        verifiedHostOverride: String? = null
+        verifiedHostOverride: String? = null,
+        prepareRequest: (() -> Unit)? = null
     ) {
         val host = if (verified) {
             verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
@@ -90,145 +97,166 @@ internal open class RadarApiHelper(
 
         executor.execute {
             val startMs = SystemClock.elapsedRealtime()
-            try {
-                val urlConnection = url.openConnection() as HttpURLConnection
-                if (headers != null) {
-                    for ((key, value) in headers) {
-                        try {
-                            urlConnection.setRequestProperty(key, value)
-                        } catch (e: Exception) {
-                            logger?.d("Error setting request property | key = $key; value = $value")
+            val retryEncryptedRequest = verified && prepareRequest != null
+            for (attempt in 0..1) {
+                var connectionToClose: HttpURLConnection? = null
+                try {
+                    try {
+                        prepareRequest?.invoke()
+                    } catch (e: Exception) {
+                        logger?.e("Failed to prepare Radar API request", RadarLogType.SDK_ERROR, e)
+                        handler.post {
+                            callback?.onComplete(Radar.RadarStatus.ERROR_PLUGIN, throwable = e)
+                        }
+                        return@execute
+                    }
+                    val urlConnection = connectionFactory(url)
+                    connectionToClose = urlConnection
+                    if (headers != null) {
+                        for ((key, value) in headers) {
+                            try {
+                                urlConnection.setRequestProperty(key, value)
+                            } catch (e: Exception) {
+                                logger?.d("Error setting request property | key = $key; value = $value")
+                            }
                         }
                     }
-                }
-                urlConnection.requestMethod = method
-                val timeoutMs = RadarSettings.getNetworkTimeoutMs(context)
-                urlConnection.connectTimeout = timeoutMs
-                // Preserve historical 2.5x read timeout for long-running requests (was 25s vs 10s)
-                urlConnection.readTimeout = if (extendedTimeout) {
-                    (timeoutMs * 2.5).toInt()
-                } else {
-                    timeoutMs
-                }
-                if (stream) {
-                    urlConnection.setChunkedStreamingMode(1024)
-                }
+                    urlConnection.requestMethod = method
+                    val timeoutMs = RadarSettings.getNetworkTimeoutMs(context)
+                    urlConnection.connectTimeout = timeoutMs
+                    // Preserve historical 2.5x read timeout for long-running requests (was 25s vs 10s)
+                    urlConnection.readTimeout = if (extendedTimeout) {
+                        (timeoutMs * 2.5).toInt()
+                    } else {
+                        timeoutMs
+                    }
+                    if (stream) {
+                        urlConnection.setChunkedStreamingMode(1024)
+                    }
 
-                if (params != null) {
-                    val prevUpdatedAtMsDiff = params.optLong("updatedAtMsDiff", -1L)
-                    val replays = params.optJSONArray("replays")
+                    if (params != null) {
+                        val prevUpdatedAtMsDiff = params.optLong("updatedAtMsDiff", -1L)
+                        val replays = params.optJSONArray("replays")
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && (prevUpdatedAtMsDiff != -1L || replays != null)) {
-                        val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
-                        val locationMs = params.optLong("locationMs", -1L)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && (prevUpdatedAtMsDiff != -1L || replays != null)) {
+                            val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
+                            val locationMs = params.optLong("locationMs", -1L)
 
-                        if (prevUpdatedAtMsDiff != -1L && locationMs != -1L) {
-                            val updatedAtMsDiff = nowMs - locationMs
-                            params.put("updatedAtMsDiff", updatedAtMsDiff)
-                        }
+                            if (prevUpdatedAtMsDiff != -1L && locationMs != -1L) {
+                                val updatedAtMsDiff = nowMs - locationMs
+                                params.put("updatedAtMsDiff", updatedAtMsDiff)
+                            }
 
-                        if (replays != null) {
-                            val updatedReplays = mutableListOf<JSONObject>()
-                            for (i in 0 until replays.length()) {
-                                val replay = replays.optJSONObject(i)
-                                replay?.let {
-                                    val replayLocationMs = it.optLong("locationMs", -1L)
-                                    if (replayLocationMs != -1L) {
-                                        val replayUpdatedAtMsDiff = nowMs - replayLocationMs
-                                        it.put("updatedAtMsDiff", replayUpdatedAtMsDiff)
+                            if (replays != null) {
+                                val updatedReplays = mutableListOf<JSONObject>()
+                                for (i in 0 until replays.length()) {
+                                    val replay = replays.optJSONObject(i)
+                                    replay?.let {
+                                        val replayLocationMs = it.optLong("locationMs", -1L)
+                                        if (replayLocationMs != -1L) {
+                                            val replayUpdatedAtMsDiff = nowMs - replayLocationMs
+                                            it.put("updatedAtMsDiff", replayUpdatedAtMsDiff)
+                                        }
+                                        updatedReplays.add(it)
                                     }
-                                    updatedReplays.add(it)
                                 }
+                                params.put("replays", JSONArray(updatedReplays))
                             }
-                            params.put("replays", JSONArray(updatedReplays))
                         }
+
+                        val body = params.toString().toByteArray(Charsets.UTF_8)
+                        if (verified && prepareRequest != null && !stream) {
+                            urlConnection.setFixedLengthStreamingMode(body.size)
+                        }
+                        urlConnection.doOutput = true
+                        urlConnection.outputStream.use { it.write(body) }
                     }
 
-                    urlConnection.doOutput = true
-                    val outputStreamWriter = OutputStreamWriter(urlConnection.outputStream)
-                    outputStreamWriter.write(params.toString())
-                    outputStreamWriter.close()
-                }
+                    if (urlConnection.responseCode in 200 until 400) {
+                        if (callback != null) {
+                            val body = urlConnection.inputStream.readAll()
+                            if (body == null) {
+                                handler.post {
+                                    callback.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                                }
 
-                if (urlConnection.responseCode in 200 until 400) {
-                    if (callback != null) {
-                        val body = urlConnection.inputStream.readAll()
-                        if (body == null) {
-                            handler.post {
-                                callback.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                                return@execute
                             }
+
+                            val res = JSONObject(body)
+
+                            logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res")
+
+                            handler.post {
+                                callback.onComplete(Radar.RadarStatus.SUCCESS, res)
+                            }
+                        }
+                        if (imageCallback != null) {
+                            val inputStream = urlConnection.inputStream
+                            val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+                            inputStream.close()
+
+                            logger?.d("📍 Radar API image response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}")
+
+                            handler.post {
+                                imageCallback.onComplete(Radar.RadarStatus.SUCCESS, bitmap)
+                            }
+                        }
+                    } else {
+                        val status = when (urlConnection.responseCode) {
+                            400 -> Radar.RadarStatus.ERROR_BAD_REQUEST
+                            401 -> Radar.RadarStatus.ERROR_UNAUTHORIZED
+                            402 -> Radar.RadarStatus.ERROR_PAYMENT_REQUIRED
+                            403 -> Radar.RadarStatus.ERROR_FORBIDDEN
+                            404 -> Radar.RadarStatus.ERROR_NOT_FOUND
+                            429 -> Radar.RadarStatus.ERROR_RATE_LIMIT
+                            in (500 until 600) -> Radar.RadarStatus.ERROR_SERVER
+                            else -> Radar.RadarStatus.ERROR_UNKNOWN
+                        }
+
+                        val body = urlConnection.errorStream.readAll()
+                        if (body == null) {
+                            callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                            imageCallback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
 
                             return@execute
                         }
 
                         val res = JSONObject(body)
 
-                        logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res")
+                        logger?.e("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
 
                         handler.post {
-                            callback.onComplete(Radar.RadarStatus.SUCCESS, res)
+                            callback?.onComplete(status, res)
+                            imageCallback?.onComplete(status)
                         }
                     }
-                    if (imageCallback != null) {
-                        val inputStream = urlConnection.inputStream
-                        val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
-                        inputStream.close()
-
-                        logger?.d("📍 Radar API image response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}")
-
-                        handler.post {
-                            imageCallback.onComplete(Radar.RadarStatus.SUCCESS, bitmap)
-                        }
+                } catch (e: IOException) {
+                    if (attempt == 0 && retryEncryptedRequest && isRetryableConnectionFailure(e)) {
+                        logger?.d("📍 Radar API retrying after lost connection | url = $url")
+                        continue
                     }
-                } else {
-                    val status = when (urlConnection.responseCode) {
-                        400 -> Radar.RadarStatus.ERROR_BAD_REQUEST
-                        401 -> Radar.RadarStatus.ERROR_UNAUTHORIZED
-                        402 -> Radar.RadarStatus.ERROR_PAYMENT_REQUIRED
-                        403 -> Radar.RadarStatus.ERROR_FORBIDDEN
-                        404 -> Radar.RadarStatus.ERROR_NOT_FOUND
-                        429 -> Radar.RadarStatus.ERROR_RATE_LIMIT
-                        in (500 until 600) -> Radar.RadarStatus.ERROR_SERVER
-                        else -> Radar.RadarStatus.ERROR_UNKNOWN
-                    }
-
-                    val body = urlConnection.errorStream.readAll()
-                    if (body == null) {
-                        callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
-                        imageCallback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
-
-                        return@execute
-                    }
-
-                    val res = JSONObject(body)
-
-                    logger?.e("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
-
+                    logNetworkError(host, e, startMs, NetworkErrorKind.from(e).name)
                     handler.post {
-                        callback?.onComplete(status, res)
-                        imageCallback?.onComplete(status)
+                        callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK, throwable = e)
+                        imageCallback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
                     }
+                } catch (e: JSONException) {
+                    logNetworkError(host, e, startMs, "JSON_PARSE")
+                    handler.post {
+                        callback?.onComplete(Radar.RadarStatus.ERROR_SERVER, throwable = e)
+                        imageCallback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                    }
+                } catch (e: Exception) {
+                    logNetworkError(host, e, startMs, "UNKNOWN")
+                    handler.post {
+                        callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN, throwable = e)
+                        imageCallback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
+                    }
+                } finally {
+                    connectionToClose?.disconnect()
                 }
-
-                urlConnection.disconnect()
-            } catch (e: IOException) {
-                logNetworkError(host, e, startMs, NetworkErrorKind.from(e).name)
-                handler.post {
-                    callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK, throwable = e)
-                    imageCallback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
-                }
-            } catch (e: JSONException) {
-                logNetworkError(host, e, startMs, "JSON_PARSE")
-                handler.post {
-                    callback?.onComplete(Radar.RadarStatus.ERROR_SERVER, throwable = e)
-                    imageCallback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
-                }
-            } catch (e: Exception) {
-                logNetworkError(host, e, startMs, "UNKNOWN")
-                handler.post {
-                    callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN, throwable = e)
-                    imageCallback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)
-                }
+                break
             }
 
             if (sleep) {

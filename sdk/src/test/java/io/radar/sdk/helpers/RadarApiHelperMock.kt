@@ -53,8 +53,16 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         logPayload: Boolean,
         verified: Boolean,
         imageCallback: RadarImageApiCallback?,
-        verifiedHostOverride: String?
+        verifiedHostOverride: String?,
+        prepareRequest: (() -> Unit)?
     ) {
+        try {
+            prepareRequest?.invoke()
+        } catch (e: Exception) {
+            callback?.onComplete(Radar.RadarStatus.ERROR_PLUGIN, throwable = e)
+            return
+        }
+
         if (path != "v1/logs") {
             val host = if (verified) {
                 verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)

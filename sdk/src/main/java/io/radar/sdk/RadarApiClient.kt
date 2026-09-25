@@ -303,7 +303,7 @@ internal class RadarApiClient(
         reason: String? = null,
         transactionId: String? = null,
         revealRiskId: String? = null,
-        fraudPayload: String? = null,
+        preparedFraudPayload: RadarPreparedFraudPayload? = null,
         callback: RadarTrackApiCallback? = null,
         verifiedHostOverride: String? = null
     ) {
@@ -404,9 +404,6 @@ internal class RadarApiClient(
             params.putOpt("verified", verified)
             if (verified) {
                 params.putOpt("encrypted", encrypted)
-                if (fraudPayload != null) {
-                    params.putOpt("fraudPayload", fraudPayload)
-                }
                 if (expectedCountryCode != null) {
                     params.putOpt("expectedCountryCode", expectedCountryCode)
                 }
@@ -525,12 +522,31 @@ internal class RadarApiClient(
             logPayload = true,
             verified = verified,
             verifiedHostOverride = verifiedHostOverride,
+            prepareRequest = {
+                if (verified) {
+                    val prepared = preparedFraudPayload
+                        ?: throw IllegalStateException("Missing prepared fraud payload")
+                    params.put(
+                        "fraudPayload",
+                        prepared.sealForRequest(path, params, headers)
+                    )
+                }
+            },
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status != RadarStatus.SUCCESS || res == null) {
+                        if (status == RadarStatus.ERROR_PLUGIN) {
+                            callback?.onComplete(status)
+                            return
+                        }
+
                         if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
-                            params.putOpt("replayed", true)
-                            Radar.addReplay(params)
+                            val replayParams = JSONObject(params.toString())
+                            if (verified) {
+                                replayParams.remove("fraudPayload")
+                            }
+                            replayParams.putOpt("replayed", true)
+                            Radar.addReplay(replayParams)
                         } else if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.STOPS && stopped && !(source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.BACKGROUND_LOCATION)) {
                             RadarState.setLastFailedStoppedLocation(context, location)
                         }
@@ -650,7 +666,7 @@ internal class RadarApiClient(
     }
 
     internal fun revealRisk(
-        fraudPayload: String? = null,
+        preparedFraudPayload: RadarPreparedFraudPayload,
         verifiedHostOverride: String? = null,
         callback: (
             status: RadarStatus,
@@ -669,9 +685,6 @@ internal class RadarApiClient(
             putDeviceParameters(params)
             putUserParameters(params)
             putApplicationParameters(params)
-            if (fraudPayload != null) {
-                params.put("fraudPayload", fraudPayload)
-            }
         } catch (e: JSONException) {
             logger.e("Error while processing RevealRisk parameters", Radar.RadarLogType.SDK_ERROR, e)
             callback(RadarStatus.ERROR_BAD_REQUEST, null)
@@ -693,6 +706,12 @@ internal class RadarApiClient(
             logPayload = true,
             verified = true,
             verifiedHostOverride = verifiedHostOverride,
+            prepareRequest = {
+                params.put(
+                    "fraudPayload",
+                    preparedFraudPayload.sealForRequest(path, params, headers)
+                )
+            },
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status != RadarStatus.SUCCESS || res == null) {

@@ -365,7 +365,8 @@ class RadarTest {
             logPayload: Boolean,
             verified: Boolean,
             imageCallback: RadarApiHelper.RadarImageApiCallback?,
-            verifiedHostOverride: String?
+            verifiedHostOverride: String?,
+            prepareRequest: (() -> Unit)?
         ) {
             if (path == "v1/logs") {
                 uploadCount.incrementAndGet()
