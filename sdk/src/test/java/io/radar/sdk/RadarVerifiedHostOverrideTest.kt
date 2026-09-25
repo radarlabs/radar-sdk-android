@@ -23,6 +23,10 @@ class RadarVerifiedHostOverrideTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val apiHelperMock = RadarApiHelperMock()
 
+    class StubFraudHandle {
+        fun seal(options: Map<String, Any?>): Map<String, Any?> = mapOf("payload" to """{"encv":1}""")
+    }
+
     @Before
     fun setUp() {
         Radar.logger = RadarLogger(context)
@@ -152,7 +156,15 @@ class RadarVerifiedHostOverrideTest {
     fun `track verified with override propagates to helper`() {
         val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
         Radar.apiClient.track(
-            location = Location("test"), stopped = false, foreground = true, source = Radar.RadarLocationSource.FOREGROUND_LOCATION, replayed = false, beacons = null, verified = true, verifiedHostOverride = secondary
+            location = Location("test"),
+            stopped = false,
+            foreground = true,
+            source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
+            replayed = false,
+            beacons = null,
+            verified = true,
+            preparedFraudPayload = RadarPreparedFraudPayload(StubFraudHandle()),
+            verifiedHostOverride = secondary
         )
 
         assertTrue(apiHelperMock.lastCapturedVerified)
@@ -163,7 +175,14 @@ class RadarVerifiedHostOverrideTest {
     @Test
     fun `track verified with no override passes null through`() {
         Radar.apiClient.track(
-            location = Location("test"), stopped = false, foreground = true, source = Radar.RadarLocationSource.FOREGROUND_LOCATION, replayed = false, beacons = null, verified = true
+            location = Location("test"),
+            stopped = false,
+            foreground = true,
+            source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
+            replayed = false,
+            beacons = null,
+            verified = true,
+            preparedFraudPayload = RadarPreparedFraudPayload(StubFraudHandle())
         )
 
         assertTrue(apiHelperMock.lastCapturedVerified)
