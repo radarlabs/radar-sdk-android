@@ -24,6 +24,10 @@ class RadarVerifiedHostOverrideTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val apiHelperMock = RadarApiHelperMock()
 
+    class StubFraudHandle {
+        fun seal(options: Map<String, Any?>): Map<String, Any?> = mapOf("payload" to """{"encv":1}""")
+    }
+
     @Before
     fun setUp() {
         Radar.logger = RadarLogger(context)
@@ -188,6 +192,7 @@ class RadarVerifiedHostOverrideTest {
             replayed = false,
             beacons = null,
             verified = true,
+            preparedFraudPayload = RadarPreparedFraudPayload(StubFraudHandle()),
             verifiedHostOverride = secondary
         )
 
@@ -205,7 +210,8 @@ class RadarVerifiedHostOverrideTest {
             source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
             replayed = false,
             beacons = null,
-            verified = true
+            verified = true,
+            preparedFraudPayload = RadarPreparedFraudPayload(StubFraudHandle())
         )
 
         assertTrue(apiHelperMock.lastCapturedVerified)
