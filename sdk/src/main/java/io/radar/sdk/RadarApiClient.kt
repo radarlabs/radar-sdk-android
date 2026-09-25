@@ -299,6 +299,7 @@ internal class RadarApiClient(
         encrypted: Boolean? = false,
         expectedCountryCode: String? = null,
         expectedStateCode: String? = null,
+        expectedAddress: String? = null,
         reason: String? = null,
         transactionId: String? = null,
         revealRiskId: String? = null,
@@ -408,6 +409,9 @@ internal class RadarApiClient(
                 }
                 if (expectedStateCode != null) {
                     params.putOpt("expectedStateCode", expectedStateCode)
+                }
+                if (expectedAddress != null) {
+                    params.putOpt("expectedAddress", expectedAddress)
                 }
                 if (reason != null) {
                     params.putOpt("reason", reason)

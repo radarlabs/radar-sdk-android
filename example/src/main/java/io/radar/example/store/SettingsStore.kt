@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
+import io.radar.example.MainActivity
 import io.radar.sdk.Radar
 import org.json.JSONObject
 
@@ -22,7 +23,7 @@ class SettingsStore(context: Context) {
         private set
 
     val resolvedPublishableKey: String
-        get() = publishableKeyOverride.ifBlank { DEFAULT_PUBLISHABLE_KEY }
+        get() = publishableKeyOverride.ifBlank { MainActivity.DEFAULT_PUBLISHABLE_KEY }
 
     // Identity
     var userId by mutableStateOf("")
@@ -92,9 +93,6 @@ class SettingsStore(context: Context) {
     }
 
     companion object {
-        /** Placeholder — replace or override at runtime. */
-        const val DEFAULT_PUBLISHABLE_KEY = "prj_test_pk_"
-
         private const val PREFS = "radar_example_settings"
         private const val KEY_PK = "publishableKeyOverride"
     }

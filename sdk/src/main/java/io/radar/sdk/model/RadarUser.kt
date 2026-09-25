@@ -115,7 +115,7 @@ class RadarUser(
      * A boolean indicating whether the user has been "Marked as Debug" in the dashboard.
      */
     val debug: Boolean = false,
-    
+
     /**
      * The user's current fraud state. May be `null` if Fraud is not enabled. See [](https://radar.com/documentation/fraud).
      */
@@ -126,7 +126,12 @@ class RadarUser(
      */
     val activityType: Radar.RadarActivityType?,
 
-    val altitude: Double?
+    val altitude: Double?,
+
+    /**
+     * Optional description of the user's expected address.
+     */
+    val expectedAddress: RadarExpectedAddress?
 ) {
     internal companion object {
         private const val FIELD_ID = "_id"
@@ -156,6 +161,7 @@ class RadarUser(
         private const val FIELD_ACTIVITY_TYPE = "activityType"
         private const val FIELD_BAROMETRIC_ALTITUDE = "barometricAltitude"
         private const val FIELD_ALTITUDE = "altitude"
+        private const val FIELD_EXPECTED_ADDRESS = "expectedAddress"
 
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarUser? {
@@ -211,10 +217,9 @@ class RadarUser(
             } else {
                 null
             }
-            
-            
 
-            
+            val expectedAddress = RadarExpectedAddress.fromJson(obj.optJSONObject(FIELD_EXPECTED_ADDRESS))
+
             return RadarUser(
                 id,
                 userId,
@@ -239,7 +244,8 @@ class RadarUser(
                 debug,
                 fraud,
                 activityType,
-                altitude
+                altitude,
+                expectedAddress
             )
         }
     }
@@ -274,10 +280,11 @@ class RadarUser(
         obj.putOpt(FIELD_TRIP, this.trip?.toJson())
         obj.putOpt(FIELD_DEBUG, this.debug)
         obj.putOpt(FIELD_FRAUD, this.fraud?.toJson())
-        obj.putOpt(FIELD_ACTIVITY_TYPE,this.activityType?.toString())
+        obj.putOpt(FIELD_ACTIVITY_TYPE, this.activityType?.toString())
         if (this.altitude != null) {
             obj.putOpt(FIELD_ALTITUDE, this.altitude)
         }
+        obj.putOpt(FIELD_EXPECTED_ADDRESS, this.expectedAddress?.toJson())
         return obj
     }
 }

@@ -5,6 +5,7 @@ import android.location.Location
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.radar.sdk.helpers.RadarApiHelperMock
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarGeofence

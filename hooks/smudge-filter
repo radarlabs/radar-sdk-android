@@ -1,0 +1,31 @@
+#!/bin/sh
+# Radar example smudge filter - restores saved TARGET_HOST and DEFAULT_PUBLISHABLE_KEY to working tree
+KEYS_FILE="$(git rev-parse --show-toplevel)/.radar-env"
+
+if [ ! -f "$KEYS_FILE" ]; then
+    cat
+    exit 0
+fi
+
+# Read a saved value and escape it for use in a sed replacement
+load() {
+    sed -n "s/^$1=//p" "$KEYS_FILE" | head -n 1 | sed 's/[\\&|]/\\&/g'
+}
+
+HOST=$(load radar_host)
+KEY=$(load publishable_key)
+
+# Build sed command to apply saved values
+SED_CMD=""
+if [ -n "$HOST" ]; then
+    SED_CMD="${SED_CMD}s|(const val TARGET_HOST = \")[^\"]*\"|\1${HOST}\"|;"
+fi
+if [ -n "$KEY" ]; then
+    SED_CMD="${SED_CMD}s|(const val DEFAULT_PUBLISHABLE_KEY = \")[^\"]*\"|\1${KEY}\"|;"
+fi
+
+if [ -z "$SED_CMD" ]; then
+    cat
+else
+    sed -E "$SED_CMD"
+fi

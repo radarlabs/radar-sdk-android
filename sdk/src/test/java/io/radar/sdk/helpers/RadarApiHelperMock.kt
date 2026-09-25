@@ -1,6 +1,9 @@
-package io.radar.sdk
+package io.radar.sdk.helpers
 
 import android.content.Context
+import io.radar.sdk.Radar
+import io.radar.sdk.RadarApiHelper
+import io.radar.sdk.RadarSettings
 import org.json.JSONObject
 
 internal class RadarApiHelperMock : RadarApiHelper() {

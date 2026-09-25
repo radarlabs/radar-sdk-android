@@ -1,13 +1,16 @@
 package io.radar.sdk
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.util.Base64
 import java.security.SecureRandom
 import org.json.JSONObject
 
-internal class RadarSDKFraud {
+internal open class RadarSDKFraud {
     companion object {
+        var shared = RadarSDKFraud()
+
         fun prepareFraudPayload(
             context: Context,
             logger: RadarLogger,
@@ -15,43 +18,53 @@ internal class RadarSDKFraud {
             googlePlayProjectNumber: Long? = null,
             callback: (Radar.RadarStatus, RadarPreparedFraudPayload?) -> Unit
         ) {
-            try {
-                val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
-                val fraudInstance = fraudClass.getMethod("sharedInstance").invoke(null)
-                val options = mutableMapOf<String, Any?>(
-                    "context" to context,
-                    "location" to location
-                )
-                if (googlePlayProjectNumber != null) {
-                    options["googlePlayProjectNumber"] = googlePlayProjectNumber
-                }
+            shared.prepareFraudPayload(context, logger, location, googlePlayProjectNumber, callback)
+        }
+    }
 
-                val method = fraudClass.getMethod(
-                    "prepareFraudPayload",
-                    java.util.Map::class.java,
-                    Function1::class.java
-                )
+    open fun prepareFraudPayload(
+        context: Context,
+        logger: RadarLogger,
+        location: Location? = null,
+        googlePlayProjectNumber: Long? = null,
+        callback: (Radar.RadarStatus, RadarPreparedFraudPayload?) -> Unit
+    ) {
+        try {
+            val fraudClass = Class.forName("io.radar.sdk.fraud.RadarSDKFraud")
+            val fraudInstance = fraudClass.getMethod("sharedInstance").invoke(null)
+            val options = mutableMapOf<String, Any?>(
+                "context" to context,
+                "location" to location
+            )
+            if (googlePlayProjectNumber != null) {
+                options["googlePlayProjectNumber"] = googlePlayProjectNumber
+            }
 
-                val fraudCallback = object : Function1<Map<String, Any?>?, Unit> {
-                    override fun invoke(result: Map<String, Any?>?) {
-                        val handle = result?.get("preparedPayload")
-                        if (handle == null) {
-                            val error = result?.get("error") as? String ?: "Unknown error"
-                            logger.e("Error preparing fraud payload: $error", Radar.RadarLogType.SDK_ERROR)
-                            callback(Radar.RadarStatus.ERROR_PLUGIN, null)
-                        } else {
-                            callback(Radar.RadarStatus.SUCCESS, RadarPreparedFraudPayload(handle))
-                        }
+            val method = fraudClass.getMethod(
+                "prepareFraudPayload",
+                java.util.Map::class.java,
+                Function1::class.java
+            )
+
+            val fraudCallback = object : Function1<Map<String, Any?>?, Unit> {
+                override fun invoke(result: Map<String, Any?>?) {
+                    val handle = result?.get("preparedPayload")
+                    if (handle == null) {
+                        val error = result?.get("error") as? String ?: "Unknown error"
+                        logger.e("Error preparing fraud payload: $error", Radar.RadarLogType.SDK_ERROR)
+                        callback(Radar.RadarStatus.ERROR_PLUGIN, null)
+                    } else {
+                        callback(Radar.RadarStatus.SUCCESS, RadarPreparedFraudPayload(handle))
                     }
                 }
-                method.invoke(fraudInstance, options, fraudCallback)
-            } catch (e: ClassNotFoundException) {
-                logger.d("Skipping fraud checks: RadarSDKFraud submodule not available")
-                callback(Radar.RadarStatus.ERROR_PLUGIN, null)
-            } catch (e: Exception) {
-                logger.e("Error preparing fraud payload ${e.message ?: ""}", Radar.RadarLogType.SDK_EXCEPTION, e)
-                callback(Radar.RadarStatus.ERROR_PLUGIN, null)
             }
+            method.invoke(fraudInstance, options, fraudCallback)
+        } catch (e: ClassNotFoundException) {
+            logger.d("Skipping fraud checks: RadarSDKFraud submodule not available")
+            callback(Radar.RadarStatus.ERROR_PLUGIN, null)
+        } catch (e: Exception) {
+            logger.e("Error preparing fraud payload ${e.message ?: ""}", Radar.RadarLogType.SDK_EXCEPTION, e)
+            callback(Radar.RadarStatus.ERROR_PLUGIN, null)
         }
     }
 }
@@ -68,6 +81,8 @@ internal class RadarPreparedFraudPayload(private val handle: Any) {
             )
     }
 
+    // The optional Fraud SDK requires API 21, above the Android versions affected by TrulyRandom.
+    @SuppressLint("TrulyRandom")
     fun sealForRequest(
         path: String,
         params: JSONObject,

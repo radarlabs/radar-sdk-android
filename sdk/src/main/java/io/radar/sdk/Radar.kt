@@ -1867,6 +1867,26 @@ object Radar {
     }
 
     /**
+     * Optionally sets the user's expected address, check is skipped if either param is null
+     *
+     * @param[address] The user's expected address
+     */
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    @JvmStatic
+    fun setExpectedAddress(address: String?) {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("setExpectedAddress", RadarLogType.SDK_CALL)
+
+        if (!this::verificationManager.isInitialized) {
+            this.verificationManager = RadarVerificationManager(this.context, this.logger, this.revealRiskManager)
+        }
+
+        this.verificationManager.setExpectedAddress(address)
+    }
+
+    /**
      * Starts tracking the user's location in the background.
      *
      * @see [](https://radar.com/documentation/sdk/android#background-tracking-for-geofencing)
@@ -2353,7 +2373,7 @@ object Radar {
                         }
 
                         // flush location update to generate events
-                        locationManager.getLocation(null)
+                        Radar.trackOnce()
                     }
 
                     handler.post {
