@@ -42,6 +42,9 @@ internal enum class NetworkErrorKind {
     }
 }
 
+// Android has no exact equivalent of iOS's NSURLErrorNetworkConnectionLost.
+// EOF and socket failures may indicate a dropped in-flight request. Exclude
+// known connection-setup failures; an eligible request retries once with a fresh seal.
 internal fun isRetryableConnectionFailure(e: IOException): Boolean = e is EOFException ||
     (e is SocketException && e !is ConnectException && e !is NoRouteToHostException)
 
@@ -98,6 +101,7 @@ internal open class RadarApiHelper(
         executor.execute {
             val startMs = SystemClock.elapsedRealtime()
             val retryEncryptedRequest = verified && prepareRequest != null
+            // Attempt 2 is reached only via the eligible IOException `continue` below.
             for (attempt in 0..1) {
                 var connectionToClose: HttpURLConnection? = null
                 try {

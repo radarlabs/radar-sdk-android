@@ -5,8 +5,11 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.EOFException
 import java.io.IOException
+import java.net.ConnectException
 import java.net.HttpURLConnection
+import java.net.NoRouteToHostException
 import java.net.SocketException
 import java.net.SocketTimeoutException
 import java.net.URL
@@ -15,6 +18,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,6 +45,13 @@ class RadarApiHelperRetryTest {
             failure?.let { throw it }
             return 200
         }
+    }
+
+    @Test
+    fun retryClassifierExcludesConnectionSetupFailures() {
+        assertTrue(isRetryableConnectionFailure(EOFException("Connection closed")))
+        assertFalse(isRetryableConnectionFailure(ConnectException("Connection refused")))
+        assertFalse(isRetryableConnectionFailure(NoRouteToHostException("No route to host")))
     }
 
     @Test
