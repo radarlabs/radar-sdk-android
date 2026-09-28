@@ -103,17 +103,18 @@ internal open class RadarApiHelper(
             val retryEncryptedRequest = verified && prepareRequest != null
             // Attempt 2 is reached only via the eligible IOException `continue` below.
             for (attempt in 0..1) {
+                try {
+                    prepareRequest?.invoke()
+                } catch (e: Exception) {
+                    logger?.e("Failed to prepare Radar API request", RadarLogType.SDK_ERROR, e)
+                    handler.post {
+                        callback?.onComplete(Radar.RadarStatus.ERROR_PLUGIN, throwable = e)
+                    }
+                    return@execute
+                }
+
                 var connectionToClose: HttpURLConnection? = null
                 try {
-                    try {
-                        prepareRequest?.invoke()
-                    } catch (e: Exception) {
-                        logger?.e("Failed to prepare Radar API request", RadarLogType.SDK_ERROR, e)
-                        handler.post {
-                            callback?.onComplete(Radar.RadarStatus.ERROR_PLUGIN, throwable = e)
-                        }
-                        return@execute
-                    }
                     val urlConnection = connectionFactory(url)
                     connectionToClose = urlConnection
                     if (headers != null) {
