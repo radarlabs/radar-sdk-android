@@ -535,6 +535,8 @@ internal class RadarApiClient(
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status != RadarStatus.SUCCESS || res == null) {
+                        // Request preparation failed before dispatch. Fail closed without
+                        // buffering a replay or treating this as an offline track failure.
                         if (status == RadarStatus.ERROR_PLUGIN) {
                             callback?.onComplete(status)
                             return
@@ -543,6 +545,8 @@ internal class RadarApiClient(
                         if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
                             val replayParams = JSONObject(params.toString())
                             if (verified) {
+                                // This envelope is bound to the original track attempt and expires quickly.
+                                // The replay endpoint does not decrypt it, so do not persist it.
                                 replayParams.remove("fraudPayload")
                             }
                             replayParams.putOpt("replayed", true)
