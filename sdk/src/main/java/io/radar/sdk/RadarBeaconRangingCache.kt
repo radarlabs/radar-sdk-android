@@ -54,8 +54,13 @@ internal class RadarBeaconRangingCache(
     }
 
     internal data class SearchResult(
+        // iBeacon proximity UUIDs. Ranging one matches every iBeacon with that UUID, whatever its
+        // major and minor.
         val uuids: List<String> = emptyList(),
+        // Eddystone namespace IDs (10 bytes, 20 hex characters). Ranging one matches every
+        // Eddystone-UID beacon in that namespace, whatever its instance ID.
         val uids: List<String> = emptyList(),
+        // Specific beacons, ranged only when there are no UUIDs or UIDs.
         val beacons: List<RadarBeacon> = emptyList()
     ) {
         // UUIDs and UIDs take precedence over specific beacons, matching the one-shot ranging path.
