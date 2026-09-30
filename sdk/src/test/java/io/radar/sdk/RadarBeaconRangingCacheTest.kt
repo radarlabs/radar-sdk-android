@@ -185,15 +185,29 @@ class RadarBeaconRangingCacheTest {
         assertTrue(searches.isEmpty())
         assertFalse(cache.ranging)
 
-        cache.seedIfNeeded(beacons = arrayOf(beacon("2")))
+        cache.seedIfNeeded(location(LAT, LNG), null, null, arrayOf(beacon("2")))
         assertTrue(cache.ranging)
+    }
+
+    @Test
+    fun seedIfNeeded_coversOnlyAroundWhereItWasSearched() {
+        lastLocation = null
+        cache.start()
+
+        // Seeded from a search about 2km away from where `trackVerified` is later called.
+        cache.seedIfNeeded(location(LAT + 0.018, LNG), null, null, arrayOf(beacon("2", lat = LAT + 0.018)))
+        idle(RadarBeaconRangingCache.WARM_UP_MS)
+
+        assertEquals(LAT + 0.018, cache.searchLocation!!.latitude, 0.0)
+        assertNull(cache.cachedBeacons(location(LAT, LNG)))
+        assertNull(cache.searchResult)
     }
 
     @Test
     fun seedIfNeeded_withBeacons_doesNotReplaceThem() {
         startAndSearch(RadarBeaconRangingCache.SearchResult(beacons = listOf(beacon("2"))))
 
-        cache.seedIfNeeded(uuids = arrayOf(UUID))
+        cache.seedIfNeeded(location(LAT, LNG), arrayOf(UUID), null, null)
 
         assertEquals(1, scanner.starts)
         assertFalse(cache.searchResult!!.usesIdentifiers)
@@ -201,7 +215,7 @@ class RadarBeaconRangingCacheTest {
 
     @Test
     fun seedIfNeeded_notStarted_isNoOp() {
-        cache.seedIfNeeded(beacons = arrayOf(beacon("2")))
+        cache.seedIfNeeded(location(LAT, LNG), null, null, arrayOf(beacon("2")))
 
         assertFalse(cache.ranging)
         assertNull(cache.searchResult)

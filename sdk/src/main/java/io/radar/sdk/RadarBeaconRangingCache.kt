@@ -233,15 +233,19 @@ internal class RadarBeaconRangingCache(
     }
 
     /**
-     * Uses the beacons from a one-shot ranging request when the cache has started but has no
+     * Uses the result of `trackVerified`'s beacon search when the cache has started but has no
      * beacons yet, for example because there was no location to search from.
+     *
+     * Only pass the result of a successful search near `searchedFrom`. Other one-shot ranging
+     * callers can range beacons saved from an earlier search somewhere else, which would make the
+     * cache report that no beacons are near `searchedFrom`.
      */
-    fun seedIfNeeded(uuids: Array<String>? = null, uids: Array<String>? = null, beacons: Array<RadarBeacon>? = null) {
+    fun seedIfNeeded(searchedFrom: Location, uuids: Array<String>?, uids: Array<String>?, beacons: Array<RadarBeacon>?) {
         if (!searchResult?.filterKeys.isNullOrEmpty()) {
             return
         }
 
-        update(SearchResult(uuids?.toList().orEmpty(), uids?.toList().orEmpty(), beacons?.toList().orEmpty()))
+        update(SearchResult(uuids?.toList().orEmpty(), uids?.toList().orEmpty(), beacons?.toList().orEmpty()), searchedFrom)
     }
 
     /**

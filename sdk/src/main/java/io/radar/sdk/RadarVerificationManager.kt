@@ -164,6 +164,12 @@ internal class RadarVerificationManager(
                                                 uuids: Array<String>?,
                                                 uids: Array<String>?
                                             ) {
+                                                // On failure `searchBeacons` returns beacons saved from an earlier search,
+                                                // which may not be near `location`.
+                                                if (status == Radar.RadarStatus.SUCCESS) {
+                                                    Radar.seedBeaconRangingCache(location, uuids, uids, beacons)
+                                                }
+
                                                 if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                                                     Radar.beaconManager.startMonitoringBeaconUUIDs(
                                                         uuids,

@@ -1682,9 +1682,9 @@ object Radar {
         }
     }
 
-    internal fun seedBeaconRangingCache(uuids: Array<String>? = null, uids: Array<String>? = null, beacons: Array<RadarBeacon>? = null) {
+    internal fun seedBeaconRangingCache(searchedFrom: Location, uuids: Array<String>?, uids: Array<String>?, beacons: Array<RadarBeacon>?) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::beaconRangingCache.isInitialized) {
-            handler.post { beaconRangingCache.seedIfNeeded(uuids, uids, beacons) }
+            handler.post { beaconRangingCache.seedIfNeeded(searchedFrom, uuids, uids, beacons) }
         }
     }
 

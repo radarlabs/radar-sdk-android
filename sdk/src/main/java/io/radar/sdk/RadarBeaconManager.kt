@@ -332,8 +332,6 @@ internal class RadarBeaconManager(
             return
         }
 
-        Radar.seedBeaconRangingCache(beacons = beacons)
-
         this.addCallback(callback)
 
         if (this.started) {
@@ -454,8 +452,6 @@ internal class RadarBeaconManager(
 
             return
         }
-
-        Radar.seedBeaconRangingCache(uuids = beaconUUIDs, uids = beaconUIDs)
 
         this.addCallback(callback)
 
