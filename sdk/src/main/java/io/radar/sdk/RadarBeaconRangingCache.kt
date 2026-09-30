@@ -6,7 +6,10 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
@@ -183,6 +186,18 @@ internal class RadarBeaconRangingCache(
         }
     }
 
+    // Android stops scans when Bluetooth turns off without calling `onScanFailed`, so the cache
+    // would otherwise keep reporting that no beacons are nearby, and never restart the scan.
+    private val bluetoothStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
+                BluetoothAdapter.STATE_ON -> onBluetoothStateChanged(true)
+                BluetoothAdapter.STATE_TURNING_OFF, BluetoothAdapter.STATE_OFF -> onBluetoothStateChanged(false)
+            }
+        }
+    }
+    private var bluetoothStateReceiverRegistered = false
+
     internal val ranging: Boolean
         get() = scanCallback != null
 
@@ -197,6 +212,7 @@ internal class RadarBeaconRangingCache(
         logger.d("Starting beacon ranging cache")
 
         requested = true
+        registerBluetoothStateReceiver()
         resume()
     }
 
@@ -205,6 +221,7 @@ internal class RadarBeaconRangingCache(
 
         requested = false
         handler.removeCallbacks(backgroundPauseRunnable)
+        unregisterBluetoothStateReceiver()
         reset(null)
     }
 
@@ -279,6 +296,12 @@ internal class RadarBeaconRangingCache(
      * warmed up yet. An empty array means no beacons are nearby.
      */
     fun cachedBeacons(): Array<RadarBeacon>? {
+        if (ranging && !scanner.isAvailable()) {
+            // Bluetooth turned off and the state broadcast hasn't arrived yet.
+            logger.d("Pausing beacon ranging cache: Bluetooth not available")
+            pause()
+        }
+
         if (!ranging || !warmedUp) {
             return null
         }
@@ -309,6 +332,46 @@ internal class RadarBeaconRangingCache(
 
         handler.removeCallbacks(backgroundPauseRunnable)
         handler.postDelayed(backgroundPauseRunnable, BACKGROUND_PAUSE_DELAY_MS)
+    }
+
+    internal fun onBluetoothStateChanged(enabled: Boolean) {
+        if (!requested) {
+            return
+        }
+
+        if (enabled) {
+            logger.d("Resuming beacon ranging cache: Bluetooth enabled")
+            resume()
+        } else {
+            logger.d("Pausing beacon ranging cache: Bluetooth disabled")
+            pause()
+        }
+    }
+
+    private fun registerBluetoothStateReceiver() {
+        if (bluetoothStateReceiverRegistered) {
+            return
+        }
+
+        try {
+            context.applicationContext.registerReceiver(bluetoothStateReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
+            bluetoothStateReceiverRegistered = true
+        } catch (e: Exception) {
+            logger.d("Beacon ranging cache error registering Bluetooth state receiver", RadarLogType.SDK_EXCEPTION, e)
+        }
+    }
+
+    private fun unregisterBluetoothStateReceiver() {
+        if (!bluetoothStateReceiverRegistered) {
+            return
+        }
+
+        try {
+            context.applicationContext.unregisterReceiver(bluetoothStateReceiver)
+        } catch (e: Exception) {
+            logger.d("Beacon ranging cache error unregistering Bluetooth state receiver", RadarLogType.SDK_EXCEPTION, e)
+        }
+        bluetoothStateReceiverRegistered = false
     }
 
     // endregion

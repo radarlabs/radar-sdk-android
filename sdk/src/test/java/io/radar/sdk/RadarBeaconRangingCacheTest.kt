@@ -1,8 +1,10 @@
 package io.radar.sdk
 
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.content.Context
+import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.Looper
@@ -337,5 +339,51 @@ class RadarBeaconRangingCacheTest {
         assertNotNull(cache.cachedBeacons(location(LAT + 0.0009, LNG)))
         // About 250m away: beacons within 100m of it may not have been included.
         assertNull(cache.cachedBeacons(location(LAT + 0.00225, LNG)))
+    }
+
+    @Test
+    fun cachedBeacons_bluetoothUnavailable_pausesAndReturnsNull() {
+        startAndSearch(RadarBeaconRangingCache.SearchResult(beacons = listOf(beacon("2"))))
+        idle(RadarBeaconRangingCache.WARM_UP_MS)
+
+        scanner.available = false
+
+        assertNull(cache.cachedBeacons(location(LAT, LNG)))
+        assertFalse(cache.ranging)
+    }
+
+    @Test
+    fun bluetoothStateBroadcast_pausesWhenOffAndResumesWhenOn() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        startAndSearch(RadarBeaconRangingCache.SearchResult(beacons = listOf(beacon("2"))))
+        cache.handleRanged(listOf(beacon("2")))
+
+        scanner.available = false
+        context.sendBroadcast(Intent(BluetoothAdapter.ACTION_STATE_CHANGED).putExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF))
+        idle()
+
+        assertFalse(cache.ranging)
+        assertNull(scanner.active)
+
+        scanner.available = true
+        context.sendBroadcast(Intent(BluetoothAdapter.ACTION_STATE_CHANGED).putExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_ON))
+        idle()
+
+        assertTrue(cache.ranging)
+        assertEquals(2, scanner.starts)
+        assertEquals(1, searches.size)
+    }
+
+    @Test
+    fun bluetoothStateBroadcast_afterStop_isIgnored() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        cache.start()
+        cache.stop()
+
+        context.sendBroadcast(Intent(BluetoothAdapter.ACTION_STATE_CHANGED).putExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_ON))
+        idle()
+
+        assertFalse(cache.ranging)
+        assertEquals(1, searches.size)
     }
 }
