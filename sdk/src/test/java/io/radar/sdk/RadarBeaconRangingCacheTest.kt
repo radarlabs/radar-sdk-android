@@ -43,11 +43,15 @@ class RadarBeaconRangingCacheTest {
 
     private class FakeScanner : RadarBeaconRangingCache.Scanner {
         var available = true
+        var availabilityError: Exception? = null
         var starts = 0
         var stops = 0
         var active: ScanCallback? = null
 
-        override fun isAvailable() = available
+        override fun isAvailable(): Boolean {
+            availabilityError?.let { throw it }
+            return available
+        }
 
         override fun start(filters: List<ScanFilter>, callback: ScanCallback) {
             starts++
@@ -385,5 +389,24 @@ class RadarBeaconRangingCacheTest {
 
         assertFalse(cache.ranging)
         assertEquals(1, searches.size)
+    }
+
+    @Test
+    fun bluetoothAvailabilityError_isTreatedAsUnavailable() {
+        scanner.availabilityError = SecurityException("Need android.permission.BLUETOOTH_CONNECT")
+        cache.start()
+
+        assertFalse(cache.ranging)
+        assertTrue(searches.isEmpty())
+
+        scanner.availabilityError = null
+        cache.onBluetoothStateChanged(true)
+        searches.removeAt(0).second(RadarBeaconRangingCache.SearchResult(beacons = listOf(beacon("2"))))
+        idle(RadarBeaconRangingCache.WARM_UP_MS)
+
+        scanner.availabilityError = SecurityException("Need android.permission.BLUETOOTH_CONNECT")
+
+        assertNull(cache.cachedBeacons(location(LAT, LNG)))
+        assertFalse(cache.ranging)
     }
 }

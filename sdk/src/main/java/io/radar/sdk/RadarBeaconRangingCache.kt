@@ -296,7 +296,7 @@ internal class RadarBeaconRangingCache(
      * warmed up yet. An empty array means no beacons are nearby.
      */
     fun cachedBeacons(): Array<RadarBeacon>? {
-        if (ranging && !scanner.isAvailable()) {
+        if (ranging && !bluetoothAvailable()) {
             // Bluetooth turned off and the state broadcast hasn't arrived yet.
             logger.d("Pausing beacon ranging cache: Bluetooth not available")
             pause()
@@ -393,7 +393,7 @@ internal class RadarBeaconRangingCache(
             return
         }
 
-        if (!scanner.isAvailable()) {
+        if (!bluetoothAvailable()) {
             logger.d("Beacon ranging cache not started: Bluetooth not available")
             return
         }
@@ -480,6 +480,15 @@ internal class RadarBeaconRangingCache(
         }
         scanCallback = callback
         handler.postDelayed(warmUpRunnable, WARM_UP_MS)
+    }
+
+    // Treats an exception from the scanner as Bluetooth being unavailable rather than crashing the
+    // host app, which calls in through `trackVerified` and lifecycle callbacks.
+    private fun bluetoothAvailable(): Boolean = try {
+        scanner.isAvailable()
+    } catch (e: Exception) {
+        logger.d("Beacon ranging cache error checking Bluetooth availability", RadarLogType.SDK_EXCEPTION, e)
+        false
     }
 
     private fun handleScanResult(result: ScanResult?) {
