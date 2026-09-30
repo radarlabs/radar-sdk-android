@@ -566,8 +566,8 @@ object Radar {
     internal lateinit var logger: RadarLogger
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
-    internal lateinit var beaconManager: RadarBeaconManager
-    internal lateinit var beaconRangingCache: RadarBeaconRangingCache
+    internal lateinit var oneShotBeaconManager: RadarOneShotBeaconManager
+    internal lateinit var continuousBeaconManager: RadarContinuousBeaconManager
     private lateinit var logBuffer: RadarLogBuffer
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
@@ -717,11 +717,11 @@ object Radar {
             this.batteryManager = RadarBatteryManager(this.context)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!this::beaconManager.isInitialized) {
-                this.beaconManager = RadarBeaconManager(this.context, logger)
+            if (!this::oneShotBeaconManager.isInitialized) {
+                this.oneShotBeaconManager = RadarOneShotBeaconManager(this.context, logger)
             }
-            if (!this::beaconRangingCache.isInitialized) {
-                this.beaconRangingCache = RadarBeaconRangingCache(this.context, logger)
+            if (!this::continuousBeaconManager.isInitialized) {
+                this.continuousBeaconManager = RadarContinuousBeaconManager(this.context, logger)
             }
         }
 
@@ -1314,9 +1314,9 @@ object Radar {
                             object : RadarApiClient.RadarSearchBeaconsApiCallback {
                                 override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
                                     if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                        beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
+                                        oneShotBeaconManager.startMonitoringBeaconUUIDs(uuids, uids)
 
-                                        beaconManager.rangeBeaconUUIDs(
+                                        oneShotBeaconManager.rangeBeaconUUIDs(
                                             uuids,
                                             uids,
                                             false,
@@ -1333,9 +1333,9 @@ object Radar {
                                             }
                                         )
                                     } else if (beacons != null) {
-                                        beaconManager.startMonitoringBeacons(beacons)
+                                        oneShotBeaconManager.startMonitoringBeacons(beacons)
 
-                                        beaconManager.rangeBeacons(
+                                        oneShotBeaconManager.rangeBeacons(
                                             beacons,
                                             false,
                                             object : RadarBeaconCallback {
@@ -1649,7 +1649,7 @@ object Radar {
             return
         }
 
-        handler.post { beaconRangingCache.start() }
+        handler.post { continuousBeaconManager.start() }
     }
 
     /**
@@ -1668,7 +1668,7 @@ object Radar {
             return
         }
 
-        handler.post { beaconRangingCache.stop() }
+        handler.post { continuousBeaconManager.stop() }
     }
 
     /**

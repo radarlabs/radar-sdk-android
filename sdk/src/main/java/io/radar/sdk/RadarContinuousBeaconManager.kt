@@ -27,13 +27,13 @@ import org.json.JSONObject
  * Continuously ranges nearby beacons while the app is in the foreground, so `trackVerified` can
  * attach the last ranging result without waiting on a one-shot ranging window.
  *
- * Uses its own searches and scan, separate from the one-shot ranging in `RadarBeaconManager`.
+ * Uses its own searches and scan, separate from the one-shot ranging in `RadarOneShotBeaconManager`.
  * Ranging pauses when the app enters the background and resumes when it returns to the
  * foreground, until `stop()` is called. Must be used from the main thread.
  */
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("MissingPermission")
-internal class RadarBeaconRangingCache(
+internal class RadarContinuousBeaconManager(
     private val context: Context,
     private val logger: RadarLogger,
     @SuppressLint("VisibleForTests")
@@ -85,7 +85,7 @@ internal class RadarBeaconRangingCache(
             fun build(description: String, block: () -> ScanFilter?): ScanFilter? = try {
                 block()
             } catch (e: Exception) {
-                logger.d("Beacon ranging cache error building scan filter | $description", RadarLogType.SDK_EXCEPTION, e)
+                logger.d("Continuous beacon manager error building scan filter | $description", RadarLogType.SDK_EXCEPTION, e)
                 null
             }
 
@@ -202,7 +202,7 @@ internal class RadarBeaconRangingCache(
 
     private val backgroundPauseRunnable = Runnable {
         if (!isForeground()) {
-            logger.d("Pausing beacon ranging cache in background")
+            logger.d("Pausing continuous beacon manager in background")
             pause()
         }
     }
@@ -212,8 +212,8 @@ internal class RadarBeaconRangingCache(
         override fun onBackground() = onAppBackground()
     }
 
-    // Android stops scans when Bluetooth turns off without calling `onScanFailed`, so the cache
-    // would otherwise keep reporting that no beacons are nearby, and never restart the scan.
+    // Android stops scans when Bluetooth turns off without calling `onScanFailed`, so ranging would
+    // otherwise keep reporting that no beacons are nearby, and never restart the scan.
     private val bluetoothStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
@@ -229,11 +229,11 @@ internal class RadarBeaconRangingCache(
 
     fun start() {
         if (started) {
-            logger.d("Beacon ranging cache already started")
+            logger.d("Continuous beacon manager already started")
             return
         }
 
-        logger.d("Starting beacon ranging cache")
+        logger.d("Starting continuous beacon manager")
 
         started = true
         RadarActivityLifecycleCallbacks.foregroundListeners.add(foregroundListener)
@@ -242,7 +242,7 @@ internal class RadarBeaconRangingCache(
     }
 
     fun stop() {
-        logger.d("Stopping beacon ranging cache")
+        logger.d("Stopping continuous beacon manager")
 
         started = false
         handler.removeCallbacks(backgroundPauseRunnable)
@@ -255,10 +255,10 @@ internal class RadarBeaconRangingCache(
      * Completes `callback` with the last ranging result near `location`, or with the result of the
      * running scan's first round if it hasn't finished yet.
      *
-     * Returns `false`, without calling `callback`, if the cache can't serve the request: it's
-     * stopped, it isn't scanning, or its search didn't include every beacon in range of
-     * `location`. Range beacons once instead. Unless stopped, the cache then searches for beacons
-     * near `location`, so later requests there can be served.
+     * Returns `false`, without calling `callback`, if continuous ranging can't serve the request:
+     * it's stopped, it isn't scanning, or its search didn't include every beacon in range of
+     * `location`. Range beacons once instead. Unless stopped, it then searches for beacons near
+     * `location`, so later requests there can be served.
      */
     fun rangeBeacons(location: Location, callback: RadarBeaconCallback): Boolean {
         if (!started) {
@@ -267,7 +267,7 @@ internal class RadarBeaconRangingCache(
 
         if (ranging && !bluetoothAvailable()) {
             // Bluetooth turned off and the state broadcast hasn't arrived yet.
-            logger.d("Pausing beacon ranging cache: Bluetooth not available")
+            logger.d("Pausing continuous beacon manager: Bluetooth not available")
             pause()
         }
 
@@ -285,8 +285,8 @@ internal class RadarBeaconRangingCache(
     }
 
     /**
-     * Beacons ranged within `MAX_BEACON_AGE_MS`, or `null` if the cache is not scanning or its
-     * first round hasn't finished. An empty array means no beacons are nearby.
+     * Beacons ranged within `MAX_BEACON_AGE_MS`, or `null` if it is not scanning or its first
+     * round hasn't finished. An empty array means no beacons are nearby.
      */
     internal fun beacons(): Array<RadarBeacon>? {
         if (!ranging || !warmedUp) {
@@ -329,7 +329,7 @@ internal class RadarBeaconRangingCache(
         val callbacks = pendingCallbacks.toList()
         pendingCallbacks.clear()
 
-        logger.d("Calling beacon ranging cache callbacks | callbacks.size = ${callbacks.size}; beacons.size = ${result.size}")
+        logger.d("Calling continuous beacon manager callbacks | callbacks.size = ${callbacks.size}; beacons.size = ${result.size}")
 
         callbacks.forEach { it.onComplete(RadarStatus.SUCCESS, result) }
     }
@@ -346,7 +346,7 @@ internal class RadarBeaconRangingCache(
             return
         }
 
-        logger.d("Resuming beacon ranging cache in foreground")
+        logger.d("Resuming continuous beacon manager in foreground")
         resume()
     }
 
@@ -365,10 +365,10 @@ internal class RadarBeaconRangingCache(
         }
 
         if (enabled) {
-            logger.d("Resuming beacon ranging cache: Bluetooth enabled")
+            logger.d("Resuming continuous beacon manager: Bluetooth enabled")
             resume()
         } else {
-            logger.d("Pausing beacon ranging cache: Bluetooth disabled")
+            logger.d("Pausing continuous beacon manager: Bluetooth disabled")
             pause()
         }
     }
@@ -382,7 +382,7 @@ internal class RadarBeaconRangingCache(
             context.applicationContext.registerReceiver(bluetoothStateReceiver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
             bluetoothStateReceiverRegistered = true
         } catch (e: Exception) {
-            logger.d("Beacon ranging cache error registering Bluetooth state receiver", RadarLogType.SDK_EXCEPTION, e)
+            logger.d("Continuous beacon manager error registering Bluetooth state receiver", RadarLogType.SDK_EXCEPTION, e)
         }
     }
 
@@ -394,7 +394,7 @@ internal class RadarBeaconRangingCache(
         try {
             context.applicationContext.unregisterReceiver(bluetoothStateReceiver)
         } catch (e: Exception) {
-            logger.d("Beacon ranging cache error unregistering Bluetooth state receiver", RadarLogType.SDK_EXCEPTION, e)
+            logger.d("Continuous beacon manager error unregistering Bluetooth state receiver", RadarLogType.SDK_EXCEPTION, e)
         }
         bluetoothStateReceiverRegistered = false
     }
@@ -417,17 +417,17 @@ internal class RadarBeaconRangingCache(
         }
 
         if (!permissionsHelper.fineLocationPermissionGranted(context) && !permissionsHelper.coarseLocationPermissionGranted(context)) {
-            logger.d("Beacon ranging cache not started: location not authorized")
+            logger.d("Continuous beacon manager not started: location not authorized")
             return
         }
 
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
-            logger.d("Beacon ranging cache not started: Bluetooth permissions not granted")
+            logger.d("Continuous beacon manager not started: Bluetooth permissions not granted")
             return
         }
 
         if (!bluetoothAvailable()) {
-            logger.d("Beacon ranging cache not started: Bluetooth not available")
+            logger.d("Continuous beacon manager not started: Bluetooth not available")
             return
         }
 
@@ -441,19 +441,19 @@ internal class RadarBeaconRangingCache(
 
         val searchFrom = location ?: lastLocation()
         if (searchFrom == null) {
-            logger.d("Beacon ranging cache waiting for a location to search beacons")
+            logger.d("Continuous beacon manager waiting for a location to search beacons")
             return
         }
 
         pendingSearchLocation = searchFrom
         searchBeacons(searchFrom) { result ->
             if (pendingSearchLocation !== searchFrom) {
-                logger.d("Beacon ranging cache ignoring stale search")
+                logger.d("Continuous beacon manager ignoring stale search")
                 return@searchBeacons
             }
             pendingSearchLocation = null
             if (result == null) {
-                logger.d("Beacon ranging cache search failed")
+                logger.d("Continuous beacon manager search failed")
                 return@searchBeacons
             }
             update(result, searchFrom)
@@ -473,7 +473,7 @@ internal class RadarBeaconRangingCache(
             try {
                 scanner.stop(callback)
             } catch (e: Exception) {
-                logger.d("Beacon ranging cache error stopping scan", RadarLogType.SDK_EXCEPTION, e)
+                logger.d("Continuous beacon manager error stopping scan", RadarLogType.SDK_EXCEPTION, e)
             }
         }
         scanCallback = null
@@ -491,7 +491,7 @@ internal class RadarBeaconRangingCache(
         if (!bluetoothAvailable()) {
             // The scanner does nothing while Bluetooth is off. Leave the scan stopped so it
             // restarts when Bluetooth turns back on.
-            logger.d("Beacon ranging cache not started: Bluetooth not available")
+            logger.d("Continuous beacon manager not started: Bluetooth not available")
             pause()
             return
         }
@@ -505,7 +505,7 @@ internal class RadarBeaconRangingCache(
             return
         }
 
-        searchResult?.filterKeys?.forEach { key -> logger.d("Beacon ranging cache ranging | $key") }
+        searchResult?.filterKeys?.forEach { key -> logger.d("Continuous beacon manager ranging | $key") }
 
         val callback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
@@ -517,7 +517,7 @@ internal class RadarBeaconRangingCache(
             }
 
             override fun onScanFailed(errorCode: Int) {
-                logger.d("Beacon ranging cache scan failed | errorCode = $errorCode")
+                logger.d("Continuous beacon manager scan failed | errorCode = $errorCode")
                 if (scanCallback === this) {
                     pause()
                 }
@@ -527,7 +527,7 @@ internal class RadarBeaconRangingCache(
         try {
             scanner.start(filters, callback)
         } catch (e: Exception) {
-            logger.e("Beacon ranging cache error starting scan", RadarLogType.SDK_EXCEPTION, e)
+            logger.e("Continuous beacon manager error starting scan", RadarLogType.SDK_EXCEPTION, e)
             completeCallbacks()
             return
         }
@@ -540,7 +540,7 @@ internal class RadarBeaconRangingCache(
     private fun bluetoothAvailable(): Boolean = try {
         scanner.isAvailable()
     } catch (e: Exception) {
-        logger.d("Beacon ranging cache error checking Bluetooth availability", RadarLogType.SDK_EXCEPTION, e)
+        logger.d("Continuous beacon manager error checking Bluetooth availability", RadarLogType.SDK_EXCEPTION, e)
         false
     }
 
@@ -549,7 +549,7 @@ internal class RadarBeaconRangingCache(
             val scanRecord = result?.scanRecord ?: return
             RadarBeaconUtils.getBeacon(result, scanRecord)?.let { handleRanged(listOf(it)) }
         } catch (e: Exception) {
-            logger.d("Beacon ranging cache error handling scan result", RadarLogType.SDK_EXCEPTION, e)
+            logger.d("Continuous beacon manager error handling scan result", RadarLogType.SDK_EXCEPTION, e)
         }
     }
 
@@ -573,7 +573,7 @@ internal class RadarBeaconRangingCache(
         val distance = location.distanceTo(searchLocation).toDouble()
         val coverage = coverageRadius(searchLocation)
         if (distance + BEACON_RANGE_METERS > coverage) {
-            logger.d("Beacon ranging cache search doesn't cover location | distance = ${distance.toInt()}m; coverage = ${minOf(coverage, 1_000_000.0).toInt()}m")
+            logger.d("Continuous beacon manager search doesn't cover location | distance = ${distance.toInt()}m; coverage = ${minOf(coverage, 1_000_000.0).toInt()}m")
             return false
         }
         return true

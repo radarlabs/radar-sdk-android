@@ -21,7 +21,7 @@ import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("MissingPermission")
-internal class RadarBeaconManager(
+internal class RadarOneShotBeaconManager(
     private val context: Context,
     private val logger: RadarLogger,
     @SuppressLint("VisibleForTests")
@@ -373,19 +373,19 @@ internal class RadarBeaconManager(
         val scanMode = if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY
         val scanSettings = getScanSettings(scanMode)
 
-        val beaconManager = this
+        val oneShotBeaconManager = this
 
         this.scanCallback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
                 super.onScanResult(callbackType, result)
 
-                beaconManager.handleScanResult(callbackType, result)
+                oneShotBeaconManager.handleScanResult(callbackType, result)
             }
 
             override fun onBatchScanResults(results: MutableList<ScanResult>?) {
                 super.onBatchScanResults(results)
 
-                results?.forEach { result -> beaconManager.handleScanResult(ScanSettings.CALLBACK_TYPE_FIRST_MATCH, result) }
+                results?.forEach { result -> oneShotBeaconManager.handleScanResult(ScanSettings.CALLBACK_TYPE_FIRST_MATCH, result) }
             }
 
             override fun onScanFailed(errorCode: Int) {
@@ -393,7 +393,7 @@ internal class RadarBeaconManager(
 
                 logger.d("Scan failed")
 
-                beaconManager.stopRanging()
+                oneShotBeaconManager.stopRanging()
             }
         }
 
@@ -516,19 +516,19 @@ internal class RadarBeaconManager(
         val scanMode = if (background) ScanSettings.SCAN_MODE_LOW_POWER else ScanSettings.SCAN_MODE_LOW_LATENCY
         val scanSettings = getScanSettings(scanMode)
 
-        val beaconManager = this
+        val oneShotBeaconManager = this
 
         this.scanCallback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
                 super.onScanResult(callbackType, result)
 
-                beaconManager.handleScanResult(callbackType, result)
+                oneShotBeaconManager.handleScanResult(callbackType, result)
             }
 
             override fun onBatchScanResults(results: MutableList<ScanResult>?) {
                 super.onBatchScanResults(results)
 
-                results?.forEach { result -> beaconManager.handleScanResult(ScanSettings.CALLBACK_TYPE_FIRST_MATCH, result) }
+                results?.forEach { result -> oneShotBeaconManager.handleScanResult(ScanSettings.CALLBACK_TYPE_FIRST_MATCH, result) }
             }
 
             override fun onScanFailed(errorCode: Int) {
@@ -536,7 +536,7 @@ internal class RadarBeaconManager(
 
                 logger.d("Scan failed")
 
-                beaconManager.stopRanging()
+                oneShotBeaconManager.stopRanging()
             }
         }
 

@@ -165,12 +165,12 @@ internal class RadarVerificationManager(
                                                 uids: Array<String>?
                                             ) {
                                                 if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                                    Radar.beaconManager.startMonitoringBeaconUUIDs(
+                                                    Radar.oneShotBeaconManager.startMonitoringBeaconUUIDs(
                                                         uuids,
                                                         uids
                                                     )
 
-                                                    Radar.beaconManager.rangeBeaconUUIDs(
+                                                    Radar.oneShotBeaconManager.rangeBeaconUUIDs(
                                                         uuids,
                                                         uids,
                                                         false,
@@ -190,11 +190,11 @@ internal class RadarVerificationManager(
                                                         }
                                                     )
                                                 } else if (beacons != null) {
-                                                    Radar.beaconManager.startMonitoringBeacons(
+                                                    Radar.oneShotBeaconManager.startMonitoringBeacons(
                                                         beacons
                                                     )
 
-                                                    Radar.beaconManager.rangeBeacons(
+                                                    Radar.oneShotBeaconManager.rangeBeacons(
                                                         beacons,
                                                         false,
                                                         object : Radar.RadarBeaconCallback {
@@ -223,7 +223,7 @@ internal class RadarVerificationManager(
 
                                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                     Radar.handler.post {
-                                        val served = Radar.beaconRangingCache.rangeBeacons(
+                                        val served = Radar.continuousBeaconManager.rangeBeacons(
                                             location,
                                             object : Radar.RadarBeaconCallback {
                                                 override fun onComplete(

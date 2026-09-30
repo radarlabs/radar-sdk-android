@@ -63,7 +63,8 @@ Internal structure under [sdk/src/main/java/io/radar/sdk/](sdk/src/main/java/io/
   - `RadarLocationManager` — background location tracking
   - `RadarSyncManager` — event sync and batching
   - `RadarOfflineEventManager` — offline event queueing with retry-timeout ramping
-  - `RadarBeaconManager` — beacon ranging
+  - `RadarOneShotBeaconManager` — one-shot beacon ranging and beacon monitoring
+  - `RadarContinuousBeaconManager` — continuous foreground beacon ranging for `trackVerified`
   - `RadarVerificationManager` — location verification
   - `RadarInAppMessageManager` — in-app messages
 - **Networking**
