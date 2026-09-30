@@ -360,7 +360,7 @@ internal class RadarBeaconManager(
             return
         }
 
-        if (searchedFrom != null && rangeWithContinuousRanging(ContinuousSearchResult(beacons = beacons.toList()), searchedFrom, callback)) {
+        if (handOffToContinuousRanging(ContinuousSearchResult(beacons = beacons.toList()), searchedFrom, callback)) {
             return
         }
 
@@ -492,9 +492,8 @@ internal class RadarBeaconManager(
             return
         }
 
-        if (searchedFrom != null &&
-            rangeWithContinuousRanging(ContinuousSearchResult(uuids = beaconUUIDs?.toList().orEmpty(), uids = beaconUIDs?.toList().orEmpty()), searchedFrom, callback)
-        ) {
+        val searchResult = ContinuousSearchResult(uuids = beaconUUIDs?.toList().orEmpty(), uids = beaconUIDs?.toList().orEmpty())
+        if (handOffToContinuousRanging(searchResult, searchedFrom, callback)) {
             return
         }
 
@@ -945,11 +944,15 @@ internal class RadarBeaconManager(
     }
 
     /**
-     * Serves a one-shot ranging request from continuous ranging, switching it to `result` if it's
-     * ranging other beacons. Returns `false` if continuous ranging is off or can't scan.
+     * Hands a one-shot ranging request over to continuous ranging, switching it to `result` if
+     * it's ranging other beacons. Continuous ranging then completes `callback`, so the caller
+     * should skip its one-shot scan.
+     *
+     * Returns `false` if `searchedFrom` is `null` (`result` didn't come from a successful search
+     * near a known location), or continuous ranging is off or can't scan.
      */
-    private fun rangeWithContinuousRanging(result: ContinuousSearchResult, searchedFrom: Location, callback: RadarBeaconCallback?): Boolean {
-        if (!continuousRequested || callback == null) {
+    private fun handOffToContinuousRanging(result: ContinuousSearchResult, searchedFrom: Location?, callback: RadarBeaconCallback?): Boolean {
+        if (searchedFrom == null || !continuousRequested || callback == null) {
             return false
         }
 
