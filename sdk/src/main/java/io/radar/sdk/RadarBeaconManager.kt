@@ -312,12 +312,7 @@ internal class RadarBeaconManager(
         monitoredBeaconIdentifiers = setOf()
     }
 
-    /**
-     * Ranges `beacons` once. Pass `searchedFrom` only when `beacons` come from a successful search
-     * near that location: while continuous ranging is on, the request then switches continuous
-     * ranging to `beacons` and completes with its result instead of starting a separate scan.
-     */
-    fun rangeBeacons(beacons: Array<RadarBeacon>, background: Boolean, callback: RadarBeaconCallback?, searchedFrom: Location? = null) {
+    fun rangeBeacons(beacons: Array<RadarBeacon>, background: Boolean, callback: RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
 
@@ -357,10 +352,6 @@ internal class RadarBeaconManager(
 
             callback?.onComplete(RadarStatus.SUCCESS, emptyArray())
 
-            return
-        }
-
-        if (handOffToContinuousRanging(ContinuousSearchResult(beacons = beacons.toList()), searchedFrom, callback)) {
             return
         }
 
@@ -442,14 +433,7 @@ internal class RadarBeaconManager(
         }, TIMEOUT_TOKEN, SystemClock.uptimeMillis() + 5000L)
     }
 
-    /** Ranges beacons with `beaconUUIDs` or `beaconUIDs` once. See `rangeBeacons()` for `searchedFrom`. */
-    fun rangeBeaconUUIDs(
-        beaconUUIDs: Array<String>?,
-        beaconUIDs: Array<String>?,
-        background: Boolean,
-        callback: RadarBeaconCallback?,
-        searchedFrom: Location? = null
-    ) {
+    fun rangeBeaconUUIDs(beaconUUIDs: Array<String>?, beaconUIDs: Array<String>?, background: Boolean, callback: RadarBeaconCallback?) {
         if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
             logger.d("Bluetooth permissions not granted")
 
@@ -489,11 +473,6 @@ internal class RadarBeaconManager(
 
             callback?.onComplete(RadarStatus.SUCCESS, emptyArray())
 
-            return
-        }
-
-        val searchResult = ContinuousSearchResult(uuids = beaconUUIDs?.toList().orEmpty(), uids = beaconUIDs?.toList().orEmpty())
-        if (handOffToContinuousRanging(searchResult, searchedFrom, callback)) {
             return
         }
 
@@ -880,8 +859,8 @@ internal class RadarBeaconManager(
      *
      * Returns `false`, without calling `callback`, if continuous ranging can't serve the request:
      * it's off, it isn't scanning, or its search didn't include every beacon in range of
-     * `location`. In the last case the search is cleared, so the one-shot ranging request that
-     * follows, with `searchedFrom`, switches continuous ranging to beacons near `location`.
+     * `location`. In the last case the search is cleared, so the next `rangeWithContinuousRanging()`
+     * switches continuous ranging to beacons near `location`.
      */
     fun rangeContinuousBeacons(location: Location, callback: RadarBeaconCallback): Boolean {
         if (!continuousRequested) {
@@ -944,15 +923,15 @@ internal class RadarBeaconManager(
     }
 
     /**
-     * Hands a one-shot ranging request over to continuous ranging, switching it to `result` if
-     * it's ranging other beacons. Continuous ranging then completes `callback`, so the caller
-     * should skip its one-shot scan.
+     * Switches continuous ranging to `result`, a successful search near `searchedFrom`, and
+     * completes `callback` with its result: after the first round if the scan restarted, or right
+     * away if it was already ranging those beacons.
      *
-     * Returns `false` if `searchedFrom` is `null` (`result` didn't come from a successful search
-     * near a known location), or continuous ranging is off or can't scan.
+     * Returns `false`, without calling `callback`, if continuous ranging is off or can't scan.
+     * Use one-shot ranging instead.
      */
-    private fun handOffToContinuousRanging(result: ContinuousSearchResult, searchedFrom: Location?, callback: RadarBeaconCallback?): Boolean {
-        if (searchedFrom == null || !continuousRequested || callback == null) {
+    fun rangeWithContinuousRanging(result: ContinuousSearchResult, searchedFrom: Location, callback: RadarBeaconCallback): Boolean {
+        if (!continuousRequested) {
             return false
         }
 

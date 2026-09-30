@@ -152,6 +152,12 @@ class RadarBeaconManagerContinuousRangingTest {
         return if (manager.rangeContinuousBeacons(location, request)) request else null
     }
 
+    /** Ranges beacons from a search near `location` with continuous ranging, or `null` if continuous ranging can't. */
+    private fun rangeSearched(result: RadarBeaconManager.ContinuousSearchResult, location: Location = location(LAT, LNG)): Request? {
+        val request = Request()
+        return if (manager.rangeWithContinuousRanging(result, location, request)) request else null
+    }
+
     private fun appForeground(isForeground: Boolean) {
         foreground = isForeground
         RadarActivityLifecycleCallbacks.foregroundListeners.forEach {
@@ -256,7 +262,7 @@ class RadarBeaconManagerContinuousRangingTest {
     }
 
     @Test
-    fun rangeBeacons_withoutLocationToSearch_startsContinuousRangingAndWaits() {
+    fun rangeWithContinuousRanging_withoutLocationToSearch_startsContinuousRangingAndWaits() {
         lastLocation = null
         manager.startContinuousRanging()
 
@@ -264,8 +270,7 @@ class RadarBeaconManagerContinuousRangingTest {
         assertFalse(manager.continuousRanging)
         assertNull(request())
 
-        val request = Request()
-        manager.rangeBeacons(arrayOf(beacon("2")), false, request, location(LAT, LNG))
+        val request = rangeSearched(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2"))))!!
 
         assertTrue(manager.continuousRanging)
         assertFalse(request.completed)
@@ -278,13 +283,12 @@ class RadarBeaconManagerContinuousRangingTest {
     }
 
     @Test
-    fun rangeBeacons_differentBeacons_switchesAndWaitsForTheNewScan() {
+    fun rangeWithContinuousRanging_differentBeacons_switchesAndWaitsForTheNewScan() {
         startAndSearch(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2"))))
         manager.handleContinuousRanged(listOf(beacon("2")))
         val waiting = request()!!
 
-        val request = Request()
-        manager.rangeBeaconUUIDs(arrayOf(UUID), null, false, request, location(LAT, LNG))
+        val request = rangeSearched(RadarBeaconManager.ContinuousSearchResult(uuids = listOf(UUID)))!!
 
         assertEquals(2, scanner.starts)
         assertEquals(setOf("uuid:$UUID"), manager.continuousSearchResult!!.filterKeys)
@@ -299,13 +303,12 @@ class RadarBeaconManagerContinuousRangingTest {
     }
 
     @Test
-    fun rangeBeacons_sameBeaconsAfterFirstRound_completesWithoutRestartingScan() {
+    fun rangeWithContinuousRanging_sameBeaconsAfterFirstRound_completesWithoutRestartingScan() {
         startAndSearch(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2"))))
         manager.handleContinuousRanged(listOf(beacon("2")))
         idle(RadarBeaconManager.WARM_UP_MS)
 
-        val request = Request()
-        manager.rangeBeacons(arrayOf(beacon("2")), false, request, location(LAT, LNG))
+        val request = rangeSearched(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2"))))!!
 
         assertEquals(1, scanner.starts)
         assertTrue(request.completed)
@@ -313,7 +316,7 @@ class RadarBeaconManagerContinuousRangingTest {
     }
 
     @Test
-    fun rangeBeacons_withoutSearchedFrom_doesNotChangeContinuousRanging() {
+    fun rangeBeacons_doesNotChangeContinuousRanging() {
         startAndSearch(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2"))))
 
         manager.rangeBeacons(arrayOf(beacon("3")), false, Request())
@@ -323,20 +326,20 @@ class RadarBeaconManagerContinuousRangingTest {
     }
 
     @Test
-    fun rangeBeacons_continuousRangingOff_doesNotStartContinuousScan() {
-        manager.rangeBeacons(arrayOf(beacon("2")), false, Request(), location(LAT, LNG))
+    fun rangeWithContinuousRanging_continuousRangingOff_returnsFalse() {
+        assertNull(rangeSearched(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2")))))
 
         assertEquals(0, scanner.starts)
         assertNull(manager.continuousSearchResult)
     }
 
     @Test
-    fun rangeBeacons_searchedFarAway_coversOnlyAroundWhereItWasSearched() {
+    fun rangeWithContinuousRanging_searchedFarAway_coversOnlyAroundWhereItWasSearched() {
         lastLocation = null
         manager.startContinuousRanging()
 
         // Searched about 2km away from where `trackVerified` is later called.
-        manager.rangeBeacons(arrayOf(beacon("2", lat = LAT + 0.018)), false, Request(), location(LAT + 0.018, LNG))
+        rangeSearched(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2", lat = LAT + 0.018))), location(LAT + 0.018, LNG))
         idle(RadarBeaconManager.WARM_UP_MS)
 
         assertEquals(LAT + 0.018, manager.continuousSearchLocation!!.latitude, 0.0)
@@ -386,7 +389,7 @@ class RadarBeaconManagerContinuousRangingTest {
         manager.startContinuousRanging()
         val startup = searches.removeAt(0)
 
-        manager.rangeBeacons(arrayOf(beacon("3")), false, Request(), location(LAT, LNG))
+        rangeSearched(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("3"))))
         startup.second(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2"))))
 
         assertEquals(1, scanner.starts)
