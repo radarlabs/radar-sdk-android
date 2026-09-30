@@ -57,9 +57,9 @@ internal class RadarBeaconManager(
         // where the search included every beacon within this distance of the device.
         const val BEACON_RANGE_METERS = 100.0
 
-        // How long the first round of continuous ranging runs. Android only reports matches, so a
-        // scan that has run this long without a match means no beacons are nearby.
-        const val WARM_UP_MS = 1000L
+        // How long the first round of continuous ranging runs, matching the one-shot ranging window.
+        // Requests made before it finishes wait for it and get every beacon it ranged.
+        const val WARM_UP_MS = 5000L
 
         // Delay before pausing continuous ranging on background, so moving between activities
         // doesn't restart the scan. Android fails scans started more than 5 times in 30 seconds.
@@ -818,7 +818,9 @@ internal class RadarBeaconManager(
     private val continuousWarmUpRunnable = Runnable {
         if (continuousRanging) {
             continuousWarmedUp = true
-            completeContinuousCallbacks()
+            // Every beacon ranged since the scan started, including any last seen more than
+            // `MAX_BEACON_AGE_MS` ago, early in the round.
+            completeContinuousCallbacks(continuousBeacons.values.map { it.first }.toTypedArray())
         }
     }
 
@@ -972,12 +974,12 @@ internal class RadarBeaconManager(
         }
     }
 
-    private fun completeContinuousCallbacks() {
+    private fun completeContinuousCallbacks(rangedBeacons: Array<RadarBeacon>? = null) {
         if (pendingContinuousCallbacks.isEmpty()) {
             return
         }
 
-        val beacons = currentContinuousBeacons()
+        val beacons = rangedBeacons ?: currentContinuousBeacons()
         val callbacks = pendingContinuousCallbacks.toList()
         pendingContinuousCallbacks.clear()
 

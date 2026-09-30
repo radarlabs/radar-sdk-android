@@ -182,6 +182,22 @@ class RadarBeaconManagerContinuousRangingTest {
     }
 
     @Test
+    fun rangeContinuousBeacons_duringFirstRound_includesBeaconsRangedEarlyInTheRound() {
+        startAndSearch(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2"), beacon("3"))))
+
+        val request = request()!!
+        manager.handleContinuousRanged(listOf(beacon("2")))
+        clock += RadarBeaconManager.MAX_BEACON_AGE_MS + 1
+        manager.handleContinuousRanged(listOf(beacon("3")))
+
+        idle(RadarBeaconManager.WARM_UP_MS - 1)
+        assertFalse(request.completed)
+
+        idle(1)
+        assertEquals(listOf("2", "3"), request.beacons!!.map { it.minor }.sorted())
+    }
+
+    @Test
     fun rangeContinuousBeacons_afterFirstRound_completesWithLastResult() {
         startAndSearch(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2"))))
         manager.handleContinuousRanged(listOf(beacon("2")))
