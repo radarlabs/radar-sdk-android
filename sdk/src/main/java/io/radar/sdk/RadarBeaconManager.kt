@@ -44,7 +44,7 @@ internal class RadarBeaconManager(
     }
 
     private fun addCallback(callback: RadarBeaconCallback?) {
-       if (callback == null) {
+        if (callback == null) {
             return
         }
 
@@ -332,6 +332,8 @@ internal class RadarBeaconManager(
             return
         }
 
+        Radar.seedBeaconRangingCache(beacons = beacons)
+
         this.addCallback(callback)
 
         if (this.started) {
@@ -452,6 +454,8 @@ internal class RadarBeaconManager(
 
             return
         }
+
+        Radar.seedBeaconRangingCache(uuids = beaconUUIDs, uids = beaconUIDs)
 
         this.addCallback(callback)
 
@@ -575,7 +579,7 @@ internal class RadarBeaconManager(
         } catch (e: Exception) {
             logger.d("Error stopping ranging beacons", RadarLogType.SDK_EXCEPTION, e)
         }
-        
+
         scanCallback = null
 
         this.callCallbacks(this.nearbyBeacons.toTypedArray())
@@ -635,7 +639,7 @@ internal class RadarBeaconManager(
     }
 
     private fun isBluetoothSupported(context: Context): Boolean {
-        if(!this::adapter.isInitialized) {
+        if (!this::adapter.isInitialized) {
             val defaultAdapter = BluetoothAdapter.getDefaultAdapter()
             if (defaultAdapter != null) {
                 adapter = defaultAdapter
@@ -645,10 +649,7 @@ internal class RadarBeaconManager(
         return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
     }
 
-    private fun getScanSettings(scanMode: Int): ScanSettings {
-        return ScanSettings.Builder()
-            .setScanMode(scanMode)
-            .build()
-    }
-
+    private fun getScanSettings(scanMode: Int): ScanSettings = ScanSettings.Builder()
+        .setScanMode(scanMode)
+        .build()
 }

@@ -567,6 +567,7 @@ object Radar {
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var beaconManager: RadarBeaconManager
+    internal lateinit var beaconRangingCache: RadarBeaconRangingCache
     private lateinit var logBuffer: RadarLogBuffer
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
@@ -718,6 +719,9 @@ object Radar {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (!this::beaconManager.isInitialized) {
                 this.beaconManager = RadarBeaconManager(this.context, logger)
+            }
+            if (!this::beaconRangingCache.isInitialized) {
+                this.beaconRangingCache = RadarBeaconRangingCache(this.context, logger)
             }
         }
 
@@ -1619,6 +1623,80 @@ object Radar {
         }
 
         this.verificationManager.startTrackingVerified(interval, beacons)
+    }
+
+    /**
+     * Starts continuously ranging nearby beacons while the app is in the foreground, so
+     * `trackVerified(beacons = true)` can attach nearby beacons without waiting on a new ranging window.
+     *
+     * Call this after `initialize()` and after location and Bluetooth permissions are granted, ideally when the
+     * user enters a flow that calls `trackVerified(beacons = true)`, and call `stopRangingBeacons()` when beacons
+     * are no longer needed. Ranging pauses automatically when the app enters the background and resumes when it
+     * returns to the foreground. Until ranging results are available, `trackVerified(beacons = true)` ranges
+     * beacons as usual. Requires Android 8.0 (API level 26) or later.
+     *
+     * @see [](https://radar.com/documentation/beacons)
+     */
+    @JvmStatic
+    fun startRangingBeacons() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("startRangingBeacons()", RadarLogType.SDK_CALL)
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return
+        }
+
+        handler.post { beaconRangingCache.start() }
+    }
+
+    /**
+     * Stops ranging beacons started with `startRangingBeacons()`.
+     *
+     * @see [](https://radar.com/documentation/beacons)
+     */
+    @JvmStatic
+    fun stopRangingBeacons() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("stopRangingBeacons()", RadarLogType.SDK_CALL)
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return
+        }
+
+        handler.post { beaconRangingCache.stop() }
+    }
+
+    internal fun handleBeaconRangingForeground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::beaconRangingCache.isInitialized) {
+            beaconRangingCache.onForeground()
+        }
+    }
+
+    internal fun handleBeaconRangingBackground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::beaconRangingCache.isInitialized) {
+            beaconRangingCache.onBackground()
+        }
+    }
+
+    internal fun seedBeaconRangingCache(uuids: Array<String>? = null, uids: Array<String>? = null, beacons: Array<RadarBeacon>? = null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::beaconRangingCache.isInitialized) {
+            handler.post { beaconRangingCache.seedIfNeeded(uuids, uids, beacons) }
+        }
+    }
+
+    /**
+     * Returns the beacons cached by `startRangingBeacons()` near `location`, or `null` if they aren't available
+     * and beacons should be ranged as usual. Must be called on the main thread.
+     */
+    internal fun cachedBeacons(location: Location): Array<RadarBeacon>? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::beaconRangingCache.isInitialized) {
+            return beaconRangingCache.cachedBeacons(location)
+        }
+        return null
     }
 
     /**

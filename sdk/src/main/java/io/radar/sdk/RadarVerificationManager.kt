@@ -150,7 +150,8 @@ internal class RadarVerificationManager(
                                     )
                                 }
 
-                                if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                @RequiresApi(Build.VERSION_CODES.O)
+                                fun rangeBeaconsAndTrack() {
                                     Radar.apiClient.searchBeacons(
                                         location,
                                         1000,
@@ -218,6 +219,19 @@ internal class RadarVerificationManager(
                                         },
                                         false
                                     )
+                                }
+
+                                if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    Radar.handler.post {
+                                        val cachedBeacons = Radar.cachedBeacons(location)
+                                        if (cachedBeacons == null) {
+                                            rangeBeaconsAndTrack()
+                                        } else {
+                                            logger.d("Using cached beacons | cachedBeacons.size = ${cachedBeacons.size}")
+
+                                            callTrackApi(cachedBeacons)
+                                        }
+                                    }
                                 } else {
                                     callTrackApi(null)
                                 }
