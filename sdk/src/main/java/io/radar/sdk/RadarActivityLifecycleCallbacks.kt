@@ -12,6 +12,7 @@ import android.view.Window
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
+import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.math.max
 
 
@@ -22,9 +23,17 @@ internal class RadarActivityLifecycleCallbacks(
     private var isFirstOnResume = true
     private val wrappedActivities = mutableSetOf<Activity>()
 
+    internal interface ForegroundListener {
+        fun onForeground()
+        fun onBackground()
+    }
+
     companion object {
         var foreground: Boolean = false
             private set
+
+        /** Notified on the main thread when the app enters the foreground or the background. */
+        internal val foregroundListeners = CopyOnWriteArraySet<ForegroundListener>()
 
         private const val TAG = "RadarActivityLifecycle"
     }
@@ -125,7 +134,7 @@ internal class RadarActivityLifecycleCallbacks(
         foreground = count > 0
         if (wasBackgrounded) {
             Radar.handleForegroundProcessStart()
-            Radar.handleBeaconRangingForeground()
+            foregroundListeners.forEach { it.onForeground() }
         }
         activity.intent?.let { Radar.logOpenedAppConversion(it) } ?: Radar.logOpenedAppConversion()
 
@@ -140,7 +149,7 @@ internal class RadarActivityLifecycleCallbacks(
         count = max(count - 1, 0)
         foreground = count > 0
         if (!foreground) {
-            Radar.handleBeaconRangingBackground()
+            foregroundListeners.forEach { it.onBackground() }
         }
 
         updatePermissionsDenied(activity)

@@ -567,7 +567,6 @@ object Radar {
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var beaconManager: RadarBeaconManager
-    internal lateinit var beaconRangingCache: RadarBeaconRangingCache
     private lateinit var logBuffer: RadarLogBuffer
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
@@ -719,9 +718,6 @@ object Radar {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (!this::beaconManager.isInitialized) {
                 this.beaconManager = RadarBeaconManager(this.context, logger)
-            }
-            if (!this::beaconRangingCache.isInitialized) {
-                this.beaconRangingCache = RadarBeaconRangingCache(this.context, logger)
             }
         }
 
@@ -1648,7 +1644,7 @@ object Radar {
             return
         }
 
-        handler.post { beaconRangingCache.start() }
+        handler.post { beaconManager.startContinuousRanging() }
     }
 
     /**
@@ -1667,36 +1663,7 @@ object Radar {
             return
         }
 
-        handler.post { beaconRangingCache.stop() }
-    }
-
-    internal fun handleBeaconRangingForeground() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::beaconRangingCache.isInitialized) {
-            beaconRangingCache.onForeground()
-        }
-    }
-
-    internal fun handleBeaconRangingBackground() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::beaconRangingCache.isInitialized) {
-            beaconRangingCache.onBackground()
-        }
-    }
-
-    internal fun seedBeaconRangingCache(searchedFrom: Location, uuids: Array<String>?, uids: Array<String>?, beacons: Array<RadarBeacon>?) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::beaconRangingCache.isInitialized) {
-            handler.post { beaconRangingCache.seedIfNeeded(searchedFrom, uuids, uids, beacons) }
-        }
-    }
-
-    /**
-     * Returns the beacons cached by `startRangingBeacons()` near `location`, or `null` if they aren't available
-     * and beacons should be ranged as usual. Must be called on the main thread.
-     */
-    internal fun cachedBeacons(location: Location): Array<RadarBeacon>? {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::beaconRangingCache.isInitialized) {
-            return beaconRangingCache.cachedBeacons(location)
-        }
-        return null
+        handler.post { beaconManager.stopContinuousRanging() }
     }
 
     /**

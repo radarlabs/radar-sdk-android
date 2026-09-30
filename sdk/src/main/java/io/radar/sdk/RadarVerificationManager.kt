@@ -165,10 +165,8 @@ internal class RadarVerificationManager(
                                                 uids: Array<String>?
                                             ) {
                                                 // On failure `searchBeacons` returns beacons saved from an earlier search,
-                                                // which may not be near `location`.
-                                                if (status == Radar.RadarStatus.SUCCESS) {
-                                                    Radar.seedBeaconRangingCache(location, uuids, uids, beacons)
-                                                }
+                                                // which may not be near `location`, so continuous ranging shouldn't switch to them.
+                                                val searchedFrom = if (status == Radar.RadarStatus.SUCCESS) location else null
 
                                                 if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                                                     Radar.beaconManager.startMonitoringBeaconUUIDs(
@@ -193,7 +191,8 @@ internal class RadarVerificationManager(
 
                                                                 callTrackApi(beacons)
                                                             }
-                                                        }
+                                                        },
+                                                        searchedFrom
                                                     )
                                                 } else if (beacons != null) {
                                                     Radar.beaconManager.startMonitoringBeacons(
@@ -216,7 +215,8 @@ internal class RadarVerificationManager(
 
                                                                 callTrackApi(beacons)
                                                             }
-                                                        }
+                                                        },
+                                                        searchedFrom
                                                     )
                                                 } else {
                                                     callTrackApi(arrayOf())
@@ -229,13 +229,21 @@ internal class RadarVerificationManager(
 
                                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                     Radar.handler.post {
-                                        val cachedBeacons = Radar.cachedBeacons(location)
-                                        if (cachedBeacons == null) {
-                                            rangeBeaconsAndTrack()
-                                        } else {
-                                            logger.d("Using cached beacons | cachedBeacons.size = ${cachedBeacons.size}")
+                                        val rangingContinuously = Radar.beaconManager.rangeContinuousBeacons(
+                                            location,
+                                            object : Radar.RadarBeaconCallback {
+                                                override fun onComplete(
+                                                    status: Radar.RadarStatus,
+                                                    beacons: Array<RadarBeacon>?
+                                                ) {
+                                                    logger.d("Using continuously ranged beacons | beacons.size = ${beacons?.size}")
 
-                                            callTrackApi(cachedBeacons)
+                                                    callTrackApi(beacons)
+                                                }
+                                            }
+                                        )
+                                        if (!rangingContinuously) {
+                                            rangeBeaconsAndTrack()
                                         }
                                     }
                                 } else {
