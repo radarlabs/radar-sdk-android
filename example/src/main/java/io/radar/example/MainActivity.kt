@@ -151,7 +151,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Requests foreground location + notifications + activity recognition on launch.
+     * Requests foreground location + notifications + activity recognition + Bluetooth on launch.
      * Background location ("allow all the time") is intentionally left to the settings
      * sheet — Android 11+ requires it to follow a granted foreground request and routes to
      * system settings, which makes for a poor first-launch experience.
@@ -171,6 +171,13 @@ class MainActivity : AppCompatActivity() {
             !isGranted(Manifest.permission.ACTIVITY_RECOGNITION)
         ) {
             needed += Manifest.permission.ACTIVITY_RECOGNITION
+        }
+        // Needed on Android 12+ to range beacons (trackVerified with beacons, startRangingBeacons).
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            !isGranted(Manifest.permission.BLUETOOTH_SCAN)
+        ) {
+            needed += Manifest.permission.BLUETOOTH_SCAN
+            needed += Manifest.permission.BLUETOOTH_CONNECT
         }
         if (needed.isNotEmpty()) {
             startupPermissionLauncher.launch(needed.toTypedArray())
