@@ -708,18 +708,20 @@ internal class RadarBeaconManager(
             }
 
         fun scanFilters(logger: RadarLogger): List<ScanFilter> {
-            val filters = mutableListOf<ScanFilter>()
-            try {
-                if (usesIdentifiers) {
-                    uuids.forEach { uuid -> RadarBeaconUtils.getScanFilterForBeacon(uuid)?.let { filters.add(it) } }
-                    uids.forEach { uid -> RadarBeaconUtils.getScanFilterForBeaconUID(uid)?.let { filters.add(it) } }
-                } else {
-                    beacons.forEach { beacon -> RadarBeaconUtils.getScanFilterForBeacon(beacon)?.let { filters.add(it) } }
-                }
+            // Built one at a time, so an invalid identifier doesn't drop the filters after it.
+            fun build(description: String, block: () -> ScanFilter?): ScanFilter? = try {
+                block()
             } catch (e: Exception) {
-                logger.d("Continuous ranging error building scan filters", RadarLogType.SDK_EXCEPTION, e)
+                logger.d("Continuous ranging error building scan filter | $description", RadarLogType.SDK_EXCEPTION, e)
+                null
             }
-            return filters
+
+            return if (usesIdentifiers) {
+                uuids.mapNotNull { uuid -> build("uuid = $uuid") { RadarBeaconUtils.getScanFilterForBeacon(uuid) } } +
+                    uids.mapNotNull { uid -> build("uid = $uid") { RadarBeaconUtils.getScanFilterForBeaconUID(uid) } }
+            } else {
+                beacons.mapNotNull { beacon -> build("beacon = ${beaconKey(beacon)}") { RadarBeaconUtils.getScanFilterForBeacon(beacon) } }
+            }
         }
     }
 
@@ -949,6 +951,8 @@ internal class RadarBeaconManager(
             return false
         }
 
+        // This search is newer than any startup search still running, so that one is stale.
+        pendingContinuousSearchLocation = null
         updateContinuousRanging(result, searchedFrom)
         if (!continuousRanging) {
             return false
@@ -1128,6 +1132,14 @@ internal class RadarBeaconManager(
     private fun startContinuousScan() {
         if (!isForeground()) {
             // Don't keep ranging beacons from an older search.
+            pauseContinuousRanging()
+            return
+        }
+
+        if (!bluetoothAvailable()) {
+            // The scanner does nothing while Bluetooth is off. Leave the scan stopped so it
+            // restarts when Bluetooth turns back on.
+            logger.d("Continuous ranging not started: Bluetooth not available")
             pauseContinuousRanging()
             return
         }

@@ -366,6 +366,41 @@ class RadarBeaconManagerContinuousRangingTest {
     }
 
     @Test
+    fun startupSearch_returningAfterNewerSearch_isIgnored() {
+        manager.startContinuousRanging()
+        val startup = searches.removeAt(0)
+
+        manager.rangeBeacons(arrayOf(beacon("3")), false, Request(), location(LAT, LNG))
+        startup.second(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2"))))
+
+        assertEquals(1, scanner.starts)
+        assertEquals(setOf("$UUID-1-3"), manager.continuousSearchResult!!.filterKeys)
+    }
+
+    @Test
+    fun search_returnsWhileBluetoothOff_startsWhenBluetoothTurnsOn() {
+        manager.startContinuousRanging()
+        scanner.available = false
+        searches.removeAt(0).second(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2"))))
+
+        assertFalse(manager.continuousRanging)
+        assertEquals(0, scanner.starts)
+
+        scanner.available = true
+        manager.onBluetoothStateChanged(true)
+
+        assertTrue(manager.continuousRanging)
+        assertEquals(1, scanner.starts)
+    }
+
+    @Test
+    fun scanFilters_invalidIdentifier_keepsTheOthers() {
+        val result = RadarBeaconManager.ContinuousSearchResult(uuids = listOf("not-a-uuid", UUID))
+
+        assertEquals(1, result.scanFilters(Radar.logger).size)
+    }
+
+    @Test
     fun stopContinuousRanging_stopsScanClearsResultAndCompletesWaitingRequests() {
         startAndSearch(RadarBeaconManager.ContinuousSearchResult(beacons = listOf(beacon("2"))))
         manager.handleContinuousRanged(listOf(beacon("2")))
