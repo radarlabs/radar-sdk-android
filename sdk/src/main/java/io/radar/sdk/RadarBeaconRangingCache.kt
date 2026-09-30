@@ -167,8 +167,10 @@ internal class RadarBeaconRangingCache(
     internal var searchResult: SearchResult? = null
         private set
 
-    // Incremented to invalidate a search that's still running.
-    private var searchGeneration = 0
+    // Where the running search, if any, was started from. A result from any other search is
+    // stale. Compared by identity, which is safe because `lastLocation` returns a new `Location`
+    // on every call.
+    private var pendingSearchLocation: Location? = null
 
     // The running scan, if any.
     private var scanCallback: ScanCallback? = null
@@ -211,7 +213,7 @@ internal class RadarBeaconRangingCache(
         pause()
         searchResult = null
         searchLocation = location
-        searchGeneration++
+        pendingSearchLocation = null
     }
 
     /** Replaces the beacons being ranged. No-op unless the cache has been started. */
@@ -343,12 +345,13 @@ internal class RadarBeaconRangingCache(
             return
         }
 
-        val generation = ++searchGeneration
+        pendingSearchLocation = location
         searchBeacons(location) { result ->
-            if (generation != searchGeneration) {
+            if (pendingSearchLocation !== location) {
                 logger.d("Beacon ranging cache ignoring stale search")
                 return@searchBeacons
             }
+            pendingSearchLocation = null
             if (result == null) {
                 logger.d("Beacon ranging cache search failed")
                 return@searchBeacons

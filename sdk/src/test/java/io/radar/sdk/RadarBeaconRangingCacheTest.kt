@@ -86,7 +86,8 @@ class RadarBeaconRangingCacheTest {
         cache.permissionsHelper = permissions
         cache.now = { clock }
         cache.isForeground = { foreground }
-        cache.lastLocation = { lastLocation }
+        // A new `Location` on every call, like `RadarState.getLastLocation`.
+        cache.lastLocation = { lastLocation?.let { Location(it) } }
         cache.searchBeacons = { location, completion -> searches.add(Pair(location, completion)) }
     }
 
@@ -235,6 +236,12 @@ class RadarBeaconRangingCacheTest {
         pending.second(RadarBeaconRangingCache.SearchResult(beacons = listOf(beacon("2"))))
 
         assertFalse(cache.ranging)
+
+        // The newer search still applies.
+        searches.removeAt(0).second(RadarBeaconRangingCache.SearchResult(beacons = listOf(beacon("3"))))
+
+        assertTrue(cache.ranging)
+        assertEquals(setOf("$UUID-1-3"), cache.searchResult!!.filterKeys)
     }
 
     @Test
