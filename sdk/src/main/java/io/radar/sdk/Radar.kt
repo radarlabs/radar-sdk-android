@@ -567,6 +567,7 @@ object Radar {
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var beaconManager: RadarBeaconManager
+    internal lateinit var beaconRangingCache: RadarBeaconRangingCache
     private lateinit var logBuffer: RadarLogBuffer
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
@@ -718,6 +719,9 @@ object Radar {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (!this::beaconManager.isInitialized) {
                 this.beaconManager = RadarBeaconManager(this.context, logger)
+            }
+            if (!this::beaconRangingCache.isInitialized) {
+                this.beaconRangingCache = RadarBeaconRangingCache(this.context, logger)
             }
         }
 
@@ -1628,8 +1632,9 @@ object Radar {
      * Call this after `initialize()` and after location and Bluetooth permissions are granted, ideally when the
      * user enters a flow that calls `trackVerified(beacons = true)`, and call `stopRangingBeacons()` when beacons
      * are no longer needed. Ranging pauses automatically when the app enters the background and resumes when it
-     * returns to the foreground. Until ranging results are available, `trackVerified(beacons = true)` ranges
-     * beacons as usual. Requires Android 8.0 (API level 26) or later.
+     * returns to the foreground. Until ranging has started, `trackVerified(beacons = true)` ranges beacons as
+     * usual. During the first 5 seconds of ranging, it waits for them and attaches every beacon ranged. Requires
+     * Android 8.0 (API level 26) or later.
      *
      * @see [](https://radar.com/documentation/beacons)
      */
@@ -1644,7 +1649,7 @@ object Radar {
             return
         }
 
-        handler.post { beaconManager.startContinuousRanging() }
+        handler.post { beaconRangingCache.start() }
     }
 
     /**
@@ -1663,7 +1668,7 @@ object Radar {
             return
         }
 
-        handler.post { beaconManager.stopContinuousRanging() }
+        handler.post { beaconRangingCache.stop() }
     }
 
     /**

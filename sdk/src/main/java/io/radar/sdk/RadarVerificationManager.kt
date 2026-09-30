@@ -164,48 +164,54 @@ internal class RadarVerificationManager(
                                                 uuids: Array<String>?,
                                                 uids: Array<String>?
                                             ) {
-                                                val rangingCallback = object : Radar.RadarBeaconCallback {
-                                                    override fun onComplete(
-                                                        status: Radar.RadarStatus,
-                                                        beacons: Array<RadarBeacon>?
-                                                    ) {
-                                                        if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
-                                                            callTrackApi(null)
-
-                                                            return
-                                                        }
-
-                                                        callTrackApi(beacons)
-                                                    }
-                                                }
-
-                                                // Ranges the searched beacons with continuous ranging if it's on, switching it to them.
-                                                // Returns `false` if one-shot ranging should range them instead.
-                                                fun rangeContinuously(result: RadarBeaconManager.ContinuousSearchResult): Boolean {
-                                                    // On failure `searchBeacons` returns beacons saved from an earlier search,
-                                                    // which may not be near `location`, so continuous ranging shouldn't switch to them.
-                                                    return status == Radar.RadarStatus.SUCCESS &&
-                                                        Radar.beaconManager.rangeWithContinuousRanging(result, location, rangingCallback)
-                                                }
-
                                                 if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                                                     Radar.beaconManager.startMonitoringBeaconUUIDs(
                                                         uuids,
                                                         uids
                                                     )
 
-                                                    val result = RadarBeaconManager.ContinuousSearchResult(uuids = uuids?.toList().orEmpty(), uids = uids?.toList().orEmpty())
-                                                    if (!rangeContinuously(result)) {
-                                                        Radar.beaconManager.rangeBeaconUUIDs(uuids, uids, false, rangingCallback)
-                                                    }
+                                                    Radar.beaconManager.rangeBeaconUUIDs(
+                                                        uuids,
+                                                        uids,
+                                                        false,
+                                                        object : Radar.RadarBeaconCallback {
+                                                            override fun onComplete(
+                                                                status: Radar.RadarStatus,
+                                                                beacons: Array<RadarBeacon>?
+                                                            ) {
+                                                                if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
+                                                                    callTrackApi(null)
+
+                                                                    return
+                                                                }
+
+                                                                callTrackApi(beacons)
+                                                            }
+                                                        }
+                                                    )
                                                 } else if (beacons != null) {
                                                     Radar.beaconManager.startMonitoringBeacons(
                                                         beacons
                                                     )
 
-                                                    if (!rangeContinuously(RadarBeaconManager.ContinuousSearchResult(beacons = beacons.toList()))) {
-                                                        Radar.beaconManager.rangeBeacons(beacons, false, rangingCallback)
-                                                    }
+                                                    Radar.beaconManager.rangeBeacons(
+                                                        beacons,
+                                                        false,
+                                                        object : Radar.RadarBeaconCallback {
+                                                            override fun onComplete(
+                                                                status: Radar.RadarStatus,
+                                                                beacons: Array<RadarBeacon>?
+                                                            ) {
+                                                                if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
+                                                                    callTrackApi(null)
+
+                                                                    return
+                                                                }
+
+                                                                callTrackApi(beacons)
+                                                            }
+                                                        }
+                                                    )
                                                 } else {
                                                     callTrackApi(arrayOf())
                                                 }
@@ -217,7 +223,7 @@ internal class RadarVerificationManager(
 
                                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                     Radar.handler.post {
-                                        val rangingContinuously = Radar.beaconManager.rangeContinuousBeacons(
+                                        val served = Radar.beaconRangingCache.rangeBeacons(
                                             location,
                                             object : Radar.RadarBeaconCallback {
                                                 override fun onComplete(
@@ -230,7 +236,7 @@ internal class RadarVerificationManager(
                                                 }
                                             }
                                         )
-                                        if (!rangingContinuously) {
+                                        if (!served) {
                                             rangeBeaconsAndTrack()
                                         }
                                     }
