@@ -154,8 +154,8 @@ internal class RadarVerificationManager(
                                 fun rangeBeaconsAndTrack() {
                                     Radar.apiClient.searchBeacons(
                                         location,
-                                        1000,
-                                        10,
+                                        RadarBeaconUtils.SEARCH_RADIUS,
+                                        RadarBeaconUtils.SEARCH_LIMIT,
                                         object : RadarApiClient.RadarSearchBeaconsApiCallback {
                                             override fun onComplete(
                                                 status: Radar.RadarStatus,

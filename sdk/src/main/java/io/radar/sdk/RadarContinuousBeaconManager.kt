@@ -27,9 +27,10 @@ import org.json.JSONObject
  * attach the last ranging result without waiting on a one-shot ranging window.
  *
  * Uses its own searches and scan, separate from the one-shot ranging in `RadarOneShotBeaconManager`.
- * It searches for up to `SEARCH_LIMIT` nearby beacons, scans for them, and searches again every
- * `REFRESH_INTERVAL_MS`. Ranging pauses when the app enters the background and resumes when it
- * returns to the foreground, until `stop()` is called. Must be used from the main thread.
+ * It searches for up to `RadarBeaconUtils.SEARCH_LIMIT` nearby beacons, scans for them, and
+ * searches again every `REFRESH_INTERVAL_MS`. Ranging pauses when the app enters the background
+ * and resumes when it returns to the foreground, until `stop()` is called. Must be used from the
+ * main thread.
  */
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("MissingPermission")
@@ -43,8 +44,6 @@ internal class RadarContinuousBeaconManager(
     internal companion object {
         // Beacons not ranged within this many milliseconds are treated as out of range.
         const val MAX_BEACON_AGE_MS = 5000L
-        const val SEARCH_RADIUS = 1000
-        const val SEARCH_LIMIT = 10
 
         // How often the beacons being ranged are searched again, so they follow the device.
         const val REFRESH_INTERVAL_MS = 60_000L
@@ -141,8 +140,8 @@ internal class RadarContinuousBeaconManager(
     internal var searchBeacons: (Location, (SearchResult?) -> Unit) -> Unit = { location, completion ->
         Radar.apiClient.searchBeacons(
             location,
-            SEARCH_RADIUS,
-            SEARCH_LIMIT,
+            RadarBeaconUtils.SEARCH_RADIUS,
+            RadarBeaconUtils.SEARCH_LIMIT,
             object : RadarApiClient.RadarSearchBeaconsApiCallback {
                 override fun onComplete(
                     status: RadarStatus,

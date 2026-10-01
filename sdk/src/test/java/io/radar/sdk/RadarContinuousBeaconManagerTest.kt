@@ -372,7 +372,7 @@ class RadarContinuousBeaconManagerTest {
     @Test
     fun beacons_withinMaxDistance_isServed() {
         // Ten beacons, the farthest about 30m away, as in a dense venue.
-        val beacons = (0 until RadarContinuousBeaconManager.SEARCH_LIMIT).map { i ->
+        val beacons = (0 until RadarBeaconUtils.SEARCH_LIMIT).map { i ->
             beacon("$i", lat = LAT + 0.00003 * i)
         }
         startAndSearch(RadarContinuousBeaconManager.SearchResult(beacons = beacons))
