@@ -165,7 +165,7 @@ internal class RadarVerificationManager(
                                                 uids: Array<String>?
                                             ) {
                                                 if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                                    Radar.oneShotBeaconManager.startMonitoringBeaconUUIDs(
+                                                    Radar.beaconMonitoringManager.startMonitoringBeaconUUIDs(
                                                         uuids,
                                                         uids
                                                     )
@@ -190,7 +190,7 @@ internal class RadarVerificationManager(
                                                         }
                                                     )
                                                 } else if (beacons != null) {
-                                                    Radar.oneShotBeaconManager.startMonitoringBeacons(
+                                                    Radar.beaconMonitoringManager.startMonitoringBeacons(
                                                         beacons
                                                     )
 

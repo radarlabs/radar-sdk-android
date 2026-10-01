@@ -175,7 +175,7 @@ internal class RadarLocationManager(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             logger.d("Handling beacons")
 
-            Radar.oneShotBeaconManager.handleBeacons(beacons, source)
+            Radar.oneShotBeaconManager.seedNearbyBeacons(beacons, source)
 
             val lastLocation = RadarState.getLastLocation(context)
 
@@ -273,7 +273,7 @@ internal class RadarLocationManager(
             this.stopLocationUpdates()
             this.removeAllGeofences()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                Radar.oneShotBeaconManager.stopMonitoringBeacons()
+                Radar.beaconMonitoringManager.stopMonitoringBeacons()
             }
         }
     }
@@ -733,7 +733,7 @@ internal class RadarLocationManager(
                 val syncedBeacons = Radar.syncManager.getBeacons(location).toTypedArray()
                 logger.i("Sync region beacon ranging | syncedBeacons = ${syncedBeacons.size}, forceTrack = $forceTrack")
                 if (syncedBeacons.isNotEmpty()) {
-                    Radar.oneShotBeaconManager.startMonitoringBeacons(syncedBeacons)
+                    Radar.beaconMonitoringManager.startMonitoringBeacons(syncedBeacons)
                     Radar.oneShotBeaconManager.rangeBeacons(syncedBeacons, true, object : Radar.RadarBeaconCallback {
                         override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
                             if (status != RadarStatus.SUCCESS) {
@@ -800,7 +800,7 @@ internal class RadarLocationManager(
                             uids: Array<String>?
                         ) {
                             if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                Radar.oneShotBeaconManager.startMonitoringBeaconUUIDs(uuids, uids)
+                                Radar.beaconMonitoringManager.startMonitoringBeaconUUIDs(uuids, uids)
 
                                 Radar.oneShotBeaconManager.rangeBeaconUUIDs(
                                     uuids,
@@ -821,7 +821,7 @@ internal class RadarLocationManager(
                                         }
                                     })
                             } else if (beacons != null) {
-                                Radar.oneShotBeaconManager.startMonitoringBeacons(beacons)
+                                Radar.beaconMonitoringManager.startMonitoringBeacons(beacons)
 
                                 Radar.oneShotBeaconManager.rangeBeacons(
                                     beacons,

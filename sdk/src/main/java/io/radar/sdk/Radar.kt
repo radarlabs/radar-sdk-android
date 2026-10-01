@@ -567,6 +567,7 @@ object Radar {
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var oneShotBeaconManager: RadarOneShotBeaconManager
+    internal lateinit var beaconMonitoringManager: RadarBeaconMonitoringManager
     internal lateinit var continuousBeaconManager: RadarContinuousBeaconManager
     private lateinit var logBuffer: RadarLogBuffer
     private lateinit var replayBuffer: RadarReplayBuffer
@@ -719,6 +720,9 @@ object Radar {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (!this::oneShotBeaconManager.isInitialized) {
                 this.oneShotBeaconManager = RadarOneShotBeaconManager(this.context, logger)
+            }
+            if (!this::beaconMonitoringManager.isInitialized) {
+                this.beaconMonitoringManager = RadarBeaconMonitoringManager(this.context, logger)
             }
             if (!this::continuousBeaconManager.isInitialized) {
                 this.continuousBeaconManager = RadarContinuousBeaconManager(this.context, logger)
@@ -1314,7 +1318,7 @@ object Radar {
                             object : RadarApiClient.RadarSearchBeaconsApiCallback {
                                 override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
                                     if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                        oneShotBeaconManager.startMonitoringBeaconUUIDs(uuids, uids)
+                                        beaconMonitoringManager.startMonitoringBeaconUUIDs(uuids, uids)
 
                                         oneShotBeaconManager.rangeBeaconUUIDs(
                                             uuids,
@@ -1333,7 +1337,7 @@ object Radar {
                                             }
                                         )
                                     } else if (beacons != null) {
-                                        oneShotBeaconManager.startMonitoringBeacons(beacons)
+                                        beaconMonitoringManager.startMonitoringBeacons(beacons)
 
                                         oneShotBeaconManager.rangeBeacons(
                                             beacons,
