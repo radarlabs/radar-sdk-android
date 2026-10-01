@@ -40,23 +40,23 @@
     </file>
     <file name="src/main/java/io/radar/sdk/RadarBeaconUtils.kt">
         <error line="3" column="1" source="standard:import-ordering" />
-        <error line="101" column="51" source="standard:curly-spacing" />
-        <error line="101" column="52" source="standard:paren-spacing" />
-        <error line="102" column="51" source="standard:curly-spacing" />
-        <error line="102" column="52" source="standard:paren-spacing" />
-        <error line="103" column="52" source="standard:curly-spacing" />
-        <error line="103" column="53" source="standard:paren-spacing" />
-        <error line="169" column="47" source="standard:curly-spacing" />
-        <error line="169" column="48" source="standard:paren-spacing" />
-        <error line="170" column="47" source="standard:curly-spacing" />
-        <error line="170" column="48" source="standard:paren-spacing" />
-        <error line="171" column="48" source="standard:curly-spacing" />
-        <error line="171" column="49" source="standard:paren-spacing" />
-        <error line="172" column="47" source="standard:curly-spacing" />
-        <error line="172" column="48" source="standard:paren-spacing" />
-        <error line="242" column="63" source="standard:function-expression-body" />
-        <error line="248" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="249" column="1" source="standard:final-newline" />
+        <error line="96" column="51" source="standard:curly-spacing" />
+        <error line="96" column="52" source="standard:paren-spacing" />
+        <error line="97" column="51" source="standard:curly-spacing" />
+        <error line="97" column="52" source="standard:paren-spacing" />
+        <error line="98" column="52" source="standard:curly-spacing" />
+        <error line="98" column="53" source="standard:paren-spacing" />
+        <error line="164" column="47" source="standard:curly-spacing" />
+        <error line="164" column="48" source="standard:paren-spacing" />
+        <error line="165" column="47" source="standard:curly-spacing" />
+        <error line="165" column="48" source="standard:paren-spacing" />
+        <error line="166" column="48" source="standard:curly-spacing" />
+        <error line="166" column="49" source="standard:paren-spacing" />
+        <error line="167" column="47" source="standard:curly-spacing" />
+        <error line="167" column="48" source="standard:paren-spacing" />
+        <error line="237" column="63" source="standard:function-expression-body" />
+        <error line="243" column="1" source="standard:no-blank-line-before-rbrace" />
+        <error line="244" column="1" source="standard:final-newline" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarFirebaseMessagingService.kt">
         <error line="3" column="1" source="standard:no-unused-imports" />

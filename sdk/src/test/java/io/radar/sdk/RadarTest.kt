@@ -3586,6 +3586,58 @@ class RadarTest {
     }
 
     @Test
+    fun test_Radar_trackVerified_beacons_continuousMiss_searchesOnceForBothManagers() {
+        val uuid = "2f234454-cf6d-4a0f-adf2-f4911ba9ffa6"
+        val mockLocation = mockTrackVerifiedBeacons()
+        apiHelperMock.queueMockResponses(
+            "v1/search/beacons",
+            listOf(
+                JSONObject()
+                    .put("meta", JSONObject().put("code", 200).put("settings", JSONObject().put("beacons", JSONObject().put("uuids", JSONArray().put(uuid)))))
+                    .put("beacons", JSONArray())
+            )
+        )
+
+        val continuousPermissions = RadarPermissionsHelperMock()
+        continuousPermissions.mockFineLocationPermissionGranted = true
+        continuousPermissions.mockBluetoothPermissionsGranted = true
+        val manager = RadarContinuousBeaconManager(context, Radar.logger, continuousPermissions)
+        manager.scanner = RadarFakeBeaconScanner()
+        manager.isForeground = { true }
+        // The startup search is from about 1km away, so `trackVerified` misses.
+        val farAway = Location(mockLocation).apply { latitude += 0.009 }
+        manager.lastLocation = { Location(farAway) }
+        // Completes only the startup search, leaving any later refresh running.
+        val managerSearches = mutableListOf<Location>()
+        manager.searchBeacons = { searchFrom, completion ->
+            managerSearches.add(searchFrom)
+            if (managerSearches.size == 1) {
+                completion(RadarContinuousBeaconManager.SearchResult(uuids = listOf("11111111-1111-1111-1111-111111111111")))
+            }
+        }
+        val originalManager = Radar.continuousBeaconManager
+        Radar.continuousBeaconManager = manager
+
+        try {
+            manager.start()
+            assertEquals(1, managerSearches.size)
+            apiHelperMock.clearCapturedParams()
+
+            assertEquals(Radar.RadarStatus.SUCCESS, trackVerifiedBeacons())
+
+            assertEquals(1, apiHelperMock.capturedPaths.count { it.startsWith("v1/search/beacons") })
+            // The continuous manager never searched from `trackVerified`'s location itself. (Running
+            // delayed tasks also fires its 60s refresh, from the last location.)
+            assertTrue(managerSearches.none { it.latitude == mockLocation.latitude })
+            assertEquals(listOf(uuid), manager.searchResult!!.uuids)
+            assertEquals(mockLocation.latitude, manager.searchLocation!!.latitude, 0.0)
+        } finally {
+            manager.stop()
+            Radar.continuousBeaconManager = originalManager
+        }
+    }
+
+    @Test
     fun test_Radar_trackVerified_beacons_continuousNotStarted_fallsBackToOneShot() {
         mockTrackVerifiedBeacons()
         apiHelperMock.queueMockResponses(

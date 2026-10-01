@@ -152,10 +152,8 @@ internal class RadarVerificationManager(
 
                                 @RequiresApi(Build.VERSION_CODES.O)
                                 fun rangeBeaconsAndTrack() {
-                                    Radar.apiClient.searchBeacons(
+                                    RadarNearbyBeaconSearch.search(
                                         location,
-                                        RadarBeaconUtils.SEARCH_RADIUS,
-                                        RadarBeaconUtils.SEARCH_LIMIT,
                                         object : RadarApiClient.RadarSearchBeaconsApiCallback {
                                             override fun onComplete(
                                                 status: Radar.RadarStatus,
@@ -164,6 +162,14 @@ internal class RadarVerificationManager(
                                                 uuids: Array<String>?,
                                                 uids: Array<String>?
                                             ) {
+                                                // Continuous ranging couldn't serve this request, so
+                                                // it ranges this search's beacons from now on rather
+                                                // than searching again itself.
+                                                val continuousResult = RadarContinuousBeaconManager.SearchResult.fromResponse(status, beacons, uuids, uids)
+                                                Radar.handler.post {
+                                                    Radar.continuousBeaconManager.onSearched(location, continuousResult)
+                                                }
+
                                                 if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                                                     Radar.beaconMonitoringManager.startMonitoringBeaconUUIDs(
                                                         uuids,
@@ -216,8 +222,7 @@ internal class RadarVerificationManager(
                                                     callTrackApi(arrayOf())
                                                 }
                                             }
-                                        },
-                                        false
+                                        }
                                     )
                                 }
 

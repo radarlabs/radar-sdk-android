@@ -789,8 +789,8 @@ internal class RadarLocationManager(
             } else {
                 this.apiClient.searchBeacons(
                     location,
-                    RadarBeaconUtils.SEARCH_RADIUS,
-                    RadarBeaconUtils.SEARCH_LIMIT,
+                    RadarNearbyBeaconSearch.RADIUS,
+                    RadarNearbyBeaconSearch.LIMIT,
                     object : RadarApiClient.RadarSearchBeaconsApiCallback {
                         override fun onComplete(
                             status: RadarStatus,

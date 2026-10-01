@@ -18,11 +18,6 @@ internal object RadarBeaconUtils {
     private val EDDYSTONE_SERVICE_UUID = ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB")
     private val HEX = "0123456789abcdef".toCharArray()
 
-    // Radius in meters and limit for nearby beacon searches, shared by one-shot and continuous
-    // ranging so both range the same beacons.
-    const val SEARCH_RADIUS = 1000
-    const val SEARCH_LIMIT = 10
-
     fun beaconsForScanResults(scanResults: ArrayList<ScanResult>?): Array<RadarBeacon> {
         if (scanResults.isNullOrEmpty()) {
             return arrayOf()

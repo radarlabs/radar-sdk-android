@@ -27,7 +27,7 @@ import org.json.JSONObject
  * attach the last ranging result without waiting on a one-shot ranging window.
  *
  * Uses its own searches and scan, separate from the one-shot ranging in `RadarOneShotBeaconManager`.
- * It searches for up to `RadarBeaconUtils.SEARCH_LIMIT` nearby beacons, scans for them, and
+ * It searches for up to `RadarNearbyBeaconSearch.LIMIT` nearby beacons, scans for them, and
  * searches again every `REFRESH_INTERVAL_MS`. Ranging pauses when the app enters the background
  * and resumes when it returns to the foreground, until `stop()` is called. Must be used from the
  * main thread.
@@ -72,6 +72,24 @@ internal class RadarContinuousBeaconManager(
         // Specific beacons, ranged only when there are no UUIDs or UIDs.
         val beacons: List<RadarBeacon> = emptyList()
     ) {
+        companion object {
+            /**
+             * The result of a `RadarNearbyBeaconSearch` response, or `null` if it failed. On
+             * failure the API client returns the last saved beacons, which may not be near where
+             * the search was made from, so they aren't used.
+             */
+            fun fromResponse(
+                status: RadarStatus,
+                beacons: Array<RadarBeacon>?,
+                uuids: Array<String>?,
+                uids: Array<String>?
+            ): SearchResult? = if (status == RadarStatus.SUCCESS) {
+                SearchResult(uuids?.toList().orEmpty(), uids?.toList().orEmpty(), beacons?.toList().orEmpty())
+            } else {
+                null
+            }
+        }
+
         // UUIDs and UIDs take precedence over specific beacons, matching one-shot ranging.
         val usesIdentifiers: Boolean
             get() = uuids.isNotEmpty() || uids.isNotEmpty()
@@ -138,10 +156,8 @@ internal class RadarContinuousBeaconManager(
     internal var isForeground: () -> Boolean = { RadarActivityLifecycleCallbacks.foreground }
     internal var lastLocation: () -> Location? = { RadarState.getLastLocation(context) }
     internal var searchBeacons: (Location, (SearchResult?) -> Unit) -> Unit = { location, completion ->
-        Radar.apiClient.searchBeacons(
+        RadarNearbyBeaconSearch.search(
             location,
-            RadarBeaconUtils.SEARCH_RADIUS,
-            RadarBeaconUtils.SEARCH_LIMIT,
             object : RadarApiClient.RadarSearchBeaconsApiCallback {
                 override fun onComplete(
                     status: RadarStatus,
@@ -150,17 +166,10 @@ internal class RadarContinuousBeaconManager(
                     uuids: Array<String>?,
                     uids: Array<String>?
                 ) {
-                    // On failure the API client returns the last saved beacons, which may not be
-                    // near `location`, so treat it as a failed search.
-                    val result = if (status == RadarStatus.SUCCESS) {
-                        SearchResult(uuids?.toList().orEmpty(), uids?.toList().orEmpty(), beacons?.toList().orEmpty())
-                    } else {
-                        null
-                    }
+                    val result = SearchResult.fromResponse(status, beacons, uuids, uids)
                     handler.post { completion(result) }
                 }
-            },
-            false
+            }
         )
     }
 
@@ -246,9 +255,9 @@ internal class RadarContinuousBeaconManager(
      *
      * Returns `null` if continuous ranging can't serve the request: it's stopped, it isn't
      * scanning, its scan has run less than `MIN_SCAN_MS`, or its beacons were searched more than
-     * `MAX_SEARCH_DISTANCE_METERS` from `location`. Range beacons once instead. In the last two
-     * cases, unless stopped, it searches again from `location`, so later requests there can be
-     * served.
+     * `MAX_SEARCH_DISTANCE_METERS` from `location`. Range beacons once instead, with a
+     * `RadarNearbyBeaconSearch` from `location`, and pass the result to `onSearched` so later
+     * requests there can be served.
      */
     fun beacons(location: Location): Array<RadarBeacon>? {
         if (!started) {
@@ -269,12 +278,34 @@ internal class RadarContinuousBeaconManager(
                 }
                 return currentBeacons()
             }
-
-            reset()
         }
 
-        resume(location)
+        // Forget the old search, and wait for the caller's search from `location`.
+        reset()
         return null
+    }
+
+    /**
+     * Ranges the beacons from a `RadarNearbyBeaconSearch` made from `searchedFrom`, or `null` if it
+     * failed, replacing any search still running. Schedules the next refresh.
+     */
+    internal fun onSearched(searchedFrom: Location, result: SearchResult?) {
+        if (!started) {
+            return
+        }
+
+        pendingSearchLocation = null
+        scheduleRefresh(REFRESH_INTERVAL_MS)
+        if (result == null) {
+            logger.d("Continuous beacon manager search failed")
+            return
+        }
+
+        if (!permissionsGranted()) {
+            return
+        }
+
+        update(result, searchedFrom)
     }
 
     /** Replaces the beacons being ranged with `result`, searched from `searchedFrom`. */
@@ -379,13 +410,7 @@ internal class RadarContinuousBeaconManager(
             return
         }
 
-        if (!permissionsHelper.fineLocationPermissionGranted(context) && !permissionsHelper.coarseLocationPermissionGranted(context)) {
-            logger.d("Continuous beacon manager not started: location not authorized")
-            return
-        }
-
-        if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
-            logger.d("Continuous beacon manager not started: Bluetooth permissions not granted")
+        if (!permissionsGranted()) {
             return
         }
 
@@ -426,14 +451,22 @@ internal class RadarContinuousBeaconManager(
                 logger.d("Continuous beacon manager ignoring stale search")
                 return@searchBeacons
             }
-            pendingSearchLocation = null
-            scheduleRefresh(REFRESH_INTERVAL_MS)
-            if (result == null) {
-                logger.d("Continuous beacon manager search failed")
-                return@searchBeacons
-            }
-            update(result, searchFrom)
+            onSearched(searchFrom, result)
         }
+    }
+
+    private fun permissionsGranted(): Boolean {
+        if (!permissionsHelper.fineLocationPermissionGranted(context) && !permissionsHelper.coarseLocationPermissionGranted(context)) {
+            logger.d("Continuous beacon manager not started: location not authorized")
+            return false
+        }
+
+        if (!permissionsHelper.bluetoothPermissionsGranted(context)) {
+            logger.d("Continuous beacon manager not started: Bluetooth permissions not granted")
+            return false
+        }
+
+        return true
     }
 
     private fun scheduleRefresh(delayMs: Long) {
