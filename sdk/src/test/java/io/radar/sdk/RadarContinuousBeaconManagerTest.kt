@@ -1,6 +1,8 @@
 package io.radar.sdk
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.le.ScanRecord
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
 import android.location.Location
@@ -11,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.helpers.RadarFakeBeaconScanner
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarCoordinate
+import java.nio.ByteBuffer
 import java.time.Duration
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -115,6 +118,24 @@ class RadarContinuousBeaconManagerTest {
         if (isForeground) manager.onForeground() else manager.onBackground()
     }
 
+    // A scan result advertising the iBeacon `UUID` / 1 / `minor`.
+    @Suppress("DEPRECATION")
+    private fun scanResult(minor: Int, rssi: Int = -60): ScanResult {
+        val uuid = java.util.UUID.fromString(UUID)
+        val bytes = ByteBuffer.allocate(30)
+            .put(byteArrayOf(0x02, 0x01, 0x06, 0x1A, 0xFF.toByte(), 0x4C, 0x00, 0x02, 0x15))
+            .putLong(uuid.mostSignificantBits)
+            .putLong(uuid.leastSignificantBits)
+            .putShort(1)
+            .putShort(minor.toShort())
+            .put(0xC5.toByte())
+            .array()
+        // `ScanRecord.parseFromBytes` is hidden.
+        val scanRecord = ScanRecord::class.java.getMethod("parseFromBytes", ByteArray::class.java).invoke(null, bytes) as ScanRecord
+        val device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice("00:11:22:33:44:55")
+        return ScanResult(device, scanRecord, rssi, 0L)
+    }
+
     // endregion
 
     @Test
@@ -173,6 +194,22 @@ class RadarContinuousBeaconManagerTest {
 
         idle(RadarContinuousBeaconManager.MIN_SCAN_MS)
         assertNotNull(request())
+    }
+
+    @Test
+    fun scanResult_fromStoppedScan_isIgnored() {
+        startAndSearch(RadarContinuousBeaconManager.SearchResult(beacons = listOf(beacon("2"))))
+        val oldCallback = scanner.active!!
+        oldCallback.onScanResult(0, scanResult(minor = 2, rssi = -70))
+
+        manager.update(RadarContinuousBeaconManager.SearchResult(beacons = listOf(beacon("3"))), location(LAT, LNG))
+        val newCallback = scanner.active!!
+        oldCallback.onScanResult(0, scanResult(minor = 2))
+        oldCallback.onBatchScanResults(mutableListOf(scanResult(minor = 2)))
+        newCallback.onScanResult(0, scanResult(minor = 3, rssi = -50))
+
+        idle(RadarContinuousBeaconManager.MIN_SCAN_MS)
+        assertEquals(listOf("3"), request()!!.map { it.minor })
     }
 
     @Test

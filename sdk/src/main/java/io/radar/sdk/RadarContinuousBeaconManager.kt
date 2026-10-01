@@ -511,12 +511,18 @@ internal class RadarContinuousBeaconManager(
         searchResult?.filterKeys?.forEach { key -> logger.d("Continuous beacon manager ranging | $key") }
 
         val callback = object : ScanCallback() {
+            // Results already queued when a scan stops can still be delivered after another
+            // scan starts, so only the running scan's results are used.
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
-                handleScanResult(result)
+                if (scanCallback === this) {
+                    handleScanResult(result)
+                }
             }
 
             override fun onBatchScanResults(results: MutableList<ScanResult>?) {
-                results?.forEach { handleScanResult(it) }
+                if (scanCallback === this) {
+                    results?.forEach { handleScanResult(it) }
+                }
             }
 
             override fun onScanFailed(errorCode: Int) {
