@@ -6,15 +6,10 @@
         <error line="70" column="1" source="standard:final-newline" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarActivityLifecycleCallbacks.kt">
-        <error line="18" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="44" column="1" source="standard:indent" />
-        <error line="44" column="123" source="standard:wrapping" />
-        <error line="48" column="1" source="standard:indent" />
-        <error line="48" column="125" source="standard:wrapping" />
-        <error line="79" column="47" source="standard:wrapping" />
-        <error line="79" column="61" source="standard:wrapping" />
-        <error line="105" column="21" source="standard:wrapping" />
-        <error line="161" column="1" source="standard:final-newline" />
+        <error line="34" column="1" source="standard:indent" />
+        <error line="34" column="123" source="standard:wrapping" />
+        <error line="38" column="1" source="standard:indent" />
+        <error line="38" column="125" source="standard:wrapping" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarActivityManager.kt">
         <error line="15" column="36" source="standard:paren-spacing" />

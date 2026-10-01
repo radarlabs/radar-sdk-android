@@ -150,9 +150,7 @@ class RadarContinuousBeaconManagerTest {
 
     private fun appForeground(isForeground: Boolean) {
         foreground = isForeground
-        RadarActivityLifecycleCallbacks.foregroundListeners.forEach {
-            if (isForeground) it.onForeground() else it.onBackground()
-        }
+        if (isForeground) manager.onForeground() else manager.onBackground()
     }
 
     // endregion
@@ -419,7 +417,7 @@ class RadarContinuousBeaconManagerTest {
     }
 
     @Test
-    fun stop_removesForegroundListener() {
+    fun stop_ignoresForegroundTransitions() {
         manager.start()
         manager.stop()
 

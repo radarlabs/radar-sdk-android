@@ -1671,6 +1671,18 @@ object Radar {
         handler.post { continuousBeaconManager.stop() }
     }
 
+    internal fun handleBeaconRangingForeground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::continuousBeaconManager.isInitialized) {
+            continuousBeaconManager.onForeground()
+        }
+    }
+
+    internal fun handleBeaconRangingBackground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::continuousBeaconManager.isInitialized) {
+            continuousBeaconManager.onBackground()
+        }
+    }
+
     /**
      * Stops tracking the user's location with device integrity information for location verification use cases.
      *

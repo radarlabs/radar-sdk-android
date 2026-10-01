@@ -207,11 +207,6 @@ internal class RadarContinuousBeaconManager(
         }
     }
 
-    private val foregroundListener = object : RadarActivityLifecycleCallbacks.ForegroundListener {
-        override fun onForeground() = onAppForeground()
-        override fun onBackground() = onAppBackground()
-    }
-
     // Android stops scans when Bluetooth turns off without calling `onScanFailed`, so ranging would
     // otherwise keep reporting that no beacons are nearby, and never restart the scan.
     private val bluetoothStateReceiver = object : BroadcastReceiver() {
@@ -236,7 +231,6 @@ internal class RadarContinuousBeaconManager(
         logger.d("Starting continuous beacon manager")
 
         started = true
-        RadarActivityLifecycleCallbacks.foregroundListeners.add(foregroundListener)
         registerBluetoothStateReceiver()
         resume()
     }
@@ -246,7 +240,6 @@ internal class RadarContinuousBeaconManager(
 
         started = false
         handler.removeCallbacks(backgroundPauseRunnable)
-        RadarActivityLifecycleCallbacks.foregroundListeners.remove(foregroundListener)
         unregisterBluetoothStateReceiver()
         reset()
     }
@@ -340,7 +333,7 @@ internal class RadarContinuousBeaconManager(
         return rangedBeacons.values.map { it.first }.toTypedArray()
     }
 
-    private fun onAppForeground() {
+    internal fun onForeground() {
         handler.removeCallbacks(backgroundPauseRunnable)
         if (!started || ranging) {
             return
@@ -350,7 +343,7 @@ internal class RadarContinuousBeaconManager(
         resume()
     }
 
-    private fun onAppBackground() {
+    internal fun onBackground() {
         if (!started) {
             return
         }
