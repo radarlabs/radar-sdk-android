@@ -17,7 +17,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import androidx.annotation.RequiresApi
-import io.radar.sdk.Radar.RadarBeaconCallback
 import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarBeacon
@@ -29,8 +28,8 @@ import org.json.JSONObject
  *
  * Uses its own searches and scan, separate from the one-shot ranging in `RadarOneShotBeaconManager`.
  * It searches for up to `SEARCH_LIMIT` nearby beacons, scans for them, and searches again every
- * `REFRESH_INTERVAL_MS`. Ranging pauses when the app enters the background and resumes when it returns to the
- * foreground, until `stop()` is called. Must be used from the main thread.
+ * `REFRESH_INTERVAL_MS`. Ranging pauses when the app enters the background and resumes when it
+ * returns to the foreground, until `stop()` is called. Must be used from the main thread.
  */
 @RequiresApi(Build.VERSION_CODES.O)
 @SuppressLint("MissingPermission")
@@ -55,9 +54,9 @@ internal class RadarContinuousBeaconManager(
         // another place's beacons until the next refresh.
         const val MAX_SEARCH_DISTANCE_METERS = 100.0
 
-        // How long the first round of ranging runs, matching the one-shot ranging window. Requests
-        // made before it finishes wait for it and get every beacon it ranged.
-        const val WARM_UP_MS = 5000L
+        // How long a scan runs before its beacons are used, matching the one-shot ranging window.
+        // Until then, an empty result could just mean the scan hasn't heard the beacons yet.
+        const val MIN_SCAN_MS = 5000L
 
         // Delay before pausing on background, so moving between activities doesn't restart the
         // scan. Android fails scans started more than 5 times in 30 seconds.
@@ -169,10 +168,6 @@ internal class RadarContinuousBeaconManager(
     internal var started = false
         private set
 
-    // Whether the first round of the running scan has finished. Until then, requests wait for it.
-    internal var warmedUp = false
-        private set
-
     // Where and when `searchResult` was searched.
     internal var searchLocation: Location? = null
         private set
@@ -189,27 +184,16 @@ internal class RadarContinuousBeaconManager(
     // call has its own.
     private var pendingSearchLocation: Location? = null
 
-    // The running scan, if any.
+    // The running scan, if any, and when it started.
     private var scanCallback: ScanCallback? = null
+    private var scanStartedAt = 0L
 
     // The last ranging result: each beacon ranged by the running scan, and when it was last ranged.
     private var rangedBeacons = mutableMapOf<String, Pair<RadarBeacon, Long>>()
 
-    // Requests waiting for the first round of the running scan.
-    private val pendingCallbacks = mutableListOf<RadarBeaconCallback>()
-
     private val refreshRunnable = Runnable {
         if (started && isForeground() && bluetoothAvailable()) {
             lastLocation()?.let { search(it) }
-        }
-    }
-
-    private val warmUpRunnable = Runnable {
-        if (ranging) {
-            warmedUp = true
-            // Every beacon ranged since the scan started, including any last seen more than
-            // `MAX_BEACON_AGE_MS` ago, early in the round.
-            completeCallbacks(rangedBeacons.values.map { it.first }.toTypedArray())
         }
     }
 
@@ -258,17 +242,18 @@ internal class RadarContinuousBeaconManager(
     }
 
     /**
-     * Completes `callback` with the last ranging result near `location`, or with the result of the
-     * running scan's first round if it hasn't finished yet.
+     * Beacons ranged near `location` within `MAX_BEACON_AGE_MS`. An empty array means no beacons
+     * are nearby.
      *
-     * Returns `false`, without calling `callback`, if continuous ranging can't serve the request:
-     * it's stopped, it isn't scanning, or its beacons were searched more than
-     * `MAX_SEARCH_DISTANCE_METERS` from `location`. Range beacons once instead. Unless stopped, it then searches for beacons near
-     * `location`, so later requests there can be served.
+     * Returns `null` if continuous ranging can't serve the request: it's stopped, it isn't
+     * scanning, its scan has run less than `MIN_SCAN_MS`, or its beacons were searched more than
+     * `MAX_SEARCH_DISTANCE_METERS` from `location`. Range beacons once instead. In the last two
+     * cases, unless stopped, it searches again from `location`, so later requests there can be
+     * served.
      */
-    fun rangeBeacons(location: Location, callback: RadarBeaconCallback): Boolean {
+    fun beacons(location: Location): Array<RadarBeacon>? {
         if (!started) {
-            return false
+            return null
         }
 
         if (ranging && !bluetoothAvailable()) {
@@ -279,27 +264,18 @@ internal class RadarContinuousBeaconManager(
 
         if (ranging) {
             if (isNearSearchLocation(location)) {
-                addCallback(callback)
-                return true
+                if (now() - scanStartedAt < MIN_SCAN_MS) {
+                    logger.d("Continuous beacon manager scan not ready")
+                    return null
+                }
+                return currentBeacons()
             }
 
             reset()
         }
 
         resume(location)
-        return false
-    }
-
-    /**
-     * Beacons ranged within `MAX_BEACON_AGE_MS`, or `null` if it is not scanning or its first
-     * round hasn't finished. An empty array means no beacons are nearby.
-     */
-    internal fun beacons(): Array<RadarBeacon>? {
-        if (!ranging || !warmedUp) {
-            return null
-        }
-
-        return currentBeacons()
+        return null
     }
 
     /** Replaces the beacons being ranged with `result`, searched from `searchedFrom`. */
@@ -317,28 +293,6 @@ internal class RadarContinuousBeaconManager(
         }
 
         startScan()
-    }
-
-    private fun addCallback(callback: RadarBeaconCallback) {
-        if (warmedUp) {
-            callback.onComplete(RadarStatus.SUCCESS, currentBeacons())
-        } else {
-            pendingCallbacks.add(callback)
-        }
-    }
-
-    private fun completeCallbacks(beacons: Array<RadarBeacon>? = null) {
-        if (pendingCallbacks.isEmpty()) {
-            return
-        }
-
-        val result = beacons ?: currentBeacons()
-        val callbacks = pendingCallbacks.toList()
-        pendingCallbacks.clear()
-
-        logger.d("Calling continuous beacon manager callbacks | callbacks.size = ${callbacks.size}; beacons.size = ${result.size}")
-
-        callbacks.forEach { it.onComplete(RadarStatus.SUCCESS, result) }
     }
 
     private fun currentBeacons(): Array<RadarBeacon> {
@@ -488,15 +442,8 @@ internal class RadarContinuousBeaconManager(
         handler.postDelayed(refreshRunnable, delayMs)
     }
 
-    /**
-     * Stops the running scan and forgets its result. Unless `keepCallbacks`, requests waiting for
-     * its first round complete with what it has ranged so far.
-     */
-    private fun pause(keepCallbacks: Boolean = false) {
-        handler.removeCallbacks(warmUpRunnable)
-        if (!keepCallbacks) {
-            completeCallbacks()
-        }
+    /** Stops the running scan and forgets its result. */
+    private fun pause() {
         scanCallback?.let { callback ->
             try {
                 scanner.stop(callback)
@@ -505,7 +452,6 @@ internal class RadarContinuousBeaconManager(
             }
         }
         scanCallback = null
-        warmedUp = false
         rangedBeacons.clear()
     }
 
@@ -524,12 +470,9 @@ internal class RadarContinuousBeaconManager(
             return
         }
 
-        // Requests waiting on the old scan wait for the new one instead, so they get beacons from
-        // the latest search.
-        pause(keepCallbacks = true)
+        pause()
         val filters = searchResult?.scanFilters(logger).orEmpty()
         if (filters.isEmpty()) {
-            completeCallbacks()
             return
         }
 
@@ -556,11 +499,10 @@ internal class RadarContinuousBeaconManager(
             scanner.start(filters, callback)
         } catch (e: Exception) {
             logger.e("Continuous beacon manager error starting scan", RadarLogType.SDK_EXCEPTION, e)
-            completeCallbacks()
             return
         }
         scanCallback = callback
-        handler.postDelayed(warmUpRunnable, WARM_UP_MS)
+        scanStartedAt = now()
     }
 
     // Treats an exception from the scanner as Bluetooth being unavailable rather than crashing the

@@ -223,20 +223,12 @@ internal class RadarVerificationManager(
 
                                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                     Radar.handler.post {
-                                        val served = Radar.continuousBeaconManager.rangeBeacons(
-                                            location,
-                                            object : Radar.RadarBeaconCallback {
-                                                override fun onComplete(
-                                                    status: Radar.RadarStatus,
-                                                    beacons: Array<RadarBeacon>?
-                                                ) {
-                                                    logger.d("Using continuously ranged beacons | beacons.size = ${beacons?.size}")
+                                        val continuousBeacons = Radar.continuousBeaconManager.beacons(location)
+                                        if (continuousBeacons != null) {
+                                            logger.d("Using continuously ranged beacons | beacons.size = ${continuousBeacons.size}")
 
-                                                    callTrackApi(beacons)
-                                                }
-                                            }
-                                        )
-                                        if (!served) {
+                                            callTrackApi(continuousBeacons)
+                                        } else {
                                             rangeBeaconsAndTrack()
                                         }
                                     }

@@ -1636,9 +1636,8 @@ object Radar {
      * Call this after `initialize()` and after location and Bluetooth permissions are granted, ideally when the
      * user enters a flow that calls `trackVerified(beacons = true)`, and call `stopRangingBeacons()` when beacons
      * are no longer needed. Ranging pauses automatically when the app enters the background and resumes when it
-     * returns to the foreground. Until ranging has started, `trackVerified(beacons = true)` ranges beacons as
-     * usual. During the first 5 seconds of ranging, it waits for them and attaches every beacon ranged. Requires
-     * Android 8.0 (API level 26) or later.
+     * returns to the foreground. Until ranging has run for 5 seconds, `trackVerified(beacons = true)` ranges
+     * beacons as usual. Requires Android 8.0 (API level 26) or later.
      *
      * @see [](https://radar.com/documentation/beacons)
      */

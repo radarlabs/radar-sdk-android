@@ -3532,7 +3532,7 @@ class RadarTest {
         try {
             manager.start()
             manager.handleRanged(listOf(beacon))
-            ShadowLooper.idleMainLooper(RadarContinuousBeaconManager.WARM_UP_MS, TimeUnit.MILLISECONDS)
+            ShadowLooper.idleMainLooper(RadarContinuousBeaconManager.MIN_SCAN_MS, TimeUnit.MILLISECONDS)
             assertTrue(manager.ranging)
             apiHelperMock.clearCapturedParams()
 
@@ -3543,6 +3543,42 @@ class RadarTest {
             val trackedBeacons = apiHelperMock.lastCapturedParams!!.getJSONArray("beacons")
             assertEquals(1, trackedBeacons.length())
             assertEquals("2", trackedBeacons.getJSONObject(0).getString("minor"))
+        } finally {
+            manager.stop()
+            Radar.continuousBeaconManager = originalManager
+        }
+    }
+
+    @Test
+    fun test_Radar_trackVerified_beacons_continuousWarmingUp_fallsBackToOneShot() {
+        val mockLocation = mockTrackVerifiedBeacons()
+        apiHelperMock.queueMockResponses(
+            "v1/search/beacons",
+            listOf(JSONObject().put("meta", JSONObject().put("code", 200)).put("beacons", JSONArray()))
+        )
+
+        val continuousPermissions = RadarPermissionsHelperMock()
+        continuousPermissions.mockFineLocationPermissionGranted = true
+        continuousPermissions.mockBluetoothPermissionsGranted = true
+        val manager = RadarContinuousBeaconManager(context, Radar.logger, continuousPermissions)
+        manager.scanner = RadarFakeBeaconScanner()
+        manager.isForeground = { true }
+        manager.lastLocation = { Location(mockLocation) }
+        manager.searchBeacons = { _, completion ->
+            completion(RadarContinuousBeaconManager.SearchResult(uuids = listOf("2f234454-cf6d-4a0f-adf2-f4911ba9ffa6")))
+        }
+        val originalManager = Radar.continuousBeaconManager
+        Radar.continuousBeaconManager = manager
+
+        try {
+            manager.start()
+            assertTrue(manager.ranging)
+            apiHelperMock.clearCapturedParams()
+
+            assertEquals(Radar.RadarStatus.SUCCESS, trackVerifiedBeacons())
+
+            assertTrue(apiHelperMock.capturedPaths.any { it.startsWith("v1/search/beacons") })
+            assertEquals("v1/track", apiHelperMock.lastCapturedPath)
         } finally {
             manager.stop()
             Radar.continuousBeaconManager = originalManager
