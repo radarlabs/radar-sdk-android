@@ -1,8 +1,6 @@
 package io.radar.sdk
 
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
 import android.content.Context
 import android.content.Intent
 import android.location.Location
@@ -10,6 +8,7 @@ import android.os.Build
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.radar.sdk.helpers.RadarFakeBeaconScanner
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarCoordinate
 import java.time.Duration
@@ -43,31 +42,6 @@ class RadarContinuousBeaconManagerTest {
         override fun bluetoothPermissionsGranted(context: Context) = granted
     }
 
-    private class FakeScanner : RadarContinuousBeaconManager.Scanner {
-        var available = true
-        var availabilityError: Exception? = null
-        var starts = 0
-        var stops = 0
-        var active: ScanCallback? = null
-
-        override fun isAvailable(): Boolean {
-            availabilityError?.let { throw it }
-            return available
-        }
-
-        override fun start(filters: List<ScanFilter>, callback: ScanCallback) {
-            starts++
-            active = callback
-        }
-
-        override fun stop(callback: ScanCallback) {
-            stops++
-            if (active === callback) {
-                active = null
-            }
-        }
-    }
-
     /** A ranging request, and its result once it completes. */
     private class Request : Radar.RadarBeaconCallback {
         var completed = false
@@ -80,7 +54,7 @@ class RadarContinuousBeaconManagerTest {
     }
 
     private lateinit var manager: RadarContinuousBeaconManager
-    private lateinit var scanner: FakeScanner
+    private lateinit var scanner: RadarFakeBeaconScanner
     private lateinit var permissions: PermissionsHelper
     private var clock = 0L
     private var foreground = true
@@ -93,7 +67,7 @@ class RadarContinuousBeaconManagerTest {
         Radar.initialize(context, "prj_test_pk_0000000000000000000000000000000000000000")
         idle()
 
-        scanner = FakeScanner()
+        scanner = RadarFakeBeaconScanner()
         permissions = PermissionsHelper()
         clock = 100_000L
         foreground = true
@@ -272,22 +246,22 @@ class RadarContinuousBeaconManagerTest {
     }
 
     @Test
-    fun rangeBeacons_outsideCoverage_searchesFromRequestLocation() {
+    fun rangeBeacons_beyondMaxDistance_searchesFromRequestLocation() {
         startAndSearch(RadarContinuousBeaconManager.SearchResult(beacons = listOf(beacon("2"))))
         idle(RadarContinuousBeaconManager.WARM_UP_MS)
 
-        // About 1000m away.
-        val farAway = location(LAT + 0.009, LNG)
+        // About 150m away.
+        val farAway = location(LAT + 0.00135, LNG)
         assertNull(request(farAway))
         assertFalse(manager.ranging)
         assertNull(manager.searchResult)
         assertEquals(1, searches.size)
         assertSame(farAway, searches[0].first)
 
-        searches.removeAt(0).second(RadarContinuousBeaconManager.SearchResult(beacons = listOf(beacon("3", lat = LAT + 0.009))))
+        searches.removeAt(0).second(RadarContinuousBeaconManager.SearchResult(beacons = listOf(beacon("3", lat = LAT + 0.00135))))
 
         assertEquals(setOf("$UUID-1-3"), manager.searchResult!!.filterKeys)
-        assertEquals(LAT + 0.009, manager.searchLocation!!.latitude, 0.0)
+        assertEquals(LAT + 0.00135, manager.searchLocation!!.latitude, 0.0)
         assertNotNull(request(farAway))
     }
 
@@ -397,6 +371,7 @@ class RadarContinuousBeaconManagerTest {
         assertNull(scanner.active)
         assertTrue(waiting.completed)
 
+        clock += RadarContinuousBeaconManager.REFRESH_INTERVAL_MS
         appForeground(true)
 
         assertTrue(manager.ranging)
@@ -429,39 +404,89 @@ class RadarContinuousBeaconManagerTest {
     }
 
     @Test
-    fun rangeBeacons_uuidSearch_coversAnyLocation() {
-        startAndSearch(RadarContinuousBeaconManager.SearchResult(uuids = listOf(UUID)))
-        idle(RadarContinuousBeaconManager.WARM_UP_MS)
-
-        assertNotNull(request(location(LAT + 1, LNG)))
-    }
-
-    @Test
-    fun rangeBeacons_partialSearch_coversSearchRadius() {
-        startAndSearch(RadarContinuousBeaconManager.SearchResult(beacons = listOf(beacon("2"))))
-        idle(RadarContinuousBeaconManager.WARM_UP_MS)
-
-        // About 500m away.
-        assertNotNull(request(location(LAT + 0.0045, LNG)))
-        // About 1000m away.
-        assertNull(request(location(LAT + 0.009, LNG)))
-        assertFalse(manager.ranging)
-        assertNull(manager.searchResult)
-    }
-
-    @Test
-    fun rangeBeacons_fullSearch_coversFarthestBeacon() {
-        // Ten beacons, the farthest about 300m away.
+    fun rangeBeacons_withinMaxDistance_isServed() {
+        // Ten beacons, the farthest about 30m away, as in a dense venue.
         val beacons = (0 until RadarContinuousBeaconManager.SEARCH_LIMIT).map { i ->
-            beacon("$i", lat = LAT + 0.0003 * i)
+            beacon("$i", lat = LAT + 0.00003 * i)
         }
         startAndSearch(RadarContinuousBeaconManager.SearchResult(beacons = beacons))
         idle(RadarContinuousBeaconManager.WARM_UP_MS)
 
-        // About 100m away: within 300m - 100m.
-        assertNotNull(request(location(LAT + 0.0009, LNG)))
-        // About 250m away: beacons within 100m of it may not have been included.
-        assertNull(request(location(LAT + 0.00225, LNG)))
+        assertNotNull(request(location(LAT, LNG)))
+        // About 90m away.
+        assertNotNull(request(location(LAT + 0.00081, LNG)))
+    }
+
+    @Test
+    fun rangeBeacons_uuidSearch_beyondMaxDistance_returnsFalse() {
+        startAndSearch(RadarContinuousBeaconManager.SearchResult(uuids = listOf(UUID)))
+        idle(RadarContinuousBeaconManager.WARM_UP_MS)
+
+        // About 150m away.
+        assertNull(request(location(LAT + 0.00135, LNG)))
+        assertFalse(manager.ranging)
+    }
+
+    @Test
+    fun refresh_afterInterval_searchesAgainFromLastLocation() {
+        startAndSearch(RadarContinuousBeaconManager.SearchResult(beacons = listOf(beacon("2"))))
+        lastLocation = location(LAT + 0.001, LNG)
+
+        idle(RadarContinuousBeaconManager.REFRESH_INTERVAL_MS - 1)
+        assertTrue(searches.isEmpty())
+        idle(1)
+        assertEquals(1, searches.size)
+        assertEquals(LAT + 0.001, searches[0].first.latitude, 0.0)
+
+        searches.removeAt(0).second(RadarContinuousBeaconManager.SearchResult(beacons = listOf(beacon("3"))))
+        assertEquals(2, scanner.starts)
+        assertEquals(setOf("$UUID-1-3"), manager.searchResult!!.filterKeys)
+        assertEquals(LAT + 0.001, manager.searchLocation!!.latitude, 0.0)
+
+        idle(RadarContinuousBeaconManager.REFRESH_INTERVAL_MS)
+        assertEquals(1, searches.size)
+    }
+
+    @Test
+    fun refresh_afterFailedSearch_retries() {
+        manager.start()
+        searches.removeAt(0).second(null)
+
+        idle(RadarContinuousBeaconManager.REFRESH_INTERVAL_MS)
+        assertEquals(1, searches.size)
+    }
+
+    @Test
+    fun refresh_inBackgroundOrAfterStop_doesNotSearch() {
+        startAndSearch(RadarContinuousBeaconManager.SearchResult(beacons = listOf(beacon("2"))))
+
+        appForeground(false)
+        idle(RadarContinuousBeaconManager.REFRESH_INTERVAL_MS)
+        assertTrue(searches.isEmpty())
+
+        appForeground(true)
+        clock += RadarContinuousBeaconManager.REFRESH_INTERVAL_MS
+        manager.stop()
+        idle(RadarContinuousBeaconManager.REFRESH_INTERVAL_MS)
+        assertTrue(searches.isEmpty())
+    }
+
+    @Test
+    fun foreground_withinRefreshInterval_doesNotSearchAgain() {
+        startAndSearch(RadarContinuousBeaconManager.SearchResult(beacons = listOf(beacon("2"))))
+
+        appForeground(false)
+        idle(RadarContinuousBeaconManager.BACKGROUND_PAUSE_DELAY_MS)
+        assertFalse(manager.ranging)
+
+        clock += 10_000L
+        appForeground(true)
+        assertTrue(manager.ranging)
+        assertTrue(searches.isEmpty())
+
+        // The refresh runs when the last search turns `REFRESH_INTERVAL_MS` old.
+        idle(RadarContinuousBeaconManager.REFRESH_INTERVAL_MS - 10_000L)
+        assertEquals(1, searches.size)
     }
 
     @Test
@@ -494,7 +519,8 @@ class RadarContinuousBeaconManagerTest {
 
         assertTrue(manager.ranging)
         assertEquals(2, scanner.starts)
-        assertEquals(1, searches.size)
+        // The last search is less than `REFRESH_INTERVAL_MS` old, so it isn't repeated.
+        assertTrue(searches.isEmpty())
     }
 
     @Test

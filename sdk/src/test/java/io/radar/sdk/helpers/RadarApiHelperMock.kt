@@ -34,6 +34,11 @@ internal class RadarApiHelperMock : RadarApiHelper() {
     internal var lastUrl: String? = null
 
     /**
+     * Paths of every request since the last `clearCapturedParams()`, in order.
+     */
+    internal val capturedPaths = mutableListOf<String>()
+
+    /**
      * Sequential responses to return for repeated requests against the same path. When set,
      * each call to `request()` for that path consumes the head of the queue. Useful for
      * exercising failover flows where the primary and retry hit the same path.
@@ -62,6 +67,7 @@ internal class RadarApiHelperMock : RadarApiHelper() {
                 RadarSettings.getHost(context)
             }
             lastUrl = "$host/$path"
+            capturedPaths.add(path)
             lastCapturedPath = path
             lastCapturedMethod = method
             lastCapturedParams = params
@@ -104,5 +110,6 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         lastCapturedParams = null
         lastCapturedPath = null
         lastCapturedMethod = null
+        capturedPaths.clear()
     }
 }

@@ -10,14 +10,17 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSyncGeofences
 import io.radar.sdk.helpers.RadarApiHelperMock
+import io.radar.sdk.helpers.RadarFakeBeaconScanner
 import io.radar.sdk.helpers.RadarMockLocationProvider
 import io.radar.sdk.helpers.RadarPermissionsHelperMock
 import io.radar.sdk.helpers.RadarSDKFraudMock
 import io.radar.sdk.helpers.RadarTestUtils
 import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarChain
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarCoordinate
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarFraud
 import io.radar.sdk.model.RadarGeofence
@@ -3467,6 +3470,101 @@ class RadarTest {
         assertEquals(fraudMock.mockPayload, params.getString("fraudPayload"))
 
         Radar.setExpectedAddress(null)
+    }
+
+    private fun mockTrackVerifiedBeacons(): Location {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.queueMockResponses(
+            "v1/config",
+            listOf(RadarTestUtils.jsonObjectFromResource("/get_config_response.json"))
+        )
+        apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/track.json")!!)
+
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+        return mockLocation
+    }
+
+    private fun trackVerifiedBeacons(): Radar.RadarStatus? {
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.trackVerified(beacons = true) { status, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+        return callbackStatus
+    }
+
+    @Test
+    fun test_Radar_trackVerified_beacons_usesContinuouslyRangedBeacons() {
+        val mockLocation = mockTrackVerifiedBeacons()
+        val beacon = RadarBeacon(
+            uuid = "2f234454-cf6d-4a0f-adf2-f4911ba9ffa6",
+            major = "1",
+            minor = "2",
+            rssi = -60,
+            location = RadarCoordinate(mockLocation.latitude, mockLocation.longitude),
+            type = RadarBeacon.RadarBeaconType.IBEACON
+        )
+
+        val continuousPermissions = RadarPermissionsHelperMock()
+        continuousPermissions.mockFineLocationPermissionGranted = true
+        continuousPermissions.mockBluetoothPermissionsGranted = true
+        val manager = RadarContinuousBeaconManager(context, Radar.logger, continuousPermissions)
+        manager.scanner = RadarFakeBeaconScanner()
+        manager.isForeground = { true }
+        manager.lastLocation = { Location(mockLocation) }
+        manager.searchBeacons = { _, completion ->
+            completion(RadarContinuousBeaconManager.SearchResult(beacons = listOf(beacon)))
+        }
+        val originalManager = Radar.continuousBeaconManager
+        Radar.continuousBeaconManager = manager
+
+        try {
+            manager.start()
+            manager.handleRanged(listOf(beacon))
+            ShadowLooper.idleMainLooper(RadarContinuousBeaconManager.WARM_UP_MS, TimeUnit.MILLISECONDS)
+            assertTrue(manager.ranging)
+            apiHelperMock.clearCapturedParams()
+
+            assertEquals(Radar.RadarStatus.SUCCESS, trackVerifiedBeacons())
+
+            assertEquals("v1/track", apiHelperMock.lastCapturedPath)
+            assertFalse(apiHelperMock.capturedPaths.any { it.startsWith("v1/search/beacons") })
+            val trackedBeacons = apiHelperMock.lastCapturedParams!!.getJSONArray("beacons")
+            assertEquals(1, trackedBeacons.length())
+            assertEquals("2", trackedBeacons.getJSONObject(0).getString("minor"))
+        } finally {
+            manager.stop()
+            Radar.continuousBeaconManager = originalManager
+        }
+    }
+
+    @Test
+    fun test_Radar_trackVerified_beacons_continuousNotStarted_fallsBackToOneShot() {
+        mockTrackVerifiedBeacons()
+        apiHelperMock.queueMockResponses(
+            "v1/search/beacons",
+            listOf(JSONObject().put("meta", JSONObject().put("code", 200)).put("beacons", JSONArray()))
+        )
+        Radar.continuousBeaconManager.stop()
+        apiHelperMock.clearCapturedParams()
+
+        assertEquals(Radar.RadarStatus.SUCCESS, trackVerifiedBeacons())
+
+        val searchIndex = apiHelperMock.capturedPaths.indexOfFirst { it.startsWith("v1/search/beacons") }
+        val trackIndex = apiHelperMock.capturedPaths.indexOf("v1/track")
+        assertTrue(searchIndex >= 0)
+        assertTrue(trackIndex > searchIndex)
     }
 }
 

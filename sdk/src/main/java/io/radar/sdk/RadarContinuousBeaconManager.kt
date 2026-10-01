@@ -28,7 +28,8 @@ import org.json.JSONObject
  * attach the last ranging result without waiting on a one-shot ranging window.
  *
  * Uses its own searches and scan, separate from the one-shot ranging in `RadarOneShotBeaconManager`.
- * Ranging pauses when the app enters the background and resumes when it returns to the
+ * It searches for up to `SEARCH_LIMIT` nearby beacons, scans for them, and searches again every
+ * `REFRESH_INTERVAL_MS`. Ranging pauses when the app enters the background and resumes when it returns to the
  * foreground, until `stop()` is called. Must be used from the main thread.
  */
 @RequiresApi(Build.VERSION_CODES.O)
@@ -46,9 +47,13 @@ internal class RadarContinuousBeaconManager(
         const val SEARCH_RADIUS = 1000
         const val SEARCH_LIMIT = 10
 
-        // About the farthest a device can range a beacon. Ranging results are only used where the
-        // search included every beacon within this distance of the device.
-        const val BEACON_RANGE_METERS = 100.0
+        // How often the beacons being ranged are searched again, so they follow the device.
+        const val REFRESH_INTERVAL_MS = 60_000L
+
+        // Requests farther than this from where the beacons were searched aren't served, since the
+        // beacons near them may not have been searched. A fast-moving device would otherwise get
+        // another place's beacons until the next refresh.
+        const val MAX_SEARCH_DISTANCE_METERS = 100.0
 
         // How long the first round of ranging runs, matching the one-shot ranging window. Requests
         // made before it finishes wait for it and get every beacon it ranged.
@@ -168,8 +173,10 @@ internal class RadarContinuousBeaconManager(
     internal var warmedUp = false
         private set
 
-    // Where `searchResult` was searched from.
+    // Where and when `searchResult` was searched.
     internal var searchLocation: Location? = null
+        private set
+    internal var searchedAt: Long? = null
         private set
 
     // The beacons being ranged, and the search they came from.
@@ -190,6 +197,12 @@ internal class RadarContinuousBeaconManager(
 
     // Requests waiting for the first round of the running scan.
     private val pendingCallbacks = mutableListOf<RadarBeaconCallback>()
+
+    private val refreshRunnable = Runnable {
+        if (started && isForeground() && bluetoothAvailable()) {
+            lastLocation()?.let { search(it) }
+        }
+    }
 
     private val warmUpRunnable = Runnable {
         if (ranging) {
@@ -249,8 +262,8 @@ internal class RadarContinuousBeaconManager(
      * running scan's first round if it hasn't finished yet.
      *
      * Returns `false`, without calling `callback`, if continuous ranging can't serve the request:
-     * it's stopped, it isn't scanning, or its search didn't include every beacon in range of
-     * `location`. Range beacons once instead. Unless stopped, it then searches for beacons near
+     * it's stopped, it isn't scanning, or its beacons were searched more than
+     * `MAX_SEARCH_DISTANCE_METERS` from `location`. Range beacons once instead. Unless stopped, it then searches for beacons near
      * `location`, so later requests there can be served.
      */
     fun rangeBeacons(location: Location, callback: RadarBeaconCallback): Boolean {
@@ -265,7 +278,7 @@ internal class RadarContinuousBeaconManager(
         }
 
         if (ranging) {
-            if (covers(location)) {
+            if (isNearSearchLocation(location)) {
                 addCallback(callback)
                 return true
             }
@@ -297,6 +310,7 @@ internal class RadarContinuousBeaconManager(
 
         val previousKeys = searchResult?.filterKeys ?: emptySet()
         searchLocation = searchedFrom
+        searchedAt = now()
         searchResult = result
         if (result.filterKeys == previousKeys && ranging) {
             return
@@ -395,14 +409,17 @@ internal class RadarContinuousBeaconManager(
     /** Stops ranging and forgets the beacons, invalidating any search that's still running. */
     private fun reset() {
         pause()
+        handler.removeCallbacks(refreshRunnable)
         searchResult = null
         searchLocation = null
+        searchedAt = null
         pendingSearchLocation = null
     }
 
     /**
-     * Resumes ranging the last search's beacons, if any, and searches again from `location`, or
-     * from the last known location if `location` is `null`.
+     * Resumes ranging the last search's beacons, if any, and searches again from `location`. If
+     * `location` is `null`, searches from the last known location, unless the last search is less
+     * than `REFRESH_INTERVAL_MS` old.
      */
     private fun resume(location: Location? = null) {
         if (!started || ranging) {
@@ -432,12 +449,24 @@ internal class RadarContinuousBeaconManager(
             startScan()
         }
 
+        val searchAge = searchedAt?.let { now() - it }
+        if (location == null && searchAge != null && searchAge < REFRESH_INTERVAL_MS) {
+            scheduleRefresh(REFRESH_INTERVAL_MS - searchAge)
+            return
+        }
+
         val searchFrom = location ?: lastLocation()
         if (searchFrom == null) {
             logger.d("Continuous beacon manager waiting for a location to search beacons")
             return
         }
 
+        search(searchFrom)
+    }
+
+    /** Searches beacons near `searchFrom` and ranges them, then schedules the next search. */
+    private fun search(searchFrom: Location) {
+        handler.removeCallbacks(refreshRunnable)
         pendingSearchLocation = searchFrom
         searchBeacons(searchFrom) { result ->
             if (pendingSearchLocation !== searchFrom) {
@@ -445,12 +474,18 @@ internal class RadarContinuousBeaconManager(
                 return@searchBeacons
             }
             pendingSearchLocation = null
+            scheduleRefresh(REFRESH_INTERVAL_MS)
             if (result == null) {
                 logger.d("Continuous beacon manager search failed")
                 return@searchBeacons
             }
             update(result, searchFrom)
         }
+    }
+
+    private fun scheduleRefresh(delayMs: Long) {
+        handler.removeCallbacks(refreshRunnable)
+        handler.postDelayed(refreshRunnable, delayMs)
     }
 
     /**
@@ -560,37 +595,14 @@ internal class RadarContinuousBeaconManager(
         }
     }
 
-    /** Whether the search included every beacon in range of `location`. */
-    private fun covers(location: Location): Boolean {
+    private fun isNearSearchLocation(location: Location): Boolean {
         val searchLocation = searchLocation ?: return false
-        val distance = location.distanceTo(searchLocation).toDouble()
-        val coverage = coverageRadius(searchLocation)
-        if (distance + BEACON_RANGE_METERS > coverage) {
-            logger.d("Continuous beacon manager search doesn't cover location | distance = ${distance.toInt()}m; coverage = ${minOf(coverage, 1_000_000.0).toInt()}m")
+        val distance = location.distanceTo(searchLocation)
+        if (distance > MAX_SEARCH_DISTANCE_METERS) {
+            logger.d("Continuous beacon manager searched too far from location | distance = ${distance.toInt()}m")
             return false
         }
         return true
-    }
-
-    /** How far from `searchLocation` the search result included every beacon. */
-    private fun coverageRadius(searchLocation: Location): Double {
-        val result = searchResult ?: return 0.0
-        // UUID and UID ranging matches every beacon with those identifiers, wherever the device is.
-        if (result.usesIdentifiers) {
-            return Double.POSITIVE_INFINITY
-        }
-        // Fewer beacons than the limit means the search returned every beacon in its radius.
-        if (result.beacons.size < SEARCH_LIMIT) {
-            return SEARCH_RADIUS.toDouble()
-        }
-        // A full result is the nearest beacons, so it only covers out to the farthest one.
-        return result.beacons.mapNotNull { beacon ->
-            beacon.location?.let { coordinate ->
-                val results = FloatArray(1)
-                Location.distanceBetween(searchLocation.latitude, searchLocation.longitude, coordinate.latitude, coordinate.longitude, results)
-                results[0].toDouble()
-            }
-        }.maxOrNull() ?: 0.0
     }
 }
 
