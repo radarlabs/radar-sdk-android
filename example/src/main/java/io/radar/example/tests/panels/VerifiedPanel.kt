@@ -1,5 +1,6 @@
 package io.radar.example.tests.panels
 
+import android.os.SystemClock
 import androidx.compose.runtime.Composable
 import io.radar.example.Utils
 import io.radar.example.components.ActionButton
@@ -30,6 +31,27 @@ fun VerifiedPanel() {
             Radar.trackVerified(false) { status, token ->
                 log.writeStatus(status, "trackVerified: ${Utils.stringForRadarStatus(status)}", token?.toJson()?.toString(2))
             }
+        }
+        ActionButton("trackVerified (beacons)") {
+            val start = SystemClock.elapsedRealtime()
+            Radar.trackVerified(true) { status, token ->
+                val elapsed = SystemClock.elapsedRealtime() - start
+                val beacons = token?.user?.beacons.orEmpty()
+                val beaconDesc = beacons.joinToString("\n") { "${it.description ?: it._id ?: "beacon"} (${it.uuid} ${it.major}/${it.minor})" }
+                log.writeStatus(
+                    status,
+                    "trackVerified (beacons): ${Utils.stringForRadarStatus(status)} in $elapsed ms, ${beacons.size} beacons",
+                    beaconDesc
+                )
+            }
+        }
+        ActionButton("startRangingBeacons", style = ActionButtonStyle.PRIMARY) {
+            Radar.startRangingBeacons()
+            log.writeResult("startRangingBeacons")
+        }
+        ActionButton("stopRangingBeacons", style = ActionButtonStyle.DESTRUCTIVE) {
+            Radar.stopRangingBeacons()
+            log.writeResult("stopRangingBeacons")
         }
         ActionButton("isSharing") {
             log.writeResult("isSharing", Radar.isSharing().toString())

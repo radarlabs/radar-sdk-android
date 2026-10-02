@@ -14,7 +14,6 @@ import androidx.core.content.ContextCompat
 import io.radar.sdk.model.RadarConfig
 import kotlin.math.max
 
-
 internal class RadarActivityLifecycleCallbacks(
     private val fraud: Boolean = false
 ) : Application.ActivityLifecycleCallbacks {
@@ -125,6 +124,7 @@ internal class RadarActivityLifecycleCallbacks(
         foreground = count > 0
         if (wasBackgrounded) {
             Radar.handleForegroundProcessStart()
+            Radar.handleBeaconRangingForeground()
         }
         activity.intent?.let { Radar.logOpenedAppConversion(it) } ?: Radar.logOpenedAppConversion()
 
@@ -138,6 +138,9 @@ internal class RadarActivityLifecycleCallbacks(
     override fun onActivityPaused(activity: Activity) {
         count = max(count - 1, 0)
         foreground = count > 0
+        if (!foreground) {
+            Radar.handleBeaconRangingBackground()
+        }
 
         updatePermissionsDenied(activity)
         Radar.logResigningActive()

@@ -6,15 +6,10 @@
         <error line="70" column="1" source="standard:final-newline" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarActivityLifecycleCallbacks.kt">
-        <error line="17" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="35" column="1" source="standard:indent" />
-        <error line="35" column="123" source="standard:wrapping" />
-        <error line="39" column="1" source="standard:indent" />
-        <error line="39" column="125" source="standard:wrapping" />
-        <error line="79" column="47" source="standard:wrapping" />
-        <error line="79" column="61" source="standard:wrapping" />
-        <error line="105" column="21" source="standard:wrapping" />
-        <error line="161" column="1" source="standard:final-newline" />
+        <error line="34" column="1" source="standard:indent" />
+        <error line="34" column="123" source="standard:wrapping" />
+        <error line="38" column="1" source="standard:indent" />
+        <error line="38" column="125" source="standard:wrapping" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarActivityManager.kt">
         <error line="15" column="36" source="standard:paren-spacing" />
@@ -35,13 +30,13 @@
         <error line="84" column="1" source="standard:no-blank-line-before-rbrace" />
         <error line="85" column="1" source="standard:final-newline" />
     </file>
-    <file name="src/main/java/io/radar/sdk/RadarBeaconManager.kt">
-        <error line="47" column="1" source="standard:indent" />
-        <error line="578" column="1" source="standard:no-trailing-spaces" />
-        <error line="638" column="11" source="standard:keyword-spacing" />
-        <error line="648" column="62" source="standard:function-expression-body" />
-        <error line="653" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="654" column="1" source="standard:final-newline" />
+    <file name="src/main/java/io/radar/sdk/RadarOneShotBeaconManager.kt">
+        <error line="46" column="1" source="standard:indent" />
+        <error line="356" column="1" source="standard:no-trailing-spaces" />
+        <error line="417" column="11" source="standard:keyword-spacing" />
+        <error line="427" column="62" source="standard:function-expression-body" />
+        <error line="432" column="1" source="standard:no-blank-line-before-rbrace" />
+        <error line="433" column="1" source="standard:final-newline" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarBeaconUtils.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -242,8 +237,8 @@
         <error line="731" column="17" source="standard:chain-wrapping" />
         <error line="731" column="69" source="standard:wrapping" />
         <error line="732" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="737" column="54" source="standard:wrapping" />
-        <error line="737" column="74" source="standard:wrapping" />
+        <error line="737" column="61" source="standard:wrapping" />
+        <error line="737" column="81" source="standard:wrapping" />
         <error line="782" column="21" source="standard:wrapping" />
         <error line="822" column="37" source="standard:wrapping" />
         <error line="822" column="38" source="standard:argument-list-wrapping" />
