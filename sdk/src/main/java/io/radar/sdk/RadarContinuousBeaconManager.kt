@@ -20,6 +20,9 @@ import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarBeacon
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import org.json.JSONObject
 
 /**
@@ -28,7 +31,7 @@ import org.json.JSONObject
  *
  * Uses its own searches and scan, separate from the one-shot ranging in `RadarOneShotBeaconManager`.
  * It searches for up to `RadarNearbyBeaconSearch.LIMIT` nearby beacons, scans for them, and
- * searches again every `REFRESH_INTERVAL_MS`. Ranging pauses when the app enters the background
+ * searches again every `REFRESH_INTERVAL`. Ranging pauses when the app enters the background
  * and resumes when it returns to the foreground, until `stop()` is called. Must be used from the
  * main thread.
  */
@@ -42,11 +45,11 @@ internal class RadarContinuousBeaconManager(
 ) {
 
     internal companion object {
-        // Beacons not ranged within this many milliseconds are treated as out of range.
-        const val MAX_BEACON_AGE_MS = 5000L
+        // Beacons not ranged within this long are treated as out of range.
+        val MAX_BEACON_AGE = 5.seconds
 
         // How often the beacons being ranged are searched again, so they follow the device.
-        const val REFRESH_INTERVAL_MS = 60_000L
+        val REFRESH_INTERVAL = 60.seconds
 
         // Requests farther than this from where the beacons were searched aren't served, since the
         // beacons near them may not have been searched. A fast-moving device would otherwise get
@@ -55,11 +58,11 @@ internal class RadarContinuousBeaconManager(
 
         // How long a scan runs before its beacons are used, matching the one-shot ranging window.
         // Until then, an empty result could just mean the scan hasn't heard the beacons yet.
-        const val MIN_SCAN_MS = 5000L
+        val MIN_SCAN = 5.seconds
 
         // Delay before pausing on background, so moving between activities doesn't restart the
         // scan. Android fails scans started more than 5 times in 30 seconds.
-        const val BACKGROUND_PAUSE_DELAY_MS = 700L
+        val BACKGROUND_PAUSE_DELAY = 700.milliseconds
     }
 
     internal data class SearchResult(
@@ -250,11 +253,11 @@ internal class RadarContinuousBeaconManager(
     }
 
     /**
-     * Beacons ranged near `location` within `MAX_BEACON_AGE_MS`. An empty array means no beacons
+     * Beacons ranged near `location` within `MAX_BEACON_AGE`. An empty array means no beacons
      * are nearby.
      *
      * Returns `null` if continuous ranging can't serve the request: it's stopped, it isn't
-     * scanning, its scan has run less than `MIN_SCAN_MS`, or its beacons were searched more than
+     * scanning, its scan has run less than `MIN_SCAN`, or its beacons were searched more than
      * `MAX_SEARCH_DISTANCE_METERS` from `location`. Range beacons once instead, with a
      * `RadarNearbyBeaconSearch` from `location`, and pass the result to `onSearched` so later
      * requests there can be served.
@@ -272,7 +275,7 @@ internal class RadarContinuousBeaconManager(
 
         if (ranging) {
             if (isNearSearchLocation(location)) {
-                if (now() - scanStartedAt < MIN_SCAN_MS) {
+                if ((now() - scanStartedAt).milliseconds < MIN_SCAN) {
                     logger.d("Continuous beacon manager scan not ready")
                     return null
                 }
@@ -295,7 +298,7 @@ internal class RadarContinuousBeaconManager(
         }
 
         pendingSearchLocation = null
-        scheduleRefresh(REFRESH_INTERVAL_MS)
+        scheduleRefresh(REFRESH_INTERVAL)
         if (result == null) {
             logger.d("Continuous beacon manager search failed")
             return
@@ -326,7 +329,7 @@ internal class RadarContinuousBeaconManager(
     }
 
     private fun currentBeacons(): Array<RadarBeacon> {
-        val cutoff = now() - MAX_BEACON_AGE_MS
+        val cutoff = now() - MAX_BEACON_AGE.inWholeMilliseconds
         rangedBeacons = rangedBeacons.filterValues { it.second >= cutoff }.toMutableMap()
         return rangedBeacons.values.map { it.first }.toTypedArray()
     }
@@ -347,7 +350,7 @@ internal class RadarContinuousBeaconManager(
         }
 
         handler.removeCallbacks(backgroundPauseRunnable)
-        handler.postDelayed(backgroundPauseRunnable, BACKGROUND_PAUSE_DELAY_MS)
+        handler.postDelayed(backgroundPauseRunnable, BACKGROUND_PAUSE_DELAY.inWholeMilliseconds)
     }
 
     internal fun onBluetoothStateChanged(enabled: Boolean) {
@@ -403,7 +406,7 @@ internal class RadarContinuousBeaconManager(
     /**
      * Resumes ranging the last search's beacons, if any, and searches again from `location`. If
      * `location` is `null`, searches from the last known location, unless the last search is less
-     * than `REFRESH_INTERVAL_MS` old.
+     * than `REFRESH_INTERVAL` old.
      */
     private fun resume(location: Location? = null) {
         if (!started || ranging) {
@@ -427,9 +430,9 @@ internal class RadarContinuousBeaconManager(
             startScan()
         }
 
-        val searchAge = searchedAt?.let { now() - it }
-        if (location == null && searchAge != null && searchAge < REFRESH_INTERVAL_MS) {
-            scheduleRefresh(REFRESH_INTERVAL_MS - searchAge)
+        val searchAge = searchedAt?.let { (now() - it).milliseconds }
+        if (location == null && searchAge != null && searchAge < REFRESH_INTERVAL) {
+            scheduleRefresh(REFRESH_INTERVAL - searchAge)
             return
         }
 
@@ -469,9 +472,9 @@ internal class RadarContinuousBeaconManager(
         return true
     }
 
-    private fun scheduleRefresh(delayMs: Long) {
+    private fun scheduleRefresh(delay: Duration) {
         handler.removeCallbacks(refreshRunnable)
-        handler.postDelayed(refreshRunnable, delayMs)
+        handler.postDelayed(refreshRunnable, delay.inWholeMilliseconds)
     }
 
     /** Stops the running scan and forgets its result. */

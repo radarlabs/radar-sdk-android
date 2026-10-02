@@ -3532,7 +3532,7 @@ class RadarTest {
         try {
             manager.start()
             manager.handleRanged(listOf(beacon))
-            ShadowLooper.idleMainLooper(RadarContinuousBeaconManager.MIN_SCAN_MS, TimeUnit.MILLISECONDS)
+            ShadowLooper.idleMainLooper(RadarContinuousBeaconManager.MIN_SCAN.inWholeMilliseconds, TimeUnit.MILLISECONDS)
             assertTrue(manager.ranging)
             apiHelperMock.clearCapturedParams()
 
