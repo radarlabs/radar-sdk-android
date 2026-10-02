@@ -173,11 +173,11 @@ class MainActivity : AppCompatActivity() {
             needed += Manifest.permission.ACTIVITY_RECOGNITION
         }
         // Needed on Android 12+ to range beacons (trackVerified with beacons, startRangingBeacons).
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            !isGranted(Manifest.permission.BLUETOOTH_SCAN)
-        ) {
-            needed += Manifest.permission.BLUETOOTH_SCAN
-            needed += Manifest.permission.BLUETOOTH_CONNECT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val bluetoothPermissions = listOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
+            if (bluetoothPermissions.any { !isGranted(it) }) {
+                needed += bluetoothPermissions
+            }
         }
         if (needed.isNotEmpty()) {
             startupPermissionLauncher.launch(needed.toTypedArray())

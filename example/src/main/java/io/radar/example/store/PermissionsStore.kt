@@ -46,8 +46,10 @@ class PermissionsStore {
             true
         }
         bluetoothGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            granted(context, Manifest.permission.BLUETOOTH_SCAN)
+            granted(context, Manifest.permission.BLUETOOTH_SCAN) &&
+                granted(context, Manifest.permission.BLUETOOTH_CONNECT)
         } else {
+            // Bluetooth permissions are granted at install time below Android 12.
             true
         }
     }
