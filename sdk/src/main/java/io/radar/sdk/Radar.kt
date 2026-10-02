@@ -1313,7 +1313,7 @@ object Radar {
                     if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         apiClient.searchBeacons(
                             location,
-                            RadarNearbyBeaconSearch.RADIUS,
+                            RadarNearbyBeaconSearch.RADIUS_METERS,
                             RadarNearbyBeaconSearch.LIMIT,
                             object : RadarApiClient.RadarSearchBeaconsApiCallback {
                                 override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {

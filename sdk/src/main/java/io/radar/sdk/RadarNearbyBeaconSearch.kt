@@ -14,8 +14,8 @@ import android.location.Location
  */
 internal object RadarNearbyBeaconSearch {
 
-    // Radius in meters and maximum number of beacons for nearby beacon searches.
-    const val RADIUS = 1000
+    // Radius and maximum number of beacons for nearby beacon searches.
+    const val RADIUS_METERS = 1000
     const val LIMIT = 10
 
     /**
@@ -23,6 +23,6 @@ internal object RadarNearbyBeaconSearch {
      * may not be near `location`.
      */
     fun search(location: Location, callback: RadarApiClient.RadarSearchBeaconsApiCallback) {
-        Radar.apiClient.searchBeacons(location, RADIUS, LIMIT, callback, false)
+        Radar.apiClient.searchBeacons(location, RADIUS_METERS, LIMIT, callback, false)
     }
 }

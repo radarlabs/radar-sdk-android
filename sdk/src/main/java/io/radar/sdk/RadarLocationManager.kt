@@ -789,7 +789,7 @@ internal class RadarLocationManager(
             } else {
                 this.apiClient.searchBeacons(
                     location,
-                    RadarNearbyBeaconSearch.RADIUS,
+                    RadarNearbyBeaconSearch.RADIUS_METERS,
                     RadarNearbyBeaconSearch.LIMIT,
                     object : RadarApiClient.RadarSearchBeaconsApiCallback {
                         override fun onComplete(
