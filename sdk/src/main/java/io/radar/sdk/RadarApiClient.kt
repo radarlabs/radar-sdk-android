@@ -522,15 +522,14 @@ internal class RadarApiClient(
             logPayload = true,
             verified = verified,
             verifiedHostOverride = verifiedHostOverride,
-            prepareRequest = {
-                if (verified) {
+            prepareRequest = if (verified) {
+                {
                     val prepared = preparedFraudPayload
                         ?: throw IllegalStateException("Missing prepared fraud payload")
-                    params.put(
-                        "fraudPayload",
-                        prepared.sealForRequest(path, params, headers)
-                    )
+                    JSONObject(prepared.sealForRequest(path, params, headers))
                 }
+            } else {
+                null
             },
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
@@ -711,10 +710,7 @@ internal class RadarApiClient(
             verified = true,
             verifiedHostOverride = verifiedHostOverride,
             prepareRequest = {
-                params.put(
-                    "fraudPayload",
-                    preparedFraudPayload.sealForRequest(path, params, headers)
-                )
+                JSONObject(preparedFraudPayload.sealForRequest(path, params, headers))
             },
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {

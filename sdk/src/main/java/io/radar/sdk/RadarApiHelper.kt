@@ -80,7 +80,7 @@ internal open class RadarApiHelper(
         verified: Boolean = false,
         imageCallback: RadarImageApiCallback? = null,
         verifiedHostOverride: String? = null,
-        prepareRequest: (() -> Unit)? = null
+        prepareRequest: (() -> JSONObject)? = null
     ) {
         val host = if (verified) {
             verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
@@ -103,8 +103,39 @@ internal open class RadarApiHelper(
             val retryEncryptedRequest = verified && prepareRequest != null
             // Attempt 2 is reached only via the eligible IOException `continue` below.
             for (attempt in 0..1) {
-                try {
-                    prepareRequest?.invoke()
+                val requestParams = try {
+                    if (params != null) {
+                        val prevUpdatedAtMsDiff = params.optLong("updatedAtMsDiff", -1L)
+                        val replays = params.optJSONArray("replays")
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && (prevUpdatedAtMsDiff != -1L || replays != null)) {
+                            val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
+                            val locationMs = params.optLong("locationMs", -1L)
+
+                            if (prevUpdatedAtMsDiff != -1L && locationMs != -1L) {
+                                val updatedAtMsDiff = nowMs - locationMs
+                                params.put("updatedAtMsDiff", updatedAtMsDiff)
+                            }
+
+                            if (replays != null) {
+                                val updatedReplays = mutableListOf<JSONObject>()
+                                for (i in 0 until replays.length()) {
+                                    val replay = replays.optJSONObject(i)
+                                    replay?.let {
+                                        val replayLocationMs = it.optLong("locationMs", -1L)
+                                        if (replayLocationMs != -1L) {
+                                            val replayUpdatedAtMsDiff = nowMs - replayLocationMs
+                                            it.put("updatedAtMsDiff", replayUpdatedAtMsDiff)
+                                        }
+                                        updatedReplays.add(it)
+                                    }
+                                }
+                                params.put("replays", JSONArray(updatedReplays))
+                            }
+                        }
+                    }
+
+                    prepareRequest?.invoke() ?: params
                 } catch (e: Exception) {
                     logger?.e("Failed to prepare Radar API request", RadarLogType.SDK_ERROR, e)
                     handler.post {
@@ -139,37 +170,8 @@ internal open class RadarApiHelper(
                         urlConnection.setChunkedStreamingMode(1024)
                     }
 
-                    if (params != null) {
-                        val prevUpdatedAtMsDiff = params.optLong("updatedAtMsDiff", -1L)
-                        val replays = params.optJSONArray("replays")
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && (prevUpdatedAtMsDiff != -1L || replays != null)) {
-                            val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
-                            val locationMs = params.optLong("locationMs", -1L)
-
-                            if (prevUpdatedAtMsDiff != -1L && locationMs != -1L) {
-                                val updatedAtMsDiff = nowMs - locationMs
-                                params.put("updatedAtMsDiff", updatedAtMsDiff)
-                            }
-
-                            if (replays != null) {
-                                val updatedReplays = mutableListOf<JSONObject>()
-                                for (i in 0 until replays.length()) {
-                                    val replay = replays.optJSONObject(i)
-                                    replay?.let {
-                                        val replayLocationMs = it.optLong("locationMs", -1L)
-                                        if (replayLocationMs != -1L) {
-                                            val replayUpdatedAtMsDiff = nowMs - replayLocationMs
-                                            it.put("updatedAtMsDiff", replayUpdatedAtMsDiff)
-                                        }
-                                        updatedReplays.add(it)
-                                    }
-                                }
-                                params.put("replays", JSONArray(updatedReplays))
-                            }
-                        }
-
-                        val body = params.toString().toByteArray(Charsets.UTF_8)
+                    if (requestParams != null) {
+                        val body = requestParams.toString().toByteArray(Charsets.UTF_8)
                         if (verified && prepareRequest != null && !stream) {
                             urlConnection.setFixedLengthStreamingMode(body.size)
                         }

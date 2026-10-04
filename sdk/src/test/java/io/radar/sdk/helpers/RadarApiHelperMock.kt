@@ -59,10 +59,10 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         verified: Boolean,
         imageCallback: RadarImageApiCallback?,
         verifiedHostOverride: String?,
-        prepareRequest: (() -> Unit)?
+        prepareRequest: (() -> JSONObject)?
     ) {
-        try {
-            prepareRequest?.invoke()
+        val requestParams = try {
+            prepareRequest?.invoke() ?: params
         } catch (e: Exception) {
             callback?.onComplete(Radar.RadarStatus.ERROR_PLUGIN, throwable = e)
             return
@@ -78,7 +78,7 @@ internal class RadarApiHelperMock : RadarApiHelper() {
             capturedPaths.add(path)
             lastCapturedPath = path
             lastCapturedMethod = method
-            lastCapturedParams = params
+            lastCapturedParams = requestParams
             lastCapturedVerified = verified
             lastCapturedVerifiedHostOverride = verifiedHostOverride
         }

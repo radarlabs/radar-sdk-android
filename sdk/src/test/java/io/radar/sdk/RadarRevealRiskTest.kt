@@ -87,12 +87,17 @@ class RadarRevealRiskTest {
         assertEquals("POST", apiHelperMock.lastCapturedMethod)
         assertEquals("v1/reveal/risk", apiHelperMock.lastCapturedPath)
         assertTrue(apiHelperMock.lastCapturedVerified)
-        assertEquals(SEALED_FRAUD_PAYLOAD, apiHelperMock.lastCapturedParams?.getString("fraudPayload"))
+        assertEquals(SEALED_FRAUD_PAYLOAD, apiHelperMock.lastCapturedParams?.toString())
 
         val sealOptions = fraudHandle.sealOptions.single()
         assertEquals("POST", sealOptions["method"])
         assertEquals("/v1/reveal/risk", sealOptions["canonicalRoute"])
-        assertEquals(apiHelperMock.lastCapturedParams?.getString("installId"), sealOptions["installId"])
+        val coreBody = JSONObject(sealOptions["body"] as String)
+        assertEquals(RadarSettings.getInstallId(context), coreBody.getString("installId"))
+        assertEquals("Android", coreBody.getString("deviceType"))
+        assertEquals(RadarUtils.sdkVersion, coreBody.getString("sdkVersion"))
+        assertFalse(coreBody.has("fraudPayload"))
+        assertFalse(sealOptions.containsKey("installId"))
         assertEquals(context.packageName, sealOptions["origin"])
         assertEquals(RadarUtils.sdkVersion, sealOptions["sdkVersion"])
         assertEquals(PUBLISHABLE_KEY, sealOptions["authorization"])
@@ -188,19 +193,30 @@ class RadarRevealRiskTest {
 
     @Test
     fun test_revealRisk_doesNotSendWhenSealingFails() {
-        val fraudHandle = RecordingFraudHandle(mapOf("error" to "Failed to encrypt fraud payload"))
-        var callbackStatus: Radar.RadarStatus? = null
-        var callbackToken: RadarRevealRiskToken? = null
+        val results = listOf(
+            emptyMap(),
+            mapOf("error" to "Failed to encrypt request body"),
+            mapOf("payload" to "not JSON"),
+            mapOf("payload" to "[]"),
+            mapOf("payload" to "null"),
+            mapOf("payload" to 42)
+        )
+        results.forEach { result ->
+            apiHelperMock.clearCapturedParams()
+            val fraudHandle = RecordingFraudHandle(result)
+            var callbackStatus: Radar.RadarStatus? = null
+            var callbackToken: RadarRevealRiskToken? = null
 
-        Radar.apiClient.revealRisk(RadarPreparedFraudPayload(fraudHandle)) { status, token ->
-            callbackStatus = status
-            callbackToken = token
+            Radar.apiClient.revealRisk(RadarPreparedFraudPayload(fraudHandle)) { status, token ->
+                callbackStatus = status
+                callbackToken = token
+            }
+
+            assertEquals(1, fraudHandle.sealOptions.size)
+            assertEquals(Radar.RadarStatus.ERROR_PLUGIN, callbackStatus)
+            assertNull(callbackToken)
+            assertNotEquals("v1/reveal/risk", apiHelperMock.lastCapturedPath)
         }
-
-        assertEquals(1, fraudHandle.sealOptions.size)
-        assertEquals(Radar.RadarStatus.ERROR_PLUGIN, callbackStatus)
-        assertNull(callbackToken)
-        assertNotEquals("v1/reveal/risk", apiHelperMock.lastCapturedPath)
     }
 
     @Test
