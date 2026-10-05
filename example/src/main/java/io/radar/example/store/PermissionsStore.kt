@@ -25,6 +25,8 @@ class PermissionsStore {
         private set
     var activityRecognitionGranted by mutableStateOf(false)
         private set
+    var bluetoothGranted by mutableStateOf(false)
+        private set
 
     fun refresh(context: Context) {
         fineLocationGranted = granted(context, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -41,6 +43,13 @@ class PermissionsStore {
         activityRecognitionGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             granted(context, Manifest.permission.ACTIVITY_RECOGNITION)
         } else {
+            true
+        }
+        bluetoothGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            granted(context, Manifest.permission.BLUETOOTH_SCAN) &&
+                granted(context, Manifest.permission.BLUETOOTH_CONNECT)
+        } else {
+            // Bluetooth permissions are granted at install time below Android 12.
             true
         }
     }

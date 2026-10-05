@@ -566,7 +566,9 @@ object Radar {
     internal lateinit var logger: RadarLogger
     internal lateinit var apiClient: RadarApiClient
     internal lateinit var locationManager: RadarLocationManager
-    internal lateinit var beaconManager: RadarBeaconManager
+    internal lateinit var oneShotBeaconManager: RadarOneShotBeaconManager
+    internal lateinit var beaconMonitoringManager: RadarBeaconMonitoringManager
+    internal lateinit var continuousBeaconManager: RadarContinuousBeaconManager
     private lateinit var logBuffer: RadarLogBuffer
     private lateinit var replayBuffer: RadarReplayBuffer
     internal lateinit var batteryManager: RadarBatteryManager
@@ -716,8 +718,14 @@ object Radar {
             this.batteryManager = RadarBatteryManager(this.context)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!this::beaconManager.isInitialized) {
-                this.beaconManager = RadarBeaconManager(this.context, logger)
+            if (!this::oneShotBeaconManager.isInitialized) {
+                this.oneShotBeaconManager = RadarOneShotBeaconManager(this.context, logger)
+            }
+            if (!this::beaconMonitoringManager.isInitialized) {
+                this.beaconMonitoringManager = RadarBeaconMonitoringManager(this.context, logger)
+            }
+            if (!this::continuousBeaconManager.isInitialized) {
+                this.continuousBeaconManager = RadarContinuousBeaconManager(this.context, logger)
             }
         }
 
@@ -1305,14 +1313,14 @@ object Radar {
                     if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         apiClient.searchBeacons(
                             location,
-                            1000,
-                            10,
+                            RadarNearbyBeaconSearch.RADIUS_METERS,
+                            RadarNearbyBeaconSearch.LIMIT,
                             object : RadarApiClient.RadarSearchBeaconsApiCallback {
                                 override fun onComplete(status: RadarStatus, res: JSONObject?, beacons: Array<RadarBeacon>?, uuids: Array<String>?, uids: Array<String>?) {
                                     if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                        beaconManager.startMonitoringBeaconUUIDs(uuids, uids)
+                                        beaconMonitoringManager.startMonitoringBeaconUUIDs(uuids, uids)
 
-                                        beaconManager.rangeBeaconUUIDs(
+                                        oneShotBeaconManager.rangeBeaconUUIDs(
                                             uuids,
                                             uids,
                                             false,
@@ -1329,9 +1337,9 @@ object Radar {
                                             }
                                         )
                                     } else if (beacons != null) {
-                                        beaconManager.startMonitoringBeacons(beacons)
+                                        beaconMonitoringManager.startMonitoringBeacons(beacons)
 
-                                        beaconManager.rangeBeacons(
+                                        oneShotBeaconManager.rangeBeacons(
                                             beacons,
                                             false,
                                             object : RadarBeaconCallback {
@@ -1619,6 +1627,63 @@ object Radar {
         }
 
         this.verificationManager.startTrackingVerified(interval, beacons)
+    }
+
+    /**
+     * Starts continuously ranging nearby beacons while the app is in the foreground, so
+     * `trackVerified(beacons = true)` can attach nearby beacons without waiting on a new ranging window.
+     *
+     * Call this after `initialize()` and after location and Bluetooth permissions are granted, ideally when the
+     * user enters a flow that calls `trackVerified(beacons = true)`, and call `stopRangingBeacons()` when beacons
+     * are no longer needed. Ranging pauses automatically when the app enters the background and resumes when it
+     * returns to the foreground. Until ranging has run for 5 seconds, `trackVerified(beacons = true)` ranges
+     * beacons as usual. Requires Android 8.0 (API level 26) or later.
+     *
+     * @see [](https://radar.com/documentation/beacons)
+     */
+    @JvmStatic
+    fun startRangingBeacons() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("startRangingBeacons()", RadarLogType.SDK_CALL)
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return
+        }
+
+        handler.post { continuousBeaconManager.start() }
+    }
+
+    /**
+     * Stops ranging beacons started with `startRangingBeacons()`.
+     *
+     * @see [](https://radar.com/documentation/beacons)
+     */
+    @JvmStatic
+    fun stopRangingBeacons() {
+        if (!initialized) {
+            return
+        }
+        this.logger.i("stopRangingBeacons()", RadarLogType.SDK_CALL)
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return
+        }
+
+        handler.post { continuousBeaconManager.stop() }
+    }
+
+    internal fun handleBeaconRangingForeground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::continuousBeaconManager.isInitialized) {
+            continuousBeaconManager.onForeground()
+        }
+    }
+
+    internal fun handleBeaconRangingBackground() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && this::continuousBeaconManager.isInitialized) {
+            continuousBeaconManager.onBackground()
+        }
     }
 
     /**

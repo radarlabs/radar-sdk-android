@@ -43,6 +43,11 @@ fun PermissionsSection() {
                 requestPermission(context, Manifest.permission.ACTIVITY_RECOGNITION, 3)
             }
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            PermissionRow("Bluetooth (nearby devices)", perms.bluetoothGranted) {
+                requestPermissions(context, arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT), 5)
+            }
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             PermissionRow("Notifications", perms.notificationsGranted) {
                 requestPermission(context, Manifest.permission.POST_NOTIFICATIONS, 4)
@@ -70,7 +75,11 @@ private fun PermissionRow(label: String, granted: Boolean, onRequest: () -> Unit
 }
 
 private fun requestPermission(context: Context, permission: String, code: Int) {
+    requestPermissions(context, arrayOf(permission), code)
+}
+
+private fun requestPermissions(context: Context, permissions: Array<String>, code: Int) {
     (context as? Activity)?.let {
-        ActivityCompat.requestPermissions(it, arrayOf(permission), code)
+        ActivityCompat.requestPermissions(it, permissions, code)
     }
 }
