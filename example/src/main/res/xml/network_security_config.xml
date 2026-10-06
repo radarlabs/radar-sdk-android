@@ -36,4 +36,22 @@
             <pin digest="SHA-256">KwccWaCgrnaw6tsrrSO61FgLacNgG2MMLq8GE6+oP5I=</pin>
         </pin-set>
     </domain-config>
+    <!-- Staging primary verified host (staging equivalent of api-verified.radar.io). SPKI pin of the host's key. -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api-verified-cf.radar-staging.com</domain>
+        <pin-set>
+            <pin digest="SHA-256">ZWl2+twNVF7q/6JBzqOIlApF0SsjhVY0FB/GMLslduY=</pin>
+        </pin-set>
+    </domain-config>
+    <!-- Staging secondary verified host (staging equivalent of api-verified.radar.com). Amazon Trust Services SPKI pins. -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api-verified-ga.radar-staging.com</domain>
+        <pin-set>
+            <pin digest="SHA-256">++MBgDH5WGvL9Bcn5Be30cRcL0f5O+NyoXuWtQdX1aI=</pin>
+            <pin digest="SHA-256">f0KW/FtqTjs108NpYj42SrGvOB2PpxIVM8nWxjPqJGE=</pin>
+            <pin digest="SHA-256">NqvDJlas/GRcYbcWE8S/IceH9cq77kg0jVhZeAPXq8k=</pin>
+            <pin digest="SHA-256">9+ze1cZgR9KO1kZrVDxA4HQ6voHRCSVNz4RdTCx4U8U=</pin>
+            <pin digest="SHA-256">KwccWaCgrnaw6tsrrSO61FgLacNgG2MMLq8GE6+oP5I=</pin>
+        </pin-set>
+    </domain-config>
 </network-security-config>
