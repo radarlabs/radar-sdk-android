@@ -11,10 +11,17 @@ internal class RadarSDKFraudMock : RadarSDKFraud() {
 
     internal var mockStatus: Radar.RadarStatus = Radar.RadarStatus.SUCCESS
 
-    internal var mockPayload: String = "mock-fraud-payload"
+    internal var mockPayload: String = """{"encv":1}"""
+
+    internal var lastHandle: StubFraudHandle? = null
 
     class StubFraudHandle(private val payload: String) {
-        fun seal(options: Map<String, Any?>): Map<String, Any?> = mapOf("payload" to payload)
+        val sealOptions = mutableListOf<Map<String, Any?>>()
+
+        fun seal(options: Map<String, Any?>): Map<String, Any?> {
+            sealOptions.add(options.toMap())
+            return mapOf("payload" to payload)
+        }
     }
 
     override fun prepareFraudPayload(
@@ -24,6 +31,8 @@ internal class RadarSDKFraudMock : RadarSDKFraud() {
         googlePlayProjectNumber: Long?,
         callback: (Radar.RadarStatus, RadarPreparedFraudPayload?) -> Unit
     ) {
-        callback(mockStatus, RadarPreparedFraudPayload(StubFraudHandle(mockPayload)))
+        val handle = StubFraudHandle(mockPayload)
+        lastHandle = handle
+        callback(mockStatus, RadarPreparedFraudPayload(handle))
     }
 }

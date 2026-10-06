@@ -369,7 +369,7 @@ class RadarTest {
             verified: Boolean,
             imageCallback: RadarApiHelper.RadarImageApiCallback?,
             verifiedHostOverride: String?,
-            prepareRequest: (() -> Unit)?
+            prepareRequest: (() -> JSONObject)?
         ) {
             if (path == "v1/logs") {
                 uploadCount.incrementAndGet()
@@ -3466,9 +3466,10 @@ class RadarTest {
         assertEquals("v1/track", apiHelperMock.lastCapturedPath)
         assertTrue(apiHelperMock.lastCapturedVerified)
 
-        val params = apiHelperMock.lastCapturedParams!!
+        val params = JSONObject(fraudMock.lastHandle!!.sealOptions.single()["body"] as String)
         assertEquals(expectedAddress, params.getString("expectedAddress"))
-        assertEquals(fraudMock.mockPayload, params.getString("fraudPayload"))
+        assertFalse(params.has("fraudPayload"))
+        assertEquals(fraudMock.mockPayload, apiHelperMock.lastCapturedParams!!.toString())
 
         Radar.setExpectedAddress(null)
     }
@@ -3541,7 +3542,8 @@ class RadarTest {
 
             assertEquals("v1/track", apiHelperMock.lastCapturedPath)
             assertFalse(apiHelperMock.capturedPaths.any { it.startsWith("v1/search/beacons") })
-            val trackedBeacons = apiHelperMock.lastCapturedParams!!.getJSONArray("beacons")
+            val coreBody = JSONObject(fraudMock.lastHandle!!.sealOptions.single()["body"] as String)
+            val trackedBeacons = coreBody.getJSONArray("beacons")
             assertEquals(1, trackedBeacons.length())
             assertEquals("2", trackedBeacons.getJSONObject(0).getString("minor"))
         } finally {
