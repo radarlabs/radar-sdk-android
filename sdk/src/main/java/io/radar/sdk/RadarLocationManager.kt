@@ -16,9 +16,18 @@ import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.RadarApiClient.RadarTrackApiCallback
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsSyncGeofences
-import io.radar.sdk.model.*
-import org.json.JSONObject
+import io.radar.sdk.model.RadarBeacon
+import io.radar.sdk.model.RadarCircleGeometry
+import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarCoordinate
+import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarMeta
+import io.radar.sdk.model.RadarPolygonGeometry
+import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarVerifiedLocationToken
 import java.util.*
+import org.json.JSONObject
 
 @SuppressLint("MissingPermission")
 internal class RadarLocationManager(
@@ -27,7 +36,7 @@ internal class RadarLocationManager(
     private val logger: RadarLogger,
     private val batteryManager: RadarBatteryManager,
     provider: Radar.RadarLocationServicesProvider,
-    internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper(),
+    internal var permissionsHelper: RadarPermissionsHelper = RadarPermissionsHelper()
 ) {
 
     @SuppressLint("VisibleForTests")
@@ -256,7 +265,7 @@ internal class RadarLocationManager(
                 if (options.useMovingGeofence) {
                     if (location != null) {
                         this.replaceBubbleGeofence(location, false)
-                    } 
+                    }
                 } else {
                     this.removeBubbleGeofences()
                 }
@@ -295,7 +304,7 @@ internal class RadarLocationManager(
 
     internal fun restartPreviousTrackingOptions() {
         val previousTrackingOptions = RadarSettings.getPreviousTrackingOptions(context)
-        logger.d("Restarting previous tracking options | trackingOptions = ${previousTrackingOptions}")
+        logger.d("Restarting previous tracking options | trackingOptions = $previousTrackingOptions")
         if (previousTrackingOptions == null) {
             Radar.stopTracking()
         } else {
@@ -304,21 +313,15 @@ internal class RadarLocationManager(
         RadarSettings.removePreviousTrackingOptions(context)
     }
 
-    internal fun getLocationFromGeofenceIntent(intent: Intent): Location? {
-        return locationClient.getLocationFromGeofenceIntent(intent)
-    }
+    internal fun getLocationFromGeofenceIntent(intent: Intent): Location? = locationClient.getLocationFromGeofenceIntent(intent)
 
-    internal fun getSourceFromGeofenceIntent(intent: Intent): RadarLocationSource? {
-        return locationClient.getSourceFromGeofenceIntent(intent)
-    }
+    internal fun getSourceFromGeofenceIntent(intent: Intent): RadarLocationSource? = locationClient.getSourceFromGeofenceIntent(intent)
 
-    internal fun getLocationFromLocationIntent(intent: Intent): Location? {
-        return locationClient.getLocationFromLocationIntent(intent)
-    }
+    internal fun getLocationFromLocationIntent(intent: Intent): Location? = locationClient.getLocationFromLocationIntent(intent)
 
     private fun replaceBubbleGeofence(location: Location, stopped: Boolean) {
-        this.removeBubbleGeofences() { success ->
-	  this.addBubbleGeofence(location, stopped)
+        this.removeBubbleGeofences { success ->
+            this.addBubbleGeofence(location, stopped)
         }
     }
 
@@ -386,7 +389,7 @@ internal class RadarLocationManager(
     }
 
     private fun replaceSyncedGeofences(radarGeofences: Array<RadarGeofence>?) {
-        this.removeSyncedGeofences() { success ->
+        this.removeSyncedGeofences { success ->
             this.addSyncedGeofences(radarGeofences)
         }
     }
@@ -410,7 +413,7 @@ internal class RadarLocationManager(
             }
             if (center != null) {
                 try {
-                    val identifier = "${SYNCED_GEOFENCES_REQUEST_ID_PREFIX}_${i}"
+                    val identifier = "${SYNCED_GEOFENCES_REQUEST_ID_PREFIX}_$i"
                     val geofence = RadarAbstractLocationClient.RadarAbstractGeofence(
                         requestId = identifier,
                         latitude = center.latitude,
@@ -483,22 +486,22 @@ internal class RadarLocationManager(
             val batteryState = batteryManager.getBatteryState()
             logger.d(
                 "Handling location | " +
-                        "location = $location; " +
-                        "latency = $latency; " +
-                        "standbyBucket = $standbyBucket; " +
-                        "performanceState = ${batteryState.performanceState.name}; " +
-                        "isCharging = ${batteryState.isCharging}; " +
-                        "batteryPercentage = ${batteryState.percent}; " +
-                        "isPowerSaveMode = ${batteryState.powerSaveMode}; " +
-                        "isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations}; " +
-                        "locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()}; " +
-                        "isDozeMode = ${batteryState.isDeviceIdleMode}"
+                    "location = $location; " +
+                    "latency = $latency; " +
+                    "standbyBucket = $standbyBucket; " +
+                    "performanceState = ${batteryState.performanceState.name}; " +
+                    "isCharging = ${batteryState.isCharging}; " +
+                    "batteryPercentage = ${batteryState.percent}; " +
+                    "isPowerSaveMode = ${batteryState.powerSaveMode}; " +
+                    "isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations}; " +
+                    "locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()}; " +
+                    "isDozeMode = ${batteryState.isDeviceIdleMode}"
             )
         } else {
             logger.d("Handling location | source = $source; location = $location")
         }
-         // Set default accuracy if not provided
-        if (location?.accuracy  == 0f) {
+        // Set default accuracy if not provided
+        if (location?.accuracy == 0f) {
             location.accuracy = 1000f
             logger.d("Setting default accuracy of 1000 for location without accuracy")
         }
@@ -517,9 +520,11 @@ internal class RadarLocationManager(
         val wasStopped = RadarState.getStopped(context)
         var stopped: Boolean
 
-        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION)
-                || (options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
-                && (source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT))
+        val force = (source == RadarLocationSource.FOREGROUND_LOCATION || source == RadarLocationSource.MANUAL_LOCATION) ||
+            (
+                options.sync != RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS &&
+                    (source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT)
+                )
         if (!force && location.accuracy >= 1000 && options.desiredAccuracy != RadarTrackingOptionsDesiredAccuracy.LOW) {
             logger.d("Skipping location: inaccurate | accuracy = ${location.accuracy}")
 
@@ -579,9 +584,12 @@ internal class RadarLocationManager(
         if (sdkConfiguration.useSyncRegion) {
             if (!Radar.syncManager.hasSyncedRegion()) {
                 Radar.syncManager.fetchSyncRegion()
-            } else if (sdkConfiguration.offlineEventGenerationEnabled
-                && (Radar.syncManager.isOutsideSyncedRegion(location) ||
-                        Radar.syncManager.isNearSyncedRegionBoundary(location))) {
+            } else if (sdkConfiguration.offlineEventGenerationEnabled &&
+                (
+                    Radar.syncManager.isOutsideSyncedRegion(location) ||
+                        Radar.syncManager.isNearSyncedRegionBoundary(location)
+                    )
+            ) {
                 Radar.syncManager.fetchSyncRegion()
             }
         }
@@ -601,7 +609,7 @@ internal class RadarLocationManager(
 
         val lastSentAt = RadarState.getLastSentAt(context)
         val ignoreSync =
-            lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT;
+            lastSentAt == 0L || this.callbacks.count() > 0 || justStopped || replayed || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT
         val now = System.currentTimeMillis()
         val lastSyncInterval = (now - lastSentAt) / 1000L
         if (!ignoreSync) {
@@ -614,7 +622,7 @@ internal class RadarLocationManager(
             // add a 0.1 second buffer to account for the fact that the timer may fire slightly before the desired interval
             val lastSyncIntervalWithBuffer = lastSyncInterval + 0.1
             if (lastSyncIntervalWithBuffer < options.desiredSyncInterval) {
-                logger.d("Skipping sync: desired sync interval | desiredSyncInterval = ${options.desiredSyncInterval}; lastSyncInterval = ${lastSyncIntervalWithBuffer}")
+                logger.d("Skipping sync: desired sync interval | desiredSyncInterval = ${options.desiredSyncInterval}; lastSyncInterval = $lastSyncIntervalWithBuffer")
 
                 return
             }
@@ -655,8 +663,9 @@ internal class RadarLocationManager(
                 return
             }
 
-            if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-                && permissionsHelper.bluetoothPermissionsGranted(context)) {
+            if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                permissionsHelper.bluetoothPermissionsGranted(context)
+            ) {
                 this.sendLocation(sendLocation, stopped, source, replayed, forceTrack = false)
                 return
             }
@@ -687,101 +696,113 @@ internal class RadarLocationManager(
         val locationManager = this
 
         val callTrackApi = { beacons: Array<RadarBeacon>? ->
-            this.apiClient.track(location, stopped, RadarActivityLifecycleCallbacks.foreground, source, replayed, beacons, callback = object : RadarTrackApiCallback {
-                override fun onComplete(
-                    status: RadarStatus,
-                    res: JSONObject?,
-                    events: Array<RadarEvent>?,
-                    user: RadarUser?,
-                    nearbyGeofences: Array<RadarGeofence>?,
-                    config: RadarConfig?,
-                    token: RadarVerifiedLocationToken?
-                ) {
+            this.apiClient.track(
+                location,
+                stopped,
+                RadarActivityLifecycleCallbacks.foreground,
+                source,
+                replayed,
+                beacons,
+                callback = object : RadarTrackApiCallback {
+                    override fun onComplete(
+                        status: RadarStatus,
+                        res: JSONObject?,
+                        events: Array<RadarEvent>?,
+                        user: RadarUser?,
+                        nearbyGeofences: Array<RadarGeofence>?,
+                        config: RadarConfig?,
+                        token: RadarVerifiedLocationToken?
+                    ) {
+                        if (RadarSettings.getSdkConfiguration(context).useSyncRegion) {
+                            if (status == RadarStatus.SUCCESS && user != null) {
+                                Radar.syncManager.reconcileSyncState(user)
 
-                    if (RadarSettings.getSdkConfiguration(context).useSyncRegion) {
-                        if (status == RadarStatus.SUCCESS && user != null) {
-                            Radar.syncManager.reconcileSyncState(user)
-
-                            events?.forEach { event ->
-                                if(event.type == RadarEvent.RadarEventType.USER_DWELLED_IN_GEOFENCE) {
-                                    val geofenceId = event.geofence?._id ?: return@forEach
-                                    Radar.syncManager.markDwellFired(geofenceId)
+                                events?.forEach { event ->
+                                    if (event.type == RadarEvent.RadarEventType.USER_DWELLED_IN_GEOFENCE) {
+                                        val geofenceId = event.geofence?._id ?: return@forEach
+                                        Radar.syncManager.markDwellFired(geofenceId)
+                                    }
                                 }
+                            } else {
+                                Radar.syncManager.rollbackSyncState()
                             }
-                        } else {
-                            Radar.syncManager.rollbackSyncState()
                         }
+
+                        locationManager.replaceSyncedGeofences(nearbyGeofences)
+
+                        if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                            locationManager.stopForegroundService()
+                        }
+
+                        updateTrackingFromMeta(config?.meta)
                     }
-
-                    locationManager.replaceSyncedGeofences(nearbyGeofences)
-
-                    if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
-                        locationManager.stopForegroundService()
-                    }
-
-                    updateTrackingFromMeta(config?.meta)
                 }
-            })
+            )
         }
 
-        if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-            && permissionsHelper.bluetoothPermissionsGranted(context)) {
+        if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            permissionsHelper.bluetoothPermissionsGranted(context)
+        ) {
             val cache = stopped || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT
 
-            if (RadarSettings.getSdkConfiguration(context).useSyncRegion
-                && Radar.syncManager.hasSyncedRegion()
-                && !Radar.syncManager.isOutsideSyncedRegion(location)) {
-
+            if (RadarSettings.getSdkConfiguration(context).useSyncRegion &&
+                Radar.syncManager.hasSyncedRegion() &&
+                !Radar.syncManager.isOutsideSyncedRegion(location)
+            ) {
                 val syncedBeacons = Radar.syncManager.getBeacons(location).toTypedArray()
                 logger.i("Sync region beacon ranging | syncedBeacons = ${syncedBeacons.size}, forceTrack = $forceTrack")
                 if (syncedBeacons.isNotEmpty()) {
                     Radar.beaconMonitoringManager.startMonitoringBeacons(syncedBeacons)
-                    Radar.oneShotBeaconManager.rangeBeacons(syncedBeacons, true, object : Radar.RadarBeaconCallback {
-                        override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
-                            if (status != RadarStatus.SUCCESS) {
-                                logger.i("Beacon ranging failed | status = $status, forceTrack = $forceTrack")
-                                if (forceTrack) {
-                                    callTrackApi(null)
-                                } else if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
-                                    locationManager.stopForegroundService()
+                    Radar.oneShotBeaconManager.rangeBeacons(
+                        syncedBeacons,
+                        true,
+                        object : Radar.RadarBeaconCallback {
+                            override fun onComplete(status: RadarStatus, beacons: Array<RadarBeacon>?) {
+                                if (status != RadarStatus.SUCCESS) {
+                                    logger.i("Beacon ranging failed | status = $status, forceTrack = $forceTrack")
+                                    if (forceTrack) {
+                                        callTrackApi(null)
+                                    } else if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                                        locationManager.stopForegroundService()
+                                    }
+                                    return
                                 }
-                                return
-                            }
-                            if (beacons == null) {
-                                logger.i("Beacon ranging returned null beacons | forceTrack = $forceTrack")
-                                if (forceTrack) {
-                                    callTrackApi(arrayOf())
-                                } else if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
-                                    locationManager.stopForegroundService()
+                                if (beacons == null) {
+                                    logger.i("Beacon ranging returned null beacons | forceTrack = $forceTrack")
+                                    if (forceTrack) {
+                                        callTrackApi(arrayOf())
+                                    } else if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                                        locationManager.stopForegroundService()
+                                    }
+                                    return
                                 }
-                                return
-                            }
 
-                            val syncedBeaconMap = syncedBeacons.associateBy { Triple(it.uuid.lowercase(), it.major, it.minor) }
-                            val matchedIds = beacons.mapNotNull { ranged ->
-                                syncedBeaconMap[Triple(ranged.uuid.lowercase(), ranged.major, ranged.minor)]?._id
-                            }
-                            logger.i("Beacon ID matching | synced=${syncedBeaconMap.size}, ranged=${beacons.size}, matchedIds=$matchedIds")
-                            if (forceTrack) {
-                                logger.i("Beacon ranging complete (forceTrack) | beacons = ${beacons.size}, matchedIds = ${matchedIds.size}")
-                                Radar.syncManager.saveBeaconState(matchedIds)
-                                callTrackApi(beacons)
-                            } else {
-                                val rangedIds = matchedIds.toSet()
-                                if (Radar.syncManager.hasBeaconStateChanged(rangedIds)) {
-                                    logger.i("Beacon state changed, sending track | rangedIds = $rangedIds")
-                                    RadarState.updateLastSentAt(context)
-                                    Radar.syncManager.saveBeaconState(rangedIds.toList())
+                                val syncedBeaconMap = syncedBeacons.associateBy { Triple(it.uuid.lowercase(), it.major, it.minor) }
+                                val matchedIds = beacons.mapNotNull { ranged ->
+                                    syncedBeaconMap[Triple(ranged.uuid.lowercase(), ranged.major, ranged.minor)]?._id
+                                }
+                                logger.i("Beacon ID matching | synced=${syncedBeaconMap.size}, ranged=${beacons.size}, matchedIds=$matchedIds")
+                                if (forceTrack) {
+                                    logger.i("Beacon ranging complete (forceTrack) | beacons = ${beacons.size}, matchedIds = ${matchedIds.size}")
+                                    Radar.syncManager.saveBeaconState(matchedIds)
                                     callTrackApi(beacons)
                                 } else {
-                                    logger.i("Skipping track: beacon state unchanged after BLE ranging")
-                                    if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
-                                        locationManager.stopForegroundService()
+                                    val rangedIds = matchedIds.toSet()
+                                    if (Radar.syncManager.hasBeaconStateChanged(rangedIds)) {
+                                        logger.i("Beacon state changed, sending track | rangedIds = $rangedIds")
+                                        RadarState.updateLastSentAt(context)
+                                        Radar.syncManager.saveBeaconState(rangedIds.toList())
+                                        callTrackApi(beacons)
+                                    } else {
+                                        logger.i("Skipping track: beacon state unchanged after BLE ranging")
+                                        if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                                            locationManager.stopForegroundService()
+                                        }
                                     }
                                 }
                             }
                         }
-                    })
+                    )
                 } else {
                     if (forceTrack) {
                         logger.i("No synced beacons nearby, sending empty beacons | forceTrack = $forceTrack")
@@ -821,7 +842,8 @@ internal class RadarLocationManager(
 
                                             callTrackApi(beacons)
                                         }
-                                    })
+                                    }
+                                )
                             } else if (beacons != null) {
                                 Radar.beaconMonitoringManager.startMonitoringBeacons(beacons)
 
@@ -841,7 +863,8 @@ internal class RadarLocationManager(
 
                                             callTrackApi(beacons)
                                         }
-                                    })
+                                    }
+                                )
                             } else {
                                 callTrackApi(arrayOf())
                             }

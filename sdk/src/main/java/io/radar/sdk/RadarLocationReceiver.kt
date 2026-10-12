@@ -134,7 +134,6 @@ class RadarLocationReceiver : BroadcastReceiver() {
         }
 
         private fun baseIntent(context: Context): Intent = Intent(context, RadarLocationReceiver::class.java)
-
     }
 
     @SuppressLint("MissingPermission")
@@ -158,6 +157,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
 
                 Radar.handleLocation(context, location, source)
             }
+
             ACTION_LOCATION -> {
                 val location = Radar.locationManager.getLocationFromLocationIntent(intent)
                 val source = Radar.RadarLocationSource.BACKGROUND_LOCATION
@@ -172,6 +172,7 @@ class RadarLocationReceiver : BroadcastReceiver() {
                     Radar.handleLocation(context, location, source)
                 }
             }
+
             ACTION_BEACON -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     val bleCallbackType = intent.getIntExtra(BluetoothLeScanner.EXTRA_CALLBACK_TYPE, -1)
@@ -213,5 +214,4 @@ class RadarLocationReceiver : BroadcastReceiver() {
             }
         }
     }
-
 }
