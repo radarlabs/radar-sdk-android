@@ -1,7 +1,10 @@
 package io.radar.sdk
 
 import android.app.Activity
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.location.Location
 import android.net.ConnectivityManager
 import android.os.Build
@@ -40,6 +43,7 @@ import java.util.Date
 import java.util.EnumSet
 import java.util.TimeZone
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import org.json.JSONArray
@@ -386,6 +390,7 @@ class RadarTest {
         Radar.apiClient = RadarApiClient(context, Radar.logger)
         Radar.apiClient.apiHelper = apiHelperMock
         setUpLogConversionTest()
+        RadarBootReceiver.executor = Executor { it.run() }
 
         Radar.initialize(context, PUBLISHABLE_KEY)
 
@@ -1673,6 +1678,105 @@ class RadarTest {
     fun test_Radar_stopTracking() {
         Radar.stopTracking()
         assertFalse(Radar.isTracking())
+    }
+
+    // DEFAULT means the manifest value, which is enabled
+    private fun bootReceiverEnabled(): Boolean {
+        val component = ComponentName(context, RadarBootReceiver::class.java)
+        return context.packageManager.getComponentEnabledSetting(component) != PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+    }
+
+    @Test
+    fun test_RadarBootReceiver_disabledWhenNotTracking() {
+        Radar.stopTracking()
+        assertFalse(bootReceiverEnabled())
+    }
+
+    @Test
+    fun test_RadarBootReceiver_enabledWhileTracking() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        Radar.stopTracking()
+
+        Radar.startTracking(RadarTrackingOptions.EFFICIENT)
+        assertTrue(bootReceiverEnabled())
+
+        Radar.stopTracking()
+        assertFalse(bootReceiverEnabled())
+    }
+
+    @Test
+    fun test_RadarBootReceiver_updatesOffCallingThread() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        Radar.stopTracking()
+
+        val pending = mutableListOf<Runnable>()
+        RadarBootReceiver.executor = Executor { pending.add(it) }
+
+        Radar.startTracking(RadarTrackingOptions.EFFICIENT)
+        assertFalse(bootReceiverEnabled())
+
+        pending.forEach { it.run() }
+        assertTrue(bootReceiverEnabled())
+
+        RadarBootReceiver.executor = Executor { it.run() }
+        Radar.stopTracking()
+    }
+
+    @Test
+    fun test_RadarBootReceiver_enabledForDelayedTripTracking() {
+        Radar.stopTracking()
+        assertFalse(bootReceiverEnabled())
+
+        val trackingOptions = RadarTrackingOptions.CONTINUOUS.copy(
+            startTrackingAfter = Date(System.currentTimeMillis() + 60 * 60 * 1000)
+        )
+        val latch = CountDownLatch(1)
+        Radar.startTrip(getTestTripOptions(), trackingOptions) { _, _, _ ->
+            assertFalse(Radar.isTracking())
+            latch.countDown()
+        }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertTrue(bootReceiverEnabled())
+
+        Radar.stopTracking()
+        assertFalse(bootReceiverEnabled())
+    }
+
+    @Test
+    fun test_RadarBootReceiver_notTracking_disablesWithoutRestoring() {
+        Radar.stopTracking()
+        // simulate a fresh install where the receiver is still in its manifest-default state
+        context.packageManager.setComponentEnabledSetting(
+            ComponentName(context, RadarBootReceiver::class.java),
+            PackageManager.COMPONENT_ENABLED_STATE_DEFAULT,
+            PackageManager.DONT_KILL_APP
+        )
+
+        for (action in listOf(Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED)) {
+            val getLastLocationCount = locationClientMock.getLastLocationCount
+            RadarBootReceiver().onReceive(context, Intent(action))
+
+            assertFalse(bootReceiverEnabled())
+            assertEquals(getLastLocationCount, locationClientMock.getLastLocationCount)
+        }
+    }
+
+    @Test
+    fun test_RadarBootReceiver_tracking_restores() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        Radar.startTracking(RadarTrackingOptions.EFFICIENT)
+
+        for (action in listOf(Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED)) {
+            val getLastLocationCount = locationClientMock.getLastLocationCount
+            RadarBootReceiver().onReceive(context, Intent(action))
+
+            assertEquals(getLastLocationCount + 1, locationClientMock.getLastLocationCount)
+            assertTrue(bootReceiverEnabled())
+        }
+
+        Radar.stopTracking()
     }
 
     @Test

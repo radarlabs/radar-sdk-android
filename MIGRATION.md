@@ -1,5 +1,9 @@
 # Migration guides
 
+## 3.38.x to 3.39.x
+- Restoring tracking after a reboot or app update now happens in a new `RadarBootReceiver` instead of `RadarLocationReceiver`. The SDK disables this receiver whenever tracking isn't active, so apps that don't call `Radar.startTracking()` are no longer started on every reboot and app update. Integrations that track need no changes.
+- If you removed `BOOT_COMPLETED` or `MY_PACKAGE_REPLACED` from `RadarLocationReceiver` with a manifest override, you can remove that override.
+
 ## 3.20.x to 3.21.x
 - The `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, limit, callback)` is now  `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, countryCodes, limit, callback)`. See [documentation](https://radar.com/documentation/sdk/android#search).
 

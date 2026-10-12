@@ -10,6 +10,7 @@ import io.radar.sdk.RadarTrackingOptions
 internal class RadarMockLocationProvider : RadarAbstractLocationClient() {
 
     internal var mockLocation: Location? = null
+    internal var getLastLocationCount = 0
 
     override fun getCurrentLocation(
         desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy,
@@ -30,6 +31,7 @@ internal class RadarMockLocationProvider : RadarAbstractLocationClient() {
     }
 
     override fun getLastLocation(block: (location: Location?) -> Unit) {
+        getLastLocationCount++
     }
 
     override fun addGeofences(
