@@ -2433,6 +2433,8 @@ object Radar {
                             Radar.startTracking(trackingOptions)
                         } else if (trackingOptions != null) {
                             RadarSettings.setTrackingOptions(context, trackingOptions)
+                            // Tracking is deferred until startTrackingAfter, so updateTracking() hasn't run.
+                            // Enable the boot receiver so a reboot before then can still start tracking.
                             RadarBootReceiver.update(context, logger)
                         } else if (!isTracking && options.startTracking) {
                             Radar.startTracking(RadarSettings.getRemoteTrackingOptions(context) ?: RadarSettings.getTrackingOptions(context))
