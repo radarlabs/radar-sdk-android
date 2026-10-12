@@ -43,7 +43,6 @@ import java.util.Date
 import java.util.EnumSet
 import java.util.TimeZone
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import org.json.JSONArray
@@ -390,7 +389,8 @@ class RadarTest {
         Radar.apiClient = RadarApiClient(context, Radar.logger)
         Radar.apiClient.apiHelper = apiHelperMock
         setUpLogConversionTest()
-        RadarBootReceiver.executor = Executor { it.run() }
+        // PackageManager state resets between tests but preferences don't, so drop the saved boot receiver state
+        context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit().remove("boot_receiver_enabled").commit()
 
         Radar.initialize(context, PUBLISHABLE_KEY)
 
@@ -1705,21 +1705,17 @@ class RadarTest {
     }
 
     @Test
-    fun test_RadarBootReceiver_updatesOffCallingThread() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = true
+    fun test_RadarBootReceiver_updateUsesSavedState() {
         Radar.stopTracking()
+        assertEquals(false, RadarSettings.getBootReceiverEnabled(context))
 
-        val pending = mutableListOf<Runnable>()
-        RadarBootReceiver.executor = Executor { pending.add(it) }
+        // the receiver's real state disagrees with the saved state
+        val component = ComponentName(context, RadarBootReceiver::class.java)
+        context.packageManager.setComponentEnabledSetting(component, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
 
-        Radar.startTracking(RadarTrackingOptions.EFFICIENT)
-        assertFalse(bootReceiverEnabled())
-
-        pending.forEach { it.run() }
+        // nothing changed, so update() trusts the saved state and doesn't call PackageManager
+        RadarBootReceiver.update(context, Radar.logger)
         assertTrue(bootReceiverEnabled())
-
-        RadarBootReceiver.executor = Executor { it.run() }
-        Radar.stopTracking()
     }
 
     @Test
@@ -1771,7 +1767,8 @@ class RadarTest {
     @Test
     fun test_RadarBootReceiver_notTracking_disablesWithoutRestoring() {
         Radar.stopTracking()
-        // simulate a fresh install where the receiver is still in its manifest-default state
+        // the receiver is still in its manifest-default state even though the saved state says disabled,
+        // e.g. after a backup restored old preferences
         context.packageManager.setComponentEnabledSetting(
             ComponentName(context, RadarBootReceiver::class.java),
             PackageManager.COMPONENT_ENABLED_STATE_DEFAULT,

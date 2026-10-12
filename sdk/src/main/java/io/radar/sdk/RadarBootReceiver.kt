@@ -5,8 +5,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
 
 /**
  * Restores tracking after a reboot or app update.
@@ -21,29 +19,34 @@ internal class RadarBootReceiver : BroadcastReceiver() {
 
         internal fun needsBootRestore(context: Context): Boolean = RadarSettings.getTracking(context) || RadarSettings.getTrackingOptions(context).startTrackingAfter != null
 
-        // PackageManager calls are binder IPCs, and update() runs from initialize() on the main thread
-        // during app startup. A single thread keeps updates in order, and each one reads the latest
-        // tracking state when it runs.
-        internal var executor: Executor = Executors.newSingleThreadExecutor()
-
         internal fun update(context: Context, logger: RadarLogger) {
-            executor.execute {
-                setEnabled(context, needsBootRestore(context), logger)
+            val enabled = needsBootRestore(context)
+            // Compare against the state we last applied so app opens don't need a PackageManager call
+            val savedEnabled = RadarSettings.getBootReceiverEnabled(context)
+            val currentlyEnabled = savedEnabled ?: isEnabled(context, logger) ?: return
+            if (currentlyEnabled != enabled) {
+                setEnabled(context, enabled, logger)
+            } else if (savedEnabled == null) {
+                RadarSettings.setBootReceiverEnabled(context, enabled)
             }
+        }
+
+        private fun isEnabled(context: Context, logger: RadarLogger): Boolean? = try {
+            val component = ComponentName(context, RadarBootReceiver::class.java)
+            // DEFAULT means the manifest value, which is enabled
+            context.packageManager.getComponentEnabledSetting(component) != PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+        } catch (e: Exception) {
+            // e.g. the app removed the receiver from its merged manifest
+            logger.e("Error reading boot receiver state", Radar.RadarLogType.SDK_EXCEPTION, e)
+            null
         }
 
         private fun setEnabled(context: Context, enabled: Boolean, logger: RadarLogger) {
             try {
                 val component = ComponentName(context, RadarBootReceiver::class.java)
-                val packageManager = context.packageManager
-                // DEFAULT means the manifest value, which is enabled
-                val currentlyEnabled = packageManager.getComponentEnabledSetting(component) != PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-                if (currentlyEnabled == enabled) {
-                    return
-                }
-
                 val state = if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
-                packageManager.setComponentEnabledSetting(component, state, PackageManager.DONT_KILL_APP)
+                context.packageManager.setComponentEnabledSetting(component, state, PackageManager.DONT_KILL_APP)
+                RadarSettings.setBootReceiverEnabled(context, enabled)
                 logger.d("Updated boot receiver | enabled = $enabled")
             } catch (e: Exception) {
                 // e.g. the app removed the receiver from its merged manifest
@@ -56,8 +59,8 @@ internal class RadarBootReceiver : BroadcastReceiver() {
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED -> {
                 if (!needsBootRestore(context)) {
-                    // Don't initialize the SDK just to find there's nothing to restore. This runs
-                    // synchronously so it finishes before the process can be killed.
+                    // Don't initialize the SDK just to find there's nothing to restore. Skip the saved
+                    // state: this receiver is running, so it's enabled even if the saved state says otherwise.
                     setEnabled(context, false, RadarLogger(context.applicationContext))
                     return
                 }

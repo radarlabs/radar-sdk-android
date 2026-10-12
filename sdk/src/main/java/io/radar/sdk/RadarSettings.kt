@@ -24,6 +24,7 @@ internal object RadarSettings {
     private const val KEY_ANONYMOUS = "anonymous"
     private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
     private const val KEY_TRACKING = "background_tracking"
+    private const val KEY_BOOT_RECEIVER_ENABLED = "boot_receiver_enabled"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
     private const val KEY_PREVIOUS_TRACKING_OPTIONS = "previous_tracking_options"
     private const val KEY_REMOTE_TRACKING_OPTIONS = "remote_tracking_options"
@@ -218,6 +219,19 @@ internal object RadarSettings {
 
     internal fun setTracking(context: Context, tracking: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_TRACKING, tracking) }
+    }
+
+    // The enabled state last applied to RadarBootReceiver, or null if it hasn't been applied yet.
+    internal fun getBootReceiverEnabled(context: Context): Boolean? {
+        val prefs = getSharedPreferences(context)
+        if (!prefs.contains(KEY_BOOT_RECEIVER_ENABLED)) {
+            return null
+        }
+        return prefs.getBoolean(KEY_BOOT_RECEIVER_ENABLED, true)
+    }
+
+    internal fun setBootReceiverEnabled(context: Context, enabled: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_BOOT_RECEIVER_ENABLED, enabled) }
     }
 
     internal fun getTrackingOptions(context: Context): RadarTrackingOptions {
