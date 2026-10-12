@@ -290,64 +290,6 @@
         <error line="44" column="1" source="standard:no-trailing-spaces" />
         <error line="68" column="1" source="standard:final-newline" />
     </file>
-    <file name="src/main/java/io/radar/sdk/RadarSettings.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="60" column="75" source="standard:function-expression-body" />
-        <error line="64" column="63" source="standard:function-expression-body" />
-        <error line="72" column="73" source="standard:function-expression-body" />
-        <error line="89" column="57" source="standard:function-expression-body" />
-        <error line="117" column="51" source="standard:function-expression-body" />
-        <error line="125" column="55" source="standard:function-expression-body" />
-        <error line="133" column="61" source="standard:function-expression-body" />
-        <error line="141" column="60" source="standard:function-expression-body" />
-        <error line="149" column="56" source="standard:function-expression-body" />
-        <error line="167" column="73" source="standard:function-expression-body" />
-        <error line="175" column="60" source="standard:function-expression-body" />
-        <error line="183" column="61" source="standard:function-expression-body" />
-        <error line="191" column="61" source="standard:function-expression-body" />
-        <error line="197" column="1" source="standard:indent" />
-        <error line="197" column="1" source="standard:indent" />
-        <error line="199" column="72" source="standard:function-expression-body" />
-        <error line="207" column="74" source="standard:function-expression-body" />
-        <error line="215" column="57" source="standard:function-expression-body" />
-        <error line="223" column="77" source="standard:function-expression-body" />
-        <error line="291" column="48" source="standard:parameter-list-spacing" />
-        <error line="291" column="49" source="standard:colon-spacing" />
-        <error line="291" column="56" source="standard:parameter-list-spacing" />
-        <error line="291" column="57" source="standard:comma-spacing" />
-        <error line="291" column="57" source="standard:function-signature" />
-        <error line="291" column="76" source="standard:parameter-list-spacing" />
-        <error line="291" column="77" source="standard:colon-spacing" />
-        <error line="291" column="102" source="standard:curly-spacing" />
-        <error line="291" column="102" source="standard:function-start-of-body-spacing" />
-        <error line="295" column="30" source="standard:wrapping" />
-        <error line="295" column="38" source="standard:wrapping" />
-        <error line="307" column="9" source="standard:wrapping" />
-        <error line="310" column="58" source="standard:function-return-type-spacing" />
-        <error line="310" column="59" source="standard:colon-spacing" />
-        <error line="310" column="84" source="standard:curly-spacing" />
-        <error line="310" column="84" source="standard:function-start-of-body-spacing" />
-        <error line="336" column="1" source="standard:indent" />
-        <error line="339" column="1" source="standard:indent" />
-        <error line="393" column="116" source="standard:no-semi" />
-        <error line="425" column="52" source="standard:function-expression-body" />
-        <error line="433" column="66" source="standard:function-expression-body" />
-        <error line="442" column="61" source="standard:function-expression-body" />
-        <error line="446" column="60" source="standard:function-expression-body" />
-        <error line="450" column="60" source="standard:function-expression-body" />
-        <error line="454" column="58" source="standard:function-expression-body" />
-        <error line="462" column="67" source="standard:function-expression-body" />
-        <error line="471" column="56" source="standard:function-expression-body" />
-        <error line="483" column="57" source="standard:function-expression-body" />
-        <error line="485" column="1" source="standard:indent" />
-        <error line="489" column="86" source="standard:no-semi" />
-        <error line="493" column="89" source="standard:no-semi" />
-        <error line="496" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="549" column="17" source="standard:statement-wrapping" />
-        <error line="549" column="87" source="standard:statement-wrapping" />
-        <error line="550" column="22" source="standard:statement-wrapping" />
-        <error line="550" column="95" source="standard:statement-wrapping" />
-    </file>
     <file name="src/main/java/io/radar/sdk/RadarState.kt">
         <error line="48" column="75" source="standard:function-expression-body" />
         <error line="126" column="57" source="standard:function-expression-body" />
