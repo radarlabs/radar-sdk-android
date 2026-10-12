@@ -1723,6 +1723,30 @@ class RadarTest {
     }
 
     @Test
+    fun test_RadarBootReceiver_reconciledOnAppOpen() {
+        val sdkConfiguration = RadarSettings.getSdkConfiguration(context)
+        Radar.stopTracking()
+        assertFalse(bootReceiverEnabled())
+
+        // tracking state changed without going through the SDK, leaving the receiver out of sync
+        RadarSettings.setTracking(context, true)
+        assertFalse(bootReceiverEnabled())
+
+        try {
+            apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+            apiHelperMock.queueMockResponses("v1/config", listOf(JSONObject("""{"meta":{"code":200}}""")))
+            Radar.initialized = false
+            Radar.initialize(context, PUBLISHABLE_KEY)
+            ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+
+            assertTrue(bootReceiverEnabled())
+        } finally {
+            Radar.stopTracking()
+            RadarSettings.setSdkConfiguration(context, sdkConfiguration)
+        }
+    }
+
+    @Test
     fun test_RadarBootReceiver_enabledForDelayedTripTracking() {
         Radar.stopTracking()
         assertFalse(bootReceiverEnabled())
