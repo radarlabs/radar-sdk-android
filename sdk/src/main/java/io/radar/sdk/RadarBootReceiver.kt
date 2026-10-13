@@ -58,10 +58,16 @@ internal class RadarBootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED, Intent.ACTION_MY_PACKAGE_REPLACED -> {
+                val tracking = RadarSettings.getTracking(context)
+                val startTrackingAfter = RadarSettings.getTrackingOptions(context).startTrackingAfter
+
                 if (!needsBootRestore(context)) {
-                    // Don't initialize the SDK just to find there's nothing to restore. Skip the saved
-                    // state: this receiver is running, so it's enabled even if the saved state says otherwise.
-                    setEnabled(context, false, RadarLogger(context.applicationContext))
+                    // Don't initialize the SDK just to find there's nothing to restore. Radar.logger isn't
+                    // set up yet in a process started for this broadcast, so use a standalone logger.
+                    val logger = RadarLogger(context.applicationContext)
+                    logger.d("Received boot broadcast with nothing to restore, disabling boot receiver | action = ${intent.action}")
+                    // Skip the saved state: this receiver is running, so it's enabled even if the saved state says otherwise.
+                    setEnabled(context, false, logger)
                     return
                 }
 
@@ -71,7 +77,7 @@ internal class RadarBootReceiver : BroadcastReceiver() {
                     Radar.initialize(context, null, initializeOptions)
                 }
 
-                Radar.logger.d("Received broadcast | action = ${intent.action}")
+                Radar.logger.d("Received boot broadcast, restoring tracking | action = ${intent.action}; tracking = $tracking; startTrackingAfter = $startTrackingAfter")
 
                 Radar.handleBootCompleted(context)
             }
