@@ -104,7 +104,9 @@ data class RadarTrackingOptions(
     var syncGeofencesLimit: Int,
 
     /**
-     * If set, starts a foreground service and shows a notification during tracking.
+     * If set, starts a foreground service and shows a notification during tracking. Requires declaring
+     * `io.radar.sdk.RadarForegroundService` with `android:foregroundServiceType="location"` in your app manifest.
+     * Geofencing does not require a foreground service.
      */
     var foregroundServiceEnabled: Boolean,
 
@@ -461,6 +463,8 @@ data class RadarTrackingOptions(
 
         /**
          * Updates about every 30 seconds while moving or stopped. Starts a foreground service. Moderate battery usage.
+         * Requires declaring `io.radar.sdk.RadarForegroundService` in your app manifest. Intended for trips and live
+         * tracking, not geofencing.
          */
         @JvmField
         val CONTINUOUS = RadarTrackingOptions(

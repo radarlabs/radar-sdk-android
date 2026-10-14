@@ -1,7 +1,9 @@
 package io.radar.sdk
 
 import android.app.Activity
+import android.app.Application
 import android.content.Context
+import android.content.pm.ServiceInfo
 import android.location.Location
 import android.net.ConnectivityManager
 import android.os.Build
@@ -1554,6 +1556,51 @@ class RadarTest {
         Radar.startTracking(options)
         assertEquals(options, Radar.getTrackingOptions())
         assertTrue(Radar.isTracking())
+    }
+
+    @Test
+    fun test_Radar_startTracking_continuous_foregroundServiceNotDeclared() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+
+        Radar.stopTracking()
+        RadarForegroundService.started = false
+        val application = context as Application
+        shadowOf(application).clearStartedServices()
+
+        Radar.startTracking(RadarTrackingOptions.CONTINUOUS)
+
+        assertTrue(Radar.isTracking())
+        assertFalse(RadarForegroundService.started)
+        assertNull(shadowOf(application).nextStartedService)
+    }
+
+    @Test
+    fun test_Radar_startTracking_continuous_foregroundServiceDeclared() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+
+        Radar.stopTracking()
+        RadarForegroundService.started = false
+        val application = context as Application
+        shadowOf(application).clearStartedServices()
+        Radar.setForegroundServiceOptions(RadarTrackingOptions.RadarTrackingOptionsForegroundService(updatesOnly = false))
+        shadowOf(context.packageManager).addOrUpdateService(
+            ServiceInfo().apply {
+                packageName = context.packageName
+                name = RadarForegroundService::class.java.name
+            }
+        )
+
+        try {
+            Radar.startTracking(RadarTrackingOptions.CONTINUOUS)
+
+            assertTrue(RadarForegroundService.started)
+            val intent = shadowOf(application).nextStartedService
+            assertEquals(RadarForegroundService::class.java.name, intent.component?.className)
+            assertEquals("start", intent.action)
+        } finally {
+            Radar.stopTracking()
+            RadarForegroundService.started = false
+        }
     }
 
     @Test

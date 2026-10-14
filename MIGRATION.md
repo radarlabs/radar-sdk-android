@@ -1,5 +1,19 @@
 # Migration guides
 
+## 3.38.x to 3.39.x
+- The SDK no longer declares `RadarForegroundService` in its manifest, so apps that only use geofencing don't ship a location foreground service. Google Play no longer accepts geofencing as a foreground service use case. If you use `RadarTrackingOptions.CONTINUOUS`, set `foregroundServiceEnabled = true`, or enable the foreground service in remote tracking options, declare the service and the `FOREGROUND_SERVICE_LOCATION` permission in your app manifest. Otherwise the SDK logs a warning and tracks without a foreground service.
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <application>
+        <service
+            android:name="io.radar.sdk.RadarForegroundService"
+            android:foregroundServiceType="location" />
+    </application>
+</manifest>
+```
+
 ## 3.20.x to 3.21.x
 - The `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, limit, callback)` is now  `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, countryCodes, limit, callback)`. See [documentation](https://radar.com/documentation/sdk/android#search).
 

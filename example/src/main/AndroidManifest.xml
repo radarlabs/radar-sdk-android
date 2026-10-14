@@ -43,5 +43,8 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        <service
+            android:name="io.radar.sdk.RadarForegroundService"
+            android:foregroundServiceType="location" />
     </application>
 </manifest>

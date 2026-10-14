@@ -2,7 +2,10 @@ package io.radar.sdk
 
 import android.annotation.SuppressLint
 import android.app.*
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
 import android.graphics.Color
 import android.os.Build
@@ -15,6 +18,8 @@ import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.C
 import androidx.core.graphics.toColorInt
 
 
+// apps that use foregroundServiceEnabled declare this service with foregroundServiceType="location" in their manifest
+@SuppressLint("ForegroundServiceType")
 @RequiresApi(Build.VERSION_CODES.O)
 class RadarForegroundService : Service() {
 
@@ -24,6 +29,14 @@ class RadarForegroundService : Service() {
         internal var started: Boolean = false
 
         private const val NOTIFICATION_ID = 20160525 // random notification ID (Radar's birthday!)
+
+        // the SDK manifest does not declare this service, apps that use foregroundServiceEnabled must declare it
+        internal fun isDeclared(context: Context): Boolean = try {
+            context.packageManager.getServiceInfo(ComponentName(context, RadarForegroundService::class.java), 0)
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
