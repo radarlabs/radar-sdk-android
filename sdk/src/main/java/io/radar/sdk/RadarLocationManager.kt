@@ -287,6 +287,8 @@ internal class RadarLocationManager(
                 Radar.beaconMonitoringManager.stopMonitoringBeacons()
             }
         }
+
+        RadarBootReceiver.update(context, logger)
     }
 
     internal fun updateTrackingFromMeta(meta: RadarMeta?) {

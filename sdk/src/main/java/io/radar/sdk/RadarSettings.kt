@@ -4,10 +4,10 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import io.radar.sdk.model.RadarSdkConfiguration
-import org.json.JSONObject
+import io.radar.sdk.model.RadarTrip
 import java.text.DecimalFormat
 import java.util.UUID
-import io.radar.sdk.model.RadarTrip
+import org.json.JSONObject
 
 internal object RadarSettings {
 
@@ -24,6 +24,7 @@ internal object RadarSettings {
     private const val KEY_ANONYMOUS = "anonymous"
     private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
     private const val KEY_TRACKING = "background_tracking"
+    private const val KEY_BOOT_RECEIVER_ENABLED = "boot_receiver_enabled"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
     private const val KEY_PREVIOUS_TRACKING_OPTIONS = "previous_tracking_options"
     private const val KEY_REMOTE_TRACKING_OPTIONS = "remote_tracking_options"
@@ -57,21 +58,15 @@ internal object RadarSettings {
     private const val KEY_OLD_OFFLINE_MODE = "offline_mode"
     private const val KEY_USER_DEBUG = "user_debug"
 
-    private fun getSharedPreferences(context: Context): SharedPreferences {
-        return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
-    }
+    private fun getSharedPreferences(context: Context): SharedPreferences = context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
 
-    internal fun getPublishableKey(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_PUBLISHABLE_KEY, null)
-    }
+    internal fun getPublishableKey(context: Context): String? = getSharedPreferences(context).getString(KEY_PUBLISHABLE_KEY, null)
 
     internal fun setPublishableKey(context: Context, publishableKey: String?) {
         getSharedPreferences(context).edit { putString(KEY_PUBLISHABLE_KEY, publishableKey) }
     }
 
-    internal fun getLocationServicesProvider(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_LOCATION_SERVICES_PROVIDER, null)
-    }
+    internal fun getLocationServicesProvider(context: Context): String? = getSharedPreferences(context).getString(KEY_LOCATION_SERVICES_PROVIDER, null)
 
     internal fun setLocationServicesProvider(context: Context, provider: Radar.RadarLocationServicesProvider) {
         getSharedPreferences(context).edit { putString(KEY_LOCATION_SERVICES_PROVIDER, provider.name) }
@@ -86,9 +81,7 @@ internal object RadarSettings {
         return installId
     }
 
-    internal fun getSessionId(context: Context): String {
-        return DecimalFormat("#").format(getSharedPreferences(context).getLong(KEY_SESSION_ID, 0))
-    }
+    internal fun getSessionId(context: Context): String = DecimalFormat("#").format(getSharedPreferences(context).getLong(KEY_SESSION_ID, 0))
 
     internal fun updateSessionId(context: Context): Boolean {
         val timestampSeconds = System.currentTimeMillis() / 1000
@@ -114,41 +107,31 @@ internal object RadarSettings {
         return false
     }
 
-    internal fun getId(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_ID, null)
-    }
+    internal fun getId(context: Context): String? = getSharedPreferences(context).getString(KEY_ID, null)
 
     internal fun setId(context: Context, _id: String?) {
         getSharedPreferences(context).edit { putString(KEY_ID, _id) }
     }
 
-    internal fun getUserId(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_USER_ID, null)
-    }
+    internal fun getUserId(context: Context): String? = getSharedPreferences(context).getString(KEY_USER_ID, null)
 
     internal fun setUserId(context: Context, userId: String?) {
         getSharedPreferences(context).edit { putString(KEY_USER_ID, userId) }
     }
 
-    internal fun getUserLanguage(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_USER_LANGUAGE, null)
-    }
+    internal fun getUserLanguage(context: Context): String? = getSharedPreferences(context).getString(KEY_USER_LANGUAGE, null)
 
     internal fun setUserLanguage(context: Context, userLanguage: String?) {
         getSharedPreferences(context).edit { putString(KEY_USER_LANGUAGE, userLanguage) }
     }
 
-    internal fun getDescription(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_DESCRIPTION, null)
-    }
+    internal fun getDescription(context: Context): String? = getSharedPreferences(context).getString(KEY_DESCRIPTION, null)
 
     internal fun setDescription(context: Context, description: String?) {
         getSharedPreferences(context).edit { putString(KEY_DESCRIPTION, description) }
     }
 
-    internal fun getProduct(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_PRODUCT, null)
-    }
+    internal fun getProduct(context: Context): String? = getSharedPreferences(context).getString(KEY_PRODUCT, null)
 
     internal fun setProduct(context: Context, product: String?) {
         getSharedPreferences(context).edit { putString(KEY_PRODUCT, product) }
@@ -164,65 +147,62 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putString(KEY_METADATA, metadataJSON) }
     }
 
-    internal fun getAnonymousTrackingEnabled(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_ANONYMOUS, false)
-    }
+    internal fun getAnonymousTrackingEnabled(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_ANONYMOUS, false)
 
     internal fun setAnonymousTrackingEnabled(context: Context, enabled: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_ANONYMOUS, enabled) }
     }
 
-    internal fun getAdIdEnabled(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_AD_ID_ENABLED, false)
-    }
+    internal fun getAdIdEnabled(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_AD_ID_ENABLED, false)
 
     internal fun setAdIdEnabled(context: Context, enabled: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_AD_ID_ENABLED, enabled) }
     }
 
-    internal fun getFraudEnabled(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_FRAUD_ENABLED, false)
-    }
+    internal fun getFraudEnabled(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_FRAUD_ENABLED, false)
 
     internal fun setFraudEnabled(context: Context, enabled: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_FRAUD_ENABLED, enabled) }
     }
 
-    internal fun getNetworkTimeoutMs(context: Context): Int {
-        return getSharedPreferences(context).getInt(KEY_NETWORK_TIMEOUT_MS, DEFAULT_NETWORK_TIMEOUT_MS)
-    }
+    internal fun getNetworkTimeoutMs(context: Context): Int = getSharedPreferences(context).getInt(KEY_NETWORK_TIMEOUT_MS, DEFAULT_NETWORK_TIMEOUT_MS)
 
     internal fun setNetworkTimeoutMs(context: Context, timeoutMs: Int) {
         getSharedPreferences(context).edit { putInt(KEY_NETWORK_TIMEOUT_MS, timeoutMs) }
-	}
-
-    internal fun getIpChangeDebounceIntervalMs(context: Context): Long {
-        return getSharedPreferences(context).getLong(KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS, DEFAULT_IP_CHANGE_DEBOUNCE_INTERVAL_MS)
     }
+
+    internal fun getIpChangeDebounceIntervalMs(context: Context): Long = getSharedPreferences(context).getLong(KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS, DEFAULT_IP_CHANGE_DEBOUNCE_INTERVAL_MS)
 
     internal fun setIpChangeDebounceIntervalMs(context: Context, intervalMs: Long) {
         getSharedPreferences(context).edit { putLong(KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS, intervalMs) }
     }
 
-    internal fun getTrackVerifiedAutoFailover(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_TRACK_VERIFIED_AUTO_FAILOVER, false)
-    }
+    internal fun getTrackVerifiedAutoFailover(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_TRACK_VERIFIED_AUTO_FAILOVER, false)
 
     internal fun setTrackVerifiedAutoFailover(context: Context, enabled: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_TRACK_VERIFIED_AUTO_FAILOVER, enabled) }
     }
 
-    internal fun getTracking(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_TRACKING, false)
-    }
+    internal fun getTracking(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_TRACKING, false)
 
     internal fun setTracking(context: Context, tracking: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_TRACKING, tracking) }
     }
 
-    internal fun getTrackingOptions(context: Context): RadarTrackingOptions {
-        return getTrackingOptionsByKey(context, KEY_TRACKING_OPTIONS)
+    // The enabled state last applied to RadarBootReceiver, or null if it hasn't been applied yet.
+    internal fun getBootReceiverEnabled(context: Context): Boolean? {
+        val prefs = getSharedPreferences(context)
+        if (!prefs.contains(KEY_BOOT_RECEIVER_ENABLED)) {
+            return null
+        }
+        return prefs.getBoolean(KEY_BOOT_RECEIVER_ENABLED, true)
     }
+
+    internal fun setBootReceiverEnabled(context: Context, enabled: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_BOOT_RECEIVER_ENABLED, enabled) }
+    }
+
+    internal fun getTrackingOptions(context: Context): RadarTrackingOptions = getTrackingOptionsByKey(context, KEY_TRACKING_OPTIONS)
 
     private fun getTrackingOptionsByKey(context: Context, key: String): RadarTrackingOptions {
         val optionsJson = getSharedPreferences(context).getString(key, null)
@@ -288,26 +268,29 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { remove(KEY_REMOTE_TRACKING_OPTIONS) }
     }
 
-    internal fun setNotificationOptions(context:Context,notificationOptions:RadarNotificationOptions){
+    internal fun setNotificationOptions(context: Context, notificationOptions: RadarNotificationOptions) {
         val notificationOptionsJson = notificationOptions.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_NOTIFICATION_OPTIONS, notificationOptionsJson) }
         var previousValue = getForegroundService(context)
-        setForegroundService(context, RadarTrackingOptions.RadarTrackingOptionsForegroundService(
-            previousValue.text,
-            previousValue.title,
-            previousValue.icon,
-            previousValue.updatesOnly,
-            previousValue.activity,
-            previousValue.importance,
-            previousValue.id,
-            previousValue.channelName,
-            notificationOptions.getForegroundServiceIcon() ?: previousValue.iconString,
-            notificationOptions.getForegroundServiceColor() ?: previousValue.iconColor,
-            notificationOptions.deepLink
-        ))
+        setForegroundService(
+            context,
+            RadarTrackingOptions.RadarTrackingOptionsForegroundService(
+                previousValue.text,
+                previousValue.title,
+                previousValue.icon,
+                previousValue.updatesOnly,
+                previousValue.activity,
+                previousValue.importance,
+                previousValue.id,
+                previousValue.channelName,
+                notificationOptions.getForegroundServiceIcon() ?: previousValue.iconString,
+                notificationOptions.getForegroundServiceColor() ?: previousValue.iconColor,
+                notificationOptions.deepLink
+            )
+        )
     }
 
-    internal fun getNotificationOptions(context: Context):RadarNotificationOptions?{
+    internal fun getNotificationOptions(context: Context): RadarNotificationOptions? {
         val optionsJson = getSharedPreferences(context).getString(KEY_NOTIFICATION_OPTIONS, null) ?: return null
         val optionsObj = JSONObject(optionsJson)
         return RadarNotificationOptions.fromJson(optionsObj)
@@ -333,10 +316,10 @@ internal object RadarSettings {
         // previous values of iconColor and iconString are preserved if new fields are null
         val previousValue = getForegroundService(context)
         if (foregroundService.iconString == null) {
-           foregroundService.iconString = previousValue.iconString
+            foregroundService.iconString = previousValue.iconString
         }
         if (foregroundService.iconColor == null) {
-           foregroundService.iconColor = previousValue.iconColor
+            foregroundService.iconColor = previousValue.iconColor
         }
         val foregroundJson = foregroundService.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_FOREGROUND_SERVICE, foregroundJson) }
@@ -390,7 +373,7 @@ internal object RadarSettings {
     }
 
     fun getClientSdkConfiguration(context: Context): JSONObject {
-        val sharedPrefClientSdkConfig = getSharedPreferences(context).getString(KEY_CLIENT_SDK_CONFIGURATION, null);
+        val sharedPrefClientSdkConfig = getSharedPreferences(context).getString(KEY_CLIENT_SDK_CONFIGURATION, null)
 
         return if (sharedPrefClientSdkConfig != null) {
             JSONObject(sharedPrefClientSdkConfig)
@@ -422,55 +405,39 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, level.value) }
     }
 
-    internal fun getHost(context: Context): String {
-        return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
-    }
+    internal fun getHost(context: Context): String = getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
 
     internal fun setPermissionsDenied(context: Context, denied: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_PERMISSIONS_DENIED, denied) }
     }
 
-    internal fun getPermissionsDenied(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_PERMISSIONS_DENIED, false)
-    }
+    internal fun getPermissionsDenied(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_PERMISSIONS_DENIED, false)
 
     internal fun updateLastTrackedTime(context: Context) {
         val timestampSeconds = System.currentTimeMillis() / 1000
         getSharedPreferences(context).edit { putLong(KEY_LAST_TRACKED_TIME, timestampSeconds) }
     }
 
-    internal fun getLastTrackedTime(context: Context): Long {
-        return getSharedPreferences(context).getLong(KEY_LAST_TRACKED_TIME, 0)
-    }
+    internal fun getLastTrackedTime(context: Context): Long = getSharedPreferences(context).getLong(KEY_LAST_TRACKED_TIME, 0)
 
-    internal fun getVerifiedHost(context: Context): String {
-        return getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api-verified.radar.io"
-    }
+    internal fun getVerifiedHost(context: Context): String = getSharedPreferences(context).getString(KEY_VERIFIED_HOST, null) ?: "https://api-verified.radar.io"
 
-    internal fun getDefaultVerifiedHostSecondary(): String {
-        return "https://api-verified.radar.com"
-    }
+    internal fun getDefaultVerifiedHostSecondary(): String = "https://api-verified.radar.com"
 
-    internal fun getUserDebug(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_USER_DEBUG, false)
-    }
+    internal fun getUserDebug(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_USER_DEBUG, false)
 
     internal fun setUserDebug(context: Context, userDebug: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_USER_DEBUG, userDebug) }
     }
 
-    internal fun getLastAppOpenTimeMillis(context: Context): Long {
-        return getSharedPreferences(context).getLong(KEY_LAST_APP_OPEN_TIME, 0)
-    }
+    internal fun getLastAppOpenTimeMillis(context: Context): Long = getSharedPreferences(context).getLong(KEY_LAST_APP_OPEN_TIME, 0)
 
     internal fun updateLastAppOpenTimeMillis(context: Context) {
         val timestampSeconds = System.currentTimeMillis()
         getSharedPreferences(context).edit { putLong(KEY_LAST_APP_OPEN_TIME, timestampSeconds) }
     }
 
-    internal fun getSharing(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_SHARING, false)
-    }
+    internal fun getSharing(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_SHARING, false)
 
     internal fun setSharing(context: Context, sharing: Boolean) {
         val previous = getSharedPreferences(context).getBoolean(KEY_SHARING, false)
@@ -480,19 +447,12 @@ internal object RadarSettings {
         }
     }
 
-    internal fun isXPlatform(context: Context): Boolean {
-        return getSharedPreferences(context).contains(KEY_X_PLATFORM_SDK_TYPE) &&
-                getSharedPreferences(context).contains(KEY_X_PLATFORM_SDK_VERSION)
-    }
+    internal fun isXPlatform(context: Context): Boolean = getSharedPreferences(context).contains(KEY_X_PLATFORM_SDK_TYPE) &&
+        getSharedPreferences(context).contains(KEY_X_PLATFORM_SDK_VERSION)
 
-    internal fun getXPlatformSDKType(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_X_PLATFORM_SDK_TYPE, null);
-    }
+    internal fun getXPlatformSDKType(context: Context): String? = getSharedPreferences(context).getString(KEY_X_PLATFORM_SDK_TYPE, null)
 
-    internal fun getXPlatformSDKVersion(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_X_PLATFORM_SDK_VERSION, null);
-    }
-
+    internal fun getXPlatformSDKVersion(context: Context): String? = getSharedPreferences(context).getString(KEY_X_PLATFORM_SDK_VERSION, null)
 
     internal fun getTags(context: Context): Array<String>? {
         val tagsJson = getSharedPreferences(context).getString(KEY_USER_TAGS, null) ?: return null
@@ -546,6 +506,10 @@ internal object RadarSettings {
 
     private const val KEY_PUSH_NOTIFICATION_TOKEN = "pushNotificationToken"
     var pushNotificationToken: String?
-        get() { return sharedPreferences.getString(KEY_PUSH_NOTIFICATION_TOKEN, null) }
-        set(value) { sharedPreferences.edit { putString(KEY_PUSH_NOTIFICATION_TOKEN, value) } }
+        get() {
+            return sharedPreferences.getString(KEY_PUSH_NOTIFICATION_TOKEN, null)
+        }
+        set(value) {
+            sharedPreferences.edit { putString(KEY_PUSH_NOTIFICATION_TOKEN, value) }
+        }
 }
