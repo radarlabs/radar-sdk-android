@@ -97,11 +97,11 @@ internal class RadarPreparedFraudPayload(private val handle: Any) {
 
         return seal(
             mapOf(
+                "body" to params.toString(),
                 "method" to "POST",
                 "canonicalRoute" to "/$path",
                 "encryptionAttemptId" to attemptId,
                 "issuedAt" to System.currentTimeMillis() / 1000L,
-                "installId" to params.getString("installId"),
                 "origin" to headers["X-Radar-Mobile-Origin"],
                 "product" to headers["X-Radar-Product"],
                 "sdkVersion" to headers["X-Radar-SDK-Version"],

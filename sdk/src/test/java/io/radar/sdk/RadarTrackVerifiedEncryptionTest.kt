@@ -55,7 +55,10 @@ class RadarTrackVerifiedEncryptionTest {
         val handle = RecordingFraudHandle()
 
         Radar.apiClient.track(
-            location = Location("test"),
+            location = Location("test").apply {
+                latitude = 40.78382
+                longitude = -73.97536
+            },
             stopped = false,
             foreground = true,
             source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
@@ -68,24 +71,72 @@ class RadarTrackVerifiedEncryptionTest {
         assertEquals("POST", apiHelperMock.lastCapturedMethod)
         assertEquals("v1/track", apiHelperMock.lastCapturedPath)
         assertTrue(apiHelperMock.lastCapturedVerified)
-        assertEquals("""{"encv":1}""", apiHelperMock.lastCapturedParams?.getString("fraudPayload"))
+        assertEquals("""{"encv":1}""", apiHelperMock.lastCapturedParams?.toString())
 
         val options = handle.sealOptions.single()
         assertEquals("POST", options["method"])
         assertEquals("/v1/track", options["canonicalRoute"])
-        assertEquals(apiHelperMock.lastCapturedParams?.getString("installId"), options["installId"])
+        val coreBody = JSONObject(options["body"] as String)
+        assertEquals(RadarSettings.getInstallId(context), coreBody.getString("installId"))
+        assertEquals(40.78382, coreBody.getDouble("latitude"), 0.0)
+        assertEquals(-73.97536, coreBody.getDouble("longitude"), 0.0)
+        assertEquals(RadarUtils.sdkVersion, coreBody.getString("sdkVersion"))
+        assertFalse(coreBody.has("fraudPayload"))
+        assertFalse(options.containsKey("installId"))
         assertEquals(context.packageName, options["origin"])
         assertEquals(publishableKey, options["authorization"])
         assertTrue((options["encryptionAttemptId"] as String).matches(Regex("[A-Za-z0-9_-]{22}")))
     }
 
     @Test
-    fun trackVerifiedDoesNotSendWhenSealingFails() {
-        val handle = RecordingFraudHandle(
-            mapOf("error" to "Failed to encrypt fraud payload")
+    fun trackVerifiedDoesNotSendWhenPreparationFails() {
+        val results = listOf(
+            null,
+            emptyMap(),
+            mapOf("error" to "Failed to encrypt request body"),
+            mapOf("payload" to "not JSON"),
+            mapOf("payload" to "[]"),
+            mapOf("payload" to "null"),
+            mapOf("payload" to 42)
         )
-        var callbackStatus: Radar.RadarStatus? = null
+        results.forEach { result ->
+            apiHelperMock.clearCapturedParams()
+            val handle = result?.let { RecordingFraudHandle(it) }
+            var callbackStatus: Radar.RadarStatus? = null
 
+            Radar.apiClient.track(
+                location = Location("test"),
+                stopped = false,
+                foreground = true,
+                source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
+                replayed = false,
+                beacons = null,
+                verified = true,
+                preparedFraudPayload = handle?.let { RadarPreparedFraudPayload(it) },
+                callback = object : RadarApiClient.RadarTrackApiCallback {
+                    override fun onComplete(
+                        status: Radar.RadarStatus,
+                        res: JSONObject?,
+                        events: Array<RadarEvent>?,
+                        user: RadarUser?,
+                        nearbyGeofences: Array<RadarGeofence>?,
+                        config: RadarConfig?,
+                        token: RadarVerifiedLocationToken?
+                    ) {
+                        callbackStatus = status
+                    }
+                }
+            )
+
+            assertEquals(if (result == null) 0 else 1, handle?.sealOptions?.size ?: 0)
+            assertEquals(Radar.RadarStatus.ERROR_PLUGIN, callbackStatus)
+            assertNull(apiHelperMock.lastCapturedPath)
+        }
+    }
+
+    @Test
+    fun ordinaryTrackSendsCoreBodyWithoutSealing() {
+        val handle = RecordingFraudHandle(mapOf("error" to "Must not be called"))
         Radar.apiClient.track(
             location = Location("test"),
             stopped = false,
@@ -93,26 +144,17 @@ class RadarTrackVerifiedEncryptionTest {
             source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
             replayed = false,
             beacons = null,
-            verified = true,
-            preparedFraudPayload = RadarPreparedFraudPayload(handle),
-            callback = object : RadarApiClient.RadarTrackApiCallback {
-                override fun onComplete(
-                    status: Radar.RadarStatus,
-                    res: JSONObject?,
-                    events: Array<RadarEvent>?,
-                    user: RadarUser?,
-                    nearbyGeofences: Array<RadarGeofence>?,
-                    config: RadarConfig?,
-                    token: RadarVerifiedLocationToken?
-                ) {
-                    callbackStatus = status
-                }
-            }
+            verified = false,
+            preparedFraudPayload = RadarPreparedFraudPayload(handle)
         )
 
-        assertEquals(1, handle.sealOptions.size)
-        assertEquals(Radar.RadarStatus.ERROR_PLUGIN, callbackStatus)
-        assertNull(apiHelperMock.lastCapturedPath)
+        assertTrue(handle.sealOptions.isEmpty())
+        assertFalse(apiHelperMock.lastCapturedVerified)
+        val body = apiHelperMock.lastCapturedParams!!
+        assertEquals(RadarSettings.getInstallId(context), body.getString("installId"))
+        assertTrue(body.has("latitude"))
+        assertFalse(body.has("fraudPayload"))
+        assertFalse(body.has("encv"))
     }
 
     @Test
@@ -143,7 +185,7 @@ class RadarTrackVerifiedEncryptionTest {
             assertEquals("v1/track", apiHelperMock.lastCapturedPath)
             assertEquals(
                 """{"encv":1}""",
-                apiHelperMock.lastCapturedParams?.getString("fraudPayload")
+                apiHelperMock.lastCapturedParams?.toString()
             )
 
             apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
@@ -154,6 +196,9 @@ class RadarTrackVerifiedEncryptionTest {
             val replays = apiHelperMock.lastCapturedParams!!.getJSONArray("replays")
             val replay = replays.getJSONObject(replays.length() - 1)
             assertFalse(replay.has("fraudPayload"))
+            assertFalse(replay.has("encv"))
+            assertEquals(RadarSettings.getInstallId(context), replay.getString("installId"))
+            assertTrue(replay.has("latitude"))
             assertTrue(replay.getBoolean("replayed"))
         } finally {
             if (originalRemoteOptions == null) {
