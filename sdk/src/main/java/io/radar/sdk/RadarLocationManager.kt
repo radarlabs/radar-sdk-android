@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.location.Location
 import android.os.Build
 import android.os.Handler
@@ -879,17 +880,26 @@ internal class RadarLocationManager(
 
     private fun startForegroundService(foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!RadarForegroundService.started && !RadarForegroundService.isDeclared(context)) {
+                val message =
+                    "RadarForegroundService is not declared in your app manifest. Declare it to use foregroundServiceEnabled: " +
+                        "https://docs.radar.com/sdk/android#foreground-services-and-google-play-policy"
+                // fail fast in debug builds when the app enabled the foreground service itself, remote tracking options
+                // are set from the dashboard and should never crash the app
+                val isDebuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+                if (isDebuggable && RadarSettings.getRemoteTrackingOptions(context) == null) {
+                    throw IllegalStateException(message)
+                }
+                if (!loggedForegroundServiceNotDeclared) {
+                    logger.e("Not starting foreground service. $message")
+                    loggedForegroundServiceNotDeclared = true
+                }
+                return
+            }
+
             try {
                 if (RadarForegroundService.started) {
                     logger.d("Already started foreground service")
-                } else if (!RadarForegroundService.isDeclared(context)) {
-                    if (!loggedForegroundServiceNotDeclared) {
-                        logger.w(
-                            "Not starting foreground service, RadarForegroundService is not declared in your app manifest. " +
-                                "Declare it to use foregroundServiceEnabled: https://docs.radar.com/sdk/android#foreground-services-and-google-play-policy"
-                        )
-                        loggedForegroundServiceNotDeclared = true
-                    }
                 } else {
                     val intent = Intent(context, RadarForegroundService::class.java)
                     intent.action = "start"
