@@ -61,19 +61,6 @@
     <file name="src/main/java/io/radar/sdk/RadarFirebaseMessagingService.kt">
         <error line="3" column="1" source="standard:no-unused-imports" />
     </file>
-    <file name="src/main/java/io/radar/sdk/RadarForegroundService.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="4" column="1" source="standard:no-wildcard-imports" />
-        <error line="10" column="1" source="standard:no-unused-imports" />
-        <error line="20" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="76" column="1" source="standard:no-trailing-spaces" />
-        <error line="137" column="99" source="standard:chain-wrapping" />
-        <error line="137" column="101" source="standard:no-trailing-spaces" />
-        <error line="149" column="80" source="standard:no-semi" />
-        <error line="155" column="51" source="standard:function-expression-body" />
-        <error line="158" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="159" column="1" source="standard:final-newline" />
-    </file>
     <file name="src/main/java/io/radar/sdk/RadarGoogleLocationClient.kt">
         <error line="20" column="2" source="standard:colon-spacing" />
         <error line="28" column="1" source="standard:no-trailing-spaces" />
@@ -184,65 +171,6 @@
         <error line="171" column="1" source="standard:indent" />
         <error line="172" column="1" source="standard:indent" />
         <error line="219" column="1" source="standard:no-blank-line-before-rbrace" />
-    </file>
-    <file name="src/main/java/io/radar/sdk/RadarLocationManager.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="19" column="1" source="standard:no-wildcard-imports" />
-        <error line="30" column="86" source="standard:trailing-comma-on-declaration-site" />
-        <error line="260" column="22" source="standard:no-trailing-spaces" />
-        <error line="297" column="21" source="standard:string-template" />
-        <error line="306" column="75" source="standard:function-expression-body" />
-        <error line="310" column="84" source="standard:function-expression-body" />
-        <error line="314" column="75" source="standard:function-expression-body" />
-        <error line="319" column="35" source="standard:unnecessary-parentheses-before-trailing-lambda" />
-        <error line="320" column="1" source="standard:indent" />
-        <error line="320" column="1" source="standard:indent" />
-        <error line="388" column="35" source="standard:unnecessary-parentheses-before-trailing-lambda" />
-        <error line="412" column="78" source="standard:string-template" />
-        <error line="485" column="1" source="standard:indent" />
-        <error line="486" column="1" source="standard:indent" />
-        <error line="487" column="1" source="standard:indent" />
-        <error line="488" column="1" source="standard:indent" />
-        <error line="489" column="1" source="standard:indent" />
-        <error line="490" column="1" source="standard:indent" />
-        <error line="491" column="1" source="standard:indent" />
-        <error line="492" column="1" source="standard:indent" />
-        <error line="493" column="1" source="standard:indent" />
-        <error line="494" column="1" source="standard:indent" />
-        <error line="499" column="1" source="standard:indent" />
-        <error line="500" column="32" source="standard:no-multi-spaces" />
-        <error line="520" column="1" source="standard:indent" />
-        <error line="520" column="17" source="standard:chain-wrapping" />
-        <error line="520" column="21" source="standard:wrapping" />
-        <error line="521" column="17" source="standard:chain-wrapping" />
-        <error line="521" column="108" source="standard:wrapping" />
-        <error line="582" column="17" source="standard:chain-wrapping" />
-        <error line="582" column="21" source="standard:wrapping" />
-        <error line="583" column="1" source="standard:indent" />
-        <error line="583" column="78" source="standard:wrapping" />
-        <error line="583" column="79" source="standard:wrapping" />
-        <error line="603" column="177" source="standard:no-semi" />
-        <error line="616" column="120" source="standard:string-template" />
-        <error line="658" column="17" source="standard:chain-wrapping" />
-        <error line="658" column="73" source="standard:wrapping" />
-        <error line="689" column="34" source="standard:wrapping" />
-        <error line="689" column="123" source="standard:wrapping" />
-        <error line="699" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="705" column="35" source="standard:keyword-spacing" />
-        <error line="723" column="13" source="standard:wrapping" />
-        <error line="727" column="13" source="standard:chain-wrapping" />
-        <error line="727" column="69" source="standard:wrapping" />
-        <error line="731" column="17" source="standard:chain-wrapping" />
-        <error line="732" column="17" source="standard:chain-wrapping" />
-        <error line="732" column="69" source="standard:wrapping" />
-        <error line="733" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="738" column="61" source="standard:wrapping" />
-        <error line="738" column="81" source="standard:wrapping" />
-        <error line="783" column="21" source="standard:wrapping" />
-        <error line="823" column="37" source="standard:wrapping" />
-        <error line="823" column="38" source="standard:argument-list-wrapping" />
-        <error line="843" column="37" source="standard:wrapping" />
-        <error line="843" column="38" source="standard:argument-list-wrapping" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarLocationReceiver.kt">
         <error line="137" column="1" source="standard:no-blank-line-before-rbrace" />
@@ -471,47 +399,6 @@
         <error line="85" column="38" source="standard:wrapping" />
         <error line="87" column="9" source="standard:wrapping" />
         <error line="92" column="1" source="standard:final-newline" />
-    </file>
-    <file name="src/main/java/io/radar/sdk/RadarTrackingOptions.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="118" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="142" column="74" source="standard:trailing-comma-on-declaration-site" />
-        <error line="143" column="1" source="standard:indent" />
-        <error line="151" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="153" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="155" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="173" column="96" source="standard:function-expression-body" />
-        <error line="174" column="28" source="standard:keyword-spacing" />
-        <error line="184" column="37" source="standard:function-expression-body" />
-        <error line="185" column="24" source="standard:keyword-spacing" />
-        <error line="200" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="202" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="219" column="78" source="standard:function-expression-body" />
-        <error line="220" column="28" source="standard:keyword-spacing" />
-        <error line="229" column="37" source="standard:function-expression-body" />
-        <error line="230" column="24" source="standard:keyword-spacing" />
-        <error line="241" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="243" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="245" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="263" column="74" source="standard:function-expression-body" />
-        <error line="264" column="28" source="standard:keyword-spacing" />
-        <error line="274" column="37" source="standard:function-expression-body" />
-        <error line="275" column="24" source="standard:keyword-spacing" />
-        <error line="287" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="289" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="306" column="92" source="standard:function-expression-body" />
-        <error line="307" column="28" source="standard:keyword-spacing" />
-        <error line="315" column="37" source="standard:function-expression-body" />
-        <error line="316" column="24" source="standard:keyword-spacing" />
-        <error line="336" column="74" source="standard:function-expression-body" />
-        <error line="346" column="37" source="standard:function-expression-body" />
-        <error line="422" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="459" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="588" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="632" column="24" source="standard:multiline-if-else" />
-        <error line="642" column="24" source="standard:multiline-if-else" />
-        <error line="658" column="1" source="standard:blank-line-between-when-conditions" />
-        <error line="701" column="1" source="standard:no-blank-line-before-rbrace" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarTripOptions.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -980,9 +867,6 @@
         <error line="385" column="51" source="standard:wrapping" />
         <error line="391" column="9" source="standard:wrapping" />
         <error line="399" column="1" source="standard:final-newline" />
-    </file>
-    <file name="src/test/java/io/radar/sdk/RadarTest.kt">
-        <error line="59" column="19" source="standard:property-naming" />
     </file>
     <file name="src/test/java/io/radar/sdk/model/RadarTripLegTest.kt">
         <error line="145" column="17" source="standard:wrapping" />

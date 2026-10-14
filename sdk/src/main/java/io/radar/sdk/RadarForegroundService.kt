@@ -1,22 +1,24 @@
 package io.radar.sdk
 
 import android.annotation.SuppressLint
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import androidx.annotation.RequiresApi
+import androidx.core.graphics.toColorInt
 import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogType
 import io.radar.sdk.RadarTrackingOptions.RadarTrackingOptionsForegroundService.Companion.KEY_FOREGROUND_SERVICE_CHANNEL_NAME
-import androidx.core.graphics.toColorInt
-
 
 // apps that use foregroundServiceEnabled declare this service with foregroundServiceType="location" in their manifest
 @SuppressLint("ForegroundServiceType")
@@ -73,7 +75,7 @@ class RadarForegroundService : Service() {
         manager.deleteNotificationChannel("RadarSDK")
         var id = extras?.getInt("id") ?: 0
         id = if (id == 0) NOTIFICATION_ID else id
-        
+
         val customNotification = RadarNotificationHelper.getCustomForegroundNotification()
 
         // Use the custom notification
@@ -134,8 +136,8 @@ class RadarForegroundService : Service() {
             } else {
                 // If no deep link, open the main app
                 val packageManager = applicationContext.packageManager
-                intent = packageManager.getLaunchIntentForPackage(applicationContext.packageName) ?: 
-                    Intent(applicationContext, Class.forName(extras?.getString("activity")))
+                intent = packageManager.getLaunchIntentForPackage(applicationContext.packageName)
+                    ?: Intent(applicationContext, Class.forName(extras?.getString("activity")))
             }
 
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -146,14 +148,11 @@ class RadarForegroundService : Service() {
         }
         val notification = builder.build()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(id, notification, FOREGROUND_SERVICE_TYPE_LOCATION);
+            startForeground(id, notification, FOREGROUND_SERVICE_TYPE_LOCATION)
         } else {
             startForeground(id, notification)
         }
     }
 
-    override fun onBind(intent: Intent): IBinder? {
-        throw UnsupportedOperationException()
-    }
-
+    override fun onBind(intent: Intent): IBinder? = throw UnsupportedOperationException()
 }
