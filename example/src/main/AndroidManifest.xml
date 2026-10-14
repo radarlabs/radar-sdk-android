@@ -45,6 +45,7 @@
         </service>
         <service
             android:name="io.radar.sdk.RadarForegroundService"
-            android:foregroundServiceType="location" />
+            android:foregroundServiceType="location"
+            tools:targetApi="26" />
     </application>
 </manifest>
