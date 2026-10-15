@@ -48,10 +48,6 @@ internal class RadarBeaconMonitoringManager(
             return
         }
 
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
-        }
-
         if (!adapter.isEnabled) {
             logger.d("Bluetooth not enabled")
 
@@ -126,10 +122,6 @@ internal class RadarBeaconMonitoringManager(
             logger.d("Bluetooth not supported")
 
             return
-        }
-
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
         }
 
         if (!adapter.isEnabled) {
@@ -231,10 +223,6 @@ internal class RadarBeaconMonitoringManager(
             return
         }
 
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
-        }
-
         if (!adapter.isEnabled) {
             logger.d("Bluetooth not enabled")
 
@@ -254,13 +242,10 @@ internal class RadarBeaconMonitoringManager(
 
     private fun isBluetoothSupported(context: Context): Boolean {
         if (!this::adapter.isInitialized) {
-            val defaultAdapter = BluetoothAdapter.getDefaultAdapter()
-            if (defaultAdapter != null) {
-                adapter = defaultAdapter
-            }
+            RadarBeaconUtils.getBluetoothAdapter(context)?.let { adapter = it }
         }
 
-        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && this::adapter.isInitialized && adapter.bluetoothLeScanner != null
     }
 
     private fun getScanSettings(scanMode: Int): ScanSettings = ScanSettings.Builder()

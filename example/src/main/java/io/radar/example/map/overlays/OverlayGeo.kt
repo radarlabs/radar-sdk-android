@@ -49,7 +49,7 @@ suspend fun searchGeofencesNear(near: Location, radius: Int, limit: Int): Array<
 /** Suspend wrapper around `Radar.searchPlaces(...)` (block variant). */
 suspend fun searchPlacesNear(near: Location, radius: Int, limit: Int): Array<RadarPlace> =
     suspendCancellableCoroutine { cont ->
-        Radar.searchPlaces(near, radius, null, null, null, null, limit) { _, _, places ->
+        Radar.searchPlaces(near, radius, null, null, null, null, null, limit) { _, _, places ->
             if (cont.isActive) cont.resume(places ?: emptyArray())
         }
     }

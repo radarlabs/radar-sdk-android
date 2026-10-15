@@ -22,7 +22,6 @@ internal object RadarSettings {
     private const val KEY_PRODUCT = "product"
     private const val KEY_METADATA = "user_metadata"
     private const val KEY_ANONYMOUS = "anonymous"
-    private const val KEY_AD_ID_ENABLED = "ad_id_enabled"
     private const val KEY_TRACKING = "background_tracking"
     private const val KEY_BOOT_RECEIVER_ENABLED = "boot_receiver_enabled"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
@@ -52,10 +51,6 @@ internal object RadarSettings {
     private const val DEFAULT_NETWORK_TIMEOUT_MS = 10000
     private const val DEFAULT_IP_CHANGE_DEBOUNCE_INTERVAL_MS = 10000L
 
-    private const val KEY_OLD_UPDATE_INTERVAL = "dwell_delay"
-    private const val KEY_OLD_UPDATE_INTERVAL_RESPONSIVE = 60000
-    private const val KEY_OLD_SYNC_MODE = "sync_mode"
-    private const val KEY_OLD_OFFLINE_MODE = "offline_mode"
     private const val KEY_USER_DEBUG = "user_debug"
 
     private fun getSharedPreferences(context: Context): SharedPreferences = context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
@@ -153,12 +148,6 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putBoolean(KEY_ANONYMOUS, enabled) }
     }
 
-    internal fun getAdIdEnabled(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_AD_ID_ENABLED, false)
-
-    internal fun setAdIdEnabled(context: Context, enabled: Boolean) {
-        getSharedPreferences(context).edit { putBoolean(KEY_AD_ID_ENABLED, enabled) }
-    }
-
     internal fun getFraudEnabled(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_FRAUD_ENABLED, false)
 
     internal fun setFraudEnabled(context: Context, enabled: Boolean) {
@@ -206,31 +195,10 @@ internal object RadarSettings {
 
     private fun getTrackingOptionsByKey(context: Context, key: String): RadarTrackingOptions {
         val optionsJson = getSharedPreferences(context).getString(key, null)
-        val options: RadarTrackingOptions?
-        if (optionsJson != null) { // v3 tracking options set
-            val optionsObj = JSONObject(optionsJson)
-            options = RadarTrackingOptions.fromJson(optionsObj)
-        } else {
-            val oldInterval = getSharedPreferences(context).getInt(KEY_OLD_UPDATE_INTERVAL, 0)
-            if (oldInterval > 0) { // v2 tracking options upgrade
-                options = if (oldInterval == KEY_OLD_UPDATE_INTERVAL_RESPONSIVE) {
-                    RadarTrackingOptions.RESPONSIVE
-                } else {
-                    RadarTrackingOptions.EFFICIENT
-                }
-                val oldSync = getSharedPreferences(context).getInt(KEY_OLD_SYNC_MODE, 0)
-                if (oldSync == -1) {
-                    options.sync = RadarTrackingOptions.RadarTrackingOptionsSync.ALL
-                }
-                val oldOffline = getSharedPreferences(context).getInt(KEY_OLD_OFFLINE_MODE, 0)
-                if (oldOffline == -1) {
-                    options.replay = RadarTrackingOptions.RadarTrackingOptionsReplay.NONE
-                }
-            } else { // no tracking options set
-                options = RadarTrackingOptions.EFFICIENT
-            }
+        if (optionsJson == null) {
+            return RadarTrackingOptions.EFFICIENT
         }
-        return options
+        return RadarTrackingOptions.fromJson(JSONObject(optionsJson))
     }
 
     internal fun setTrackingOptions(context: Context, options: RadarTrackingOptions) {

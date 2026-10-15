@@ -12,6 +12,7 @@ import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 
 @SuppressLint("MissingPermission")
 internal class RadarGoogleLocationClient(
@@ -152,10 +153,10 @@ internal class RadarGoogleLocationClient(
 
     private fun priorityForDesiredAccuracy(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy) =
         when(desiredAccuracy) {
-            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH -> LocationRequest.PRIORITY_HIGH_ACCURACY
-            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM -> LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
-            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW -> LocationRequest.PRIORITY_LOW_POWER
-            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.NONE -> LocationRequest.PRIORITY_NO_POWER
+            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH -> Priority.PRIORITY_HIGH_ACCURACY
+            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM -> Priority.PRIORITY_BALANCED_POWER_ACCURACY
+            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW -> Priority.PRIORITY_LOW_POWER
+            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.NONE -> Priority.PRIORITY_PASSIVE
         }
 
     override fun getLocationFromGeofenceIntent(intent: Intent): Location? {

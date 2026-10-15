@@ -1,5 +1,15 @@
 # Migration guides
 
+## 3.x to 4.x
+- `Radar.RadarIpGeocodeCallback.onComplete(status, address, proxy)` has been removed. Implement `onComplete(status, address, proxy, throwable)` instead. The `Radar.ipGeocode { status, address, proxy -> }` block overload has also been removed; use `Radar.ipGeocode { status, address, proxy, throwable -> }`.
+- The `expandUnits` parameter has been removed from `Radar.autocomplete()`. The method is now `Radar.autocomplete(query, near, layers, limit, country, mailable, callback)`.
+  - **Note:** if you passed `expandUnits` positionally (e.g. `Radar.autocomplete(query, near, layers, limit, country, true) { ... }`), that Boolean will now be interpreted as `mailable`. Remove the argument.
+- The `Radar.autocomplete(query, near, limit, callback)` and `Radar.autocomplete(query, near, layers, limit, country, callback)` overloads have been removed. Use `Radar.autocomplete(query, near, layers, limit, country, mailable, callback)`; Java callers can omit trailing optional arguments.
+- The `Radar.searchPlaces()` overloads without `chainMetadata` have been removed. Pass `null` for `chainMetadata`: `Radar.searchPlaces(radius, chains, chainMetadata, categories, groups, countryCodes, limit, callback)` and `Radar.searchPlaces(near, radius, chains, chainMetadata, categories, groups, countryCodes, limit, callback)`.
+- `RadarOperatingHour` has been removed. It was unused; geofence operating hours are available via `RadarGeofence.operatingHours` (`RadarOperatingHours`).
+- The SDK no longer depends on `androidx.appcompat:appcompat`, `androidx.activity:activity`, or `androidx.fragment:fragment`. If your app relied on the SDK to pull these in transitively, add them to your app's dependencies.
+- Tracking options persisted by v2 of the SDK are no longer migrated. Devices upgrading directly from v2 will start with `RadarTrackingOptions.EFFICIENT`.
+
 ## 3.20.x to 3.21.x
 - The `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, limit, callback)` is now  `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, countryCodes, limit, callback)`. See [documentation](https://radar.com/documentation/sdk/android#search).
 

@@ -28,15 +28,6 @@ import org.json.JSONObject
         }
     }
 
-    fun toListofJson(replays: List<RadarReplay>): List<JSONObject> {
-        val replayList = mutableListOf<JSONObject>()
-        for (replay in replays) {
-            replayList.add(replay.toJson())
-        }
-        return replayList
-
-    }
-
     override fun compareTo(other: RadarReplay): Int {
         return replayParams.toString().compareTo(other.replayParams.toString())
     }

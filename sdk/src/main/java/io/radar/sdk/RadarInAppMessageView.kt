@@ -34,7 +34,6 @@ class RadarInAppMessageView @JvmOverloads constructor(
     companion object {
         private const val OVERLAY_BACKGROUND_COLOR = "#80000000" // Semi-transparent black overlay
         private const val MODAL_BACKGROUND_COLOR = "#FFFFFF" // White modal background
-        private const val DISMISS_BUTTON_TEXT_COLOR = "#FFFFFF" // White text for dismiss button
         private const val DISMISS_BUTTON_BACKGROUND_COLOR = "#808080" // Gray background for dismiss button
     }
 

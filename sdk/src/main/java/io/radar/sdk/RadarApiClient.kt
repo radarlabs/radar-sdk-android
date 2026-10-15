@@ -1900,7 +1900,13 @@ internal class RadarApiClient(
             params.putOpt("appName", context.applicationInfo.loadLabel(context.packageManager).toString())
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             params.putOpt("appVersion", packageInfo.versionName)
-            params.putOpt("appBuild", packageInfo.versionCode)
+            val appBuild = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                packageInfo.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo.versionCode.toLong()
+            }
+            params.putOpt("appBuild", appBuild)
         } catch (error: Exception) {
             logger.e("Error putting application information into parameters.", Radar.RadarLogType.NONE, error)
         }

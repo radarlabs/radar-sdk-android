@@ -257,23 +257,6 @@ object Radar {
      */
     interface RadarIpGeocodeCallback {
         /**
-         * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a partial address) and a boolean indicating whether the IP address is a known proxy.
-         *
-         * @param[status] RadarStatus The request status.
-         * @param[address] RadarAddress? If successful, the geocoding result (a partial address).
-         * @param[proxy] Boolean A boolean indicating whether the IP address is a known proxy.
-         */
-        @Deprecated(
-            "Override the four-arg onComplete(status, address, proxy, throwable) instead to also receive the underlying exception on network/parse errors.",
-            ReplaceWith("onComplete(status, address, proxy, throwable)")
-        )
-        fun onComplete(
-            status: RadarStatus,
-            address: RadarAddress? = null,
-            proxy: Boolean = false
-        ) {}
-
-        /**
          * Called when an IP geocoding request succeeds, fails, or times out. Receives the request status and, if successful, the geocoding result (a partial address) and a boolean indicating whether the IP address is a known proxy. Also receives the underlying exception when the failure originated from a caught network or parse error.
          *
          * @param[status] RadarStatus The request status.
@@ -286,10 +269,7 @@ object Radar {
             address: RadarAddress? = null,
             proxy: Boolean = false,
             throwable: Throwable? = null
-        ) {
-            @Suppress("DEPRECATION")
-            onComplete(status, address, proxy)
-        }
+        )
     }
 
     /**
@@ -1503,7 +1483,7 @@ object Radar {
         desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
         callback: RadarTrackVerifiedCallback? = null
     ) {
-        trackVerified(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, null, null, callback)
+        trackVerified(beacons, desiredAccuracy, null, null, callback)
     }
 
     /**
@@ -2895,32 +2875,6 @@ object Radar {
     }
 
     /**
-     * Gets the device's current location, then searches for places near that location, sorted by distance.
-     *
-     * @see [](https://radar.com/documentation/api#search-places)
-     *
-     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
-     * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
-     * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
-     * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
-     * @param[limit] The max number of places to return. A number between 1 and 100.
-     * @param[callback] A callback.
-     */
-    @JvmStatic
-    fun searchPlaces(
-        radius: Int,
-        chains: Array<String>?,
-        categories: Array<String>?,
-        groups: Array<String>?,
-        countryCodes: Array<String>?,
-        limit: Int?,
-        callback: RadarSearchPlacesCallback
-    ) {
-        searchPlaces(radius, chains, null, categories, groups, countryCodes, limit, callback)
-    }
-
-    /**
      * Gets the device's current location, then searches for places (with or without chain-specific
      * metadata) near that location, sorted by distance.
      *
@@ -2978,31 +2932,6 @@ object Radar {
     }
 
     /**
-     * Gets the device's current location, then searches for places near that location, sorted by distance.
-     *
-     * @see [](https://radar.com/documentation/api#search-places)
-     *
-     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
-     * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
-     * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
-     * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
-     * @param[limit] The max number of places to return. A number between 1 and 100.
-     * @param[block] A block callback.
-     */
-    fun searchPlaces(
-        radius: Int,
-        chains: Array<String>?,
-        categories: Array<String>?,
-        groups: Array<String>?,
-        countryCodes: Array<String>?,
-        limit: Int?,
-        block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
-    ) {
-        searchPlaces(radius, chains, null, categories, groups, countryCodes, limit, block)
-    }
-
-    /**
      * Gets the device's current location, then searches for places (with or without chain-specific
      * metadata) near that location, sorted by distance.
      *
@@ -3041,34 +2970,6 @@ object Radar {
                 }
             }
         )
-    }
-
-    /**
-     * Search for places near a location, sorted by distance.
-     *
-     * @see [](https://radar.com/documentation/api#search-places)
-     *
-     * @param[near] The location to search.
-     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
-     * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
-     * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
-     * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
-     * @param[limit] The max number of places to return. A number between 1 and 100.
-     * @param[callback] A callback.
-     */
-    @JvmStatic
-    fun searchPlaces(
-        near: Location,
-        radius: Int,
-        chains: Array<String>?,
-        categories: Array<String>?,
-        groups: Array<String>?,
-        countryCodes: Array<String>?,
-        limit: Int?,
-        callback: RadarSearchPlacesCallback
-    ) {
-        searchPlaces(near, radius, chains, null, categories, groups, countryCodes, limit, callback)
     }
 
     /**
@@ -3116,33 +3017,6 @@ object Radar {
                 }
             }
         )
-    }
-
-    /**
-     * Search for places near a location, sorted by distance.
-     *
-     * @see [](https://radar.com/documentation/api#search-places)
-     *
-     * @param[near] The location to search.
-     * @param[radius] The radius to search, in meters. A number between 100 and 10000.
-     * @param[chains] An array of chain slugs to filter. See [](https://radar.com/documentation/places/chains)
-     * @param[categories] An array of categories to filter. See [](https://radar.com/documentation/places/categories)
-     * @param[groups] An array of groups to filter. See [](https://radar.com/documentation/places/groups)
-     * @param[countryCodes] An array of country codes to filter. See [](https://radar.com/documentation/regions/countries)
-     * @param[limit] The max number of places to return. A number between 1 and 100.
-     * @param[block] A block callback.
-     */
-    fun searchPlaces(
-        near: Location,
-        radius: Int,
-        chains: Array<String>?,
-        categories: Array<String>?,
-        groups: Array<String>?,
-        countryCodes: Array<String>?,
-        limit: Int?,
-        block: (status: RadarStatus, location: Location?, places: Array<RadarPlace>?) -> Unit
-    ) {
-        searchPlaces(near, radius, chains, null, categories, groups, countryCodes, limit, block)
     }
 
     /**
@@ -3371,171 +3245,20 @@ object Radar {
      *
      * @param[query] The partial address or place name to autocomplete.
      * @param[near] A location for the search.
-     * @param[limit] The max number of addresses to return. A number between 1 and 100.
-     * @param[callback] A callback.
-     */
-    @JvmStatic
-    fun autocomplete(
-        query: String,
-        near: Location? = null,
-        limit: Int? = null,
-        callback: RadarGeocodeCallback
-    ) {
-        if (!initialized) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
-            return
-        }
-        this.logger.i("autocomplete()", RadarLogType.SDK_CALL)
-
-        apiClient.autocomplete(
-            query,
-            near,
-            null,
-            limit,
-            null,
-            null,
-            object : RadarApiClient.RadarGeocodeApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
-                    handler.post {
-                        callback.onComplete(status, addresses)
-                    }
-                }
-            }
-        )
-    }
-
-    /**
-     * Autocompletes partial addresses and place names, sorted by relevance.
-     *
-     * @see [](https://radar.com/documentation/api#autocomplete)
-     *
-     * @param[query] The partial address or place name to autocomplete.
-     * @param[near] A location for the search.
-     * @param[limit] The max number of addresses to return. A number between 1 and 100.
-     * @param[block] A block callback.
-     */
-    fun autocomplete(
-        query: String,
-        near: Location? = null,
-        limit: Int? = null,
-        block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
-    ) {
-        autocomplete(
-            query,
-            near,
-            null,
-            limit,
-            null,
-            object : RadarGeocodeCallback {
-                override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
-                    block(status, addresses)
-                }
-            }
-        )
-    }
-
-    /**
-     * Autocompletes partial addresses and place names, sorted by relevance.
-     *
-     * @see [](https://radar.com/documentation/api#autocomplete)
-     *
-     * @param[query] The partial address or place name to autocomplete.
-     * @param[near] A location for the search.
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
      * @param[country] An optional country filter. A string, the unique 2-letter country code.
-     * @param[callback] A callback.
-     */
-    @JvmStatic
-    fun autocomplete(
-        query: String,
-        near: Location? = null,
-        layers: Array<String>? = null,
-        limit: Int? = null,
-        country: String? = null,
-        callback: RadarGeocodeCallback
-    ) {
-        if (!initialized) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
-
-            return
-        }
-        this.logger.i("autocomplete()", RadarLogType.SDK_CALL)
-
-        apiClient.autocomplete(
-            query,
-            near,
-            layers,
-            limit,
-            country,
-            null,
-            object : RadarApiClient.RadarGeocodeApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
-                    handler.post {
-                        callback.onComplete(status, addresses)
-                    }
-                }
-            }
-        )
-    }
-
-    /**
-     * Autocompletes partial addresses and place names, sorted by relevance.
-     *
-     * @see [](https://radar.com/documentation/api#autocomplete)
-     *
-     * @param[query] The partial address or place name to autocomplete.
-     * @param[near] A location for the search.
-     * @param[layers] Optional layer filters.
-     * @param[limit] The max number of addresses to return. A number between 1 and 100.
-     * @param[country] An optional country filter. A string, the unique 2-letter country code.
-     * @param[block] A block callback.
-     */
-    fun autocomplete(
-        query: String,
-        near: Location? = null,
-        layers: Array<String>? = null,
-        limit: Int? = null,
-        country: String? = null,
-        block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
-    ) {
-        autocomplete(
-            query,
-            near,
-            layers,
-            limit,
-            country,
-            object : RadarGeocodeCallback {
-                override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
-                    block(status, addresses)
-                }
-            }
-        )
-    }
-
-    /**
-     * Autocompletes partial addresses and place names, sorted by relevance.
-     *
-     * @see [](https://radar.com/documentation/api#autocomplete)
-     *
-     * @param[query] The partial address or place name to autocomplete.
-     * @param[near] A location for the search.
-     * @param[layers] Optional layer filters.
-     * @param[limit] The max number of addresses to return. A number between 1 and 100.
-     * @param[country] An optional country filter. A string, the unique 2-letter country code.
-     * @param[expandUnits] (Deprecated) This is always true, regardless of the value passed here.
      * @param[mailable] Whether to only include mailable addresses.
      * @param[callback] A callback.
      */
     @JvmStatic
+    @JvmOverloads
     fun autocomplete(
         query: String,
         near: Location? = null,
         layers: Array<String>? = null,
         limit: Int? = null,
         country: String? = null,
-        expandUnits: Boolean? = null,
         mailable: Boolean? = null,
         callback: RadarGeocodeCallback
     ) {
@@ -3544,6 +3267,7 @@ object Radar {
 
             return
         }
+        this.logger.i("autocomplete()", RadarLogType.SDK_CALL)
 
         apiClient.autocomplete(
             query,
@@ -3572,18 +3296,15 @@ object Radar {
      * @param[layers] Optional layer filters.
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
      * @param[country] An optional country filter. A string, the unique 2-letter country code.
-     * @param[expandUnits] (Deprecated) This is always true, regardless of the value passed here.
      * @param[mailable] Whether to only include mailable addresses
      * @param[block] A block callback.
      */
-
     fun autocomplete(
         query: String,
         near: Location? = null,
         layers: Array<String>? = null,
         limit: Int? = null,
         country: String? = null,
-        expandUnits: Boolean? = null,
         mailable: Boolean? = null,
         block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
     ) {
@@ -3593,7 +3314,6 @@ object Radar {
             layers,
             limit,
             country,
-            expandUnits,
             mailable,
             object : RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
@@ -3884,25 +3604,6 @@ object Radar {
                 }
             }
         })
-    }
-
-    /**
-     * Geocodes the device's current IP address, converting IP address to partial address.
-     *
-     * @see [](https://radar.com/documentation/api#ip-geocode)
-     *
-     * @param[block] A block callback.
-     */
-    fun ipGeocode(
-        block: (status: RadarStatus, address: RadarAddress?, proxy: Boolean) -> Unit
-    ) {
-        ipGeocode(
-            object : RadarIpGeocodeCallback {
-                override fun onComplete(status: RadarStatus, address: RadarAddress?, proxy: Boolean) {
-                    block(status, address, proxy)
-                }
-            }
-        )
     }
 
     /**
@@ -4783,7 +4484,10 @@ object Radar {
             obj.put("speedAccuracy", location.speedAccuracyMetersPerSecond)
             obj.put("courseAccuracy", location.bearingAccuracyDegrees)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            obj.put("mocked", location.isMock)
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            @Suppress("DEPRECATION")
             obj.put("mocked", location.isFromMockProvider)
         }
         return obj

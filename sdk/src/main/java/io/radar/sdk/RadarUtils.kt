@@ -6,12 +6,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
-import android.location.LocationManager
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
-import androidx.core.hardware.display.DisplayManagerCompat
-import java.security.MessageDigest
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -92,11 +89,6 @@ internal object RadarUtils {
         }
     }
 
-    internal fun getLocationEnabled(context: Context): Boolean {
-        val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return manager.isProviderEnabled(LocationManager.GPS_PROVIDER) || manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-    }
-
     internal fun valid(location: Location): Boolean {
         val latitudeValid = !isWithinDegreeEpsilon(location.latitude, 0.0) && location.latitude > -90.0 && location.latitude < 90.0
         val longitudeValid = !isWithinDegreeEpsilon(location.longitude, 0.0) && location.longitude > -180.0 && location.longitude < 180.0
@@ -128,15 +120,6 @@ internal object RadarUtils {
                 || Build.PRODUCT.contains("vbox86p")
                 || Build.PRODUCT.contains("emulator")
                 || Build.PRODUCT.contains("simulator");
-    }
-
-    internal fun hasMultipleDisplays(context: Context): Boolean {
-        val displayManager = DisplayManagerCompat.getInstance(context)
-        return displayManager.displays.size > 1
-    }
-
-    internal fun hasVirtualInputDevice(context: Context): Boolean {
-        return RadarSettings.getSharing(context)
     }
 
     internal fun isoStringToDate(str: String?): Date? {
@@ -182,19 +165,6 @@ internal object RadarUtils {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
         dateFormat.timeZone = TimeZone.getTimeZone("UTC")
         return dateFormat.format(date)
-    }
-
-    fun hashSHA256(input: String): String {
-        val bytes = MessageDigest.getInstance("SHA-256").digest(input.toByteArray())
-        val hexString = StringBuilder(2 * bytes.size)
-        for (byte in bytes) {
-            val hex = Integer.toHexString(0xFF and byte.toInt())
-            if (hex.length == 1) {
-                hexString.append('0')
-            }
-            hexString.append(hex)
-        }
-        return hexString.toString()
     }
 
     internal fun getConnectionType(context: Context): ConnectionType {

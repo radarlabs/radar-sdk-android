@@ -178,7 +178,12 @@ class RadarLocationReceiver : BroadcastReceiver() {
                     val bleCallbackType = intent.getIntExtra(BluetoothLeScanner.EXTRA_CALLBACK_TYPE, -1)
                     if (bleCallbackType != -1) {
                         val source = if (bleCallbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) Radar.RadarLocationSource.BEACON_EXIT else Radar.RadarLocationSource.BEACON_ENTER
-                        val scanResults: ArrayList<ScanResult>? = intent.getParcelableArrayListExtra(BluetoothLeScanner.EXTRA_LIST_SCAN_RESULT)
+                        val scanResults: ArrayList<ScanResult>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            intent.getParcelableArrayListExtra(BluetoothLeScanner.EXTRA_LIST_SCAN_RESULT, ScanResult::class.java)
+                        } else {
+                            @Suppress("DEPRECATION")
+                            intent.getParcelableArrayListExtra(BluetoothLeScanner.EXTRA_LIST_SCAN_RESULT)
+                        }
                         try {
                             val beacons = RadarBeaconUtils.beaconsForScanResults(scanResults)
                             RadarJobScheduler.scheduleJob(context, beacons, source)

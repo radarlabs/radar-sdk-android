@@ -1,5 +1,8 @@
 package io.radar.sdk
 
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
+import android.content.Context
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanRecord
 import android.bluetooth.le.ScanResult
@@ -17,6 +20,8 @@ internal object RadarBeaconUtils {
     private const val IBEACON_MANUFACTURER_ID = 76
     private val EDDYSTONE_SERVICE_UUID = ParcelUuid.fromString("0000FEAA-0000-1000-8000-00805F9B34FB")
     private val HEX = "0123456789abcdef".toCharArray()
+
+    fun getBluetoothAdapter(context: Context): BluetoothAdapter? = (context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?)?.adapter
 
     fun beaconsForScanResults(scanResults: ArrayList<ScanResult>?): Array<RadarBeacon> {
         if (scanResults.isNullOrEmpty()) {

@@ -88,10 +88,6 @@ internal class RadarOneShotBeaconManager(
             return
         }
 
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
-        }
-
         if (!adapter.isEnabled) {
             logger.d("Bluetooth not enabled")
 
@@ -207,10 +203,6 @@ internal class RadarOneShotBeaconManager(
             callback?.onComplete(RadarStatus.ERROR_BLUETOOTH)
 
             return
-        }
-
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
         }
 
         if (!adapter.isEnabled) {
@@ -340,10 +332,6 @@ internal class RadarOneShotBeaconManager(
             return
         }
 
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
-        }
-
         logger.d("Stopping ranging")
 
         handler.removeCallbacksAndMessages(TIMEOUT_TOKEN)
@@ -414,14 +402,11 @@ internal class RadarOneShotBeaconManager(
     }
 
     private fun isBluetoothSupported(context: Context): Boolean {
-        if(!this::adapter.isInitialized) {
-            val defaultAdapter = BluetoothAdapter.getDefaultAdapter()
-            if (defaultAdapter != null) {
-                adapter = defaultAdapter
-            }
+        if (!this::adapter.isInitialized) {
+            RadarBeaconUtils.getBluetoothAdapter(context)?.let { adapter = it }
         }
 
-        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && this::adapter.isInitialized && adapter.bluetoothLeScanner != null
     }
 
     private fun getScanSettings(scanMode: Int): ScanSettings {

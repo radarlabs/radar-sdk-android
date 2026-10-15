@@ -13,7 +13,6 @@ import org.json.JSONObject
 
 internal object RadarState {
 
-    private const val KEY_STARTED = "has_started"
     private const val KEY_LAST_LOCATION_LATITUDE = "last_location_latitude"
     private const val KEY_LAST_LOCATION_LONGITUDE = "last_location_longitude"
     private const val KEY_LAST_LOCATION_ACCURACY = "last_location_accuracy"
