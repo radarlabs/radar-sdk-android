@@ -44,9 +44,7 @@ internal object RadarState {
     private const val KEY_ALTITUDE_ADJUSTMENTS = "altitude_adjustments"
     private const val KEY_LAST_USER = "last_user"
 
-    private fun getSharedPreferences(context: Context): SharedPreferences {
-        return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
-    }
+    private fun getSharedPreferences(context: Context): SharedPreferences = context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
 
     internal fun getLastLocation(context: Context): Location? {
         val lastLocationLatitude = getSharedPreferences(context).getFloat(KEY_LAST_LOCATION_LATITUDE, 0f)
@@ -122,33 +120,25 @@ internal object RadarState {
         }
     }
 
-    internal fun getLastMovedAt(context: Context): Long {
-        return getSharedPreferences(context).getLong(KEY_LAST_MOVED_AT, 0L)
-    }
+    internal fun getLastMovedAt(context: Context): Long = getSharedPreferences(context).getLong(KEY_LAST_MOVED_AT, 0L)
 
     internal fun setLastMovedAt(context: Context, lastMovedAt: Long) {
         getSharedPreferences(context).edit { putLong(KEY_LAST_MOVED_AT, lastMovedAt) }
     }
 
-    internal fun getStopped(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_STOPPED, false)
-    }
+    internal fun getStopped(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_STOPPED, false)
 
     internal fun setStopped(context: Context, stopped: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_STOPPED, stopped) }
     }
 
     internal fun updateLastSentAt(context: Context) {
-        getSharedPreferences(context).edit { putLong(KEY_LAST_SENT_AT,  System.currentTimeMillis()) }
+        getSharedPreferences(context).edit { putLong(KEY_LAST_SENT_AT, System.currentTimeMillis()) }
     }
 
-    internal fun getLastSentAt(context: Context): Long {
-        return getSharedPreferences(context).getLong(KEY_LAST_SENT_AT, 0L)
-    }
+    internal fun getLastSentAt(context: Context): Long = getSharedPreferences(context).getLong(KEY_LAST_SENT_AT, 0L)
 
-    internal fun getCanExit(context: Context): Boolean {
-        return getSharedPreferences(context).getBoolean(KEY_CAN_EXIT, true)
-    }
+    internal fun getCanExit(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_CAN_EXIT, true)
 
     internal fun setCanExit(context: Context, canExit: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_CAN_EXIT, canExit) }
@@ -195,33 +185,25 @@ internal object RadarState {
         }
     }
 
-    internal fun getGeofenceIds(context: Context): MutableSet<String>? {
-        return getSharedPreferences(context).getStringSet(KEY_GEOFENCE_IDS, null)
-    }
+    internal fun getGeofenceIds(context: Context): MutableSet<String>? = getSharedPreferences(context).getStringSet(KEY_GEOFENCE_IDS, null)
 
     internal fun setGeofenceIds(context: Context, geofenceIds: Set<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_GEOFENCE_IDS, geofenceIds) }
     }
 
-    internal fun getPlaceId(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_PLACE_ID, null)
-    }
+    internal fun getPlaceId(context: Context): String? = getSharedPreferences(context).getString(KEY_PLACE_ID, null)
 
     internal fun setPlaceId(context: Context, placeId: String?) {
         getSharedPreferences(context).edit { putString(KEY_PLACE_ID, placeId) }
     }
 
-    internal fun getRegionIds(context: Context): MutableSet<String>? {
-        return getSharedPreferences(context).getStringSet(KEY_REGION_IDS, null)
-    }
+    internal fun getRegionIds(context: Context): MutableSet<String>? = getSharedPreferences(context).getStringSet(KEY_REGION_IDS, null)
 
     internal fun setRegionIds(context: Context, regionIds: Set<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_REGION_IDS, regionIds) }
     }
 
-    internal fun getBeaconIds(context: Context): MutableSet<String>? {
-        return getSharedPreferences(context).getStringSet(KEY_BEACON_IDS, null)
-    }
+    internal fun getBeaconIds(context: Context): MutableSet<String>? = getSharedPreferences(context).getStringSet(KEY_BEACON_IDS, null)
 
     internal fun setBeaconIds(context: Context, beaconIds: Set<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_BEACON_IDS, beaconIds) }
@@ -240,9 +222,7 @@ internal object RadarState {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    internal fun getLastBeaconUUIDs(context: Context): Array<String>? {
-        return getSharedPreferences(context).getStringSet(KEY_LAST_BEACON_UUIDS, null)?.toTypedArray()
-    }
+    internal fun getLastBeaconUUIDs(context: Context): Array<String>? = getSharedPreferences(context).getStringSet(KEY_LAST_BEACON_UUIDS, null)?.toTypedArray()
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeaconUUIDs(context: Context, uuids: Array<String>?) {
@@ -250,32 +230,26 @@ internal object RadarState {
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-    internal fun getLastBeaconUIDs(context: Context): Array<String>? {
-        return getSharedPreferences(context).getStringSet(KEY_LAST_BEACON_UIDS, null)?.toTypedArray()
-    }
+    internal fun getLastBeaconUIDs(context: Context): Array<String>? = getSharedPreferences(context).getStringSet(KEY_LAST_BEACON_UIDS, null)?.toTypedArray()
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeaconUIDs(context: Context, uids: Array<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
     }
 
-    private fun stringToJsonObject(jsonString: String?): JSONObject? {
-        return jsonString?.let {
-            try {
-                JSONObject(it)
-            } catch (e: Exception) {
-                null
-            }
+    private fun stringToJsonObject(jsonString: String?): JSONObject? = jsonString?.let {
+        try {
+            JSONObject(it)
+        } catch (e: Exception) {
+            null
         }
     }
 
-    private fun stringToJsonArray(jsonString: String?): JSONArray? {
-        return jsonString?.let {
-            try {
-                JSONArray(it)
-            } catch (e: Exception) {
-                null
-            }
+    private fun stringToJsonArray(jsonString: String?): JSONArray? = jsonString?.let {
+        try {
+            JSONArray(it)
+        } catch (e: Exception) {
+            null
         }
     }
 
@@ -331,5 +305,4 @@ internal object RadarState {
             }
         }
     }
-
 }

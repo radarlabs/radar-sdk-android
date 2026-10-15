@@ -4499,7 +4499,7 @@ object Radar {
      * @return The current `sdkVersion`.
      */
     @JvmStatic
-    fun sdkVersion(): String = RadarUtils.sdkVersion
+    fun sdkVersion(): String = RadarUtils.SDK_VERSION
 
     internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>) {
         if (!initialized || !this::inAppMessageManager.isInitialized) {

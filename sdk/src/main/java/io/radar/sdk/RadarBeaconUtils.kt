@@ -2,17 +2,17 @@ package io.radar.sdk
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
-import android.content.Context
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanRecord
 import android.bluetooth.le.ScanResult
+import android.content.Context
 import android.os.Build
 import android.os.ParcelUuid
 import androidx.annotation.RequiresApi
 import io.radar.sdk.model.RadarBeacon
-import org.json.JSONObject
 import java.nio.ByteBuffer
 import java.util.*
+import org.json.JSONObject
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal object RadarBeaconUtils {
@@ -92,15 +92,15 @@ internal object RadarBeaconUtils {
             val identifier = beacon.major
 
             val serviceData = ByteBuffer.allocate(18)
-                .put(ByteArray(2) { 0x00.toByte() })
+                .put(ByteArray(2))
                 .put(this.toByteArray(uid, 10))
                 .put(this.toByteArray(identifier, 6))
                 .array()
 
             val serviceDataMask = ByteBuffer.allocate(18)
-                .put(ByteArray(1) { 0xFF.toByte() } )
-                .put(ByteArray(1) { 0x00.toByte() } )
-                .put(ByteArray(16) { 0xFF.toByte() } )
+                .put(ByteArray(1) { 0xFF.toByte() })
+                .put(ByteArray(1))
+                .put(ByteArray(16) { 0xFF.toByte() })
                 .array()
 
             return ScanFilter.Builder()
@@ -113,20 +113,20 @@ internal object RadarBeaconUtils {
             val minor = beacon.minor.toInt()
 
             val manufacturerData = ByteBuffer.allocate(23)
-                .put(ByteArray(2) { 0x00.toByte() })
+                .put(ByteArray(2))
                 .putLong(uuid.mostSignificantBits)
                 .putLong(uuid.leastSignificantBits)
                 .put((major / 256).toByte())
                 .put((major % 256).toByte())
                 .put((minor / 256).toByte())
                 .put((minor % 256).toByte())
-                .put(ByteArray(1) { 0x00.toByte() })
+                .put(ByteArray(1))
                 .array()
 
             val manufacturerDataMask = ByteBuffer.allocate(23)
-                .put(ByteArray(2) { 0x00.toByte() })
+                .put(ByteArray(2))
                 .put(ByteArray(20) { 0xFF.toByte() })
-                .put(ByteArray(1) { 0x00.toByte() })
+                .put(ByteArray(1))
                 .array()
 
             return ScanFilter.Builder()
@@ -141,16 +141,16 @@ internal object RadarBeaconUtils {
         val uuid = UUID.fromString(beaconUUID.lowercase())
 
         val manufacturerData = ByteBuffer.allocate(23)
-            .put(ByteArray(2) { 0x00.toByte() })
+            .put(ByteArray(2))
             .putLong(uuid.mostSignificantBits)
             .putLong(uuid.leastSignificantBits)
-            .put(ByteArray(5) { 0x00.toByte() })
+            .put(ByteArray(5))
             .array()
 
         val manufacturerDataMask = ByteBuffer.allocate(23)
-            .put(ByteArray(2) { 0x00.toByte() })
+            .put(ByteArray(2))
             .put(ByteArray(16) { 0xFF.toByte() })
-            .put(ByteArray(5) { 0x00.toByte() })
+            .put(ByteArray(5))
             .array()
 
         return ScanFilter.Builder()
@@ -160,16 +160,16 @@ internal object RadarBeaconUtils {
 
     fun getScanFilterForBeaconUID(beaconUID: String): ScanFilter? {
         val serviceData = ByteBuffer.allocate(18)
-            .put(ByteArray(2) { 0x00.toByte() })
+            .put(ByteArray(2))
             .put(this.toByteArray(beaconUID, 10))
-            .put(ByteArray(6) { 0x00.toByte() })
+            .put(ByteArray(6))
             .array()
 
         val serviceDataMask = ByteBuffer.allocate(18)
-            .put(ByteArray(1) { 0xFF.toByte() } )
-            .put(ByteArray(1) { 0x00.toByte() } )
-            .put(ByteArray(10) { 0xFF.toByte() } )
-            .put(ByteArray(6) { 0x00.toByte() } )
+            .put(ByteArray(1) { 0xFF.toByte() })
+            .put(ByteArray(1))
+            .put(ByteArray(10) { 0xFF.toByte() })
+            .put(ByteArray(6))
             .array()
 
         return ScanFilter.Builder()
@@ -239,11 +239,8 @@ internal object RadarBeaconUtils {
         return hex.joinToString("")
     }
 
-    private fun toByteArray(hex: String, max: Int): ByteArray {
-        return hex.chunked(2)
-            .map { it.toInt(16).toByte() }
-            .toByteArray()
-            .sliceArray(0 until max)
-    }
-
+    private fun toByteArray(hex: String, max: Int): ByteArray = hex.chunked(2)
+        .map { it.toInt(16).toByte() }
+        .toByteArray()
+        .sliceArray(0 until max)
 }

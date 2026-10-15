@@ -18,7 +18,7 @@ import com.google.android.gms.location.Priority
 internal class RadarGoogleLocationClient(
     private val context: Context,
     private val logger: RadarLogger
-): RadarAbstractLocationClient() {
+) : RadarAbstractLocationClient() {
 
     @SuppressLint("VisibleForTests")
     val locationClient = LocationServices.getFusedLocationProviderClient(context)
@@ -26,13 +26,13 @@ internal class RadarGoogleLocationClient(
 
     override fun getCurrentLocation(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy, block: (location: Location?) -> Unit) {
         val priority = priorityForDesiredAccuracy(desiredAccuracy)
-        
+
         var currentLocationRequestBuilder = CurrentLocationRequest.Builder()
             .setPriority(priority)
         if (desiredAccuracy == RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH) {
             currentLocationRequestBuilder = currentLocationRequestBuilder.setMaxUpdateAgeMillis(0)
         }
-        
+
         val timeout = RadarSettings.getSdkConfiguration(context).locationManagerTimeout
         if (timeout > 0) {
             logger.d("Requesting location with timeout | timeout = $timeout")
@@ -151,13 +151,12 @@ internal class RadarGoogleLocationClient(
         }
     }
 
-    private fun priorityForDesiredAccuracy(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy) =
-        when(desiredAccuracy) {
-            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH -> Priority.PRIORITY_HIGH_ACCURACY
-            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM -> Priority.PRIORITY_BALANCED_POWER_ACCURACY
-            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW -> Priority.PRIORITY_LOW_POWER
-            RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.NONE -> Priority.PRIORITY_PASSIVE
-        }
+    private fun priorityForDesiredAccuracy(desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy) = when (desiredAccuracy) {
+        RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH -> Priority.PRIORITY_HIGH_ACCURACY
+        RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM -> Priority.PRIORITY_BALANCED_POWER_ACCURACY
+        RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.LOW -> Priority.PRIORITY_LOW_POWER
+        RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.NONE -> Priority.PRIORITY_PASSIVE
+    }
 
     override fun getLocationFromGeofenceIntent(intent: Intent): Location? {
         if (intent == null) {
@@ -204,5 +203,4 @@ internal class RadarGoogleLocationClient(
 
         return result.lastLocation
     }
-
 }

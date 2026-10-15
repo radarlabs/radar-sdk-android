@@ -43,7 +43,7 @@ internal class RadarOneShotBeaconManager(
     }
 
     private fun addCallback(callback: RadarBeaconCallback?) {
-       if (callback == null) {
+        if (callback == null) {
             return
         }
 
@@ -341,7 +341,7 @@ internal class RadarOneShotBeaconManager(
         } catch (e: Exception) {
             logger.d("Error stopping ranging beacons", RadarLogType.SDK_EXCEPTION, e)
         }
-        
+
         scanCallback = null
 
         this.callCallbacks(this.nearbyBeacons.toTypedArray())
@@ -409,10 +409,7 @@ internal class RadarOneShotBeaconManager(
         return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && this::adapter.isInitialized && adapter.bluetoothLeScanner != null
     }
 
-    private fun getScanSettings(scanMode: Int): ScanSettings {
-        return ScanSettings.Builder()
-            .setScanMode(scanMode)
-            .build()
-    }
-
+    private fun getScanSettings(scanMode: Int): ScanSettings = ScanSettings.Builder()
+        .setScanMode(scanMode)
+        .build()
 }

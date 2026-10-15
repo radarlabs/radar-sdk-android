@@ -95,11 +95,11 @@ class RadarRevealRiskTest {
         val coreBody = JSONObject(sealOptions["body"] as String)
         assertEquals(RadarSettings.getInstallId(context), coreBody.getString("installId"))
         assertEquals("Android", coreBody.getString("deviceType"))
-        assertEquals(RadarUtils.sdkVersion, coreBody.getString("sdkVersion"))
+        assertEquals(RadarUtils.SDK_VERSION, coreBody.getString("sdkVersion"))
         assertFalse(coreBody.has("fraudPayload"))
         assertFalse(sealOptions.containsKey("installId"))
         assertEquals(context.packageName, sealOptions["origin"])
-        assertEquals(RadarUtils.sdkVersion, sealOptions["sdkVersion"])
+        assertEquals(RadarUtils.SDK_VERSION, sealOptions["sdkVersion"])
         assertEquals(PUBLISHABLE_KEY, sealOptions["authorization"])
         val attemptId = sealOptions["encryptionAttemptId"] as String
         assertTrue(attemptId.matches(Regex("[A-Za-z0-9_-]{22}")))
