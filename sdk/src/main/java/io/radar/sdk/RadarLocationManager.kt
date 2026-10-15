@@ -886,10 +886,9 @@ internal class RadarLocationManager(
                 val message =
                     "RadarForegroundService is not declared in your app manifest. Declare it to use foregroundServiceEnabled: " +
                         "https://docs.radar.com/sdk/android#foreground-services-and-google-play-policy"
-                // fail fast in debug builds when the app's own tracking options enable the foreground service, if only
-                // remote tracking options enable it, log instead since a dashboard change should never crash the app
+                // fail fast in debug builds so the missing declaration is caught before release, release builds log instead
                 val isDebuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-                if (isDebuggable && RadarSettings.getTrackingOptions(context).foregroundServiceEnabled) {
+                if (isDebuggable) {
                     throw IllegalStateException(message)
                 }
                 if (!loggedForegroundServiceNotDeclared) {
