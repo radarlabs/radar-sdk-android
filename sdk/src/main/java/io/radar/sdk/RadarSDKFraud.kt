@@ -41,17 +41,29 @@ internal open class RadarSDKFraud(
     ) {
         val (fraudInstance, method) = try {
             val fraudClass = fraudClassProvider()
-            check(
-                fraudClass.getMethod("coreCompatibilityVersion").invoke(null) == REQUIRED_CORE_COMPATIBILITY_VERSION
-            ) {
-                INCOMPATIBLE_FRAUD_SDK_MESSAGE
-            }
             val method = fraudClass.getMethod(
                 "prepareFraudPayload",
                 java.util.Map::class.java,
                 Function1::class.java
             )
-            val instance = checkNotNull(fraudClass.getMethod("sharedInstance").invoke(null))
+            val sharedInstanceMethod = fraudClass.getMethod("sharedInstance")
+            val compatibilityMethod = try {
+                fraudClass.getMethod("coreCompatibilityVersion")
+            } catch (e: NoSuchMethodException) {
+                null
+            }
+            if (compatibilityMethod == null) {
+                // Older encryption-capable Fraud SDKs predate the compatibility marker.
+                logger.w(
+                    "Installed Radar Fraud SDK does not report compatibility with this Radar SDK. " +
+                        "Continuing with the available Fraud SDK methods."
+                )
+            } else {
+                check(compatibilityMethod.invoke(null) == REQUIRED_CORE_COMPATIBILITY_VERSION) {
+                    INCOMPATIBLE_FRAUD_SDK_MESSAGE
+                }
+            }
+            val instance = checkNotNull(sharedInstanceMethod.invoke(null))
             instance to method
         } catch (e: ClassNotFoundException) {
             logger.e(REQUIRED_FRAUD_SDK_MESSAGE, Radar.RadarLogType.SDK_ERROR)
