@@ -80,7 +80,8 @@ internal open class RadarApiHelper(
         verified: Boolean = false,
         imageCallback: RadarImageApiCallback? = null,
         verifiedHostOverride: String? = null,
-        prepareRequest: (() -> JSONObject)? = null
+        prepareRequest: (() -> JSONObject)? = null,
+        preparationFailureHandler: ((Exception) -> Unit)? = null
     ) {
         val host = if (verified) {
             verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
@@ -137,9 +138,13 @@ internal open class RadarApiHelper(
 
                     prepareRequest?.invoke() ?: params
                 } catch (e: Exception) {
-                    logger?.e("Failed to prepare Radar API request", RadarLogType.SDK_ERROR, e)
+                    logger?.e("Failed to prepare Radar API request: ${e.message ?: "Unknown error"}", RadarLogType.SDK_ERROR, e)
                     handler.post {
-                        callback?.onComplete(Radar.RadarStatus.ERROR_PLUGIN, throwable = e)
+                        if (preparationFailureHandler != null) {
+                            preparationFailureHandler(e)
+                        } else {
+                            callback?.onComplete(Radar.RadarStatus.ERROR_BAD_REQUEST, throwable = e)
+                        }
                     }
                     return@execute
                 }
