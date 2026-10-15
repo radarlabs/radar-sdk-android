@@ -372,7 +372,8 @@ class RadarTest {
             verified: Boolean,
             imageCallback: RadarApiHelper.RadarImageApiCallback?,
             verifiedHostOverride: String?,
-            prepareRequest: (() -> JSONObject)?
+            prepareRequest: (() -> JSONObject)?,
+            preparationFailureHandler: ((Exception) -> Unit)?
         ) {
             if (path == "v1/logs") {
                 uploadCount.incrementAndGet()
@@ -3597,6 +3598,41 @@ class RadarTest {
         assertEquals(fraudMock.mockPayload, apiHelperMock.lastCapturedParams!!.toString())
 
         Radar.setExpectedAddress(null)
+    }
+
+    @Test
+    fun test_Radar_trackVerified_preparationFailuresPreserveStatusAndRejectMissingPayload() {
+        for (preparationStatus in listOf(Radar.RadarStatus.ERROR_PLUGIN, Radar.RadarStatus.ERROR_BAD_REQUEST, Radar.RadarStatus.SUCCESS)) {
+            mockTrackVerifiedBeacons()
+            apiHelperMock.clearCapturedParams()
+            RadarSDKFraud.shared = object : RadarSDKFraud() {
+                override fun prepareFraudPayload(
+                    context: Context,
+                    logger: RadarLogger,
+                    location: Location?,
+                    googlePlayProjectNumber: Long?,
+                    callback: (Radar.RadarStatus, RadarPreparedFraudPayload?) -> Unit
+                ) {
+                    callback(preparationStatus, null)
+                }
+            }
+            val latch = CountDownLatch(1)
+            var callbackStatus: Radar.RadarStatus? = null
+            Radar.trackVerified { status, token ->
+                callbackStatus = status
+                assertNull(token)
+                latch.countDown()
+            }
+            ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+            assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS))
+            val expected = if (preparationStatus == Radar.RadarStatus.SUCCESS) {
+                Radar.RadarStatus.ERROR_BAD_REQUEST
+            } else {
+                preparationStatus
+            }
+            assertEquals(expected, callbackStatus)
+            assertFalse(apiHelperMock.capturedPaths.contains("v1/track"))
+        }
     }
 
     private fun mockTrackVerifiedBeacons(): Location {

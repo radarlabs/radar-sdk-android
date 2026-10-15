@@ -95,7 +95,7 @@ internal class RadarVerificationManager(
                             RadarSDKFraud.prepareFraudPayload(context, logger, location, googlePlayProjectNumber) { status, preparedPayload ->
                                 if (status != RadarStatus.SUCCESS || preparedPayload == null) {
                                     callback?.onComplete(
-                                        if (status == RadarStatus.SUCCESS) RadarStatus.ERROR_PLUGIN else status
+                                        if (status == RadarStatus.SUCCESS) RadarStatus.ERROR_BAD_REQUEST else status
                                     )
                                     return@prepareFraudPayload
                                 }

@@ -525,22 +525,19 @@ internal class RadarApiClient(
             prepareRequest = if (verified) {
                 {
                     val prepared = preparedFraudPayload
-                        ?: throw IllegalStateException("Missing prepared fraud payload")
+                        ?: throw IllegalStateException("Failed to prepare fraud payload")
                     JSONObject(prepared.sealForRequest(path, params, headers))
                 }
             } else {
                 null
             },
+            preparationFailureHandler = {
+                // Local preparation failures bypass replay and offline processing.
+                callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            },
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status != RadarStatus.SUCCESS || res == null) {
-                        // Request preparation failed before dispatch. Fail closed without
-                        // buffering a replay or treating this as an offline track failure.
-                        if (status == RadarStatus.ERROR_PLUGIN) {
-                            callback?.onComplete(status)
-                            return
-                        }
-
                         if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
                             val replayParams = JSONObject(params.toString())
                             if (verified) {
