@@ -213,7 +213,7 @@ class RadarRevealRiskTest {
             }
 
             assertEquals(1, fraudHandle.sealOptions.size)
-            assertEquals(Radar.RadarStatus.ERROR_PLUGIN, callbackStatus)
+            assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, callbackStatus)
             assertNull(callbackToken)
             assertNotEquals("v1/reveal/risk", apiHelperMock.lastCapturedPath)
         }
