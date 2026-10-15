@@ -1,7 +1,7 @@
 # Migration guides
 
 ## 3.x to X.Y.Z (version TBD)
-- The SDK no longer declares `RadarForegroundService` in its manifest, so apps that only use geofencing don't ship a location foreground service. Google Play no longer accepts geofencing as a foreground service use case. If you use `RadarTrackingOptions.CONTINUOUS`, set `foregroundServiceEnabled = true`, or enable the foreground service in remote tracking options, declare the service and the `FOREGROUND_SERVICE_LOCATION` permission in your app manifest. If the service is not declared, debug builds throw an `IllegalStateException` when tracking starts with the foreground service enabled, including when remote tracking options enable it. Release builds log an error and track without a foreground service.
+- The SDK no longer declares `RadarForegroundService` in its manifest, so apps that only use geofencing don't ship a location foreground service. Google Play no longer accepts geofencing as a foreground service use case. If you use `RadarTrackingOptions.CONTINUOUS`, set `foregroundServiceEnabled = true`, or enable the foreground service in remote tracking options, declare the service and the `FOREGROUND_SERVICE_LOCATION` permission in your app manifest. If the service is not declared, the SDK logs an error and tracks without a foreground service.
 
 ```xml
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"

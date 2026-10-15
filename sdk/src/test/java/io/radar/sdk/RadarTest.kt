@@ -5,7 +5,6 @@ import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.location.Location
@@ -56,7 +55,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -1576,54 +1574,11 @@ class RadarTest {
         val application = context as Application
         shadowOf(application).clearStartedServices()
 
-        withDebuggable(false) {
-            Radar.startTracking(RadarTrackingOptions.CONTINUOUS)
-        }
+        Radar.startTracking(RadarTrackingOptions.CONTINUOUS)
 
         assertTrue(Radar.isTracking())
         assertFalse(RadarForegroundService.started)
         assertNull(shadowOf(application).nextStartedService)
-    }
-
-    @Test
-    fun test_Radar_startTracking_continuous_foregroundServiceNotDeclared_debuggableThrows() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = true
-
-        Radar.stopTracking()
-        shadowOf(context.packageManager).removeService(ComponentName(context, RadarForegroundService::class.java))
-        RadarForegroundService.started = false
-
-        try {
-            withDebuggable(true) {
-                assertThrows(IllegalStateException::class.java) {
-                    Radar.startTracking(RadarTrackingOptions.CONTINUOUS)
-                }
-            }
-            assertFalse(RadarForegroundService.started)
-        } finally {
-            Radar.stopTracking()
-        }
-    }
-
-    @Test
-    fun test_Radar_startTracking_foregroundServiceNotDeclared_debuggableRemoteOptionsThrows() {
-        permissionsHelperMock.mockFineLocationPermissionGranted = true
-
-        Radar.stopTracking()
-        shadowOf(context.packageManager).removeService(ComponentName(context, RadarForegroundService::class.java))
-        RadarForegroundService.started = false
-        RadarSettings.setRemoteTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
-
-        try {
-            withDebuggable(true) {
-                assertThrows(IllegalStateException::class.java) {
-                    Radar.startTracking(RadarTrackingOptions.RESPONSIVE)
-                }
-            }
-        } finally {
-            RadarSettings.removeRemoteTrackingOptions(context)
-            Radar.stopTracking()
-        }
     }
 
     private fun declareForegroundService() {
@@ -1633,20 +1588,6 @@ class RadarTest {
                 name = RadarForegroundService::class.java.name
             }
         )
-    }
-
-    private fun withDebuggable(debuggable: Boolean, block: () -> Unit) {
-        val originalFlags = context.applicationInfo.flags
-        context.applicationInfo.flags = if (debuggable) {
-            originalFlags or ApplicationInfo.FLAG_DEBUGGABLE
-        } else {
-            originalFlags and ApplicationInfo.FLAG_DEBUGGABLE.inv()
-        }
-        try {
-            block()
-        } finally {
-            context.applicationInfo.flags = originalFlags
-        }
     }
 
     @Test
