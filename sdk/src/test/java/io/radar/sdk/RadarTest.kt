@@ -1627,6 +1627,27 @@ class RadarTest {
         }
     }
 
+    @Test
+    fun test_Radar_startTracking_continuous_foregroundServiceNotDeclared_debuggableLocalAndRemoteOptionsThrows() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+
+        Radar.stopTracking()
+        shadowOf(context.packageManager).removeService(ComponentName(context, RadarForegroundService::class.java))
+        RadarForegroundService.started = false
+        RadarSettings.setRemoteTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
+
+        try {
+            withDebuggable(true) {
+                assertThrows(IllegalStateException::class.java) {
+                    Radar.startTracking(RadarTrackingOptions.CONTINUOUS)
+                }
+            }
+        } finally {
+            RadarSettings.removeRemoteTrackingOptions(context)
+            Radar.stopTracking()
+        }
+    }
+
     private fun declareForegroundService() {
         shadowOf(context.packageManager).addOrUpdateService(
             ServiceInfo().apply {
