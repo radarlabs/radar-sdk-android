@@ -2,7 +2,7 @@
 
 ## 3.x to 4.x
 - The minimum supported Android version is now API 23 (Android 6.0), up from API 16. Apps with a lower `minSdk` must raise it to 23 to use v4.
-- The SDK is now compiled for Java 11 bytecode (`jvmTarget = "11"`). Apps must set `compileOptions` (and `kotlinOptions.jvmTarget`) to Java 11 or newer.
+- The SDK is now compiled to Java 11 bytecode. Apps don't need to change their own `compileOptions` or `kotlinOptions.jvmTarget`, but must build with Android Gradle Plugin 7.0 or newer.
 - `Radar.RadarIpGeocodeCallback.onComplete(status, address, proxy)` has been removed. Implement `onComplete(status, address, proxy, throwable)` instead. The `Radar.ipGeocode { status, address, proxy -> }` block overload has also been removed; use `Radar.ipGeocode { status, address, proxy, throwable -> }`.
 - The `expandUnits` parameter has been removed from `Radar.autocomplete()`. The method is now `Radar.autocomplete(query, near, layers, limit, country, mailable, callback)`.
   - **Note:** if you passed `expandUnits` positionally (e.g. `Radar.autocomplete(query, near, layers, limit, country, true) { ... }`), that Boolean will now be interpreted as `mailable`. Remove the argument.
