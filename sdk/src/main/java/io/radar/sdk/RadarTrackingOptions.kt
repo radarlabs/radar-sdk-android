@@ -1,7 +1,7 @@
 package io.radar.sdk
 
-import org.json.JSONObject
 import java.util.Date
+import org.json.JSONObject
 
 /**
  * An options class used to configure background tracking.
@@ -104,7 +104,9 @@ data class RadarTrackingOptions(
     var syncGeofencesLimit: Int,
 
     /**
-     * If set, starts a foreground service and shows a notification during tracking.
+     * If set, starts a foreground service and shows a notification during tracking. Requires declaring
+     * `io.radar.sdk.RadarForegroundService` with `android:foregroundServiceType="location"` in your app manifest.
+     * Geofencing does not require a foreground service.
      */
     var foregroundServiceEnabled: Boolean,
 
@@ -112,7 +114,6 @@ data class RadarTrackingOptions(
      * Determines whether to monitor beacons.
      */
     var beacons: Boolean,
-
 
     /**
      * Determines whether to use motion detection and collect location metadata.
@@ -137,8 +138,8 @@ data class RadarTrackingOptions(
     /**
      * Specifies the tracking options preset type used to configure this instance.
      */
-    var type: RadarTrackingOptionsType = RadarTrackingOptionsType.DEFAULT,
-    ) {
+    var type: RadarTrackingOptionsType = RadarTrackingOptionsType.DEFAULT
+) {
 
     /**
      * The location accuracy options.
@@ -146,10 +147,13 @@ data class RadarTrackingOptions(
     enum class RadarTrackingOptionsDesiredAccuracy(internal val desiredAccuracy: Int) {
         /** Uses PRIORITY_HIGH_ACCURACY. */
         HIGH(3),
+
         /** Uses PRIORITY_BALANCED_POWER_ACCURACY. */
         MEDIUM(2),
+
         /** Uses PRIORITY_LOW_POWER. */
         LOW(1),
+
         /** Uses PRIORITY_NO_POWER. */
         NONE(0);
 
@@ -168,24 +172,20 @@ data class RadarTrackingOptions(
                 return MEDIUM
             }
 
-            fun fromRadarString(desiredAccuracy: String?): RadarTrackingOptionsDesiredAccuracy {
-                return when(desiredAccuracy) {
-                    HIGH_STR -> HIGH
-                    MEDIUM_STR -> MEDIUM
-                    LOW_STR -> LOW
-                    NONE_STR -> NONE
-                    else -> MEDIUM
-                }
+            fun fromRadarString(desiredAccuracy: String?): RadarTrackingOptionsDesiredAccuracy = when (desiredAccuracy) {
+                HIGH_STR -> HIGH
+                MEDIUM_STR -> MEDIUM
+                LOW_STR -> LOW
+                NONE_STR -> NONE
+                else -> MEDIUM
             }
         }
 
-        fun toRadarString(): String {
-            return when(this) {
-                HIGH -> HIGH_STR
-                MEDIUM -> MEDIUM_STR
-                LOW -> LOW_STR
-                NONE -> NONE_STR
-            }
+        fun toRadarString(): String = when (this) {
+            HIGH -> HIGH_STR
+            MEDIUM -> MEDIUM_STR
+            LOW -> LOW_STR
+            NONE -> NONE_STR
         }
     }
 
@@ -195,8 +195,10 @@ data class RadarTrackingOptions(
     enum class RadarTrackingOptionsReplay(internal val replay: Int) {
         /** Replays all failed location updates. */
         ALL(2),
+
         /** Replays failed stops. */
         STOPS(1),
+
         /** Replays no location updates. */
         NONE(0);
 
@@ -214,32 +216,31 @@ data class RadarTrackingOptions(
                 return NONE
             }
 
-            fun fromRadarString(replay: String?): RadarTrackingOptionsReplay {
-                return when(replay) {
-                    STOPS_STR -> STOPS
-                    NONE_STR -> NONE
-                    ALL_STR -> ALL
-                    else -> NONE
-                }
+            fun fromRadarString(replay: String?): RadarTrackingOptionsReplay = when (replay) {
+                STOPS_STR -> STOPS
+                NONE_STR -> NONE
+                ALL_STR -> ALL
+                else -> NONE
             }
         }
 
-        fun toRadarString(): String {
-            return when(this) {
-                STOPS -> STOPS_STR
-                NONE -> NONE_STR
-                ALL -> ALL_STR
-            }
+        fun toRadarString(): String = when (this) {
+            STOPS -> STOPS_STR
+            NONE -> NONE_STR
+            ALL -> ALL_STR
         }
     }
 
     enum class RadarTrackingOptionsSync(internal val sync: Int) {
         /** Does not sync location updates to the server. */
         NONE(0),
+
         /** Syncs only stops and exits to the server. */
         STOPS_AND_EXITS(1),
+
         /** Syncs all location updates to the server. */
         ALL(2),
+
         /** Syncs location updates to the server when an event is generated */
         EVENTS(3);
 
@@ -258,32 +259,30 @@ data class RadarTrackingOptions(
                 return STOPS_AND_EXITS
             }
 
-            fun fromRadarString(sync: String?): RadarTrackingOptionsSync {
-                return when(sync) {
-                    ALL_STR -> ALL
-                    STOPS_AND_EXITS_STR -> STOPS_AND_EXITS
-                    NONE_STR -> NONE
-                    EVENTS_STR -> EVENTS
-                    else -> STOPS_AND_EXITS
-                }
+            fun fromRadarString(sync: String?): RadarTrackingOptionsSync = when (sync) {
+                ALL_STR -> ALL
+                STOPS_AND_EXITS_STR -> STOPS_AND_EXITS
+                NONE_STR -> NONE
+                EVENTS_STR -> EVENTS
+                else -> STOPS_AND_EXITS
             }
         }
 
-        fun toRadarString(): String {
-            return when(this) {
-                ALL -> ALL_STR
-                STOPS_AND_EXITS -> STOPS_AND_EXITS_STR
-                NONE -> NONE_STR
-                EVENTS -> EVENTS_STR
-            }
+        fun toRadarString(): String = when (this) {
+            ALL -> ALL_STR
+            STOPS_AND_EXITS -> STOPS_AND_EXITS_STR
+            NONE -> NONE_STR
+            EVENTS -> EVENTS_STR
         }
     }
 
     enum class RadarTrackingOptionsSyncGeofences(internal val syncGeofences: Int) {
         /** Does not sync geofences to the server. */
         NONE(0),
+
         /** Syncs the nearest geofence to the server. */
         NEAREST(1),
+
         /** Syncs all geofences to the server. */
         CAMPAIGN(2);
 
@@ -301,21 +300,17 @@ data class RadarTrackingOptions(
                 return NONE
             }
 
-            fun fromRadarString(syncGeofences: String?): RadarTrackingOptionsSyncGeofences {
-                return when(syncGeofences) {
-                    NEAREST_STR -> NEAREST
-                    CAMPAIGN_STR -> CAMPAIGN
-                    else -> NONE
-                }
+            fun fromRadarString(syncGeofences: String?): RadarTrackingOptionsSyncGeofences = when (syncGeofences) {
+                NEAREST_STR -> NEAREST
+                CAMPAIGN_STR -> CAMPAIGN
+                else -> NONE
             }
         }
 
-        fun toRadarString(): String {
-            return when(this) {
-                NEAREST -> NEAREST_STR
-                CAMPAIGN -> CAMPAIGN_STR
-                NONE -> NONE_STR
-            }
+        fun toRadarString(): String = when (this) {
+            NEAREST -> NEAREST_STR
+            CAMPAIGN -> CAMPAIGN_STR
+            NONE -> NONE_STR
         }
     }
 
@@ -331,23 +326,19 @@ data class RadarTrackingOptions(
             internal const val IN_GEOFENCE_STR = "in-geofence"
             internal const val IS_USER_STR = "is-user"
 
-            fun fromRadarString(type: String?): RadarTrackingOptionsType {
-                return when (type) {
-                    ON_TRIP_STR -> ON_TRIP
-                    IN_GEOFENCE_STR -> IN_GEOFENCE
-                    IS_USER_STR -> IS_USER
-                    else -> DEFAULT
-                }
+            fun fromRadarString(type: String?): RadarTrackingOptionsType = when (type) {
+                ON_TRIP_STR -> ON_TRIP
+                IN_GEOFENCE_STR -> IN_GEOFENCE
+                IS_USER_STR -> IS_USER
+                else -> DEFAULT
             }
         }
 
-        fun toRadarString(): String {
-            return when (this) {
-                DEFAULT -> DEFAULT_STR
-                ON_TRIP -> ON_TRIP_STR
-                IN_GEOFENCE -> IN_GEOFENCE_STR
-                IS_USER -> IS_USER_STR
-            }
+        fun toRadarString(): String = when (this) {
+            DEFAULT -> DEFAULT_STR
+            ON_TRIP -> ON_TRIP_STR
+            IN_GEOFENCE -> IN_GEOFENCE_STR
+            IS_USER -> IS_USER_STR
         }
     }
 
@@ -417,6 +408,7 @@ data class RadarTrackingOptions(
             internal const val KEY_FOREGROUND_SERVICE_ID = "id"
             internal const val KEY_FOREGROUND_SERVICE_CHANNEL_NAME = "channelName"
             internal const val KEY_FOREGROUND_SERVICE_DEEP_LINK = "deepLink"
+
             @JvmStatic
             fun fromJson(obj: JSONObject?): RadarTrackingOptionsForegroundService? {
                 if (obj == null) {
@@ -454,13 +446,14 @@ data class RadarTrackingOptions(
             obj.put(KEY_FOREGROUND_SERVICE_DEEP_LINK, deepLink)
             return obj
         }
-
     }
 
     companion object {
 
         /**
          * Updates about every 30 seconds while moving or stopped. Starts a foreground service. Moderate battery usage.
+         * Requires declaring `io.radar.sdk.RadarForegroundService` in your app manifest. Intended for trips and live
+         * tracking, not geofencing.
          */
         @JvmField
         val CONTINUOUS = RadarTrackingOptions(
@@ -581,6 +574,7 @@ data class RadarTrackingOptions(
         internal const val KEY_BATCH_INTERVAL = "batchInterval"
         internal const val KEY_BATCH_SIZE = "batchSize"
         internal const val KEY_TYPE = "type"
+
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTrackingOptions {
             val desiredAccuracy = if (obj.has(KEY_DESIRED_ACCURACY) && obj.get(KEY_DESIRED_ACCURACY) is String) {
@@ -625,7 +619,9 @@ data class RadarTrackingOptions(
                     } else {
                         RadarUtils.isoStringToDate(obj.optString(KEY_START_TRACKING_AFTER))
                     }
-                } else null,
+                } else {
+                    null
+                },
                 stopTrackingAfter = if (obj.has(KEY_STOP_TRACKING_AFTER)) {
                     var stopTrackingAfterLong = obj.optLong(
                         KEY_STOP_TRACKING_AFTER
@@ -635,7 +631,9 @@ data class RadarTrackingOptions(
                     } else {
                         RadarUtils.isoStringToDate(obj.optString(KEY_STOP_TRACKING_AFTER))
                     }
-                } else null,
+                } else {
+                    null
+                },
                 replay = replay,
                 sync = sync,
                 useStoppedGeofence = obj.optBoolean(KEY_USE_STOPPED_GEOFENCE),
@@ -651,6 +649,7 @@ data class RadarTrackingOptions(
                             RadarTrackingOptionsSyncGeofences.NONE
                         }
                     }
+
                     else -> RadarTrackingOptionsSyncGeofences.fromRadarString(obj.optString(KEY_SYNC_GEOFENCES))
                 },
                 syncGeofencesLimit = obj.optInt(KEY_SYNC_GEOFENCES_LIMIT, 10),
@@ -694,5 +693,4 @@ data class RadarTrackingOptions(
         obj.put(KEY_TYPE, type.toRadarString())
         return obj
     }
-
 }
