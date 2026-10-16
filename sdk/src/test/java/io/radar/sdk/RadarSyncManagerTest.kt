@@ -25,7 +25,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [Build.VERSION_CODES.P])
+@Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
 class RadarSyncManagerTest {
 
     companion object {

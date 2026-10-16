@@ -12,7 +12,7 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [android.os.Build.VERSION_CODES.P])
+@Config(sdk = [android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
 class RadarLifecycleMarkerTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val preferences = context.getSharedPreferences("RadarLifecycleMarkerTest", Context.MODE_PRIVATE)

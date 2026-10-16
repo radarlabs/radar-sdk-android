@@ -9,7 +9,6 @@ import android.content.Intent
 import android.location.Location
 import android.os.Build
 import android.os.Handler
-import androidx.annotation.RequiresApi
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
@@ -846,9 +845,7 @@ object Radar {
             handleForegroundProcessStart()
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
-            verifiedReceiver != null
-        ) {
+        if (verifiedReceiver != null) {
             updateVerifiedReceiverMonitoringState()
         }
 
@@ -1444,7 +1441,6 @@ object Radar {
      *
      * @param[callback] An optional callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerified(callback: RadarTrackVerifiedCallback? = null) {
         trackVerified(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, null, null, callback)
@@ -1459,7 +1455,6 @@ object Radar {
      *
      * @param[block] A block callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerified(block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
         trackVerified(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, null, null, block)
@@ -1476,7 +1471,6 @@ object Radar {
      * @param[desiredAccuracy] The desired accuracy.
      * @param[callback] An optional callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerified(
         beacons: Boolean = false,
@@ -1497,7 +1491,6 @@ object Radar {
      * @param[desiredAccuracy] The desired accuracy.
      * @param[block] A block callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerified(
         beacons: Boolean = false,
@@ -1520,7 +1513,6 @@ object Radar {
      * @param[transactionId] An optional transaction ID, displayed in the dashboard and reports.
      * @param[callback] An optional callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerified(
         beacons: Boolean = false,
@@ -1562,7 +1554,6 @@ object Radar {
      * @param[transactionId] An optional transaction ID, displayed in the dashboard and reports.
      * @param[block] A block callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun trackVerified(
         beacons: Boolean = false,
@@ -1594,7 +1585,6 @@ object Radar {
      * @param[interval] The interval in seconds between each location update.
      * @param[beacons] A boolean indicating whether to range beacons.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun startTrackingVerified(interval: Int, beacons: Boolean) {
         if (!initialized) {
@@ -1671,7 +1661,6 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun stopTrackingVerified() {
         if (!initialized) {
@@ -1693,7 +1682,6 @@ object Radar {
      *
      * @return A boolean indicating whether verified tracking has been started.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun isTrackingVerified(): Boolean {
         if (!initialized) {
@@ -1747,7 +1735,6 @@ object Radar {
      *
      * @return A boolean indicating the current screen sharing state.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun isSharing(): Boolean {
         if (!initialized) {
@@ -1762,7 +1749,6 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun clearSharing() {
         if (!initialized) {
@@ -1781,7 +1767,6 @@ object Radar {
      *
      * @param[callback] An optional callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun getVerifiedLocationToken(callback: RadarTrackVerifiedCallback? = null) {
         getVerifiedLocationToken(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback)
@@ -1796,7 +1781,6 @@ object Radar {
      *
      * @param[block] A block callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun getVerifiedLocationToken(block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
         getVerifiedLocationToken(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, block)
@@ -1813,7 +1797,6 @@ object Radar {
      * @param[desiredAccuracy] The desired accuracy.
      * @param[callback] An optional callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun getVerifiedLocationToken(beacons: Boolean = false, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, callback: RadarTrackVerifiedCallback? = null) {
         if (!initialized) {
@@ -1841,7 +1824,6 @@ object Radar {
      * @param[desiredAccuracy] The desired accuracy.
      * @param[block] A block callback.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun getVerifiedLocationToken(beacons: Boolean = false, desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy = RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit) {
         getVerifiedLocationToken(
@@ -1860,7 +1842,6 @@ object Radar {
      *
      * @see [](https://radar.com/documentation/fraud)
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun clearVerifiedLocationToken() {
         if (!initialized) {
@@ -1896,7 +1877,6 @@ object Radar {
      * @param[countryCode] The user's expected country code.
      * @param[stateCode] The user's expected state code.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun setExpectedJurisdiction(countryCode: String?, stateCode: String?) {
         if (!initialized) {
@@ -1916,7 +1896,6 @@ object Radar {
      *
      * @param[address] The user's expected address
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun setExpectedAddress(address: String?) {
         if (!initialized) {
@@ -2250,7 +2229,6 @@ object Radar {
      *
      * @param[verifiedReceiver] A delegate for client-side delivery of verified location tokens. If `null`, the previous receiver will be cleared.
      */
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @JvmStatic
     fun setVerifiedReceiver(verifiedReceiver: RadarVerifiedReceiver?) {
         this.verifiedReceiver = verifiedReceiver
@@ -2262,7 +2240,6 @@ object Radar {
         updateVerifiedReceiverMonitoringState()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun updateVerifiedReceiverMonitoringState() {
         if (this::verificationManager.isInitialized) {
             this.verificationManager.updateMonitoringState()
@@ -4486,7 +4463,7 @@ object Radar {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             obj.put("mocked", location.isMock)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        } else {
             @Suppress("DEPRECATION")
             obj.put("mocked", location.isFromMockProvider)
         }

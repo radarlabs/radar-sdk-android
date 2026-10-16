@@ -167,31 +167,14 @@ internal object RadarUtils {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
         var result: ConnectionType = ConnectionType.UNKNOWN
 
-        // API 23+ uses NetworkCapabilities API
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            connectivityManager?.run {
-                connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)?.run {
-                    if (hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                        result = ConnectionType.WIFI
-                    } else if (hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                        result = ConnectionType.CELLULAR
-                    } else {
-                        result = ConnectionType.UNKNOWN
-                    }
-                }
-            }
-        } else {
-            // API 22 and lower falls back to ConnectivityManager.activeNetworkInfo
-            @Suppress("DEPRECATION")
-            connectivityManager?.run {
-                connectivityManager.activeNetworkInfo?.run {
-                    if (type == ConnectivityManager.TYPE_WIFI) {
-                        result = ConnectionType.WIFI
-                    } else if (type == ConnectivityManager.TYPE_MOBILE) {
-                        result = ConnectionType.CELLULAR
-                    } else {
-                        result = ConnectionType.UNKNOWN
-                    }
+        connectivityManager?.run {
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)?.run {
+                if (hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                    result = ConnectionType.WIFI
+                } else if (hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                    result = ConnectionType.CELLULAR
+                } else {
+                    result = ConnectionType.UNKNOWN
                 }
             }
         }

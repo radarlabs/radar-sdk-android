@@ -32,7 +32,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [Build.VERSION_CODES.P])
+@Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
 class RadarContinuousBeaconManagerTest {
 
     companion object {

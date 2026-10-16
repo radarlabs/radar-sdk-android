@@ -17,7 +17,7 @@ import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [Build.VERSION_CODES.P])
+@Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
 class RadarVerifiedHostOverrideTest {
 
     private val publishableKey = "prj_test_pk_0000000000000000000000000000000000000000"
