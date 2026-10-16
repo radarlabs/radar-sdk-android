@@ -33,8 +33,8 @@ internal class RadarBatteryManager(
             context.registerReceiver(null, filter)
         }
         val status: Int = batteryStatus?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
-        val isCharging: Boolean = status == BatteryManager.BATTERY_STATUS_CHARGING
-                || status == BatteryManager.BATTERY_STATUS_FULL
+        val isCharging: Boolean = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+            status == BatteryManager.BATTERY_STATUS_FULL
 
         val batteryPct: Float? = batteryStatus?.let { intent ->
             val level: Int = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
@@ -54,12 +54,7 @@ internal class RadarBatteryManager(
     @SuppressLint("NewApi")
     fun getAppStandbyBucket(): Int? = usageStatsManager?.appStandbyBucket
 
-    private fun isPowerSaveMode(): Boolean? {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            return powerManager?.isPowerSaveMode
-        }
-        return null
-    }
+    private fun isPowerSaveMode(): Boolean? = powerManager?.isPowerSaveMode
 
     private fun getLocationPowerSaveMode(): Int {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && powerManager != null) {
@@ -68,18 +63,7 @@ internal class RadarBatteryManager(
         return locationUnaffected
     }
 
-    private fun isDeviceIdleMode(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && powerManager != null) {
-            return powerManager.isDeviceIdleMode
-        }
-        return false
-    }
+    private fun isDeviceIdleMode(): Boolean = powerManager?.isDeviceIdleMode ?: false
 
-    private fun isIgnoringBatteryOptimizations(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && powerManager != null) {
-            return powerManager.isIgnoringBatteryOptimizations(context.packageName)
-        }
-        return false
-    }
-
+    private fun isIgnoringBatteryOptimizations(): Boolean = powerManager?.isIgnoringBatteryOptimizations(context.packageName) ?: false
 }

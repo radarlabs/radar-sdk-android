@@ -361,15 +361,13 @@ internal class RadarApiClient(
                     params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
                 }
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
-                val locationMs = location.elapsedRealtimeNanos / 1000000
-                val updatedAtMsDiff = (nowMs - locationMs)
-                if (RadarSettings.getSdkConfiguration(context).useForegroundLocationUpdatedAtMsDiff || !foreground) {
-                    params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
-                }
-                params.putOpt("locationMs", locationMs)
+            val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
+            val locationMs = location.elapsedRealtimeNanos / 1000000
+            val updatedAtMsDiff = (nowMs - locationMs)
+            if (RadarSettings.getSdkConfiguration(context).useForegroundLocationUpdatedAtMsDiff || !foreground) {
+                params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
             }
+            params.putOpt("locationMs", locationMs)
 
             params.putOpt("foreground", foreground)
             params.putOpt("stopped", stopped)

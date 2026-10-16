@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Outline
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
@@ -156,23 +155,12 @@ class RadarInAppMessageView @JvmOverloads constructor(
         )
 
         // Create rounded corners
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // if we are SDK >= 21, we can use clipping to make it look better
-            outlineProvider = object : ViewOutlineProvider() {
-                override fun getOutline(view: View, outline: Outline) {
-                    outline.setRoundRect(0, 0, view.width, view.height, dp(20))
-                }
+        outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+                outline.setRoundRect(0, 0, view.width, view.height, dp(20))
             }
-            clipToOutline = true
-        } else {
-            // otherwise just set the background to have a radius
-            val shape = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16f, context.resources.displayMetrics)
-                setColor(MODAL_BACKGROUND_COLOR.toColorInt())
-            }
-            background = shape
         }
+        clipToOutline = true
 
         setOnClickListener {
             // empty click listener so the click is handled instead of propagating to the background
@@ -229,9 +217,7 @@ class RadarInAppMessageView @JvmOverloads constructor(
         }
         background = buttonShape
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            stateListAnimator = null
-        }
+        stateListAnimator = null
 
         // Add horizontal margins to compensate for removed container padding
         layoutParams = LayoutParams(

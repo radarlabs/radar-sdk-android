@@ -22,7 +22,6 @@ import java.net.NetworkInterface
 import java.util.Enumeration
 import org.json.JSONObject
 
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class RadarVerificationManager(
     private val context: Context,
     private val logger: RadarLogger,

@@ -33,7 +33,7 @@ import kotlin.collections.ArrayList
 class RadarBatteryManagerTests {
 
     @RunWith(AndroidJUnit4::class)
-    @Config(sdk = [Build.VERSION_CODES.P])
+    @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
     class RadarBatteryManagerTest {
         companion object {
             private const val SCALE: Int = 100
@@ -78,7 +78,7 @@ class RadarBatteryManagerTests {
     }
 
     @RunWith(ParameterizedRobolectricTestRunner::class)
-    @Config(sdk = [Build.VERSION_CODES.P], shadows = [ShadowPowerManager::class])
+    @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE], shadows = [ShadowPowerManager::class])
     internal class RadarBatteryManagerParameterizedTest(
         private val powerSaveMode: Boolean,
         private val locationPowerSaveMode: Int,

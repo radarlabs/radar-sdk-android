@@ -24,7 +24,7 @@ import javax.net.ssl.SSLHandshakeException
  * standing up a real network call.
  */
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [Build.VERSION_CODES.P])
+@Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
 class RadarApiHelperTest {
 
     @Test

@@ -24,12 +24,6 @@
         <error line="95" column="1" source="standard:indent" />
         <error line="105" column="1" source="standard:no-blank-line-before-rbrace" />
     </file>
-    <file name="src/main/java/io/radar/sdk/RadarBatteryManager.kt">
-        <error line="37" column="1" source="standard:indent" />
-        <error line="37" column="17" source="standard:chain-wrapping" />
-        <error line="84" column="1" source="standard:no-blank-line-before-rbrace" />
-        <error line="85" column="1" source="standard:final-newline" />
-    </file>
     <file name="src/main/java/io/radar/sdk/RadarFirebaseMessagingService.kt">
         <error line="3" column="1" source="standard:no-unused-imports" />
     </file>
@@ -96,19 +90,6 @@
         <error line="37" column="51" source="standard:trailing-comma-on-declaration-site" />
         <error line="78" column="64" source="standard:trailing-comma-on-call-site" />
         <error line="88" column="1" source="standard:no-consecutive-blank-lines" />
-    </file>
-    <file name="src/main/java/io/radar/sdk/RadarJobScheduler.kt">
-        <error line="163" column="1" source="standard:indent" />
-        <error line="164" column="1" source="standard:indent" />
-        <error line="165" column="1" source="standard:indent" />
-        <error line="166" column="1" source="standard:indent" />
-        <error line="167" column="1" source="standard:indent" />
-        <error line="168" column="1" source="standard:indent" />
-        <error line="169" column="1" source="standard:indent" />
-        <error line="170" column="1" source="standard:indent" />
-        <error line="171" column="1" source="standard:indent" />
-        <error line="172" column="1" source="standard:indent" />
-        <error line="219" column="1" source="standard:no-blank-line-before-rbrace" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarLogger.kt">
         <error line="3" column="1" source="standard:import-ordering" />

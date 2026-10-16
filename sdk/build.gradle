@@ -31,14 +31,14 @@ if (githubRelease) {
 android {
     compileSdk 36
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
     defaultConfig {
-        minSdk 16
+        minSdk 23
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
         multiDexEnabled = true
     }
@@ -92,7 +92,7 @@ dependencies {
     }
 
     testImplementation "androidx.test.ext:junit:1.1.5"
-    testImplementation "org.robolectric:robolectric:4.10"
+    testImplementation "org.robolectric:robolectric:4.16.1"
     testImplementation 'org.json:json:20211205'
     testImplementation "com.google.android.play:integrity:1.2.0"
     compileOnly "com.google.firebase:firebase-messaging:25.0.1"

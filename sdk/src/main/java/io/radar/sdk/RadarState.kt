@@ -3,8 +3,6 @@ package io.radar.sdk
 import android.content.Context
 import android.content.SharedPreferences
 import android.location.Location
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarUser
@@ -209,30 +207,24 @@ internal object RadarState {
         getSharedPreferences(context).edit { putStringSet(KEY_BEACON_IDS, beaconIds) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun getLastBeacons(context: Context): Array<RadarBeacon>? {
         val set = getSharedPreferences(context).getStringSet(KEY_LAST_BEACONS, null)
         return RadarBeaconUtils.beaconsForStringSet(set)
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeacons(context: Context, beacons: Array<RadarBeacon>?) {
         val set = RadarBeaconUtils.stringSetForBeacons(beacons)
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACONS, set) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun getLastBeaconUUIDs(context: Context): Array<String>? = getSharedPreferences(context).getStringSet(KEY_LAST_BEACON_UUIDS, null)?.toTypedArray()
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeaconUUIDs(context: Context, uuids: Array<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UUIDS, uuids?.toSet()) }
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun getLastBeaconUIDs(context: Context): Array<String>? = getSharedPreferences(context).getStringSet(KEY_LAST_BEACON_UIDS, null)?.toTypedArray()
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     internal fun setLastBeaconUIDs(context: Context, uids: Array<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
     }

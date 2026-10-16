@@ -7,17 +7,14 @@ import android.app.job.JobService
 import android.content.ComponentName
 import android.content.Context
 import android.location.Location
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.PersistableBundle
-import androidx.annotation.RequiresApi
 import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.stringForSource
 import io.radar.sdk.model.RadarBeacon
 import java.util.concurrent.atomic.AtomicInteger
 
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class RadarJobScheduler : JobService() {
 
     internal companion object {
@@ -160,16 +157,16 @@ class RadarJobScheduler : JobService() {
                 val batteryState = Radar.batteryManager.getBatteryState()
                 Radar.logger.d(
                     "Starting location job | " +
-                            "source = $sourceStr; " +
-                            "location = $location; " +
-                            "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
-                            "performanceState = ${batteryState.performanceState.name}; " +
-                            "isCharging = ${batteryState.isCharging}; " +
-                            "batteryPercentage = ${batteryState.percent}; " +
-                            "isPowerSaveMode = ${batteryState.powerSaveMode}; " +
-                            "isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations}; " +
-                            "locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()}; " +
-                            "isDozeMode = ${batteryState.isDeviceIdleMode}"
+                        "source = $sourceStr; " +
+                        "location = $location; " +
+                        "standbyBucket = ${Radar.batteryManager.getAppStandbyBucket()}; " +
+                        "performanceState = ${batteryState.performanceState.name}; " +
+                        "isCharging = ${batteryState.isCharging}; " +
+                        "batteryPercentage = ${batteryState.percent}; " +
+                        "isPowerSaveMode = ${batteryState.powerSaveMode}; " +
+                        "isIgnoringBatteryOptimizations = ${batteryState.isIgnoringBatteryOptimizations}; " +
+                        "locationPowerSaveMode = ${batteryState.getPowerLocationPowerSaveModeString()}; " +
+                        "isDozeMode = ${batteryState.isDeviceIdleMode}"
                 )
             } else {
                 Radar.logger.d("Starting location job | source = $sourceStr; location = $location")
@@ -216,5 +213,4 @@ class RadarJobScheduler : JobService() {
 
         return false
     }
-
 }
