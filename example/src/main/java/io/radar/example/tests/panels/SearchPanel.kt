@@ -20,7 +20,7 @@ fun SearchPanel() {
 
     TogglePanel("Search & Geocoding") {
         ActionButton("searchPlaces") {
-            Radar.searchPlaces(1000, arrayOf("mcdonalds"), null, null, arrayOf("US", "SG"), 10) { status, location, places ->
+            Radar.searchPlaces(1000, arrayOf("mcdonalds"), null, null, null, arrayOf("US", "SG"), 10) { status, location, places ->
                 log.writeStatus(status, "searchPlaces: ${Utils.stringForRadarStatus(status)}", "places = ${places?.size ?: 0}\nfirst = ${places?.firstOrNull()?.name}")
             }
         }
@@ -64,7 +64,7 @@ fun SearchPanel() {
             }
         }
         ActionButton("autocomplete") {
-            Radar.autocomplete("brooklyn", origin, arrayOf("locality"), 10, "US", true) { status, addresses ->
+            Radar.autocomplete("brooklyn", origin, arrayOf("locality"), 10, "US") { status, addresses ->
                 log.writeStatus(status, "autocomplete: ${Utils.stringForRadarStatus(status)}", "results = ${addresses?.size ?: 0}\nfirst = ${addresses?.firstOrNull()?.formattedAddress}")
             }
         }

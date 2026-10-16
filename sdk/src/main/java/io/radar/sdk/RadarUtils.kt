@@ -6,29 +6,26 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
-import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
-import androidx.core.hardware.display.DisplayManagerCompat
-import java.security.MessageDigest
 import java.text.ParseException
 import java.text.SimpleDateFormat
-import java.util.*
 import java.time.ZonedDateTime
+import java.util.*
 import kotlin.math.abs
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 
-enum class ConnectionType {
-    cellular, unknown, wifi
+internal enum class ConnectionType(val value: String) {
+    CELLULAR("cellular"),
+    UNKNOWN("unknown"),
+    WIFI("wifi")
 }
 
 internal object RadarUtils {
 
-    private fun getSharedPreferences(context: Context): SharedPreferences {
-        return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
-    }
+    private fun getSharedPreferences(context: Context): SharedPreferences = context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
 
     internal val deviceModel = Build.MODEL
 
@@ -37,7 +34,7 @@ internal object RadarUtils {
     internal val country: String
         get() = Locale.getDefault().country
 
-    internal const val sdkVersion: String = BuildConfig.VERSION_NAME
+    internal const val SDK_VERSION: String = BuildConfig.VERSION_NAME
 
     internal val timeZoneOffset: Int
         get() {
@@ -50,13 +47,11 @@ internal object RadarUtils {
         }
 
     @SuppressLint("HardwareIds")
-    internal fun getDeviceId(context: Context): String? {
-        return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
-    }
+    internal fun getDeviceId(context: Context): String? = Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
 
-    internal const val deviceType = "Android"
+    internal const val DEVICE_TYPE = "Android"
 
-    internal val deviceMake =  Build.MANUFACTURER
+    internal val deviceMake = Build.MANUFACTURER
 
     internal fun getLocationAuthorization(context: Context): String {
         var locationAuthorization = "NOT_DETERMINED"
@@ -64,14 +59,16 @@ internal object RadarUtils {
             locationAuthorization = "DENIED"
         }
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        ) {
             locationAuthorization = "GRANTED_FOREGROUND"
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
             ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_BACKGROUND_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED) {
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             locationAuthorization = "GRANTED_BACKGROUND"
         }
         return locationAuthorization
@@ -92,11 +89,6 @@ internal object RadarUtils {
         }
     }
 
-    internal fun getLocationEnabled(context: Context): Boolean {
-        val manager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return manager.isProviderEnabled(LocationManager.GPS_PROVIDER) || manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-    }
-
     internal fun valid(location: Location): Boolean {
         val latitudeValid = !isWithinDegreeEpsilon(location.latitude, 0.0) && location.latitude > -90.0 && location.latitude < 90.0
         val longitudeValid = !isWithinDegreeEpsilon(location.longitude, 0.0) && location.longitude > -180.0 && location.longitude < 180.0
@@ -106,38 +98,25 @@ internal object RadarUtils {
 
     private const val DEGREE_EPSILON = 0.00000001
 
-    private fun isWithinDegreeEpsilon(firstValue: Double, secondValue: Double): Boolean {
-        return abs(firstValue - secondValue) < DEGREE_EPSILON;
-    }
+    private fun isWithinDegreeEpsilon(firstValue: Double, secondValue: Double): Boolean = abs(firstValue - secondValue) < DEGREE_EPSILON
 
     // based on https://github.com/flutter/plugins/tree/master/packages/device_info/device_info
-    internal fun isEmulator(): Boolean {
-        return (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
-                || Build.FINGERPRINT.startsWith("generic")
-                || Build.FINGERPRINT.startsWith("unknown")
-                || Build.HARDWARE.contains("goldfish")
-                || Build.HARDWARE.contains("ranchu")
-                || Build.MODEL.contains("google_sdk")
-                || Build.MODEL.contains("Emulator")
-                || Build.MODEL.contains("Android SDK built for x86")
-                || Build.MANUFACTURER.contains("Genymotion")
-                || Build.PRODUCT.contains("sdk_google")
-                || Build.PRODUCT.contains("google_sdk")
-                || Build.PRODUCT.contains("sdk")
-                || Build.PRODUCT.contains("sdk_x86")
-                || Build.PRODUCT.contains("vbox86p")
-                || Build.PRODUCT.contains("emulator")
-                || Build.PRODUCT.contains("simulator");
-    }
-
-    internal fun hasMultipleDisplays(context: Context): Boolean {
-        val displayManager = DisplayManagerCompat.getInstance(context)
-        return displayManager.displays.size > 1
-    }
-
-    internal fun hasVirtualInputDevice(context: Context): Boolean {
-        return RadarSettings.getSharing(context)
-    }
+    internal fun isEmulator(): Boolean = (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic")) ||
+        Build.FINGERPRINT.startsWith("generic") ||
+        Build.FINGERPRINT.startsWith("unknown") ||
+        Build.HARDWARE.contains("goldfish") ||
+        Build.HARDWARE.contains("ranchu") ||
+        Build.MODEL.contains("google_sdk") ||
+        Build.MODEL.contains("Emulator") ||
+        Build.MODEL.contains("Android SDK built for x86") ||
+        Build.MANUFACTURER.contains("Genymotion") ||
+        Build.PRODUCT.contains("sdk_google") ||
+        Build.PRODUCT.contains("google_sdk") ||
+        Build.PRODUCT.contains("sdk") ||
+        Build.PRODUCT.contains("sdk_x86") ||
+        Build.PRODUCT.contains("vbox86p") ||
+        Build.PRODUCT.contains("emulator") ||
+        Build.PRODUCT.contains("simulator")
 
     internal fun isoStringToDate(str: String?): Date? {
         if (str == null) {
@@ -155,10 +134,10 @@ internal object RadarUtils {
         // fallback version
         val locale = Locale.US
         val patterns = arrayOf(
-            "yyyy-MM-dd'T'HH:mm:ss.SSSZ",     // +0530
-            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",   // Z (literal)
-            "yyyy-MM-dd'T'HH:mm:ssZ",          // no millis, +0530
-            "yyyy-MM-dd'T'HH:mm:ss'Z'"         // no millis, Z
+            "yyyy-MM-dd'T'HH:mm:ss.SSSZ", // +0530
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", // Z (literal)
+            "yyyy-MM-dd'T'HH:mm:ssZ", // no millis, +0530
+            "yyyy-MM-dd'T'HH:mm:ss'Z'" // no millis, Z
         )
 
         // Normalize "+05:00" → "+0500" since SimpleDateFormat Z doesn't handle colon
@@ -184,33 +163,20 @@ internal object RadarUtils {
         return dateFormat.format(date)
     }
 
-    fun hashSHA256(input: String): String {
-        val bytes = MessageDigest.getInstance("SHA-256").digest(input.toByteArray())
-        val hexString = StringBuilder(2 * bytes.size)
-        for (byte in bytes) {
-            val hex = Integer.toHexString(0xFF and byte.toInt())
-            if (hex.length == 1) {
-                hexString.append('0')
-            }
-            hexString.append(hex)
-        }
-        return hexString.toString()
-    }
-
     internal fun getConnectionType(context: Context): ConnectionType {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
-        var result: ConnectionType = ConnectionType.unknown
+        var result: ConnectionType = ConnectionType.UNKNOWN
 
         // API 23+ uses NetworkCapabilities API
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             connectivityManager?.run {
                 connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)?.run {
                     if (hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-                        result = ConnectionType.wifi
+                        result = ConnectionType.WIFI
                     } else if (hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                        result = ConnectionType.cellular
+                        result = ConnectionType.CELLULAR
                     } else {
-                        result = ConnectionType.unknown
+                        result = ConnectionType.UNKNOWN
                     }
                 }
             }
@@ -220,11 +186,11 @@ internal object RadarUtils {
             connectivityManager?.run {
                 connectivityManager.activeNetworkInfo?.run {
                     if (type == ConnectivityManager.TYPE_WIFI) {
-                        result = ConnectionType.wifi
+                        result = ConnectionType.WIFI
                     } else if (type == ConnectivityManager.TYPE_MOBILE) {
-                        result = ConnectionType.cellular
+                        result = ConnectionType.CELLULAR
                     } else {
-                        result = ConnectionType.unknown
+                        result = ConnectionType.UNKNOWN
                     }
                 }
             }

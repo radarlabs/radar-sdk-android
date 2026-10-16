@@ -908,6 +908,7 @@ internal class RadarLocationManager(
                         .putExtra("iconColor", foregroundService.iconColor)
                         .putExtra("activity", foregroundService.activity)
                         .putExtra("deepLink", foregroundService.deepLink)
+                        .putExtra("channelName", foregroundService.channelName)
                     logger.d("Starting foreground service with intent | intent = $intent")
                     if (context.applicationContext.startForegroundService(intent) != null) {
                         RadarForegroundService.started = true

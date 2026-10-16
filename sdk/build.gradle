@@ -1,7 +1,6 @@
 import io.radar.ci.GitHubActions
 import io.radar.ci.GitHubClient
 import io.radar.ci.SnapshotDispatcher
-// Removed custom mvnpublish dependency – switching to standard Gradle publishing
 
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
@@ -30,7 +29,7 @@ if (githubRelease) {
 }
 
 android {
-    compileSdkVersion 36
+    compileSdk 36
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -39,8 +38,7 @@ android {
         jvmTarget = "1.8"
     }
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 36
+        minSdk 16
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
         multiDexEnabled = true
     }
@@ -66,10 +64,10 @@ android {
             }
         }
     }
-    lintOptions {
-        warningsAsErrors true
-        disable 'AndroidGradlePluginVersion'
-        baseline file("lint-baseline.xml")
+    lint {
+        warningsAsErrors = true
+        disable += 'AndroidGradlePluginVersion'
+        baseline = file("lint-baseline.xml")
     }
     namespace 'io.radar.sdk'
 }
@@ -83,11 +81,8 @@ ktlint {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    implementation "androidx.appcompat:appcompat:1.4.0"
     implementation "androidx.core:core-ktx:1.7.0"
     implementation "com.google.android.gms:play-services-location:21.0.1"
-    implementation "androidx.activity:activity:1.2.0"
-    implementation "androidx.fragment:fragment:1.3.0"
     compileOnly "com.huawei.hms:location:6.16.0.302"
     compileOnly "com.google.android.play:integrity:1.6.0"
 
@@ -102,7 +97,7 @@ dependencies {
     compileOnly "com.google.firebase:firebase-messaging:25.0.1"
 }
 
-task androidSourcesJar(type: Jar) {
+tasks.register('androidSourcesJar', Jar) {
     group 'publishing'
     archiveClassifier.set("sources")
     from android.sourceSets.main.java.srcDirs
@@ -119,17 +114,14 @@ dokkaHtml.configure {
 }
 
 dokkaJavadoc.configure {
-    outputDirectory.set(file("$buildDir/javadocs"))
+    outputDirectory.set(layout.buildDirectory.dir("javadocs").get().asFile)
 }
 
-task androidJavadocsJar(type: Jar, dependsOn: dokkaJavadoc) {
+tasks.register('androidJavadocsJar', Jar) {
+    dependsOn dokkaJavadoc
     group 'publishing'
     archiveClassifier.set("javadoc")
     from dokkaJavadoc.outputDirectory
-}
-
-artifacts {
-    archives androidSourcesJar, androidJavadocsJar
 }
 
 // ----------------------------
@@ -142,9 +134,9 @@ publishing {
             artifactId 'sdk'
             version "$radarVersion$buildNumber"
 
-            artifact("$buildDir/outputs/aar/${project.name}-release.aar")
-            artifact androidSourcesJar
-            artifact androidJavadocsJar
+            artifact(layout.buildDirectory.file("outputs/aar/${project.name}-release.aar").get().asFile)
+            artifact tasks.named('androidSourcesJar')
+            artifact tasks.named('androidJavadocsJar')
 
             pom {
                 name = 'Radar Android SDK'
@@ -197,7 +189,7 @@ afterEvaluate {
     }
 }
 
-task dispatchSnapshot {
+tasks.register('dispatchSnapshot') {
     group 'ci'
     description 'Send event to notify listeners that a new SNAPSHOT build has been published.'
     String username = System.getenv('PAT_USERNAME')

@@ -138,10 +138,10 @@ internal class RadarApiClient(
             "X-Radar-Device-Make" to RadarUtils.deviceMake,
             "X-Radar-Device-Model" to RadarUtils.deviceModel,
             "X-Radar-Device-OS" to RadarUtils.deviceOS,
-            "X-Radar-Device-Type" to RadarUtils.deviceType,
-            "X-Radar-SDK-Version" to RadarUtils.sdkVersion,
+            "X-Radar-Device-Type" to RadarUtils.DEVICE_TYPE,
+            "X-Radar-SDK-Version" to RadarUtils.SDK_VERSION,
             "X-Radar-Mobile-Origin" to context.packageName,
-            "X-Radar-Network-Type" to networkType.name,
+            "X-Radar-Network-Type" to networkType.value,
             "X-Radar-App-Info" to JSONObject(applicationInfo).toString()
         )
         if (RadarSettings.isXPlatform(context)) {
@@ -1874,10 +1874,10 @@ internal class RadarApiClient(
     }
 
     private fun putDeviceParameters(params: JSONObject) {
-        params.putOpt("sdkVersion", RadarUtils.sdkVersion)
+        params.putOpt("sdkVersion", RadarUtils.SDK_VERSION)
         params.putOpt("deviceModel", RadarUtils.deviceModel)
         params.putOpt("deviceOS", RadarUtils.deviceOS)
-        params.putOpt("deviceType", RadarUtils.deviceType)
+        params.putOpt("deviceType", RadarUtils.DEVICE_TYPE)
         params.putOpt("deviceMake", RadarUtils.deviceMake)
         params.putOpt("country", RadarUtils.country)
         params.putOpt("timeZoneOffset", RadarUtils.timeZoneOffset)
@@ -1897,7 +1897,13 @@ internal class RadarApiClient(
             params.putOpt("appName", context.applicationInfo.loadLabel(context.packageManager).toString())
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             params.putOpt("appVersion", packageInfo.versionName)
-            params.putOpt("appBuild", packageInfo.versionCode)
+            val appBuild = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                packageInfo.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo.versionCode.toLong()
+            }
+            params.putOpt("appBuild", appBuild)
         } catch (error: Exception) {
             logger.e("Error putting application information into parameters.", Radar.RadarLogType.NONE, error)
         }

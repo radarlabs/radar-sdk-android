@@ -43,7 +43,7 @@ internal class RadarOneShotBeaconManager(
     }
 
     private fun addCallback(callback: RadarBeaconCallback?) {
-       if (callback == null) {
+        if (callback == null) {
             return
         }
 
@@ -86,10 +86,6 @@ internal class RadarOneShotBeaconManager(
             callback?.onComplete(RadarStatus.ERROR_BLUETOOTH)
 
             return
-        }
-
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
         }
 
         if (!adapter.isEnabled) {
@@ -207,10 +203,6 @@ internal class RadarOneShotBeaconManager(
             callback?.onComplete(RadarStatus.ERROR_BLUETOOTH)
 
             return
-        }
-
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
         }
 
         if (!adapter.isEnabled) {
@@ -340,10 +332,6 @@ internal class RadarOneShotBeaconManager(
             return
         }
 
-        if (!this::adapter.isInitialized) {
-            adapter = BluetoothAdapter.getDefaultAdapter()
-        }
-
         logger.d("Stopping ranging")
 
         handler.removeCallbacksAndMessages(TIMEOUT_TOKEN)
@@ -353,7 +341,7 @@ internal class RadarOneShotBeaconManager(
         } catch (e: Exception) {
             logger.d("Error stopping ranging beacons", RadarLogType.SDK_EXCEPTION, e)
         }
-        
+
         scanCallback = null
 
         this.callCallbacks(this.nearbyBeacons.toTypedArray())
@@ -414,20 +402,14 @@ internal class RadarOneShotBeaconManager(
     }
 
     private fun isBluetoothSupported(context: Context): Boolean {
-        if(!this::adapter.isInitialized) {
-            val defaultAdapter = BluetoothAdapter.getDefaultAdapter()
-            if (defaultAdapter != null) {
-                adapter = defaultAdapter
-            }
+        if (!this::adapter.isInitialized) {
+            RadarBeaconUtils.getBluetoothAdapter(context)?.let { adapter = it }
         }
 
-        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && adapter != null && adapter.bluetoothLeScanner != null
+        return context.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH) && this::adapter.isInitialized && adapter.bluetoothLeScanner != null
     }
 
-    private fun getScanSettings(scanMode: Int): ScanSettings {
-        return ScanSettings.Builder()
-            .setScanMode(scanMode)
-            .build()
-    }
-
+    private fun getScanSettings(scanMode: Int): ScanSettings = ScanSettings.Builder()
+        .setScanMode(scanMode)
+        .build()
 }

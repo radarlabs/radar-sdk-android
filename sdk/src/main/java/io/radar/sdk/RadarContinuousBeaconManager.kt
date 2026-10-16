@@ -131,7 +131,7 @@ internal class RadarContinuousBeaconManager(
 
     private class BluetoothScanner(private val context: Context) : Scanner {
         private val adapter: BluetoothAdapter?
-            get() = BluetoothAdapter.getDefaultAdapter()
+            get() = RadarBeaconUtils.getBluetoothAdapter(context)
 
         override fun isAvailable(): Boolean {
             val adapter = adapter ?: return false

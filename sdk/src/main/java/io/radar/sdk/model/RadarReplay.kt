@@ -1,13 +1,12 @@
 package io.radar.sdk.model
 
-import io.radar.sdk.Radar
 import org.json.JSONObject
 
 /**
  * Represents a replay.
  */
 
- internal data class RadarReplay(
+internal data class RadarReplay(
     val replayParams: JSONObject
 ) : Comparable<RadarReplay> {
 
@@ -15,29 +14,14 @@ import org.json.JSONObject
         private const val REPLAY_PARAMS = "replayParams"
 
         @JvmStatic
-        fun fromJson(json: JSONObject): RadarReplay {
-            return RadarReplay(
-                replayParams = json.optJSONObject(REPLAY_PARAMS)
-            )
-        }
+        fun fromJson(json: JSONObject): RadarReplay = RadarReplay(
+            replayParams = json.optJSONObject(REPLAY_PARAMS)
+        )
     }
 
-    fun toJson(): JSONObject {
-        return JSONObject().apply {
-            putOpt(REPLAY_PARAMS, replayParams)
-        }
+    fun toJson(): JSONObject = JSONObject().apply {
+        putOpt(REPLAY_PARAMS, replayParams)
     }
 
-    fun toListofJson(replays: List<RadarReplay>): List<JSONObject> {
-        val replayList = mutableListOf<JSONObject>()
-        for (replay in replays) {
-            replayList.add(replay.toJson())
-        }
-        return replayList
-
-    }
-
-    override fun compareTo(other: RadarReplay): Int {
-        return replayParams.toString().compareTo(other.replayParams.toString())
-    }
+    override fun compareTo(other: RadarReplay): Int = replayParams.toString().compareTo(other.replayParams.toString())
 }

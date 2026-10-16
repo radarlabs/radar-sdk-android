@@ -83,7 +83,7 @@ class RadarTrackVerifiedEncryptionTest {
         assertEquals(RadarSettings.getInstallId(context), coreBody.getString("installId"))
         assertEquals(40.78382, coreBody.getDouble("latitude"), 0.0)
         assertEquals(-73.97536, coreBody.getDouble("longitude"), 0.0)
-        assertEquals(RadarUtils.sdkVersion, coreBody.getString("sdkVersion"))
+        assertEquals(RadarUtils.SDK_VERSION, coreBody.getString("sdkVersion"))
         assertFalse(coreBody.has("fraudPayload"))
         assertFalse(options.containsKey("installId"))
         assertEquals(context.packageName, options["origin"])
