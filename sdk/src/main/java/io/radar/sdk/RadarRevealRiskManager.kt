@@ -29,7 +29,7 @@ internal class RadarRevealRiskManager(
         RadarSDKFraud.prepareFraudPayload(context, logger) { status, preparedPayload ->
             if (status != RadarStatus.SUCCESS || preparedPayload == null) {
                 callback(
-                    if (status == RadarStatus.SUCCESS) RadarStatus.ERROR_PLUGIN else status,
+                    if (status == RadarStatus.SUCCESS) RadarStatus.ERROR_BAD_REQUEST else status,
                     null
                 )
                 return@prepareFraudPayload
