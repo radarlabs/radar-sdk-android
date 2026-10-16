@@ -10,7 +10,7 @@ apply plugin: 'signing'
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
 
 ext {
-    radarVersion = '3.38.1'
+    radarVersion = '3.39.0'
 }
 
 String buildNumber = ".${System.currentTimeMillis()}"
@@ -84,7 +84,7 @@ dependencies {
     implementation "androidx.core:core-ktx:1.7.0"
     implementation "com.google.android.gms:play-services-location:21.0.1"
     compileOnly "com.huawei.hms:location:6.16.0.302"
-    compileOnly "com.google.android.play:integrity:1.2.0"
+    compileOnly "com.google.android.play:integrity:1.6.0"
 
     // Optional fraud detection module (Git submodule)
     if (findProject(':sdk-fraud') != null) {
@@ -94,7 +94,6 @@ dependencies {
     testImplementation "androidx.test.ext:junit:1.1.5"
     testImplementation "org.robolectric:robolectric:4.10"
     testImplementation 'org.json:json:20211205'
-    testImplementation "com.google.android.play:integrity:1.2.0"
     compileOnly "com.google.firebase:firebase-messaging:25.0.1"
 }
 

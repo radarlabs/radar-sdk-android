@@ -6,9 +6,12 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.helpers.RadarApiHelperMock
+import io.radar.sdk.model.RadarCircleGeometry
 import io.radar.sdk.model.RadarConfig
+import io.radar.sdk.model.RadarCoordinate
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarSdkConfiguration
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import org.json.JSONObject
@@ -129,7 +132,7 @@ class RadarTrackVerifiedEncryptionTest {
             )
 
             assertEquals(if (result == null) 0 else 1, handle?.sealOptions?.size ?: 0)
-            assertEquals(Radar.RadarStatus.ERROR_PLUGIN, callbackStatus)
+            assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, callbackStatus)
             assertNull(apiHelperMock.lastCapturedPath)
         }
     }
@@ -155,6 +158,84 @@ class RadarTrackVerifiedEncryptionTest {
         assertTrue(body.has("latitude"))
         assertFalse(body.has("fraudPayload"))
         assertFalse(body.has("encv"))
+    }
+
+    @Test
+    fun localSealingFailureSkipsReplayAndOfflineProcessingButServerBadRequestDoesNot() {
+        val originalRemoteOptions = RadarSettings.getRemoteTrackingOptions(context)
+        val originalConfiguration = RadarSettings.getSdkConfiguration(context)
+        val originalSyncState = Radar.syncManager.syncStore.read()
+        val originalOfflineManager = Radar.offlineEventManager
+        Radar.offlineEventManager = RadarOfflineEventManager(context, Radar.syncManager, Radar.logger)
+        try {
+            assertFalse(Radar.hasReplays())
+            RadarSettings.setRemoteTrackingOptions(
+                context,
+                RadarTrackingOptions.EFFICIENT.copy(replay = RadarTrackingOptions.RadarTrackingOptionsReplay.ALL)
+            )
+            RadarSettings.setSdkConfiguration(
+                context,
+                RadarSdkConfiguration.fromJson(JSONObject().put("offlineEventGenerationEnabled", true))
+            )
+            for (localFailure in listOf(true, false)) {
+                apiHelperMock.clearCapturedParams()
+                apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_BAD_REQUEST
+                apiHelperMock.mockResponse = JSONObject()
+                Radar.offlineEventManager.reset()
+                val geofence = RadarGeofence(
+                    _id = "encryption-failure-test",
+                    description = "Encryption failure test",
+                    tag = null,
+                    externalId = null,
+                    metadata = null,
+                    operatingHours = null,
+                    geometry = RadarCircleGeometry(RadarCoordinate(40.0, -73.0), 100.0),
+                    stopDetection = false
+                )
+                Radar.syncManager.syncStore.write(RadarSyncState(syncedGeofences = listOf(geofence)))
+                val handle = RecordingFraudHandle(
+                    if (localFailure) mapOf("error" to "Seal failed") else mapOf("payload" to """{"encv":1}""")
+                )
+                val location = Location("test").apply {
+                    latitude = 40.0
+                    longitude = -73.0
+                    accuracy = 5f
+                    time = System.currentTimeMillis()
+                }
+                Radar.apiClient.track(
+                    location = location,
+                    stopped = false,
+                    foreground = true,
+                    source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
+                    replayed = false,
+                    beacons = null,
+                    verified = true,
+                    preparedFraudPayload = RadarPreparedFraudPayload(handle)
+                )
+
+                assertEquals(!localFailure, Radar.hasReplays())
+                // A prior offline evaluation consumes this entry; local sealing failures must leave it pending.
+                var pendingEntries = -1
+                Radar.offlineEventManager.generateEvents(location) { events, _, _ -> pendingEntries = events.size }
+                assertEquals(if (localFailure) 1 else 0, pendingEntries)
+                assertEquals(if (localFailure) null else "v1/track", apiHelperMock.lastCapturedPath)
+                apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+                Radar.flushReplays()
+            }
+        } finally {
+            RadarSettings.setSdkConfiguration(context, originalConfiguration)
+            if (originalRemoteOptions == null) {
+                RadarSettings.removeRemoteTrackingOptions(context)
+            } else {
+                RadarSettings.setRemoteTrackingOptions(context, originalRemoteOptions)
+            }
+            if (originalSyncState == null) {
+                Radar.syncManager.syncStore.clear()
+            } else {
+                Radar.syncManager.syncStore.write(originalSyncState)
+            }
+            Radar.offlineEventManager = originalOfflineManager
+        }
     }
 
     @Test
