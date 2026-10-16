@@ -33,6 +33,10 @@ fun TrackingPanel() {
             Radar.startTracking(RadarTrackingOptions.CONTINUOUS)
             log.writeResult("startTracking (continuous)")
         }
+        ActionButton("startTracking (continuous + beacons)", style = ActionButtonStyle.PRIMARY) {
+            Radar.startTracking(RadarTrackingOptions.CONTINUOUS.copy(beacons = true))
+            log.writeResult("startTracking (continuous + beacons)")
+        }
         ActionButton("stopTracking", style = ActionButtonStyle.DESTRUCTIVE) {
             Radar.stopTracking()
             log.writeResult("stopTracking")

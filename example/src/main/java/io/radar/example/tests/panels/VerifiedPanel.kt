@@ -8,6 +8,8 @@ import io.radar.example.components.ActionButtonStyle
 import io.radar.example.components.TogglePanel
 import io.radar.example.store.LocalLogStore
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarTrackingOptions
+import io.radar.sdk.model.RadarVerifiedLocationToken
 
 @Composable
 fun VerifiedPanel() {
@@ -44,6 +46,23 @@ fun VerifiedPanel() {
                     beaconDesc
                 )
             }
+        }
+        ActionButton("trackVerified (callback, beacons, HIGH)") {
+            // Exercises the callback overload trackVerified(beacons, desiredAccuracy, callback).
+            Radar.trackVerified(
+                true,
+                RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH,
+                object : Radar.RadarTrackVerifiedCallback {
+                    override fun onComplete(status: Radar.RadarStatus, token: RadarVerifiedLocationToken?) {
+                        val beacons = token?.user?.beacons.orEmpty()
+                        log.writeStatus(
+                            status,
+                            "trackVerified (callback, beacons, HIGH): ${Utils.stringForRadarStatus(status)}, ${beacons.size} beacons",
+                            token?.toJson()?.toString(2)
+                        )
+                    }
+                }
+            )
         }
         ActionButton("startRangingBeacons", style = ActionButtonStyle.PRIMARY) {
             Radar.startRangingBeacons()
