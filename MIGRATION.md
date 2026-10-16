@@ -27,6 +27,12 @@ Other changes:
 - The `Radar.searchPlaces()` overloads without `chainMetadata` have been removed. Pass `null` for `chainMetadata`: `Radar.searchPlaces(radius, chains, chainMetadata, categories, groups, countryCodes, limit, callback)` and `Radar.searchPlaces(near, radius, chains, chainMetadata, categories, groups, countryCodes, limit, callback)`.
 - `ConnectionType` is now internal. It was never returned or accepted by any public API.
 
+## 3.38.x to 3.39.0
+
+- Verified tracking and reveal-risk requests now encrypt the complete request body. Apps using these features must update `io.radar:sdk-fraud` alongside `io.radar:sdk` to a compatible version (`1.3.x` for Core SDK `3.39.x`). Regular tracking does not require the Fraud SDK.
+- A missing or incompatible Fraud SDK returns `ERROR_PLUGIN`, with additional diagnostic logging.
+- If payload preparation or encryption fails, the request stops without sending a plaintext fallback.
+
 ## 3.20.x to 3.21.x
 - The `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, limit, callback)` is now  `Radar.searchPlaces(near, radius, chain, chainMetadata, groups, countryCodes, limit, callback)`. See [documentation](https://radar.com/documentation/sdk/android#search).
 
