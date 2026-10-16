@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.os.Build
+import android.os.Looper
 import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -32,7 +33,8 @@ import org.robolectric.shadows.ShadowLooper
 @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
 class RadarApiHelperRetryTest {
     private class StubConnection(
-        private val failure: IOException? = null
+        private val failure: IOException? = null,
+        private val statusCode: Int = 200
     ) : HttpURLConnection(URL("https://verified.test")) {
         val writtenBody = ByteArrayOutputStream()
         val disconnected = CountDownLatch(1)
@@ -49,9 +51,10 @@ class RadarApiHelperRetryTest {
         override fun usingProxy(): Boolean = false
         override fun getOutputStream() = writtenBody
         override fun getInputStream() = ByteArrayInputStream("{}".toByteArray(Charsets.UTF_8))
+        override fun getErrorStream() = ByteArrayInputStream("{}".toByteArray(Charsets.UTF_8))
         override fun getResponseCode(): Int {
             failure?.let { throw it }
-            return 200
+            return statusCode
         }
     }
 
@@ -189,7 +192,7 @@ class RadarApiHelperRetryTest {
         )
 
         callback.await()
-        assertEquals(Radar.RadarStatus.ERROR_PLUGIN, callback.status)
+        assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, callback.status)
         assertEquals(failure, callback.error)
         assertEquals(0, opened)
         assertEquals("""{"installId":"install-1"}""", params.toString())
@@ -222,11 +225,85 @@ class RadarApiHelperRetryTest {
         )
 
         callback.await()
-        assertEquals(Radar.RadarStatus.ERROR_PLUGIN, callback.status)
+        assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, callback.status)
         assertEquals(1, opened)
         assertEquals(2, seals)
         assertEquals("""{"ct":"sealed-1"}""", first.writtenBody.toByteArray().toString(Charsets.UTF_8))
         assertEquals(0L, first.disconnected.count)
+    }
+
+    @Test
+    fun preparationFailureUsesDedicatedHandlerOnMainThreadForEitherAttempt() {
+        for (failingAttempt in listOf(1, 2)) {
+            var opened = 0
+            var preparations = 0
+            val failure = SocketException("Cannot encrypt request")
+            val callback = RecordingCallback()
+            var responseCallbacks = 0
+            RadarApiHelper(connectionFactory = {
+                opened++
+                StubConnection(SocketException("Connection reset"))
+            }).request(
+                context = ApplicationProvider.getApplicationContext(),
+                method = "POST",
+                path = "v1/track",
+                headers = emptyMap(),
+                params = JSONObject().put("installId", "install-1"),
+                sleep = false,
+                verified = true,
+                verifiedHostOverride = "https://verified.test",
+                prepareRequest = {
+                    preparations++
+                    if (preparations == failingAttempt) throw failure
+                    JSONObject().put("ct", "sealed-$preparations")
+                },
+                preparationFailureHandler = { error ->
+                    assertEquals(Looper.getMainLooper(), Looper.myLooper())
+                    callback.onComplete(Radar.RadarStatus.ERROR_BAD_REQUEST, throwable = error)
+                },
+                callback = object : RadarApiHelper.RadarApiCallback {
+                    override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, throwable: Throwable?) {
+                        responseCallbacks++
+                    }
+                }
+            )
+
+            callback.await()
+            assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, callback.status)
+            assertEquals(failure, callback.error)
+            assertEquals(failingAttempt, preparations)
+            assertEquals(failingAttempt - 1, opened)
+            assertEquals(0, responseCallbacks)
+        }
+    }
+
+    @Test
+    fun serverBadRequestUsesResponseCallbackInsteadOfPreparationFailureHandler() {
+        var opened = 0
+        var preparationFailures = 0
+        val callback = RecordingCallback()
+        RadarApiHelper(connectionFactory = {
+            opened++
+            StubConnection(statusCode = 400)
+        }).request(
+            context = ApplicationProvider.getApplicationContext(),
+            method = "POST",
+            path = "v1/track",
+            headers = emptyMap(),
+            params = JSONObject().put("installId", "install-1"),
+            sleep = false,
+            verified = true,
+            verifiedHostOverride = "https://verified.test",
+            prepareRequest = { JSONObject().put("ct", "sealed") },
+            preparationFailureHandler = { preparationFailures++ },
+            callback = callback
+        )
+
+        callback.await()
+        assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, callback.status)
+        assertEquals(null, callback.error)
+        assertEquals(1, opened)
+        assertEquals(0, preparationFailures)
     }
 
     @Test

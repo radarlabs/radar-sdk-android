@@ -48,6 +48,7 @@ internal class RadarLocationManager(
     private val callbacks = ArrayList<RadarLocationCallback>()
     private val activityManager = RadarActivityManager(context)
     private val sensorsManager = RadarSensorsManager(context)
+    private var loggedForegroundServiceNotDeclared = false
 
     // In production, context.applicationContext is always the same Application instance,
     // so this is effectively a no-op. Under Robolectric test suites, different test classes
@@ -880,6 +881,18 @@ internal class RadarLocationManager(
 
     private fun startForegroundService(foregroundService: RadarTrackingOptions.RadarTrackingOptionsForegroundService) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!RadarForegroundService.started && !RadarForegroundService.isDeclared(context)) {
+                if (!loggedForegroundServiceNotDeclared) {
+                    logger.e(
+                        "Not starting foreground service. RadarForegroundService is not declared in your app manifest. " +
+                            "Declare it to use foregroundServiceEnabled: " +
+                            "https://docs.radar.com/sdk/android#foreground-services-and-google-play-policy"
+                    )
+                    loggedForegroundServiceNotDeclared = true
+                }
+                return
+            }
+
             try {
                 if (RadarForegroundService.started) {
                     logger.d("Already started foreground service")
@@ -897,8 +910,9 @@ internal class RadarLocationManager(
                         .putExtra("deepLink", foregroundService.deepLink)
                         .putExtra("channelName", foregroundService.channelName)
                     logger.d("Starting foreground service with intent | intent = $intent")
-                    context.applicationContext.startForegroundService(intent)
-                    RadarForegroundService.started = true
+                    if (context.applicationContext.startForegroundService(intent) != null) {
+                        RadarForegroundService.started = true
+                    }
                 }
             } catch (e: Exception) {
                 logger.e("Error starting foreground service with intent", RadarLogType.SDK_EXCEPTION, e)
@@ -907,7 +921,7 @@ internal class RadarLocationManager(
     }
 
     private fun stopForegroundService() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && RadarForegroundService.isDeclared(context)) {
             try {
                 val intent = Intent(context, RadarForegroundService::class.java)
                 intent.action = "stop"
