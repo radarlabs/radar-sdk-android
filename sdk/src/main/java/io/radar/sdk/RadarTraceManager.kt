@@ -38,7 +38,6 @@ internal class RadarTraceManager(
         private const val STALE_TEMP_FILE_MS = 60 * 1000L
         private const val MAX_BATCH_SPANS = 100
         private const val MAX_BATCH_BYTES = 128 * 1024
-        private const val MAX_CONSECUTIVE_SERVER_ERRORS = 3
         private const val DIR = "radar_traces"
     }
 
@@ -48,7 +47,6 @@ internal class RadarTraceManager(
 
     // Accessed only on the disk worker. inFlightFiles protects a selected batch from pruning during upload.
     private var inFlightFiles: Set<File> = emptySet()
-    private var consecutiveServerErrors = 0
     private var fileSequence = 0L
 
     @Volatile
@@ -146,7 +144,6 @@ internal class RadarTraceManager(
         when (status) {
             Radar.RadarStatus.SUCCESS -> {
                 batch.files.forEach { it.delete() }
-                consecutiveServerErrors = 0
                 res?.optJSONObject("partialSuccess")?.let {
                     logger.w("Trace batch partially accepted | rejectedSpans = ${it.optInt("rejectedSpans")}; not retrying")
                 }
@@ -158,19 +155,9 @@ internal class RadarTraceManager(
                 return true
             }
 
-            // Transient: keep the batch for the next flush.
-            Radar.RadarStatus.ERROR_NETWORK, Radar.RadarStatus.ERROR_RATE_LIMIT -> return false
-
-            // Usually transient, but a batch the server can never accept must not block the queue until it expires.
-            Radar.RadarStatus.ERROR_SERVER -> {
-                consecutiveServerErrors++
-                if (consecutiveServerErrors >= MAX_CONSECUTIVE_SERVER_ERRORS) {
-                    batch.files.forEach { it.delete() }
-                    consecutiveServerErrors = 0
-                    logger.w("Dropped trace batch after $MAX_CONSECUTIVE_SERVER_ERRORS consecutive server errors", Radar.RadarLogType.SDK_ERROR)
-                }
-                return false
-            }
+            // Transient: keep the batch for the next flush. A batch the server can never accept is retried until it
+            // ages out or is evicted by the storage limits.
+            Radar.RadarStatus.ERROR_NETWORK, Radar.RadarStatus.ERROR_RATE_LIMIT, Radar.RadarStatus.ERROR_SERVER -> return false
 
             // Not retryable (bad request, auth, payload too large, etc.).
             else -> {

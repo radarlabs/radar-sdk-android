@@ -134,51 +134,20 @@ class RadarTraceManagerTest {
     }
 
     @Test
-    fun repeatedServerErrorsDropBatch() {
-        apiHelper.queueMockStatuses("v1/traces", List(3) { Radar.RadarStatus.ERROR_SERVER })
-        recordSpans(1)
+    fun serverErrorsKeepBatchOnDisk() {
+        apiHelper.queueMockStatuses("v1/traces", List(5) { Radar.RadarStatus.ERROR_SERVER })
+        recordSpans(150)
 
-        manager.flushAndWaitForTesting()
-        manager.flushAndWaitForTesting()
-        // Batch is persisted after two failures
-        assertEquals(1, traceFiles().size)
+        // Each flush retries the oldest batch and stops. Repeated server errors never drop spans.
+        repeat(5) { manager.flushAndWaitForTesting() }
+        assertEquals(150, traceFiles().size)
+        assertEquals(List(5) { 100 }, batchSizes())
+        assertTrue(apiHelper.capturedTracePayloads.all { spanIds(it) == (1..100).map { id -> spanId(id) } })
 
-        manager.flushAndWaitForTesting()
-        // Batch is dropped after 3rd failure
-        assertTrue(traceFiles().isEmpty())
-        assertEquals(3, apiHelper.capturedTracePayloads.size)
-    }
-
-    @Test
-    fun networkErrorsDoNotCountTowardServerErrors() {
-        apiHelper.queueMockStatuses(
-            "v1/traces",
-            listOf(Radar.RadarStatus.ERROR_SERVER, Radar.RadarStatus.ERROR_NETWORK, Radar.RadarStatus.ERROR_SERVER, Radar.RadarStatus.ERROR_SERVER)
-        )
-        recordSpans(1)
-
-        repeat(3) { manager.flushAndWaitForTesting() }
-        assertEquals(1, traceFiles().size)
-
+        // Once the server recovers, the whole queue uploads.
         manager.flushAndWaitForTesting()
         assertTrue(traceFiles().isEmpty())
-        assertEquals(4, apiHelper.capturedTracePayloads.size)
-    }
-
-    @Test
-    fun successResetsServerErrorCount() {
-        apiHelper.queueMockStatuses(
-            "v1/traces",
-            listOf(Radar.RadarStatus.ERROR_SERVER, Radar.RadarStatus.ERROR_SERVER, Radar.RadarStatus.SUCCESS, Radar.RadarStatus.ERROR_SERVER, Radar.RadarStatus.ERROR_SERVER)
-        )
-        recordSpans(1)
-        repeat(3) { manager.flushAndWaitForTesting() }
-        assertTrue(traceFiles().isEmpty())
-
-        // Without the reset, the next server error would be the third in a row and drop this span.
-        recordSpans(1, firstId = 2)
-        repeat(2) { manager.flushAndWaitForTesting() }
-        assertEquals(setOf(spanId(2)), persistedSpanIds())
+        assertEquals(List(5) { 100 } + listOf(100, 50), batchSizes())
     }
 
     @Test
