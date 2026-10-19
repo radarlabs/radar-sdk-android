@@ -8,6 +8,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.helpers.RadarApiHelperMock
 import java.io.File
 import java.time.Duration
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -205,6 +208,41 @@ class RadarTraceSpanTest {
         assertNull(root.traceparent())
         manager.awaitDiskForTesting()
         assertTrue(File(temp.root, "radar_traces").listFiles()?.none { it.extension == "json" } ?: true)
+    }
+
+    @Test
+    fun attributeUpdatesRacingEndDoNotDropSpans() {
+        // Writers keep adding attributes while end() serializes the span. Each new key changes the map's structure,
+        // which breaks an unsynchronized serialization and drops the span. A race test only fails when it hits the
+        // window, so it runs many spans and ends each one while the writers are mid-way through.
+        val writers = 3
+        val spans = 200
+        val pool = Executors.newFixedThreadPool(writers)
+        try {
+            repeat(spans) { i ->
+                val span = RadarTraceSpan.start("span-$i")
+                val writing = CountDownLatch(writers)
+                val writes = (0 until writers).map { w ->
+                    pool.submit {
+                        // Writers keep going through serialization; writes after end() are ignored. Keys repeat after
+                        // 200 so a span holds at most 600 attributes and stays well under the storage limits.
+                        repeat(2_000) { k ->
+                            span.setAttribute("w$w-${k % 200}", k.toLong())
+                            if (k == 20) writing.countDown()
+                        }
+                    }
+                }
+                writing.await(5, TimeUnit.SECONDS)
+                span.end(Radar.RadarStatus.SUCCESS)
+                writes.forEach { it.get(5, TimeUnit.SECONDS) }
+                // Upload as we go so the spans stay well under the storage limits.
+                if (i % 10 == 9) manager.flushAndWaitForTesting()
+            }
+        } finally {
+            pool.shutdownNow()
+        }
+
+        assertEquals((0 until spans).map { "span-$it" }.toSet(), apiHelper.capturedTraceSpans().map { it.getString("name") }.toSet())
     }
 
     private fun uploadedSpans(): Map<String, JSONObject> {

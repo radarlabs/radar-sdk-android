@@ -3,7 +3,6 @@ package io.radar.sdk
 import android.os.SystemClock
 import androidx.annotation.VisibleForTesting
 import java.util.Random
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * A deliberately small, dependency-free span. The manager owns sampling and export.
@@ -12,6 +11,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * kind, timestamps, status, typed attributes) and propagates context as a W3C `traceparent`. It is not an
  * implementation of the OTel API, and does not support span events, links, `tracestate`, or array
  * attributes.
+ *
+ * Safe for concurrent use, like OTel spans: attribute updates and [end] are serialized on one lock, and the
+ * span records a snapshot of its attributes.
  *
  * `manager` is null only for the shared no-op span returned when there is no trace manager, no publishable
  * key, or the trace is not sampled. That span records nothing and propagates no context.
@@ -28,7 +30,10 @@ internal class RadarTraceSpan private constructor(
 ) {
     private val startedAtElapsedMs = SystemClock.elapsedRealtime()
     private val startedAtUnixMs = wallClockMs()
-    private val ended = AtomicBoolean(false)
+    private val lock = Any()
+
+    // Guarded by lock, along with attributes.
+    private var ended = false
 
     fun setAttribute(key: String, value: String) = putAttribute(key, value)
 
@@ -38,8 +43,13 @@ internal class RadarTraceSpan private constructor(
 
     /** Ignored on no-op spans and after [end]. */
     private fun putAttribute(key: String, value: Any) {
-        if (manager != null && !ended.get()) {
-            attributes[key] = value
+        if (manager == null) {
+            return
+        }
+        synchronized(lock) {
+            if (!ended) {
+                attributes[key] = value
+            }
         }
     }
 
@@ -54,8 +64,15 @@ internal class RadarTraceSpan private constructor(
     fun traceparent(): String? = if (manager == null) null else "00-$traceId-$spanId-01"
 
     fun end(status: Radar.RadarStatus) {
-        if (manager == null || !ended.compareAndSet(false, true)) {
+        if (manager == null) {
             return
+        }
+        val snapshot = synchronized(lock) {
+            if (ended) {
+                return
+            }
+            ended = true
+            attributes.toMap()
         }
         val elapsedMs = SystemClock.elapsedRealtime() - startedAtElapsedMs
         val completed = RadarCompletedSpan(
@@ -67,7 +84,7 @@ internal class RadarTraceSpan private constructor(
             startedAtUnixMs * 1_000_000,
             (startedAtUnixMs + elapsedMs) * 1_000_000,
             status,
-            attributes
+            snapshot
         )
         manager.record(completed, project)
     }
