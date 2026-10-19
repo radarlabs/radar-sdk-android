@@ -544,6 +544,7 @@ object Radar {
     private var verifiedReceiver: RadarVerifiedReceiver? = null
     internal lateinit var logger: RadarLogger
     internal lateinit var apiClient: RadarApiClient
+    internal var traceManager: RadarTraceManager? = null
     internal lateinit var locationManager: RadarLocationManager
     internal lateinit var oneShotBeaconManager: RadarOneShotBeaconManager
     internal lateinit var beaconMonitoringManager: RadarBeaconMonitoringManager
@@ -691,6 +692,11 @@ object Radar {
             RadarSettings.updateSessionId(this.context)
         } else {
             this.logger.d("App is backgrounded, not updating session ID")
+        }
+
+        if (traceManager == null) {
+            traceManager = RadarTraceManager(this.context, this.apiClient, this.logger)
+            traceManager?.flush()
         }
 
         if (!this::batteryManager.isInitialized) {
@@ -4201,6 +4207,13 @@ object Radar {
         this.logBuffer.persistLogs()
     }
 
+    /** Opportunistically exports completed, sampled spans. */
+    internal fun flushTraces() {
+        if (initialized) {
+            traceManager?.flush()
+        }
+    }
+
     /**
      * Flushes debug logs to the server.
      */
@@ -4306,6 +4319,7 @@ object Radar {
                         logger.d("Successfully flushed replays")
                         replaysStash.onFlush(true) // clear from buffer what was synced
                         Radar.flushLogs()
+                        Radar.flushTraces()
                     } else {
                         if (replayParams != null) {
                             logger.d("Failed to flush replays, adding track update to buffer")

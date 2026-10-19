@@ -5,6 +5,8 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarApiHelper
 import io.radar.sdk.RadarRequestQueue
 import io.radar.sdk.RadarSettings
+import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
 import org.json.JSONObject
 
 internal class RadarApiHelperMock : RadarApiHelper() {
@@ -43,8 +45,26 @@ internal class RadarApiHelperMock : RadarApiHelper() {
      * Sequential responses to return for repeated requests against the same path. When set,
      * each call to `request()` for that path consumes the head of the queue. Useful for
      * exercising failover flows where the primary and retry hit the same path.
+     *
+     * Concurrent because trace uploads read the queues from the trace manager's disk thread while
+     * tests modify them.
      */
-    internal var mockResponseQueues: MutableMap<String, ArrayDeque<JSONObject?>> = mutableMapOf()
+    internal var mockResponseQueues: MutableMap<String, ArrayDeque<JSONObject?>> = ConcurrentHashMap()
+
+    /**
+     * Sequential statuses to return for repeated requests against the same path. When a path's queue
+     * is empty, `mockStatus` is returned. Concurrent for the same reason as `mockResponseQueues`.
+     */
+    internal var mockStatusQueues: MutableMap<String, ArrayDeque<Radar.RadarStatus>> = ConcurrentHashMap()
+
+    /**
+     * Payloads of every `v1/traces` request. Trace uploads are started from the trace manager's disk
+     * thread at times tests don't control, so they are kept out of the `lastCaptured*` fields to avoid
+     * overwriting values tests assert on. Synchronized because that thread writes while tests read.
+     */
+    internal val capturedTracePayloads: MutableList<JSONObject> = Collections.synchronizedList(mutableListOf())
+    internal var lastCapturedTraceHeaders: Map<String, String>? = null
+    internal var lastCapturedTraceQueue: RadarRequestQueue? = null
 
     override fun request(
         context: Context,
@@ -75,7 +95,12 @@ internal class RadarApiHelperMock : RadarApiHelper() {
             return
         }
 
-        if (path != "v1/logs") {
+        if (path == "v1/traces") {
+            requestParams?.let { capturedTracePayloads.add(it) }
+            lastCapturedTraceHeaders = headers
+            lastCapturedTraceQueue = queue
+        }
+        if (path != "v1/logs" && path != "v1/traces") {
             val host = if (verified) {
                 verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
             } else {
@@ -90,19 +115,39 @@ internal class RadarApiHelperMock : RadarApiHelper() {
             lastCapturedVerifiedHostOverride = verifiedHostOverride
         }
 
+        val status = mockStatusQueues.entries.firstOrNull { path.startsWith(it.key) }?.value?.removeFirstOrNull() ?: mockStatus
+
         val queueKey = mockResponseQueues.keys.firstOrNull { path.startsWith(it) }
         if (queueKey != null) {
-            val queue = mockResponseQueues[queueKey]!!
-            val head = if (queue.isNotEmpty()) queue.removeFirst() else null
-            callback?.onComplete(mockStatus, head, mockThrowable)
+            val responses = mockResponseQueues[queueKey]!!
+            val head = if (responses.isNotEmpty()) responses.removeFirst() else null
+            callback?.onComplete(status, head, mockThrowable)
             return
         }
 
         if (mockResponses.containsKey(path)) {
-            callback?.onComplete(mockStatus, mockResponses[path], mockThrowable)
+            callback?.onComplete(status, mockResponses[path], mockThrowable)
         } else {
-            callback?.onComplete(mockStatus, mockResponse, mockThrowable)
+            callback?.onComplete(status, mockResponse, mockThrowable)
         }
+    }
+
+    /**
+     * All spans uploaded to `v1/traces`, flattened across requests.
+     */
+    fun capturedTraceSpans(): List<JSONObject> = synchronized(capturedTracePayloads) { capturedTracePayloads.toList() }.flatMap { payload ->
+        val resourceSpans = payload.getJSONArray("resourceSpans")
+        (0 until resourceSpans.length()).flatMap { r ->
+            val scopeSpans = resourceSpans.getJSONObject(r).getJSONArray("scopeSpans")
+            (0 until scopeSpans.length()).flatMap { s ->
+                val spans = scopeSpans.getJSONObject(s).getJSONArray("spans")
+                (0 until spans.length()).map { spans.getJSONObject(it) }
+            }
+        }
+    }
+
+    fun queueMockStatuses(path: String, statuses: List<Radar.RadarStatus>) {
+        mockStatusQueues[path] = ArrayDeque(statuses)
     }
 
     fun queueMockResponses(path: String, responses: List<JSONObject?>) {
@@ -126,5 +171,8 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         lastCapturedPath = null
         lastCapturedMethod = null
         capturedPaths.clear()
+        capturedTracePayloads.clear()
+        lastCapturedTraceHeaders = null
+        lastCapturedTraceQueue = null
     }
 }

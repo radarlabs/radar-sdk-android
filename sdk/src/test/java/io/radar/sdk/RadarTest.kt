@@ -118,6 +118,18 @@ class RadarTest {
         assertNotNull(chain?.metadata)
     }
 
+    private fun completedSpan(spanId: String) = RadarCompletedSpan(
+        "span",
+        "0123456789abcdef0123456789abcdef",
+        spanId,
+        null,
+        RadarSpanKind.INTERNAL,
+        1_780_000_000_000_000_000,
+        1_780_000_000_100_000_000,
+        Radar.RadarStatus.SUCCESS,
+        emptyMap()
+    )
+
     private fun assertPlacesOk(places: Array<RadarPlace>?) {
         assertNotNull(places)
         places?.let {
@@ -398,6 +410,9 @@ class RadarTest {
         setUpLogConversionTest()
         // PackageManager state resets between tests but preferences don't, so drop the saved boot receiver state
         context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit().remove("boot_receiver_enabled").commit()
+        // initialize() only creates the trace manager once, so reset it to pick up this test's apiClient.
+        Radar.traceManager?.shutdownForTesting()
+        Radar.traceManager = null
 
         declareForegroundService()
         Radar.initialize(context, PUBLISHABLE_KEY)
@@ -413,6 +428,7 @@ class RadarTest {
         apiHelperMock.clearCapturedParams()
         apiHelperMock.mockResponses.clear()
         apiHelperMock.mockResponseQueues.clear()
+        apiHelperMock.mockStatusQueues.clear()
         Radar.flushBatch()
     }
 
@@ -1448,6 +1464,47 @@ class RadarTest {
         assertEquals(mockLocation, callbackLocation)
         assertEventsOk(callbackEvents)
         assertUserOk(callbackUser)
+    }
+
+    @Test
+    fun test_Radar_trackOnce_success_flushesTraces() {
+        val traceManager = Radar.traceManager!!
+        traceManager.record(completedSpan("00000000000000a1"), traceManager.currentProjectFingerprint())
+        traceManager.awaitDiskForTesting()
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
+        val location = Location("RadarSDK").apply {
+            latitude = 40.78382
+            longitude = -73.97536
+            accuracy = 65f
+            time = System.currentTimeMillis()
+        }
+
+        val latch = CountDownLatch(1)
+        Radar.trackOnce(location) { _, _, _, _ -> latch.countDown() }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+        traceManager.awaitDiskForTesting()
+
+        assertTrue(apiHelperMock.capturedTraceSpans().any { it.getString("spanId") == "00000000000000a1" })
+    }
+
+    @Test
+    fun test_Radar_initialize_flushesTracesFromPreviousSession() {
+        Radar.traceManager?.shutdownForTesting()
+        Radar.traceManager = null
+        // Spans persisted by a previous process.
+        val previous = RadarTraceManager(context, Radar.apiClient, Radar.logger)
+        previous.record(completedSpan("00000000000000a2"), previous.currentProjectFingerprint())
+        previous.awaitDiskForTesting()
+        previous.shutdownForTesting()
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = JSONObject()
+
+        Radar.initialize(context, PUBLISHABLE_KEY)
+        Radar.traceManager!!.awaitDiskForTesting()
+
+        assertTrue(apiHelperMock.capturedTraceSpans().any { it.getString("spanId") == "00000000000000a2" })
     }
 
     @Test

@@ -123,6 +123,10 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null)
     }
 
+    internal interface RadarTraceCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null)
+    }
+
     internal interface RadarReplayApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null)
     }
@@ -237,6 +241,24 @@ internal class RadarApiClient(
             extendedTimeout = false,
             stream = true,
             logPayload = false // avoid logging the logging call
+        )
+    }
+
+    internal fun traces(payload: JSONObject, publishableKey: String, callback: RadarTraceCallback?) {
+        apiHelper.request(
+            context = context,
+            method = "POST",
+            path = "v1/traces",
+            headers = headers(publishableKey),
+            params = payload,
+            sleep = false,
+            callback = object : RadarApiHelper.RadarApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
+                    callback?.onComplete(status, res)
+                }
+            },
+            logPayload = false,
+            queue = RadarRequestQueue.BACKGROUND
         )
     }
 
@@ -572,6 +594,7 @@ internal class RadarApiClient(
 
                     RadarState.setLastFailedStoppedLocation(context, null)
                     Radar.flushLogs()
+                    Radar.flushTraces()
                     RadarSettings.updateLastTrackedTime(context)
 
                     val config = RadarConfig.fromJson(res)
