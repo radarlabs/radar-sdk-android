@@ -375,7 +375,8 @@ class RadarTest {
             imageCallback: RadarApiHelper.RadarImageApiCallback?,
             verifiedHostOverride: String?,
             prepareRequest: (() -> JSONObject)?,
-            preparationFailureHandler: ((Exception) -> Unit)?
+            preparationFailureHandler: ((Exception) -> Unit)?,
+            queue: RadarRequestQueue
         ) {
             if (path == "v1/logs") {
                 uploadCount.incrementAndGet()
