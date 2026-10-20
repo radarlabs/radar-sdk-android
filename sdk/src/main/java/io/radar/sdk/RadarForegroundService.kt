@@ -31,6 +31,7 @@ class RadarForegroundService : Service() {
         internal var started: Boolean = false
 
         private const val NOTIFICATION_ID = 20160525 // random notification ID (Radar's birthday!)
+        internal const val CHANNEL_ID = "RadarSDK"
 
         // the SDK manifest does not declare this service, apps that use foregroundServiceEnabled must declare it
         internal fun isDeclared(context: Context): Boolean = try {
@@ -72,7 +73,7 @@ class RadarForegroundService : Service() {
 
     private fun startForegroundService(extras: Bundle?) {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        manager.deleteNotificationChannel("RadarSDK")
+        manager.deleteNotificationChannel(CHANNEL_ID)
         var id = extras?.getInt("id") ?: 0
         id = if (id == 0) NOTIFICATION_ID else id
 
@@ -112,10 +113,10 @@ class RadarForegroundService : Service() {
             }
         }
         val channelName = extras?.getString(KEY_FOREGROUND_SERVICE_CHANNEL_NAME) ?: "Location Services"
-        val channel = NotificationChannel("RadarSDK", channelName, importance)
+        val channel = NotificationChannel(CHANNEL_ID, channelName, importance)
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
-        var builder = Notification.Builder(applicationContext, "RadarSDK")
+        var builder = Notification.Builder(applicationContext, CHANNEL_ID)
             .setContentText(text as CharSequence?)
             .setOngoing(true)
             .setSmallIcon(smallIcon)

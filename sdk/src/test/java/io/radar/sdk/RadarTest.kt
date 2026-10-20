@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.app.Activity
 import android.app.Application
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
@@ -965,6 +966,43 @@ class RadarTest {
         val params = trackOnceAndCaptureParams(notificationsEnabled = false)
         assertTrue(params!!.has("notificationAuthorization"))
         assertFalse(params.getBoolean("notificationAuthorization"))
+    }
+
+    private fun notificationManagerWithChannels(vararg channels: Pair<String, Int>): NotificationManager {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        shadowOf(notificationManager).setNotificationsEnabled(true)
+        notificationManager.notificationChannels.forEach { notificationManager.deleteNotificationChannel(it.id) }
+        channels.forEach { (id, importance) ->
+            notificationManager.createNotificationChannel(NotificationChannel(id, id, importance))
+        }
+        return notificationManager
+    }
+
+    @Test
+    fun test_RadarUtils_notificationAuthorization_falseWhenEveryAppChannelBlocked() {
+        notificationManagerWithChannels(
+            "marketing" to NotificationManager.IMPORTANCE_NONE,
+            "transactional" to NotificationManager.IMPORTANCE_NONE
+        )
+        assertFalse(RadarUtils.getNotificationAuthorization(context))
+    }
+
+    @Test
+    fun test_RadarUtils_notificationAuthorization_trueWhenAnyAppChannelOpen() {
+        notificationManagerWithChannels(
+            "marketing" to NotificationManager.IMPORTANCE_NONE,
+            "transactional" to NotificationManager.IMPORTANCE_DEFAULT
+        )
+        assertTrue(RadarUtils.getNotificationAuthorization(context))
+    }
+
+    @Test
+    fun test_RadarUtils_notificationAuthorization_ignoresForegroundServiceChannel() {
+        notificationManagerWithChannels(
+            RadarForegroundService.CHANNEL_ID to NotificationManager.IMPORTANCE_LOW,
+            "marketing" to NotificationManager.IMPORTANCE_NONE
+        )
+        assertFalse(RadarUtils.getNotificationAuthorization(context))
     }
 
     @Test

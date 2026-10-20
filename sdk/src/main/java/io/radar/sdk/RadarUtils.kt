@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.NotificationManager
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -75,8 +76,19 @@ internal object RadarUtils {
         return locationAuthorization
     }
 
-    // matches iOS: true if the app can post notifications (POST_NOTIFICATIONS on Android 13+, app notification setting before)
-    internal fun getNotificationAuthorization(context: Context): Boolean = NotificationManagerCompat.from(context).areNotificationsEnabled()
+    // true if the app can post notifications (POST_NOTIFICATIONS on Android 13+, app notification setting before) and,
+    // on Android 8+, the user hasn't blocked every channel. The SDK's foreground service status channel doesn't count
+    internal fun getNotificationAuthorization(context: Context): Boolean {
+        val notificationManager = NotificationManagerCompat.from(context)
+        if (!notificationManager.areNotificationsEnabled()) {
+            return false
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return true
+        }
+        val channels = notificationManager.notificationChannels.filter { it.id != RadarForegroundService.CHANNEL_ID }
+        return channels.isEmpty() || channels.any { it.importance != NotificationManager.IMPORTANCE_NONE }
+    }
 
     internal fun getLocationAccuracyAuthorization(context: Context): String {
         val olderThanAndroidS = Build.VERSION.SDK_INT < Build.VERSION_CODES.S
