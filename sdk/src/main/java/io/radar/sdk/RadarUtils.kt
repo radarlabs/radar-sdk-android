@@ -10,6 +10,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.provider.Settings
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -73,6 +74,9 @@ internal object RadarUtils {
         }
         return locationAuthorization
     }
+
+    // matches iOS: true if the app can post notifications (POST_NOTIFICATIONS on Android 13+, app notification setting before)
+    internal fun getNotificationAuthorization(context: Context): Boolean = NotificationManagerCompat.from(context).areNotificationsEnabled()
 
     internal fun getLocationAccuracyAuthorization(context: Context): String {
         val olderThanAndroidS = Build.VERSION.SDK_INT < Build.VERSION_CODES.S

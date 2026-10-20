@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.app.Activity
 import android.app.Application
+import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -927,6 +928,58 @@ class RadarTest {
 
         // Clean up
         Radar.removeTags(arrayOf("premium", "beta_user"))
+    }
+
+    private fun trackOnceAndCaptureParams(notificationsEnabled: Boolean): JSONObject? {
+        shadowOf(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            .setNotificationsEnabled(notificationsEnabled)
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
+        apiHelperMock.clearCapturedParams()
+
+        val latch = CountDownLatch(1)
+        Radar.trackOnce { _, _, _, _ -> latch.countDown() }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals("v1/track", apiHelperMock.lastCapturedPath)
+        return apiHelperMock.lastCapturedParams
+    }
+
+    @Test
+    fun test_Radar_track_sendsNotificationAuthorization_whenNotificationsEnabled() {
+        val params = trackOnceAndCaptureParams(notificationsEnabled = true)
+        assertTrue(params!!.has("notificationAuthorization"))
+        assertTrue(params.getBoolean("notificationAuthorization"))
+    }
+
+    @Test
+    fun test_Radar_track_sendsNotificationAuthorization_whenNotificationsDisabled() {
+        val params = trackOnceAndCaptureParams(notificationsEnabled = false)
+        assertTrue(params!!.has("notificationAuthorization"))
+        assertFalse(params.getBoolean("notificationAuthorization"))
+    }
+
+    @Test
+    fun test_Radar_getConfig_sendsNotificationAuthorization() {
+        shadowOf(context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            .setNotificationsEnabled(false)
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.clearCapturedParams()
+
+        Radar.apiClient.getConfig("resume")
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+
+        val configPath = apiHelperMock.capturedPaths.firstOrNull { it.startsWith("v1/config") }
+        assertNotNull(configPath)
+        assertTrue(configPath!!.contains("&notificationAuthorization=false"))
     }
 
     @Test

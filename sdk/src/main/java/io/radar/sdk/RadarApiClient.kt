@@ -178,6 +178,7 @@ internal class RadarApiClient(
         }
         queryParams.append("&locationAuthorization=${RadarUtils.getLocationAuthorization(context)}")
         queryParams.append("&locationAccuracyAuthorization=${RadarUtils.getLocationAccuracyAuthorization(context)}")
+        queryParams.append("&notificationAuthorization=${RadarUtils.getNotificationAuthorization(context)}")
         queryParams.append("&verified=$verified")
         queryParams.append("&usage=$usage")
         val clientSdkConfiguration = RadarSettings.getClientSdkConfiguration(context).toString()
@@ -394,6 +395,7 @@ internal class RadarApiClient(
             }
             params.putOpt("locationAuthorization", RadarUtils.getLocationAuthorization(context))
             params.putOpt("locationAccuracyAuthorization", RadarUtils.getLocationAccuracyAuthorization(context))
+            params.putOpt("notificationAuthorization", RadarUtils.getNotificationAuthorization(context))
             params.putOpt("trackingOptions", Radar.getTrackingOptions().toJson())
             val usingRemoteTrackingOptions = RadarSettings.getTracking(context) && RadarSettings.getRemoteTrackingOptions(context) != null
             params.putOpt("usingRemoteTrackingOptions", usingRemoteTrackingOptions)
