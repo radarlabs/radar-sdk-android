@@ -283,7 +283,9 @@ class RadarTraceManagerTest {
 
     @Test
     fun fileLimitEvictsOldestSpans() {
-        recordSpans(510)
+        // Record in two steps so the write queue (also 500) never fills; this test is about the file limit.
+        recordSpans(500)
+        recordSpans(10, firstId = 501)
 
         assertEquals(500, traceFiles().size)
         assertEquals((11..510).map { spanId(it) }.toSet(), persistedSpanIds())
