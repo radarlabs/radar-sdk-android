@@ -10,7 +10,9 @@ import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import org.json.JSONArray
@@ -41,11 +43,16 @@ internal class RadarTraceManager(
         private const val MAX_BATCH_SPANS = 100
         private const val MAX_BATCH_BYTES = 128 * 1024
         private const val DIR = "radar_traces"
+
+        // Spans waiting for the disk worker. Past this, storing a new span would only evict an older one.
+        private const val MAX_PENDING_WRITES = MAX_FILES
     }
 
     private val disk = Executors.newSingleThreadExecutor()
     private val directory = File(context.filesDir, DIR)
     private val isFlushing = AtomicBoolean(false)
+    private val pendingWrites = AtomicInteger(0)
+    private val droppedWrites = AtomicInteger(0)
 
     // Accessed only on the disk worker. inFlightFiles protects a selected batch from pruning during upload.
     private var inFlightFiles: Set<File> = emptySet()
@@ -71,7 +78,21 @@ internal class RadarTraceManager(
                 .put("project", project)
                 .put("sdkVersion", RadarUtils.SDK_VERSION)
                 .put("span", span.toJson())
-            runOnDisk { write(record) }
+            // If spans are created faster than they can be written, drop new ones instead of queuing without limit.
+            if (pendingWrites.incrementAndGet() > MAX_PENDING_WRITES) {
+                pendingWrites.decrementAndGet()
+                if (droppedWrites.incrementAndGet() == 1) {
+                    logger.e("Trace write queue is full; dropping new spans | limit = $MAX_PENDING_WRITES", Radar.RadarLogType.SDK_ERROR)
+                }
+                return
+            }
+            runOnDisk {
+                try {
+                    write(record)
+                } finally {
+                    finishWrite()
+                }
+            }
         } catch (e: Exception) {
             logger.e("Could not record trace span | message = ${e.message}", Radar.RadarLogType.SDK_ERROR, e)
         }
@@ -84,6 +105,16 @@ internal class RadarTraceManager(
     fun flush() {
         if (!isFlushing.compareAndSet(false, true)) return
         runOnDisk { uploadNextBatch() }
+    }
+
+    /** Called on the disk worker after each write. Logs how many spans were dropped once the queue drains. */
+    private fun finishWrite() {
+        if (pendingWrites.decrementAndGet() == 0) {
+            val dropped = droppedWrites.getAndSet(0)
+            if (dropped > 0) {
+                logger.e("Dropped trace spans while the write queue was full | dropped = $dropped", Radar.RadarLogType.SDK_ERROR)
+            }
+        }
     }
 
     /** Runs a task on the disk worker. */
@@ -330,7 +361,11 @@ internal class RadarTraceManager(
     private fun waitForFlushForTesting() {
         val deadline = System.currentTimeMillis() + 10_000
         while (isFlushing.get() && System.currentTimeMillis() < deadline) {
-            disk.submit {}.get(1, TimeUnit.SECONDS)
+            try {
+                disk.submit {}.get(1, TimeUnit.SECONDS)
+            } catch (_: TimeoutException) {
+                // The worker is still busy, for example with a long queue of writes. Keep waiting until the deadline.
+            }
         }
         check(!isFlushing.get()) { "Trace flush did not finish within 10 seconds" }
     }

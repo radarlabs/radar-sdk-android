@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.SharedPreferences
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -9,6 +10,7 @@ import io.radar.sdk.helpers.RadarApiHelperMock
 import java.io.File
 import java.util.Collections
 import java.util.Locale
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import org.json.JSONObject
@@ -382,6 +384,41 @@ class RadarTraceManagerTest {
 
         assertTrue(traceFiles().isEmpty())
         assertEquals((1..3).map { spanId(it) }.toSet(), apiHelper.capturedTraceSpans().map { it.getString("spanId") }.toSet())
+    }
+
+    @Test
+    fun spansBeyondWriteQueueLimitAreDropped() {
+        // Hold the disk worker so writes queue up. A flush reads the publishable key on the worker, so block there.
+        val held = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val testThread = Thread.currentThread()
+        val holdingContext = object : ContextWrapper(context) {
+            override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences {
+                if (Thread.currentThread() != testThread && release.count > 0) {
+                    held.countDown()
+                    release.await(10, TimeUnit.SECONDS)
+                }
+                return super.getSharedPreferences(name, mode)
+            }
+        }
+        manager.shutdownForTesting()
+        manager = RadarTraceManager(holdingContext, apiClient, logger)
+        manager.flush()
+        assertTrue("Disk worker was not held", held.await(5, TimeUnit.SECONDS))
+
+        // The queue holds 500 writes, so the newest 100 spans are dropped. Without the limit, all 600 would be
+        // written and the storage limits would evict the oldest 100 instead.
+        (1..600).forEach { manager.record(span("span", spanId(it)), manager.currentProjectFingerprint()) }
+        release.countDown()
+        manager.flushAndWaitForTesting()
+
+        assertEquals((1..500).map { spanId(it) }, apiHelper.capturedTraceSpans().map { it.getString("spanId") })
+
+        // Once the queue drains, new spans are accepted again.
+        recordSpans(1, firstId = 601)
+        manager.flushAndWaitForTesting()
+
+        assertEquals(spanId(601), apiHelper.capturedTraceSpans().last().getString("spanId"))
     }
 
     @Test
