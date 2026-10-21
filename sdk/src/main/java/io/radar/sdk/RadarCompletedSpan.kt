@@ -15,7 +15,11 @@ internal enum class RadarSpanKind(val otlpValue: Int) {
     CLIENT(3)
 }
 
-/** An ended span's data, serialized with [toJson] as an OTLP span for storage and upload. */
+/**
+ * An ended span's data, serialized with [toJson] as an OTLP span for storage and upload. [toJson] follows the
+ * OTLP/JSON encoding: hex IDs, int64 values as decimal strings, and enums as integers.
+ * https://opentelemetry.io/docs/specs/otlp/#json-protobuf-encoding
+ */
 internal data class RadarCompletedSpan(
     val name: String,
     val traceId: String,
@@ -47,6 +51,9 @@ internal data class RadarCompletedSpan(
             .put("traceId", traceId)
             .put("spanId", spanId)
             .put("kind", kind.otlpValue)
+            // Bits 0-7 are the W3C trace flags; 1 = sampled.
+            // https://github.com/open-telemetry/opentelemetry-proto/blob/main/opentelemetry/proto/trace/v1/trace.proto
+            // https://www.w3.org/TR/trace-context-2/#trace-flags
             .put("flags", 1)
             .put("startTimeUnixNano", startUnixNanos.toString())
             .put("endTimeUnixNano", endUnixNanos.toString())
@@ -54,6 +61,8 @@ internal data class RadarCompletedSpan(
         if (parentSpanId != null) {
             json.put("parentSpanId", parentSpanId)
         }
+        // OTLP status code 2 is ERROR. Leave status unset (0) on success; instrumentation should not set OK (1).
+        // https://opentelemetry.io/docs/specs/semconv/general/recording-errors/#recording-errors-on-spans
         if (radarStatus != Radar.RadarStatus.SUCCESS) {
             json.put("status", JSONObject().put("code", 2))
         }

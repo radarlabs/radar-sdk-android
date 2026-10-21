@@ -11,6 +11,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -30,12 +32,12 @@ internal class RadarTraceManager(
     private val logger: RadarLogger
 ) {
     companion object {
-        // TODO: replace hard coded SAMPLED with sampling decision from server.
+        // TODO(jordan-nelson): replace hard coded SAMPLED with sampling decision from server.
         private const val SAMPLED = false
         private const val MAX_FILES = 500
         private const val MAX_BYTES = 512 * 1024L
-        private const val MAX_AGE_MS = 72 * 60 * 60 * 1000L
-        private const val STALE_TEMP_FILE_MS = 60 * 1000L
+        private val MAX_AGE = 72.hours
+        private val STALE_TEMP_FILE_AGE = 1.minutes
         private const val MAX_BATCH_SPANS = 100
         private const val MAX_BATCH_BYTES = 128 * 1024
         private const val DIR = "radar_traces"
@@ -89,9 +91,9 @@ internal class RadarTraceManager(
         try {
             disk.execute(task)
         } catch (_: RejectedExecutionException) {
-            // Only happens after the worker is shut down, which currently only shutdownForTesting() does.
-            // No disk work can run after that, so the task is dropped.
-            logger.w("Dropped trace task; disk worker is shut down", Radar.RadarLogType.SDK_ERROR)
+            // Only happens after shutdown (today, only shutdownForTesting()). No disk work can run, so drop the task
+            // rather than throw into the caller.
+            logger.e("Dropped trace task; disk worker is shut down", Radar.RadarLogType.SDK_ERROR)
         }
     }
 
@@ -105,7 +107,7 @@ internal class RadarTraceManager(
                 finishFlush()
                 return
             }
-            apiClient.traces(
+            apiClient.postTraces(
                 batch.payload,
                 publishableKey,
                 object : RadarApiClient.RadarTraceCallback {
@@ -162,7 +164,7 @@ internal class RadarTraceManager(
             // Not retryable (bad request, auth, payload too large, etc.).
             else -> {
                 batch.files.forEach { it.delete() }
-                logger.w("Dropped trace batch | status = $status; res = ${res?.toString()?.take(1000)}", Radar.RadarLogType.SDK_ERROR)
+                logger.e("Dropped trace batch | status = $status; res = ${res?.toString()?.take(1000)}", Radar.RadarLogType.SDK_ERROR)
                 return false
             }
         }
@@ -271,9 +273,9 @@ internal class RadarTraceManager(
     private fun prune() {
         val now = System.currentTimeMillis()
         // Only remove old temp files left by a crash. A recent one may be an in-progress write by another manager
-        directory.listFiles()?.filter { it.extension == "tmp" && now - it.lastModified() > STALE_TEMP_FILE_MS }?.forEach { it.delete() }
+        directory.listFiles()?.filter { it.extension == "tmp" && now - it.lastModified() > STALE_TEMP_FILE_AGE.inWholeMilliseconds }?.forEach { it.delete() }
         val files = files().toMutableList()
-        files.filter { it !in inFlightFiles && now - it.lastModified() > MAX_AGE_MS }.forEach { it.delete() }
+        files.filter { it !in inFlightFiles && now - it.lastModified() > MAX_AGE.inWholeMilliseconds }.forEach { it.delete() }
         files.removeAll { !it.exists() }
         var bytes = files.sumOf { it.length() }
         while (files.size > MAX_FILES || bytes > MAX_BYTES) {

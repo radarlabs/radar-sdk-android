@@ -244,7 +244,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun traces(payload: JSONObject, publishableKey: String, callback: RadarTraceCallback?) {
+    internal fun postTraces(payload: JSONObject, publishableKey: String, callback: RadarTraceCallback?) {
         apiHelper.request(
             context = context,
             method = "POST",
