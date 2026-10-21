@@ -54,12 +54,9 @@ internal class RadarTraceSpan private constructor(
     }
 
     /** Starts a child span in this trace. Children of a no-op span are the same no-op span. */
-    fun child(name: String, kind: RadarSpanKind = RadarSpanKind.INTERNAL): RadarTraceSpan {
-        if (manager == null) {
-            return this
-        }
-        return RadarTraceSpan(name, traceId, newSpanId(), spanId, mutableMapOf(), manager, project, kind)
-    }
+    fun child(name: String, kind: RadarSpanKind = RadarSpanKind.INTERNAL): RadarTraceSpan = manager?.let {
+        RadarTraceSpan(name, traceId, newSpanId(), spanId, mutableMapOf(), manager, project, kind)
+    } ?: this
 
     /**
      * The W3C `traceparent` header for requests made in this span: `version-traceId-parentId-flags`, where flags
