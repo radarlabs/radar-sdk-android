@@ -3,6 +3,7 @@ package io.radar.sdk
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.os.Process
 import android.os.SystemClock
 import androidx.core.net.toUri
 import io.radar.sdk.Radar.RadarLogType
@@ -18,6 +19,9 @@ import java.net.URL
 import java.net.UnknownHostException
 import java.util.Scanner
 import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLException
 import org.json.JSONArray
 import org.json.JSONException
@@ -47,6 +51,20 @@ internal enum class NetworkErrorKind {
 internal fun isRetryableConnectionFailure(e: IOException): Boolean = e is EOFException ||
     (e is SocketException && e !is ConnectException && e !is NoRouteToHostException)
 
+/**
+ * The queue a request runs on. Queues are isolated so a request on one never waits behind a request on another.
+ */
+internal enum class RadarRequestQueue {
+    /** One request at a time, in order. For requests like track whose order matters on the server. */
+    ORDERED,
+
+    /**
+     * One request at a time at background thread priority. For telemetry like traces that must not delay other requests.
+     * One at a time limits bandwidth contention with higher priority requests.
+     */
+    BACKGROUND
+}
+
 internal fun networkErrorMessage(host: String, e: Exception, elapsedMs: Long, kind: String): String = "📍 Radar API network error | host = $host; kind = $kind; exception = ${e.javaClass.simpleName}; message = ${e.localizedMessage}; elapsedMs = $elapsedMs"
 
 internal open class RadarApiHelper(
@@ -54,7 +72,13 @@ internal open class RadarApiHelper(
     private val connectionFactory: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection }
 ) {
 
-    private val executor = Executors.newSingleThreadExecutor()
+    private val orderedExecutor = Executors.newSingleThreadExecutor()
+    private val backgroundExecutor = ThreadPoolExecutor(1, 1, 30, TimeUnit.SECONDS, LinkedBlockingQueue()) { runnable ->
+        Thread {
+            Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
+            runnable.run()
+        }
+    }.apply { allowCoreThreadTimeOut(true) }
     private val handler = Handler(Looper.getMainLooper())
 
     interface RadarApiCallback {
@@ -80,7 +104,8 @@ internal open class RadarApiHelper(
         imageCallback: RadarImageApiCallback? = null,
         verifiedHostOverride: String? = null,
         prepareRequest: (() -> JSONObject)? = null,
-        preparationFailureHandler: ((Exception) -> Unit)? = null
+        preparationFailureHandler: ((Exception) -> Unit)? = null,
+        queue: RadarRequestQueue = RadarRequestQueue.ORDERED
     ) {
         val host = if (verified) {
             verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
@@ -98,6 +123,10 @@ internal open class RadarApiHelper(
             logger?.d("📍 Radar API request | method = $method; url = $url; headers = $headers")
         }
 
+        val executor = when (queue) {
+            RadarRequestQueue.ORDERED -> orderedExecutor
+            RadarRequestQueue.BACKGROUND -> backgroundExecutor
+        }
         executor.execute {
             val startMs = SystemClock.elapsedRealtime()
             val retryEncryptedRequest = verified && prepareRequest != null

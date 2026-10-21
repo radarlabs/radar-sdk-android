@@ -3,6 +3,7 @@ package io.radar.sdk.helpers
 import android.content.Context
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarApiHelper
+import io.radar.sdk.RadarRequestQueue
 import io.radar.sdk.RadarSettings
 import org.json.JSONObject
 
@@ -60,7 +61,8 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         imageCallback: RadarImageApiCallback?,
         verifiedHostOverride: String?,
         prepareRequest: (() -> JSONObject)?,
-        preparationFailureHandler: ((Exception) -> Unit)?
+        preparationFailureHandler: ((Exception) -> Unit)?,
+        queue: RadarRequestQueue
     ) {
         val requestParams = try {
             prepareRequest?.invoke() ?: params
