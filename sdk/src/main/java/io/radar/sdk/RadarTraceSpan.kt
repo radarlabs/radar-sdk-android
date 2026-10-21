@@ -10,7 +10,7 @@ import java.util.Random
  * Follows the OpenTelemetry trace data model and OTLP/JSON encoding for the fields it supports (IDs, parent,
  * kind, timestamps, status, typed attributes) and propagates context as a W3C `traceparent`. It is not an
  * implementation of the OTel API, and does not support span events, links, `tracestate`, or array
- * attributes.
+ * attributes. OTel spans and traces: https://opentelemetry.io/docs/specs/otel/trace/api/#span
  *
  * Safe for concurrent use, like OTel spans: attribute updates and [end] are serialized on one lock, and the
  * span records a snapshot of its attributes.
@@ -61,6 +61,11 @@ internal class RadarTraceSpan private constructor(
         return RadarTraceSpan(name, traceId, newSpanId(), spanId, mutableMapOf(), manager, project, kind)
     }
 
+    /**
+     * The W3C `traceparent` header for requests made in this span: `version-traceId-parentId-flags`, where flags
+     * 01 means sampled. Null for no-op spans.
+     * https://www.w3.org/TR/trace-context/#traceparent-header
+     */
     fun traceparent(): String? = if (manager == null) null else "00-$traceId-$spanId-01"
 
     fun end(status: Radar.RadarStatus) {
@@ -115,10 +120,14 @@ internal class RadarTraceSpan private constructor(
          * A random, non-zero 8-byte span ID as 16 lowercase hex characters. Inspired by the OpenTelemetry Java
          * SDK's RandomIdGenerator, which opentelemetry-android uses:
          * https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk/trace/src/main/java/io/opentelemetry/sdk/trace/RandomIdGenerator.java
+         * The W3C format, where the span ID is called parent-id: https://www.w3.org/TR/trace-context/#parent-id
          */
         private fun newSpanId(): String = hex(nonZeroLong())
 
-        /** A random, non-zero 16-byte trace ID as 32 lowercase hex characters. See [newSpanId]. */
+        /**
+         * A random, non-zero 16-byte trace ID as 32 lowercase hex characters. See [newSpanId].
+         * https://www.w3.org/TR/trace-context/#trace-id
+         */
         private fun newTraceId(): String = hex(random.nextLong()) + hex(nonZeroLong())
 
         /** All-zero span and trace IDs are invalid in W3C Trace Context. */
