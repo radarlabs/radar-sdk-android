@@ -62,6 +62,10 @@ internal class RadarLocationManager(
         private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
         private const val BUBBLE_STOPPED_GEOFENCE_REQUEST_ID = "radar_stopped"
         private const val SYNCED_GEOFENCES_REQUEST_ID_PREFIX = "radar_sync"
+
+        // Beacon monitoring reports every sighting as an entry, so beacons already tracked within
+        // this window don't trigger another track.
+        internal const val BEACON_ENTER_DEBOUNCE_MS = 60_000L
     }
 
     private fun addCallback(callback: RadarLocationCallback?) {
@@ -197,6 +201,12 @@ internal class RadarLocationManager(
 
             Radar.oneShotBeaconManager.seedNearbyBeacons(beacons, source)
 
+            if (source == RadarLocationSource.BEACON_ENTER && !shouldTrackBeaconEnter(beacons)) {
+                logger.d("Skipping beacon entry: beacons already tracked recently")
+
+                return
+            }
+
             val lastLocation = RadarState.getLastLocation(context)
 
             if (lastLocation == null) {
@@ -205,6 +215,26 @@ internal class RadarLocationManager(
 
             this.handleLocation(lastLocation, source)
         }
+    }
+
+    /**
+     * Returns true when [beacons] include one not tracked within [BEACON_ENTER_DEBOUNCE_MS], and records
+     * the beacons as tracked.
+     */
+    private fun shouldTrackBeaconEnter(beacons: Array<RadarBeacon>?): Boolean {
+        val keys = beacons.orEmpty().map { "${it.type}:${it.uuid.lowercase()}:${it.major}:${it.minor}" }.toSet()
+        val now = System.currentTimeMillis()
+        val elapsed = now - RadarState.getLastBeaconEnterAt(context)
+        val withinWindow = elapsed in 0 until BEACON_ENTER_DEBOUNCE_MS
+        val lastKeys = if (withinWindow) RadarState.getLastBeaconEnterKeys(context) else emptySet()
+
+        if (withinWindow && lastKeys.containsAll(keys)) {
+            return false
+        }
+
+        RadarState.setLastBeaconEnter(context, lastKeys + keys, now)
+
+        return true
     }
 
     internal fun handleBootCompleted() {

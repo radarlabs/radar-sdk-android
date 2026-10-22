@@ -3993,7 +3993,14 @@ class RadarTest {
         assertTrue(trackIndex > searchIndex)
     }
 
-    private fun handleBeaconEnter() {
+    private fun testBeacon(minor: String = "1") = RadarBeacon(
+        uuid = "b9407f30-f5f8-466e-aff9-25556b57fe6d",
+        major = "100",
+        minor = minor,
+        type = RadarBeacon.RadarBeaconType.IBEACON
+    )
+
+    private fun handleBeaconEnter(vararg beacons: RadarBeacon = arrayOf(testBeacon())) {
         val lastLocation = Location("RadarSDK").apply {
             latitude = 40.78382
             longitude = -73.97536
@@ -4003,43 +4010,77 @@ class RadarTest {
         RadarState.setLastLocation(context, lastLocation)
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/track.json")!!)
-        apiHelperMock.clearCapturedParams()
 
-        val beacon = RadarBeacon(
-            _id = "beacon_1",
-            uuid = "b9407f30-f5f8-466e-aff9-25556b57fe6d",
-            major = "100",
-            minor = "1",
-            type = RadarBeacon.RadarBeaconType.IBEACON
-        )
-        Radar.handleBeacons(context, arrayOf(beacon), Radar.RadarLocationSource.BEACON_ENTER)
+        Radar.handleBeacons(context, arrayOf(*beacons), Radar.RadarLocationSource.BEACON_ENTER)
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+    }
+
+    private fun trackCount() = apiHelperMock.capturedPaths.count { it == "v1/track" }
+
+    private fun withBeaconTracking(block: () -> Unit) {
+        val trackingOptions = RadarSettings.getTrackingOptions(context)
+        try {
+            RadarSettings.setTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
+            RadarSettings.setTracking(context, true)
+            RadarState.setLastBeaconEnter(context, emptySet(), 0L)
+            apiHelperMock.clearCapturedParams()
+
+            block()
+        } finally {
+            Radar.stopTracking()
+            RadarSettings.setTrackingOptions(context, trackingOptions)
+            RadarState.setLastBeaconEnter(context, emptySet(), 0L)
+        }
     }
 
     @Test
     fun test_Radar_handleBeacons_notTracking_doesNotTrack() {
         Radar.stopTracking()
+        RadarState.setLastBeaconEnter(context, emptySet(), 0L)
+        apiHelperMock.clearCapturedParams()
 
         handleBeaconEnter()
 
-        assertFalse(apiHelperMock.capturedPaths.contains("v1/track"))
+        assertEquals(0, trackCount())
     }
 
     @Test
-    fun test_Radar_handleBeacons_tracking_tracks() {
-        val trackingOptions = RadarSettings.getTrackingOptions(context)
-        try {
-            RadarSettings.setTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
-            RadarSettings.setTracking(context, true)
+    fun test_Radar_handleBeacons_tracking_tracks() = withBeaconTracking {
+        handleBeaconEnter()
 
-            handleBeaconEnter()
+        assertEquals("v1/track", apiHelperMock.lastCapturedPath)
+        assertEquals("BEACON_ENTER", apiHelperMock.lastCapturedParams!!.getString("source"))
+    }
 
-            assertEquals("v1/track", apiHelperMock.lastCapturedPath)
-            assertEquals("BEACON_ENTER", apiHelperMock.lastCapturedParams!!.getString("source"))
-        } finally {
-            Radar.stopTracking()
-            RadarSettings.setTrackingOptions(context, trackingOptions)
-        }
+    @Test
+    fun test_Radar_handleBeacons_sameBeaconsWithinWindow_tracksOnce() = withBeaconTracking {
+        handleBeaconEnter()
+        handleBeaconEnter()
+        handleBeaconEnter(testBeacon())
+
+        assertEquals(1, trackCount())
+    }
+
+    @Test
+    fun test_Radar_handleBeacons_newBeaconWithinWindow_tracks() = withBeaconTracking {
+        handleBeaconEnter(testBeacon("1"))
+        handleBeaconEnter(testBeacon("2"))
+        // Both beacons were tracked in this window, so seeing either again doesn't track.
+        handleBeaconEnter(testBeacon("1"))
+        handleBeaconEnter(testBeacon("1"), testBeacon("2"))
+
+        assertEquals(2, trackCount())
+    }
+
+    @Test
+    fun test_Radar_handleBeacons_sameBeaconsAfterWindow_tracks() = withBeaconTracking {
+        handleBeaconEnter()
+        val keys = RadarState.getLastBeaconEnterKeys(context)
+        RadarState.setLastBeaconEnter(context, keys, System.currentTimeMillis() - RadarLocationManager.BEACON_ENTER_DEBOUNCE_MS - 1)
+
+        handleBeaconEnter()
+
+        assertEquals(2, trackCount())
     }
 }
 

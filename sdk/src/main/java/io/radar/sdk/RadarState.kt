@@ -37,6 +37,8 @@ internal object RadarState {
     private const val KEY_LAST_BEACONS = "last_beacons"
     private const val KEY_LAST_BEACON_UUIDS = "last_beacon_uuids"
     private const val KEY_LAST_BEACON_UIDS = "last_beacon_uids"
+    private const val KEY_LAST_BEACON_ENTER_KEYS = "last_beacon_enter_keys"
+    private const val KEY_LAST_BEACON_ENTER_AT = "last_beacon_enter_at"
     private const val KEY_LAST_MOTION_ACTIVITY = "last_motion_activity"
     private const val KEY_LAST_PRESSURE = "last_pressure"
     private const val KEY_ALTITUDE_ADJUSTMENTS = "altitude_adjustments"
@@ -227,6 +229,17 @@ internal object RadarState {
 
     internal fun setLastBeaconUIDs(context: Context, uids: Array<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
+    }
+
+    internal fun getLastBeaconEnterKeys(context: Context): Set<String> = getSharedPreferences(context).getStringSet(KEY_LAST_BEACON_ENTER_KEYS, null) ?: emptySet()
+
+    internal fun getLastBeaconEnterAt(context: Context): Long = getSharedPreferences(context).getLong(KEY_LAST_BEACON_ENTER_AT, 0L)
+
+    internal fun setLastBeaconEnter(context: Context, keys: Set<String>, at: Long) {
+        getSharedPreferences(context).edit {
+            putStringSet(KEY_LAST_BEACON_ENTER_KEYS, keys)
+            putLong(KEY_LAST_BEACON_ENTER_AT, at)
+        }
     }
 
     private fun stringToJsonObject(jsonString: String?): JSONObject? = jsonString?.let {
