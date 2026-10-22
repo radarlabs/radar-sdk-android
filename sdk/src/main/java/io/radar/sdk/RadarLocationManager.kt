@@ -183,6 +183,16 @@ internal class RadarLocationManager(
 
     internal fun handleBeacons(beacons: Array<RadarBeacon>?, source: RadarLocationSource) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Beacon monitoring events only track while tracking is on. This matches iOS and keeps a
+            // leftover scan from sending unverified tracks with a cached location.
+            if (!RadarSettings.getTracking(context)) {
+                logger.d("Ignoring beacon event: not tracking | source = $source")
+
+                Radar.beaconMonitoringManager.stopMonitoringBeacons()
+
+                return
+            }
+
             logger.d("Handling beacons")
 
             Radar.oneShotBeaconManager.seedNearbyBeacons(beacons, source)
