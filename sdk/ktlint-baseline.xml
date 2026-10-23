@@ -245,21 +245,6 @@
         <error line="87" column="9" source="standard:wrapping" />
         <error line="92" column="1" source="standard:final-newline" />
     </file>
-    <file name="src/main/java/io/radar/sdk/RadarTripOptions.kt">
-        <error line="3" column="1" source="standard:import-ordering" />
-        <error line="7" column="1" source="standard:no-consecutive-blank-lines" />
-        <error line="73" column="28" source="standard:keyword-spacing" />
-        <error line="89" column="24" source="standard:multiline-if-else" />
-        <error line="133" column="1" source="standard:indent" />
-        <error line="134" column="1" source="standard:indent" />
-        <error line="135" column="1" source="standard:indent" />
-        <error line="136" column="1" source="standard:indent" />
-        <error line="137" column="1" source="standard:indent" />
-        <error line="138" column="1" source="standard:indent" />
-        <error line="139" column="1" source="standard:indent" />
-        <error line="140" column="1" source="standard:indent" />
-        <error line="157" column="1" source="standard:final-newline" />
-    </file>
     <file name="src/main/java/io/radar/sdk/model/RadarAddress.kt">
         <error line="21" column="1" source="standard:indent" />
         <error line="22" column="1" source="standard:indent" />
@@ -441,26 +426,6 @@
         <error line="104" column="1" source="standard:no-trailing-spaces" />
         <error line="112" column="1" source="standard:no-trailing-spaces" />
         <error line="118" column="1" source="standard:final-newline" />
-    </file>
-    <file name="src/main/java/io/radar/sdk/model/RadarTrip.kt">
-        <error line="82" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="84" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="86" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="88" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="90" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="92" column="9" source="standard:spacing-between-declarations-with-comments" />
-        <error line="122" column="65" source="standard:paren-spacing" />
-        <error line="123" column="46" source="standard:wrapping" />
-        <error line="123" column="47" source="standard:argument-list-wrapping" />
-        <error line="124" column="72" source="standard:paren-spacing" />
-        <error line="125" column="54" source="standard:wrapping" />
-        <error line="125" column="55" source="standard:argument-list-wrapping" />
-        <error line="126" column="75" source="standard:paren-spacing" />
-        <error line="127" column="42" source="standard:wrapping" />
-        <error line="127" column="43" source="standard:argument-list-wrapping" />
-        <error line="135" column="51" source="standard:keyword-spacing" />
-        <error line="145" column="47" source="standard:keyword-spacing" />
-        <error line="209" column="1" source="standard:no-blank-line-before-rbrace" />
     </file>
     <file name="src/main/java/io/radar/sdk/model/RadarTripLeg.kt">
         <error line="3" column="1" source="standard:import-ordering" />
@@ -726,34 +691,6 @@
         <error line="413" column="17" source="standard:wrapping" />
         <error line="414" column="13" source="standard:wrapping" />
         <error line="431" column="49" source="standard:argument-list-wrapping" />
-    </file>
-    <file name="src/test/java/io/radar/sdk/model/RadarTripOptionsTest.kt">
-        <error line="20" column="40" source="standard:argument-list-wrapping" />
-        <error line="20" column="91" source="standard:argument-list-wrapping" />
-        <error line="20" column="156" source="standard:argument-list-wrapping" />
-        <error line="40" column="40" source="standard:argument-list-wrapping" />
-        <error line="40" column="91" source="standard:argument-list-wrapping" />
-        <error line="40" column="156" source="standard:argument-list-wrapping" />
-        <error line="60" column="40" source="standard:argument-list-wrapping" />
-        <error line="60" column="91" source="standard:argument-list-wrapping" />
-        <error line="60" column="156" source="standard:argument-list-wrapping" />
-        <error line="80" column="40" source="standard:argument-list-wrapping" />
-        <error line="80" column="91" source="standard:argument-list-wrapping" />
-        <error line="80" column="156" source="standard:argument-list-wrapping" />
-        <error line="84" column="40" source="standard:argument-list-wrapping" />
-        <error line="84" column="91" source="standard:argument-list-wrapping" />
-        <error line="84" column="156" source="standard:argument-list-wrapping" />
-        <error line="93" column="40" source="standard:argument-list-wrapping" />
-        <error line="93" column="91" source="standard:argument-list-wrapping" />
-        <error line="97" column="40" source="standard:argument-list-wrapping" />
-        <error line="97" column="91" source="standard:argument-list-wrapping" />
-        <error line="97" column="156" source="standard:argument-list-wrapping" />
-        <error line="106" column="40" source="standard:argument-list-wrapping" />
-        <error line="106" column="91" source="standard:argument-list-wrapping" />
-        <error line="106" column="156" source="standard:argument-list-wrapping" />
-        <error line="110" column="40" source="standard:argument-list-wrapping" />
-        <error line="110" column="91" source="standard:argument-list-wrapping" />
-        <error line="110" column="156" source="standard:argument-list-wrapping" />
     </file>
     <file name="src/test/java/io/radar/sdk/util/RadarSimpleReplayBufferTest.kt">
         <error line="36" column="32" source="standard:argument-list-wrapping" />

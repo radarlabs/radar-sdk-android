@@ -1,6 +1,8 @@
 package io.radar.sdk.model
 
 import io.radar.sdk.Radar
+import io.radar.sdk.util.optDoubleOrNull
+import io.radar.sdk.util.optStringOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -79,16 +81,22 @@ class RadarTrip(
     enum class RadarTripStatus {
         /** Unknown */
         UNKNOWN,
+
         /** `started` */
         STARTED,
+
         /** `approaching` */
         APPROACHING,
+
         /** `arrived` */
         ARRIVED,
+
         /** `expired` */
         EXPIRED,
+
         /** `completed` */
         COMPLETED,
+
         /** `canceled` */
         CANCELED
     }
@@ -119,20 +127,16 @@ class RadarTrip(
             val id: String = obj.optString(FIELD_ID) ?: ""
             val externalId: String = obj.optString(FIELD_EXTERNAL_ID) ?: ""
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
-            val destinationGeofenceTag: String? = obj.optString(
-                FIELD_DESTINATION_GEOFENCE_TAG) ?: null
-            val destinationGeofenceExternalId: String? = obj.optString(
-                FIELD_DESTINATION_GEOFENCE_EXTERNAL_ID) ?: null
-            val destinationLocation: RadarCoordinate? = obj.optJSONObject(
-                FIELD_DESTINATION_LOCATION)?.let { location ->
+            val destinationGeofenceTag: String? = obj.optStringOrNull(FIELD_DESTINATION_GEOFENCE_TAG)
+            val destinationGeofenceExternalId: String? = obj.optStringOrNull(FIELD_DESTINATION_GEOFENCE_EXTERNAL_ID)
+            val destinationLocation: RadarCoordinate? = obj.optJSONObject(FIELD_DESTINATION_LOCATION)?.let { location ->
                 location.optJSONArray(FIELD_COORDINATES)?.let { coordinate ->
-                    RadarCoordinate(
-                        coordinate.optDouble(1),
-                        coordinate.optDouble(0)
-                    )
+                    val latitude = coordinate.optDouble(1)
+                    val longitude = coordinate.optDouble(0)
+                    if (latitude.isNaN() || longitude.isNaN()) null else RadarCoordinate(latitude, longitude)
                 }
             }
-            val mode: Radar.RadarRouteMode? = when(obj.optString(FIELD_MODE)) {
+            val mode: Radar.RadarRouteMode? = when (obj.optString(FIELD_MODE)) {
                 "foot" -> Radar.RadarRouteMode.FOOT
                 "bike" -> Radar.RadarRouteMode.BIKE
                 "car" -> Radar.RadarRouteMode.CAR
@@ -140,9 +144,9 @@ class RadarTrip(
                 "motorbike" -> Radar.RadarRouteMode.MOTORBIKE
                 else -> null
             }
-            val etaDistance = obj.optJSONObject(FIELD_ETA)?.optDouble(FIELD_DISTANCE)
-            val etaDuration = obj.optJSONObject(FIELD_ETA)?.optDouble(FIELD_DURATION)
-            val status: RadarTripStatus = when(obj.optString(FIELD_STATUS)) {
+            val etaDistance = obj.optJSONObject(FIELD_ETA)?.optDoubleOrNull(FIELD_DISTANCE)
+            val etaDuration = obj.optJSONObject(FIELD_ETA)?.optDoubleOrNull(FIELD_DURATION)
+            val status: RadarTripStatus = when (obj.optString(FIELD_STATUS)) {
                 "started" -> RadarTripStatus.STARTED
                 "approaching" -> RadarTripStatus.APPROACHING
                 "arrived" -> RadarTripStatus.ARRIVED
@@ -194,10 +198,13 @@ class RadarTrip(
         obj.putOpt(FIELD_DESTINATION_GEOFENCE_EXTERNAL_ID, this.destinationGeofenceExternalId)
         obj.putOpt(FIELD_DESTINATION_LOCATION, this.destinationLocation?.toJson())
         obj.putOpt(FIELD_MODE, this.mode?.let { Radar.stringForMode(it) })
+        // org.json refuses to serialize NaN, so skip ETA values the server hasn't sent yet
         val etaObj = JSONObject()
-        etaObj.putOpt(FIELD_DISTANCE, this.etaDistance)
-        etaObj.putOpt(FIELD_DURATION, this.etaDuration)
-        obj.putOpt(FIELD_ETA, etaObj)
+        this.etaDistance?.takeIf { !it.isNaN() }?.let { etaObj.put(FIELD_DISTANCE, it) }
+        this.etaDuration?.takeIf { !it.isNaN() }?.let { etaObj.put(FIELD_DURATION, it) }
+        if (etaObj.length() > 0) {
+            obj.put(FIELD_ETA, etaObj)
+        }
         obj.putOpt(FIELD_STATUS, Radar.stringForTripStatus(status))
         obj.putOpt(FIELD_ORDERS, RadarTripOrder.toJson(this.orders))
         obj.putOpt(FIELD_LEGS, RadarTripLeg.toJson(this.legs))
@@ -206,5 +213,4 @@ class RadarTrip(
         }
         return obj
     }
-
 }
