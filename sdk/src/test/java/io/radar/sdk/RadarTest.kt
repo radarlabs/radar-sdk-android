@@ -3994,16 +3994,8 @@ class RadarTest {
     }
 
     private fun handleBeaconEnter() {
-        val lastLocation = Location("RadarSDK").apply {
-            latitude = 40.78382
-            longitude = -73.97536
-            accuracy = 65f
-            time = System.currentTimeMillis()
-        }
-        RadarState.setLastLocation(context, lastLocation)
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/track.json")!!)
-        apiHelperMock.clearCapturedParams()
 
         val beacon = RadarBeacon(
             _id = "beacon_1",
@@ -4016,30 +4008,54 @@ class RadarTest {
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
     }
 
-    @Test
-    fun test_Radar_handleBeacons_notTracking_doesNotTrack() {
-        Radar.stopTracking()
+    // Radar.locationManager is created once with the first test's context, so beacon tests use one built
+    // with this test's context to read the tracking state they set.
+    private fun withBeaconLocationManager(tracking: Boolean, block: () -> Unit) {
+        val originalLocationManager = Radar.locationManager
+        val trackingOptions = RadarSettings.getTrackingOptions(context)
+        Radar.locationManager = RadarLocationManager(
+            context,
+            Radar.apiClient,
+            Radar.logger,
+            Radar.batteryManager,
+            Radar.RadarLocationServicesProvider.GOOGLE,
+            permissionsHelperMock
+        ).apply { locationClient = locationClientMock }
+        try {
+            RadarState.setLastLocation(
+                context,
+                Location("RadarSDK").apply {
+                    latitude = 40.78382
+                    longitude = -73.97536
+                    accuracy = 65f
+                    time = System.currentTimeMillis()
+                }
+            )
+            RadarSettings.setTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
+            RadarSettings.setTracking(context, tracking)
+            apiHelperMock.clearCapturedParams()
 
+            block()
+        } finally {
+            Radar.stopTracking()
+            RadarSettings.setTrackingOptions(context, trackingOptions)
+            Radar.locationManager = originalLocationManager
+        }
+    }
+
+    @Test
+    fun test_Radar_handleBeacons_notTracking_doesNotTrack() = withBeaconLocationManager(tracking = false) {
         handleBeaconEnter()
 
         assertFalse(apiHelperMock.capturedPaths.contains("v1/track"))
     }
 
     @Test
-    fun test_Radar_handleBeacons_tracking_tracks() {
-        val trackingOptions = RadarSettings.getTrackingOptions(context)
-        try {
-            RadarSettings.setTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
-            RadarSettings.setTracking(context, true)
+    fun test_Radar_handleBeacons_tracking_tracks() = withBeaconLocationManager(tracking = true) {
+        handleBeaconEnter()
 
-            handleBeaconEnter()
-
-            assertEquals("v1/track", apiHelperMock.lastCapturedPath)
-            assertEquals("BEACON_ENTER", apiHelperMock.lastCapturedParams!!.getString("source"))
-        } finally {
-            Radar.stopTracking()
-            RadarSettings.setTrackingOptions(context, trackingOptions)
-        }
+        assertEquals("v1/track", apiHelperMock.lastCapturedPath)
+        assertEquals("BEACON_ENTER", apiHelperMock.lastCapturedParams!!.getString("source"))
     }
 }
 
