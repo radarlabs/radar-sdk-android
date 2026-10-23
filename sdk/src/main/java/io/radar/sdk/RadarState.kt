@@ -37,6 +37,9 @@ internal object RadarState {
     private const val KEY_LAST_BEACONS = "last_beacons"
     private const val KEY_LAST_BEACON_UUIDS = "last_beacon_uuids"
     private const val KEY_LAST_BEACON_UIDS = "last_beacon_uids"
+    private const val KEY_INSIDE_BEACONS = "inside_beacons"
+    private const val KEY_BEACON_MONITORING_TRANSITIONS = "beacon_monitoring_transitions"
+    private const val KEY_BEACON_TRANSITIONS_UNSUPPORTED = "beacon_transitions_unsupported"
     private const val KEY_LAST_MOTION_ACTIVITY = "last_motion_activity"
     private const val KEY_LAST_PRESSURE = "last_pressure"
     private const val KEY_ALTITUDE_ADJUSTMENTS = "altitude_adjustments"
@@ -227,6 +230,68 @@ internal object RadarState {
 
     internal fun setLastBeaconUIDs(context: Context, uids: Array<String>?) {
         getSharedPreferences(context).edit { putStringSet(KEY_LAST_BEACON_UIDS, uids?.toSet()) }
+    }
+
+    /**
+     * A beacon the user is inside, from beacon monitoring, when it was last seen, and when it was lost
+     * if its exit is waiting to be confirmed (0 otherwise).
+     */
+    internal data class InsideBeacon(val beacon: RadarBeacon, val lastSeenAt: Long, val lostAt: Long = 0L)
+
+    /**
+     * The beacons the user is inside, keyed by [RadarBeaconUtils.beaconKey]. Used to track beacon monitoring
+     * events only when a beacon is entered or exited, like iOS beacon regions.
+     */
+    internal fun getInsideBeacons(context: Context): MutableMap<String, InsideBeacon> {
+        val insideBeacons = linkedMapOf<String, InsideBeacon>()
+        val arr = getSharedPreferences(context).getString(KEY_INSIDE_BEACONS, null)?.let {
+            try {
+                JSONArray(it)
+            } catch (e: Exception) {
+                null
+            }
+        } ?: return insideBeacons
+
+        for (i in 0 until arr.length()) {
+            val obj = arr.optJSONObject(i) ?: continue
+            val beacon = RadarBeacon.fromJson(obj.optJSONObject("beacon")) ?: continue
+            insideBeacons[RadarBeaconUtils.beaconKey(beacon)] = InsideBeacon(beacon, obj.optLong("lastSeenAt"), obj.optLong("lostAt"))
+        }
+
+        return insideBeacons
+    }
+
+    internal fun setInsideBeacons(context: Context, insideBeacons: Map<String, InsideBeacon>) {
+        val arr = JSONArray()
+        insideBeacons.values.forEach { insideBeacon ->
+            arr.put(
+                JSONObject().apply {
+                    put("beacon", insideBeacon.beacon.toJson())
+                    put("lastSeenAt", insideBeacon.lastSeenAt)
+                    put("lostAt", insideBeacon.lostAt)
+                }
+            )
+        }
+        getSharedPreferences(context).edit { putString(KEY_INSIDE_BEACONS, arr.toString()) }
+    }
+
+    /**
+     * Whether the running beacon monitoring scan reports first matches and losses (enter and exit), rather
+     * than every sighting.
+     */
+    internal fun getBeaconMonitoringTransitions(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_BEACON_MONITORING_TRANSITIONS, false)
+
+    internal fun setBeaconMonitoringTransitions(context: Context, transitions: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_BEACON_MONITORING_TRANSITIONS, transitions) }
+    }
+
+    /**
+     * Set when a first match and loss scan failed on this device, so monitoring falls back to every sighting.
+     */
+    internal fun getBeaconTransitionsUnsupported(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_BEACON_TRANSITIONS_UNSUPPORTED, false)
+
+    internal fun setBeaconTransitionsUnsupported(context: Context, unsupported: Boolean) {
+        getSharedPreferences(context).edit { putBoolean(KEY_BEACON_TRANSITIONS_UNSUPPORTED, unsupported) }
     }
 
     private fun stringToJsonObject(jsonString: String?): JSONObject? = jsonString?.let {

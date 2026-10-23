@@ -36,6 +36,9 @@ internal object RadarBeaconUtils {
         return beacons.toTypedArray()
     }
 
+    // Identifies a beacon by what its advertisement carries, so scan results match beacons from the API.
+    fun beaconKey(beacon: RadarBeacon): String = "${beacon.type}:${beacon.uuid.lowercase()}:${beacon.major}:${beacon.minor}"
+
     fun stringSetForBeacons(beacons: Array<RadarBeacon>?): Set<String>? {
         if (beacons == null) {
             return null
