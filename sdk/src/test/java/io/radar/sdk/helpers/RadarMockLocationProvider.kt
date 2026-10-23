@@ -12,6 +12,10 @@ internal class RadarMockLocationProvider : RadarAbstractLocationClient() {
     internal var mockLocation: Location? = null
     internal var getLastLocationCount = 0
 
+    // getLastLocation only calls back when this is set, so tests that don't expect a callback are unaffected.
+    internal var respondToGetLastLocation = false
+    internal var mockLastLocation: Location? = null
+
     override fun getCurrentLocation(
         desiredAccuracy: RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy,
         block: (location: Location?) -> Unit
@@ -32,6 +36,9 @@ internal class RadarMockLocationProvider : RadarAbstractLocationClient() {
 
     override fun getLastLocation(block: (location: Location?) -> Unit) {
         getLastLocationCount++
+        if (respondToGetLastLocation) {
+            block(mockLastLocation)
+        }
     }
 
     override fun addGeofences(

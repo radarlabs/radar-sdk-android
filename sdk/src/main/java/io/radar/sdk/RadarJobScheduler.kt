@@ -14,6 +14,8 @@ import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.stringForSource
 import io.radar.sdk.model.RadarBeacon
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class RadarJobScheduler : JobService() {
 
@@ -25,9 +27,18 @@ class RadarJobScheduler : JobService() {
         private const val EXTRA_TIME = "time"
         private const val EXTRA_SOURCE = "source"
         private const val EXTRA_BEACONS = "beacons"
+        private const val EXTRA_BEACON_EXIT_CHECK = "beaconExitCheck"
 
         private const val BASE_JOB_ID_LOCATIONS = 20160525 // Radar's birthday!
         private const val BASE_JOB_ID_BEACONS = 20210216 // Beacons launch date
+
+        // Scheduling the exit check again replaces it. A check that reschedules itself uses the other ID,
+        // because replacing a running job stops it.
+        internal const val JOB_ID_BEACON_EXIT_CHECK = 20261023
+        internal const val JOB_ID_BEACON_EXIT_CHECK_NEXT = 20261024
+
+        // How long after its earliest start the system may delay the beacon exit check.
+        private val BEACON_EXIT_CHECK_DEADLINE = 30.seconds
 
         private val numActiveLocationJobs = AtomicInteger()
         private val numActiveBeaconJobs = AtomicInteger()
@@ -112,6 +123,38 @@ class RadarJobScheduler : JobService() {
                 Radar.logger.d("Failed to schedule beacons job | source = $sourceStr; beaconsArr = ${beaconsArr.joinToString(",")}")
             }
         }
+
+        /**
+         * Schedules a check, after [delay], that confirms beacon exits still pending. Pass the ID of the
+         * running exit check, if any, as [runningJobId].
+         */
+        internal fun scheduleBeaconExitCheck(context: Context, delay: Duration, runningJobId: Int? = null) {
+            val jobId = if (runningJobId == JOB_ID_BEACON_EXIT_CHECK) JOB_ID_BEACON_EXIT_CHECK_NEXT else JOB_ID_BEACON_EXIT_CHECK
+            val componentName = ComponentName(context, RadarJobScheduler::class.java)
+            val extras = PersistableBundle().apply {
+                putBoolean(EXTRA_BEACON_EXIT_CHECK, true)
+            }
+
+            val settings = RadarSettings.getSdkConfiguration(context)
+            val delayMs = delay.inWholeMilliseconds.coerceAtLeast(0L)
+
+            val jobInfo = JobInfo.Builder(jobId, componentName)
+                .setExtras(extras)
+                .setMinimumLatency(delayMs)
+                .setOverrideDeadline(delayMs + BEACON_EXIT_CHECK_DEADLINE.inWholeMilliseconds)
+                .setRequiredNetworkType(
+                    if (settings.schedulerRequiresNetwork) JobInfo.NETWORK_TYPE_ANY else JobInfo.NETWORK_TYPE_NONE
+                )
+                .build()
+
+            val jobScheduler = context.getSystemService(JOB_SCHEDULER_SERVICE) as JobScheduler
+            val result = jobScheduler.schedule(jobInfo)
+            if (result == JobScheduler.RESULT_SUCCESS) {
+                Radar.logger.d("Scheduling beacon exit check | delay = $delay")
+            } else {
+                Radar.logger.d("Failed to schedule beacon exit check | delay = $delay")
+            }
+        }
     }
 
     override fun onStartJob(params: JobParameters): Boolean {
@@ -120,6 +163,19 @@ class RadarJobScheduler : JobService() {
         }
 
         val extras = params.extras
+
+        if (extras.getBoolean(EXTRA_BEACON_EXIT_CHECK)) {
+            Radar.logger.d("Starting beacon exit check job")
+
+            Radar.handleBeaconExitCheck(this.applicationContext, params.jobId)
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                this.jobFinished(params, false)
+            }, 10000)
+
+            return true
+        }
+
         val beaconsArr = extras.getStringArray(EXTRA_BEACONS)
         val latitude = extras.getDouble(EXTRA_LATITUDE)
         val longitude = extras.getDouble(EXTRA_LONGITUDE)
@@ -190,6 +246,12 @@ class RadarJobScheduler : JobService() {
         }
 
         val extras = params.extras
+
+        if (extras.getBoolean(EXTRA_BEACON_EXIT_CHECK)) {
+            Radar.logger.d("Stopping beacon exit check job")
+
+            return false
+        }
         val beaconsArr = extras.getStringArray(EXTRA_BEACONS)
         val latitude = extras.getDouble(EXTRA_LATITUDE)
         val longitude = extras.getDouble(EXTRA_LONGITUDE)

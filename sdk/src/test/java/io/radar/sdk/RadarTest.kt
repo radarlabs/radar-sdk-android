@@ -4,6 +4,8 @@ import android.app.Activity
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.job.JobScheduler
+import android.bluetooth.le.ScanSettings
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -3993,26 +3995,42 @@ class RadarTest {
         assertTrue(trackIndex > searchIndex)
     }
 
-    private fun handleBeaconEnter() {
+    private fun testBeacon(minor: String = "1") = RadarBeacon(
+        uuid = "b9407f30-f5f8-466e-aff9-25556b57fe6d",
+        major = "100",
+        minor = minor,
+        type = RadarBeacon.RadarBeaconType.IBEACON
+    )
+
+    private fun handleBeaconEvent(source: Radar.RadarLocationSource, vararg beacons: RadarBeacon) {
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/track.json")!!)
 
-        val beacon = RadarBeacon(
-            _id = "beacon_1",
-            uuid = "b9407f30-f5f8-466e-aff9-25556b57fe6d",
-            major = "100",
-            minor = "1",
-            type = RadarBeacon.RadarBeaconType.IBEACON
-        )
-        Radar.handleBeacons(context, arrayOf(beacon), Radar.RadarLocationSource.BEACON_ENTER)
+        Radar.handleBeacons(context, arrayOf(*beacons), source)
         ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+    }
+
+    private fun handleBeaconEnter(vararg beacons: RadarBeacon = arrayOf(testBeacon())) = handleBeaconEvent(Radar.RadarLocationSource.BEACON_ENTER, *beacons)
+
+    private fun handleBeaconExit(vararg beacons: RadarBeacon) = handleBeaconEvent(Radar.RadarLocationSource.BEACON_EXIT, *beacons)
+
+    private fun trackCount() = apiHelperMock.capturedPaths.count { it == "v1/track" }
+
+    private fun lastTrackedBeaconMinors(): List<String> {
+        val beacons = apiHelperMock.lastCapturedParams!!.getJSONArray("beacons")
+        return (0 until beacons.length()).map { beacons.getJSONObject(it).getString("minor") }.sorted()
     }
 
     // Radar.locationManager is created once with the first test's context, so beacon tests use one built
     // with this test's context to read the tracking state they set.
-    private fun withBeaconLocationManager(tracking: Boolean, block: () -> Unit) {
+    private fun withBeaconLocationManager(
+        tracking: Boolean,
+        transitions: Boolean = true,
+        trackingOptions: RadarTrackingOptions = RadarTrackingOptions.CONTINUOUS,
+        block: () -> Unit
+    ) {
         val originalLocationManager = Radar.locationManager
-        val trackingOptions = RadarSettings.getTrackingOptions(context)
+        val originalTrackingOptions = RadarSettings.getTrackingOptions(context)
         Radar.locationManager = RadarLocationManager(
             context,
             Radar.apiClient,
@@ -4031,31 +4049,207 @@ class RadarTest {
                     time = System.currentTimeMillis()
                 }
             )
-            RadarSettings.setTrackingOptions(context, RadarTrackingOptions.CONTINUOUS)
+            RadarSettings.setTrackingOptions(context, trackingOptions)
             RadarSettings.setTracking(context, tracking)
+            RadarState.setInsideBeacons(context, emptyMap())
+            RadarState.setBeaconMonitoringTransitions(context, transitions)
+            locationClientMock.respondToGetLastLocation = true
+            locationClientMock.mockLastLocation = null
             apiHelperMock.clearCapturedParams()
 
             block()
         } finally {
             Radar.stopTracking()
-            RadarSettings.setTrackingOptions(context, trackingOptions)
+            RadarSettings.setTrackingOptions(context, originalTrackingOptions)
+            RadarState.setInsideBeacons(context, emptyMap())
+            RadarState.setBeaconMonitoringTransitions(context, false)
+            locationClientMock.respondToGetLastLocation = false
+            locationClientMock.mockLastLocation = null
+            permissionsHelperMock.mockBluetoothPermissionsGranted = null
             Radar.locationManager = originalLocationManager
         }
     }
+
+    private fun withBeaconTracking(transitions: Boolean = true, block: () -> Unit) = withBeaconLocationManager(tracking = true, transitions = transitions, block = block)
 
     @Test
     fun test_Radar_handleBeacons_notTracking_doesNotTrack() = withBeaconLocationManager(tracking = false) {
         handleBeaconEnter()
 
-        assertFalse(apiHelperMock.capturedPaths.contains("v1/track"))
+        assertEquals(0, trackCount())
     }
 
     @Test
-    fun test_Radar_handleBeacons_tracking_tracks() = withBeaconLocationManager(tracking = true) {
+    fun test_Radar_handleBeacons_enter_tracks() = withBeaconTracking {
         handleBeaconEnter()
 
         assertEquals("v1/track", apiHelperMock.lastCapturedPath)
         assertEquals("BEACON_ENTER", apiHelperMock.lastCapturedParams!!.getString("source"))
+        assertEquals(listOf("1"), lastTrackedBeaconMinors())
+    }
+
+    @Test
+    fun test_Radar_handleBeacons_enterWhileInside_doesNotTrack() = withBeaconTracking {
+        handleBeaconEnter(testBeacon("1"))
+        handleBeaconEnter(testBeacon("1"))
+        handleBeaconEnter(testBeacon("1"))
+
+        assertEquals(1, trackCount())
+    }
+
+    @Test
+    fun test_Radar_handleBeacons_enterNewBeacon_tracksAllInsideBeacons() = withBeaconTracking {
+        handleBeaconEnter(testBeacon("1"))
+        handleBeaconEnter(testBeacon("2"))
+        handleBeaconEnter(testBeacon("1"), testBeacon("2"))
+
+        assertEquals(2, trackCount())
+        assertEquals(listOf("1", "2"), lastTrackedBeaconMinors())
+    }
+
+    private fun backdateLostBeacons() {
+        val due = System.currentTimeMillis() - RadarLocationManager.BEACON_EXIT_DELAY.inWholeMilliseconds - 1
+        RadarState.setInsideBeacons(context, RadarState.getInsideBeacons(context).mapValues { if (it.value.lostAt > 0) it.value.copy(lostAt = due) else it.value })
+    }
+
+    private fun handleBeaconExitCheck() {
+        Radar.locationManager.handleBeaconExitCheck()
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+    }
+
+    private fun beaconExitCheckScheduled(): Boolean {
+        val jobScheduler = context.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+        return jobScheduler.getPendingJob(RadarJobScheduler.JOB_ID_BEACON_EXIT_CHECK) != null
+    }
+
+    @Test
+    fun test_Radar_handleBeacons_exit_waitsThenTracksRemainingBeacons() = withBeaconTracking {
+        handleBeaconEnter(testBeacon("1"), testBeacon("2"))
+        handleBeaconExit(testBeacon("1"))
+
+        // A loss doesn't exit right away.
+        assertEquals(1, trackCount())
+        assertTrue(beaconExitCheckScheduled())
+
+        // Not due yet.
+        handleBeaconExitCheck()
+
+        assertEquals(1, trackCount())
+
+        backdateLostBeacons()
+        handleBeaconExitCheck()
+
+        assertEquals(2, trackCount())
+        assertEquals("BEACON_EXIT", apiHelperMock.lastCapturedParams!!.getString("source"))
+        assertEquals(listOf("2"), lastTrackedBeaconMinors())
+
+        // Already outside, and never entered.
+        handleBeaconExit(testBeacon("1"))
+        handleBeaconExit(testBeacon("3"))
+        backdateLostBeacons()
+        handleBeaconExitCheck()
+
+        assertEquals(2, trackCount())
+
+        handleBeaconEnter(testBeacon("1"))
+
+        assertEquals(3, trackCount())
+    }
+
+    @Test
+    fun test_Radar_handleBeacons_foundAgainBeforeExit_doesNotTrack() = withBeaconTracking {
+        handleBeaconEnter(testBeacon("1"))
+        handleBeaconExit(testBeacon("1"))
+        handleBeaconEnter(testBeacon("1"))
+        backdateLostBeacons()
+        handleBeaconExitCheck()
+
+        assertEquals(1, trackCount())
+        assertEquals(0L, RadarState.getInsideBeacons(context).values.single().lostAt)
+    }
+
+    @Test
+    fun test_Radar_handleBeaconExitCheck_notTracking_doesNotTrack() = withBeaconLocationManager(tracking = true) {
+        handleBeaconEnter(testBeacon("1"))
+        handleBeaconExit(testBeacon("1"))
+        RadarSettings.setTracking(context, false)
+        backdateLostBeacons()
+        handleBeaconExitCheck()
+
+        assertEquals(1, trackCount())
+    }
+
+    private fun backdateInsideBeacons() {
+        val stale = System.currentTimeMillis() - RadarLocationManager.BEACON_STALE_AFTER.inWholeMilliseconds - 1
+        RadarState.setInsideBeacons(context, RadarState.getInsideBeacons(context).mapValues { it.value.copy(lastSeenAt = stale) })
+    }
+
+    @Test
+    fun test_Radar_handleBeacons_everySighting_staleBeaconIsEnteredAgain() = withBeaconTracking(transitions = false) {
+        handleBeaconEnter()
+        handleBeaconEnter()
+
+        assertEquals(1, trackCount())
+
+        backdateInsideBeacons()
+        handleBeaconEnter()
+
+        assertEquals(2, trackCount())
+    }
+
+    @Test
+    fun test_Radar_handleBeacons_transitions_staleBeaconStaysInside() = withBeaconTracking(transitions = true) {
+        handleBeaconEnter()
+        backdateInsideBeacons()
+        handleBeaconEnter()
+
+        assertEquals(1, trackCount())
+    }
+
+    @Test
+    fun test_Radar_handleBeacons_doesNotSearchBeacons() = withBeaconLocationManager(
+        tracking = true,
+        trackingOptions = RadarTrackingOptions.CONTINUOUS.copy(beacons = true)
+    ) {
+        permissionsHelperMock.mockBluetoothPermissionsGranted = true
+
+        handleBeaconEnter()
+
+        assertEquals(1, trackCount())
+        assertFalse(apiHelperMock.capturedPaths.any { it.startsWith("v1/search/beacons") })
+    }
+
+    @Test
+    fun test_Radar_handleBeacons_usesLastKnownLocation() = withBeaconTracking {
+        locationClientMock.mockLastLocation = Location("RadarSDK").apply {
+            latitude = 40.70
+            longitude = -74.01
+            accuracy = 20f
+            time = System.currentTimeMillis()
+        }
+
+        handleBeaconEnter()
+
+        assertEquals(40.70, apiHelperMock.lastCapturedParams!!.getDouble("latitude"), 0.0001)
+    }
+
+    @Test
+    fun test_RadarBeaconMonitoringManager_stopMonitoringBeacons_clearsInsideBeacons() {
+        RadarState.setInsideBeacons(context, mapOf(RadarBeaconUtils.beaconKey(testBeacon()) to RadarState.InsideBeacon(testBeacon(), System.currentTimeMillis())))
+
+        RadarBeaconMonitoringManager(context, Radar.logger).stopMonitoringBeacons()
+
+        assertTrue(RadarState.getInsideBeacons(context).isEmpty())
+    }
+
+    @Test
+    fun test_RadarBeaconMonitoringManager_getScanSettings() {
+        val transitions = RadarBeaconMonitoringManager.getScanSettings(transitions = true)
+        assertEquals(ScanSettings.CALLBACK_TYPE_FIRST_MATCH or ScanSettings.CALLBACK_TYPE_MATCH_LOST, transitions.callbackType)
+        assertEquals(ScanSettings.SCAN_MODE_LOW_POWER, transitions.scanMode)
+
+        val everySighting = RadarBeaconMonitoringManager.getScanSettings(transitions = false)
+        assertEquals(ScanSettings.CALLBACK_TYPE_ALL_MATCHES, everySighting.callbackType)
     }
 }
 
