@@ -27,6 +27,8 @@ import io.radar.sdk.model.RadarPolygonGeometry
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import java.util.*
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import org.json.JSONObject
 
 @SuppressLint("MissingPermission")
@@ -62,6 +64,13 @@ internal class RadarLocationManager(
         private const val BUBBLE_MOVING_GEOFENCE_REQUEST_ID = "radar_moving"
         private const val BUBBLE_STOPPED_GEOFENCE_REQUEST_ID = "radar_stopped"
         private const val SYNCED_GEOFENCES_REQUEST_ID_PREFIX = "radar_sync"
+
+        // When beacon monitoring reports every sighting, a beacon not seen for this long counts as
+        // entered again.
+        internal val BEACON_STALE_AFTER = 60.seconds
+
+        // How long a lost beacon must stay unseen before its exit is tracked, like iOS beacon region exits.
+        internal val BEACON_EXIT_DELAY = 30.seconds
     }
 
     private fun addCallback(callback: RadarLocationCallback?) {
@@ -197,14 +206,126 @@ internal class RadarLocationManager(
 
             Radar.oneShotBeaconManager.seedNearbyBeacons(beacons, source)
 
-            val lastLocation = RadarState.getLastLocation(context)
+            val insideBeacons = updateInsideBeacons(beacons, source) ?: return
 
-            if (lastLocation == null) {
+            trackBeaconEvent(source, insideBeacons)
+        }
+    }
+
+    /**
+     * Confirms beacon exits that have been pending for [BEACON_EXIT_DELAY], and tracks them.
+     * [runningJobId] is the exit check job running this, if any.
+     */
+    internal fun handleBeaconExitCheck(runningJobId: Int? = null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!RadarSettings.getTracking(context)) {
+                logger.d("Ignoring beacon exit check: not tracking")
+
+                Radar.beaconMonitoringManager.stopMonitoringBeacons()
+
+                return
+            }
+
+            val now = System.currentTimeMillis()
+            val insideBeacons = RadarState.getInsideBeacons(context)
+            val exitedKeys = insideBeacons.filterValues { it.lostAt > 0 && (now - it.lostAt).milliseconds >= BEACON_EXIT_DELAY }.keys.toList()
+            exitedKeys.forEach { insideBeacons.remove(it) }
+            RadarState.setInsideBeacons(context, insideBeacons)
+
+            scheduleBeaconExitCheck(insideBeacons, now, runningJobId)
+
+            if (exitedKeys.isEmpty()) {
+                logger.d("No beacon exits to confirm")
+
+                return
+            }
+
+            logger.d("Exited beacon region | beacons = ${exitedKeys.joinToString()}; insideBeacons = ${insideBeacons.size}")
+
+            trackBeaconEvent(RadarLocationSource.BEACON_EXIT, insideBeacons.values.map { it.beacon }.toTypedArray())
+        }
+    }
+
+    // Like iOS, tracks with the current last known location if valid, otherwise the last tracked one.
+    private fun trackBeaconEvent(source: RadarLocationSource, insideBeacons: Array<RadarBeacon>) {
+        locationClient.getLastLocation { lastKnownLocation ->
+            val location = if (lastKnownLocation != null && RadarUtils.valid(lastKnownLocation)) lastKnownLocation else RadarState.getLastLocation(context)
+
+            if (location == null) {
                 logger.d("Not handling beacons, no last location")
             }
 
-            this.handleLocation(lastLocation, source)
+            this.handleLocation(location, source, insideBeacons)
         }
+    }
+
+    // Schedules the next beacon exit check for the earliest pending exit, if any.
+    private fun scheduleBeaconExitCheck(insideBeacons: Map<String, RadarState.InsideBeacon>, now: Long, runningJobId: Int? = null) {
+        val nextLostAt = insideBeacons.values.filter { it.lostAt > 0 }.minOfOrNull { it.lostAt } ?: return
+        val delay = BEACON_EXIT_DELAY - (now - nextLostAt).milliseconds
+
+        RadarJobScheduler.scheduleBeaconExitCheck(context, delay, runningJobId)
+    }
+
+    /**
+     * Updates the beacons the user is inside for a beacon monitoring event, like iOS beacon region
+     * enter and exit. Returns the beacons the user is inside if a beacon was entered or exited, or
+     * null if nothing changed.
+     *
+     * A lost beacon isn't exited right away. Like iOS, the exit waits [BEACON_EXIT_DELAY], and seeing the
+     * beacon again in the meantime cancels it, because Bluetooth controllers report losses after missing
+     * only a few advertisements.
+     */
+    private fun updateInsideBeacons(beacons: Array<RadarBeacon>?, source: RadarLocationSource): Array<RadarBeacon>? {
+        val now = System.currentTimeMillis()
+        val transitions = RadarState.getBeaconMonitoringTransitions(context)
+        val insideBeacons = RadarState.getInsideBeacons(context)
+        val enteredBeacons = mutableListOf<RadarBeacon>()
+        var lost = false
+
+        beacons.orEmpty().forEach { beacon ->
+            val key = RadarBeaconUtils.beaconKey(beacon)
+            val previous = insideBeacons[key]
+            if (source == RadarLocationSource.BEACON_EXIT) {
+                if (previous != null && previous.lostAt == 0L) {
+                    insideBeacons[key] = previous.copy(lostAt = now)
+                    lost = true
+                }
+            } else {
+                // A scan that reports every sighting has no losses, so a beacon not seen recently is entered again.
+                val stale = previous != null && !transitions && (now - previous.lastSeenAt).milliseconds >= BEACON_STALE_AFTER
+                if (previous == null || stale) {
+                    enteredBeacons.add(beacon)
+                } else if (previous.lostAt > 0) {
+                    logger.d("Beacon found again, canceling exit | beacon = $key")
+                }
+                insideBeacons[key] = RadarState.InsideBeacon(beacon, now)
+            }
+        }
+
+        RadarState.setInsideBeacons(context, insideBeacons)
+
+        if (source == RadarLocationSource.BEACON_EXIT) {
+            if (lost) {
+                logger.d("Beacon lost, confirming exit in $BEACON_EXIT_DELAY")
+
+                scheduleBeaconExitCheck(insideBeacons, now)
+            } else {
+                logger.d("Already outside beacon region")
+            }
+
+            return null
+        }
+
+        if (enteredBeacons.isEmpty()) {
+            logger.d("Already inside beacon region")
+
+            return null
+        }
+
+        logger.d("Entered beacon region | beacons = ${enteredBeacons.joinToString { RadarBeaconUtils.beaconKey(it) }}; insideBeacons = ${insideBeacons.size}")
+
+        return insideBeacons.values.map { it.beacon }.toTypedArray()
     }
 
     internal fun handleBootCompleted() {
@@ -212,6 +333,8 @@ internal class RadarLocationManager(
 
         this.started = false
         RadarState.setStopped(context, false)
+        // Beacon monitoring scans don't survive a reboot.
+        RadarState.setInsideBeacons(context, emptyMap())
 
         locationClient.getLastLocation { location: Location? ->
             updateTracking(location)
@@ -490,7 +613,7 @@ internal class RadarLocationManager(
         this.removeSyncedGeofences()
     }
 
-    fun handleLocation(location: Location?, source: RadarLocationSource) {
+    fun handleLocation(location: Location?, source: RadarLocationSource, beacons: Array<RadarBeacon>? = null) {
         if (Radar.isTestKey()) {
             val latency = if (location == null) -1 else Date().time - location.time
             val standbyBucket = batteryManager.getAppStandbyBucket()
@@ -666,6 +789,13 @@ internal class RadarLocationManager(
                 return
             }
 
+            // A beacon monitoring event is a beacon state change.
+            if (source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT) {
+                RadarState.updateLastSentAt(context)
+                this.sendLocation(sendLocation, stopped, source, replayed, beacons = beacons)
+                return
+            }
+
             val geofenceOrPlaceChanged = Radar.syncManager.shouldTrack(location, options)
 
             if (geofenceOrPlaceChanged) {
@@ -691,10 +821,17 @@ internal class RadarLocationManager(
             return
         }
 
-        this.sendLocation(sendLocation, stopped, source, replayed)
+        this.sendLocation(sendLocation, stopped, source, replayed, beacons = beacons)
     }
 
-    private fun sendLocation(location: Location, stopped: Boolean, source: RadarLocationSource, replayed: Boolean, forceTrack: Boolean = true) {
+    private fun sendLocation(
+        location: Location,
+        stopped: Boolean,
+        source: RadarLocationSource,
+        replayed: Boolean,
+        forceTrack: Boolean = true,
+        beacons: Array<RadarBeacon>? = null
+    ) {
         val options = Radar.getTrackingOptions()
         val foregroundService = RadarSettings.getForegroundService(context)
 
@@ -751,10 +888,17 @@ internal class RadarLocationManager(
             )
         }
 
+        // Like iOS, beacon monitoring events track right away with the beacons the user is inside,
+        // without searching, ranging or monitoring beacons again.
+        if (source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT) {
+            callTrackApi(beacons ?: arrayOf())
+            return
+        }
+
         if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             permissionsHelper.bluetoothPermissionsGranted(context)
         ) {
-            val cache = stopped || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT
+            val cache = stopped
 
             if (RadarSettings.getSdkConfiguration(context).useSyncRegion &&
                 Radar.syncManager.hasSyncedRegion() &&

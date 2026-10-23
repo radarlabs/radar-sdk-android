@@ -175,8 +175,11 @@ class RadarLocationReceiver : BroadcastReceiver() {
 
             ACTION_BEACON -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val errorCode = intent.getIntExtra(BluetoothLeScanner.EXTRA_ERROR_CODE, 0)
                     val bleCallbackType = intent.getIntExtra(BluetoothLeScanner.EXTRA_CALLBACK_TYPE, -1)
-                    if (bleCallbackType != -1) {
+                    if (errorCode != 0) {
+                        Radar.beaconMonitoringManager.handleScanError(errorCode)
+                    } else if (bleCallbackType != -1) {
                         val source = if (bleCallbackType == ScanSettings.CALLBACK_TYPE_MATCH_LOST) Radar.RadarLocationSource.BEACON_EXIT else Radar.RadarLocationSource.BEACON_ENTER
                         val scanResults: ArrayList<ScanResult>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             intent.getParcelableArrayListExtra(BluetoothLeScanner.EXTRA_LIST_SCAN_RESULT, ScanResult::class.java)

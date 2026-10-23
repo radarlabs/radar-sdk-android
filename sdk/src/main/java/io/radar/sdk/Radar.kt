@@ -4563,6 +4563,14 @@ object Radar {
         locationManager.handleBeacons(beacons, source)
     }
 
+    internal fun handleBeaconExitCheck(context: Context, runningJobId: Int? = null) {
+        if (!initialized) {
+            initialize(context)
+        }
+
+        locationManager.handleBeaconExitCheck(runningJobId)
+    }
+
     internal fun handleBootCompleted(context: Context) {
         if (!initialized) {
             initialize(context)
