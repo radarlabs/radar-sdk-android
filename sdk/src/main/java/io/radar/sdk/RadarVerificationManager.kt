@@ -171,12 +171,9 @@ internal class RadarVerificationManager(
                                                     Radar.continuousBeaconManager.onSearched(location, continuousResult)
                                                 }
 
+                                                // Ranges only. Background beacon monitoring isn't started here, so
+                                                // trackVerified() doesn't cause later unverified BEACON_ENTER tracks.
                                                 if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
-                                                    Radar.beaconMonitoringManager.startMonitoringBeaconUUIDs(
-                                                        uuids,
-                                                        uids
-                                                    )
-
                                                     Radar.oneShotBeaconManager.rangeBeaconUUIDs(
                                                         uuids,
                                                         uids,
@@ -197,10 +194,6 @@ internal class RadarVerificationManager(
                                                         }
                                                     )
                                                 } else if (beacons != null) {
-                                                    Radar.beaconMonitoringManager.startMonitoringBeacons(
-                                                        beacons
-                                                    )
-
                                                     Radar.oneShotBeaconManager.rangeBeacons(
                                                         beacons,
                                                         false,
