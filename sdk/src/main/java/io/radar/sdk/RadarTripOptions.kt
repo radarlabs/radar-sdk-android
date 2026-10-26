@@ -1,9 +1,9 @@
 package io.radar.sdk
 
-import org.json.JSONObject
-import java.util.*
 import io.radar.sdk.model.RadarTripLeg
-
+import io.radar.sdk.util.optStringOrNull
+import java.util.*
+import org.json.JSONObject
 
 /**
  * An options class used to configure trip options.
@@ -66,18 +66,18 @@ data class RadarTripOptions(
         @JvmStatic
         fun fromJson(obj: JSONObject): RadarTripOptions {
             val options = RadarTripOptions(
-                externalId = obj.optString(KEY_EXTERNAL_ID),
+                externalId = obj.optStringOrNull(KEY_EXTERNAL_ID) ?: "",
                 metadata = obj.optJSONObject(KEY_METADATA),
-                destinationGeofenceTag = obj.optString(KEY_DESTINATION_GEOFENCE_TAG),
-                destinationGeofenceExternalId = obj.optString(KEY_DESTINATION_GEOFENCE_EXTERNAL_ID),
-                mode = when(obj.optString(KEY_MODE)) {
+                destinationGeofenceTag = obj.optStringOrNull(KEY_DESTINATION_GEOFENCE_TAG),
+                destinationGeofenceExternalId = obj.optStringOrNull(KEY_DESTINATION_GEOFENCE_EXTERNAL_ID),
+                mode = when (obj.optString(KEY_MODE)) {
                     "foot" -> Radar.RadarRouteMode.FOOT
                     "bike" -> Radar.RadarRouteMode.BIKE
                     "truck" -> Radar.RadarRouteMode.TRUCK
                     "motorbike" -> Radar.RadarRouteMode.MOTORBIKE
                     else -> Radar.RadarRouteMode.CAR
                 },
-                scheduledArrivalAt = if (obj.has(KEY_SCHEDULED_ARRIVAL_AT)) {
+                scheduledArrivalAt = if (obj.has(KEY_SCHEDULED_ARRIVAL_AT) && !obj.isNull(KEY_SCHEDULED_ARRIVAL_AT)) {
                     var scheduledArrivalAtLong = obj.optLong(
                         KEY_SCHEDULED_ARRIVAL_AT
                     )
@@ -86,7 +86,9 @@ data class RadarTripOptions(
                     } else {
                         RadarUtils.isoStringToDate(obj.optString(KEY_SCHEDULED_ARRIVAL_AT))
                     }
-                } else null,
+                } else {
+                    null
+                },
                 approachingThreshold = obj.optInt(KEY_APPROACHING_THRESHOLD),
                 startTracking = obj.optBoolean(KEY_START_TRACKING, true)
             )
@@ -130,14 +132,14 @@ data class RadarTripOptions(
         other as RadarTripOptions
 
         return this.externalId == other.externalId &&
-                this.metadata?.toString() == other.metadata?.toString() &&
-                this.destinationGeofenceTag == other.destinationGeofenceTag &&
-                this.destinationGeofenceExternalId == other.destinationGeofenceExternalId &&
-                this.mode == other.mode &&
-                this.scheduledArrivalAt?.time == other.scheduledArrivalAt?.time &&
-                this.approachingThreshold == other.approachingThreshold &&
-                this.startTracking == other.startTracking &&
-                this.legs?.contentDeepEquals(other.legs ?: emptyArray()) ?: (other.legs == null)
+            this.metadata?.toString() == other.metadata?.toString() &&
+            this.destinationGeofenceTag == other.destinationGeofenceTag &&
+            this.destinationGeofenceExternalId == other.destinationGeofenceExternalId &&
+            this.mode == other.mode &&
+            this.scheduledArrivalAt?.time == other.scheduledArrivalAt?.time &&
+            this.approachingThreshold == other.approachingThreshold &&
+            this.startTracking == other.startTracking &&
+            this.legs?.contentDeepEquals(other.legs ?: emptyArray()) ?: (other.legs == null)
     }
 
     // Array properties require manual equals/hashCode since data class

@@ -1,5 +1,8 @@
 package io.radar.sdk.model
 
+import io.radar.sdk.util.optBooleanOrNull
+import io.radar.sdk.util.optDoubleOrNull
+import io.radar.sdk.util.optStringOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -344,12 +347,6 @@ class RadarRevealRiskToken(
         private const val FIELD_TOKEN = "token"
         private const val FIELD_EXPIRES_AT = "expiresAt"
         private const val FIELD_EXPIRES_IN = "expiresIn"
-
-        private fun JSONObject.optStringOrNull(name: String): String? = if (has(name) && !isNull(name)) optString(name) else null
-
-        private fun JSONObject.optDoubleOrNull(name: String): Double? = if (has(name) && !isNull(name)) optDouble(name) else null
-
-        private fun JSONObject.optBooleanOrNull(name: String): Boolean? = if (has(name) && !isNull(name)) optBoolean(name) else null
 
         private fun stringArrayFromJson(arr: JSONArray?): Array<String>? {
             if (arr == null) {
