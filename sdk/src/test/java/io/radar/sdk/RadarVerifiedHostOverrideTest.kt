@@ -43,9 +43,15 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun `trackVerifiedAutoFailover defaults to false`() {
-        val options = RadarInitializeOptions()
-        assertFalse(options.trackVerifiedAutoFailover)
+    fun `trackVerifiedAutoFailover defaults to true`() {
+        assertTrue(RadarInitializeOptions().trackVerifiedAutoFailover)
+        assertTrue(RadarInitializeOptions.builder().build().trackVerifiedAutoFailover)
+    }
+
+    @Test
+    fun `trackVerifiedAutoFailover setting defaults to true before initialize`() {
+        context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit().clear().commit()
+        assertTrue(RadarSettings.getTrackVerifiedAutoFailover(context))
     }
 
     @Test

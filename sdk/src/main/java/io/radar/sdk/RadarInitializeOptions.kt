@@ -18,7 +18,7 @@ import kotlin.time.Duration
  * @param[activity] An optional activity that overwrites the activity from context.
  * @param[networkTimeout] Connect and base read timeout for Radar API requests.
  *                        If set, the value is persisted. If null, a previously saved value or default (10 seconds) is used.
- * @param[trackVerifiedAutoFailover] A boolean indicating whether `trackVerified()` should retry against a secondary verified host if the primary returns a non-Radar response. Defaults to false.
+ * @param[trackVerifiedAutoFailover] A boolean indicating whether `trackVerified()` should retry against a secondary verified host if the primary returns a non-Radar response. Defaults to true.
  * @param[ipChangeDebounceInterval] Minimum interval between deliveries of `RadarVerifiedReceiver.onIpChanged`. If set, the value is persisted. If null, a previously saved value or default (10 seconds) is used. Pass `Duration.ZERO` to disable throttling (deliver every detected change).
  *
  */
@@ -33,7 +33,7 @@ data class RadarInitializeOptions(
     val authToken: String? = null,
     val activity: Activity? = null,
     val networkTimeout: Duration? = null,
-    val trackVerifiedAutoFailover: Boolean = false,
+    val trackVerifiedAutoFailover: Boolean = true,
     val ipChangeDebounceInterval: Duration? = null,
 ) {
     class Builder {
@@ -47,7 +47,7 @@ data class RadarInitializeOptions(
         private var authToken: String? = null
         private var activity: Activity? = null
         private var networkTimeout: Duration? = null
-        private var trackVerifiedAutoFailover: Boolean = false
+        private var trackVerifiedAutoFailover: Boolean = true
         private var ipChangeDebounceInterval: Duration? = null
 
         fun radarReceiver(radarReceiver: RadarReceiver) = apply { this.radarReceiver = radarReceiver }
