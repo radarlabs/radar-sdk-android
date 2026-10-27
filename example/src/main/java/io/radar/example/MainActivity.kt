@@ -105,7 +105,6 @@ class MainActivity : AppCompatActivity() {
             fraud = true,
             customForegroundNotification = customNotification,
             silentPush = true,
-            trackVerifiedAutoFailover = true,
             activity = this,
         )
         applyLocalDevHostOverrides()

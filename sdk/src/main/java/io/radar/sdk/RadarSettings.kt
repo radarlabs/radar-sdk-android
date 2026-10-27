@@ -166,7 +166,7 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putLong(KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS, intervalMs) }
     }
 
-    internal fun getTrackVerifiedAutoFailover(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_TRACK_VERIFIED_AUTO_FAILOVER, false)
+    internal fun getTrackVerifiedAutoFailover(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_TRACK_VERIFIED_AUTO_FAILOVER, true)
 
     internal fun setTrackVerifiedAutoFailover(context: Context, enabled: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_TRACK_VERIFIED_AUTO_FAILOVER, enabled) }
