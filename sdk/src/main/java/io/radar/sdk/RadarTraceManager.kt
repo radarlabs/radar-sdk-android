@@ -27,6 +27,12 @@ import org.json.JSONObject
  * Uploads run on [RadarRequestQueue.BACKGROUND] so they never delay track requests. Like log uploads,
  * flushes are triggered after successful API calls, so failed batches stay on disk and are retried on
  * the next trigger instead of on a timer.
+ *
+ * The server decides sampling per session (`tracingEnabled` in `/v1/config` and `/v1/track` responses). Spans can
+ * end before that decision arrives, so they are written as pending, tagged with their session, and are not
+ * uploaded. [onSamplingDecision] then makes them uploadable or deletes them. A replaced session can still get
+ * its decision from a request that was in flight when the session changed, so its pending spans are kept util
+ * the next [init] call. Pending spans from sessions other than the current one are deleted when the manager starts.
  */
 internal class RadarTraceManager(
     private val context: Context,
@@ -34,8 +40,6 @@ internal class RadarTraceManager(
     private val logger: RadarLogger
 ) {
     companion object {
-        // TODO(jordan-nelson): replace hard coded SAMPLED with sampling decision from server.
-        private const val SAMPLED = false
         private const val MAX_FILES = 500
         private const val MAX_BYTES = 512 * 1024L
         private val MAX_AGE = 72.hours
@@ -43,6 +47,13 @@ internal class RadarTraceManager(
         private const val MAX_BATCH_SPANS = 100
         private const val MAX_BATCH_BYTES = 128 * 1024
         private const val DIR = "radar_traces"
+        private const val READY_EXTENSION = "json"
+        private const val PENDING_EXTENSION = "pending"
+
+        // Decisions remembered per process. Sampling is based on session ID. Session ID can change in the middle of
+        // a trace resulting in a new sampling decision. A minimum of two decisions need to be retained. Retaining 5
+        // allows for cases where multiple session changes could occur between trace start and end.
+        private const val MAX_DECISIONS = 5
 
         // Spans waiting for the disk worker. Past this, storing a new span would only evict an older one.
         private const val MAX_PENDING_WRITES = MAX_FILES
@@ -61,18 +72,63 @@ internal class RadarTraceManager(
     @Volatile
     private var sampledOverride: Boolean? = null
 
+    // The server's decisions by session, oldest first. A trace keeps the session it started in, so spans that end
+    // after the session changes still need the previous session's decision.
+    private val decisions = object : LinkedHashMap<String, Boolean>() {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean = size > MAX_DECISIONS
+    }
+
+    /** Whether spans in a session are uploaded, dropped, or kept until the server decides. */
+    enum class SamplingState { SAMPLED, NOT_SAMPLED, PENDING }
+
     init {
         disk.execute {
             directory.mkdirs()
+            deletePendingFromOtherSessions()
             prune()
         }
     }
 
-    /** Whether new spans should be recorded. */
-    fun isSampled(): Boolean = sampledOverride ?: SAMPLED
+    /**
+     * The sampling state for spans in a session. A decision only covers the session it was made for, so a new
+     * session is pending until its own decision arrives.
+     */
+    fun samplingState(sessionId: String): SamplingState {
+        sampledOverride?.let { return if (it) SamplingState.SAMPLED else SamplingState.NOT_SAMPLED }
+        return when (synchronized(decisions) { decisions[sessionId] }) {
+            null -> SamplingState.PENDING
+            true -> SamplingState.SAMPLED
+            false -> SamplingState.NOT_SAMPLED
+        }
+    }
 
-    /** Queues a completed span to be written to disk on the disk worker. Never throws into SDK call paths. */
-    fun record(span: RadarCompletedSpan, project: String?) {
+    /**
+     * Applies the server's sampling decision for [sessionId], which must be the session sent with the request,
+     * not the current one: the session can change while the request is in flight. Pending spans from that
+     * session become uploadable if sampled and are deleted otherwise.
+     */
+    fun onSamplingDecision(sessionId: String, sampled: Boolean) {
+        synchronized(decisions) {
+            // Return early if there was already a sampling decision for this session. This prevents the sampling
+            // decision from changing mid session. While the server should return a stable decision for the same session,
+            // in the case the sampling percentage was changed or could not be loaded, the client should respect the
+            // initial decision.
+            if (decisions.containsKey(sessionId)) {
+                return
+            }
+            decisions[sessionId] = sampled
+        }
+        runOnDisk { resolvePending(sessionId, sampled) }
+        if (sampled) {
+            flush()
+        }
+    }
+
+    /**
+     * Queues a completed span to be written to disk on the disk worker. Never throws into SDK call paths.
+     * [sessionId] is the session the span's trace started in, which decides whether it is sampled.
+     */
+    fun record(span: RadarCompletedSpan, project: String?, sessionId: String) {
         try {
             val record = JSONObject()
                 .put("project", project)
@@ -88,7 +144,14 @@ internal class RadarTraceManager(
             }
             runOnDisk {
                 try {
-                    write(record)
+                    // Checked on the disk worker, which runs tasks in order. onSamplingDecision stores the decision
+                    // before queueing resolvePending, so this write either sees the decision or writes a pending file
+                    // that resolvePending runs after.
+                    when (samplingState(sessionId)) {
+                        SamplingState.SAMPLED -> write(record, pendingSessionId = null)
+                        SamplingState.PENDING -> write(record, pendingSessionId = sessionId)
+                        SamplingState.NOT_SAMPLED -> Unit
+                    }
                 } finally {
                     finishWrite()
                 }
@@ -163,6 +226,40 @@ internal class RadarTraceManager(
             // Any exception must end the flush, or isFlushing stays set and uploads stop for the process.
             finishFlush()
         }
+    }
+
+    /** Makes a session's pending spans uploadable if it is sampled, or deletes them. */
+    private fun resolvePending(sessionId: String, sampled: Boolean) {
+        try {
+            pendingFiles().filter { parsePendingName(it).second == sessionId }.forEach { file ->
+                if (!sampled) {
+                    file.delete()
+                } else if (!file.renameTo(File(directory, "${parsePendingName(file).first}.$READY_EXTENSION"))) {
+                    logger.e("Could not make pending trace span uploadable", Radar.RadarLogType.SDK_ERROR)
+                }
+            }
+        } catch (e: Exception) {
+            logger.e("Could not apply trace sampling decision | message = ${e.message}", Radar.RadarLogType.SDK_ERROR, e)
+        }
+    }
+
+    /**
+     * Deletes pending spans left by a previous session during init. Decisions for those sessions will never arrive.
+     * Pending spans from the current session are kept, because a request in this process can still return its decision.
+     */
+    private fun deletePendingFromOtherSessions() {
+        try {
+            val currentSessionId = RadarSettings.getSessionId(context)
+            pendingFiles().filter { parsePendingName(it).second != currentSessionId }.forEach { it.delete() }
+        } catch (e: Exception) {
+            logger.e("Could not delete pending trace spans | message = ${e.message}", Radar.RadarLogType.SDK_ERROR, e)
+        }
+    }
+
+    /** Splits `<name>.<sessionId>.pending` into the record name and session. */
+    private fun parsePendingName(file: File): Pair<String, String> {
+        val base = file.nameWithoutExtension
+        return base.substringBeforeLast('.') to base.substringAfterLast('.')
     }
 
     /** Ends the current flush. */
@@ -273,11 +370,13 @@ internal class RadarTraceManager(
      * Atomically writes one span record, then enforces the storage limits.
      *
      * Each span is one file, `<directory>/<millis>-<sequence>-<uuid>.json`, containing
-     * `{"project": <key fingerprint>, "sdkVersion": <version>, "span": <OTLP span>}`. Names sort oldest
-     * first: millis, then a sequence for spans written in the same millisecond. The file is written to a
-     * `.tmp` file, synced, and renamed, so readers never see a partial record.
+     * `{"project": <key fingerprint>, "sdkVersion": <version>, "span": <OTLP span>}`. A span waiting for its
+     * session's sampling decision is written as `<millis>-<sequence>-<uuid>.<sessionId>.pending` instead and
+     * renamed when the decision arrives. Names sort oldest first: millis, then a sequence for spans written in
+     * the same millisecond. The file is written to a `.tmp` file, synced, and renamed, so readers never see a
+     * partial record.
      */
-    private fun write(record: JSONObject) {
+    private fun write(record: JSONObject, pendingSessionId: String?) {
         var temp: File? = null
         try {
             directory.mkdirs()
@@ -286,8 +385,9 @@ internal class RadarTraceManager(
                 stream.write(record.toString().toByteArray(Charsets.UTF_8))
                 stream.fd.sync()
             }
-            val name = String.format(Locale.US, "%d-%09d-%s.json", System.currentTimeMillis(), fileSequence++, UUID.randomUUID())
-            val target = File(directory, name)
+            val name = String.format(Locale.US, "%d-%09d-%s", System.currentTimeMillis(), fileSequence++, UUID.randomUUID())
+            val suffix = if (pendingSessionId == null) READY_EXTENSION else "$pendingSessionId.$PENDING_EXTENSION"
+            val target = File(directory, "$name.$suffix")
             if (!temp.renameTo(target)) throw IllegalStateException("Could not commit trace span")
             prune()
         } catch (e: Exception) {
@@ -297,15 +397,24 @@ internal class RadarTraceManager(
         }
     }
 
-    /** Committed span records, oldest first. */
-    private fun files(): List<File> = directory.listFiles()?.filter { it.extension == "json" }?.sortedBy { it.name } ?: emptyList()
+    /** Uploadable span records, oldest first. */
+    private fun files(): List<File> = records(READY_EXTENSION)
 
-    /** Removes stale temp files and expired spans, then evicts the oldest spans until within limits. */
+    /** Span records waiting for a sampling decision, oldest first. */
+    private fun pendingFiles(): List<File> = records(PENDING_EXTENSION)
+
+    /** Committed span records with the given extensions, oldest first. */
+    private fun records(vararg extensions: String): List<File> = directory.listFiles()?.filter { it.extension in extensions }?.sortedBy { it.name } ?: emptyList()
+
+    /**
+     * Removes stale temp files and expired spans, then evicts the oldest spans until within limits. Pending spans
+     * count toward the limits, so a decision that never arrives can't grow storage.
+     */
     private fun prune() {
         val now = System.currentTimeMillis()
         // Only remove old temp files left by a crash. A recent one may be an in-progress write by another manager
         directory.listFiles()?.filter { it.extension == "tmp" && now - it.lastModified() > STALE_TEMP_FILE_AGE.inWholeMilliseconds }?.forEach { it.delete() }
-        val files = files().toMutableList()
+        val files = records(READY_EXTENSION, PENDING_EXTENSION).toMutableList()
         files.filter { it !in inFlightFiles && now - it.lastModified() > MAX_AGE.inWholeMilliseconds }.forEach { it.delete() }
         files.removeAll { !it.exists() }
         var bytes = files.sumOf { it.length() }
@@ -320,6 +429,9 @@ internal class RadarTraceManager(
 
     /** Fingerprint of the current publishable key, or null if none is set. */
     internal fun currentProjectFingerprint(): String? = RadarSettings.getPublishableKey(context)?.let { fingerprint(it) }
+
+    /** The current session, which new traces are sampled under. */
+    internal fun currentSessionId(): String = RadarSettings.getSessionId(context)
 
     /**
      * Tags each span record with its project so spans are only uploaded under the key they were recorded with,
@@ -337,7 +449,10 @@ internal class RadarTraceManager(
 
     // Test hooks
 
-    /** Forces spans to be recorded (true) or not (false), e.g. to trace 100% locally. Pass null to restore the default. */
+    /**
+     * Forces every session to be sampled (true) or not (false), e.g. to trace 100% locally. Pass null to use the
+     * server's decision.
+     */
     @VisibleForTesting
     internal fun overrideSampledForTesting(sampled: Boolean?) {
         sampledOverride = sampled

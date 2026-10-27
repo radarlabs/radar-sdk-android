@@ -173,9 +173,10 @@ internal class RadarApiClient(
             return
         }
 
+        val sessionId = RadarSettings.getSessionId(context)
         val queryParams = StringBuilder()
         queryParams.append("installId=${RadarSettings.getInstallId(context)}")
-        queryParams.append("&sessionId=${RadarSettings.getSessionId(context)}")
+        queryParams.append("&sessionId=$sessionId")
         val id = RadarSettings.getId(context)
         if (id != null) {
             queryParams.append("&id=$id")
@@ -197,6 +198,7 @@ internal class RadarApiClient(
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status == RadarStatus.SUCCESS) {
                         Radar.flushLogs()
+                        applyTraceSamplingDecision(sessionId, res?.optJSONObject("meta")?.optJSONObject("sdkConfiguration"))
                     }
                     val config = if (res?.has("meta") == true) RadarConfig.fromJson(res) else null
                     callback?.onComplete(status, config)
@@ -204,6 +206,13 @@ internal class RadarApiClient(
             },
             extendedTimeout = false, stream = true, verified = verified, verifiedHostOverride = verifiedHostOverride
         )
+    }
+
+    /**
+     * Applies `tracingEnabled` from a successful config or track response to the session the request was made for
+     */
+    private fun applyTraceSamplingDecision(sessionId: String, settings: JSONObject?) {
+        Radar.traceManager?.onSamplingDecision(sessionId, settings?.optBoolean("tracingEnabled", false) == true)
     }
 
     internal fun log(logs: List<RadarLog>, callback: RadarLogCallback?) {
@@ -341,6 +350,8 @@ internal class RadarApiClient(
         val options = Radar.getTrackingOptions()
         val tripOptions = RadarSettings.getTripOptions(context)
         val anonymous = RadarSettings.getAnonymousTrackingEnabled(context)
+        // Anonymous tracks don't send a session, so the response has no sampling decision for one.
+        var sessionId: String? = null
         val locationMetadata = JSONObject()
         try {
             params.putOpt("anonymous", anonymous)
@@ -351,7 +362,8 @@ internal class RadarApiClient(
                 params.putOpt("regionIds", JSONArray(RadarState.getRegionIds(context)))
                 params.putOpt("beaconIds", JSONArray(RadarState.getBeaconIds(context)))
             } else {
-                putUserParameters(params)
+                sessionId = RadarSettings.getSessionId(context)
+                putUserParameters(params, sessionId)
             }
 
             params.putOpt("latitude", location.latitude)
@@ -594,6 +606,9 @@ internal class RadarApiClient(
 
                     RadarState.setLastFailedStoppedLocation(context, null)
                     Radar.flushLogs()
+                    sessionId?.let {
+                        applyTraceSamplingDecision(it, res.optJSONObject("meta")?.optJSONObject("featureSettings"))
+                    }
                     Radar.flushTraces()
                     RadarSettings.updateLastTrackedTime(context)
 
@@ -1882,14 +1897,14 @@ internal class RadarApiClient(
         )
     }
 
-    private fun putUserParameters(params: JSONObject) {
+    private fun putUserParameters(params: JSONObject, sessionId: String = RadarSettings.getSessionId(context)) {
         params.putOpt("id", RadarSettings.getId(context))
         params.putOpt("installId", RadarSettings.getInstallId(context))
         params.putOpt("userId", RadarSettings.getUserId(context))
         params.putOpt("deviceId", RadarUtils.getDeviceId(context))
         params.putOpt("description", RadarSettings.getDescription(context))
         params.putOpt("metadata", RadarSettings.getMetadata(context))
-        params.putOpt("sessionId", RadarSettings.getSessionId(context))
+        params.putOpt("sessionId", sessionId)
         val tags = RadarSettings.getTags(context)
         if (!tags.isNullOrEmpty()) {
             params.putOpt("userTags", JSONArray(tags.toList()))

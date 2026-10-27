@@ -51,7 +51,8 @@ class RadarTraceManagerTest {
             mockResponse = JSONObject()
         }
         apiClient = RadarApiClient(context, logger).also { it.apiHelper = apiHelper }
-        manager = RadarTraceManager(context, apiClient, logger)
+        // Most tests are about storage and upload, so every session is sampled unless a test clears this.
+        manager = RadarTraceManager(context, apiClient, logger).also { it.overrideSampledForTesting(true) }
     }
 
     @After
@@ -63,8 +64,8 @@ class RadarTraceManagerTest {
 
     @Test
     fun persistsAndExportsOtlpEnvelopeThenDeletesAcknowledgedFiles() {
-        manager.record(span("one", spanId(1)), manager.currentProjectFingerprint())
-        manager.record(span("two", spanId(2)), manager.currentProjectFingerprint())
+        manager.record(span("one", spanId(1)), manager.currentProjectFingerprint(), manager.currentSessionId())
+        manager.record(span("two", spanId(2)), manager.currentProjectFingerprint(), manager.currentSessionId())
         manager.awaitDiskForTesting()
         assertEquals(2, traceFiles().size)
 
@@ -404,13 +405,13 @@ class RadarTraceManagerTest {
             }
         }
         manager.shutdownForTesting()
-        manager = RadarTraceManager(holdingContext, apiClient, logger)
+        manager = RadarTraceManager(holdingContext, apiClient, logger).also { it.overrideSampledForTesting(true) }
         manager.flush()
         assertTrue("Disk worker was not held", held.await(5, TimeUnit.SECONDS))
 
         // The queue holds 500 writes, so the newest 100 spans are dropped. Without the limit, all 600 would be
         // written and the storage limits would evict the oldest 100 instead.
-        (1..600).forEach { manager.record(span("span", spanId(it)), manager.currentProjectFingerprint()) }
+        (1..600).forEach { manager.record(span("span", spanId(it)), manager.currentProjectFingerprint(), manager.currentSessionId()) }
         release.countDown()
         manager.flushAndWaitForTesting()
 
@@ -427,12 +428,200 @@ class RadarTraceManagerTest {
     fun recordAndFlushAfterShutdownDoNotThrow() {
         manager.shutdownForTesting()
 
-        manager.record(span("span", spanId(1)), manager.currentProjectFingerprint())
+        manager.record(span("span", spanId(1)), manager.currentProjectFingerprint(), manager.currentSessionId())
         manager.flush()
     }
 
+    // Sampling
+
+    @Test
+    fun spansWaitForSamplingDecisionBeforeUpload() {
+        useServerSampling(sessionId = 1000)
+        recordSpans(2)
+
+        manager.flushAndWaitForTesting()
+        assertTrue(apiHelper.capturedTracePayloads.isEmpty())
+        assertEquals(2, pendingFiles().size)
+        assertEquals(RadarTraceManager.SamplingState.PENDING, manager.samplingState("1000"))
+
+        manager.onSamplingDecision("1000", sampled = true)
+        manager.flushAndWaitForTesting()
+
+        assertEquals(listOf(spanId(1), spanId(2)), spanIds(apiHelper.capturedTracePayloads.single()))
+        assertTrue(pendingFiles().isEmpty())
+        assertTrue(traceFiles().isEmpty())
+    }
+
+    @Test
+    fun spansAfterSampledDecisionAreWrittenUploadable() {
+        useServerSampling(sessionId = 1000)
+        manager.onSamplingDecision("1000", sampled = true)
+
+        recordSpans(1)
+
+        assertTrue(pendingFiles().isEmpty())
+        assertEquals(1, traceFiles().size)
+    }
+
+    @Test
+    fun notSampledDecisionDeletesPendingSpansAndDropsLaterSpans() {
+        useServerSampling(sessionId = 1000)
+        recordSpans(2)
+
+        manager.onSamplingDecision("1000", sampled = false)
+        recordSpans(1, firstId = 3)
+        manager.flushAndWaitForTesting()
+
+        assertEquals(RadarTraceManager.SamplingState.NOT_SAMPLED, manager.samplingState("1000"))
+        assertTrue(pendingFiles().isEmpty())
+        assertTrue(traceFiles().isEmpty())
+        assertTrue(apiHelper.capturedTracePayloads.isEmpty())
+    }
+
+    @Test
+    fun replacedSessionKeepsPendingSpansForItsOwnDecision() {
+        // Session 1000 is replaced before its decision arrives, e.g. from a track that was in flight when the app
+        // was resumed. Session 2000's decision must not delete session 1000's spans.
+        useServerSampling(sessionId = 1000)
+        recordSpans(2)
+        setSessionId(2000)
+        recordSpans(1, firstId = 3)
+
+        manager.onSamplingDecision("2000", sampled = true)
+        manager.flushAndWaitForTesting()
+        assertEquals(listOf(spanId(3)), apiHelper.capturedTraceSpans().map { it.getString("spanId") })
+        assertEquals(2, pendingFiles().size)
+
+        manager.onSamplingDecision("1000", sampled = true)
+        manager.flushAndWaitForTesting()
+        assertEquals(setOf(spanId(1), spanId(2), spanId(3)), apiHelper.capturedTraceSpans().map { it.getString("spanId") }.toSet())
+        assertTrue(pendingFiles().isEmpty())
+    }
+
+    @Test
+    fun spansFromDecidedSessionUseItsDecisionAfterSessionChanges() {
+        // A trace started in session 1000 ends after the session changed and the new session was decided.
+        useServerSampling(sessionId = 1000)
+        manager.onSamplingDecision("1000", sampled = true)
+        setSessionId(2000)
+        manager.onSamplingDecision("2000", sampled = false)
+
+        manager.record(span("span", spanId(1)), manager.currentProjectFingerprint(), "1000")
+        manager.record(span("span", spanId(2)), manager.currentProjectFingerprint(), "2000")
+        manager.flushAndWaitForTesting()
+
+        assertEquals(listOf(spanId(1)), apiHelper.capturedTraceSpans().map { it.getString("spanId") })
+        assertTrue(pendingFiles().isEmpty())
+    }
+
+    @Test
+    fun firstDecisionForSessionIsFinal() {
+        useServerSampling(sessionId = 1000)
+        manager.onSamplingDecision("1000", sampled = true)
+
+        // E.g. a track response after the sampling rate was lowered, or a sporadic false.
+        manager.onSamplingDecision("1000", sampled = false)
+        recordSpans(1)
+        manager.flushAndWaitForTesting()
+
+        assertEquals(RadarTraceManager.SamplingState.SAMPLED, manager.samplingState("1000"))
+        assertEquals(listOf(spanId(1)), apiHelper.capturedTraceSpans().map { it.getString("spanId") })
+    }
+
+    @Test
+    fun firstNotSampledDecisionIsFinal() {
+        useServerSampling(sessionId = 1000)
+        manager.onSamplingDecision("1000", sampled = false)
+
+        manager.onSamplingDecision("1000", sampled = true)
+        recordSpans(1)
+        manager.flushAndWaitForTesting()
+
+        assertEquals(RadarTraceManager.SamplingState.NOT_SAMPLED, manager.samplingState("1000"))
+        assertTrue(apiHelper.capturedTracePayloads.isEmpty())
+        assertTrue(pendingFiles().isEmpty())
+    }
+
+    @Test
+    fun startupDeletesPendingSpansFromOtherSessions() {
+        // The previous process's session was replaced, so no request can carry its decision anymore.
+        useServerSampling(sessionId = 1000)
+        recordSpans(2)
+        manager.shutdownForTesting()
+        setSessionId(2000)
+
+        manager = RadarTraceManager(context, apiClient, logger)
+        manager.awaitDiskForTesting()
+
+        assertTrue(pendingFiles().isEmpty())
+    }
+
+    @Test
+    fun lateDecisionForReplacedSessionKeepsCurrentSessionPending() {
+        // The config request was sent in session 1000, and the session changed before the response arrived.
+        useServerSampling(sessionId = 1000)
+        recordSpans(1)
+        setSessionId(2000)
+        recordSpans(1, firstId = 2)
+
+        manager.onSamplingDecision("1000", sampled = true)
+        manager.flushAndWaitForTesting()
+
+        assertEquals(listOf(spanId(1)), apiHelper.capturedTraceSpans().map { it.getString("spanId") })
+        assertEquals(RadarTraceManager.SamplingState.PENDING, manager.samplingState("2000"))
+        assertEquals(1, pendingFiles().size)
+
+        manager.onSamplingDecision("2000", sampled = false)
+        manager.awaitDiskForTesting()
+        assertTrue(pendingFiles().isEmpty())
+    }
+
+    @Test
+    fun newSessionIsPendingUntilItsOwnDecision() {
+        useServerSampling(sessionId = 1000)
+        manager.onSamplingDecision("1000", sampled = true)
+        assertEquals(RadarTraceManager.SamplingState.SAMPLED, manager.samplingState(manager.currentSessionId()))
+
+        setSessionId(2000)
+
+        assertEquals(RadarTraceManager.SamplingState.PENDING, manager.samplingState(manager.currentSessionId()))
+    }
+
+    @Test
+    fun pendingSpansAreResolvedAfterProcessDeathInTheSameSession() {
+        useServerSampling(sessionId = 1000)
+        recordSpans(2)
+        manager.shutdownForTesting()
+
+        manager = RadarTraceManager(context, apiClient, logger)
+        manager.onSamplingDecision("1000", sampled = true)
+        manager.flushAndWaitForTesting()
+
+        assertEquals(setOf(spanId(1), spanId(2)), apiHelper.capturedTraceSpans().map { it.getString("spanId") }.toSet())
+        assertTrue(pendingFiles().isEmpty())
+    }
+
+    @Test
+    fun pendingSpansCountTowardStorageLimits() {
+        useServerSampling(sessionId = 1000)
+        recordSpans(500)
+        recordSpans(10, firstId = 501)
+
+        assertEquals(500, pendingFiles().size)
+    }
+
+    /** Uses the server's sampling decisions instead of sampling every session, starting in [sessionId]. */
+    private fun useServerSampling(sessionId: Long) {
+        manager.overrideSampledForTesting(null)
+        setSessionId(sessionId)
+    }
+
+    private fun setSessionId(sessionId: Long) {
+        context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit().putLong("session_id", sessionId).commit()
+    }
+
     private fun recordSpans(count: Int, firstId: Int = 1, attributes: Map<String, Any> = emptyMap()) {
-        (firstId until firstId + count).forEach { manager.record(span("span", spanId(it), attributes = attributes), manager.currentProjectFingerprint()) }
+        (firstId until firstId + count).forEach { manager.record(span("span", spanId(it), attributes = attributes), manager.currentProjectFingerprint(), manager.currentSessionId()) }
         manager.awaitDiskForTesting()
     }
 
@@ -448,6 +637,8 @@ class RadarTraceManagerTest {
     private fun traceDirectory(): File = File(temp.root, "radar_traces").apply { mkdirs() }
 
     private fun traceFiles(): List<File> = traceDirectory().listFiles()?.filter { it.extension == "json" } ?: emptyList()
+
+    private fun pendingFiles(): List<File> = traceDirectory().listFiles()?.filter { it.extension == "pending" } ?: emptyList()
 
     private fun persistedSpanIds(): Set<String> = traceFiles().map { JSONObject(it.readText()).getJSONObject("span").getString("spanId") }.toSet()
 

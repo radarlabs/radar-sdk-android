@@ -16,6 +16,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -188,6 +189,66 @@ class RadarTraceSpanTest {
     }
 
     @Test
+    fun spanStartedBeforeDecisionIsNotNoOp() {
+        manager.overrideSampledForTesting(null)
+
+        val root = RadarTraceSpan.start("root")
+        val child = root.child("child")
+
+        // Pending spans are real so they can be kept until the decision arrives.
+        assertNotSame(root, child)
+        assertNotSame(root, RadarTraceSpan.start("other"))
+        assertEquals(root.traceId, child.traceId)
+    }
+
+    @Test
+    fun traceparentIsOmittedUntilSessionIsSampled() {
+        manager.overrideSampledForTesting(null)
+        val child = RadarTraceSpan.start("root").child("HTTP POST /v1/test", RadarSpanKind.CLIENT)
+
+        // No header while the decision is pending, never the not-sampled flag.
+        assertNull(child.traceparent())
+
+        manager.onSamplingDecision(manager.currentSessionId(), sampled = true)
+        assertEquals("00-${child.traceId}-${child.spanId}-01", child.traceparent())
+    }
+
+    @Test
+    fun traceparentIsOmittedWhenSessionIsNotSampled() {
+        manager.overrideSampledForTesting(null)
+        val span = RadarTraceSpan.start("root")
+
+        manager.onSamplingDecision(manager.currentSessionId(), sampled = false)
+
+        assertNull(span.traceparent())
+    }
+
+    @Test
+    fun childSpansUseTheSessionTheirTraceStartedIn() {
+        manager.overrideSampledForTesting(null)
+        setSessionId(1_000)
+        val root = RadarTraceSpan.start("root")
+        setSessionId(2_000)
+        val child = root.child("HTTP POST /v1/test", RadarSpanKind.CLIENT)
+
+        manager.onSamplingDecision("2000", sampled = false)
+        manager.onSamplingDecision("1000", sampled = true)
+
+        assertEquals("00-${child.traceId}-${child.spanId}-01", child.traceparent())
+    }
+
+    @Test
+    fun spanIsNoOpWhenSessionIsNotSampled() {
+        manager.overrideSampledForTesting(null)
+        manager.onSamplingDecision(manager.currentSessionId(), sampled = false)
+
+        val root = RadarTraceSpan.start("root")
+
+        assertSame(root, RadarTraceSpan.start("other"))
+        assertNull(root.traceparent())
+    }
+
+    @Test
     fun spanIsNoOpWithoutManager() {
         Radar.traceManager = null
 
@@ -248,6 +309,10 @@ class RadarTraceSpanTest {
     private fun uploadedSpans(): Map<String, JSONObject> {
         manager.flushAndWaitForTesting()
         return apiHelper.capturedTraceSpans().associateBy { it.getString("name") }
+    }
+
+    private fun setSessionId(sessionId: Long) {
+        context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit().putLong("session_id", sessionId).commit()
     }
 
     private fun attribute(span: JSONObject, key: String): JSONObject? {
