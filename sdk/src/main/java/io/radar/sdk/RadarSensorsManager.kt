@@ -12,7 +12,7 @@ class RadarSensorsManager(context: Context) : SensorEventListener {
     private val context: Context = context
     private val shortTermWindow = mutableListOf<Float>()
     private val shortTermSize = 50  // 5 seconds at 10 Hz
-    private val userAgent = "RadarSDK/Android/4.1.0"
+    private val userAgent = "RadarSDK/Android/4.2.0"
     private var lastSyncTime: Long = 0
     private val SYNC_INTERVAL_MS = 2000L // 2 seconds
 
