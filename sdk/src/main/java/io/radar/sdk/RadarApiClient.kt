@@ -10,6 +10,7 @@ import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.Radar.locationManager
 import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarAutocompleteEnrichedAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarContext
@@ -90,7 +91,7 @@ internal class RadarApiClient(
     }
 
     interface RadarSelectAutocompleteAddressApiCallback {
-        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAddress? = null)
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAutocompleteEnrichedAddress? = null)
     }
 
     interface RadarIpGeocodeApiCallback {
@@ -1421,7 +1422,7 @@ internal class RadarApiClient(
 
                     // 204 with no body unless the response carries an enriched address.
                     val address = res?.optJSONObject("address")?.let { addressObj ->
-                        RadarAddress.fromJson(addressObj)
+                        RadarAutocompleteEnrichedAddress.fromJson(addressObj)
                     }
 
                     callback.onComplete(RadarStatus.SUCCESS, res, address)

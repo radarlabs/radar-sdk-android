@@ -3,22 +3,12 @@
     "code": 200
   },
   "address": {
-    "latitude": 40.7039,
-    "longitude": -73.9867,
-    "formattedAddress": "25 Jay Street, Brooklyn, New York, NY 11201 USA",
-    "country": "United States",
-    "countryCode": "US",
-    "countryFlag": "🇺🇸",
-    "state": "New York",
-    "stateCode": "NY",
-    "postalCode": "11201",
-    "city": "New York",
-    "borough": "Brooklyn",
-    "county": "Kings County",
-    "neighborhood": "DUMBO",
-    "street": "Jay Street",
-    "number": "25",
-    "placeLabel": "Brooklyn Roasting Company",
-    "confidence": "exact"
+    "formattedAddress": "123 Main St, New York, NY 10001 US",
+    "locationDetails": {
+      "usage": "unknown",
+      "dwelling": "unknown",
+      "grounds": [],
+      "places": []
+    }
   }
 }
