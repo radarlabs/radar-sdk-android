@@ -227,23 +227,34 @@ internal open class RadarApiHelper(
 
                     if (urlConnection.responseCode in 200 until 400) {
                         if (callback != null) {
-                            val body = urlConnection.inputStream.readAll()
-                            if (body == null) {
-                                traceSpan?.end(Radar.RadarStatus.ERROR_SERVER)
+                            // Some endpoints (e.g. v1/search/autocomplete/select) reply 204 with no
+                            // body, which there is nothing to parse.
+                            if (urlConnection.responseCode == HttpURLConnection.HTTP_NO_CONTENT) {
+                                logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}")
+
+                                traceSpan?.end(Radar.RadarStatus.SUCCESS)
                                 handler.post {
-                                    callback.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                                    callback.onComplete(Radar.RadarStatus.SUCCESS)
+                                }
+                            } else {
+                                val body = urlConnection.inputStream.readAll()
+                                if (body == null) {
+                                    traceSpan?.end(Radar.RadarStatus.ERROR_SERVER)
+                                    handler.post {
+                                        callback.onComplete(Radar.RadarStatus.ERROR_SERVER)
+                                    }
+
+                                    return@execute
                                 }
 
-                                return@execute
-                            }
+                                val res = JSONObject(body)
 
-                            val res = JSONObject(body)
+                                logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res")
 
-                            logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res")
-
-                            traceSpan?.end(Radar.RadarStatus.SUCCESS)
-                            handler.post {
-                                callback.onComplete(Radar.RadarStatus.SUCCESS, res)
+                                traceSpan?.end(Radar.RadarStatus.SUCCESS)
+                                handler.post {
+                                    callback.onComplete(Radar.RadarStatus.SUCCESS, res)
+                                }
                             }
                         } else {
                             traceSpan?.end(Radar.RadarStatus.SUCCESS)
