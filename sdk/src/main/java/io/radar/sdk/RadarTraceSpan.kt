@@ -22,6 +22,19 @@ import java.util.Random
  * can be uploaded if the decision is yes.
  *
  * A trace's `sessionId` is the session the trace started in. All child spans inherit that session Id.
+ *
+ * Instrumentation lives in one `Radar<Subsystem>Tracing.kt` file per attribute namespace, for example
+ * `radar.location.*` in RadarLocationTracing.kt. Each file holds its attributes as extensions on this class, and
+ * its callback wrappers. A wrapper ends its span with the result's status before calling back, so every path that
+ * calls back ends the span. A child span wrapper is an extension on the callback, so a traced call adds only
+ * `.traced(...)` after the callback's closing brace. Attribute names and values match the iOS SDK, so one query
+ * works on both.
+ *
+ * Read attribute values that cost more than a field access (system services, permissions, preferences) inside
+ * [recording], so calls whose session isn't sampled skip them.
+ *
+ * Never record precise coordinates, identifiers (install, device, user, session, transaction), strings the app
+ * passes in, tokens, or fraud check results.
  */
 internal class RadarTraceSpan private constructor(
     val name: String,
@@ -47,6 +60,8 @@ internal class RadarTraceSpan private constructor(
 
     fun setAttribute(key: String, value: Double) = putAttribute(key, value)
 
+    fun setAttribute(key: String, value: Boolean) = putAttribute(key, value)
+
     /** Ignored on no-op spans and after [end]. */
     private fun putAttribute(key: String, value: Any) {
         if (manager == null) {
@@ -56,6 +71,16 @@ internal class RadarTraceSpan private constructor(
             if (!ended) {
                 attributes[key] = value
             }
+        }
+    }
+
+    /**
+     * Calls [setAttributes] on this span only when it records. A no-op span ignores attributes, but their values
+     * would still be computed.
+     */
+    fun recording(setAttributes: RadarTraceSpan.() -> Unit) = apply {
+        if (manager != null) {
+            setAttributes()
         }
     }
 
@@ -107,6 +132,12 @@ internal class RadarTraceSpan private constructor(
 
         /** Shared span returned when tracing is off. It records nothing, so one instance serves every caller. */
         private val NOOP = RadarTraceSpan("", "", "", null, mutableMapOf(), null, null, "", RadarSpanKind.INTERNAL)
+
+        /**
+         * Starts a root span and calls [setAttributes] on it. [setAttributes] only runs when the span records, so
+         * attribute values that cost something to compute are skipped when tracing is off.
+         */
+        fun start(name: String, setAttributes: RadarTraceSpan.() -> Unit): RadarTraceSpan = start(name).recording(setAttributes)
 
         fun start(name: String, attributes: Map<String, Any> = emptyMap()): RadarTraceSpan {
             val manager = Radar.traceManager

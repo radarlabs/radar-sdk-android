@@ -76,6 +76,9 @@ class RadarTraceManagerTest {
         assertEquals("radar-client", resourceAttribute(payload, "service.name"))
         assertEquals("android", resourceAttribute(payload, "os.type"))
         assertEquals(RadarUtils.SDK_VERSION, resourceAttribute(payload, "radar.sdk.version"))
+        assertEquals(Build.VERSION.RELEASE, resourceAttribute(payload, "os.version"))
+        assertEquals(Build.MANUFACTURER, resourceAttribute(payload, "device.manufacturer"))
+        assertEquals(Build.MODEL, resourceAttribute(payload, "device.model.identifier"))
         val scope = payload.getJSONArray("resourceSpans").getJSONObject(0).getJSONArray("scopeSpans").getJSONObject(0).getJSONObject("scope")
         assertEquals("io.radar.sdk", scope.getString("name"))
         assertEquals(listOf(spanId(1), spanId(2)), apiHelper.capturedTraceSpans().map { it.getString("spanId") })
@@ -252,7 +255,8 @@ class RadarTraceManagerTest {
                 verifiedHostOverride: String?,
                 prepareRequest: (() -> JSONObject)?,
                 preparationFailureHandler: ((Exception) -> Unit)?,
-                queue: RadarRequestQueue
+                queue: RadarRequestQueue,
+                traceSpan: RadarTraceSpan?
             ): Unit = throw IllegalStateException("upload failed")
         }
         recordSpans(1)
@@ -707,7 +711,8 @@ class RadarTraceManagerTest {
             verifiedHostOverride: String?,
             prepareRequest: (() -> JSONObject)?,
             preparationFailureHandler: ((Exception) -> Unit)?,
-            queue: RadarRequestQueue
+            queue: RadarRequestQueue,
+            traceSpan: RadarTraceSpan?
         ) {
             params?.let { payloads.add(it) }
             callback?.let { callbacks.add(it) }

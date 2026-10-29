@@ -105,7 +105,8 @@ internal open class RadarApiHelper(
         verifiedHostOverride: String? = null,
         prepareRequest: (() -> JSONObject)? = null,
         preparationFailureHandler: ((Exception) -> Unit)? = null,
-        queue: RadarRequestQueue = RadarRequestQueue.ORDERED
+        queue: RadarRequestQueue = RadarRequestQueue.ORDERED,
+        traceSpan: RadarTraceSpan? = null
     ) {
         val host = if (verified) {
             verifiedHostOverride ?: RadarSettings.getVerifiedHost(context)
@@ -127,11 +128,20 @@ internal open class RadarApiHelper(
             RadarRequestQueue.ORDERED -> orderedExecutor
             RadarRequestQueue.BACKGROUND -> backgroundExecutor
         }
+        // A traced request's client span ends on the executor, before its callback is posted, so time waiting for the
+        // main thread counts toward the caller's span instead.
+        val enqueuedAtMs = SystemClock.elapsedRealtime()
         executor.execute {
             val startMs = SystemClock.elapsedRealtime()
+            // Queue time includes waiting behind earlier requests on this queue, and their post-request sleeps.
+            traceSpan?.requestStarted(context, url.host, startMs - enqueuedAtMs)
+            val requestHeaders = tracedHeaders(headers, traceSpan)
             val retryEncryptedRequest = verified && prepareRequest != null
             // Attempt 2 is reached only via the eligible IOException `continue` below.
             for (attempt in 0..1) {
+                if (attempt > 0) {
+                    traceSpan?.resendCount(attempt)
+                }
                 val requestParams = try {
                     if (params != null) {
                         val prevUpdatedAtMsDiff = params.optLong("updatedAtMsDiff", -1L)
@@ -167,6 +177,7 @@ internal open class RadarApiHelper(
                     prepareRequest?.invoke() ?: params
                 } catch (e: Exception) {
                     logger?.e("Failed to prepare Radar API request: ${e.message ?: "Unknown error"}", RadarLogType.SDK_ERROR, e)
+                    traceSpan?.end(Radar.RadarStatus.ERROR_BAD_REQUEST)
                     handler.post {
                         if (preparationFailureHandler != null) {
                             preparationFailureHandler(e)
@@ -181,8 +192,8 @@ internal open class RadarApiHelper(
                 try {
                     val urlConnection = connectionFactory(url)
                     connectionToClose = urlConnection
-                    if (headers != null) {
-                        for ((key, value) in headers) {
+                    if (requestHeaders != null) {
+                        for ((key, value) in requestHeaders) {
                             try {
                                 urlConnection.setRequestProperty(key, value)
                             } catch (e: Exception) {
@@ -216,6 +227,7 @@ internal open class RadarApiHelper(
                         if (callback != null) {
                             val body = urlConnection.inputStream.readAll()
                             if (body == null) {
+                                traceSpan?.end(Radar.RadarStatus.ERROR_SERVER)
                                 handler.post {
                                     callback.onComplete(Radar.RadarStatus.ERROR_SERVER)
                                 }
@@ -227,9 +239,12 @@ internal open class RadarApiHelper(
 
                             logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res")
 
+                            traceSpan?.end(Radar.RadarStatus.SUCCESS)
                             handler.post {
                                 callback.onComplete(Radar.RadarStatus.SUCCESS, res)
                             }
+                        } else {
+                            traceSpan?.end(Radar.RadarStatus.SUCCESS)
                         }
                         if (imageCallback != null) {
                             val inputStream = urlConnection.inputStream
@@ -256,6 +271,7 @@ internal open class RadarApiHelper(
 
                         val body = urlConnection.errorStream.readAll()
                         if (body == null) {
+                            traceSpan?.end(Radar.RadarStatus.ERROR_SERVER)
                             callback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
                             imageCallback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
 
@@ -266,6 +282,7 @@ internal open class RadarApiHelper(
 
                         logger?.e("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
 
+                        traceSpan?.end(status)
                         handler.post {
                             callback?.onComplete(status, res)
                             imageCallback?.onComplete(status)
@@ -277,18 +294,21 @@ internal open class RadarApiHelper(
                         continue
                     }
                     logNetworkError(host, e, startMs, NetworkErrorKind.from(e).name)
+                    traceSpan?.networkError(e)?.end(Radar.RadarStatus.ERROR_NETWORK)
                     handler.post {
                         callback?.onComplete(Radar.RadarStatus.ERROR_NETWORK, throwable = e)
                         imageCallback?.onComplete(Radar.RadarStatus.ERROR_NETWORK)
                     }
                 } catch (e: JSONException) {
                     logNetworkError(host, e, startMs, "JSON_PARSE")
+                    traceSpan?.end(Radar.RadarStatus.ERROR_SERVER)
                     handler.post {
                         callback?.onComplete(Radar.RadarStatus.ERROR_SERVER, throwable = e)
                         imageCallback?.onComplete(Radar.RadarStatus.ERROR_SERVER)
                     }
                 } catch (e: Exception) {
                     logNetworkError(host, e, startMs, "UNKNOWN")
+                    traceSpan?.end(Radar.RadarStatus.ERROR_UNKNOWN)
                     handler.post {
                         callback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN, throwable = e)
                         imageCallback?.onComplete(Radar.RadarStatus.ERROR_UNKNOWN)

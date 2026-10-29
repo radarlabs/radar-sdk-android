@@ -1,6 +1,7 @@
 package io.radar.sdk
 
 import android.content.Context
+import android.os.Build
 import androidx.annotation.VisibleForTesting
 import java.io.File
 import java.io.FileOutputStream
@@ -348,7 +349,10 @@ internal class RadarTraceManager(
             bytes + next.file.length() <= MAX_BATCH_BYTES
     }
 
-    /** Wraps spans in an OTLP ExportTraceServiceRequest. */
+    /**
+     * Wraps spans in an OTLP ExportTraceServiceRequest. Device attributes are read at upload time, so spans recorded
+     * before an OS update are labeled with the new `os.version`.
+     */
     private fun otlpPayload(spans: List<JSONObject>, sdkVersion: String): JSONObject {
         val resource = JSONObject().put(
             "attributes",
@@ -356,6 +360,9 @@ internal class RadarTraceManager(
                 .put(attribute("service.name", "radar-client"))
                 .put(attribute("os.type", "android"))
                 .put(attribute("radar.sdk.version", sdkVersion))
+                .put(attribute("os.version", Build.VERSION.RELEASE))
+                .put(attribute("device.manufacturer", Build.MANUFACTURER))
+                .put(attribute("device.model.identifier", Build.MODEL))
         )
         val scopeSpans = JSONObject()
             .put("scope", JSONObject().put("name", "io.radar.sdk").put("version", sdkVersion))
