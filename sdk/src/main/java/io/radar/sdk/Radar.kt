@@ -10,6 +10,7 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarAutocompleteEnrichedAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarContext
@@ -235,6 +236,22 @@ object Radar {
         fun onComplete(
             status: RadarStatus,
             addresses: Array<RadarAddress>? = null
+        )
+    }
+
+    /**
+     * Called when a [RadarAutocompleteSession.select] request succeeds, fails, or times out.
+     */
+    interface RadarAutocompleteSelectCallback {
+        /**
+         * Called when a [RadarAutocompleteSession.select] request succeeds, fails, or times out. Receives the request status and, if successful, the enriched address.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[address] RadarAutocompleteEnrichedAddress? The enriched address, where available. `null` otherwise.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            address: RadarAutocompleteEnrichedAddress? = null
         )
     }
 
@@ -533,6 +550,7 @@ object Radar {
 
     internal var initialized = false
     internal var isFlushingReplays = false
+
     private lateinit var context: Context
     private lateinit var lifecycleMarker: RadarLifecycleMarker
     private var pendingUncleanPreviousProcessWithActiveTrip = false
@@ -3245,6 +3263,23 @@ object Radar {
         mailable: Boolean? = null,
         callback: RadarGeocodeCallback
     ) {
+        autocomplete(query, near, layers, limit, country, mailable, null, callback)
+    }
+
+    /**
+     * Autocompletes partial addresses and place names, sorted by relevance, optionally scoping the
+     * request to a session. A `null` token opens no session.
+     */
+    internal fun autocomplete(
+        query: String,
+        near: Location?,
+        layers: Array<String>?,
+        limit: Int?,
+        country: String?,
+        mailable: Boolean?,
+        sessionToken: String?,
+        callback: RadarGeocodeCallback
+    ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -3259,6 +3294,7 @@ object Radar {
             limit,
             country,
             mailable,
+            sessionToken,
             object : RadarApiClient.RadarGeocodeApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                     handler.post {
@@ -3301,6 +3337,43 @@ object Radar {
             object : RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
+                }
+            }
+        )
+    }
+
+    /**
+     * Reports which autocomplete result the user selected.
+     *
+     * Internal: callers reach this through [RadarAutocompleteSession.select].
+     */
+    internal fun selectAutocompleteAddress(
+        address: RadarAddress?,
+        callback: RadarAutocompleteSelectCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+        this.logger.i("selectAutocompleteAddress()", RadarLogType.SDK_CALL)
+
+        val resultId = address?.resultId
+        if (resultId.isNullOrEmpty()) {
+            // Nothing to attribute the selection to; posting would be a guaranteed 400.
+            this.logger.d("Autocomplete selection not reported | reason = the result carries no resultId")
+            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
+        }
+
+        apiClient.selectAutocompleteAddress(
+            resultId,
+            object : RadarApiClient.RadarSelectAutocompleteAddressApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAutocompleteEnrichedAddress?) {
+                    handler.post {
+                        callback.onComplete(status, address)
+                    }
                 }
             }
         )

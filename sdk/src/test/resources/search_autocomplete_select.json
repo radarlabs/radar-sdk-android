@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "code": 200
+  },
+  "address": {
+    "formattedAddress": "123 Main St, New York, NY 10001 US",
+    "locationDetails": {
+      "usage": "unknown",
+      "dwelling": "unknown",
+      "grounds": [],
+      "places": []
+    }
+  }
+}

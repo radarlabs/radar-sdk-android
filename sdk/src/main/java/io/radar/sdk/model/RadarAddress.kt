@@ -136,6 +136,13 @@ class RadarAddress(
      * The categories of the address.
      */
     val categories: Array<String>? = null,
+
+    /**
+     * Identifies this result within the session that returned it, not the address itself.
+     * Short-lived; pass the whole address to `RadarAutocompleteSession.select()` rather than
+     * storing this.
+     */
+    val resultId: String? = null,
 ) {
 
     /**
@@ -176,6 +183,7 @@ class RadarAddress(
         private const val FIELD_CONFIDENCE = "confidence"
         private const val FIELD_TIME_ZONE = "timeZone"
         private const val FIELD_CATEGORIES = "categories"
+        private const val FIELD_RESULT_ID = "resultId"
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarAddress? {
             if (obj == null) {
@@ -222,6 +230,7 @@ class RadarAddress(
                 }
                 list.toTypedArray()
             }
+            val resultId = obj.optString(FIELD_RESULT_ID).takeIf { it.isNotEmpty() }
 
             return RadarAddress(
                 coordinate,
@@ -250,6 +259,7 @@ class RadarAddress(
                 confidence,
                 timeZone,
                 categories,
+                resultId,
             )
         }
 
@@ -330,6 +340,7 @@ class RadarAddress(
                 categories.forEach { put(it) }
             }
         })
+        obj.putOpt(FIELD_RESULT_ID, this.resultId)
         return obj
     }
 
