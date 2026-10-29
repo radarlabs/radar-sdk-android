@@ -23,6 +23,7 @@ import io.radar.sdk.helpers.RadarPermissionsHelperMock
 import io.radar.sdk.helpers.RadarSDKFraudMock
 import io.radar.sdk.helpers.RadarTestUtils
 import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarAutocompleteEnrichedAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarChain
 import io.radar.sdk.model.RadarConfig
@@ -327,10 +328,10 @@ class RadarTest {
     /**
      * Reports a selection through a session and returns the status it completed with.
      */
-    private fun select(session: RadarAutocompleteSession, address: RadarAddress?): Pair<Radar.RadarStatus?, RadarAddress?> {
+    private fun select(session: RadarAutocompleteSession, address: RadarAddress?): Pair<Radar.RadarStatus?, RadarAutocompleteEnrichedAddress?> {
         val latch = CountDownLatch(1)
         var status: Radar.RadarStatus? = null
-        var selected: RadarAddress? = null
+        var selected: RadarAutocompleteEnrichedAddress? = null
 
         session.select(address) { callbackStatus, callbackAddress ->
             status = callbackStatus
@@ -3141,7 +3142,56 @@ class RadarTest {
         val (status, selected) = select(session, address)
 
         assertEquals(Radar.RadarStatus.SUCCESS, status)
-        assertAddressOk(selected)
+        assertNotNull(selected)
+        assertEquals("123 Main St, New York, NY 10001 US", selected?.formattedAddress)
+
+        // the enrichment payload is the whole reason a 200 exists; it must reach the caller intact
+        val locationDetails = selected?.locationDetails
+        assertNotNull(locationDetails)
+        assertEquals("unknown", locationDetails?.usage)
+        assertEquals("unknown", locationDetails?.dwelling)
+        assertEquals(0, locationDetails?.grounds?.size)
+        assertEquals(0, locationDetails?.places?.size)
+    }
+
+    @Test
+    fun test_RadarAutocompleteSession_select_surfacesGroundsAndPlaces() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+
+        val session = RadarAutocompleteSession()
+        val address = autocompleteFirstAddress(session)
+
+        apiHelperMock.mockResponse = JSONObject(
+            """
+            {
+              "meta": { "code": 200 },
+              "address": {
+                "formattedAddress": "20 Jay St, Brooklyn, NY 11201 US",
+                "locationDetails": {
+                  "usage": "commercial",
+                  "dwelling": "n/a",
+                  "grounds": ["parking", "loading-dock"],
+                  "places": [{ "name": "Brooklyn Roasting Company", "categories": ["food-beverage", "cafe"] }]
+                }
+              }
+            }
+            """
+        )
+
+        val (status, selected) = select(session, address)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, status)
+
+        val locationDetails = selected?.locationDetails
+        assertEquals("commercial", locationDetails?.usage)
+        assertEquals("n/a", locationDetails?.dwelling)
+        assertEquals(listOf("parking", "loading-dock"), locationDetails?.grounds?.toList())
+
+        val place = locationDetails?.places?.firstOrNull()
+        assertNotNull(place)
+        assertEquals("Brooklyn Roasting Company", place?.name)
+        assertEquals(listOf("food-beverage", "cafe"), place?.categories?.toList())
     }
 
     @Test

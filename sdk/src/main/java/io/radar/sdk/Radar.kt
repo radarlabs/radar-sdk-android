@@ -10,6 +10,7 @@ import android.location.Location
 import android.os.Build
 import android.os.Handler
 import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarAutocompleteEnrichedAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarContext
@@ -246,11 +247,11 @@ object Radar {
          * Called when a [RadarAutocompleteSession.select] request succeeds, fails, or times out. Receives the request status and, if successful, the enriched address.
          *
          * @param[status] RadarStatus The request status.
-         * @param[address] RadarAddress? The enriched address, where available. `null` otherwise.
+         * @param[address] RadarAutocompleteEnrichedAddress? The enriched address, where available. `null` otherwise.
          */
         fun onComplete(
             status: RadarStatus,
-            address: RadarAddress? = null
+            address: RadarAutocompleteEnrichedAddress? = null
         )
     }
 
@@ -3369,7 +3370,7 @@ object Radar {
         apiClient.selectAutocompleteAddress(
             resultId,
             object : RadarApiClient.RadarSelectAutocompleteAddressApiCallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?) {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAutocompleteEnrichedAddress?) {
                     handler.post {
                         callback.onComplete(status, address)
                     }

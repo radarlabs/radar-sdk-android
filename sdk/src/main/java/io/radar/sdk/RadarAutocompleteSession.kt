@@ -5,6 +5,7 @@ import io.radar.sdk.Radar.RadarAutocompleteSelectCallback
 import io.radar.sdk.Radar.RadarGeocodeCallback
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarAutocompleteEnrichedAddress
 import java.util.UUID
 
 /**
@@ -162,12 +163,12 @@ class RadarAutocompleteSession {
      */
     fun select(
         address: RadarAddress?,
-        block: (status: RadarStatus, address: RadarAddress?) -> Unit
+        block: (status: RadarStatus, address: RadarAutocompleteEnrichedAddress?) -> Unit
     ) {
         select(
             address,
             object : RadarAutocompleteSelectCallback {
-                override fun onComplete(status: RadarStatus, address: RadarAddress?) {
+                override fun onComplete(status: RadarStatus, address: RadarAutocompleteEnrichedAddress?) {
                     block(status, address)
                 }
             }
