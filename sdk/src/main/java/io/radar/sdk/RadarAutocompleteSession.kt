@@ -37,7 +37,7 @@ class RadarAutocompleteSession {
     /**
      * Autocompletes partial addresses and place names within this session, sorted by relevance.
      *
-     * Results carry the opaque handle [select] needs.
+     * Results carry the handle [select] needs.
      *
      * @see [](https://radar.com/documentation/api#autocomplete)
      *
@@ -65,7 +65,7 @@ class RadarAutocompleteSession {
     /**
      * Autocompletes partial addresses and place names within this session, sorted by relevance.
      *
-     * Results carry the opaque handle [select] needs.
+     * Results carry the handle [select] needs.
      *
      * @see [](https://radar.com/documentation/api#autocomplete)
      *
@@ -151,9 +151,11 @@ class RadarAutocompleteSession {
     /**
      * Reports which result the user chose, and returns it enriched where available.
      *
-     * Pass the [RadarAddress] straight back from [autocomplete]; it carries the opaque handle the
-     * API attributes the selection with. An address from somewhere else has no handle, so it is
-     * logged and not reported, completing with [RadarStatus.ERROR_BAD_REQUEST].
+     * Pass the [RadarAddress] straight back from [autocomplete]; it carries the handle the API
+     * attributes the selection with. That handle belongs to this session and stops working once
+     * the session expires, so it is not an address identifier and should not be stored as one.
+     * An address from somewhere else has no handle, so it is logged and not reported, completing
+     * with [RadarStatus.ERROR_BAD_REQUEST].
      *
      * @param[address] The selected address, as returned by [autocomplete].
      * @param[callback] A callback.
@@ -168,9 +170,11 @@ class RadarAutocompleteSession {
     /**
      * Reports which result the user chose, and returns it enriched where available.
      *
-     * Pass the [RadarAddress] straight back from [autocomplete]; it carries the opaque handle the
-     * API attributes the selection with. An address from somewhere else has no handle, so it is
-     * logged and not reported, completing with [RadarStatus.ERROR_BAD_REQUEST].
+     * Pass the [RadarAddress] straight back from [autocomplete]; it carries the handle the API
+     * attributes the selection with. That handle belongs to this session and stops working once
+     * the session expires, so it is not an address identifier and should not be stored as one.
+     * An address from somewhere else has no handle, so it is logged and not reported, completing
+     * with [RadarStatus.ERROR_BAD_REQUEST].
      *
      * @param[address] The selected address, as returned by [autocomplete].
      * @param[block] A block callback.
