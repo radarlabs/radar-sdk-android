@@ -30,7 +30,6 @@ import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import java.net.URLEncoder
 import java.util.EnumSet
-import java.util.UUID
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -1289,19 +1288,6 @@ internal class RadarApiClient(
         )
     }
 
-    /**
-     * Groups this process's autocomplete requests and the selection that follows them into one
-     * session. Minted lazily on the first autocomplete call and never rotated: the server expires
-     * the session on its own TTL, and rotating here would orphan results still on screen.
-     */
-    private var autocompleteSessionToken: String? = null
-
-    private fun getAutocompleteSessionToken(): String {
-        synchronized(this) {
-            return autocompleteSessionToken ?: UUID.randomUUID().toString().also { autocompleteSessionToken = it }
-        }
-    }
-
     internal fun autocomplete(
         query: String,
         near: Location? = null,
@@ -1334,7 +1320,9 @@ internal class RadarApiClient(
         if (mailable != null) {
             queryParams.append("&mailable=$mailable")
         }
-        queryParams.append("&sessionToken=${sessionToken ?: getAutocompleteSessionToken()}")
+        if (sessionToken != null) {
+            queryParams.append("&sessionToken=$sessionToken")
+        }
 
         val path = "v1/search/autocomplete?$queryParams"
         val headers = headers(publishableKey)

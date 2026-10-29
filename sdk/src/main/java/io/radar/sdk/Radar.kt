@@ -549,6 +549,10 @@ object Radar {
 
     internal var initialized = false
     internal var isFlushingReplays = false
+
+    /** Autocomplete session tokens must be UUIDs; the server rejects anything else. */
+    private val UUID_PATTERN = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+
     private lateinit var context: Context
     private lateinit var lifecycleMarker: RadarLifecycleMarker
     private var pendingUncleanPreviousProcessWithActiveTrip = false
@@ -3266,10 +3270,13 @@ object Radar {
 
     /**
      * Autocompletes partial addresses and place names, sorted by relevance, scoping the request to
-     * an explicit session.
+     * a session you own.
      *
-     * Pass a session token only when running multiple concurrent search fields that must not share
-     * a session. The other `autocomplete()` overloads use a session the SDK manages for you.
+     * Pass a session token to group a field's autocomplete requests and the selection that follows
+     * them into one session. Only results from a request carrying a session token can be reported
+     * with [selectAutocompleteAddress]. Use one token per address field: a checkout with separate
+     * billing and shipping fields needs a token each, since the fields share a session otherwise.
+     * You own the token's lifetime; the server expires a session after 20 minutes of inactivity.
      *
      * @see [](https://radar.com/documentation/api#autocomplete)
      *
@@ -3279,7 +3286,7 @@ object Radar {
      * @param[limit] The max number of addresses to return. A number between 1 and 100.
      * @param[country] An optional country filter. A string, the unique 2-letter country code.
      * @param[mailable] Whether to only include mailable addresses.
-     * @param[sessionToken] A token grouping related autocomplete requests and the selection that follows them into one session. If `null`, the SDK uses a session it manages itself.
+     * @param[sessionToken] A UUID grouping this field's autocomplete requests and the selection that follows them into one session. If `null`, the request opens no session and its results cannot be reported as selections.
      * @param[callback] A callback.
      */
     @JvmStatic
@@ -3299,6 +3306,15 @@ object Radar {
             return
         }
         this.logger.i("autocomplete()", RadarLogType.SDK_CALL)
+
+        if (sessionToken != null && !UUID_PATTERN.matches(sessionToken)) {
+            // The server rejects the whole autocomplete request on a malformed session token, so a
+            // typo would break search itself rather than just selection. Never let it reach the wire.
+            this.logger.e("Autocomplete session token must be a UUID", RadarLogType.SDK_ERROR)
+            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
+        }
 
         apiClient.autocomplete(
             query,
@@ -3359,8 +3375,8 @@ object Radar {
      * Reports which autocomplete result the user selected.
      *
      * Pass the [RadarAddress] straight back from [autocomplete]; it carries the opaque handle the
-     * API attributes the selection with. Results only carry a handle when the originating request
-     * opened a session, so a result without one is logged and not reported.
+     * API attributes the selection with. Only results from an [autocomplete] request that carried a
+     * `sessionToken` have a handle, so a result without one is logged and not reported.
      *
      * @param[address] The selected address, as returned by [autocomplete].
      * @param[callback] A callback.
@@ -3403,8 +3419,8 @@ object Radar {
      * Reports which autocomplete result the user selected.
      *
      * Pass the [RadarAddress] straight back from [autocomplete]; it carries the opaque handle the
-     * API attributes the selection with. Results only carry a handle when the originating request
-     * opened a session, so a result without one is logged and not reported.
+     * API attributes the selection with. Only results from an [autocomplete] request that carried a
+     * `sessionToken` have a handle, so a result without one is logged and not reported.
      *
      * @param[address] The selected address, as returned by [autocomplete].
      * @param[block] A block callback.
