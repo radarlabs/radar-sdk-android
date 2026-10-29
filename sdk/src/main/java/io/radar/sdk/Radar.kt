@@ -239,11 +239,11 @@ object Radar {
     }
 
     /**
-     * Called when a selectAutocompleteAddress request succeeds, fails, or times out.
+     * Called when a [RadarAutocompleteSession.select] request succeeds, fails, or times out.
      */
-    interface RadarSelectAutocompleteAddressCallback {
+    interface RadarAutocompleteSelectCallback {
         /**
-         * Called when a selectAutocompleteAddress request succeeds, fails, or times out. Receives the request status and, if the project has address enrichment enabled, the enriched address.
+         * Called when a [RadarAutocompleteSession.select] request succeeds, fails, or times out. Receives the request status and, if the project has address enrichment enabled, the enriched address.
          *
          * @param[status] RadarStatus The request status.
          * @param[address] RadarAddress? The enriched address, if the project has address enrichment enabled. `null` otherwise.
@@ -549,9 +549,6 @@ object Radar {
 
     internal var initialized = false
     internal var isFlushingReplays = false
-
-    /** Autocomplete session tokens must be UUIDs; the server rejects anything else. */
-    private val UUID_PATTERN = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
     private lateinit var context: Context
     private lateinit var lifecycleMarker: RadarLifecycleMarker
@@ -3269,28 +3266,13 @@ object Radar {
     }
 
     /**
-     * Autocompletes partial addresses and place names, sorted by relevance, scoping the request to
-     * a session you own.
+     * Autocompletes partial addresses and place names, sorted by relevance, optionally scoping the
+     * request to a session.
      *
-     * Pass a session token to group a field's autocomplete requests and the selection that follows
-     * them into one session. Only results from a request carrying a session token can be reported
-     * with [selectAutocompleteAddress]. Use one token per address field: a checkout with separate
-     * billing and shipping fields needs a token each, since the fields share a session otherwise.
-     * You own the token's lifetime; the server expires a session after 20 minutes of inactivity.
-     *
-     * @see [](https://radar.com/documentation/api#autocomplete)
-     *
-     * @param[query] The partial address or place name to autocomplete.
-     * @param[near] A location for the search.
-     * @param[layers] Optional layer filters.
-     * @param[limit] The max number of addresses to return. A number between 1 and 100.
-     * @param[country] An optional country filter. A string, the unique 2-letter country code.
-     * @param[mailable] Whether to only include mailable addresses.
-     * @param[sessionToken] A UUID grouping this field's autocomplete requests and the selection that follows them into one session. If `null`, the request opens no session and its results cannot be reported as selections.
-     * @param[callback] A callback.
+     * Internal: callers reach this through [RadarAutocompleteSession], which owns the token. A
+     * `null` token opens no session, which is what the public static overloads send.
      */
-    @JvmStatic
-    fun autocomplete(
+    internal fun autocomplete(
         query: String,
         near: Location?,
         layers: Array<String>?,
@@ -3306,15 +3288,6 @@ object Radar {
             return
         }
         this.logger.i("autocomplete()", RadarLogType.SDK_CALL)
-
-        if (sessionToken != null && !UUID_PATTERN.matches(sessionToken)) {
-            // The server rejects the whole autocomplete request on a malformed session token, so a
-            // typo would break search itself rather than just selection. Never let it reach the wire.
-            this.logger.e("Autocomplete session token must be a UUID", RadarLogType.SDK_ERROR)
-            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
-
-            return
-        }
 
         apiClient.autocomplete(
             query,
@@ -3374,17 +3347,11 @@ object Radar {
     /**
      * Reports which autocomplete result the user selected.
      *
-     * Pass the [RadarAddress] straight back from [autocomplete]; it carries the opaque handle the
-     * API attributes the selection with. Only results from an [autocomplete] request that carried a
-     * `sessionToken` have a handle, so a result without one is logged and not reported.
-     *
-     * @param[address] The selected address, as returned by [autocomplete].
-     * @param[callback] A callback.
+     * Internal: callers reach this through [RadarAutocompleteSession.select].
      */
-    @JvmStatic
-    fun selectAutocompleteAddress(
+    internal fun selectAutocompleteAddress(
         address: RadarAddress?,
-        callback: RadarSelectAutocompleteAddressCallback
+        callback: RadarAutocompleteSelectCallback
     ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -3410,30 +3377,6 @@ object Radar {
                     handler.post {
                         callback.onComplete(status, address)
                     }
-                }
-            }
-        )
-    }
-
-    /**
-     * Reports which autocomplete result the user selected.
-     *
-     * Pass the [RadarAddress] straight back from [autocomplete]; it carries the opaque handle the
-     * API attributes the selection with. Only results from an [autocomplete] request that carried a
-     * `sessionToken` have a handle, so a result without one is logged and not reported.
-     *
-     * @param[address] The selected address, as returned by [autocomplete].
-     * @param[block] A block callback.
-     */
-    fun selectAutocompleteAddress(
-        address: RadarAddress?,
-        block: (status: RadarStatus, address: RadarAddress?) -> Unit
-    ) {
-        selectAutocompleteAddress(
-            address,
-            object : RadarSelectAutocompleteAddressCallback {
-                override fun onComplete(status: RadarStatus, address: RadarAddress?) {
-                    block(status, address)
                 }
             }
         )
