@@ -99,7 +99,7 @@ internal class RadarVerificationManager(
                                 return
                             }
 
-                            RadarSDKFraud.prepareFraudPayload(context, logger, location, googlePlayProjectNumber) { status, preparedPayload ->
+                            RadarSDKFraud.prepareFraudPayload(context, logger, location, googlePlayProjectNumber, parentSpan = trace) { status, preparedPayload ->
                                 if (status != RadarStatus.SUCCESS || preparedPayload == null) {
                                     tracedCallback.onComplete(
                                         if (status == RadarStatus.SUCCESS) RadarStatus.ERROR_BAD_REQUEST else status

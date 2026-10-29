@@ -4009,7 +4009,8 @@ class RadarTest {
         assertEquals(Radar.RadarStatus.SUCCESS, trackVerifiedAndWait())
 
         val spans = uploadedTrace("radar.track_verified")
-        assertEquals(setOf("radar.track_verified", "GET /v1/config", "radar.location.get", "POST /v1/track"), spans.keys)
+        assertEquals(setOf("radar.track_verified", "GET /v1/config", "radar.location.get", "radar.fraud.prepare", "POST /v1/track"), spans.keys)
+        assertFalse(spans.getValue("radar.fraud.prepare").has("status"))
         val root = spans.getValue("radar.track_verified")
         assertEquals(false, traceAttribute(root, "radar.verified.failover")?.get("boolValue"))
         assertEquals(false, traceAttribute(root, "radar.beacons")?.get("boolValue"))
@@ -4053,6 +4054,30 @@ class RadarTest {
         val spans = uploadedTrace("radar.track_verified")
         assertEquals(setOf("radar.track_verified", "GET /v1/config", "radar.location.get"), spans.keys)
         assertEquals("ERROR_LOCATION", traceAttribute(spans.getValue("radar.track_verified"), "error.type")?.get("stringValue"))
+    }
+
+    @Test
+    fun test_Radar_trackVerified_fraudPreparationFailure_endsFraudSpanWithError() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        mockTrackVerifiedBeacons()
+        RadarSDKFraud.shared = object : RadarSDKFraud() {
+            override fun prepareFraudPayload(
+                context: Context,
+                logger: RadarLogger,
+                location: Location?,
+                googlePlayProjectNumber: Long?,
+                callback: (Radar.RadarStatus, RadarPreparedFraudPayload?) -> Unit
+            ) {
+                callback(Radar.RadarStatus.ERROR_PLUGIN, null)
+            }
+        }
+
+        assertEquals(Radar.RadarStatus.ERROR_PLUGIN, trackVerifiedAndWait())
+
+        val spans = uploadedTrace("radar.track_verified")
+        assertEquals(setOf("radar.track_verified", "GET /v1/config", "radar.location.get", "radar.fraud.prepare"), spans.keys)
+        assertEquals("ERROR_PLUGIN", traceAttribute(spans.getValue("radar.fraud.prepare"), "error.type")?.get("stringValue"))
+        assertEquals("ERROR_PLUGIN", traceAttribute(spans.getValue("radar.track_verified"), "error.type")?.get("stringValue"))
     }
 
     @Test
