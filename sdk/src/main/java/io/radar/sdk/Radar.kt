@@ -239,6 +239,22 @@ object Radar {
     }
 
     /**
+     * Called when a selectAutocompleteAddress request succeeds, fails, or times out.
+     */
+    interface RadarSelectAutocompleteAddressCallback {
+        /**
+         * Called when a selectAutocompleteAddress request succeeds, fails, or times out. Receives the request status and, if the project has address enrichment enabled, the enriched address.
+         *
+         * @param[status] RadarStatus The request status.
+         * @param[address] RadarAddress? The enriched address, if the project has address enrichment enabled. `null` otherwise.
+         */
+        fun onComplete(
+            status: RadarStatus,
+            address: RadarAddress? = null
+        )
+    }
+
+    /**
      * Called when a validateAddress request succeeds, fails, or times out.
      * Receives the request status and, if successful, the address populated with a verification status.
      */
@@ -3245,6 +3261,38 @@ object Radar {
         mailable: Boolean? = null,
         callback: RadarGeocodeCallback
     ) {
+        autocomplete(query, near, layers, limit, country, mailable, null, callback)
+    }
+
+    /**
+     * Autocompletes partial addresses and place names, sorted by relevance, scoping the request to
+     * an explicit session.
+     *
+     * Pass a session token only when running multiple concurrent search fields that must not share
+     * a session. The other `autocomplete()` overloads use a session the SDK manages for you.
+     *
+     * @see [](https://radar.com/documentation/api#autocomplete)
+     *
+     * @param[query] The partial address or place name to autocomplete.
+     * @param[near] A location for the search.
+     * @param[layers] Optional layer filters.
+     * @param[limit] The max number of addresses to return. A number between 1 and 100.
+     * @param[country] An optional country filter. A string, the unique 2-letter country code.
+     * @param[mailable] Whether to only include mailable addresses.
+     * @param[sessionToken] A token grouping related autocomplete requests and the selection that follows them into one session. If `null`, the SDK uses a session it manages itself.
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun autocomplete(
+        query: String,
+        near: Location?,
+        layers: Array<String>?,
+        limit: Int?,
+        country: String?,
+        mailable: Boolean?,
+        sessionToken: String?,
+        callback: RadarGeocodeCallback
+    ) {
         if (!initialized) {
             callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
@@ -3259,6 +3307,7 @@ object Radar {
             limit,
             country,
             mailable,
+            sessionToken,
             object : RadarApiClient.RadarGeocodeApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, addresses: Array<RadarAddress>?) {
                     handler.post {
@@ -3301,6 +3350,74 @@ object Radar {
             object : RadarGeocodeCallback {
                 override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
                     block(status, addresses)
+                }
+            }
+        )
+    }
+
+    /**
+     * Reports which autocomplete result the user selected.
+     *
+     * Pass the [RadarAddress] straight back from [autocomplete]; it carries the opaque handle the
+     * API attributes the selection with. Results only carry a handle when the originating request
+     * opened a session, so a result without one is logged and not reported.
+     *
+     * @param[address] The selected address, as returned by [autocomplete].
+     * @param[callback] A callback.
+     */
+    @JvmStatic
+    fun selectAutocompleteAddress(
+        address: RadarAddress?,
+        callback: RadarSelectAutocompleteAddressCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+        this.logger.i("selectAutocompleteAddress()", RadarLogType.SDK_CALL)
+
+        val resultId = address?.resultId
+        if (resultId.isNullOrEmpty()) {
+            // The originating autocomplete request opened no session, so there is nothing to
+            // report the selection against and posting would be a guaranteed 400.
+            this.logger.d("Autocomplete selection not reported | reason = the result carries no resultId")
+            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
+        }
+
+        apiClient.selectAutocompleteAddress(
+            resultId,
+            object : RadarApiClient.RadarSelectAutocompleteAddressApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?) {
+                    handler.post {
+                        callback.onComplete(status, address)
+                    }
+                }
+            }
+        )
+    }
+
+    /**
+     * Reports which autocomplete result the user selected.
+     *
+     * Pass the [RadarAddress] straight back from [autocomplete]; it carries the opaque handle the
+     * API attributes the selection with. Results only carry a handle when the originating request
+     * opened a session, so a result without one is logged and not reported.
+     *
+     * @param[address] The selected address, as returned by [autocomplete].
+     * @param[block] A block callback.
+     */
+    fun selectAutocompleteAddress(
+        address: RadarAddress?,
+        block: (status: RadarStatus, address: RadarAddress?) -> Unit
+    ) {
+        selectAutocompleteAddress(
+            address,
+            object : RadarSelectAutocompleteAddressCallback {
+                override fun onComplete(status: RadarStatus, address: RadarAddress?) {
+                    block(status, address)
                 }
             }
         )

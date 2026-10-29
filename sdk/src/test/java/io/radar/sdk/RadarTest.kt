@@ -75,6 +75,8 @@ class RadarTest {
 
         const val PUBLISHABLE_KEY = "prj_test_pk_0000000000000000000000000000000000000000"
 
+        const val AUTOCOMPLETE_RESULT_ID = "v1_QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVphYmNkZWZnaGk"
+
         private val context: Context = ApplicationProvider.getApplicationContext()
         private val apiHelperMock = RadarApiHelperMock()
         private val fraudMock = RadarSDKFraudMock()
@@ -291,6 +293,38 @@ class RadarTest {
         assertNotNull(address?.street)
         assertNotNull(address?.number)
         assertNotEquals(address?.confidence, RadarAddress.RadarAddressConfidence.NONE)
+    }
+
+    private fun sessionTokenFromPath(path: String?): String? = path?.let { Regex("sessionToken=([^&]+)").find(it)?.groupValues?.get(1) }
+
+    /**
+     * Runs an autocomplete request against the mocked API and returns the session token it sent.
+     */
+    private fun autocompleteSessionTokenFor(query: String): String? {
+        val latch = CountDownLatch(1)
+        Radar.autocomplete(query, null, null, 10, null) { _, _ ->
+            latch.countDown()
+        }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        return sessionTokenFromPath(apiHelperMock.lastCapturedPath)
+    }
+
+    /**
+     * Returns the first address from a mocked autocomplete response, handle and all.
+     */
+    private fun autocompleteFirstAddress(): RadarAddress? {
+        val latch = CountDownLatch(1)
+        var addresses: Array<RadarAddress>? = null
+        Radar.autocomplete("brooklyn roasting", null, null, 10, null) { _, callbackAddresses ->
+            addresses = callbackAddresses
+            latch.countDown()
+        }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        return addresses?.firstOrNull()
     }
 
     private fun assertContextOk(context: RadarContext?) {
@@ -2962,6 +2996,190 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertAddressesOk(callbackAddresses)
+    }
+
+    @Test
+    fun test_Radar_autocomplete_parsesResultId() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete.json")
+
+        val latch = CountDownLatch(1)
+        var callbackAddresses: Array<RadarAddress>? = null
+
+        Radar.autocomplete("brooklyn roasting", null, null, 10, null) { _, addresses ->
+            callbackAddresses = addresses
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(AUTOCOMPLETE_RESULT_ID, callbackAddresses?.first()?.resultId)
+        // the handle must survive a round trip through JSON, which cross-platform SDKs rely on
+        assertEquals(AUTOCOMPLETE_RESULT_ID, callbackAddresses?.first()?.toJson()?.optString("resultId"))
+    }
+
+    @Test
+    fun test_Radar_autocomplete_sendsStableSessionToken() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete.json")
+
+        val firstToken = autocompleteSessionTokenFor("brook")
+        val secondToken = autocompleteSessionTokenFor("brooklyn roasting")
+
+        assertNotNull(firstToken)
+        assertTrue(firstToken!!.isNotEmpty())
+        assertEquals(firstToken, secondToken)
+    }
+
+    @Test
+    fun test_Radar_autocomplete_explicitSessionToken() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete.json")
+
+        val sessionToken = "4b1a1a1e-0b0b-4b0b-8b0b-0b0b0b0b0b0b"
+        val latch = CountDownLatch(1)
+
+        Radar.autocomplete(
+            "brooklyn roasting",
+            null,
+            null,
+            10,
+            null,
+            null,
+            sessionToken,
+            object : Radar.RadarGeocodeCallback {
+                override fun onComplete(status: Radar.RadarStatus, addresses: Array<RadarAddress>?) {
+                    latch.countDown()
+                }
+            }
+        )
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(sessionToken, sessionTokenFromPath(apiHelperMock.lastCapturedPath))
+    }
+
+    @Test
+    fun test_Radar_selectAutocompleteAddress_success() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete.json")
+
+        val address = autocompleteFirstAddress()
+        assertNotNull(address)
+
+        // the endpoint replies 204 with no body unless the project enriches addresses
+        apiHelperMock.mockResponse = null
+        apiHelperMock.clearCapturedParams()
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackAddress: RadarAddress? = null
+
+        Radar.selectAutocompleteAddress(address) { status, selectedAddress ->
+            callbackStatus = status
+            callbackAddress = selectedAddress
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertNull(callbackAddress)
+        assertEquals("POST", apiHelperMock.lastCapturedMethod)
+        assertEquals("v1/search/autocomplete/select", apiHelperMock.lastCapturedPath)
+
+        val params = apiHelperMock.lastCapturedParams
+        assertNotNull(params)
+        assertEquals(AUTOCOMPLETE_RESULT_ID, params?.optString("resultId"))
+        // the handle is the only thing reported: no session token, request id, or index
+        assertEquals(1, params?.length())
+    }
+
+    @Test
+    fun test_Radar_selectAutocompleteAddress_enrichedAddress() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete.json")
+
+        val address = autocompleteFirstAddress()
+
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete_select.json")
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackAddress: RadarAddress? = null
+
+        Radar.selectAutocompleteAddress(address) { status, selectedAddress ->
+            callbackStatus = status
+            callbackAddress = selectedAddress
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertAddressOk(callbackAddress)
+    }
+
+    @Test
+    fun test_Radar_selectAutocompleteAddress_noResultId_doesNotRequest() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.clearCapturedParams()
+
+        // a result from a request that opened no session carries no handle
+        val address = RadarAddress(RadarCoordinate(40.7039, -73.9867), "25 Jay Street")
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.selectAutocompleteAddress(address) { status, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, callbackStatus)
+        assertTrue(apiHelperMock.capturedPaths.isEmpty())
+    }
+
+    @Test
+    fun test_Radar_selectAutocompleteAddress_error() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete.json")
+
+        val address = autocompleteFirstAddress()
+
+        // an expired session is rejected; the status surfaces instead of throwing
+        apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_BAD_REQUEST
+        apiHelperMock.mockResponse = null
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackAddress: RadarAddress? = null
+
+        Radar.selectAutocompleteAddress(address) { status, selectedAddress ->
+            callbackStatus = status
+            callbackAddress = selectedAddress
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, callbackStatus)
+        assertNull(callbackAddress)
     }
 
     @Test
