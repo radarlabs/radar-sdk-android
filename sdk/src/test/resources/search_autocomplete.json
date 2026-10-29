@@ -27,8 +27,7 @@
       "street": "Jay Street",
       "number": "25",
       "placeLabel": "Brooklyn Roasting Company",
-      "confidence": "exact",
-      "resultId": "v1_QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVphYmNkZWZnaGk"
+      "confidence": "exact"
     }
   ]
 }
