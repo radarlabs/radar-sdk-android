@@ -42,6 +42,7 @@ import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarTripLeg
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
+import java.io.File
 import java.util.Calendar
 import java.util.Date
 import java.util.EnumSet
@@ -116,6 +117,12 @@ class RadarTest {
         assertNotNull(chain?.name)
         assertNotNull(chain?.externalId)
         assertNotNull(chain?.metadata)
+    }
+
+    /** Starts a session with no trace sampling decision yet. initialize() in setUp() decided the previous one. */
+    private fun startNewSession() {
+        val sessionId = RadarSettings.getSessionId(context).toLong() + 1
+        context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit().putLong("session_id", sessionId).commit()
     }
 
     private fun completedSpan(spanId: String) = RadarCompletedSpan(
@@ -1469,7 +1476,8 @@ class RadarTest {
     @Test
     fun test_Radar_trackOnce_success_flushesTraces() {
         val traceManager = Radar.traceManager!!
-        traceManager.record(completedSpan("00000000000000a1"), traceManager.currentProjectFingerprint())
+        traceManager.overrideSampledForTesting(true)
+        traceManager.record(completedSpan("00000000000000a1"), traceManager.currentProjectFingerprint(), traceManager.currentSessionId())
         traceManager.awaitDiskForTesting()
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
@@ -1490,12 +1498,74 @@ class RadarTest {
     }
 
     @Test
+    fun test_Radar_getConfig_tracingEnabled_uploadsPendingSpans() {
+        val traceManager = Radar.traceManager!!
+        startNewSession()
+        val sessionId = traceManager.currentSessionId()
+        traceManager.record(completedSpan("00000000000000a3"), traceManager.currentProjectFingerprint(), sessionId)
+        traceManager.awaitDiskForTesting()
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponseQueues["v1/config"] = ArrayDeque(
+            listOf(JSONObject().put("meta", JSONObject().put("sdkConfiguration", JSONObject().put("tracingEnabled", true))))
+        )
+
+        Radar.apiClient.getConfig("test")
+        traceManager.flushAndWaitForTesting()
+
+        assertEquals(RadarTraceManager.SamplingState.SAMPLED, traceManager.samplingState(sessionId))
+        assertTrue(apiHelperMock.capturedTraceSpans().any { it.getString("spanId") == "00000000000000a3" })
+    }
+
+    @Test
+    fun test_Radar_getConfig_withoutTracingEnabled_deletesPendingSpans() {
+        val traceManager = Radar.traceManager!!
+        startNewSession()
+        val sessionId = traceManager.currentSessionId()
+        traceManager.record(completedSpan("00000000000000a4"), traceManager.currentProjectFingerprint(), sessionId)
+        traceManager.awaitDiskForTesting()
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponseQueues["v1/config"] = ArrayDeque(listOf(JSONObject().put("meta", JSONObject().put("sdkConfiguration", JSONObject()))))
+
+        Radar.apiClient.getConfig("test")
+        traceManager.awaitDiskForTesting()
+
+        assertEquals(RadarTraceManager.SamplingState.NOT_SAMPLED, traceManager.samplingState(sessionId))
+        assertTrue(File(context.filesDir, "radar_traces").listFiles()!!.none { it.extension == "pending" })
+    }
+
+    @Test
+    fun test_Radar_trackOnce_tracingEnabled_uploadsPendingSpans() {
+        val traceManager = Radar.traceManager!!
+        startNewSession()
+        traceManager.record(completedSpan("00000000000000a5"), traceManager.currentProjectFingerprint(), traceManager.currentSessionId())
+        traceManager.awaitDiskForTesting()
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")!!.apply {
+            getJSONObject("meta").put("featureSettings", JSONObject().put("tracingEnabled", true))
+        }
+        val location = Location("RadarSDK").apply {
+            latitude = 40.78382
+            longitude = -73.97536
+            accuracy = 65f
+            time = System.currentTimeMillis()
+        }
+
+        val latch = CountDownLatch(1)
+        Radar.trackOnce(location) { _, _, _, _ -> latch.countDown() }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+        traceManager.flushAndWaitForTesting()
+
+        assertTrue(apiHelperMock.capturedTraceSpans().any { it.getString("spanId") == "00000000000000a5" })
+    }
+
+    @Test
     fun test_Radar_initialize_flushesTracesFromPreviousSession() {
         Radar.traceManager?.shutdownForTesting()
         Radar.traceManager = null
         // Spans persisted by a previous process.
-        val previous = RadarTraceManager(context, Radar.apiClient, Radar.logger)
-        previous.record(completedSpan("00000000000000a2"), previous.currentProjectFingerprint())
+        val previous = RadarTraceManager(context, Radar.apiClient, Radar.logger).also { it.overrideSampledForTesting(true) }
+        previous.record(completedSpan("00000000000000a2"), previous.currentProjectFingerprint(), previous.currentSessionId())
         previous.awaitDiskForTesting()
         previous.shutdownForTesting()
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
