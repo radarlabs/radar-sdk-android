@@ -248,18 +248,18 @@
     <file name="src/main/java/io/radar/sdk/model/RadarAddress.kt">
         <error line="21" column="1" source="standard:indent" />
         <error line="22" column="1" source="standard:indent" />
-        <error line="146" column="33" source="standard:trailing-comma-on-declaration-site" />
-        <error line="188" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="217" column="34" source="standard:keyword-spacing" />
-        <error line="263" column="25" source="standard:trailing-comma-on-call-site" />
-        <error line="292" column="77" source="standard:function-expression-body" />
-        <error line="293" column="24" source="standard:keyword-spacing" />
-        <error line="303" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="306" column="9" source="standard:comment-spacing" />
-        <error line="339" column="20" source="standard:wrapping" />
-        <error line="339" column="37" source="standard:wrapping" />
-        <error line="343" column="9" source="standard:wrapping" />
-        <error line="347" column="1" source="standard:no-blank-line-before-rbrace" />
+        <error line="147" column="33" source="standard:trailing-comma-on-declaration-site" />
+        <error line="189" column="1" source="standard:spacing-between-declarations-with-annotations" />
+        <error line="218" column="34" source="standard:keyword-spacing" />
+        <error line="264" column="25" source="standard:trailing-comma-on-call-site" />
+        <error line="293" column="77" source="standard:function-expression-body" />
+        <error line="294" column="24" source="standard:keyword-spacing" />
+        <error line="304" column="1" source="standard:no-empty-first-line-in-method-block" />
+        <error line="307" column="9" source="standard:comment-spacing" />
+        <error line="340" column="20" source="standard:wrapping" />
+        <error line="340" column="37" source="standard:wrapping" />
+        <error line="344" column="9" source="standard:wrapping" />
+        <error line="348" column="1" source="standard:no-blank-line-before-rbrace" />
     </file>
     <file name="src/main/java/io/radar/sdk/model/RadarBeacon.kt">
         <error line="11" column="18" source="standard:paren-spacing" />

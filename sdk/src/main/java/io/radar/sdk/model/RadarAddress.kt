@@ -138,10 +138,11 @@ class RadarAddress(
     val categories: Array<String>? = null,
 
     /**
-     * An opaque handle identifying this autocomplete result, present when the originating
-     * `autocomplete` request opened a session. Pass the whole address to
-     * `Radar.selectAutocompleteAddress()` to report that the user chose it. Never parse or
-     * construct this value.
+     * Handle for this result, present when the originating `autocomplete` request opened a
+     * session. It names the result within that session, not the address: the same address from
+     * another request carries a different handle, and a handle stops working once its session
+     * expires. It is not an address identifier and should not be stored as one. Pass the whole
+     * address to `RadarAutocompleteSession.select()` to report that the user chose it.
      */
     val resultId: String? = null,
 ) {
