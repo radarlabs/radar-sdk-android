@@ -243,10 +243,10 @@ object Radar {
      */
     interface RadarAutocompleteSelectCallback {
         /**
-         * Called when a [RadarAutocompleteSession.select] request succeeds, fails, or times out. Receives the request status and, if the project has address enrichment enabled, the enriched address.
+         * Called when a [RadarAutocompleteSession.select] request succeeds, fails, or times out. Receives the request status and, if successful, the enriched address.
          *
          * @param[status] RadarStatus The request status.
-         * @param[address] RadarAddress? The enriched address, if the project has address enrichment enabled. `null` otherwise.
+         * @param[address] RadarAddress? The enriched address, where available. `null` otherwise.
          */
         fun onComplete(
             status: RadarStatus,
@@ -3267,10 +3267,7 @@ object Radar {
 
     /**
      * Autocompletes partial addresses and place names, sorted by relevance, optionally scoping the
-     * request to a session.
-     *
-     * Internal: callers reach this through [RadarAutocompleteSession], which owns the token. A
-     * `null` token opens no session, which is what the public static overloads send.
+     * request to a session. A `null` token opens no session.
      */
     internal fun autocomplete(
         query: String,
@@ -3362,8 +3359,7 @@ object Radar {
 
         val resultId = address?.resultId
         if (resultId.isNullOrEmpty()) {
-            // The originating autocomplete request opened no session, so there is nothing to
-            // report the selection against and posting would be a guaranteed 400.
+            // Nothing to attribute the selection to; posting would be a guaranteed 400.
             this.logger.d("Autocomplete selection not reported | reason = the result carries no resultId")
             callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 

@@ -214,8 +214,8 @@ internal open class RadarApiHelper(
 
                     if (urlConnection.responseCode in 200 until 400) {
                         if (callback != null) {
-                            // Some endpoints (e.g. v1/search/autocomplete/select) reply 204 with no
-                            // body, which there is nothing to parse.
+                            // Some endpoints (e.g. v1/search/autocomplete/select) reply 204 with
+                            // no body to parse.
                             if (urlConnection.responseCode == HttpURLConnection.HTTP_NO_CONTENT) {
                                 logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}")
 

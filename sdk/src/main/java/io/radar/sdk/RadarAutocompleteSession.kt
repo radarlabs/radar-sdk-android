@@ -8,19 +8,13 @@ import io.radar.sdk.model.RadarAddress
 import java.util.UUID
 
 /**
- * One autocomplete session: a single search field and the selection a user makes in it.
+ * An autocomplete search field and the selection a user makes in it.
  *
- * Create one per address field. Two fields sharing a session also share the server's per-session
- * selection cap and its snapshot window, so typing into one can stop the other's results from
- * enriching — a checkout with billing and shipping wants two sessions, not one.
- *
- * The session mints and owns its token, so there is no token for a caller to get wrong. It stays
- * valid as long as the field is in use; the server expires a session after 20 minutes of
- * inactivity, and the next call through this instance simply opens a fresh one.
+ * Create one session per address field.
  *
  * ```
  * val session = RadarAutocompleteSession()
- * session.autocomplete("brooklyn roasting", near, null, 10, null, null) { status, addresses ->
+ * session.autocomplete("brooklyn roasting", near, 10) { status, addresses ->
  *     val chosen = addresses?.firstOrNull() ?: return@autocomplete
  *     session.select(chosen) { selectStatus, enrichedAddress -> }
  * }
@@ -28,16 +22,11 @@ import java.util.UUID
  */
 class RadarAutocompleteSession {
 
-    /**
-     * The token this session sends, exposed for correlating with your own analytics. Minted on
-     * construction and immutable afterwards, so it is safe to read from any thread.
-     */
+    /** The token this session sends. */
     val sessionToken: String = UUID.randomUUID().toString()
 
     /**
      * Autocompletes partial addresses and place names within this session, sorted by relevance.
-     *
-     * Results carry the handle [select] needs.
      *
      * @see [](https://radar.com/documentation/api#autocomplete)
      *
@@ -64,8 +53,6 @@ class RadarAutocompleteSession {
 
     /**
      * Autocompletes partial addresses and place names within this session, sorted by relevance.
-     *
-     * Results carry the handle [select] needs.
      *
      * @see [](https://radar.com/documentation/api#autocomplete)
      *
@@ -151,11 +138,8 @@ class RadarAutocompleteSession {
     /**
      * Reports which result the user chose, and returns it enriched where available.
      *
-     * Pass the [RadarAddress] straight back from [autocomplete]; it carries the handle the API
-     * attributes the selection with. That handle belongs to this session and stops working once
-     * the session expires, so it is not an address identifier and should not be stored as one.
-     * An address from somewhere else has no handle, so it is logged and not reported, completing
-     * with [RadarStatus.ERROR_BAD_REQUEST].
+     * Completes with [RadarStatus.ERROR_BAD_REQUEST] if the address did not come from
+     * [autocomplete].
      *
      * @param[address] The selected address, as returned by [autocomplete].
      * @param[callback] A callback.
@@ -170,11 +154,8 @@ class RadarAutocompleteSession {
     /**
      * Reports which result the user chose, and returns it enriched where available.
      *
-     * Pass the [RadarAddress] straight back from [autocomplete]; it carries the handle the API
-     * attributes the selection with. That handle belongs to this session and stops working once
-     * the session expires, so it is not an address identifier and should not be stored as one.
-     * An address from somewhere else has no handle, so it is logged and not reported, completing
-     * with [RadarStatus.ERROR_BAD_REQUEST].
+     * Completes with [RadarStatus.ERROR_BAD_REQUEST] if the address did not come from
+     * [autocomplete].
      *
      * @param[address] The selected address, as returned by [autocomplete].
      * @param[block] A block callback.

@@ -1389,8 +1389,7 @@ internal class RadarApiClient(
                         return
                     }
 
-                    // The server replies 204 with no body unless the project has address
-                    // enrichment enabled, in which case it returns the enriched address.
+                    // 204 with no body unless the response carries an enriched address.
                     val address = res?.optJSONObject("address")?.let { addressObj ->
                         RadarAddress.fromJson(addressObj)
                     }
