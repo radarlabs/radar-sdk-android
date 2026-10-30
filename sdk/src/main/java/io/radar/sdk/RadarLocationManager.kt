@@ -705,6 +705,17 @@ internal class RadarLocationManager(
         logger.d("Sending location | source = $source; location = $location; stopped = $stopped; replayed = $replayed")
 
         val locationManager = this
+        val rangeBeacons = options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            permissionsHelper.bluetoothPermissionsGranted(context)
+
+        // Ends when the track request completes, or when an update decides not to send a track after ranging.
+        val trace = RadarTraceSpan.start("radar.tracking_update") {
+            locationSource(source)
+            stopped(stopped)
+            beacons(rangeBeacons)
+            locationQuality(location, context)
+            trackContext(context)
+        }
 
         val callTrackApi = { beacons: Array<RadarBeacon>? ->
             this.apiClient.track(
@@ -724,6 +735,8 @@ internal class RadarLocationManager(
                         config: RadarConfig?,
                         token: RadarVerifiedLocationToken?
                     ) {
+                        trace.end(status)
+
                         if (RadarSettings.getSdkConfiguration(context).useSyncRegion) {
                             if (status == RadarStatus.SUCCESS && user != null) {
                                 Radar.syncManager.reconcileSyncState(user)
@@ -747,19 +760,19 @@ internal class RadarLocationManager(
 
                         updateTrackingFromMeta(config?.meta)
                     }
-                }
+                },
+                parentSpan = trace
             )
         }
 
-        if (options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-            permissionsHelper.bluetoothPermissionsGranted(context)
-        ) {
+        if (rangeBeacons) {
             val cache = stopped || source == RadarLocationSource.BEACON_ENTER || source == RadarLocationSource.BEACON_EXIT
 
             if (RadarSettings.getSdkConfiguration(context).useSyncRegion &&
                 Radar.syncManager.hasSyncedRegion() &&
                 !Radar.syncManager.isOutsideSyncedRegion(location)
             ) {
+                trace.beaconSource("sync_region")
                 val syncedBeacons = Radar.syncManager.getBeacons(location).toTypedArray()
                 logger.i("Sync region beacon ranging | syncedBeacons = ${syncedBeacons.size}, forceTrack = $forceTrack")
                 if (syncedBeacons.isNotEmpty()) {
@@ -773,8 +786,11 @@ internal class RadarLocationManager(
                                     logger.i("Beacon ranging failed | status = $status, forceTrack = $forceTrack")
                                     if (forceTrack) {
                                         callTrackApi(null)
-                                    } else if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
-                                        locationManager.stopForegroundService()
+                                    } else {
+                                        trace.skipped("ranging_failed").end(status)
+                                        if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                                            locationManager.stopForegroundService()
+                                        }
                                     }
                                     return
                                 }
@@ -782,8 +798,11 @@ internal class RadarLocationManager(
                                     logger.i("Beacon ranging returned null beacons | forceTrack = $forceTrack")
                                     if (forceTrack) {
                                         callTrackApi(arrayOf())
-                                    } else if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
-                                        locationManager.stopForegroundService()
+                                    } else {
+                                        trace.skipped("no_beacons").end(RadarStatus.SUCCESS)
+                                        if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
+                                            locationManager.stopForegroundService()
+                                        }
                                     }
                                     return
                                 }
@@ -806,21 +825,25 @@ internal class RadarLocationManager(
                                         callTrackApi(beacons)
                                     } else {
                                         logger.i("Skipping track: beacon state unchanged after BLE ranging")
+                                        trace.skipped("beacon_state_unchanged").end(RadarStatus.SUCCESS)
                                         if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
                                             locationManager.stopForegroundService()
                                         }
                                     }
                                 }
                             }
-                        }
+                        }.traced(trace, "beacons")
                     )
                 } else {
                     if (forceTrack) {
                         logger.i("No synced beacons nearby, sending empty beacons | forceTrack = $forceTrack")
                         callTrackApi(arrayOf())
+                    } else {
+                        trace.skipped("no_synced_beacons").end(RadarStatus.SUCCESS)
                     }
                 }
             } else {
+                trace.beaconSource("search")
                 this.apiClient.searchBeacons(
                     location,
                     RadarNearbyBeaconSearch.RADIUS_METERS,
@@ -853,7 +876,7 @@ internal class RadarLocationManager(
 
                                             callTrackApi(beacons)
                                         }
-                                    }
+                                    }.traced(trace, "uuids")
                                 )
                             } else if (beacons != null) {
                                 Radar.beaconMonitoringManager.startMonitoringBeacons(beacons)
@@ -874,14 +897,15 @@ internal class RadarLocationManager(
 
                                             callTrackApi(beacons)
                                         }
-                                    }
+                                    }.traced(trace, "beacons")
                                 )
                             } else {
                                 callTrackApi(arrayOf())
                             }
                         }
                     },
-                    cache
+                    cache,
+                    parentSpan = trace
                 )
             }
         } else {

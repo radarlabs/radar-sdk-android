@@ -1757,6 +1757,93 @@ class RadarTest {
     }
 
     @Test
+    fun test_Radar_handleLocation_tracesTrackingUpdate() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        val location = mockTrackOnceLocation()
+        RadarSettings.removeRemoteTrackingOptions(context)
+        RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
+        clearLastSentAt()
+
+        withTestLocationManager {
+            Radar.handleLocation(context, location, Radar.RadarLocationSource.BACKGROUND_LOCATION)
+            ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        }
+
+        val spans = uploadedTrace("radar.tracking_update")
+        assertEquals(setOf("radar.tracking_update", "POST /v1/track"), spans.keys)
+
+        val root = spans.getValue("radar.tracking_update")
+        assertFalse(root.has("parentSpanId"))
+        assertEquals("background_location", traceAttribute(root, "radar.location.source")?.get("stringValue"))
+        assertNotNull(traceAttribute(root, "radar.track.stopped")?.get("boolValue"))
+        assertEquals(false, traceAttribute(root, "radar.beacons")?.get("boolValue"))
+        assertEquals(65.0, traceAttribute(root, "radar.location.accuracy_m")!!.getDouble("doubleValue"), 0.0)
+        assertNotNull(traceAttribute(root, "radar.location.age_ms")?.get("intValue"))
+        assertNotNull(traceAttribute(root, "radar.app.foreground")?.get("boolValue"))
+        assertNull(traceAttribute(root, "radar.track.batched"))
+        assertNull(traceAttribute(root, "radar.track.skip_reason"))
+
+        val trackSpan = spans.getValue("POST /v1/track")
+        assertEquals(root.getString("spanId"), trackSpan.getString("parentSpanId"))
+        assertEquals(
+            "00-${root.getString("traceId")}-${trackSpan.getString("spanId")}-01",
+            apiHelperMock.capturedHeadersByPath["v1/track"]?.get("traceparent")
+        )
+    }
+
+    @Test
+    fun test_Radar_handleLocation_batched_tracesWithoutTrackRequest() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        val location = mockTrackOnceLocation()
+        RadarSettings.removeRemoteTrackingOptions(context)
+        RadarSettings.setTrackingOptions(
+            context,
+            RadarTrackingOptions.fromJson(RadarTrackingOptions.EFFICIENT.toJson()).apply { batchSize = 5 }
+        )
+        clearLastSentAt()
+
+        try {
+            withTestLocationManager {
+                Radar.handleLocation(context, location, Radar.RadarLocationSource.BACKGROUND_LOCATION)
+                ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+            }
+
+            val spans = uploadedTrace("radar.tracking_update")
+            assertEquals(setOf("radar.tracking_update"), spans.keys)
+            assertEquals(true, traceAttribute(spans.getValue("radar.tracking_update"), "radar.track.batched")?.get("boolValue"))
+        } finally {
+            RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
+            Radar.flushBatch()
+        }
+    }
+
+    /** Makes the next tracking update skip the desired sync interval check, as the first update after install does. */
+    private fun clearLastSentAt() {
+        context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit().remove("last_sent_at").commit()
+    }
+
+    /**
+     * Radar.locationManager is created once per JVM, with whichever test class initialized Radar first, so tracking
+     * update tests use one built with this test's context and API client.
+     */
+    private fun withTestLocationManager(block: () -> Unit) {
+        val originalLocationManager = Radar.locationManager
+        Radar.locationManager = RadarLocationManager(
+            context,
+            Radar.apiClient,
+            Radar.logger,
+            Radar.batteryManager,
+            Radar.RadarLocationServicesProvider.GOOGLE,
+            permissionsHelperMock
+        ).apply { locationClient = locationClientMock }
+        try {
+            block()
+        } finally {
+            Radar.locationManager = originalLocationManager
+        }
+    }
+
+    @Test
     fun test_Radar_inAppMessaging_flow() {
         // Create a mock Activity for testing
         val mockActivity = Robolectric.buildActivity(Activity::class.java).create().get()
