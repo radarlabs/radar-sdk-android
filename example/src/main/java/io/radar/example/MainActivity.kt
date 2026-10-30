@@ -18,7 +18,6 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.edit
 import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import com.google.firebase.FirebaseApp
@@ -47,13 +46,22 @@ import io.radar.sdk.model.RadarVerifiedLocationToken
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        // Set local server's http:// URL here for local server testing (used for host + verified host),
-        // e.g. "http://192.168.68.112:8081". Use your LAN IP (not localhost), or 10.0.2.2 on the emulator.
-        // Leave blank to use Radar's production hosts.
-        const val TARGET_HOST = ""
+        // Default publishable keys, used until you save one in Settings → Environment. Pick the
+        // environment (Production / Staging / Local) there too. hooks/clean-filter keeps real keys
+        // out of git (they're saved to .radar-env and restored on checkout).
 
-        /** Placeholder — replace or override at runtime. */
+        /** Default key for the Production environment. */
         const val DEFAULT_PUBLISHABLE_KEY = "prj_live_pk_..."
+
+        /** Default key for the Staging environment. */
+        const val DEFAULT_STAGING_PUBLISHABLE_KEY = "prj_live_pk_..."
+
+        /** Relaunches the app, e.g. after changing the environment. */
+        fun restart(context: Context) {
+            val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return
+            context.startActivity(Intent.makeRestartActivityTask(launchIntent.component))
+            Runtime.getRuntime().exit(0)
+        }
     }
 
     private lateinit var permissionsStore: PermissionsStore
@@ -107,8 +115,12 @@ class MainActivity : AppCompatActivity() {
             silentPush = true,
             activity = this,
         )
-        applyLocalDevHostOverrides()
+        // Point the SDK at the selected environment before initializing, then check the key.
+        settingsStore.environment.applyTo(this, settingsStore.localUrl)
+        Log.i("radar-env", settingsStore.environmentSummary())
+        logStore.errorContext = settingsStore::environmentSummary
         Radar.initialize(this, settingsStore.resolvedPublishableKey, options)
+        settingsStore.runKeyCheck(logStore)
 
         Radar.setUserId("android-test-user")
         Log.i("version", Radar.sdkVersion())
@@ -180,32 +192,6 @@ class MainActivity : AppCompatActivity() {
         }
         if (needed.isNotEmpty()) {
             startupPermissionLauncher.launch(needed.toTypedArray())
-        }
-    }
-
-    /**
-     * Point the SDK at a locally hosted dev server. The example permits cleartext (HTTP) traffic
-     * (see network_security_config), so setting [TARGET_HOST] to an http:// URL is all that's needed
-     * to route traffic (including trackVerified) to your machine.
-     *
-     * The overridden host values are persisted in the SDK's SharedPreferences, so when
-     * [TARGET_HOST] is blank we clear them again to fall back to the production hosts (otherwise a
-     * previously set override would stick around).
-     */
-    private fun applyLocalDevHostOverrides() {
-        getSharedPreferences("RadarSDK", MODE_PRIVATE).edit {
-            if (TARGET_HOST.isBlank()) {
-                remove("host")
-                remove("verified_host")
-            } else {
-                putString("host", TARGET_HOST)
-                putString("verified_host", TARGET_HOST)
-            }
-        }
-        if (TARGET_HOST.isBlank()) {
-            Log.i("radar-dev", "Cleared host override; using production hosts")
-        } else {
-            Log.i("radar-dev", "Overriding host + verified host with local dev server: $TARGET_HOST")
         }
     }
 
