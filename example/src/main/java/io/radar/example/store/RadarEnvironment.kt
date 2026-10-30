@@ -1,7 +1,6 @@
 package io.radar.example.store
 
 import android.content.Context
-import androidx.compose.ui.graphics.Color
 import androidx.core.content.edit
 
 /**
@@ -14,13 +13,12 @@ import androidx.core.content.edit
  */
 enum class RadarEnvironment(
     val label: String,
-    val color: Color,
     private val fixedHost: String?,
     private val fixedVerifiedHost: String?,
 ) {
-    PRODUCTION("Production", Color(0xFFE65100), "https://api.radar.io", "https://api-verified.radar.io"),
-    STAGING("Staging", Color(0xFF1565C0), "https://api.radar-staging.com", "https://api-verified.radar-staging.com"),
-    LOCAL("Local", Color(0xFF616161), null, null),
+    PRODUCTION("Production", "https://api.radar.io", "https://api-verified.radar.io"),
+    STAGING("Staging", "https://api.radar-staging.com", "https://api-verified.radar-staging.com"),
+    LOCAL("Local", null, null),
     ;
 
     fun host(localUrl: String): String = fixedHost ?: localUrl

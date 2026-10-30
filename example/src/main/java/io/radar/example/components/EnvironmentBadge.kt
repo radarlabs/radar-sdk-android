@@ -17,29 +17,28 @@ import io.radar.example.store.LocalSettingsStore
 import io.radar.example.store.SettingsStore
 
 /**
- * A strip across the top of every tab showing the environment, the key and whether the key is
- * valid there. Turns red when the key check says the key belongs somewhere else.
+ * A red strip across the top of every tab, shown only when the environment is misconfigured: no
+ * key is set, or the key check says the key isn't valid on the selected environment.
  */
 @Composable
 fun EnvironmentBadge() {
     val settings = LocalSettingsStore.current
     val env = settings.environment
     val key = settings.resolvedPublishableKey
-    val mismatch = settings.keyCheck.mismatches(env) || key.isBlank()
+    if (key.isNotBlank() && !settings.keyCheck.mismatches(env)) return
 
-    val keyText = if (key.isBlank()) "no key set" else SettingsStore.keyPrefix(key)
-    val checkText = if (key.isBlank()) "" else " · ${settings.keyCheck.summary()}"
+    val problem = if (key.isBlank()) "no key set" else "${SettingsStore.keyPrefix(key)} · ${settings.keyCheck.summary()}"
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             // As the Scaffold's topBar, the badge has to clear the status and action bars itself.
             .statusBarsPadding()
-            .background(if (mismatch) Color(0xFFC62828) else env.color)
+            .background(Color(0xFFC62828))
             .padding(horizontal = 12.dp, vertical = 4.dp),
     ) {
         Text(
-            text = (if (mismatch) "⚠ " else "") + "${env.label} · $keyText$checkText",
+            text = "⚠ ${env.label} · $problem",
             color = Color.White,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,

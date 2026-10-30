@@ -69,8 +69,8 @@ theme/                 # Radar-branded Material3 theme
 
 Pick the environment and its publishable key in the Tests-tab settings gear (Environment →
 Apply & restart). Don't hardcode hosts or edit the SDK's default hosts: `RadarEnvironment` writes
-the SDK's host overrides at launch, and the environment badge plus the key check show what the
-app is actually talking to.
+the SDK's host overrides at launch. The key check flags a key that isn't valid on the selected
+environment, and the environment badge shows only when something is wrong.
 
 Default keys can also be set in `MainActivity` (`DEFAULT_PUBLISHABLE_KEY` for production,
 `DEFAULT_STAGING_PUBLISHABLE_KEY` for staging). The committed values are the `prj_live_pk_...`
