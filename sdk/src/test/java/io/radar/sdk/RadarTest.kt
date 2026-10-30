@@ -43,6 +43,7 @@ import io.radar.sdk.model.RadarTripLeg
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import java.io.File
+import java.time.Duration
 import java.util.Calendar
 import java.util.Date
 import java.util.EnumSet
@@ -66,6 +67,7 @@ import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
+import org.robolectric.shadows.ShadowSystemClock
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
@@ -1762,7 +1764,7 @@ class RadarTest {
         val location = mockTrackOnceLocation()
         RadarSettings.removeRemoteTrackingOptions(context)
         RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
-        clearLastSentAt()
+        resetTrackingUpdateState()
 
         withTestLocationManager {
             Radar.handleLocation(context, location, Radar.RadarLocationSource.BACKGROUND_LOCATION)
@@ -1800,7 +1802,7 @@ class RadarTest {
             context,
             RadarTrackingOptions.fromJson(RadarTrackingOptions.EFFICIENT.toJson()).apply { batchSize = 5 }
         )
-        clearLastSentAt()
+        resetTrackingUpdateState()
 
         try {
             withTestLocationManager {
@@ -1817,9 +1819,42 @@ class RadarTest {
         }
     }
 
-    /** Makes the next tracking update skip the desired sync interval check, as the first update after install does. */
-    private fun clearLastSentAt() {
+    @Test
+    fun test_Radar_handleLocation_rebuiltLocation_tracesAgeFromWallClock() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        mockTrackOnceLocation()
+        RadarSettings.removeRemoteTrackingOptions(context)
+        RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
+        resetTrackingUpdateState()
+        // Time since boot, which an age computed from a missing elapsedRealtimeNanos would report.
+        ShadowSystemClock.advanceBy(Duration.ofHours(1))
+
+        // Built like RadarJobScheduler and RadarState rebuild a location: time is restored, elapsedRealtimeNanos isn't.
+        val rebuilt = Location("RadarSDK").apply {
+            latitude = 40.78382
+            longitude = -73.97536
+            accuracy = 65f
+            time = System.currentTimeMillis() - 5_000
+        }
+        assertEquals(0L, rebuilt.elapsedRealtimeNanos)
+
+        withTestLocationManager {
+            Radar.handleLocation(context, rebuilt, Radar.RadarLocationSource.BACKGROUND_LOCATION)
+            ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        }
+
+        val root = uploadedTrace("radar.tracking_update").getValue("radar.tracking_update")
+        val ageMs = traceAttribute(root, "radar.location.age_ms")!!.getString("intValue").toLong()
+        assertTrue("age_ms = $ageMs", ageMs in 5_000L..6_000L)
+    }
+
+    /**
+     * Makes the next tracking update reach sendLocation, as the first update after install does: it skips the desired
+     * sync interval check, and isn't dropped as older than a last moved time left by an earlier test.
+     */
+    private fun resetTrackingUpdateState() {
         context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit().remove("last_sent_at").commit()
+        RadarState.setLastMovedAt(context, 0L)
     }
 
     /**
