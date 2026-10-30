@@ -531,6 +531,7 @@ internal class RadarApiClient(
             }
 
             RadarSettings.updateLastTrackedTime(context)
+            parentSpan?.batched()
             callback?.onComplete(RadarStatus.SUCCESS)
             return
         }
