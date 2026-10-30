@@ -156,6 +156,21 @@ class RadarTraceSpanTest {
     }
 
     @Test
+    fun attributeBlockExceptionIsLoggedAndDropped() {
+        manager.overrideSampledForTesting(true)
+
+        val span = RadarTraceSpan.start("root") {
+            setAttribute("before", "kept")
+            throw SecurityException("attribute read failed")
+        }
+        span.end(Radar.RadarStatus.SUCCESS)
+
+        val json = uploadedSpans().getValue("root")
+        assertEquals("kept", attribute(json, "before")?.get("stringValue"))
+        assertFalse(json.has("status"))
+    }
+
+    @Test
     fun attributeReadsSkippedWhenSpanDoesNotRecord() {
         var reads = 0
         val countingContext = object : ContextWrapper(context) {

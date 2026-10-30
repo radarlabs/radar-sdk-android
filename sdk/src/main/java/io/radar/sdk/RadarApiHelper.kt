@@ -134,6 +134,8 @@ internal open class RadarApiHelper(
         executor.execute {
             val startMs = SystemClock.elapsedRealtime()
             // Queue time includes waiting behind earlier requests on this queue, and their post-request sleeps.
+            // These run before the try below: requestStarted's reads are in recording { }, which catches exceptions,
+            // and tracedHeaders only formats IDs.
             traceSpan?.requestStarted(context, url.host, startMs - enqueuedAtMs)
             val requestHeaders = tracedHeaders(headers, traceSpan)
             val retryEncryptedRequest = verified && prepareRequest != null

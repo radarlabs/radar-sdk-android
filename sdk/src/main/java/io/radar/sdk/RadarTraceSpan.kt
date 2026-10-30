@@ -31,7 +31,8 @@ import java.util.Random
  * works on both.
  *
  * Read attribute values that cost more than a field access (system services, permissions, preferences) inside
- * [recording], so calls whose session isn't sampled skip them.
+ * [recording], so calls whose session isn't sampled skip them, and an exception from a read can't break the work
+ * being traced.
  *
  * Never record precise coordinates, identifiers (install, device, user, session, transaction), strings the app
  * passes in, tokens, or fraud check results.
@@ -77,10 +78,18 @@ internal class RadarTraceSpan private constructor(
     /**
      * Calls [setAttributes] on this span only when it records. A no-op span ignores attributes, but their values
      * would still be computed.
+     *
+     * Exceptions from [setAttributes] are logged and dropped, along with the attributes it hadn't set yet. These
+     * blocks run inline in track calls and on request executor threads, so tracing must never break the work it
+     * measures.
      */
     fun recording(setAttributes: RadarTraceSpan.() -> Unit) = apply {
         if (manager != null) {
-            setAttributes()
+            try {
+                setAttributes()
+            } catch (e: Exception) {
+                manager.logger.e("Could not record trace attributes | name = $name; message = ${e.message}", Radar.RadarLogType.SDK_ERROR, e)
+            }
         }
     }
 

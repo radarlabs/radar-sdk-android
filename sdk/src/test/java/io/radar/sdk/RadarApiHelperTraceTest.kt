@@ -90,6 +90,26 @@ class RadarApiHelperTraceTest {
     }
 
     @Test
+    fun failedAttributeReadDoesNotStopRequest() {
+        // getNetworkCapabilities throws SecurityException without ACCESS_NETWORK_STATE.
+        val throwingContext = object : ContextWrapper(context) {
+            override fun getSystemService(name: String): Any? {
+                if (name == Context.CONNECTIVITY_SERVICE) throw SecurityException("no network state")
+                return super.getSystemService(name)
+            }
+        }
+        val callback = RecordingCallback()
+
+        helper().request(throwingContext, "POST", "v1/test", null, JSONObject(), false, callback, traceSpan = clientSpan("POST /v1/test"))
+
+        callback.await()
+        assertNotNull(sentHeaders["v1/test"])
+        val json = uploadedSpans().getValue("POST /v1/test")
+        assertEquals("api.radar.io", attribute(json, "server.address")?.get("stringValue"))
+        assertNull(attribute(json, "network.connection.type"))
+    }
+
+    @Test
     fun spanEndsBeforeCallbackIsPosted() {
         val callback = request(helper(), "v1/test", clientSpan("GET /v1/test"))
 

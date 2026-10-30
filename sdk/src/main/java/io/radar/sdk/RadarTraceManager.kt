@@ -38,7 +38,7 @@ import org.json.JSONObject
 internal class RadarTraceManager(
     private val context: Context,
     private val apiClient: RadarApiClient,
-    private val logger: RadarLogger
+    internal val logger: RadarLogger
 ) {
     companion object {
         private const val MAX_FILES = 500
