@@ -54,8 +54,6 @@ import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import java.io.File
 
-private const val HOST = "https://api.radar.io"
-
 /**
  * The Map tab: a full-screen MapLibre map with the overlay registry, an interactive trip
  * builder, a layer picker, and long-press mock-location. Rewrite of the original `MapView`,
@@ -78,6 +76,8 @@ fun MapScreen(active: Boolean, modifier: Modifier = Modifier) {
     var showPicker by remember { mutableStateOf(false) }
 
     val publishableKey = settings.resolvedPublishableKey
+    // Map styles come from the same environment as the key; a staging key doesn't work on production.
+    val host = settings.host
 
     // Re-apply source visibility + data whenever a render is requested and the style is ready.
     LaunchedEffect(registry.renderVersion, styleRef.value) {
@@ -130,7 +130,7 @@ fun MapScreen(active: Boolean, modifier: Modifier = Modifier) {
                         true
                     }
 
-                    val styleUrl = "$HOST/maps/styles/radar-default-v1?publishableKey=$publishableKey"
+                    val styleUrl = "$host/maps/styles/radar-default-v1?publishableKey=$publishableKey"
                     map.setStyle(styleUrl) { style ->
                         styleRef.value = style
                         registry.sources.forEach { it.attach(style) }

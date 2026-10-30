@@ -21,7 +21,7 @@ See migration guides in `MIGRATION.md`.
 
 See an example app in `example/`.
 
-To run the example app, clone this repository, add your publishable API key in `MainActivity.kt`, and build the app.
+To run the example app, clone this repository, build the app, and set your publishable API key in the Tests tab under Settings → Environment. You can also set default keys in `MainActivity.kt` (`DEFAULT_PUBLISHABLE_KEY` for production, `DEFAULT_STAGING_PUBLISHABLE_KEY` for staging).
 
 Setup Radar key check pre-commit hook to prevent accidental key leak when working with the Example app.
 ```
@@ -29,14 +29,13 @@ git config filter.radar-keys.clean hooks/clean-filter
 git config filter.radar-keys.smudge hooks/smudge-filter
 ```
 
-### Testing against a local server
+### Switching environments (production, staging, local server)
 
-The example app can point the SDK at a locally hosted HTTP server (e.g. for testing `trackVerified` against a local dev server):
+In the example app, open the Tests tab, tap the settings gear, and pick an environment under **Environment**: Production, Staging, or Local. Each environment keeps its own publishable key. **Apply & restart** saves the choice and relaunches the app.
 
-1. Set `TARGET_HOST` in `MainActivity.kt` to your machine's `http://` URL, e.g. `"http://192.168.X.X:8081"` (use your LAN IP, not `localhost`; use `10.0.2.2` on the emulator). This overrides both the regular host and the verified host.
-2. Run the app. The example permits cleartext (HTTP) traffic to the local host — no extra flags or config needed. The production verified hosts keep strict certificate pinning.
-
-Leave `TARGET_HOST` blank to use Radar's production hosts.
+- The strip across the top of the app shows the active environment, the key, and which environments the key is valid on. On launch the app checks the key against both production and staging, and the strip turns red if the key isn't valid on the selected environment.
+- Errors that usually mean a wrong host or key (network, unauthorized, publishable key) include the environment, host, key, and key-check result in the Debug console.
+- **Local** points both the regular and verified host at your machine's `http://` URL, e.g. `http://192.168.X.X:8081` (use your LAN IP, not `localhost`; use `10.0.2.2` on the emulator). The example permits cleartext (HTTP) traffic for this, so no extra config is needed. The production verified hosts keep strict certificate pinning.
 
 > **Note:** the example enables cleartext (HTTP) traffic (`cleartextTrafficPermitted="true"` in `network_security_config.xml`) purely to support local testing. This is a convenience for the sample app only — do not enable cleartext in a real app, as it weakens your app's network security. Production apps should use HTTPS and leave cleartext disabled (the Android default).
 
