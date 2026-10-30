@@ -57,6 +57,14 @@ internal class RadarVerificationManager(
         val usage = "trackVerified"
         val autoFailover = RadarSettings.getTrackVerifiedAutoFailover(context)
 
+        val trace = RadarTraceSpan.start("radar.track_verified") {
+            desiredAccuracy(desiredAccuracy)
+            beacons(beacons)
+            verifiedFailover(false)
+            trackContext(context)
+        }
+        val tracedCallback = trace.endingWith(callback)
+
         val continueWithConfig = { status: Radar.RadarStatus, config: RadarConfig?, chosenVerifiedHost: String? ->
             if (status != Radar.RadarStatus.SUCCESS || config == null) {
                 Radar.handler.post {
@@ -64,7 +72,7 @@ internal class RadarVerificationManager(
                         Radar.sendError(status)
                     }
 
-                    callback?.onComplete(status)
+                    tracedCallback.onComplete(status)
                 }
             } else {
                 val googlePlayProjectNumber = config.googlePlayProjectNumber
@@ -85,15 +93,15 @@ internal class RadarVerificationManager(
                                         Radar.sendError(status)
                                     }
 
-                                    callback?.onComplete(status)
+                                    tracedCallback.onComplete(status)
                                 }
 
                                 return
                             }
 
-                            RadarSDKFraud.prepareFraudPayload(context, logger, location, googlePlayProjectNumber) { status, preparedPayload ->
+                            RadarSDKFraud.prepareFraudPayload(context, logger, location, googlePlayProjectNumber, parentSpan = trace) { status, preparedPayload ->
                                 if (status != RadarStatus.SUCCESS || preparedPayload == null) {
-                                    callback?.onComplete(
+                                    tracedCallback.onComplete(
                                         if (status == RadarStatus.SUCCESS) RadarStatus.ERROR_BAD_REQUEST else status
                                     )
                                     return@prepareFraudPayload
@@ -143,11 +151,12 @@ internal class RadarVerificationManager(
                                                         Radar.sendError(status)
                                                     }
 
-                                                    callback?.onComplete(status, token)
+                                                    tracedCallback.onComplete(status, token)
                                                 }
                                             }
                                         },
-                                        verifiedHostOverride = chosenVerifiedHost
+                                        verifiedHostOverride = chosenVerifiedHost,
+                                        parentSpan = trace
                                     )
                                 }
 
@@ -191,7 +200,7 @@ internal class RadarVerificationManager(
 
                                                                 callTrackApi(beacons)
                                                             }
-                                                        }
+                                                        }.traced(trace, "uuids")
                                                     )
                                                 } else if (beacons != null) {
                                                     Radar.oneShotBeaconManager.rangeBeacons(
@@ -210,13 +219,14 @@ internal class RadarVerificationManager(
 
                                                                 callTrackApi(beacons)
                                                             }
-                                                        }
+                                                        }.traced(trace, "beacons")
                                                     )
                                                 } else {
                                                     callTrackApi(arrayOf())
                                                 }
                                             }
-                                        }
+                                        },
+                                        trace
                                     )
                                 }
 
@@ -226,17 +236,22 @@ internal class RadarVerificationManager(
                                         if (continuousBeacons != null) {
                                             logger.d("Using continuously ranged beacons | beacons.size = ${continuousBeacons.size}")
 
+                                            trace.beaconSource("continuous")
                                             callTrackApi(continuousBeacons)
                                         } else {
+                                            trace.beaconSource("search")
                                             rangeBeaconsAndTrack()
                                         }
                                     }
                                 } else {
+                                    if (beacons) {
+                                        trace.beaconSource("skipped")
+                                    }
                                     callTrackApi(null)
                                 }
                             }
                         }
-                    }
+                    }.traced(trace, context)
                 )
             }
         }
@@ -255,6 +270,7 @@ internal class RadarVerificationManager(
                         val secondary = RadarSettings.getDefaultVerifiedHostSecondary()
                         logger.d("trackVerified: primary verified host returned non-Radar response, retrying on secondary=$secondary")
 
+                        trace.verifiedFailover(true)
                         Radar.apiClient.getConfig(
                             usage = usage,
                             verified = true,
@@ -263,10 +279,12 @@ internal class RadarVerificationManager(
                                 override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
                                     continueWithConfig(status, config, secondary)
                                 }
-                            }
+                            },
+                            parentSpan = trace
                         )
                     }
-                }
+                },
+                parentSpan = trace
             )
         } else {
             Radar.apiClient.getConfig(
@@ -276,7 +294,8 @@ internal class RadarVerificationManager(
                     override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
                         continueWithConfig(status, config, null)
                     }
-                }
+                },
+                parentSpan = trace
             )
         }
     }

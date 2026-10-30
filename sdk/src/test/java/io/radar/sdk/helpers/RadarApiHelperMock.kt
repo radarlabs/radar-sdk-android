@@ -5,6 +5,8 @@ import io.radar.sdk.Radar
 import io.radar.sdk.RadarApiHelper
 import io.radar.sdk.RadarRequestQueue
 import io.radar.sdk.RadarSettings
+import io.radar.sdk.RadarTraceSpan
+import io.radar.sdk.tracedHeaders
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import org.json.JSONObject
@@ -32,6 +34,11 @@ internal class RadarApiHelperMock : RadarApiHelper() {
     internal var lastCapturedParams: JSONObject? = null
     internal var lastCapturedPath: String? = null
     internal var lastCapturedMethod: String? = null
+
+    /**
+     * Headers of every request since the last `clearCapturedParams()`, keyed by path without its query string
+     */
+    internal val capturedHeadersByPath: MutableMap<String, Map<String, String>> = mutableMapOf()
     internal var lastCapturedVerified: Boolean = false
     internal var lastCapturedVerifiedHostOverride: String? = null
     internal var lastUrl: String? = null
@@ -82,11 +89,13 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         verifiedHostOverride: String?,
         prepareRequest: (() -> JSONObject)?,
         preparationFailureHandler: ((Exception) -> Unit)?,
-        queue: RadarRequestQueue
+        queue: RadarRequestQueue,
+        traceSpan: RadarTraceSpan?
     ) {
         val requestParams = try {
             prepareRequest?.invoke() ?: params
         } catch (e: Exception) {
+            traceSpan?.end(Radar.RadarStatus.ERROR_BAD_REQUEST)
             if (preparationFailureHandler != null) {
                 preparationFailureHandler(e)
             } else {
@@ -110,12 +119,15 @@ internal class RadarApiHelperMock : RadarApiHelper() {
             capturedPaths.add(path)
             lastCapturedPath = path
             lastCapturedMethod = method
+            tracedHeaders(headers, traceSpan)?.let { capturedHeadersByPath[path.substringBefore('?')] = it }
             lastCapturedParams = requestParams
             lastCapturedVerified = verified
             lastCapturedVerifiedHostOverride = verifiedHostOverride
         }
 
         val status = mockStatusQueues.entries.firstOrNull { path.startsWith(it.key) }?.value?.removeFirstOrNull() ?: mockStatus
+        // Like RadarApiHelper, end the client span before calling back.
+        traceSpan?.end(status)
 
         val queueKey = mockResponseQueues.keys.firstOrNull { path.startsWith(it) }
         if (queueKey != null) {
@@ -171,6 +183,7 @@ internal class RadarApiHelperMock : RadarApiHelper() {
         lastCapturedPath = null
         lastCapturedMethod = null
         capturedPaths.clear()
+        capturedHeadersByPath.clear()
         capturedTracePayloads.clear()
         lastCapturedTraceHeaders = null
         lastCapturedTraceQueue = null

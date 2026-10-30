@@ -1251,6 +1251,13 @@ object Radar {
         }
         this.logger.i("trackOnce()", RadarLogType.SDK_CALL)
 
+        val trace = RadarTraceSpan.start("radar.track_once") {
+            desiredAccuracy(desiredAccuracy)
+            beacons(beacons)
+            trackContext(context)
+        }
+        val tracedCallback = trace.endingWith(callback)
+
         locationManager.getLocation(
             desiredAccuracy,
             RadarLocationSource.FOREGROUND_LOCATION,
@@ -1258,7 +1265,7 @@ object Radar {
                 override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
                     if (status != RadarStatus.SUCCESS || location == null) {
                         handler.post {
-                            callback?.onComplete(status)
+                            tracedCallback.onComplete(status)
                         }
 
                         return
@@ -1286,14 +1293,16 @@ object Radar {
                                         locationManager.updateTrackingFromMeta(config?.meta)
                                     }
                                     handler.post {
-                                        callback?.onComplete(status, location, events, user)
+                                        tracedCallback.onComplete(status, location, events, user)
                                     }
                                 }
-                            }
+                            },
+                            parentSpan = trace
                         )
                     }
 
                     if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        trace.beaconSource("search")
                         apiClient.searchBeacons(
                             location,
                             RadarNearbyBeaconSearch.RADIUS_METERS,
@@ -1317,7 +1326,7 @@ object Radar {
 
                                                     callTrackApi(beacons)
                                                 }
-                                            }
+                                            }.traced(trace, "uuids")
                                         )
                                     } else if (beacons != null) {
                                         beaconMonitoringManager.startMonitoringBeacons(beacons)
@@ -1335,20 +1344,24 @@ object Radar {
 
                                                     callTrackApi(beacons)
                                                 }
-                                            }
+                                            }.traced(trace, "beacons")
                                         )
                                     } else {
                                         callTrackApi(arrayOf())
                                     }
                                 }
                             },
-                            false
+                            false,
+                            parentSpan = trace
                         )
                     } else {
+                        if (beacons) {
+                            trace.beaconSource("skipped")
+                        }
                         callTrackApi(null)
                     }
                 }
-            }
+            }.traced(trace, context)
         )
     }
 
@@ -1390,6 +1403,9 @@ object Radar {
             return
         }
 
+        val trace = RadarTraceSpan.start("radar.track_once_with_location") { trackContext(context) }
+        val tracedCallback = trace.endingWith(callback)
+
         apiClient.track(
             location,
             false,
@@ -1411,10 +1427,11 @@ object Radar {
                         locationManager.updateTrackingFromMeta(config?.meta)
                     }
                     handler.post {
-                        callback?.onComplete(status, location, events, user)
+                        tracedCallback.onComplete(status, location, events, user)
                     }
                 }
-            }
+            },
+            parentSpan = trace
         )
     }
 
@@ -4276,7 +4293,7 @@ object Radar {
      * Flushes replays to the server.
      */
     @JvmStatic
-    internal fun flushReplays(replayParams: JSONObject? = null, callback: RadarTrackCallback? = null) {
+    internal fun flushReplays(replayParams: JSONObject? = null, callback: RadarTrackCallback? = null, parentSpan: RadarTraceSpan? = null) {
         if (!initialized) {
             return
         }
@@ -4331,7 +4348,8 @@ object Radar {
                         callback?.onComplete(status)
                     }
                 }
-            }
+            },
+            parentSpan
         )
     }
 
