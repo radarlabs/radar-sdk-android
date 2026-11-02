@@ -2,18 +2,17 @@ package io.radar.sdk
 
 import android.content.Context
 import android.os.Build
-import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.helpers.RadarApiHelperMock
 import io.radar.sdk.model.RadarAddress
 import io.radar.sdk.model.RadarCoordinate
-import java.net.URL
 import java.net.URLDecoder
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -55,8 +54,14 @@ class RadarApiClientValidateAddressTest {
         unit = unit
     )
 
-    private fun send(address: RadarAddress): Radar.RadarStatus? {
-        var result: Radar.RadarStatus? = null
+    private class Result(
+        val status: Radar.RadarStatus,
+        val address: RadarAddress?,
+        val verificationStatus: Radar.RadarAddressVerificationStatus?
+    )
+
+    private fun send(address: RadarAddress): Result? {
+        var result: Result? = null
         apiClient.validateAddress(
             address,
             object : RadarApiClient.RadarValidateAddressAPICallback {
@@ -66,7 +71,7 @@ class RadarApiClientValidateAddressTest {
                     address: RadarAddress?,
                     verificationStatus: Radar.RadarAddressVerificationStatus?
                 ) {
-                    result = status
+                    result = Result(status, address, verificationStatus)
                 }
             }
         )
@@ -74,15 +79,13 @@ class RadarApiClientValidateAddressTest {
     }
 
     /**
-     * Sends the address and returns the decoded query parameters of the URL that `RadarApiHelper`
-     * would request, built the same way it builds it.
+     * Sends the address and returns the decoded query parameters of the captured request path.
      */
     private fun validate(address: RadarAddress): Map<String, String> {
         send(address)
-        val path = apiHelperMock.lastCapturedPath!!
-        val url = URL(RadarSettings.getHost(context).toUri().buildUpon().appendEncodedPath(path).build().toString())
-        assertEquals("/v1/addresses/validate", url.path)
-        return url.query.split("&").associate { pair ->
+        val (path, query) = apiHelperMock.lastCapturedPath!!.split("?", limit = 2)
+        assertEquals("v1/addresses/validate", path)
+        return query.split("&").associate { pair ->
             val (key, value) = pair.split("=", limit = 2)
             URLDecoder.decode(key, "UTF-8") to URLDecoder.decode(value, "UTF-8")
         }
@@ -132,23 +135,71 @@ class RadarApiClientValidateAddressTest {
     fun `reserved characters in values round-trip`() {
         val params = validate(address(addressLabel = "1st & Main=A+B", unit = "Apt #2 & 3"))
 
+        val path = apiHelperMock.lastCapturedPath!!
+        assertTrue(path, path.contains("addressLabel=1st%20%26%20Main%3DA%2BB"))
+        assertTrue(path, path.contains("unit=Apt%20%232%20%26%203"))
         assertEquals("1st & Main=A+B", params["addressLabel"])
         assertEquals("Apt #2 & 3", params["unit"])
     }
 
     @Test
-    fun `missing postal code returns bad request without sending a request`() {
-        val status = send(address(addressLabel = "841 Broadway", postalCode = null))
+    fun `JSON null number sends the label`() {
+        val address = RadarAddress.fromJson(
+            JSONObject()
+                .put("countryCode", "US")
+                .put("stateCode", "NY")
+                .put("city", "New York")
+                .put("postalCode", "10003")
+                .put("street", "Broadway")
+                .put("number", JSONObject.NULL)
+                .put("addressLabel", "841 Broadway")
+        )!!
 
-        assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
+        val params = validate(address)
+
+        assertEquals("841 Broadway", params["addressLabel"])
+        assertFalse(params.containsKey("street"))
+        assertFalse(params.containsKey("number"))
+        assertFalse(params.containsKey("unit"))
+    }
+
+    @Test
+    fun `success returns the parsed address and verification status`() {
+        apiHelperMock.mockResponse = JSONObject()
+            .put(
+                "address",
+                JSONObject()
+                    .put("latitude", 40.7342)
+                    .put("longitude", -73.9911)
+                    .put("number", "841")
+                    .put("street", "Broadway")
+                    .put("postalCode", "10003")
+                    .put("plus4", "4704")
+            )
+            .put("result", JSONObject().put("verificationStatus", "verified"))
+
+        val result = send(address(street = "Broadway", number = "841"))!!
+
+        assertEquals(Radar.RadarStatus.SUCCESS, result.status)
+        assertEquals("841", result.address?.number)
+        assertEquals("Broadway", result.address?.street)
+        assertEquals("4704", result.address?.plus4)
+        assertEquals(Radar.RadarAddressVerificationStatus.VERIFIED, result.verificationStatus)
+    }
+
+    @Test
+    fun `missing postal code returns bad request without sending a request`() {
+        val result = send(address(addressLabel = "841 Broadway", postalCode = null))
+
+        assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, result?.status)
         assertNull(apiHelperMock.lastCapturedPath)
     }
 
     @Test
     fun `no street and number or label returns bad request without sending a request`() {
-        val status = send(address(street = "Broadway"))
+        val result = send(address(street = "Broadway"))
 
-        assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
+        assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, result?.status)
         assertNull(apiHelperMock.lastCapturedPath)
     }
 }

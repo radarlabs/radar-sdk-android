@@ -1376,40 +1376,43 @@ internal class RadarApiClient(
             return
         }
 
-        val countryCode = address.countryCode
-        val stateCode = address.stateCode
-        val city = address.city
-        val postalCode = address.postalCode
-        val number = address.number
-        val street = address.street
-        val addressLabel = address.addressLabel
-        // The API rejects requests that contain both forms, so prefer street and number and fall back to addressLabel
-        val hasStreetAndNumber = !street.isNullOrEmpty() && !number.isNullOrEmpty()
-        if (countryCode.isNullOrEmpty() || stateCode.isNullOrEmpty() || city.isNullOrEmpty() || postalCode.isNullOrEmpty() ||
-            (!hasStreetAndNumber && addressLabel.isNullOrEmpty())
+        // RadarAddress.fromJson reads a missing field as "" and a JSON null as "null", so treat both as missing
+        fun String?.presentOrNull() = this?.takeUnless { it.isEmpty() || it == "null" }
+
+        val countryCode = address.countryCode.presentOrNull()
+        val stateCode = address.stateCode.presentOrNull()
+        val city = address.city.presentOrNull()
+        val postalCode = address.postalCode.presentOrNull()
+        val number = address.number.presentOrNull()
+        val street = address.street.presentOrNull()
+        val addressLabel = address.addressLabel.presentOrNull()
+        val unit = address.unit.presentOrNull()
+        if (countryCode == null || stateCode == null || city == null || postalCode == null ||
+            ((street == null || number == null) && addressLabel == null)
         ) {
             callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
             return
         }
 
-        // Encode each value so &, = and + stay part of the value; RadarApiHelper passes the path through as already encoded
-        val queryParams = StringBuilder()
-        queryParams.append("countryCode=${Uri.encode(countryCode)}")
-        queryParams.append("&stateCode=${Uri.encode(stateCode)}")
-        queryParams.append("&city=${Uri.encode(city)}")
-        queryParams.append("&postalCode=${Uri.encode(postalCode)}")
-        if (hasStreetAndNumber) {
-            queryParams.append("&number=${Uri.encode(number)}")
-            queryParams.append("&street=${Uri.encode(street)}")
+        // appendQueryParameter encodes each value, so &, = and + stay part of it; RadarApiHelper appends the path as already encoded
+        val query = Uri.Builder()
+            .appendQueryParameter("countryCode", countryCode)
+            .appendQueryParameter("stateCode", stateCode)
+            .appendQueryParameter("city", city)
+            .appendQueryParameter("postalCode", postalCode)
+        // The API rejects requests that contain both forms, so prefer street and number and fall back to addressLabel
+        if (street != null && number != null) {
+            query.appendQueryParameter("number", number)
+            query.appendQueryParameter("street", street)
         } else {
-            queryParams.append("&addressLabel=${Uri.encode(addressLabel)}")
+            query.appendQueryParameter("addressLabel", addressLabel)
         }
-        if (!address.unit.isNullOrEmpty()) {
-            queryParams.append("&unit=${Uri.encode(address.unit)}")
+        if (unit != null) {
+            query.appendQueryParameter("unit", unit)
         }
 
-        val path = "v1/addresses/validate?$queryParams"
+        val path = "v1/addresses/validate?${query.build().encodedQuery}"
 
         val headers = headers(publishableKey)
 
