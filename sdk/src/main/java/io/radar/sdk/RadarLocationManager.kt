@@ -708,7 +708,9 @@ internal class RadarLocationManager(
         val rangeBeacons = options.beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             permissionsHelper.bluetoothPermissionsGranted(context)
 
-        // Ends when the track request completes, or when an update decides not to send a track after ranging.
+        // Ends when the track request completes. An update that only checks whether the synced beacon state changed
+        // (forceTrack false) is discarded unless it sends a track, since those that don't send would be most updates
+        // in a synced region.
         val trace = RadarTraceSpan.start("radar.tracking_update") {
             locationSource(source)
             stopped(stopped)
@@ -777,6 +779,7 @@ internal class RadarLocationManager(
                 logger.i("Sync region beacon ranging | syncedBeacons = ${syncedBeacons.size}, forceTrack = $forceTrack")
                 if (syncedBeacons.isNotEmpty()) {
                     Radar.beaconMonitoringManager.startMonitoringBeacons(syncedBeacons)
+                    // An unforced update may be discarded, so its ranging isn't traced as a child span.
                     Radar.oneShotBeaconManager.rangeBeacons(
                         syncedBeacons,
                         true,
@@ -787,7 +790,7 @@ internal class RadarLocationManager(
                                     if (forceTrack) {
                                         callTrackApi(null)
                                     } else {
-                                        trace.skipped("ranging_failed").end(status)
+                                        trace.discard()
                                         if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
                                             locationManager.stopForegroundService()
                                         }
@@ -799,7 +802,7 @@ internal class RadarLocationManager(
                                     if (forceTrack) {
                                         callTrackApi(arrayOf())
                                     } else {
-                                        trace.skipped("no_beacons").end(RadarStatus.SUCCESS)
+                                        trace.discard()
                                         if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
                                             locationManager.stopForegroundService()
                                         }
@@ -825,21 +828,21 @@ internal class RadarLocationManager(
                                         callTrackApi(beacons)
                                     } else {
                                         logger.i("Skipping track: beacon state unchanged after BLE ranging")
-                                        trace.skipped("beacon_state_unchanged").end(RadarStatus.SUCCESS)
+                                        trace.discard()
                                         if (options.foregroundServiceEnabled && foregroundService.updatesOnly) {
                                             locationManager.stopForegroundService()
                                         }
                                     }
                                 }
                             }
-                        }.traced(trace, "beacons")
+                        }.let { if (forceTrack) it.traced(trace, "beacons") else it }
                     )
                 } else {
                     if (forceTrack) {
                         logger.i("No synced beacons nearby, sending empty beacons | forceTrack = $forceTrack")
                         callTrackApi(arrayOf())
                     } else {
-                        trace.skipped("no_synced_beacons").end(RadarStatus.SUCCESS)
+                        trace.discard()
                     }
                 }
             } else {

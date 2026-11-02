@@ -114,6 +114,19 @@ class RadarTraceSpanTest {
     }
 
     @Test
+    fun discardedSpanIsNotRecorded() {
+        val discarded = RadarTraceSpan.start("discarded")
+        discarded.discard()
+        // A later end() is ignored, like a second end().
+        discarded.end(Radar.RadarStatus.SUCCESS)
+        RadarTraceSpan.start("kept").end(Radar.RadarStatus.SUCCESS)
+
+        manager.flushAndWaitForTesting()
+
+        assertEquals(listOf("kept"), apiHelper.capturedTraceSpans().map { it.getString("name") })
+    }
+
+    @Test
     fun attributesSetAfterEndAreIgnored() {
         val span = RadarTraceSpan.start("root")
         span.setAttribute("before", "1")

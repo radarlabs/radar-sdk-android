@@ -290,7 +290,7 @@ internal class RadarApiClient(
         params.putOpt("replays", JSONArray(replaysList))
 
         val path = "v1/track/replay"
-        parentSpan?.replayed()?.outcome("sent")
+        parentSpan?.replayed()
         val span = parentSpan?.child("POST /v1/track/replay", RadarSpanKind.CLIENT)?.replayCount(replays.size)
         apiHelper.request(
             context = context,
@@ -531,7 +531,7 @@ internal class RadarApiClient(
             }
 
             RadarSettings.updateLastTrackedTime(context)
-            parentSpan?.outcome("batched")
+            parentSpan?.batched()
             callback?.onComplete(RadarStatus.SUCCESS)
             return
         }
@@ -553,7 +553,6 @@ internal class RadarApiClient(
             return
         }
 
-        parentSpan?.outcome("sent")
         val span = parentSpan?.child("POST /v1/track", RadarSpanKind.CLIENT)
 
         apiHelper.request(

@@ -24,21 +24,9 @@ internal fun RadarTraceSpan.stopped(stopped: Boolean) = apply {
     setAttribute("radar.track.stopped", stopped)
 }
 
-/**
- * What happened to the root span's track: `sent` (a track or replay request was made, whatever its result),
- * `batched` (added to a batch, so no request was sent yet), or `skipped` (see [skipped]).
- */
-internal fun RadarTraceSpan.outcome(outcome: String) = apply {
-    setAttribute("radar.track.outcome", outcome)
-}
-
-/**
- * Set on a tracking update's root span when it ends without sending a track. [reason] is `ranging_failed`,
- * `no_beacons`, `beacon_state_unchanged`, or `no_synced_beacons`.
- */
-internal fun RadarTraceSpan.skipped(reason: String) = apply {
-    outcome("skipped")
-    setAttribute("radar.track.skip_reason", reason)
+/** Set on the root span when its track is added to a batch, so no request is sent yet. */
+internal fun RadarTraceSpan.batched() = apply {
+    setAttribute("radar.track.batched", true)
 }
 
 /** Set on the `POST /v1/track/replay` client span. */
