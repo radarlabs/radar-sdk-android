@@ -37,6 +37,9 @@ enum class RadarEnvironment(
     }
 
     companion object {
+        /** Environments with fixed hosts, which the key check probes. */
+        val checkable = listOf(PRODUCTION, STAGING)
+
         fun fromName(name: String?): RadarEnvironment = entries.firstOrNull { it.name == name } ?: PRODUCTION
 
         // The SDK's own SharedPreferences (see RadarSettings in the sdk module).

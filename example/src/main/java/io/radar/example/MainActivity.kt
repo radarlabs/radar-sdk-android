@@ -118,6 +118,7 @@ class MainActivity : AppCompatActivity() {
         Log.i("radar-env", settingsStore.environmentSummary())
         logStore.writeResult("radar-env: ${settingsStore.environmentSummary()}")
         Radar.initialize(this, settingsStore.resolvedPublishableKey, options)
+        settingsStore.runKeyCheck(logStore)
 
         Radar.setUserId("android-test-user")
         Log.i("version", Radar.sdkVersion())

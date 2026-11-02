@@ -33,6 +33,10 @@ class SettingsStore(context: Context) {
     val host: String
         get() = environment.host(localUrl)
 
+    /** Which environments [resolvedPublishableKey] is valid on. */
+    var keyCheck by mutableStateOf<KeyCheck>(KeyCheck.NotChecked)
+        private set
+
     /** The saved key for [env], falling back to its default in `MainActivity` (placeholders count as unset). */
     fun publishableKey(env: RadarEnvironment): String =
         prefs.getString(keyPrefsKey(env), null) ?: defaultPublishableKey(env)
@@ -46,12 +50,33 @@ class SettingsStore(context: Context) {
         }
     }
 
-    /** Where requests go, e.g. `env = Staging; host = https://…; key = prj_test_pk_ab12…`. */
-    fun environmentSummary(): String {
+    /**
+     * Checks which environments [resolvedPublishableKey] is valid on, and logs an error if it isn't
+     * valid on the selected one.
+     */
+    fun runKeyCheck(logStore: LogStore) {
         val key = resolvedPublishableKey
-        val shortKey = if (key.isBlank()) "(none)" else if (key.length <= 16) key else key.take(16) + "…"
-        return "env = ${environment.label}; host = $host; key = $shortKey"
+        if (key.isBlank()) {
+            logStore.writeError("No publishable key set for ${environment.label}", "Set one in Settings → Environment.")
+            return
+        }
+        keyCheck = KeyCheck.Checking
+        KeyChecker.check(key) { result ->
+            keyCheck = result
+            if (result.mismatches(environment)) {
+                logStore.writeError(
+                    "Key ${keyPrefix(key)} is not valid on ${environment.label}",
+                    "Key check: ${result.summary()}. Switch environment or change the key in Settings → Environment.",
+                )
+            } else {
+                logStore.writeResult("key check: ${result.summary()}", environmentSummary())
+            }
+        }
     }
+
+    /** Where requests go, e.g. `env = Staging; host = https://…; key = prj_test_pk_ab12…; key check = …`. */
+    fun environmentSummary(): String =
+        "env = ${environment.label}; host = $host; key = ${keyPrefix(resolvedPublishableKey)}; key check = ${keyCheck.summary()}"
 
     // Identity
     var userId by mutableStateOf("")
@@ -130,6 +155,13 @@ class SettingsStore(context: Context) {
             }
             // hooks/clean-filter replaces real keys with "prj_live_pk_..." in git.
             return if (key.endsWith("...")) "" else key
+        }
+
+        /** A key shortened for display, e.g. `prj_live_pk_0c38…`. */
+        fun keyPrefix(key: String): String = when {
+            key.isBlank() -> "(none)"
+            key.length <= 16 -> key
+            else -> key.take(16) + "…"
         }
     }
 }
