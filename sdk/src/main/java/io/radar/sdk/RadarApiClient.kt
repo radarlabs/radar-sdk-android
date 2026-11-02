@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.content.Context
 import android.location.Location
+import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
 import io.radar.sdk.Radar.RadarAddressVerificationStatus
@@ -1375,22 +1376,37 @@ internal class RadarApiClient(
             return
         }
 
+        val countryCode = address.countryCode
+        val stateCode = address.stateCode
+        val city = address.city
+        val postalCode = address.postalCode
+        val number = address.number
+        val street = address.street
+        val addressLabel = address.addressLabel
+        // The API rejects requests that contain both forms, so prefer street and number and fall back to addressLabel
+        val hasStreetAndNumber = !street.isNullOrEmpty() && !number.isNullOrEmpty()
+        if (countryCode.isNullOrEmpty() || stateCode.isNullOrEmpty() || city.isNullOrEmpty() || postalCode.isNullOrEmpty() ||
+            (!hasStreetAndNumber && addressLabel.isNullOrEmpty())
+        ) {
+            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
+        }
+
+        // Encode each value so &, = and + stay part of the value; RadarApiHelper passes the path through as already encoded
         val queryParams = StringBuilder()
-        queryParams.append("countryCode=${address.countryCode}")
-        queryParams.append("&stateCode=${address.stateCode}")
-        queryParams.append("&city=${address.city}")
-        queryParams.append("&postalCode=${address.postalCode}")
-        if (address.number != null) {
-            queryParams.append("&number=${address.number}")
+        queryParams.append("countryCode=${Uri.encode(countryCode)}")
+        queryParams.append("&stateCode=${Uri.encode(stateCode)}")
+        queryParams.append("&city=${Uri.encode(city)}")
+        queryParams.append("&postalCode=${Uri.encode(postalCode)}")
+        if (hasStreetAndNumber) {
+            queryParams.append("&number=${Uri.encode(number)}")
+            queryParams.append("&street=${Uri.encode(street)}")
+        } else {
+            queryParams.append("&addressLabel=${Uri.encode(addressLabel)}")
         }
-        if (address.street != null) {
-            queryParams.append("&street=${address.street}")
-        }
-        if (address.unit != null) {
-            queryParams.append("&unit=${address.unit}")
-        }
-        if (address.addressLabel != null) {
-            queryParams.append("&addressLabel=${address.addressLabel}")
+        if (!address.unit.isNullOrEmpty()) {
+            queryParams.append("&unit=${Uri.encode(address.unit)}")
         }
 
         val path = "v1/addresses/validate?$queryParams"
