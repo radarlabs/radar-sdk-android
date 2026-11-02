@@ -60,6 +60,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -3361,6 +3362,35 @@ class RadarTest {
         // not share the server's snapshot window
         assertTrue(first.sessionToken.isNotEmpty())
         assertNotEquals(first.sessionToken, second.sessionToken)
+        // a minted token must be a UUID, so it round trips through the token constructor
+        assertEquals(first.sessionToken, RadarAutocompleteSession(first.sessionToken).sessionToken)
+    }
+
+    @Test
+    fun test_RadarAutocompleteSession_fromToken_sendsThatToken() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete_session.json")
+
+        // wrapper SDKs bridge stateless calls and rebuild the session from a token they hold
+        val token = "4b1a1a1e-0b0b-4b0b-8b0b-0b0b0b0b0b0b"
+        val session = RadarAutocompleteSession(token)
+
+        autocompleteAddresses(session)
+
+        assertEquals(token, session.sessionToken)
+        assertEquals(token, sessionTokenFromPath(apiHelperMock.lastCapturedPath))
+    }
+
+    @Test
+    fun test_RadarAutocompleteSession_fromToken_rejectsNonUuid() {
+        // the server packs the token into the result handle as raw bytes, so a non-UUID would 400
+        // the whole autocomplete request
+        for (token in listOf("not-a-uuid", "1-1-1-1-1", "", "4b1a1a1e0b0b4b0b8b0b0b0b0b0b0b0b")) {
+            assertThrows(IllegalArgumentException::class.java) {
+                RadarAutocompleteSession(token)
+            }
+        }
     }
 
     @Test

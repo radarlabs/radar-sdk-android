@@ -24,7 +24,29 @@ import java.util.UUID
 class RadarAutocompleteSession {
 
     /** The token this session sends. */
-    val sessionToken: String = UUID.randomUUID().toString()
+    val sessionToken: String
+
+    /**
+     * Opens a session with a newly minted token.
+     */
+    constructor() {
+        sessionToken = UUID.randomUUID().toString()
+    }
+
+    /**
+     * Resumes a session from a token minted elsewhere. Intended for wrapper SDKs that cannot hold
+     * a session instance; prefer the no-argument constructor.
+     *
+     * @param[sessionToken] A UUID.
+     * @throws IllegalArgumentException if [sessionToken] is not a UUID.
+     */
+    constructor(sessionToken: String) {
+        // The server packs the token into the result handle as 16 raw bytes, so anything that is
+        // not a UUID cannot be encoded and the API rejects the autocomplete request outright.
+        require(UUID_PATTERN.matches(sessionToken)) { "sessionToken must be a UUID" }
+
+        this.sessionToken = sessionToken
+    }
 
     /**
      * Autocompletes partial addresses and place names within this session, sorted by relevance.
@@ -173,5 +195,9 @@ class RadarAutocompleteSession {
                 }
             }
         )
+    }
+
+    private companion object {
+        private val UUID_PATTERN = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
     }
 }
