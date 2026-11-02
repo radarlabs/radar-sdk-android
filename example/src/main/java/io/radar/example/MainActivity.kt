@@ -46,9 +46,8 @@ import io.radar.sdk.model.RadarVerifiedLocationToken
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        // Default publishable keys, used until you save one in Settings → Environment. Pick the
-        // environment (Production / Staging / Local) there too. hooks/clean-filter keeps real keys
-        // out of git (they're saved to .radar-env and restored on checkout).
+        // Default keys, used until you save one in Settings → Environment. hooks/clean-filter keeps
+        // real keys out of git.
 
         /** Default key for the Production environment. */
         const val DEFAULT_PUBLISHABLE_KEY = "prj_live_pk_..."
@@ -115,12 +114,10 @@ class MainActivity : AppCompatActivity() {
             silentPush = true,
             activity = this,
         )
-        // Point the SDK at the selected environment before initializing, then check the key.
         settingsStore.environment.applyTo(this, settingsStore.localUrl)
         Log.i("radar-env", settingsStore.environmentSummary())
-        logStore.errorContext = settingsStore::environmentSummary
+        logStore.writeResult("radar-env: ${settingsStore.environmentSummary()}")
         Radar.initialize(this, settingsStore.resolvedPublishableKey, options)
-        settingsStore.runKeyCheck(logStore)
 
         Radar.setUserId("android-test-user")
         Log.i("version", Radar.sdkVersion())

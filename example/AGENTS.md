@@ -19,15 +19,14 @@ store/                 # Observable stores (one per concern) + value types
   LogStore.kt          # The single RadarReceiver + unified console source-of-truth
   ConsoleEntry.kt      # One console row (+ Kind enum)
   SettingsStore.kt     # SDK identity/tracking snapshot + persisted environment and per-environment keys
-  RadarEnvironment.kt  # Production / Staging / Local: the only place API hosts are defined
-  KeyCheck.kt          # Probes /v1/config on each environment to see where a key is valid
+  RadarEnvironment.kt  # Production / Staging / Local hosts
   PermissionsStore.kt  # Runtime-permission status snapshot
   TripBuilderStore.kt  # Map-driven trip selection + active-trip mirror + visualization
   TestPreset.kt        # Bundled tracking presets
   TripDestination.kt / TripEventMarker.kt  # Cross-cutting value types
   AppStores.kt         # CompositionLocals + ProvideStores (app-wide store injection)
 
-components/            # Reusable primitives: ActionButton, TogglePanel, ControlRow, FieldEditor, EnvironmentBadge
+components/            # Reusable primitives: ActionButton, TogglePanel, ControlRow, FieldEditor
 console/               # Debug tab: ConsoleView, ConsoleEntryRow, ConsoleKindUi (icon/tint)
 map/                   # Map tab: MapScreen + trip-builder UI + MockLocationController
   overlays/            # Pluggable map sources: MapOverlaySource + MapOverlayRegistry + sources
@@ -68,11 +67,6 @@ theme/                 # Radar-branded Material3 theme
 ## Setup
 
 Pick the environment and its publishable key in the Tests-tab settings gear (Environment →
-Apply & restart). Don't hardcode hosts or edit the SDK's default hosts: `RadarEnvironment` writes
-the SDK's host overrides at launch. The key check flags a key that isn't valid on the selected
-environment, and the environment badge shows only when something is wrong.
-
-Default keys can also be set in `MainActivity` (`DEFAULT_PUBLISHABLE_KEY` for production,
-`DEFAULT_STAGING_PUBLISHABLE_KEY` for staging). The committed values are the `prj_live_pk_...`
-placeholder: the `radar-keys` git filter (`hooks/clean-filter`) strips real keys on commit and
-saves them to `.radar-env`.
+Apply & restart); don't hardcode hosts. Default keys live in `MainActivity`
+(`DEFAULT_PUBLISHABLE_KEY`, `DEFAULT_STAGING_PUBLISHABLE_KEY`); the `radar-keys` git filter strips
+real keys on commit.

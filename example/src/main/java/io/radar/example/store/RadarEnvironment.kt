@@ -4,9 +4,7 @@ import android.content.Context
 import androidx.core.content.edit
 
 /**
- * The Radar API environment the example app talks to. This is the only place the hosts are
- * defined: pick an environment in Settings → Environment instead of editing constants.
- *
+ * The Radar API environment the example app talks to, picked in Settings → Environment.
  * [LOCAL] points both the regular and verified host at a dev server URL (e.g.
  * `http://192.168.X.X:8081`, or `http://10.0.2.2:8081` on the emulator). The example permits
  * cleartext traffic for this (see `network_security_config.xml`).
@@ -25,10 +23,7 @@ enum class RadarEnvironment(
 
     fun verifiedHost(localUrl: String): String = fixedVerifiedHost ?: localUrl
 
-    /**
-     * Writes the host overrides the SDK reads on every request. Production clears them so the SDK
-     * falls back to its built-in defaults.
-     */
+    /** Writes the SDK's host overrides. Production clears them so the SDK uses its built-in defaults. */
     fun applyTo(context: Context, localUrl: String) {
         context.getSharedPreferences(SDK_PREFS, Context.MODE_PRIVATE).edit {
             if (this@RadarEnvironment == PRODUCTION) {
@@ -42,9 +37,6 @@ enum class RadarEnvironment(
     }
 
     companion object {
-        /** Environments with fixed hosts, which the key check probes. */
-        val checkable = listOf(PRODUCTION, STAGING)
-
         fun fromName(name: String?): RadarEnvironment = entries.firstOrNull { it.name == name } ?: PRODUCTION
 
         // The SDK's own SharedPreferences (see RadarSettings in the sdk module).

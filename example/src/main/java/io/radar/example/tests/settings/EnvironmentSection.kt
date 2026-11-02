@@ -24,8 +24,8 @@ import io.radar.example.store.LocalSettingsStore
 import io.radar.example.store.RadarEnvironment
 
 /**
- * Picks the Radar environment and its publishable key. Changes are saved and applied on relaunch,
- * so the SDK never runs with a host from one environment and a key from another.
+ * Picks the Radar environment and its publishable key. Changes apply on relaunch, so the SDK never
+ * runs with a host from one environment and a key from another.
  */
 @Composable
 fun EnvironmentSection() {
@@ -34,12 +34,7 @@ fun EnvironmentSection() {
 
     var selected by remember { mutableStateOf(settings.environment) }
     var key by remember(selected) { mutableStateOf(settings.publishableKey(selected)) }
-    var localUrl by remember { mutableStateOf(settings.savedLocalUrl()) }
-
-    val missingLocalUrl = selected == RadarEnvironment.LOCAL && localUrl.isBlank()
-    val changed = selected != settings.environment ||
-        key.trim() != settings.publishableKey(selected) ||
-        (selected == RadarEnvironment.LOCAL && localUrl.trim() != settings.localUrl)
+    var localUrl by remember { mutableStateOf(settings.localUrl) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Environment", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -68,13 +63,6 @@ fun EnvironmentSection() {
                 { localUrl = it },
                 placeholder = "http://192.168.X.X:8081 (10.0.2.2 on the emulator)",
             )
-        } else {
-            Text(
-                "Host: ${selected.host("")}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp),
-            )
         }
 
         FieldEditor("${selected.label} publishable key", key, { key = it }, placeholder = "prj_test_pk_…")
@@ -84,8 +72,8 @@ fun EnvironmentSection() {
                 settings.saveEnvironment(selected, key, localUrl)
                 MainActivity.restart(context)
             },
-            enabled = changed && !missingLocalUrl,
+            enabled = selected != RadarEnvironment.LOCAL || localUrl.isNotBlank(),
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-        ) { Text(if (missingLocalUrl) "Set a local server URL" else "Apply & restart") }
+        ) { Text("Apply & restart") }
     }
 }

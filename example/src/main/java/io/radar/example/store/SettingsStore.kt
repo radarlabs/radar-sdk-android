@@ -20,10 +20,6 @@ class SettingsStore(context: Context) {
 
     private val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
-    init {
-        migrateLegacyKeyOverride()
-    }
-
     /** The environment this process was launched with. */
     val environment: RadarEnvironment = RadarEnvironment.fromName(prefs.getString(KEY_ENVIRONMENT, null))
 
@@ -37,53 +33,25 @@ class SettingsStore(context: Context) {
     val host: String
         get() = environment.host(localUrl)
 
-    /** Which environments [resolvedPublishableKey] is valid on. */
-    var keyCheck by mutableStateOf<KeyCheck>(KeyCheck.NotChecked)
-        private set
-
     /** The saved key for [env], falling back to its default in `MainActivity` (placeholders count as unset). */
     fun publishableKey(env: RadarEnvironment): String =
         prefs.getString(keyPrefsKey(env), null) ?: defaultPublishableKey(env)
-
-    /** The saved Local URL, which may differ from [localUrl] if it was changed since launch. */
-    fun savedLocalUrl(): String = prefs.getString(KEY_LOCAL_URL, "") ?: ""
 
     /** Persists the environment settings. Takes effect on the next launch. */
     fun saveEnvironment(env: RadarEnvironment, publishableKey: String, localUrl: String) {
         prefs.edit(commit = true) {
             putString(KEY_ENVIRONMENT, env.name)
             putString(keyPrefsKey(env), publishableKey.trim())
-            putString(KEY_LOCAL_URL, localUrl.trim().trimEnd('/'))
+            putString(KEY_LOCAL_URL, localUrl.trim())
         }
     }
 
-    /**
-     * Checks which environments [resolvedPublishableKey] is valid on, and logs an error if it isn't
-     * valid on the selected one.
-     */
-    fun runKeyCheck(logStore: LogStore) {
+    /** Where requests go, e.g. `env = Staging; host = https://…; key = prj_test_pk_ab12…`. */
+    fun environmentSummary(): String {
         val key = resolvedPublishableKey
-        if (key.isBlank()) {
-            logStore.writeError("No publishable key set for ${environment.label}", "Set one in Settings → Environment.")
-            return
-        }
-        keyCheck = KeyCheck.Checking
-        KeyChecker.check(key) { result ->
-            keyCheck = result
-            if (result.mismatches(environment)) {
-                logStore.writeError(
-                    "Key ${keyPrefix(key)} is not valid on ${environment.label}",
-                    "Key check: ${result.summary()}. Switch environment or change the key in Settings → Environment.",
-                )
-            } else {
-                logStore.writeResult("key check: ${result.summary()}", environmentSummary())
-            }
-        }
+        val shortKey = if (key.isBlank()) "(none)" else if (key.length <= 16) key else key.take(16) + "…"
+        return "env = ${environment.label}; host = $host; key = $shortKey"
     }
-
-    /** One line describing where requests go, for error context. */
-    fun environmentSummary(): String =
-        "env = ${environment.label}; host = $host; key = ${keyPrefix(resolvedPublishableKey)}; key check = ${keyCheck.summary()}"
 
     // Identity
     var userId by mutableStateOf("")
@@ -147,20 +115,8 @@ class SettingsStore(context: Context) {
         refresh()
     }
 
-    /** Moves the single pre-environment key override into the Production slot. */
-    private fun migrateLegacyKeyOverride() {
-        val legacy = prefs.getString(KEY_LEGACY_PK, null) ?: return
-        prefs.edit {
-            if (legacy.isNotBlank() && !prefs.contains(keyPrefsKey(RadarEnvironment.PRODUCTION))) {
-                putString(keyPrefsKey(RadarEnvironment.PRODUCTION), legacy)
-            }
-            remove(KEY_LEGACY_PK)
-        }
-    }
-
     companion object {
         private const val PREFS = "radar_example_settings"
-        private const val KEY_LEGACY_PK = "publishableKeyOverride"
         private const val KEY_ENVIRONMENT = "environment"
         private const val KEY_LOCAL_URL = "localUrl"
 
@@ -174,13 +130,6 @@ class SettingsStore(context: Context) {
             }
             // hooks/clean-filter replaces real keys with "prj_live_pk_..." in git.
             return if (key.endsWith("...")) "" else key
-        }
-
-        /** A key shortened for display, e.g. `prj_live_pk_0c38…`. */
-        fun keyPrefix(key: String): String = when {
-            key.isBlank() -> "(none)"
-            key.length <= 16 -> key
-            else -> key.take(16) + "…"
         }
     }
 }

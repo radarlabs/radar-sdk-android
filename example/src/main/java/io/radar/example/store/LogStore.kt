@@ -32,12 +32,6 @@ class LogStore : RadarReceiver() {
     var onEvents: ((events: Array<RadarEvent>, user: RadarUser?) -> Unit)? = null
     var onLocation: ((location: Location) -> Unit)? = null
 
-    /**
-     * Describes the current environment (env, host, key, key check). Attached to errors that are
-     * usually caused by a wrong host or key, so the console says where the request went.
-     */
-    var errorContext: (() -> String)? = null
-
     private val mainHandler = Handler(Looper.getMainLooper())
 
     // MARK: - Public write API (used by ActionButton + the verified/IAM receivers)
@@ -54,18 +48,7 @@ class LogStore : RadarReceiver() {
 
     /** Write a RESULT on success, an ERROR otherwise — for SDK completion handlers. */
     fun writeStatus(status: Radar.RadarStatus, summary: String, detail: String? = null) {
-        if (status == Radar.RadarStatus.SUCCESS) {
-            writeResult(summary, detail)
-        } else {
-            writeError(summary, withErrorContext(status, detail))
-        }
-    }
-
-    /** Appends [errorContext] for statuses that usually mean the wrong host or key. */
-    private fun withErrorContext(status: Radar.RadarStatus, detail: String?): String? {
-        if (status !in environmentErrors) return detail
-        val context = errorContext?.invoke() ?: return detail
-        return listOfNotNull(detail, context).joinToString("\n")
+        if (status == Radar.RadarStatus.SUCCESS) writeResult(summary, detail) else writeError(summary, detail)
     }
 
     fun clear() {
@@ -113,13 +96,7 @@ class LogStore : RadarReceiver() {
     }
 
     override fun onError(context: Context, status: Radar.RadarStatus) {
-        append(
-            ConsoleEntry(
-                kind = ConsoleKind.ERROR,
-                summary = "onError: ${Utils.stringForRadarStatus(status)}",
-                detail = withErrorContext(status, null),
-            ),
-        )
+        append(ConsoleEntry(kind = ConsoleKind.ERROR, summary = "onError: ${Utils.stringForRadarStatus(status)}"))
     }
 
     override fun onLog(context: Context, message: String) {
@@ -141,14 +118,6 @@ class LogStore : RadarReceiver() {
         } catch (e: Exception) {
             null
         }
-
-    private companion object {
-        val environmentErrors = setOf(
-            Radar.RadarStatus.ERROR_NETWORK,
-            Radar.RadarStatus.ERROR_UNAUTHORIZED,
-            Radar.RadarStatus.ERROR_PUBLISHABLE_KEY,
-        )
-    }
 
     private fun summarize(location: Location): String {
         val lat = String.format("%.5f", location.latitude)

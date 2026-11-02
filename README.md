@@ -31,11 +31,7 @@ git config filter.radar-keys.smudge hooks/smudge-filter
 
 ### Switching environments (production, staging, local server)
 
-In the example app, open the Tests tab, tap the settings gear, and pick an environment under **Environment**: Production, Staging, or Local. Each environment keeps its own publishable key. **Apply & restart** saves the choice and relaunches the app.
-
-- If no key is set, or the key isn't valid on the selected environment, a red strip across the top of the app says so. On launch the app checks the key against both production and staging to find out. Settings → Environment always shows the active environment, host, key, and key-check result.
-- Errors that usually mean a wrong host or key (network, unauthorized, publishable key) include the environment, host, key, and key-check result in the Debug console.
-- **Local** points both the regular and verified host at your machine's `http://` URL, e.g. `http://192.168.X.X:8081` (use your LAN IP, not `localhost`; use `10.0.2.2` on the emulator). The example permits cleartext (HTTP) traffic for this, so no extra config is needed. The production verified hosts keep strict certificate pinning.
+In the example app, open the Tests tab, tap the settings gear, and pick Production, Staging, or Local under **Environment**. Each environment keeps its own publishable key. **Apply & restart** saves the choice and relaunches the app. **Local** points both the regular and verified host at your machine's `http://` URL, e.g. `http://192.168.X.X:8081` (use your LAN IP, not `localhost`; use `10.0.2.2` on the emulator).
 
 > **Note:** the example enables cleartext (HTTP) traffic (`cleartextTrafficPermitted="true"` in `network_security_config.xml`) purely to support local testing. This is a convenience for the sample app only — do not enable cleartext in a real app, as it weakens your app's network security. Production apps should use HTTPS and leave cleartext disabled (the Android default).
 
