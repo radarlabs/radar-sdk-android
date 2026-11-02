@@ -20,6 +20,7 @@ internal fun RadarTraceSpan.replayed() = apply {
     setAttribute("radar.track.replayed", true)
 }
 
+/** Whether stop detection considers the device stopped, as sent in the track request. */
 internal fun RadarTraceSpan.stopped(stopped: Boolean) = apply {
     setAttribute("radar.track.stopped", stopped)
 }
