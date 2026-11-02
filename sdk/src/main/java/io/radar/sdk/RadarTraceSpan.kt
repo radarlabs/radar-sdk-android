@@ -27,8 +27,8 @@ import java.util.Random
  * `radar.location.*` in RadarLocationTracing.kt. Each file holds its attributes as extensions on this class, and
  * its callback wrappers. A wrapper ends its span with the result's status before calling back, so every path that
  * calls back ends the span. A child span wrapper is an extension on the callback, so a traced call adds only
- * `.traced(...)` after the callback's closing brace. Attribute names and values match the iOS SDK, so one query
- * works on both.
+ * `.traced(...)` after the callback's closing brace. Attribute names and values should match the iOS SDK where
+ * both platforms record the same thing, so one query works on both.
  *
  * Read attribute values that cost more than a field access (system services, permissions, preferences) inside
  * [recording], so calls whose session isn't sampled skip them, and an exception from a read can't break the work

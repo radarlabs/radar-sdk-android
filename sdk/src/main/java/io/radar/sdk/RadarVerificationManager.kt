@@ -244,6 +244,7 @@ internal class RadarVerificationManager(
                                         }
                                     }
                                 } else {
+                                    // Beacons were requested, but ranging needs Android 8.0 (API 26) or later.
                                     if (beacons) {
                                         trace.beaconSource("skipped")
                                     }

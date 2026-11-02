@@ -350,8 +350,10 @@ internal class RadarTraceManager(
     }
 
     /**
-     * Wraps spans in an OTLP ExportTraceServiceRequest. Device attributes are read at upload time, so spans recorded
-     * before an OS update are labeled with the new `os.version`.
+     * Wraps spans in an OTLP ExportTraceServiceRequest.
+     *
+     * Note: device attributes are read at upload time, so spans recorded before an OS update are labeled with the
+     * new `os.version`.
      */
     private fun otlpPayload(spans: List<JSONObject>, sdkVersion: String): JSONObject {
         val resource = JSONObject().put(
