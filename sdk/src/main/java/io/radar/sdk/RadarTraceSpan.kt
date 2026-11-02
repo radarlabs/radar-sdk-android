@@ -106,8 +106,8 @@ internal class RadarTraceSpan private constructor(
     fun traceparent(): String? = if (manager?.samplingState(sessionId) == RadarTraceManager.SamplingState.SAMPLED) "00-$traceId-$spanId-01" else null
 
     /**
-     * Ends this span without recording it, for work that turned out not to be worth a trace. Any child spans
-     * already ended are recorded regardless, so don't create children of a span that may be discarded.
+     * Ends this span without recording it, for work that turned out not to be worth a trace. Child spans already
+     * ended are still recorded, so only discard a span that has no children.
      */
     fun discard() {
         synchronized(lock) {
