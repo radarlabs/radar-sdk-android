@@ -24,9 +24,12 @@ internal fun RadarTraceSpan.stopped(stopped: Boolean) = apply {
     setAttribute("radar.track.stopped", stopped)
 }
 
-/** Set on the root span when its track is added to a batch, so no request is sent yet. */
-internal fun RadarTraceSpan.batched() = apply {
-    setAttribute("radar.track.batched", true)
+/**
+ * What happened to the root span's track: `sent` (a track or replay request was made, whatever its result),
+ * `batched` (added to a batch, so no request was sent yet), or `skipped` (see [skipped]).
+ */
+internal fun RadarTraceSpan.outcome(outcome: String) = apply {
+    setAttribute("radar.track.outcome", outcome)
 }
 
 /**
@@ -34,6 +37,7 @@ internal fun RadarTraceSpan.batched() = apply {
  * `no_beacons`, `beacon_state_unchanged`, or `no_synced_beacons`.
  */
 internal fun RadarTraceSpan.skipped(reason: String) = apply {
+    outcome("skipped")
     setAttribute("radar.track.skip_reason", reason)
 }
 

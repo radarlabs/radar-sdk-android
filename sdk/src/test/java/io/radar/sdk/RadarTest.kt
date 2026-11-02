@@ -1664,6 +1664,7 @@ class RadarTest {
         assertFalse(root.has("parentSpanId"))
         assertEquals("medium", traceAttribute(root, "radar.location.desired_accuracy")?.get("stringValue"))
         assertEquals(false, traceAttribute(root, "radar.beacons")?.get("boolValue"))
+        assertEquals("sent", traceAttribute(root, "radar.track.outcome")?.get("stringValue"))
         assertNotNull(traceAttribute(root, "radar.app.foreground")?.get("boolValue"))
         assertNotNull(traceAttribute(root, "radar.location.accuracy_authorization")?.get("stringValue"))
         assertNull(traceAttribute(root, "radar.beacon.source"))
@@ -1752,6 +1753,7 @@ class RadarTest {
             val spans = uploadedTrace("radar.track_once_with_location")
             assertEquals(setOf("radar.track_once_with_location", "POST /v1/track/replay"), spans.keys)
             assertEquals(true, traceAttribute(spans.getValue("radar.track_once_with_location"), "radar.track.replayed")?.get("boolValue"))
+            assertEquals("sent", traceAttribute(spans.getValue("radar.track_once_with_location"), "radar.track.outcome")?.get("stringValue"))
             assertEquals("2", traceAttribute(spans.getValue("POST /v1/track/replay"), "radar.replay.count")?.get("intValue"))
         } finally {
             RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
@@ -1782,7 +1784,7 @@ class RadarTest {
         assertEquals(65.0, traceAttribute(root, "radar.location.accuracy_m")!!.getDouble("doubleValue"), 0.0)
         assertNotNull(traceAttribute(root, "radar.location.age_ms")?.get("intValue"))
         assertNotNull(traceAttribute(root, "radar.app.foreground")?.get("boolValue"))
-        assertNull(traceAttribute(root, "radar.track.batched"))
+        assertEquals("sent", traceAttribute(root, "radar.track.outcome")?.get("stringValue"))
         assertNull(traceAttribute(root, "radar.track.skip_reason"))
 
         val trackSpan = spans.getValue("POST /v1/track")
@@ -1812,10 +1814,58 @@ class RadarTest {
 
             val spans = uploadedTrace("radar.tracking_update")
             assertEquals(setOf("radar.tracking_update"), spans.keys)
-            assertEquals(true, traceAttribute(spans.getValue("radar.tracking_update"), "radar.track.batched")?.get("boolValue"))
+            assertEquals("batched", traceAttribute(spans.getValue("radar.tracking_update"), "radar.track.outcome")?.get("stringValue"))
         } finally {
             RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
             Radar.flushBatch()
+        }
+    }
+
+    @Test
+    fun test_Radar_handleLocation_noSyncedBeacons_tracesSkippedUpdate() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        val location = mockTrackOnceLocation()
+        permissionsHelperMock.mockBluetoothPermissionsGranted = true
+        RadarSettings.removeRemoteTrackingOptions(context)
+        RadarSettings.setTrackingOptions(
+            context,
+            RadarTrackingOptions.fromJson(RadarTrackingOptions.EFFICIENT.toJson()).apply {
+                sync = RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
+                beacons = true
+            }
+        )
+        val originalConfiguration = RadarSettings.getSdkConfiguration(context)
+        RadarSettings.setSdkConfiguration(context, RadarSdkConfiguration.fromJson(JSONObject().put("useSyncRegion", true)))
+        // Radar.syncManager keeps the context of the test class that initialized Radar first, so use one with this test's.
+        val originalSyncManager = Radar.syncManager
+        Radar.syncManager = RadarSyncManager(context, Radar.apiClient, Radar.logger)
+        // A synced region around the location, with no beacons in it.
+        Radar.syncManager.syncStore.write(
+            RadarSyncState(syncedRegionCenter = RadarCoordinate(location.latitude, location.longitude), syncedRegionRadius = 1000.0)
+        )
+        resetTrackingUpdateState()
+
+        try {
+            withTestLocationManager {
+                Radar.handleLocation(context, location, Radar.RadarLocationSource.BACKGROUND_LOCATION)
+                ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+            }
+
+            val spans = uploadedTrace("radar.tracking_update")
+            assertEquals(setOf("radar.tracking_update"), spans.keys)
+            val root = spans.getValue("radar.tracking_update")
+            assertEquals("skipped", traceAttribute(root, "radar.track.outcome")?.get("stringValue"))
+            assertEquals("no_synced_beacons", traceAttribute(root, "radar.track.skip_reason")?.get("stringValue"))
+            assertEquals("sync_region", traceAttribute(root, "radar.beacon.source")?.get("stringValue"))
+            assertEquals(true, traceAttribute(root, "radar.beacons")?.get("boolValue"))
+            assertFalse(root.has("status"))
+            assertNull(apiHelperMock.capturedHeadersByPath["v1/track"])
+        } finally {
+            Radar.syncManager.syncStore.clear()
+            Radar.syncManager = originalSyncManager
+            RadarSettings.setSdkConfiguration(context, originalConfiguration)
+            RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
+            permissionsHelperMock.mockBluetoothPermissionsGranted = null
         }
     }
 
@@ -4136,6 +4186,7 @@ class RadarTest {
         val root = spans.getValue("radar.track_verified")
         assertEquals(false, traceAttribute(root, "radar.verified.failover")?.get("boolValue"))
         assertEquals(false, traceAttribute(root, "radar.beacons")?.get("boolValue"))
+        assertEquals("sent", traceAttribute(root, "radar.track.outcome")?.get("stringValue"))
         spans.values.filter { it.has("parentSpanId") }.forEach { assertEquals(root.getString("spanId"), it.getString("parentSpanId")) }
         assertEquals(
             "00-${root.getString("traceId")}-${spans.getValue("POST /v1/track").getString("spanId")}-01",
