@@ -3384,8 +3384,6 @@ class RadarTest {
 
     @Test
     fun test_RadarAutocompleteSession_fromToken_rejectsNonUuid() {
-        // the server packs the token into the result handle as raw bytes, so a non-UUID would 400
-        // the whole autocomplete request
         for (token in listOf("not-a-uuid", "1-1-1-1-1", "", "4b1a1a1e0b0b4b0b8b0b0b0b0b0b0b0b")) {
             assertThrows(IllegalArgumentException::class.java) {
                 RadarAutocompleteSession(token)

@@ -41,8 +41,6 @@ class RadarAutocompleteSession {
      * @throws IllegalArgumentException if [sessionToken] is not a UUID.
      */
     constructor(sessionToken: String) {
-        // The server packs the token into the result handle as 16 raw bytes, so anything that is
-        // not a UUID cannot be encoded and the API rejects the autocomplete request outright.
         require(UUID_PATTERN.matches(sessionToken)) { "sessionToken must be a UUID" }
 
         this.sessionToken = sessionToken
