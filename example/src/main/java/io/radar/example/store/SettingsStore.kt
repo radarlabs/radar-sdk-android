@@ -150,8 +150,7 @@ class SettingsStore(context: Context) {
         private fun defaultPublishableKey(env: RadarEnvironment): String {
             val key = when (env) {
                 RadarEnvironment.PRODUCTION -> MainActivity.DEFAULT_PUBLISHABLE_KEY
-                RadarEnvironment.STAGING -> MainActivity.DEFAULT_STAGING_PUBLISHABLE_KEY
-                RadarEnvironment.LOCAL -> ""
+                RadarEnvironment.STAGING, RadarEnvironment.LOCAL -> MainActivity.DEFAULT_STAGING_PUBLISHABLE_KEY
             }
             // hooks/clean-filter replaces real keys with "prj_live_pk_..." in git.
             return if (key.endsWith("...")) "" else key

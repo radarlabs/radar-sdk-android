@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity() {
         /** Default key for the Production environment. */
         const val DEFAULT_PUBLISHABLE_KEY = "prj_live_pk_..."
 
-        /** Default key for the Staging environment. */
+        /** Default key for the Staging and Local environments. */
         const val DEFAULT_STAGING_PUBLISHABLE_KEY = "prj_live_pk_..."
 
         /** Relaunches the app, e.g. after changing the environment. */
