@@ -7,6 +7,7 @@ import io.radar.example.components.ActionButton
 import io.radar.example.components.TogglePanel
 import io.radar.example.store.LocalLogStore
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarAutocompleteSession
 import java.util.EnumSet
 
 @Composable
@@ -72,9 +73,27 @@ fun SearchPanel() {
                 )
             }
         }
-        ActionButton("autocomplete") {
-            Radar.autocomplete("brooklyn", origin, arrayOf("locality"), 10, "US") { status, addresses ->
-                log.writeStatus(status, "autocomplete: ${Utils.stringForRadarStatus(status)}", "results = ${addresses?.size ?: 0}\nfirst = ${addresses?.firstOrNull()?.formattedAddress}")
+        ActionButton("autocomplete (session)") {
+            // one session per address field: autocomplete within it, then report the pick.
+            // the address layer is what enrichment can resolve, so select returns details.
+            val session = RadarAutocompleteSession()
+            session.autocomplete("123 Main", origin, arrayOf("address"), 5, "US") { status, addresses ->
+                val selected = addresses?.firstOrNull()
+                log.writeStatus(
+                    status,
+                    "autocomplete: ${Utils.stringForRadarStatus(status)}",
+                    "results = ${addresses?.size ?: 0}\nfirst = ${selected?.formattedAddress}\nresultId = ${selected?.resultId}",
+                )
+                if (selected == null) {
+                    return@autocomplete
+                }
+                session.select(selected) { selectStatus, enriched ->
+                    log.writeStatus(
+                        selectStatus,
+                        "select: ${Utils.stringForRadarStatus(selectStatus)}",
+                        "address = ${enriched?.formattedAddress}\nusage = ${enriched?.locationDetails?.usage}\ndwelling = ${enriched?.locationDetails?.dwelling}",
+                    )
+                }
             }
             // validateAddress needs a postal code plus a street and number or an address
             // label, so the validating searches ask for street addresses, not localities.
