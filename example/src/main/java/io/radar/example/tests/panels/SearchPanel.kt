@@ -73,7 +73,7 @@ fun SearchPanel() {
                 )
             }
         }
-        ActionButton("autocomplete (session)") {
+        ActionButton("autocomplete") {
             // one session per input: autocomplete within it, then report the pick
             val session = RadarAutocompleteSession()
             session.autocomplete(query = "123 Main", near = origin, limit = 5, country = "US") { status, addresses ->
