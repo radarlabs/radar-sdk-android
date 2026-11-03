@@ -162,11 +162,11 @@ class RadarAutocompleteSession {
      * Completes with [RadarStatus.ERROR_BAD_REQUEST] if the address did not come from
      * [autocomplete].
      *
-     * @param[address] The selected address, as returned by [autocomplete].
+     * @param[address] The selected result, as returned by [autocomplete].
      * @param[callback] A callback.
      */
     fun select(
-        address: RadarAddress?,
+        address: RadarAddress,
         callback: RadarAutocompleteSelectCallback
     ) {
         Radar.selectAutocompleteAddress(address, callback)
@@ -178,11 +178,11 @@ class RadarAutocompleteSession {
      * Completes with [RadarStatus.ERROR_BAD_REQUEST] if the address did not come from
      * [autocomplete].
      *
-     * @param[address] The selected address, as returned by [autocomplete].
+     * @param[address] The selected result, as returned by [autocomplete].
      * @param[block] A block callback.
      */
     fun select(
-        address: RadarAddress?,
+        address: RadarAddress,
         block: (status: RadarStatus, address: RadarAutocompleteEnrichedAddress?) -> Unit
     ) {
         select(

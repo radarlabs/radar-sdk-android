@@ -4,26 +4,26 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Represents what is known about the location at an address.
+ * Represents what address enrichment knows about a location.
  */
 class RadarAddressLocationDetails(
     /**
-     * How the location is used.
+     * How the location is used, or `unknown`.
      */
     val usage: String,
 
     /**
-     * The type of dwelling at the location.
+     * The dwelling type, `n/a` for usages that have none, or `unknown`.
      */
     val dwelling: String,
 
     /**
-     * The grounds at the location.
+     * The grounds of the location.
      */
     val grounds: Array<String>,
 
     /**
-     * The places at the location.
+     * The places on the grounds of the location.
      */
     val places: Array<RadarAddressPlace>
 ) {

@@ -3,16 +3,21 @@ package io.radar.sdk.model
 import org.json.JSONObject
 
 /**
- * Represents an address returned by [io.radar.sdk.RadarAutocompleteSession.select].
+ * Represents the enriched form of a selected address.
+ *
+ * Carries only these two fields. It is not a [RadarAddress], and none of that type's other
+ * fields are returned.
+ *
+ * @see [](https://radar.com/documentation/api#autocomplete)
  */
 class RadarAutocompleteEnrichedAddress(
     /**
-     * The formatted representation of the address.
+     * The formatted string representation of the address.
      */
     val formattedAddress: String?,
 
     /**
-     * What is known about the location at the address.
+     * What address enrichment knows about the location.
      */
     val locationDetails: RadarAddressLocationDetails
 ) {

@@ -4,7 +4,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * Represents a place at an address.
+ * Represents a place on the grounds of an enriched address.
  */
 class RadarAddressPlace(
     /**

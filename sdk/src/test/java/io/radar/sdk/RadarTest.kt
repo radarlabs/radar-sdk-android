@@ -373,7 +373,7 @@ class RadarTest {
     /**
      * Reports a selection through a session and returns the status it completed with.
      */
-    private fun select(session: RadarAutocompleteSession, address: RadarAddress?): Pair<Radar.RadarStatus?, RadarAutocompleteEnrichedAddress?> {
+    private fun select(session: RadarAutocompleteSession, address: RadarAddress): Pair<Radar.RadarStatus?, RadarAutocompleteEnrichedAddress?> {
         val latch = CountDownLatch(1)
         var status: Radar.RadarStatus? = null
         var selected: RadarAutocompleteEnrichedAddress? = null
@@ -3479,7 +3479,7 @@ class RadarTest {
         apiHelperMock.mockResponse = null
         apiHelperMock.clearCapturedParams()
 
-        val (status, selected) = select(session, address)
+        val (status, selected) = select(session, address!!)
 
         assertEquals(Radar.RadarStatus.SUCCESS, status)
         assertNull(selected)
@@ -3503,7 +3503,7 @@ class RadarTest {
 
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete_select.json")
 
-        val (status, selected) = select(session, address)
+        val (status, selected) = select(session, address!!)
 
         assertEquals(Radar.RadarStatus.SUCCESS, status)
         assertNotNull(selected)
@@ -3543,7 +3543,7 @@ class RadarTest {
             """
         )
 
-        val (status, selected) = select(session, address)
+        val (status, selected) = select(session, address!!)
 
         assertEquals(Radar.RadarStatus.SUCCESS, status)
 
@@ -3572,7 +3572,7 @@ class RadarTest {
 
         apiHelperMock.clearCapturedParams()
 
-        val (status, selected) = select(session, address)
+        val (status, selected) = select(session, address!!)
 
         assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
         assertNull(selected)
@@ -3591,7 +3591,7 @@ class RadarTest {
         apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_BAD_REQUEST
         apiHelperMock.mockResponse = null
 
-        val (status, selected) = select(session, address)
+        val (status, selected) = select(session, address!!)
 
         assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, status)
         assertNull(selected)
