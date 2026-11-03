@@ -74,10 +74,9 @@ fun SearchPanel() {
             }
         }
         ActionButton("autocomplete (session)") {
-            // one session per address field: autocomplete within it, then report the pick.
-            // the address layer is what enrichment can resolve, so select returns details.
+            // one session per input: autocomplete within it, then report the pick
             val session = RadarAutocompleteSession()
-            session.autocomplete("123 Main", origin, arrayOf("address"), 5, "US") { status, addresses ->
+            session.autocomplete(query = "123 Main", near = origin, limit = 5, country = "US") { status, addresses ->
                 val selected = addresses?.firstOrNull()
                 log.writeStatus(
                     status,
@@ -88,11 +87,12 @@ fun SearchPanel() {
                     return@autocomplete
                 }
                 session.select(selected) { selectStatus, enriched ->
-                    log.writeStatus(
-                        selectStatus,
-                        "select: ${Utils.stringForRadarStatus(selectStatus)}",
-                        "address = ${enriched?.formattedAddress}\nusage = ${enriched?.locationDetails?.usage}\ndwelling = ${enriched?.locationDetails?.dwelling}",
-                    )
+                    // only an address result has anything to enrich; everything else is
+                    // recorded and comes back without one
+                    val detail = enriched?.let {
+                        "address = ${it.formattedAddress}\nusage = ${it.locationDetails.usage}\ndwelling = ${it.locationDetails.dwelling}"
+                    } ?: "recorded, no enrichment for this result"
+                    log.writeStatus(selectStatus, "select: ${Utils.stringForRadarStatus(selectStatus)}", detail)
                 }
             }
             // validateAddress needs a postal code plus a street and number or an address
