@@ -60,10 +60,45 @@ class RadarApiClientValidateAddressTest {
         val verificationStatus: Radar.RadarAddressVerificationStatus?
     )
 
-    private fun send(address: RadarAddress): Result? {
+    private fun streetRequest(
+        street: String = "Broadway",
+        number: String = "841",
+        unit: String? = null,
+        city: String = "New York",
+        stateCode: String = "NY",
+        postalCode: String = "10003",
+        countryCode: String = "US"
+    ) = RadarValidateAddressRequest(
+        RadarValidateAddressRequest.Line.StreetAndNumber(street, number),
+        unit,
+        city,
+        stateCode,
+        postalCode,
+        countryCode
+    )
+
+    private fun labelRequest(
+        addressLabel: String = "841 Broadway",
+        unit: String? = null,
+        city: String = "New York",
+        stateCode: String = "NY",
+        postalCode: String = "10003",
+        countryCode: String = "US"
+    ) = RadarValidateAddressRequest(
+        RadarValidateAddressRequest.Line.Label(addressLabel),
+        unit,
+        city,
+        stateCode,
+        postalCode,
+        countryCode
+    )
+
+    private fun send(address: RadarAddress): Result? = send(RadarValidateAddressRequest.from(address))
+
+    private fun send(request: RadarValidateAddressRequest): Result? {
         var result: Result? = null
         apiClient.validateAddress(
-            address,
+            request,
             object : RadarApiClient.RadarValidateAddressAPICallback {
                 override fun onComplete(
                     status: Radar.RadarStatus,
@@ -81,8 +116,10 @@ class RadarApiClientValidateAddressTest {
     /**
      * Sends the address and returns the decoded query parameters of the captured request path.
      */
-    private fun validate(address: RadarAddress): Map<String, String> {
-        send(address)
+    private fun validate(address: RadarAddress): Map<String, String> = validate(RadarValidateAddressRequest.from(address))
+
+    private fun validate(request: RadarValidateAddressRequest): Map<String, String> {
+        send(request)
         val (path, query) = apiHelperMock.lastCapturedPath!!.split("?", limit = 2)
         assertEquals("v1/addresses/validate", path)
         return query.split("&").associate { pair ->
@@ -201,5 +238,95 @@ class RadarApiClientValidateAddressTest {
 
         assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, result?.status)
         assertNull(apiHelperMock.lastCapturedPath)
+    }
+
+    @Test
+    fun `street form sends only street and number fields`() {
+        val params = validate(streetRequest(unit = "4"))
+
+        assertEquals(
+            mapOf(
+                "countryCode" to "US",
+                "stateCode" to "NY",
+                "city" to "New York",
+                "postalCode" to "10003",
+                "street" to "Broadway",
+                "number" to "841",
+                "unit" to "4"
+            ),
+            params
+        )
+    }
+
+    @Test
+    fun `label form sends only label fields`() {
+        val params = validate(labelRequest(unit = "4"))
+
+        assertEquals(
+            mapOf(
+                "countryCode" to "US",
+                "stateCode" to "NY",
+                "city" to "New York",
+                "postalCode" to "10003",
+                "addressLabel" to "841 Broadway",
+                "unit" to "4"
+            ),
+            params
+        )
+    }
+
+    @Test
+    fun `empty unit is not sent`() {
+        val params = validate(labelRequest(unit = ""))
+
+        assertFalse(params.containsKey("unit"))
+    }
+
+    @Test
+    fun `empty required field returns bad request without sending a request`() {
+        val requests = listOf(
+            streetRequest(street = ""),
+            streetRequest(number = ""),
+            streetRequest(city = ""),
+            streetRequest(stateCode = ""),
+            streetRequest(postalCode = ""),
+            streetRequest(countryCode = ""),
+            labelRequest(addressLabel = ""),
+            labelRequest(city = ""),
+            labelRequest(stateCode = ""),
+            labelRequest(postalCode = ""),
+            labelRequest(countryCode = "")
+        )
+
+        for (request in requests) {
+            apiHelperMock.clearCapturedParams()
+
+            val result = send(request)
+
+            assertEquals(request.toString(), Radar.RadarStatus.ERROR_BAD_REQUEST, result?.status)
+            assertNull(request.toString(), apiHelperMock.lastCapturedPath)
+        }
+    }
+
+    @Test
+    fun `bad request response returns bad request`() {
+        apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_BAD_REQUEST
+        apiHelperMock.mockResponse = null
+
+        val result = send(streetRequest())!!
+
+        assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, result.status)
+        assertNull(result.address)
+    }
+
+    @Test
+    fun `server error response returns server error`() {
+        apiHelperMock.mockStatus = Radar.RadarStatus.ERROR_SERVER
+        apiHelperMock.mockResponse = null
+
+        val result = send(labelRequest())!!
+
+        assertEquals(Radar.RadarStatus.ERROR_SERVER, result.status)
+        assertNull(result.address)
     }
 }

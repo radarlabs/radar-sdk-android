@@ -12,6 +12,7 @@ import android.content.pm.ServiceInfo
 import android.location.Location
 import android.net.ConnectivityManager
 import android.os.Build
+import android.os.Looper
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -3032,6 +3033,126 @@ class RadarTest {
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
         assertAddressesOk(callbackAddresses)
+    }
+
+    private fun mockValidateAddressResponse() {
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = JSONObject()
+            .put("address", JSONObject().put("number", "841").put("street", "Broadway").put("postalCode", "10003"))
+            .put("result", JSONObject().put("verificationStatus", "verified"))
+    }
+
+    private fun assertValidateAddressPostsToMainThread(validate: (Radar.RadarValidateAddressCallback) -> Unit) {
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackAddress: RadarAddress? = null
+        var callbackVerificationStatus: Radar.RadarAddressVerificationStatus? = null
+
+        validate(
+            object : Radar.RadarValidateAddressCallback {
+                override fun onComplete(
+                    status: Radar.RadarStatus,
+                    address: RadarAddress?,
+                    verificationStatus: Radar.RadarAddressVerificationStatus?
+                ) {
+                    assertEquals(Looper.getMainLooper(), Looper.myLooper())
+                    callbackStatus = status
+                    callbackAddress = address
+                    callbackVerificationStatus = verificationStatus
+                }
+            }
+        )
+
+        // The result is posted to the main thread, so it isn't delivered until the looper runs
+        assertNull(callbackStatus)
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertEquals("841", callbackAddress?.number)
+        assertEquals(Radar.RadarAddressVerificationStatus.VERIFIED, callbackVerificationStatus)
+    }
+
+    @Test
+    fun test_Radar_validateAddress_street_success() {
+        mockValidateAddressResponse()
+
+        assertValidateAddressPostsToMainThread { callback ->
+            Radar.validateAddress(
+                street = "Broadway",
+                number = "841",
+                city = "New York",
+                stateCode = "NY",
+                postalCode = "10003",
+                countryCode = "US",
+                callback = callback
+            )
+        }
+
+        val path = apiHelperMock.lastCapturedPath!!
+        assertTrue(path, path.contains("street=Broadway"))
+        assertFalse(path, path.contains("addressLabel"))
+    }
+
+    @Test
+    fun test_Radar_validateAddress_addressLabel_success() {
+        mockValidateAddressResponse()
+
+        assertValidateAddressPostsToMainThread { callback ->
+            Radar.validateAddress(
+                addressLabel = "841 Broadway",
+                unit = "4",
+                city = "New York",
+                stateCode = "NY",
+                postalCode = "10003",
+                countryCode = "US",
+                callback = callback
+            )
+        }
+
+        val path = apiHelperMock.lastCapturedPath!!
+        assertTrue(path, path.contains("addressLabel=841%20Broadway"))
+        assertTrue(path, path.contains("unit=4"))
+        assertFalse(path, path.contains("street="))
+    }
+
+    @Test
+    @Suppress("DEPRECATION")
+    fun test_Radar_validateAddress_address_sendsStreetAndNumber() {
+        mockValidateAddressResponse()
+        val address = RadarAddress(
+            coordinate = RadarCoordinate(.0, .0),
+            city = "New York",
+            stateCode = "NY",
+            postalCode = "10003",
+            countryCode = "US",
+            street = "Broadway",
+            number = "841",
+            addressLabel = "841 Broadway"
+        )
+
+        assertValidateAddressPostsToMainThread { callback -> Radar.validateAddress(address, callback) }
+
+        val path = apiHelperMock.lastCapturedPath!!
+        assertTrue(path, path.contains("street=Broadway"))
+        assertFalse(path, path.contains("addressLabel"))
+    }
+
+    @Test
+    fun test_Radar_validateAddress_emptyField_badRequest() {
+        var callbackStatus: Radar.RadarStatus? = null
+
+        Radar.validateAddress(
+            addressLabel = "",
+            city = "New York",
+            stateCode = "NY",
+            postalCode = "10003",
+            countryCode = "US"
+        ) { status, _, _ ->
+            callbackStatus = status
+        }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+
+        assertEquals(Radar.RadarStatus.ERROR_BAD_REQUEST, callbackStatus)
+        assertNull(apiHelperMock.lastCapturedPath)
     }
 
     @Test
