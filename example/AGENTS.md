@@ -18,14 +18,16 @@ Utils.kt               # Radar status/event/source string formatters (reused by 
 store/                 # Observable stores (one per concern) + value types
   LogStore.kt          # The single RadarReceiver + unified console source-of-truth
   ConsoleEntry.kt      # One console row (+ Kind enum)
-  SettingsStore.kt     # SDK identity/tracking snapshot + persisted publishable-key override
+  SettingsStore.kt     # SDK identity/tracking snapshot + persisted environment and per-environment keys
+  RadarEnvironment.kt  # Production / Staging / Local hosts
+  KeyCheck.kt          # Probes /v1/config on each environment to see where a key is valid
   PermissionsStore.kt  # Runtime-permission status snapshot
   TripBuilderStore.kt  # Map-driven trip selection + active-trip mirror + visualization
   TestPreset.kt        # Bundled tracking presets
   TripDestination.kt / TripEventMarker.kt  # Cross-cutting value types
   AppStores.kt         # CompositionLocals + ProvideStores (app-wide store injection)
 
-components/            # Reusable primitives: ActionButton, TogglePanel, ControlRow, FieldEditor
+components/            # Reusable primitives: ActionButton, TogglePanel, ControlRow, FieldEditor, EnvironmentBadge
 console/               # Debug tab: ConsoleView, ConsoleEntryRow, ConsoleKindUi (icon/tint)
 map/                   # Map tab: MapScreen + trip-builder UI + MockLocationController
   overlays/            # Pluggable map sources: MapOverlaySource + MapOverlayRegistry + sources
@@ -65,6 +67,7 @@ theme/                 # Radar-branded Material3 theme
 
 ## Setup
 
-Set a real test publishable key at runtime via the Tests-tab settings gear ("Publishable key
-override", persisted; restart to apply), or replace `SettingsStore.DEFAULT_PUBLISHABLE_KEY`.
-The committed default is the `prj_test_pk_` placeholder (a pre-commit hook blocks real keys).
+Pick the environment and its publishable key in the Tests-tab settings gear (Environment →
+Apply & restart); don't hardcode hosts. Default keys live in `MainActivity`
+(`DEFAULT_PUBLISHABLE_KEY`, `DEFAULT_STAGING_PUBLISHABLE_KEY`); the `radar-keys` git filter strips
+real keys on commit.

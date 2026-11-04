@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-/** The settings sheet behind the Tests-tab gear: presets, identity, tracking, permissions. */
+/** The settings sheet behind the Tests-tab gear: environment, presets, identity, tracking, permissions. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsSheet(onDismiss: () -> Unit) {
@@ -42,6 +42,8 @@ fun SettingsSheet(onDismiss: () -> Unit) {
                     fontWeight = FontWeight.Bold,
                 )
             }
+            EnvironmentSection()
+            HorizontalDivider()
             PresetSection()
             HorizontalDivider()
             IdentitySection()

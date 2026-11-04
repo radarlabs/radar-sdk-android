@@ -1,11 +1,10 @@
 #!/bin/sh
-# Radar example clean filter - sanitizes TARGET_HOST and DEFAULT_PUBLISHABLE_KEY for git storage
-# Also saves the real values to .radar-env (as radar_host=... and publishable_key=...) so the smudge filter can restore them
+# Radar example clean filter - sanitizes DEFAULT_PUBLISHABLE_KEY and DEFAULT_STAGING_PUBLISHABLE_KEY for git storage
+# Also saves the real values to .radar-env (as publishable_key=... and staging_publishable_key=...) so the smudge filter can restore them
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 KEYS_FILE="$REPO_ROOT/.radar-env"
 
-HOST_PLACEHOLDER=''
 KEY_PLACEHOLDER='prj_live_pk_...'
 
 # Save stdin to a temp file to preserve exact byte content (command
@@ -36,11 +35,11 @@ save() {
     mv "$TMPFILE.keys" "$KEYS_FILE"
 }
 
-save radar_host "$(extract TARGET_HOST)" "$HOST_PLACEHOLDER"
 save publishable_key "$(extract DEFAULT_PUBLISHABLE_KEY)" "$KEY_PLACEHOLDER"
+save staging_publishable_key "$(extract DEFAULT_STAGING_PUBLISHABLE_KEY)" "$KEY_PLACEHOLDER"
 
 # Output sanitized content
 sed -E \
-    -e "s/(const val TARGET_HOST = \")[^\"]*\"/\1${HOST_PLACEHOLDER}\"/" \
     -e "s/(const val DEFAULT_PUBLISHABLE_KEY = \")[^\"]*\"/\1${KEY_PLACEHOLDER}\"/" \
+    -e "s/(const val DEFAULT_STAGING_PUBLISHABLE_KEY = \")[^\"]*\"/\1${KEY_PLACEHOLDER}\"/" \
     "$TMPFILE"

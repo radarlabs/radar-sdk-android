@@ -15,18 +15,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.radar.example.components.FieldEditor
-import io.radar.example.store.LocalLogStore
 import io.radar.example.store.LocalSettingsStore
 
-/** Identity + publishable-key editing. */
+/** Identity editing. The publishable key lives in [EnvironmentSection]. */
 @Composable
 fun IdentitySection() {
     val settings = LocalSettingsStore.current
-    val log = LocalLogStore.current
 
     var userId by remember(settings.userId) { mutableStateOf(settings.userId) }
     var description by remember(settings.description) { mutableStateOf(settings.description) }
-    var key by remember(settings.publishableKeyOverride) { mutableStateOf(settings.publishableKeyOverride) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Identity", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -43,17 +40,5 @@ fun IdentitySection() {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp),
         )
-
-        Text(
-            "Publishable key override",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(top = 12.dp),
-        )
-        FieldEditor("Publishable key", key, { key = it }, placeholder = "prj_test_pk_…")
-        TextButton(onClick = {
-            settings.savePublishableKeyOverride(key)
-            log.writeResult("publishable key override saved", "Restart the app to apply.")
-        }) { Text("Save key (restart to apply)") }
     }
 }
