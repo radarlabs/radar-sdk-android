@@ -26,10 +26,9 @@ import org.json.JSONObject
  * Disk and upload state is confined to a single disk worker thread, and the private functions that
  * touch it run there. [record] and [flush] hand their work to that thread and return immediately.
  *
- * Uploads run on [RadarRequestQueue.BACKGROUND] so they never delay track requests. There are no timers. Unless
- * forced, [flush] waits [FLUSH_INTERVAL] after the last flush that didn't end in a network error: flushes follow
- * successful requests, which show the network works, so an upload that failed while it was down shouldn't hold back
- * the next one. Failed batches stay on disk for the next flush.
+ * Uploads run on [RadarRequestQueue.BACKGROUND] so they never delay track requests. There are no timers: flushes
+ * follow successful requests, and unless forced, [flush] waits [FLUSH_INTERVAL] after the last one started. Failed
+ * batches stay on disk for the next flush.
  *
  * The server decides sampling per session (`tracingEnabled` in `/v1/config` and `/v1/track` responses). Spans can
  * end before that decision arrives, so they are written as pending, tagged with their session, and are not
@@ -50,8 +49,7 @@ internal class RadarTraceManager(
         private const val MAX_BATCH_SPANS = 100
         private const val MAX_BATCH_BYTES = 128 * 1024
 
-        // Minimum time between flushes after successful requests, counted from the last flush that didn't end in a
-        // network error. On a spotty network, a failed upload doesn't block the next one after a successful track.
+        // Minimum time between unforced flushes, counted from when the last flush started, whatever its result.
         private val FLUSH_INTERVAL = 5.minutes
         private const val DIR = "radar_traces"
         private const val READY_EXTENSION = "json"
@@ -72,11 +70,9 @@ internal class RadarTraceManager(
     private val pendingWrites = AtomicInteger(0)
     private val droppedWrites = AtomicInteger(0)
 
-    // SystemClock.elapsedRealtime() when the last flush that didn't end in a network error finished, or null if none
-    // has in this process. Network errors are left out so a successful request, which shows the network works again,
-    // isn't blocked by an upload that failed while it was down.
+    // SystemClock.elapsedRealtime() when the last flush started, or null if none has started in this process.
     @Volatile
-    private var lastFlushWithoutNetworkErrorAt: Long? = null
+    private var lastFlushStartedAt: Long? = null
 
     // Accessed only on the disk worker. inFlightFiles protects a selected batch from pruning during upload.
     private var inFlightFiles: Set<File> = emptySet()
@@ -178,20 +174,16 @@ internal class RadarTraceManager(
      * Uploads batches on the disk worker until the queue is empty or an upload does not succeed. The storage limits
      * keep a full backlog to about 10 batches.
      *
-     * Unless [force] is true, does nothing within [FLUSH_INTERVAL] of the last flush that didn't end in a network
-     * error, so frequent tracking doesn't upload after every track. Startup and a session's first sampled decision
-     * force a flush.
+     * Unless [force] is true, does nothing within [FLUSH_INTERVAL] of the last flush starting, so frequent tracking
+     * doesn't upload after every track and a failed upload isn't retried until the interval passes. Startup and a
+     * session's first sampled decision force a flush.
      */
     fun flush(force: Boolean = false) {
-        if (!force && !flushIntervalPassed()) return
+        val last = lastFlushStartedAt
+        if (!force && last != null && SystemClock.elapsedRealtime() - last < FLUSH_INTERVAL.inWholeMilliseconds) return
         if (!isFlushing.compareAndSet(false, true)) return
+        lastFlushStartedAt = SystemClock.elapsedRealtime()
         runOnDisk { uploadNextBatch() }
-    }
-
-    /** Whether [FLUSH_INTERVAL] has passed since the last flush that didn't end in a network error. */
-    private fun flushIntervalPassed(): Boolean {
-        val last = lastFlushWithoutNetworkErrorAt ?: return true
-        return SystemClock.elapsedRealtime() - last >= FLUSH_INTERVAL.inWholeMilliseconds
     }
 
     /** Called on the disk worker after each write. Logs how many spans were dropped once the queue drains. */
@@ -235,7 +227,7 @@ internal class RadarTraceManager(
                                 if (handleResponse(batch, status, res)) {
                                     uploadNextBatch()
                                 } else {
-                                    finishFlush(networkError = status == Radar.RadarStatus.ERROR_NETWORK)
+                                    finishFlush()
                                 }
                             } catch (e: Exception) {
                                 logger.e("Could not handle trace upload response | message = ${e.message}", Radar.RadarLogType.SDK_ERROR, e)
@@ -286,12 +278,9 @@ internal class RadarTraceManager(
         return base.substringBeforeLast('.') to base.substringAfterLast('.')
     }
 
-    /** Ends the current flush. [networkError] is true if it stopped because an upload failed with a network error. */
-    private fun finishFlush(networkError: Boolean = false) {
+    /** Ends the current flush. */
+    private fun finishFlush() {
         inFlightFiles = emptySet()
-        if (!networkError) {
-            lastFlushWithoutNetworkErrorAt = SystemClock.elapsedRealtime()
-        }
         isFlushing.set(false)
     }
 

@@ -458,26 +458,9 @@ class RadarTraceManagerTest {
     }
 
     @Test
-    fun flushRetriesRightAfterNetworkError() {
+    fun failedFlushIsNotRetriedWithinInterval() {
         endUploadInterval()
         apiHelper.queueMockStatuses("v1/traces", listOf(Radar.RadarStatus.ERROR_NETWORK))
-        recordSpans(1)
-
-        manager.flush()
-        manager.waitForFlushForTesting()
-        assertEquals(1, traceFiles().size)
-
-        // The next successful request shows the network is back, so it flushes without waiting.
-        manager.flush()
-        manager.waitForFlushForTesting()
-        assertEquals(listOf(1, 1), batchSizes())
-        assertTrue(traceFiles().isEmpty())
-    }
-
-    @Test
-    fun flushWaitsAfterServerError() {
-        endUploadInterval()
-        apiHelper.queueMockStatuses("v1/traces", listOf(Radar.RadarStatus.ERROR_SERVER))
         recordSpans(1)
 
         manager.flush()
