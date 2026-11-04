@@ -157,7 +157,10 @@ class RadarAutocompleteSession {
     }
 
     /**
-     * Reports which result the user chose, and returns it enriched where available.
+     * Reports which result the user chose. Selections are how autocomplete quality is measured
+     * and improved.
+     *
+     * Returns the enriched address where available.
      *
      * Completes with [RadarStatus.ERROR_BAD_REQUEST] if the address did not come from
      * [autocomplete].
@@ -173,7 +176,10 @@ class RadarAutocompleteSession {
     }
 
     /**
-     * Reports which result the user chose, and returns it enriched where available.
+     * Reports which result the user chose. Selections are how autocomplete quality is measured
+     * and improved.
+     *
+     * Returns the enriched address where available.
      *
      * Completes with [RadarStatus.ERROR_BAD_REQUEST] if the address did not come from
      * [autocomplete].
