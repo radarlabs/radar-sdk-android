@@ -2,6 +2,8 @@ package io.radar.sdk
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.SharedPreferences
+import android.location.Location
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -129,6 +131,7 @@ class RadarTraceSpanTest {
         span.setAttribute("string", "medium")
         span.setAttribute("long", 42L)
         span.setAttribute("double", 1.5)
+        span.setAttribute("setBool", false)
         span.end(Radar.RadarStatus.SUCCESS)
 
         val json = uploadedSpans().getValue("root")
@@ -137,6 +140,61 @@ class RadarTraceSpanTest {
         assertEquals("42", attribute(json, "long")?.get("intValue"))
         assertEquals(1.5, attribute(json, "double")!!.getDouble("doubleValue"), 0.0)
         assertTrue(attribute(json, "bool")!!.getBoolean("boolValue"))
+        assertEquals(false, attribute(json, "setBool")?.get("boolValue"))
+    }
+
+    @Test
+    fun attributeBlockRunsOnlyWhenSpanRecords() {
+        manager.overrideSampledForTesting(false)
+        var ranUnsampled = false
+        RadarTraceSpan.start("unsampled") { ranUnsampled = true }
+        assertFalse(ranUnsampled)
+
+        manager.overrideSampledForTesting(true)
+        RadarTraceSpan.start("root") { setAttribute("string", "medium") }.end(Radar.RadarStatus.SUCCESS)
+        assertEquals("medium", attribute(uploadedSpans().getValue("root"), "string")?.get("stringValue"))
+    }
+
+    @Test
+    fun attributeBlockExceptionIsLoggedAndDropped() {
+        manager.overrideSampledForTesting(true)
+
+        val span = RadarTraceSpan.start("root") {
+            setAttribute("before", "kept")
+            throw SecurityException("attribute read failed")
+        }
+        span.end(Radar.RadarStatus.SUCCESS)
+
+        val json = uploadedSpans().getValue("root")
+        assertEquals("kept", attribute(json, "before")?.get("stringValue"))
+        assertFalse(json.has("status"))
+    }
+
+    @Test
+    fun attributeReadsSkippedWhenSpanDoesNotRecord() {
+        var reads = 0
+        val countingContext = object : ContextWrapper(context) {
+            override fun getSystemService(name: String): Any? = super.getSystemService(name).also { reads++ }
+            override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences = super.getSharedPreferences(name, mode).also { reads++ }
+        }
+        val location = Location("test").apply { accuracy = 5f }
+        val noCallback = object : Radar.RadarLocationCallback {
+            override fun onComplete(status: Radar.RadarStatus, location: Location?, stopped: Boolean) {}
+        }
+
+        manager.overrideSampledForTesting(false)
+        val unsampled = RadarTraceSpan.start("unsampled")
+        unsampled.requestStarted(countingContext, "api.radar.io", 0)
+        noCallback.traced(unsampled, countingContext).onComplete(Radar.RadarStatus.SUCCESS, location, false)
+        assertEquals(0, reads)
+
+        manager.overrideSampledForTesting(true)
+        val sampled = RadarTraceSpan.start("sampled")
+        sampled.requestStarted(countingContext, "api.radar.io", 0)
+        val afterRequest = reads
+        assertTrue(afterRequest > 0)
+        noCallback.traced(sampled, countingContext).onComplete(Radar.RadarStatus.SUCCESS, location, false)
+        assertTrue(reads > afterRequest)
     }
 
     @Test

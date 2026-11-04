@@ -20,9 +20,9 @@ internal object RadarNearbyBeaconSearch {
 
     /**
      * Searches beacons near `location`. On failure, `callback` gets the last saved beacons, which
-     * may not be near `location`.
+     * may not be near `location`. [parentSpan] traces a search made for a traced SDK call.
      */
-    fun search(location: Location, callback: RadarApiClient.RadarSearchBeaconsApiCallback) {
-        Radar.apiClient.searchBeacons(location, RADIUS_METERS, LIMIT, callback, false)
+    fun search(location: Location, callback: RadarApiClient.RadarSearchBeaconsApiCallback, parentSpan: RadarTraceSpan? = null) {
+        Radar.apiClient.searchBeacons(location, RADIUS_METERS, LIMIT, callback, false, parentSpan)
     }
 }

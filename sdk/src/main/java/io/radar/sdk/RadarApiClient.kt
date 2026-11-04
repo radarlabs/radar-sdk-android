@@ -165,7 +165,8 @@ internal class RadarApiClient(
         usage: String,
         verified: Boolean = false,
         verifiedHostOverride: String? = null,
-        callback: RadarGetConfigApiCallback? = null
+        callback: RadarGetConfigApiCallback? = null,
+        parentSpan: RadarTraceSpan? = null
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -191,6 +192,7 @@ internal class RadarApiClient(
 
         val path = "v1/config?$queryParams"
         val headers = headers(publishableKey)
+        val span = parentSpan?.child("GET /v1/config", RadarSpanKind.CLIENT)
 
         apiHelper.request(
             context, "GET", path, headers, null, false,
@@ -204,7 +206,8 @@ internal class RadarApiClient(
                     callback?.onComplete(status, config)
                 }
             },
-            extendedTimeout = false, stream = true, verified = verified, verifiedHostOverride = verifiedHostOverride
+            extendedTimeout = false, stream = true, verified = verified, verifiedHostOverride = verifiedHostOverride,
+            traceSpan = span
         )
     }
 
@@ -271,7 +274,7 @@ internal class RadarApiClient(
         )
     }
 
-    internal fun replay(replays: List<RadarReplay>, callback: RadarReplayApiCallback?) {
+    internal fun replay(replays: List<RadarReplay>, callback: RadarReplayApiCallback?, parentSpan: RadarTraceSpan? = null) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -287,6 +290,8 @@ internal class RadarApiClient(
         params.putOpt("replays", JSONArray(replaysList))
 
         val path = "v1/track/replay"
+        parentSpan?.replayed()
+        val span = parentSpan?.child("POST /v1/track/replay", RadarSpanKind.CLIENT)?.replayCount(replays.size)
         apiHelper.request(
             context = context,
             method = "POST",
@@ -316,7 +321,8 @@ internal class RadarApiClient(
             },
             extendedTimeout = true,
             stream = false,
-            logPayload = false
+            logPayload = false,
+            traceSpan = span
         )
     }
 
@@ -337,7 +343,8 @@ internal class RadarApiClient(
         revealRiskId: String? = null,
         preparedFraudPayload: RadarPreparedFraudPayload? = null,
         callback: RadarTrackApiCallback? = null,
-        verifiedHostOverride: String? = null
+        verifiedHostOverride: String? = null,
+        parentSpan: RadarTraceSpan? = null
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -539,10 +546,13 @@ internal class RadarApiClient(
                         // pass through flush replay onComplete for track callback
                         callback?.onComplete(status)
                     }
-                }
+                },
+                parentSpan = parentSpan
             )
             return
         }
+
+        val span = parentSpan?.child("POST /v1/track", RadarSpanKind.CLIENT)
 
         apiHelper.request(
             context = context,
@@ -569,6 +579,7 @@ internal class RadarApiClient(
                 // Local preparation failures bypass replay and offline processing.
                 callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
             },
+            traceSpan = span,
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status != RadarStatus.SUCCESS || res == null) {
@@ -1216,7 +1227,8 @@ internal class RadarApiClient(
         radius: Int,
         limit: Int?,
         callback: RadarSearchBeaconsApiCallback,
-        cache: Boolean
+        cache: Boolean,
+        parentSpan: RadarTraceSpan? = null
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
@@ -1245,6 +1257,7 @@ internal class RadarApiClient(
 
         val path = "v1/search/beacons?$queryParams"
         val headers = headers(publishableKey)
+        val span = parentSpan?.child("GET /v1/search/beacons", RadarSpanKind.CLIENT)
 
         apiHelper.request(
             context,
@@ -1295,7 +1308,8 @@ internal class RadarApiClient(
 
                     callback.onComplete(RadarStatus.SUCCESS, res, beacons, uuids, uids)
                 }
-            }
+            },
+            traceSpan = span
         )
     }
 

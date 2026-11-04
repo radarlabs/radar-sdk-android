@@ -137,6 +137,42 @@ class RadarTest {
         emptyMap()
     )
 
+    /** Uploads recorded spans and returns every span in the trace whose root is named [rootName]. */
+    private fun uploadedTraceSpans(rootName: String): List<JSONObject> {
+        Radar.traceManager!!.flushAndWaitForTesting()
+        val spans = apiHelperMock.capturedTraceSpans()
+        val traceId = spans.single { it.getString("name") == rootName }.getString("traceId")
+        return spans.filter { it.getString("traceId") == traceId }
+    }
+
+    private fun uploadedTrace(rootName: String): Map<String, JSONObject> = uploadedTraceSpans(rootName).associateBy { it.getString("name") }
+
+    private fun traceAttribute(span: JSONObject, key: String): JSONObject? {
+        val attributes = span.getJSONArray("attributes")
+        return (0 until attributes.length()).map { attributes.getJSONObject(it) }.firstOrNull { it.getString("key") == key }?.getJSONObject("value")
+    }
+
+    private fun mockTrackOnceLocation(): Location {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        val location = Location("RadarSDK").apply {
+            latitude = 40.78382
+            longitude = -73.97536
+            accuracy = 65f
+            time = System.currentTimeMillis()
+        }
+        locationClientMock.mockLocation = location
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
+        return location
+    }
+
+    private fun trackOnceAndWait(beacons: Boolean) {
+        val latch = CountDownLatch(1)
+        Radar.trackOnce(RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, beacons) { _, _, _, _ -> latch.countDown() }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS))
+    }
+
     private fun assertPlacesOk(places: Array<RadarPlace>?) {
         assertNotNull(places)
         places?.let {
@@ -397,7 +433,8 @@ class RadarTest {
             verifiedHostOverride: String?,
             prepareRequest: (() -> JSONObject)?,
             preparationFailureHandler: ((Exception) -> Unit)?,
-            queue: RadarRequestQueue
+            queue: RadarRequestQueue,
+            traceSpan: RadarTraceSpan?
         ) {
             if (path == "v1/logs") {
                 uploadCount.incrementAndGet()
@@ -1609,6 +1646,114 @@ class RadarTest {
         assertEquals(mockLocation, callbackLocation)
         assertEventsOk(callbackEvents)
         assertUserOk(callbackUser)
+    }
+
+    @Test
+    fun test_Radar_trackOnce_tracesEachStep() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        mockTrackOnceLocation()
+
+        trackOnceAndWait(beacons = false)
+
+        val spans = uploadedTrace("radar.track_once")
+        assertEquals(setOf("radar.track_once", "radar.location.get", "POST /v1/track"), spans.keys)
+
+        val root = spans.getValue("radar.track_once")
+        assertFalse(root.has("parentSpanId"))
+        assertEquals("medium", traceAttribute(root, "radar.location.desired_accuracy")?.get("stringValue"))
+        assertEquals(false, traceAttribute(root, "radar.beacons")?.get("boolValue"))
+        assertNotNull(traceAttribute(root, "radar.app.foreground")?.get("boolValue"))
+        assertNotNull(traceAttribute(root, "radar.location.accuracy_authorization")?.get("stringValue"))
+        assertNull(traceAttribute(root, "radar.beacon.source"))
+
+        val locationSpan = spans.getValue("radar.location.get")
+        assertEquals(root.getString("spanId"), locationSpan.getString("parentSpanId"))
+        assertEquals(65.0, traceAttribute(locationSpan, "radar.location.accuracy_m")!!.getDouble("doubleValue"), 0.0)
+        assertNotNull(traceAttribute(locationSpan, "radar.location.age_ms")?.get("intValue"))
+        assertNull(traceAttribute(locationSpan, "radar.location.desired_accuracy"))
+
+        val trackSpan = spans.getValue("POST /v1/track")
+        assertEquals(root.getString("spanId"), trackSpan.getString("parentSpanId"))
+        assertEquals(RadarSpanKind.CLIENT.otlpValue, trackSpan.getInt("kind"))
+        assertEquals(
+            "00-${root.getString("traceId")}-${trackSpan.getString("spanId")}-01",
+            apiHelperMock.capturedHeadersByPath["v1/track"]?.get("traceparent")
+        )
+    }
+
+    @Test
+    fun test_Radar_trackOnce_beacons_tracesSearchAndRanging() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        mockTrackOnceLocation()
+        apiHelperMock.queueMockResponses(
+            "v1/search/beacons",
+            listOf(JSONObject().put("meta", JSONObject().put("code", 200)).put("beacons", JSONArray()))
+        )
+
+        trackOnceAndWait(beacons = true)
+
+        val spans = uploadedTrace("radar.track_once")
+        assertEquals(
+            setOf("radar.track_once", "radar.location.get", "GET /v1/search/beacons", "radar.beacon.range", "POST /v1/track"),
+            spans.keys
+        )
+        val root = spans.getValue("radar.track_once")
+        assertEquals("search", traceAttribute(root, "radar.beacon.source")?.get("stringValue"))
+        assertEquals("beacons", traceAttribute(spans.getValue("radar.beacon.range"), "radar.beacon.mode")?.get("stringValue"))
+
+        val searchSpan = spans.getValue("GET /v1/search/beacons")
+        assertEquals(root.getString("spanId"), searchSpan.getString("parentSpanId"))
+        assertEquals(
+            "00-${root.getString("traceId")}-${searchSpan.getString("spanId")}-01",
+            apiHelperMock.capturedHeadersByPath["v1/search/beacons"]?.get("traceparent")
+        )
+    }
+
+    @Test
+    fun test_Radar_trackOnce_location_tracesTrackRequest() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        val location = mockTrackOnceLocation()
+
+        val latch = CountDownLatch(1)
+        Radar.trackOnce(location) { _, _, _, _ -> latch.countDown() }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS))
+
+        val spans = uploadedTrace("radar.track_once_with_location")
+        assertEquals(setOf("radar.track_once_with_location", "POST /v1/track"), spans.keys)
+        val root = spans.getValue("radar.track_once_with_location")
+        assertNull(traceAttribute(root, "radar.location.desired_accuracy"))
+        assertNull(traceAttribute(root, "radar.beacons"))
+    }
+
+    @Test
+    fun test_Radar_trackOnce_replay_tracesReplayRequestInsteadOfTrack() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        val location = mockTrackOnceLocation()
+        RadarSettings.removeRemoteTrackingOptions(context)
+        RadarSettings.setTrackingOptions(
+            context,
+            RadarTrackingOptions.fromJson(RadarTrackingOptions.EFFICIENT.toJson()).apply {
+                replay = RadarTrackingOptions.RadarTrackingOptionsReplay.ALL
+            }
+        )
+        Radar.isFlushingReplays = false
+        Radar.addReplay(JSONObject().put("replayed", true))
+
+        try {
+            val latch = CountDownLatch(1)
+            Radar.trackOnce(location) { _, _, _, _ -> latch.countDown() }
+            ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+            assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS))
+
+            assertEquals("v1/track/replay", apiHelperMock.lastCapturedPath)
+            val spans = uploadedTrace("radar.track_once_with_location")
+            assertEquals(setOf("radar.track_once_with_location", "POST /v1/track/replay"), spans.keys)
+            assertEquals(true, traceAttribute(spans.getValue("radar.track_once_with_location"), "radar.track.replayed")?.get("boolValue"))
+            assertEquals("2", traceAttribute(spans.getValue("POST /v1/track/replay"), "radar.replay.count")?.get("intValue"))
+        } finally {
+            RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
+        }
     }
 
     @Test
@@ -3844,6 +3989,97 @@ class RadarTest {
         Radar.setExpectedAddress(null)
     }
 
+    private fun trackVerifiedAndWait(): Radar.RadarStatus? {
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        Radar.trackVerified(false, RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM, "app reason", "transaction-123") { status, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS))
+        return callbackStatus
+    }
+
+    @Test
+    fun test_Radar_trackVerified_tracesEachStep() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        mockTrackVerifiedBeacons()
+
+        assertEquals(Radar.RadarStatus.SUCCESS, trackVerifiedAndWait())
+
+        val spans = uploadedTrace("radar.track_verified")
+        assertEquals(setOf("radar.track_verified", "GET /v1/config", "radar.location.get", "radar.fraud.prepare", "POST /v1/track"), spans.keys)
+        assertFalse(spans.getValue("radar.fraud.prepare").has("status"))
+        val root = spans.getValue("radar.track_verified")
+        assertEquals(false, traceAttribute(root, "radar.verified.failover")?.get("boolValue"))
+        assertEquals(false, traceAttribute(root, "radar.beacons")?.get("boolValue"))
+        spans.values.filter { it.has("parentSpanId") }.forEach { assertEquals(root.getString("spanId"), it.getString("parentSpanId")) }
+        assertEquals(
+            "00-${root.getString("traceId")}-${spans.getValue("POST /v1/track").getString("spanId")}-01",
+            apiHelperMock.capturedHeadersByPath["v1/track"]?.get("traceparent")
+        )
+        // The app's reason and transaction ID are never recorded.
+        spans.values.forEach {
+            assertFalse(it.toString().contains("app reason"))
+            assertFalse(it.toString().contains("transaction-123"))
+        }
+    }
+
+    @Test
+    fun test_Radar_trackVerified_failover_tracesBothConfigRequests() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        mockTrackVerifiedBeacons()
+        apiHelperMock.queueMockResponses(
+            "v1/config",
+            listOf(JSONObject().put("error", "not a radar response"), RadarTestUtils.jsonObjectFromResource("/get_config_response.json"))
+        )
+
+        assertEquals(Radar.RadarStatus.SUCCESS, trackVerifiedAndWait())
+
+        val spans = uploadedTraceSpans("radar.track_verified")
+        assertEquals(2, spans.count { it.getString("name") == "GET /v1/config" })
+        val root = spans.single { it.getString("name") == "radar.track_verified" }
+        assertEquals(true, traceAttribute(root, "radar.verified.failover")?.get("boolValue"))
+    }
+
+    @Test
+    fun test_Radar_trackVerified_locationFailure_endsTrace() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        mockTrackVerifiedBeacons()
+        locationClientMock.mockLocation = null
+
+        assertEquals(Radar.RadarStatus.ERROR_LOCATION, trackVerifiedAndWait())
+
+        val spans = uploadedTrace("radar.track_verified")
+        assertEquals(setOf("radar.track_verified", "GET /v1/config", "radar.location.get"), spans.keys)
+        assertEquals("ERROR_LOCATION", traceAttribute(spans.getValue("radar.track_verified"), "error.type")?.get("stringValue"))
+    }
+
+    @Test
+    fun test_Radar_trackVerified_fraudPreparationFailure_endsFraudSpanWithError() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        mockTrackVerifiedBeacons()
+        RadarSDKFraud.shared = object : RadarSDKFraud() {
+            override fun prepareFraudPayload(
+                context: Context,
+                logger: RadarLogger,
+                location: Location?,
+                googlePlayProjectNumber: Long?,
+                callback: (Radar.RadarStatus, RadarPreparedFraudPayload?) -> Unit
+            ) {
+                callback(Radar.RadarStatus.ERROR_PLUGIN, null)
+            }
+        }
+
+        assertEquals(Radar.RadarStatus.ERROR_PLUGIN, trackVerifiedAndWait())
+
+        val spans = uploadedTrace("radar.track_verified")
+        assertEquals(setOf("radar.track_verified", "GET /v1/config", "radar.location.get", "radar.fraud.prepare"), spans.keys)
+        assertEquals("ERROR_PLUGIN", traceAttribute(spans.getValue("radar.fraud.prepare"), "error.type")?.get("stringValue"))
+        assertEquals("ERROR_PLUGIN", traceAttribute(spans.getValue("radar.track_verified"), "error.type")?.get("stringValue"))
+    }
+
     @Test
     fun test_Radar_trackVerified_preparationFailuresPreserveStatusAndRejectMissingPayload() {
         for (preparationStatus in listOf(Radar.RadarStatus.ERROR_PLUGIN, Radar.RadarStatus.ERROR_BAD_REQUEST, Radar.RadarStatus.SUCCESS)) {
@@ -3913,6 +4149,7 @@ class RadarTest {
 
     @Test
     fun test_Radar_trackVerified_beacons_usesContinuouslyRangedBeacons() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
         val mockLocation = mockTrackVerifiedBeacons()
         val beacon = RadarBeacon(
             uuid = "2f234454-cf6d-4a0f-adf2-f4911ba9ffa6",
@@ -3951,6 +4188,11 @@ class RadarTest {
             val trackedBeacons = coreBody.getJSONArray("beacons")
             assertEquals(1, trackedBeacons.length())
             assertEquals("2", trackedBeacons.getJSONObject(0).getString("minor"))
+
+            val spans = uploadedTrace("radar.track_verified")
+            assertEquals("continuous", traceAttribute(spans.getValue("radar.track_verified"), "radar.beacon.source")?.get("stringValue"))
+            assertFalse(spans.containsKey("GET /v1/search/beacons"))
+            assertFalse(spans.containsKey("radar.beacon.range"))
         } finally {
             manager.stop()
             Radar.continuousBeaconManager = originalManager

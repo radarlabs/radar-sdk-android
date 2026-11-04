@@ -26,9 +26,11 @@ internal open class RadarSDKFraud(
             logger: RadarLogger,
             location: Location? = null,
             googlePlayProjectNumber: Long? = null,
+            parentSpan: RadarTraceSpan? = null,
             callback: (Radar.RadarStatus, RadarPreparedFraudPayload?) -> Unit
         ) {
-            shared.prepareFraudPayload(context, logger, location, googlePlayProjectNumber, callback)
+            val span = parentSpan?.child("radar.fraud.prepare")
+            shared.prepareFraudPayload(context, logger, location, googlePlayProjectNumber, span?.endingWith(callback) ?: callback)
         }
     }
 
