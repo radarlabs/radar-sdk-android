@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.content.Context
 import android.location.Location
+import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
 import io.radar.sdk.Radar.RadarAddressVerificationStatus
@@ -1379,7 +1380,7 @@ internal class RadarApiClient(
     }
 
     internal fun validateAddress(
-        address: RadarAddress,
+        request: RadarValidateAddressRequest,
         callback: RadarValidateAddressAPICallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -1389,25 +1390,38 @@ internal class RadarApiClient(
             return
         }
 
-        val queryParams = StringBuilder()
-        queryParams.append("countryCode=${address.countryCode}")
-        queryParams.append("&stateCode=${address.stateCode}")
-        queryParams.append("&city=${address.city}")
-        queryParams.append("&postalCode=${address.postalCode}")
-        if (address.number != null) {
-            queryParams.append("&number=${address.number}")
-        }
-        if (address.street != null) {
-            queryParams.append("&street=${address.street}")
-        }
-        if (address.unit != null) {
-            queryParams.append("&unit=${address.unit}")
-        }
-        if (address.addressLabel != null) {
-            queryParams.append("&addressLabel=${address.addressLabel}")
+        val fields = mutableListOf(
+            "countryCode" to request.countryCode,
+            "stateCode" to request.stateCode,
+            "city" to request.city,
+            "postalCode" to request.postalCode
+        )
+        // The API rejects requests that contain both forms
+        when (val line = request.line) {
+            is RadarValidateAddressRequest.Line.StreetAndNumber -> {
+                fields += "street" to line.street
+                fields += "number" to line.number
+            }
+
+            is RadarValidateAddressRequest.Line.Label -> fields += "addressLabel" to line.label
         }
 
-        val path = "v1/addresses/validate?$queryParams"
+        val missing = fields.firstOrNull { (_, value) -> value.isEmpty() }
+        if (missing != null) {
+            logger.e("validateAddress() requires ${missing.first}")
+            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
+        }
+
+        // appendQueryParameter encodes each value, so &, = and + stay part of it; RadarApiHelper appends the path as already encoded
+        val query = Uri.Builder()
+        fields.forEach { (name, value) -> query.appendQueryParameter(name, value) }
+        if (!request.unit.isNullOrEmpty()) {
+            query.appendQueryParameter("unit", request.unit)
+        }
+
+        val path = "v1/addresses/validate?${query.build().encodedQuery}"
 
         val headers = headers(publishableKey)
 

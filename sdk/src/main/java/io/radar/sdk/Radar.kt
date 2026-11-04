@@ -3325,15 +3325,163 @@ object Radar {
     }
 
     /**
+     * Validates an address from its street and number, attaching a verification status, property type, and plus4.
+     *
+     * Every field except [unit] is required. If one is empty, the callback is called with
+     * [RadarStatus.ERROR_BAD_REQUEST] and no request is sent.
+     *
+     * @see [](https://radar.com/documentation/api#validate-an-address)
+     *
+     * @param[street] The street name, such as `"Jay St"`.
+     * @param[number] The street number, such as `"20"`.
+     * @param[unit] The unit, such as an apartment or suite number.
+     * @param[city] The city.
+     * @param[stateCode] The state code, such as `"NY"`.
+     * @param[postalCode] The postal code.
+     * @param[countryCode] The two-letter country code, such as `"US"`.
+     * @param[callback] A callback, called on the main thread.
+     */
+    // No @JvmOverloads: the street form without unit would have the same JVM signature as the label form
+    @JvmStatic
+    fun validateAddress(
+        street: String,
+        number: String,
+        unit: String? = null,
+        city: String,
+        stateCode: String,
+        postalCode: String,
+        countryCode: String,
+        callback: RadarValidateAddressCallback
+    ) {
+        validateAddress(
+            RadarValidateAddressRequest(
+                line = RadarValidateAddressRequest.Line.StreetAndNumber(street, number),
+                unit = unit,
+                city = city,
+                stateCode = stateCode,
+                postalCode = postalCode,
+                countryCode = countryCode
+            ),
+            callback
+        )
+    }
+
+    /**
+     * Validates an address from its street and number, attaching a verification status, property type, and plus4.
+     *
+     * Every field except [unit] is required. If one is empty, the block is called with
+     * [RadarStatus.ERROR_BAD_REQUEST] and no request is sent.
+     *
+     * @see [](https://radar.com/documentation/api#validate-an-address)
+     *
+     * @param[street] The street name, such as `"Jay St"`.
+     * @param[number] The street number, such as `"20"`.
+     * @param[unit] The unit, such as an apartment or suite number.
+     * @param[city] The city.
+     * @param[stateCode] The state code, such as `"NY"`.
+     * @param[postalCode] The postal code.
+     * @param[countryCode] The two-letter country code, such as `"US"`.
+     * @param[block] A block callback, called on the main thread.
+     */
+    fun validateAddress(
+        street: String,
+        number: String,
+        unit: String? = null,
+        city: String,
+        stateCode: String,
+        postalCode: String,
+        countryCode: String,
+        block: (status: RadarStatus, address: RadarAddress?, verificationStatus: RadarAddressVerificationStatus?) -> Unit
+    ) {
+        validateAddress(street, number, unit, city, stateCode, postalCode, countryCode, validateAddressCallback(block))
+    }
+
+    /**
+     * Validates an address from a single-line address label, attaching a verification status, property type, and
+     * plus4.
+     *
+     * Every field except [unit] is required. If one is empty, the callback is called with
+     * [RadarStatus.ERROR_BAD_REQUEST] and no request is sent.
+     *
+     * @see [](https://radar.com/documentation/api#validate-an-address)
+     *
+     * @param[addressLabel] The street address on one line, such as `"20 Jay St"`.
+     * @param[unit] The unit, such as an apartment or suite number.
+     * @param[city] The city.
+     * @param[stateCode] The state code, such as `"NY"`.
+     * @param[postalCode] The postal code.
+     * @param[countryCode] The two-letter country code, such as `"US"`.
+     * @param[callback] A callback, called on the main thread.
+     */
+    // No @JvmOverloads: the street form without unit would have the same JVM signature as the label form
+    @JvmStatic
+    fun validateAddress(
+        addressLabel: String,
+        unit: String? = null,
+        city: String,
+        stateCode: String,
+        postalCode: String,
+        countryCode: String,
+        callback: RadarValidateAddressCallback
+    ) {
+        validateAddress(
+            RadarValidateAddressRequest(
+                line = RadarValidateAddressRequest.Line.Label(addressLabel),
+                unit = unit,
+                city = city,
+                stateCode = stateCode,
+                postalCode = postalCode,
+                countryCode = countryCode
+            ),
+            callback
+        )
+    }
+
+    /**
+     * Validates an address from a single-line address label, attaching a verification status, property type, and
+     * plus4.
+     *
+     * Every field except [unit] is required. If one is empty, the block is called with
+     * [RadarStatus.ERROR_BAD_REQUEST] and no request is sent.
+     *
+     * @see [](https://radar.com/documentation/api#validate-an-address)
+     *
+     * @param[addressLabel] The street address on one line, such as `"20 Jay St"`.
+     * @param[unit] The unit, such as an apartment or suite number.
+     * @param[city] The city.
+     * @param[stateCode] The state code, such as `"NY"`.
+     * @param[postalCode] The postal code.
+     * @param[countryCode] The two-letter country code, such as `"US"`.
+     * @param[block] A block callback, called on the main thread.
+     */
+    fun validateAddress(
+        addressLabel: String,
+        unit: String? = null,
+        city: String,
+        stateCode: String,
+        postalCode: String,
+        countryCode: String,
+        block: (status: RadarStatus, address: RadarAddress?, verificationStatus: RadarAddressVerificationStatus?) -> Unit
+    ) {
+        validateAddress(addressLabel, unit, city, stateCode, postalCode, countryCode, validateAddressCallback(block))
+    }
+
+    /**
      * Validates an address, attaching to a verification status, property type, and plus4.
+     *
+     * The API accepts a street and number or an address label, but not both. Addresses from search and geocoding have
+     * all three, so this sends the street and number when both are set, and the address label otherwise.
      *
      * @see [](https://radar.com/documentation/api#validate-an-address)
      *
      * @param[address] The address to validate.
-     * @param[callback] A callback.
+     * @param[callback] A callback, called on the main thread.
      *
      */
-
+    @Deprecated(
+        "Use validateAddress(street, number, unit, city, stateCode, postalCode, countryCode, callback) or " +
+            "validateAddress(addressLabel, unit, city, stateCode, postalCode, countryCode, callback)."
+    )
     @JvmStatic
     fun validateAddress(
         address: RadarAddress?,
@@ -3351,37 +3499,59 @@ object Radar {
             return
         }
 
-        apiClient.validateAddress(
-            address,
-            object : RadarApiClient.RadarValidateAddressAPICallback {
-                override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?, verificationStatus: RadarAddressVerificationStatus?) {
-                    handler.post {
-                        callback.onComplete(status, address, verificationStatus)
-                    }
-                }
-            }
-        )
+        validateAddress(RadarValidateAddressRequest.from(address), callback)
     }
 
     /**
      * Validates an address, attaching to a verification status, property type, and plus4.
      *
+     * The API accepts a street and number or an address label, but not both. Addresses from search and geocoding have
+     * all three, so this sends the street and number when both are set, and the address label otherwise.
+     *
      * @see [](https://radar.com/documentation/api#validate-an-address)
      *
      * @param[address] The address to validate.
-     * @param[block] A block callback.
+     * @param[block] A block callback, called on the main thread.
      *
      */
-
+    @Deprecated(
+        "Use validateAddress(street, number, unit, city, stateCode, postalCode, countryCode, block) or " +
+            "validateAddress(addressLabel, unit, city, stateCode, postalCode, countryCode, block)."
+    )
+    @Suppress("DEPRECATION")
     fun validateAddress(
         address: RadarAddress?,
         block: (status: RadarStatus, address: RadarAddress?, verificationStatus: RadarAddressVerificationStatus?) -> Unit
     ) {
-        validateAddress(
-            address,
-            object : RadarValidateAddressCallback {
-                override fun onComplete(status: RadarStatus, address: RadarAddress?, verificationStatus: RadarAddressVerificationStatus?) {
-                    block(status, address, verificationStatus)
+        validateAddress(address, validateAddressCallback(block))
+    }
+
+    private fun validateAddressCallback(
+        block: (status: RadarStatus, address: RadarAddress?, verificationStatus: RadarAddressVerificationStatus?) -> Unit
+    ) = object : RadarValidateAddressCallback {
+        override fun onComplete(status: RadarStatus, address: RadarAddress?, verificationStatus: RadarAddressVerificationStatus?) {
+            block(status, address, verificationStatus)
+        }
+    }
+
+    private fun validateAddress(
+        request: RadarValidateAddressRequest,
+        callback: RadarValidateAddressCallback
+    ) {
+        if (!initialized) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+        this.logger.i("validateAddress()", RadarLogType.SDK_CALL)
+
+        apiClient.validateAddress(
+            request,
+            object : RadarApiClient.RadarValidateAddressAPICallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAddress?, verificationStatus: RadarAddressVerificationStatus?) {
+                    handler.post {
+                        callback.onComplete(status, address, verificationStatus)
+                    }
                 }
             }
         )
