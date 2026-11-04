@@ -229,9 +229,9 @@ class RadarTraceManagerTest {
         apiClient.apiHelper = holdingHelper
         recordSpans(1)
 
-        manager.flushNowForTesting()
+        manager.flush(force = true)
         manager.awaitDiskForTesting()
-        manager.flushNowForTesting()
+        manager.flush(force = true)
         manager.awaitDiskForTesting()
 
         assertEquals(1, holdingHelper.payloads.size)
@@ -328,7 +328,7 @@ class RadarTraceManagerTest {
         apiClient.apiHelper = holdingHelper
         recordSpans(100)
 
-        manager.flushNowForTesting()
+        manager.flush(force = true)
         manager.awaitDiskForTesting()
         val inFlight = (1..100).map { spanId(it) }
 
@@ -414,7 +414,7 @@ class RadarTraceManagerTest {
         }
         manager.shutdownForTesting()
         manager = RadarTraceManager(holdingContext, apiClient, logger).also { it.overrideSampledForTesting(true) }
-        manager.flushNowForTesting()
+        manager.flush(force = true)
         assertTrue("Disk worker was not held", held.await(5, TimeUnit.SECONDS))
 
         // The queue holds 1000 writes, so the newest 100 spans are dropped. Without the limit, all 1100 would be
@@ -437,74 +437,71 @@ class RadarTraceManagerTest {
         manager.shutdownForTesting()
 
         manager.record(span("span", spanId(1)), manager.currentProjectFingerprint(), manager.currentSessionId())
-        manager.flushNowForTesting()
+        manager.flush(force = true)
     }
 
     // Throttling
 
     @Test
-    fun requestSuccessFlushWaitsForInterval() {
+    fun flushWaitsForInterval() {
         recordSpans(1)
 
-        manager.flush(RadarTraceManager.FlushReason.REQUEST_SUCCESS)
+        manager.flush()
         manager.waitForFlushForTesting()
         assertTrue(apiHelper.capturedTracePayloads.isEmpty())
 
         ShadowSystemClock.advanceBy(5, TimeUnit.MINUTES)
-        manager.flush(RadarTraceManager.FlushReason.REQUEST_SUCCESS)
+        manager.flush()
         manager.waitForFlushForTesting()
         assertEquals(listOf(1), batchSizes())
         assertTrue(traceFiles().isEmpty())
     }
 
     @Test
-    fun requestSuccessFlushRetriesRightAfterNetworkError() {
+    fun flushRetriesRightAfterNetworkError() {
         endUploadInterval()
         apiHelper.queueMockStatuses("v1/traces", listOf(Radar.RadarStatus.ERROR_NETWORK))
         recordSpans(1)
 
-        manager.flush(RadarTraceManager.FlushReason.REQUEST_SUCCESS)
+        manager.flush()
         manager.waitForFlushForTesting()
         assertEquals(1, traceFiles().size)
 
         // The next successful request shows the network is back, so it flushes without waiting.
-        manager.flush(RadarTraceManager.FlushReason.REQUEST_SUCCESS)
+        manager.flush()
         manager.waitForFlushForTesting()
         assertEquals(listOf(1, 1), batchSizes())
         assertTrue(traceFiles().isEmpty())
     }
 
     @Test
-    fun requestSuccessFlushWaitsAfterServerError() {
+    fun flushWaitsAfterServerError() {
         endUploadInterval()
         apiHelper.queueMockStatuses("v1/traces", listOf(Radar.RadarStatus.ERROR_SERVER))
         recordSpans(1)
 
-        manager.flush(RadarTraceManager.FlushReason.REQUEST_SUCCESS)
+        manager.flush()
         manager.waitForFlushForTesting()
-        manager.flush(RadarTraceManager.FlushReason.REQUEST_SUCCESS)
+        manager.flush()
         manager.waitForFlushForTesting()
         assertEquals(listOf(1), batchSizes())
         assertEquals(1, traceFiles().size)
 
         ShadowSystemClock.advanceBy(5, TimeUnit.MINUTES)
-        manager.flush(RadarTraceManager.FlushReason.REQUEST_SUCCESS)
+        manager.flush()
         manager.waitForFlushForTesting()
         assertEquals(listOf(1, 1), batchSizes())
         assertTrue(traceFiles().isEmpty())
     }
 
     @Test
-    fun startupAndSamplingDecisionFlushesIgnoreThrottle() {
+    fun forcedFlushIgnoresThrottle() {
         recordSpans(1)
-        manager.flush(RadarTraceManager.FlushReason.STARTUP)
+
+        manager.flush(force = true)
         manager.waitForFlushForTesting()
 
-        recordSpans(1, firstId = 2)
-        manager.flush(RadarTraceManager.FlushReason.SAMPLING_DECISION)
-        manager.waitForFlushForTesting()
-
-        assertEquals(listOf(1, 1), batchSizes())
+        assertEquals(listOf(1), batchSizes())
     }
 
     // Sampling

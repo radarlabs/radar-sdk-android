@@ -26,11 +26,10 @@ import org.json.JSONObject
  * Disk and upload state is confined to a single disk worker thread, and the private functions that
  * touch it run there. [record] and [flush] hand their work to that thread and return immediately.
  *
- * Uploads run on [RadarRequestQueue.BACKGROUND] so they never delay track requests. There are no timers: callers
- * pass a [FlushReason], and [flush] decides whether to start one. A flush after a successful request waits
- * [FLUSH_INTERVAL] after the last flush that didn't end in a network error: a successful request shows the network
- * works, so an upload that failed while it was down shouldn't hold back the next one. Failed batches stay on disk
- * for the next flush.
+ * Uploads run on [RadarRequestQueue.BACKGROUND] so they never delay track requests. There are no timers. Unless
+ * forced, [flush] waits [FLUSH_INTERVAL] after the last flush that didn't end in a network error: flushes follow
+ * successful requests, which show the network works, so an upload that failed while it was down shouldn't hold back
+ * the next one. Failed batches stay on disk for the next flush.
  *
  * The server decides sampling per session (`tracingEnabled` in `/v1/config` and `/v1/track` responses). Spans can
  * end before that decision arrives, so they are written as pending, tagged with their session, and are not
@@ -92,18 +91,6 @@ internal class RadarTraceManager(
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Boolean>?): Boolean = size > MAX_DECISIONS
     }
 
-    /** Why a flush was requested, which decides whether [flush] starts one. */
-    enum class FlushReason {
-        /** The manager was created. Always flushes, to upload spans left by a previous process. */
-        STARTUP,
-
-        /** A session was first decided as sampled, so its pending spans became uploadable. Always flushes. */
-        SAMPLING_DECISION,
-
-        /** A track or replay succeeded. Flushes unless one without a network error finished recently. */
-        REQUEST_SUCCESS
-    }
-
     /** Whether spans in a session are uploaded, dropped, or kept until the server decides. */
     enum class SamplingState { SAMPLED, NOT_SAMPLED, PENDING }
 
@@ -146,7 +133,7 @@ internal class RadarTraceManager(
         }
         runOnDisk { resolvePending(sessionId, sampled) }
         if (sampled) {
-            flush(FlushReason.SAMPLING_DECISION)
+            flush(force = true)
         }
     }
 
@@ -188,28 +175,23 @@ internal class RadarTraceManager(
     }
 
     /**
-     * Uploads batches on the disk worker until the queue is empty or an upload does not succeed, if [reason] calls
-     * for a flush now. The throttle keeps frequent tracking from uploading after every track. The storage limits
+     * Uploads batches on the disk worker until the queue is empty or an upload does not succeed. The storage limits
      * keep a full backlog to about 10 batches.
+     *
+     * Unless [force] is true, does nothing within [FLUSH_INTERVAL] of the last flush that didn't end in a network
+     * error, so frequent tracking doesn't upload after every track. Startup and a session's first sampled decision
+     * force a flush.
      */
-    fun flush(reason: FlushReason) {
-        val due = when (reason) {
-            FlushReason.STARTUP, FlushReason.SAMPLING_DECISION -> true
-            FlushReason.REQUEST_SUCCESS -> flushIntervalPassed()
-        }
-        if (due) startFlush()
+    fun flush(force: Boolean = false) {
+        if (!force && !flushIntervalPassed()) return
+        if (!isFlushing.compareAndSet(false, true)) return
+        runOnDisk { uploadNextBatch() }
     }
 
     /** Whether [FLUSH_INTERVAL] has passed since the last flush that didn't end in a network error. */
     private fun flushIntervalPassed(): Boolean {
         val last = lastFlushWithoutNetworkErrorAt ?: return true
         return SystemClock.elapsedRealtime() - last >= FLUSH_INTERVAL.inWholeMilliseconds
-    }
-
-    /** Starts a flush unless one is already running. */
-    private fun startFlush() {
-        if (!isFlushing.compareAndSet(false, true)) return
-        runOnDisk { uploadNextBatch() }
     }
 
     /** Called on the disk worker after each write. Logs how many spans were dropped once the queue drains. */
@@ -511,17 +493,11 @@ internal class RadarTraceManager(
         sampledOverride = sampled
     }
 
-    /** Starts a flush whatever the throttle says, unless one is already running. */
-    @VisibleForTesting
-    internal fun flushNowForTesting() {
-        startFlush()
-    }
-
     /** Waits for any flush in progress, then runs a full flush and waits for it to finish. */
     @VisibleForTesting
     internal fun flushAndWaitForTesting() {
         waitForFlushForTesting()
-        startFlush()
+        flush(force = true)
         waitForFlushForTesting()
     }
 

@@ -696,7 +696,7 @@ object Radar {
 
         if (traceManager == null) {
             traceManager = RadarTraceManager(this.context, this.apiClient, this.logger)
-            traceManager?.flush(RadarTraceManager.FlushReason.STARTUP)
+            traceManager?.flush(force = true)
         }
 
         if (!this::batteryManager.isInitialized) {
@@ -4398,7 +4398,7 @@ object Radar {
     /** Attempts to export completed, sampled spans. */
     internal fun flushTraces() {
         if (initialized) {
-            traceManager?.flush(RadarTraceManager.FlushReason.REQUEST_SUCCESS)
+            traceManager?.flush()
         }
     }
 
