@@ -95,43 +95,6 @@ fun SearchPanel() {
                     log.writeStatus(selectStatus, "select: ${Utils.stringForRadarStatus(selectStatus)}", detail)
                 }
             }
-            // validateAddress needs a postal code plus a street and number or an address
-            // label, so the validating searches ask for street addresses, not localities.
-            Radar.autocomplete("20 jay st", origin, arrayOf("address"), 10, "US") { _, addresses ->
-                val address = addresses?.firstOrNull() ?: return@autocomplete
-                Radar.validateAddress(
-                    street = address.street ?: "",
-                    number = address.number ?: "",
-                    unit = address.unit,
-                    city = address.city ?: "",
-                    stateCode = address.stateCode ?: "",
-                    postalCode = address.postalCode ?: "",
-                    countryCode = address.countryCode ?: "",
-                ) { status, validated, verificationStatus ->
-                    log.writeStatus(
-                        status,
-                        "validateAddress (from autocomplete): ${Utils.stringForRadarStatus(status)}",
-                        "address = ${validated?.formattedAddress}\nverification = ${Radar.stringForVerificationStatus(verificationStatus)}",
-                    )
-                }
-            }
-            Radar.autocomplete("20 jay st", origin, arrayOf("address"), 10, "US", mailable = true) { _, addresses ->
-                val address = addresses?.firstOrNull() ?: return@autocomplete
-                Radar.validateAddress(
-                    addressLabel = address.addressLabel ?: "",
-                    unit = address.unit,
-                    city = address.city ?: "",
-                    stateCode = address.stateCode ?: "",
-                    postalCode = address.postalCode ?: "",
-                    countryCode = address.countryCode ?: "",
-                ) { status, validated, verificationStatus ->
-                    log.writeStatus(
-                        status,
-                        "validateAddress (from mailable autocomplete): ${Utils.stringForRadarStatus(status)}",
-                        "address = ${validated?.formattedAddress}\nverification = ${Radar.stringForVerificationStatus(verificationStatus)}",
-                    )
-                }
-            }
         }
         ActionButton("getDistance") {
             Radar.getDistance(
