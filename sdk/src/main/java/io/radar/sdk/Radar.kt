@@ -3379,7 +3379,7 @@ object Radar {
         val resultId = address.resultId
         if (resultId.isNullOrEmpty()) {
             // Nothing to attribute the selection to; posting would be a guaranteed 400.
-            this.logger.d("Autocomplete selection not reported | reason = the result carries no resultId")
+            this.logger.w("select() called with an address that did not come from RadarAutocompleteSession.autocomplete()", RadarLogType.SDK_CALL)
             callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
             return
