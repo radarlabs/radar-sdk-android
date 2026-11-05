@@ -44,6 +44,7 @@ import io.radar.sdk.model.RadarTripLeg
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import java.io.File
+import java.time.Duration
 import java.util.Calendar
 import java.util.Date
 import java.util.EnumSet
@@ -67,6 +68,7 @@ import org.robolectric.Robolectric
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowLooper
+import org.robolectric.shadows.ShadowSystemClock
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
@@ -1754,6 +1756,224 @@ class RadarTest {
             assertEquals("2", traceAttribute(spans.getValue("POST /v1/track/replay"), "radar.replay.count")?.get("intValue"))
         } finally {
             RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
+        }
+    }
+
+    @Test
+    fun test_Radar_handleLocation_tracesTrackingUpdate() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        val location = mockTrackOnceLocation()
+        RadarSettings.removeRemoteTrackingOptions(context)
+        RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
+        resetTrackingUpdateState()
+
+        withTestLocationManager {
+            Radar.handleLocation(context, location, Radar.RadarLocationSource.BACKGROUND_LOCATION)
+            ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        }
+
+        val spans = uploadedTrace("radar.tracking_update")
+        assertEquals(setOf("radar.tracking_update", "POST /v1/track"), spans.keys)
+
+        val root = spans.getValue("radar.tracking_update")
+        assertFalse(root.has("parentSpanId"))
+        assertEquals("background_location", traceAttribute(root, "radar.location.source")?.get("stringValue"))
+        assertNotNull(traceAttribute(root, "radar.track.stopped")?.get("boolValue"))
+        assertEquals(false, traceAttribute(root, "radar.beacons")?.get("boolValue"))
+        assertEquals(65.0, traceAttribute(root, "radar.location.accuracy_m")!!.getDouble("doubleValue"), 0.0)
+        assertNotNull(traceAttribute(root, "radar.location.age_ms")?.get("intValue"))
+        assertNotNull(traceAttribute(root, "radar.app.foreground")?.get("boolValue"))
+        assertNull(traceAttribute(root, "radar.track.batched"))
+
+        val trackSpan = spans.getValue("POST /v1/track")
+        assertEquals(root.getString("spanId"), trackSpan.getString("parentSpanId"))
+        assertEquals(
+            "00-${root.getString("traceId")}-${trackSpan.getString("spanId")}-01",
+            apiHelperMock.capturedHeadersByPath["v1/track"]?.get("traceparent")
+        )
+    }
+
+    @Test
+    fun test_Radar_handleLocation_batched_tracesWithoutTrackRequest() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        val location = mockTrackOnceLocation()
+        RadarSettings.removeRemoteTrackingOptions(context)
+        RadarSettings.setTrackingOptions(
+            context,
+            RadarTrackingOptions.fromJson(RadarTrackingOptions.EFFICIENT.toJson()).apply { batchSize = 5 }
+        )
+        resetTrackingUpdateState()
+
+        try {
+            withTestLocationManager {
+                Radar.handleLocation(context, location, Radar.RadarLocationSource.BACKGROUND_LOCATION)
+                ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+            }
+
+            val spans = uploadedTrace("radar.tracking_update")
+            assertEquals(setOf("radar.tracking_update"), spans.keys)
+            assertEquals(true, traceAttribute(spans.getValue("radar.tracking_update"), "radar.track.batched")?.get("boolValue"))
+        } finally {
+            RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
+            Radar.flushBatch()
+        }
+    }
+
+    @Test
+    fun test_Radar_handleLocation_noSyncedBeacons_discardsTrace() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        val location = mockTrackOnceLocation()
+        permissionsHelperMock.mockBluetoothPermissionsGranted = true
+        RadarSettings.removeRemoteTrackingOptions(context)
+        RadarSettings.setTrackingOptions(
+            context,
+            RadarTrackingOptions.fromJson(RadarTrackingOptions.EFFICIENT.toJson()).apply {
+                sync = RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
+                beacons = true
+            }
+        )
+        val originalConfiguration = RadarSettings.getSdkConfiguration(context)
+        RadarSettings.setSdkConfiguration(context, RadarSdkConfiguration.fromJson(JSONObject().put("useSyncRegion", true)))
+        // Radar.syncManager keeps the context of the test class that initialized Radar first, so use one with this test's.
+        val originalSyncManager = Radar.syncManager
+        Radar.syncManager = RadarSyncManager(context, Radar.apiClient, Radar.logger)
+        // A synced region around the location, with no beacons in it.
+        Radar.syncManager.syncStore.write(
+            RadarSyncState(syncedRegionCenter = RadarCoordinate(location.latitude, location.longitude), syncedRegionRadius = 1000.0)
+        )
+        resetTrackingUpdateState()
+
+        try {
+            withTestLocationManager {
+                Radar.handleLocation(context, location, Radar.RadarLocationSource.BACKGROUND_LOCATION)
+                ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+            }
+
+            // Nothing changed and no track was sent, so the update leaves no trace.
+            Radar.traceManager!!.flushAndWaitForTesting()
+            assertFalse(apiHelperMock.capturedTraceSpans().any { it.getString("name") == "radar.tracking_update" })
+            assertNull(apiHelperMock.capturedHeadersByPath["v1/track"])
+        } finally {
+            Radar.syncManager.syncStore.clear()
+            Radar.syncManager = originalSyncManager
+            RadarSettings.setSdkConfiguration(context, originalConfiguration)
+            RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
+            permissionsHelperMock.mockBluetoothPermissionsGranted = null
+        }
+    }
+
+    @Test
+    fun test_Radar_handleLocation_syncedBeaconsNearby_tracesRangingWithoutTrack() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        val location = mockTrackOnceLocation()
+        permissionsHelperMock.mockBluetoothPermissionsGranted = true
+        RadarSettings.removeRemoteTrackingOptions(context)
+        RadarSettings.setTrackingOptions(
+            context,
+            RadarTrackingOptions.fromJson(RadarTrackingOptions.EFFICIENT.toJson()).apply {
+                sync = RadarTrackingOptions.RadarTrackingOptionsSync.EVENTS
+                beacons = true
+            }
+        )
+        val originalConfiguration = RadarSettings.getSdkConfiguration(context)
+        RadarSettings.setSdkConfiguration(context, RadarSdkConfiguration.fromJson(JSONObject().put("useSyncRegion", true)))
+        // Radar.syncManager keeps the context of the test class that initialized Radar first, so use one with this test's.
+        val originalSyncManager = Radar.syncManager
+        Radar.syncManager = RadarSyncManager(context, Radar.apiClient, Radar.logger)
+        // A synced region around the location, with a beacon at the location.
+        val beacon = RadarBeacon(
+            _id = "beacon",
+            uuid = "2f234454-cf6d-4a0f-adf2-f4911ba9ffa6",
+            major = "1",
+            minor = "2",
+            location = RadarCoordinate(location.latitude, location.longitude),
+            type = RadarBeacon.RadarBeaconType.IBEACON
+        )
+        Radar.syncManager.syncStore.write(
+            RadarSyncState(
+                syncedRegionCenter = RadarCoordinate(location.latitude, location.longitude),
+                syncedRegionRadius = 1000.0,
+                syncedBeacons = listOf(beacon)
+            )
+        )
+        resetTrackingUpdateState()
+
+        try {
+            withTestLocationManager {
+                Radar.handleLocation(context, location, Radar.RadarLocationSource.BACKGROUND_LOCATION)
+                ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+            }
+
+            // Nothing changed and no track was sent, but the update ranged beacons, so its trace is recorded.
+            val spans = uploadedTrace("radar.tracking_update")
+            assertEquals(setOf("radar.tracking_update", "radar.beacon.range"), spans.keys)
+            assertEquals("sync_region", traceAttribute(spans.getValue("radar.tracking_update"), "radar.beacon.source")?.get("stringValue"))
+            assertNull(apiHelperMock.capturedHeadersByPath["v1/track"])
+        } finally {
+            Radar.syncManager.syncStore.clear()
+            Radar.syncManager = originalSyncManager
+            RadarSettings.setSdkConfiguration(context, originalConfiguration)
+            RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
+            permissionsHelperMock.mockBluetoothPermissionsGranted = null
+        }
+    }
+
+    @Test
+    fun test_Radar_handleLocation_rebuiltLocation_tracesAgeFromWallClock() {
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        mockTrackOnceLocation()
+        RadarSettings.removeRemoteTrackingOptions(context)
+        RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
+        resetTrackingUpdateState()
+        // Time since boot, which an age computed from a missing elapsedRealtimeNanos would report.
+        ShadowSystemClock.advanceBy(Duration.ofHours(1))
+
+        // Built like RadarJobScheduler and RadarState rebuild a location: time is restored, elapsedRealtimeNanos isn't.
+        val rebuilt = Location("RadarSDK").apply {
+            latitude = 40.78382
+            longitude = -73.97536
+            accuracy = 65f
+            time = System.currentTimeMillis() - 5_000
+        }
+        assertEquals(0L, rebuilt.elapsedRealtimeNanos)
+
+        withTestLocationManager {
+            Radar.handleLocation(context, rebuilt, Radar.RadarLocationSource.BACKGROUND_LOCATION)
+            ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        }
+
+        val root = uploadedTrace("radar.tracking_update").getValue("radar.tracking_update")
+        val ageMs = traceAttribute(root, "radar.location.age_ms")!!.getString("intValue").toLong()
+        assertTrue("age_ms = $ageMs", ageMs in 5_000L..6_000L)
+    }
+
+    /**
+     * Makes the next tracking update reach sendLocation, as the first update after install does: it skips the desired
+     * sync interval check, and isn't dropped as older than a last moved time left by an earlier test.
+     */
+    private fun resetTrackingUpdateState() {
+        context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit().remove("last_sent_at").commit()
+        RadarState.setLastMovedAt(context, 0L)
+    }
+
+    /**
+     * Radar.locationManager is created once per JVM, with whichever test class initialized Radar first, so tracking
+     * update tests use one built with this test's context and API client.
+     */
+    private fun withTestLocationManager(block: () -> Unit) {
+        val originalLocationManager = Radar.locationManager
+        Radar.locationManager = RadarLocationManager(
+            context,
+            Radar.apiClient,
+            Radar.logger,
+            Radar.batteryManager,
+            Radar.RadarLocationServicesProvider.GOOGLE,
+            permissionsHelperMock
+        ).apply { locationClient = locationClientMock }
+        try {
+            block()
+        } finally {
+            Radar.locationManager = originalLocationManager
         }
     }
 
