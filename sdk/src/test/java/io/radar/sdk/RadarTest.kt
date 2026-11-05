@@ -1519,6 +1519,8 @@ class RadarTest {
         traceManager.overrideSampledForTesting(true)
         traceManager.record(completedSpan("00000000000000a1"), traceManager.currentProjectFingerprint(), traceManager.currentSessionId())
         traceManager.awaitDiskForTesting()
+        // initialize() in setUp flushed, which started the throttle. A track only flushes after it.
+        org.robolectric.shadows.ShadowSystemClock.advanceBy(5, TimeUnit.MINUTES)
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
         val location = Location("RadarSDK").apply {

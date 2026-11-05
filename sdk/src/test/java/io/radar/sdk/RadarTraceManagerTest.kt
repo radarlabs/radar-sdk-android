@@ -26,6 +26,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import org.robolectric.shadows.ShadowSystemClock
 
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [Build.VERSION_CODES.P])
@@ -53,6 +54,9 @@ class RadarTraceManagerTest {
         apiClient = RadarApiClient(context, logger).also { it.apiHelper = apiHelper }
         // Most tests are about storage and upload, so every session is sampled unless a test clears this.
         manager = RadarTraceManager(context, apiClient, logger).also { it.overrideSampledForTesting(true) }
+        // Like Radar.initialize(), flush when the manager is created. This starts the throttle, so a flush after a
+        // successful request doesn't run unless a test advances the clock (see endUploadInterval).
+        manager.flushAndWaitForTesting()
     }
 
     @After
@@ -225,9 +229,9 @@ class RadarTraceManagerTest {
         apiClient.apiHelper = holdingHelper
         recordSpans(1)
 
-        manager.flush()
+        manager.flush(force = true)
         manager.awaitDiskForTesting()
-        manager.flush()
+        manager.flush(force = true)
         manager.awaitDiskForTesting()
 
         assertEquals(1, holdingHelper.payloads.size)
@@ -288,23 +292,23 @@ class RadarTraceManagerTest {
 
     @Test
     fun fileLimitEvictsOldestSpans() {
-        // Record in two steps so the write queue (also 500) never fills; this test is about the file limit.
-        recordSpans(500)
-        recordSpans(10, firstId = 501)
+        // Record in two steps so the write queue (also 1000) never fills; this test is about the file limit.
+        recordSpans(1000)
+        recordSpans(10, firstId = 1001)
 
-        assertEquals(500, traceFiles().size)
-        assertEquals((11..510).map { spanId(it) }.toSet(), persistedSpanIds())
+        assertEquals(1000, traceFiles().size)
+        assertEquals((11..1010).map { spanId(it) }.toSet(), persistedSpanIds())
     }
 
     @Test
     fun byteLimitEvictsOldestSpans() {
-        recordSpans(30, attributes = mapOf("payload" to "x".repeat(20_000)))
+        recordSpans(60, attributes = mapOf("payload" to "x".repeat(20_000)))
 
         val files = traceFiles()
-        assertTrue(files.sumOf { it.length() } <= 512 * 1024)
-        assertTrue(files.size < 30)
+        assertTrue(files.sumOf { it.length() } <= 1024 * 1024)
+        assertTrue(files.size < 60)
         // Whatever survives must be the newest spans.
-        assertEquals((1..30).map { spanId(it) }.takeLast(files.size).toSet(), persistedSpanIds())
+        assertEquals((1..60).map { spanId(it) }.takeLast(files.size).toSet(), persistedSpanIds())
     }
 
     @Test
@@ -324,21 +328,21 @@ class RadarTraceManagerTest {
         apiClient.apiHelper = holdingHelper
         recordSpans(100)
 
-        manager.flush()
+        manager.flush(force = true)
         manager.awaitDiskForTesting()
         val inFlight = (1..100).map { spanId(it) }
 
         // Exceed the file limit while the first batch is uploading. The oldest spans are in flight,
         // so the next oldest are evicted instead.
-        recordSpans(500, firstId = 101)
-        assertEquals(500, traceFiles().size)
+        recordSpans(1000, firstId = 101)
+        assertEquals(1000, traceFiles().size)
         assertTrue(persistedSpanIds().containsAll(inFlight))
 
         holdingHelper.nextCallback().onComplete(Radar.RadarStatus.SUCCESS, JSONObject())
         manager.awaitDiskForTesting()
 
         assertEquals(inFlight, spanIds(holdingHelper.payloads.first()))
-        assertEquals((201..600).map { spanId(it) }.toSet(), persistedSpanIds())
+        assertEquals((201..1100).map { spanId(it) }.toSet(), persistedSpanIds())
     }
 
     @Test
@@ -410,22 +414,22 @@ class RadarTraceManagerTest {
         }
         manager.shutdownForTesting()
         manager = RadarTraceManager(holdingContext, apiClient, logger).also { it.overrideSampledForTesting(true) }
-        manager.flush()
+        manager.flush(force = true)
         assertTrue("Disk worker was not held", held.await(5, TimeUnit.SECONDS))
 
-        // The queue holds 500 writes, so the newest 100 spans are dropped. Without the limit, all 600 would be
+        // The queue holds 1000 writes, so the newest 100 spans are dropped. Without the limit, all 1100 would be
         // written and the storage limits would evict the oldest 100 instead.
-        (1..600).forEach { manager.record(span("span", spanId(it)), manager.currentProjectFingerprint(), manager.currentSessionId()) }
+        (1..1100).forEach { manager.record(span("span", spanId(it)), manager.currentProjectFingerprint(), manager.currentSessionId()) }
         release.countDown()
         manager.flushAndWaitForTesting()
 
-        assertEquals((1..500).map { spanId(it) }, apiHelper.capturedTraceSpans().map { it.getString("spanId") })
+        assertEquals((1..1000).map { spanId(it) }, apiHelper.capturedTraceSpans().map { it.getString("spanId") })
 
         // Once the queue drains, new spans are accepted again.
-        recordSpans(1, firstId = 601)
+        recordSpans(1, firstId = 1101)
         manager.flushAndWaitForTesting()
 
-        assertEquals(spanId(601), apiHelper.capturedTraceSpans().last().getString("spanId"))
+        assertEquals(spanId(1101), apiHelper.capturedTraceSpans().last().getString("spanId"))
     }
 
     @Test
@@ -433,7 +437,54 @@ class RadarTraceManagerTest {
         manager.shutdownForTesting()
 
         manager.record(span("span", spanId(1)), manager.currentProjectFingerprint(), manager.currentSessionId())
+        manager.flush(force = true)
+    }
+
+    // Throttling
+
+    @Test
+    fun flushWaitsForInterval() {
+        recordSpans(1)
+
         manager.flush()
+        manager.waitForFlushForTesting()
+        assertTrue(apiHelper.capturedTracePayloads.isEmpty())
+
+        ShadowSystemClock.advanceBy(5, TimeUnit.MINUTES)
+        manager.flush()
+        manager.waitForFlushForTesting()
+        assertEquals(listOf(1), batchSizes())
+        assertTrue(traceFiles().isEmpty())
+    }
+
+    @Test
+    fun failedFlushIsNotRetriedWithinInterval() {
+        endUploadInterval()
+        apiHelper.queueMockStatuses("v1/traces", listOf(Radar.RadarStatus.ERROR_NETWORK))
+        recordSpans(1)
+
+        manager.flush()
+        manager.waitForFlushForTesting()
+        manager.flush()
+        manager.waitForFlushForTesting()
+        assertEquals(listOf(1), batchSizes())
+        assertEquals(1, traceFiles().size)
+
+        ShadowSystemClock.advanceBy(5, TimeUnit.MINUTES)
+        manager.flush()
+        manager.waitForFlushForTesting()
+        assertEquals(listOf(1, 1), batchSizes())
+        assertTrue(traceFiles().isEmpty())
+    }
+
+    @Test
+    fun forcedFlushIgnoresThrottle() {
+        recordSpans(1)
+
+        manager.flush(force = true)
+        manager.waitForFlushForTesting()
+
+        assertEquals(listOf(1), batchSizes())
     }
 
     // Sampling
@@ -608,10 +659,15 @@ class RadarTraceManagerTest {
     @Test
     fun pendingSpansCountTowardStorageLimits() {
         useServerSampling(sessionId = 1000)
-        recordSpans(500)
-        recordSpans(10, firstId = 501)
+        recordSpans(1000)
+        recordSpans(10, firstId = 1001)
 
-        assertEquals(500, pendingFiles().size)
+        assertEquals(1000, pendingFiles().size)
+    }
+
+    /** Ends the throttle started by the flush in [setUp], so a flush after a successful request runs. */
+    private fun endUploadInterval() {
+        ShadowSystemClock.advanceBy(5, TimeUnit.MINUTES)
     }
 
     /** Uses the server's sampling decisions instead of sampling every session, starting in [sessionId]. */

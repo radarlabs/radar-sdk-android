@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.content.Context
 import android.os.Build
+import android.os.SystemClock
 import androidx.annotation.VisibleForTesting
 import java.io.File
 import java.io.FileOutputStream
@@ -25,9 +26,9 @@ import org.json.JSONObject
  * Disk and upload state is confined to a single disk worker thread, and the private functions that
  * touch it run there. [record] and [flush] hand their work to that thread and return immediately.
  *
- * Uploads run on [RadarRequestQueue.BACKGROUND] so they never delay track requests. Like log uploads,
- * flushes are triggered after successful API calls, so failed batches stay on disk and are retried on
- * the next trigger instead of on a timer.
+ * Uploads run on [RadarRequestQueue.BACKGROUND] so they never delay track requests. There are no timers: flushes
+ * follow successful requests, and unless forced, [flush] waits [FLUSH_INTERVAL] after the last one started. Failed
+ * batches stay on disk for the next flush.
  *
  * The server decides sampling per session (`tracingEnabled` in `/v1/config` and `/v1/track` responses). Spans can
  * end before that decision arrives, so they are written as pending, tagged with their session, and are not
@@ -41,12 +42,15 @@ internal class RadarTraceManager(
     internal val logger: RadarLogger
 ) {
     companion object {
-        private const val MAX_FILES = 500
-        private const val MAX_BYTES = 512 * 1024L
+        private const val MAX_FILES = 1000
+        private const val MAX_BYTES = 1024 * 1024L
         private val MAX_AGE = 72.hours
         private val STALE_TEMP_FILE_AGE = 1.minutes
         private const val MAX_BATCH_SPANS = 100
         private const val MAX_BATCH_BYTES = 128 * 1024
+
+        // Minimum time between unforced flushes, counted from when the last flush started, whatever its result.
+        private val FLUSH_INTERVAL = 5.minutes
         private const val DIR = "radar_traces"
         private const val READY_EXTENSION = "json"
         private const val PENDING_EXTENSION = "pending"
@@ -65,6 +69,10 @@ internal class RadarTraceManager(
     private val isFlushing = AtomicBoolean(false)
     private val pendingWrites = AtomicInteger(0)
     private val droppedWrites = AtomicInteger(0)
+
+    // SystemClock.elapsedRealtime() when the last flush started, or null if none has started in this process.
+    @Volatile
+    private var lastFlushStartedAt: Long? = null
 
     // Accessed only on the disk worker. inFlightFiles protects a selected batch from pruning during upload.
     private var inFlightFiles: Set<File> = emptySet()
@@ -121,7 +129,7 @@ internal class RadarTraceManager(
         }
         runOnDisk { resolvePending(sessionId, sampled) }
         if (sampled) {
-            flush()
+            flush(force = true)
         }
     }
 
@@ -163,11 +171,18 @@ internal class RadarTraceManager(
     }
 
     /**
-     * Uploads batches on the disk worker until the queue is empty or an upload does not succeed. The storage
-     * limits keep a full backlog to about 5 batches.
+     * Uploads batches on the disk worker until the queue is empty or an upload does not succeed. The storage limits
+     * keep a full backlog to about 10 batches.
+     *
+     * Unless [force] is true, does nothing within [FLUSH_INTERVAL] of the last flush starting, so frequent tracking
+     * doesn't upload after every track and a failed upload isn't retried until the interval passes. Startup and a
+     * session's first sampled decision force a flush.
      */
-    fun flush() {
+    fun flush(force: Boolean = false) {
+        val last = lastFlushStartedAt
+        if (!force && last != null && SystemClock.elapsedRealtime() - last < FLUSH_INTERVAL.inWholeMilliseconds) return
         if (!isFlushing.compareAndSet(false, true)) return
+        lastFlushStartedAt = SystemClock.elapsedRealtime()
         runOnDisk { uploadNextBatch() }
     }
 
@@ -471,7 +486,7 @@ internal class RadarTraceManager(
     @VisibleForTesting
     internal fun flushAndWaitForTesting() {
         waitForFlushForTesting()
-        flush()
+        flush(force = true)
         waitForFlushForTesting()
     }
 
@@ -482,7 +497,8 @@ internal class RadarTraceManager(
     }
 
     /** Waits until no flush is in progress. Throws after 10 seconds so a stuck flush fails the test. */
-    private fun waitForFlushForTesting() {
+    @VisibleForTesting
+    internal fun waitForFlushForTesting() {
         val deadline = System.currentTimeMillis() + 10_000
         while (isFlushing.get() && System.currentTimeMillis() < deadline) {
             try {
