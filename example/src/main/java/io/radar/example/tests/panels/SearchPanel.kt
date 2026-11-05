@@ -81,7 +81,7 @@ fun SearchPanel() {
                 log.writeStatus(
                     status,
                     "autocomplete: ${Utils.stringForRadarStatus(status)}",
-                    "results = ${addresses?.size ?: 0}\nfirst = ${selected?.formattedAddress}\nresultId = ${selected?.resultId}",
+                    "results = ${addresses?.size ?: 0}\nfirst = ${selected?.formattedAddress}",
                 )
                 if (selected == null) {
                     return@autocomplete

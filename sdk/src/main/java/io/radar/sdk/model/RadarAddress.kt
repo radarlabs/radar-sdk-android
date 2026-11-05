@@ -141,11 +141,9 @@ class RadarAddress(
 
     /**
      * Identifies this result within the session that returned it, not the address itself.
-     * Short-lived; pass the whole address to `RadarAutocompleteSession.select()` rather than
-     * storing this. Set only by the SDK, from autocomplete results.
+     * Set from session autocomplete results and reported by `RadarAutocompleteSession.select()`.
      */
-    var resultId: String? = null
-        internal set
+    internal var resultId: String? = null
 
     /**
      * The confidence levels for geocoding results.
