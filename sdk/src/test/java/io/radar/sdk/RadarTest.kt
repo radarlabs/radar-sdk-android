@@ -3513,9 +3513,9 @@ class RadarTest {
               "address": {
                 "formattedAddress": "20 Jay St, Brooklyn, NY 11201 US",
                 "locationDetails": {
-                  "usage": "commercial",
+                  "usage": "nonResidential",
                   "dwelling": "n/a",
-                  "grounds": ["parking", "loading-dock"],
+                  "grounds": ["campus"],
                   "places": [{ "name": "Brooklyn Roasting Company", "categories": ["food-beverage", "cafe"] }]
                 }
               }
@@ -3528,9 +3528,9 @@ class RadarTest {
         assertEquals(Radar.RadarStatus.SUCCESS, status)
 
         val locationDetails = selected?.locationDetails
-        assertEquals("commercial", locationDetails?.usage)
+        assertEquals("nonResidential", locationDetails?.usage)
         assertEquals("n/a", locationDetails?.dwelling)
-        assertEquals(listOf("parking", "loading-dock"), locationDetails?.grounds?.toList())
+        assertEquals(listOf("campus"), locationDetails?.grounds?.toList())
 
         val place = locationDetails?.places?.firstOrNull()
         assertNotNull(place)
