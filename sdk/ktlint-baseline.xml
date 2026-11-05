@@ -248,8 +248,8 @@
     <file name="src/main/java/io/radar/sdk/model/RadarAddress.kt">
         <error line="22" column="1" source="standard:indent" />
         <error line="23" column="1" source="standard:indent" />
-        <error line="188" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="217" column="34" source="standard:keyword-spacing" />
+        <error line="189" column="1" source="standard:spacing-between-declarations-with-annotations" />
+        <error line="218" column="34" source="standard:keyword-spacing" />
         <error line="292" column="77" source="standard:function-expression-body" />
         <error line="293" column="24" source="standard:keyword-spacing" />
         <error line="303" column="1" source="standard:no-empty-first-line-in-method-block" />

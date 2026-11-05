@@ -136,15 +136,16 @@ class RadarAddress(
     /**
      * The categories of the address.
      */
-    val categories: Array<String>? = null,
+    val categories: Array<String>? = null
+) {
 
     /**
      * Identifies this result within the session that returned it, not the address itself.
      * Short-lived; pass the whole address to `RadarAutocompleteSession.select()` rather than
-     * storing this.
+     * storing this. Set only by the SDK, from autocomplete results.
      */
-    val resultId: String? = null
-) {
+    var resultId: String? = null
+        internal set
 
     /**
      * The confidence levels for geocoding results.
@@ -231,8 +232,6 @@ class RadarAddress(
                 }
                 list.toTypedArray()
             }
-            val resultId = obj.optStringOrNull(FIELD_RESULT_ID)
-
             return RadarAddress(
                 coordinate,
                 formattedAddress,
@@ -259,9 +258,10 @@ class RadarAddress(
                 metadata,
                 confidence,
                 timeZone,
-                categories,
-                resultId
-            )
+                categories
+            ).also {
+                it.resultId = obj.optStringOrNull(FIELD_RESULT_ID)
+            }
         }
 
         @JvmStatic
