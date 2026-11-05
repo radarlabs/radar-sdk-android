@@ -1517,8 +1517,6 @@ class RadarTest {
         traceManager.overrideSampledForTesting(true)
         traceManager.record(completedSpan("00000000000000a1"), traceManager.currentProjectFingerprint(), traceManager.currentSessionId())
         traceManager.awaitDiskForTesting()
-        // initialize() in setUp flushed, which started the throttle. A track only flushes after it.
-        org.robolectric.shadows.ShadowSystemClock.advanceBy(5, TimeUnit.MINUTES)
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
         apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
         val location = Location("RadarSDK").apply {
@@ -1535,6 +1533,41 @@ class RadarTest {
         traceManager.awaitDiskForTesting()
 
         assertTrue(apiHelperMock.capturedTraceSpans().any { it.getString("spanId") == "00000000000000a1" })
+        // initialize() in setUp flushed, but within the startup window that doesn't hold back this one. The flush waits
+        // for the track's trace to end, so one upload holds the whole trace, root included.
+        val uploads = apiHelperMock.capturedTracePayloads.map { payload ->
+            val spans = payload.getJSONArray("resourceSpans").getJSONObject(0)
+                .getJSONArray("scopeSpans").getJSONObject(0).getJSONArray("spans")
+            (0 until spans.length()).map { spans.getJSONObject(it).getString("name") }
+        }
+        assertTrue(uploads.any { it.containsAll(listOf("radar.track_once_with_location", "POST /v1/track")) })
+    }
+
+    @Test
+    fun test_Radar_trackOnce_success_respectsUploadIntervalAfterStartupWindow() {
+        val traceManager = Radar.traceManager!!
+        traceManager.overrideSampledForTesting(true)
+        org.robolectric.shadows.ShadowSystemClock.advanceBy(3, TimeUnit.MINUTES)
+        // After the startup window, a flush starts the upload interval.
+        Radar.flushTraces()
+        traceManager.waitForFlushForTesting()
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/track.json")
+
+        val latch = CountDownLatch(1)
+        Radar.trackOnce(traceTestLocation()) { _, _, _, _ -> latch.countDown() }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+        traceManager.waitForFlushForTesting()
+
+        assertTrue(apiHelperMock.capturedTraceSpans().none { it.getString("name") == "radar.track_once_with_location" })
+    }
+
+    private fun traceTestLocation() = Location("RadarSDK").apply {
+        latitude = 40.78382
+        longitude = -73.97536
+        accuracy = 65f
+        time = System.currentTimeMillis()
     }
 
     @Test

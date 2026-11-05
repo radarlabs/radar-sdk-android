@@ -621,7 +621,7 @@ internal class RadarApiClient(
                     sessionId?.let {
                         applyTraceSamplingDecision(it, res.optJSONObject("meta")?.optJSONObject("featureSettings"))
                     }
-                    Radar.flushTraces()
+                    Radar.flushTraces(after = parentSpan)
                     RadarSettings.updateLastTrackedTime(context)
 
                     val config = RadarConfig.fromJson(res)

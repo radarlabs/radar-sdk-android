@@ -54,9 +54,6 @@ class RadarTraceManagerTest {
         apiClient = RadarApiClient(context, logger).also { it.apiHelper = apiHelper }
         // Most tests are about storage and upload, so every session is sampled unless a test clears this.
         manager = RadarTraceManager(context, apiClient, logger).also { it.overrideSampledForTesting(true) }
-        // Like Radar.initialize(), flush when the manager is created. This starts the throttle, so a flush after a
-        // successful request doesn't run unless a test advances the clock (see endUploadInterval).
-        manager.flushAndWaitForTesting()
     }
 
     @After
@@ -229,9 +226,9 @@ class RadarTraceManagerTest {
         apiClient.apiHelper = holdingHelper
         recordSpans(1)
 
-        manager.flush(force = true)
+        manager.flush()
         manager.awaitDiskForTesting()
-        manager.flush(force = true)
+        manager.flush()
         manager.awaitDiskForTesting()
 
         assertEquals(1, holdingHelper.payloads.size)
@@ -328,7 +325,7 @@ class RadarTraceManagerTest {
         apiClient.apiHelper = holdingHelper
         recordSpans(100)
 
-        manager.flush(force = true)
+        manager.flush()
         manager.awaitDiskForTesting()
         val inFlight = (1..100).map { spanId(it) }
 
@@ -414,7 +411,7 @@ class RadarTraceManagerTest {
         }
         manager.shutdownForTesting()
         manager = RadarTraceManager(holdingContext, apiClient, logger).also { it.overrideSampledForTesting(true) }
-        manager.flush(force = true)
+        manager.flush()
         assertTrue("Disk worker was not held", held.await(5, TimeUnit.SECONDS))
 
         // The queue holds 1000 writes, so the newest 100 spans are dropped. Without the limit, all 1100 would be
@@ -437,29 +434,66 @@ class RadarTraceManagerTest {
         manager.shutdownForTesting()
 
         manager.record(span("span", spanId(1)), manager.currentProjectFingerprint(), manager.currentSessionId())
-        manager.flush(force = true)
+        manager.flush()
     }
 
     // Throttling
 
     @Test
-    fun flushWaitsForInterval() {
-        recordSpans(1)
+    fun flushesAreNotThrottledDuringStartupWindow() {
+        // Like initialize(), the config response's sampling decision, and then successful tracks.
+        repeat(3) {
+            recordSpans(1, firstId = it + 1)
+            manager.flush()
+            manager.waitForFlushForTesting()
+        }
 
+        assertEquals(listOf(1, 1, 1), batchSizes())
+    }
+
+    @Test
+    fun flushWaitsForIntervalAfterStartupWindow() {
+        ShadowSystemClock.advanceBy(3, TimeUnit.MINUTES)
+        recordSpans(1)
         manager.flush()
         manager.waitForFlushForTesting()
-        assertTrue(apiHelper.capturedTracePayloads.isEmpty())
+        assertEquals(listOf(1), batchSizes())
+
+        recordSpans(1, firstId = 2)
+        manager.flush()
+        manager.waitForFlushForTesting()
+        assertEquals(listOf(1), batchSizes())
 
         ShadowSystemClock.advanceBy(5, TimeUnit.MINUTES)
         manager.flush()
         manager.waitForFlushForTesting()
-        assertEquals(listOf(1), batchSizes())
+        assertEquals(listOf(1, 1), batchSizes())
         assertTrue(traceFiles().isEmpty())
     }
 
     @Test
-    fun failedFlushIsNotRetriedWithinInterval() {
-        endUploadInterval()
+    fun intervalCountsFromFlushDuringStartupWindow() {
+        ShadowSystemClock.advanceBy(2, TimeUnit.MINUTES)
+        recordSpans(1)
+        manager.flush()
+        manager.waitForFlushForTesting()
+
+        // The startup window has ended, but the last flush started 2 minutes ago.
+        ShadowSystemClock.advanceBy(2, TimeUnit.MINUTES)
+        recordSpans(1, firstId = 2)
+        manager.flush()
+        manager.waitForFlushForTesting()
+        assertEquals(listOf(1), batchSizes())
+
+        ShadowSystemClock.advanceBy(3, TimeUnit.MINUTES)
+        manager.flush()
+        manager.waitForFlushForTesting()
+        assertEquals(listOf(1, 1), batchSizes())
+    }
+
+    @Test
+    fun failedFlushIsNotRetriedWithinIntervalAfterStartupWindow() {
+        ShadowSystemClock.advanceBy(3, TimeUnit.MINUTES)
         apiHelper.queueMockStatuses("v1/traces", listOf(Radar.RadarStatus.ERROR_NETWORK))
         recordSpans(1)
 
@@ -478,13 +512,23 @@ class RadarTraceManagerTest {
     }
 
     @Test
-    fun forcedFlushIgnoresThrottle() {
+    fun flushRequestedAsUploadCompletesIsNotLost() {
+        val holdingHelper = HoldingApiHelper()
+        apiClient.apiHelper = holdingHelper
         recordSpans(1)
+        manager.flush()
+        val firstUpload = holdingHelper.nextCallback()
 
-        manager.flush(force = true)
+        // The upload's completion is queued on the disk worker before the next span's write and flush request, so the
+        // running flush ends without seeing the span. The request then finds no flush running and starts one.
+        firstUpload.onComplete(Radar.RadarStatus.SUCCESS, JSONObject())
+        manager.record(span("span", spanId(2)), manager.currentProjectFingerprint(), manager.currentSessionId())
+        manager.flush()
+
+        holdingHelper.nextCallback().onComplete(Radar.RadarStatus.SUCCESS, JSONObject())
         manager.waitForFlushForTesting()
-
-        assertEquals(listOf(1), batchSizes())
+        assertEquals(listOf(listOf(spanId(1)), listOf(spanId(2))), holdingHelper.payloads.map { spanIds(it) })
+        assertTrue(traceFiles().isEmpty())
     }
 
     // Sampling
@@ -663,11 +707,6 @@ class RadarTraceManagerTest {
         recordSpans(10, firstId = 1001)
 
         assertEquals(1000, pendingFiles().size)
-    }
-
-    /** Ends the throttle started by the flush in [setUp], so a flush after a successful request runs. */
-    private fun endUploadInterval() {
-        ShadowSystemClock.advanceBy(5, TimeUnit.MINUTES)
     }
 
     /** Uses the server's sampling decisions instead of sampling every session, starting in [sessionId]. */

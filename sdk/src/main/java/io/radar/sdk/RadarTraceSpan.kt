@@ -54,6 +54,14 @@ internal class RadarTraceSpan private constructor(
 
     // Guarded by lock, along with attributes.
     private var ended = false
+    private var flushOnEnd = false
+
+    /**
+     * False only for the shared no-op span: tracing is off, or the session isn't sampled. A span whose session's
+     * decision is still pending records. Like OTel's `Span.isRecording()`.
+     */
+    private val isRecording: Boolean
+        get() = manager != null
 
     fun setAttribute(key: String, value: String) = putAttribute(key, value)
 
@@ -65,7 +73,7 @@ internal class RadarTraceSpan private constructor(
 
     /** Ignored on no-op spans and after [end]. */
     private fun putAttribute(key: String, value: Any) {
-        if (manager == null) {
+        if (!isRecording) {
             return
         }
         synchronized(lock) {
@@ -84,19 +92,21 @@ internal class RadarTraceSpan private constructor(
      * measures.
      */
     fun recording(setAttributes: RadarTraceSpan.() -> Unit) = apply {
-        if (manager != null) {
+        if (isRecording) {
             try {
                 setAttributes()
             } catch (e: Exception) {
-                manager.logger.e("Could not record trace attributes | name = $name; message = ${e.message}", Radar.RadarLogType.SDK_ERROR, e)
+                manager?.logger?.e("Could not record trace attributes | name = $name; message = ${e.message}", Radar.RadarLogType.SDK_ERROR, e)
             }
         }
     }
 
     /** Starts a child span in this trace. Children of a no-op span are the same no-op span. */
-    fun child(name: String, kind: RadarSpanKind = RadarSpanKind.INTERNAL): RadarTraceSpan = manager?.let {
+    fun child(name: String, kind: RadarSpanKind = RadarSpanKind.INTERNAL): RadarTraceSpan = if (isRecording) {
         RadarTraceSpan(name, traceId, newSpanId(), spanId, mutableMapOf(), manager, project, sessionId, kind)
-    } ?: this
+    } else {
+        this
+    }
 
     /**
      * The W3C `traceparent` header for requests made in this span: `version-traceId-parentId-flags`, where flags
@@ -105,16 +115,34 @@ internal class RadarTraceSpan private constructor(
      */
     fun traceparent(): String? = if (manager?.samplingState(sessionId) == RadarTraceManager.SamplingState.SAMPLED) "00-$traceId-$spanId-01" else null
 
+    /**
+     * Flushes traces when this span ends, so the upload includes it.
+     *
+     * Intended to be used after successful v1/track calls. Uploading immediately after the successful call
+     * would upload the current track trace without its root. Waiting until the trace ends uploads the full trace.
+     */
+    fun flushWhenEnded() {
+        // Spans that are not recorded never upload so there is no need to wait. Flushing can still upload
+        // spans left from an earlier sampled session.
+        val flushNow = !isRecording || synchronized(lock) {
+            flushOnEnd = true
+            ended
+        }
+        if (flushNow) {
+            manager?.flush() ?: Radar.flushTraces()
+        }
+    }
+
     fun end(status: Radar.RadarStatus) {
-        if (manager == null) {
+        if (!isRecording) {
             return
         }
-        val snapshot = synchronized(lock) {
+        val (snapshot, flush) = synchronized(lock) {
             if (ended) {
                 return
             }
             ended = true
-            attributes.toMap()
+            attributes.toMap() to flushOnEnd
         }
         val elapsedMs = SystemClock.elapsedRealtime() - startedAtElapsedMs
         val completed = RadarCompletedSpan(
@@ -128,7 +156,11 @@ internal class RadarTraceSpan private constructor(
             status,
             snapshot
         )
-        manager.record(completed, project, sessionId)
+        manager?.record(completed, project, sessionId)
+        // After record(), which queues the write. flush() runs on the same disk worker, so the upload sees this span.
+        if (flush) {
+            manager?.flush()
+        }
     }
 
     companion object {

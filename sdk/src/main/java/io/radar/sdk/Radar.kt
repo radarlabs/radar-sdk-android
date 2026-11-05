@@ -696,7 +696,7 @@ object Radar {
 
         if (traceManager == null) {
             traceManager = RadarTraceManager(this.context, this.apiClient, this.logger)
-            traceManager?.flush(force = true)
+            traceManager?.flush()
         }
 
         if (!this::batteryManager.isInitialized) {
@@ -4395,9 +4395,17 @@ object Radar {
         this.logBuffer.persistLogs()
     }
 
-    /** Attempts to export completed, sampled spans. */
-    internal fun flushTraces() {
-        if (initialized) {
+    /**
+     * Attempts to export completed, sampled spans. With [after], waits until that span ends, so the upload includes
+     * it: a traced track's root span ends after the track's response has been handled.
+     */
+    internal fun flushTraces(after: RadarTraceSpan? = null) {
+        if (!initialized) {
+            return
+        }
+        if (after != null) {
+            after.flushWhenEnded()
+        } else {
             traceManager?.flush()
         }
     }
@@ -4507,7 +4515,7 @@ object Radar {
                         logger.d("Successfully flushed replays")
                         replaysStash.onFlush(true) // clear from buffer what was synced
                         Radar.flushLogs()
-                        Radar.flushTraces()
+                        Radar.flushTraces(after = parentSpan)
                     } else {
                         if (replayParams != null) {
                             logger.d("Failed to flush replays, adding track update to buffer")
