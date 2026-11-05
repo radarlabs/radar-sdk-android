@@ -15,35 +15,26 @@ import java.util.UUID
  *
  * ```
  * val session = RadarAutocompleteSession()
- * session.autocomplete("brooklyn roasting", near, 10) { status, addresses ->
+ * session.autocomplete("brooklyn roasting", near, limit = 10) { status, addresses ->
  *     val chosen = addresses?.firstOrNull() ?: return@autocomplete
  *     session.select(chosen) { selectStatus, enrichedAddress -> }
  * }
  * ```
  */
-class RadarAutocompleteSession {
-
+class RadarAutocompleteSession internal constructor(
     /** The token this session sends. */
     val sessionToken: String
+) {
 
     /**
      * Opens a session with a newly minted token.
      */
-    constructor() {
-        sessionToken = UUID.randomUUID().toString()
-    }
+    constructor() : this(UUID.randomUUID().toString())
 
-    /**
-     * Resumes a session from a token minted elsewhere. Intended for wrapper SDKs that cannot hold
-     * a session instance; prefer the no-argument constructor.
-     *
-     * @param[sessionToken] A UUID.
-     * @throws IllegalArgumentException if [sessionToken] is not a UUID.
-     */
-    constructor(sessionToken: String) {
+    init {
+        // Resuming from a token is for wrapper SDKs, whose Java bridges can reach this internal
+        // constructor. The server packs the token into each resultId as raw UUID bytes.
         require(UUID_PATTERN.matches(sessionToken)) { "sessionToken must be a UUID" }
-
-        this.sessionToken = sessionToken
     }
 
     /**
@@ -110,53 +101,6 @@ class RadarAutocompleteSession {
     }
 
     /**
-     * Autocompletes partial addresses and place names within this session, sorted by relevance.
-     *
-     * @see [](https://radar.com/documentation/api#autocomplete)
-     *
-     * @param[query] The partial address or place name to autocomplete.
-     * @param[near] A location for the search.
-     * @param[limit] The max number of addresses to return. A number between 1 and 100.
-     * @param[callback] A callback.
-     */
-    fun autocomplete(
-        query: String,
-        near: Location?,
-        limit: Int?,
-        callback: RadarGeocodeCallback
-    ) {
-        autocomplete(query, near, null, limit, null, null, callback)
-    }
-
-    /**
-     * Autocompletes partial addresses and place names within this session, sorted by relevance.
-     *
-     * @see [](https://radar.com/documentation/api#autocomplete)
-     *
-     * @param[query] The partial address or place name to autocomplete.
-     * @param[near] A location for the search.
-     * @param[limit] The max number of addresses to return. A number between 1 and 100.
-     * @param[block] A block callback.
-     */
-    fun autocomplete(
-        query: String,
-        near: Location?,
-        limit: Int?,
-        block: (status: RadarStatus, addresses: Array<RadarAddress>?) -> Unit
-    ) {
-        autocomplete(
-            query,
-            near,
-            limit,
-            object : RadarGeocodeCallback {
-                override fun onComplete(status: RadarStatus, addresses: Array<RadarAddress>?) {
-                    block(status, addresses)
-                }
-            }
-        )
-    }
-
-    /**
      * Reports which result the user chose. Selections are how autocomplete quality is measured
      * and improved.
      *
@@ -202,6 +146,6 @@ class RadarAutocompleteSession {
     }
 
     private companion object {
-        private val UUID_PATTERN = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+        val UUID_PATTERN = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
     }
 }

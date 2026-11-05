@@ -90,7 +90,7 @@ internal class RadarApiClient(
         fun onComplete(status: RadarStatus, res: JSONObject? = null, addresses: Array<RadarAddress>? = null)
     }
 
-    interface RadarSelectAutocompleteAddressApiCallback {
+    interface RadarAutocompleteSelectApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAutocompleteEnrichedAddress? = null)
     }
 
@@ -1390,7 +1390,7 @@ internal class RadarApiClient(
 
     internal fun selectAutocompleteAddress(
         resultId: String,
-        callback: RadarSelectAutocompleteAddressApiCallback
+        callback: RadarAutocompleteSelectApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {

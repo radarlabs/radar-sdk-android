@@ -34,7 +34,8 @@ import org.robolectric.shadows.ShadowLooper
 class RadarApiHelperRetryTest {
     private class StubConnection(
         private val failure: IOException? = null,
-        private val statusCode: Int = 200
+        private val statusCode: Int = 200,
+        private val body: String = "{}"
     ) : HttpURLConnection(URL("https://verified.test")) {
         val writtenBody = ByteArrayOutputStream()
         val disconnected = CountDownLatch(1)
@@ -50,7 +51,7 @@ class RadarApiHelperRetryTest {
         }
         override fun usingProxy(): Boolean = false
         override fun getOutputStream() = writtenBody
-        override fun getInputStream() = ByteArrayInputStream("{}".toByteArray(Charsets.UTF_8))
+        override fun getInputStream() = ByteArrayInputStream(body.toByteArray(Charsets.UTF_8))
         override fun getErrorStream() = ByteArrayInputStream("{}".toByteArray(Charsets.UTF_8))
         override fun getResponseCode(): Int {
             failure?.let { throw it }
@@ -85,11 +86,13 @@ class RadarApiHelperRetryTest {
     private class RecordingCallback : RadarApiHelper.RadarApiCallback {
         val completed = CountDownLatch(1)
         var status: Radar.RadarStatus? = null
+        var res: JSONObject? = null
         var error: Throwable? = null
         var count = 0
 
         override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, throwable: Throwable?) {
             this.status = status
+            this.res = res
             error = throwable
             count++
             completed.countDown()
@@ -304,6 +307,26 @@ class RadarApiHelperRetryTest {
         assertEquals(null, callback.error)
         assertEquals(1, opened)
         assertEquals(0, preparationFailures)
+    }
+
+    @Test
+    fun noContentResponseSucceedsWithoutBody() {
+        val callback = RecordingCallback()
+        RadarApiHelper(connectionFactory = {
+            StubConnection(statusCode = HttpURLConnection.HTTP_NO_CONTENT, body = "")
+        }).request(
+            context = ApplicationProvider.getApplicationContext(),
+            method = "POST",
+            path = "v1/search/autocomplete/select",
+            headers = emptyMap(),
+            params = JSONObject().put("resultId", "result-1"),
+            sleep = false,
+            callback = callback
+        )
+
+        callback.await()
+        assertEquals(Radar.RadarStatus.SUCCESS, callback.status)
+        assertEquals(null, callback.res)
     }
 
     @Test

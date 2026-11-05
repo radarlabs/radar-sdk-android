@@ -1,5 +1,6 @@
 package io.radar.sdk.model
 
+import io.radar.sdk.util.toStringArray
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -30,7 +31,7 @@ class RadarAddressPlace(
 
             return RadarAddressPlace(
                 obj.optString(FIELD_NAME),
-                stringArrayFromJson(obj.optJSONArray(FIELD_CATEGORIES))
+                obj.optJSONArray(FIELD_CATEGORIES).toStringArray()
             )
         }
 
@@ -40,40 +41,16 @@ class RadarAddressPlace(
                 return emptyArray()
             }
 
-            return Array(arr.length()) { index ->
-                fromJson(arr.optJSONObject(index))
-            }.filterNotNull().toTypedArray()
+            return (0 until arr.length()).mapNotNull { fromJson(arr.optJSONObject(it)) }.toTypedArray()
         }
 
         @JvmStatic
-        fun toJson(places: Array<RadarAddressPlace>?): JSONArray? {
-            if (places == null) {
-                return null
-            }
-
+        fun toJson(places: Array<RadarAddressPlace>): JSONArray {
             val arr = JSONArray()
             places.forEach { place ->
                 arr.put(place.toJson())
             }
             return arr
-        }
-
-        /**
-         * Reads a JSON array of strings, skipping any entry that is not one.
-         */
-        internal fun stringArrayFromJson(arr: JSONArray?): Array<String> {
-            if (arr == null) {
-                return emptyArray()
-            }
-
-            val list = mutableListOf<String>()
-            for (i in 0 until arr.length()) {
-                val value = arr.optString(i)
-                if (value.isNotEmpty()) {
-                    list.add(value)
-                }
-            }
-            return list.toTypedArray()
         }
     }
 

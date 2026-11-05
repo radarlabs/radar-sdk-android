@@ -1,5 +1,6 @@
 package io.radar.sdk.model
 
+import io.radar.sdk.util.optStringOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -142,7 +143,7 @@ class RadarAddress(
      * Short-lived; pass the whole address to `RadarAutocompleteSession.select()` rather than
      * storing this.
      */
-    val resultId: String? = null,
+    val resultId: String? = null
 ) {
 
     /**
@@ -230,7 +231,7 @@ class RadarAddress(
                 }
                 list.toTypedArray()
             }
-            val resultId = obj.optString(FIELD_RESULT_ID).takeIf { it.isNotEmpty() }
+            val resultId = obj.optStringOrNull(FIELD_RESULT_ID)
 
             return RadarAddress(
                 coordinate,
@@ -259,7 +260,7 @@ class RadarAddress(
                 confidence,
                 timeZone,
                 categories,
-                resultId,
+                resultId
             )
         }
 

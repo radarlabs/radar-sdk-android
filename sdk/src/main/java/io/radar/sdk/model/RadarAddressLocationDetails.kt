@@ -1,5 +1,6 @@
 package io.radar.sdk.model
 
+import io.radar.sdk.util.toStringArray
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -34,8 +35,6 @@ class RadarAddressLocationDetails(
         private const val FIELD_GROUNDS = "grounds"
         private const val FIELD_PLACES = "places"
 
-        private const val UNKNOWN = "unknown"
-
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarAddressLocationDetails? {
             if (obj == null) {
@@ -43,9 +42,9 @@ class RadarAddressLocationDetails(
             }
 
             return RadarAddressLocationDetails(
-                obj.optString(FIELD_USAGE).ifEmpty { UNKNOWN },
-                obj.optString(FIELD_DWELLING).ifEmpty { UNKNOWN },
-                RadarAddressPlace.stringArrayFromJson(obj.optJSONArray(FIELD_GROUNDS)),
+                obj.optString(FIELD_USAGE),
+                obj.optString(FIELD_DWELLING),
+                obj.optJSONArray(FIELD_GROUNDS).toStringArray(),
                 RadarAddressPlace.fromJson(obj.optJSONArray(FIELD_PLACES))
             )
         }

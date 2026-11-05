@@ -236,25 +236,27 @@ internal open class RadarApiHelper(
                                 handler.post {
                                     callback.onComplete(Radar.RadarStatus.SUCCESS)
                                 }
-                            } else {
-                                val body = urlConnection.inputStream.readAll()
-                                if (body == null) {
-                                    traceSpan?.end(Radar.RadarStatus.ERROR_SERVER)
-                                    handler.post {
-                                        callback.onComplete(Radar.RadarStatus.ERROR_SERVER)
-                                    }
 
-                                    return@execute
-                                }
+                                return@execute
+                            }
 
-                                val res = JSONObject(body)
-
-                                logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res")
-
-                                traceSpan?.end(Radar.RadarStatus.SUCCESS)
+                            val body = urlConnection.inputStream.readAll()
+                            if (body == null) {
+                                traceSpan?.end(Radar.RadarStatus.ERROR_SERVER)
                                 handler.post {
-                                    callback.onComplete(Radar.RadarStatus.SUCCESS, res)
+                                    callback.onComplete(Radar.RadarStatus.ERROR_SERVER)
                                 }
+
+                                return@execute
+                            }
+
+                            val res = JSONObject(body)
+
+                            logger?.d("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res")
+
+                            traceSpan?.end(Radar.RadarStatus.SUCCESS)
+                            handler.post {
+                                callback.onComplete(Radar.RadarStatus.SUCCESS, res)
                             }
                         } else {
                             traceSpan?.end(Radar.RadarStatus.SUCCESS)

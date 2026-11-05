@@ -1,5 +1,6 @@
 package io.radar.sdk.model
 
+import io.radar.sdk.util.optStringOrNull
 import org.json.JSONObject
 
 /**
@@ -38,7 +39,7 @@ class RadarAutocompleteEnrichedAddress(
                 ?: return null
 
             return RadarAutocompleteEnrichedAddress(
-                obj.optString(FIELD_FORMATTED_ADDRESS).ifEmpty { null },
+                obj.optStringOrNull(FIELD_FORMATTED_ADDRESS),
                 locationDetails
             )
         }
