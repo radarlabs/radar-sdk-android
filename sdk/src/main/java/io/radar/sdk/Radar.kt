@@ -3367,10 +3367,10 @@ object Radar {
      */
     internal fun selectAutocompleteAddress(
         address: RadarAddress,
-        callback: RadarAutocompleteSelectCallback
+        callback: RadarAutocompleteSelectCallback?
     ) {
         if (!initialized) {
-            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+            callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
 
             return
         }
@@ -3380,7 +3380,7 @@ object Radar {
         if (resultId.isNullOrEmpty()) {
             // Nothing to attribute the selection to; posting would be a guaranteed 400.
             this.logger.d("Autocomplete selection not reported | reason = the result carries no resultId")
-            callback.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
 
             return
         }
@@ -3390,7 +3390,7 @@ object Radar {
             object : RadarApiClient.RadarAutocompleteSelectApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, address: RadarAutocompleteEnrichedAddress?) {
                     handler.post {
-                        callback.onComplete(status, address)
+                        callback?.onComplete(status, address)
                     }
                 }
             }

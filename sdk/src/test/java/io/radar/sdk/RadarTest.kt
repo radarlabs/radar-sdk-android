@@ -3452,6 +3452,26 @@ class RadarTest {
     }
 
     @Test
+    fun test_RadarAutocompleteSession_select_withoutCallback_stillReports() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = false
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.mockResponse = RadarTestUtils.jsonObjectFromResource("/search_autocomplete_session.json")
+
+        val session = RadarAutocompleteSession()
+        val address = autocompleteAddresses(session)?.firstOrNull()
+        assertNotNull(address)
+
+        apiHelperMock.mockResponse = null
+        apiHelperMock.clearCapturedParams()
+
+        session.select(address!!)
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+
+        assertEquals("v1/search/autocomplete/select", apiHelperMock.lastCapturedPath)
+        assertEquals(AUTOCOMPLETE_RESULT_ID, apiHelperMock.lastCapturedParams?.optString("resultId"))
+    }
+
+    @Test
     fun test_RadarAutocompleteSession_select_surfacesEnrichedAddress() {
         permissionsHelperMock.mockFineLocationPermissionGranted = false
         apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS

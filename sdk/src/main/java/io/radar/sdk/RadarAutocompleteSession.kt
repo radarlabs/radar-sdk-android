@@ -110,11 +110,12 @@ class RadarAutocompleteSession internal constructor(
      * [autocomplete].
      *
      * @param[address] The selected result, as returned by [autocomplete].
-     * @param[callback] A callback.
+     * @param[callback] An optional callback.
      */
+    @JvmOverloads
     fun select(
         address: RadarAddress,
-        callback: RadarAutocompleteSelectCallback
+        callback: RadarAutocompleteSelectCallback? = null
     ) {
         Radar.selectAutocompleteAddress(address, callback)
     }
