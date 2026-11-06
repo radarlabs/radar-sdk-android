@@ -1,14 +1,18 @@
 package io.radar.example.tests.settings
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,8 +28,7 @@ import io.radar.example.store.LocalSettingsStore
 import io.radar.example.store.RadarEnvironment
 
 /**
- * Picks the Radar environment and its publishable key. Changes apply on relaunch, so the SDK never
- * runs with a host from one environment and a key from another.
+ * Picks the Radar environment, publishable key, and host overrides. Changes apply on relaunch.
  */
 @Composable
 fun EnvironmentSection() {
@@ -34,7 +37,8 @@ fun EnvironmentSection() {
 
     var selected by remember { mutableStateOf(settings.environment) }
     var key by remember(selected) { mutableStateOf(settings.publishableKey(selected)) }
-    var localUrl by remember { mutableStateOf(settings.localUrl) }
+    var host by remember(selected) { mutableStateOf(settings.hostOverride(selected)) }
+    var verifiedHost by remember(selected) { mutableStateOf(settings.verifiedHostOverride(selected)) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Environment", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -56,24 +60,57 @@ fun EnvironmentSection() {
             }
         }
 
-        if (selected == RadarEnvironment.LOCAL) {
-            FieldEditor(
-                "Local server URL",
-                localUrl,
-                { localUrl = it },
-                placeholder = "http://192.168.X.X:8081 (10.0.2.2 on the emulator)",
-            )
-        }
-
         FieldEditor("${selected.label} publishable key", key, { key = it }, placeholder = "prj_test_pk_…")
+        HostOverrideEditor(
+            "API host override",
+            host,
+            { host = it },
+            selected.host(settings.localUrl),
+            "https://api.radar-staging.com",
+        )
+        HostOverrideEditor(
+            "Verified host override",
+            verifiedHost,
+            { verifiedHost = it },
+            selected.verifiedHost(settings.localUrl),
+            "https://api-verified.radar-staging.com",
+        )
+        Text(
+            "Empty fields use defaults. Custom hosts can use ngrok, " +
+                "api-server-dev-<name>.use1.radar-staging.com, or " +
+                "api-server-pr-<number>.use1.radar-staging.com. Use http:// for local HTTP servers.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
 
         Button(
             onClick = {
-                settings.saveEnvironment(selected, key, localUrl)
+                settings.saveEnvironment(selected, key, host, verifiedHost)
                 MainActivity.restart(context)
             },
-            enabled = selected != RadarEnvironment.LOCAL || localUrl.isNotBlank(),
+            enabled = selected != RadarEnvironment.LOCAL || settings.localUrl.isNotBlank() || (host.isNotBlank() && verifiedHost.isNotBlank()),
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         ) { Text("Apply & restart") }
+    }
+}
+
+@Composable
+private fun HostOverrideEditor(label: String, value: String, onValueChange: (String) -> Unit, defaultHost: String, stagingHost: String) {
+    var expanded by remember { mutableStateOf(false) }
+
+    FieldEditor(label, value, onValueChange, placeholder = defaultHost.ifBlank { "http://10.0.2.2:8081" })
+    Box {
+        TextButton(onClick = { expanded = true }) { Text("Host options") }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            listOf("Default" to "", "Staging" to stagingHost, "Local emulator" to "http://10.0.2.2:8081").forEach { (name, host) ->
+                DropdownMenuItem(
+                    text = { Text(name) },
+                    onClick = {
+                        onValueChange(host)
+                        expanded = false
+                    },
+                )
+            }
+        }
     }
 }

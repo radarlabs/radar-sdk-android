@@ -5,7 +5,7 @@ import androidx.core.content.edit
 
 /**
  * The Radar API environment the example app talks to, picked in Settings → Environment.
- * [LOCAL] points both the regular and verified host at a dev server URL (e.g.
+ * [LOCAL] accepts separate API and verified host URLs (e.g.
  * `http://192.168.X.X:8081`, or `http://10.0.2.2:8081` on the emulator). The example permits
  * cleartext traffic for this (see `network_security_config.xml`).
  */
@@ -23,16 +23,11 @@ enum class RadarEnvironment(
 
     fun verifiedHost(localUrl: String): String = fixedVerifiedHost ?: localUrl
 
-    /** Writes the SDK's host overrides. Production clears them so the SDK uses its built-in defaults. */
-    fun applyTo(context: Context, localUrl: String) {
+    /** Writes the SDK's host overrides. */
+    fun applyTo(context: Context, host: String, verifiedHost: String) {
         context.getSharedPreferences(SDK_PREFS, Context.MODE_PRIVATE).edit {
-            if (this@RadarEnvironment == PRODUCTION) {
-                remove(SDK_KEY_HOST)
-                remove(SDK_KEY_VERIFIED_HOST)
-            } else {
-                putString(SDK_KEY_HOST, host(localUrl))
-                putString(SDK_KEY_VERIFIED_HOST, verifiedHost(localUrl))
-            }
+            putString(SDK_KEY_HOST, host)
+            putString(SDK_KEY_VERIFIED_HOST, verifiedHost)
         }
     }
 

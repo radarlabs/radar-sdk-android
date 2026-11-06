@@ -42,13 +42,13 @@ object KeyChecker {
     private val executor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    /** Probes every [RadarEnvironment.checkable] environment off the main thread; calls back on main. */
-    fun check(publishableKey: String, onResult: (KeyCheck.Done) -> Unit) {
+    /** Probes the configured hosts off the main thread; calls back on main. */
+    fun check(publishableKey: String, hosts: Map<RadarEnvironment, String>, onResult: (KeyCheck.Done) -> Unit) {
         executor.execute {
             val validOn = mutableListOf<RadarEnvironment>()
             val unknown = mutableListOf<RadarEnvironment>()
-            for (environment in RadarEnvironment.checkable) {
-                when (probe(environment.host(""), publishableKey)) {
+            for ((environment, host) in hosts) {
+                when (probe(host, publishableKey)) {
                     true -> validOn += environment
                     false -> Unit
                     null -> unknown += environment
