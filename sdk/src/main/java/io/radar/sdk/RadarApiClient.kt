@@ -206,7 +206,7 @@ internal class RadarApiClient(
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status == RadarStatus.SUCCESS) {
                         Radar.flushLogs()
-                        applyTraceSamplingDecision(sessionId, res?.optJSONObject("meta")?.optJSONObject("sdkConfiguration"))
+                        applyTraceSamplingDecision(sessionId, res?.optJSONObject("meta")?.optJSONObject("sdkConfiguration"), after = parentSpan)
                     }
                     val config = if (res?.has("meta") == true) RadarConfig.fromJson(res) else null
                     callback?.onComplete(status, config)
@@ -218,10 +218,11 @@ internal class RadarApiClient(
     }
 
     /**
-     * Applies `tracingEnabled` from a successful config or track response to the session the request was made for
+     * Applies `tracingEnabled` from a successful config or track response to the session the request was made for.
+     * With [after], a sampled decision's flush waits until that span ends, so the upload includes the request's trace.
      */
-    private fun applyTraceSamplingDecision(sessionId: String, settings: JSONObject?) {
-        Radar.traceManager?.onSamplingDecision(sessionId, settings?.optBoolean("tracingEnabled", false) == true)
+    private fun applyTraceSamplingDecision(sessionId: String, settings: JSONObject?, after: RadarTraceSpan? = null) {
+        Radar.traceManager?.onSamplingDecision(sessionId, settings?.optBoolean("tracingEnabled", false) == true, flushAfter = after)
     }
 
     internal fun log(logs: List<RadarLog>, callback: RadarLogCallback?) {
@@ -625,9 +626,9 @@ internal class RadarApiClient(
                     RadarState.setLastFailedStoppedLocation(context, null)
                     Radar.flushLogs()
                     sessionId?.let {
-                        applyTraceSamplingDecision(it, res.optJSONObject("meta")?.optJSONObject("featureSettings"))
+                        applyTraceSamplingDecision(it, res.optJSONObject("meta")?.optJSONObject("featureSettings"), after = parentSpan)
                     }
-                    Radar.flushTraces()
+                    Radar.flushTraces(after = parentSpan)
                     RadarSettings.updateLastTrackedTime(context)
 
                     val config = RadarConfig.fromJson(res)
