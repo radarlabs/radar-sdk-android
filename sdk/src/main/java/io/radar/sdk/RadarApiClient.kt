@@ -10,6 +10,7 @@ import io.radar.sdk.Radar.RadarLocationSource
 import io.radar.sdk.Radar.RadarStatus
 import io.radar.sdk.Radar.locationManager
 import io.radar.sdk.model.RadarAddress
+import io.radar.sdk.model.RadarAutocompleteEnrichedAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarContext
@@ -87,6 +88,10 @@ internal class RadarApiClient(
 
     interface RadarGeocodeApiCallback {
         fun onComplete(status: RadarStatus, res: JSONObject? = null, addresses: Array<RadarAddress>? = null)
+    }
+
+    interface RadarAutocompleteSelectApiCallback {
+        fun onComplete(status: RadarStatus, res: JSONObject? = null, address: RadarAutocompleteEnrichedAddress? = null)
     }
 
     interface RadarIpGeocodeApiCallback {
@@ -1322,6 +1327,7 @@ internal class RadarApiClient(
         limit: Int? = null,
         country: String? = null,
         mailable: Boolean? = null,
+        sessionToken: String? = null,
         callback: RadarGeocodeApiCallback
     ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
@@ -1345,6 +1351,11 @@ internal class RadarApiClient(
         }
         if (mailable != null) {
             queryParams.append("&mailable=$mailable")
+        }
+        // Sessions only apply to autocomplete for now. RadarAutocompleteSession is the only caller
+        // that supplies a token.
+        if (sessionToken != null) {
+            queryParams.append("&sessionToken=$sessionToken")
         }
 
         val path = "v1/search/autocomplete?$queryParams"
@@ -1375,6 +1386,49 @@ internal class RadarApiClient(
                     }
 
                     callback.onComplete(RadarStatus.ERROR_SERVER)
+                }
+            }
+        )
+    }
+
+    internal fun selectAutocompleteAddress(
+        resultId: String,
+        callback: RadarAutocompleteSelectApiCallback
+    ) {
+        val publishableKey = RadarSettings.getPublishableKey(context)
+        if (publishableKey == null) {
+            callback.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
+
+            return
+        }
+
+        val params = JSONObject()
+        params.putOpt("resultId", resultId)
+
+        val path = "v1/search/autocomplete/select"
+        val headers = headers(publishableKey)
+
+        apiHelper.request(
+            context,
+            "POST",
+            path,
+            headers,
+            params,
+            false,
+            object : RadarApiHelper.RadarApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
+                    if (status != RadarStatus.SUCCESS) {
+                        callback.onComplete(status)
+
+                        return
+                    }
+
+                    // 204 with no body unless the response carries an enriched address.
+                    val address = res?.optJSONObject("address")?.let { addressObj ->
+                        RadarAutocompleteEnrichedAddress.fromJson(addressObj)
+                    }
+
+                    callback.onComplete(RadarStatus.SUCCESS, res, address)
                 }
             }
         )

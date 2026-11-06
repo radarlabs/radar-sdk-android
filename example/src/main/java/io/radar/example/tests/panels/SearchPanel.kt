@@ -7,6 +7,7 @@ import io.radar.example.components.ActionButton
 import io.radar.example.components.TogglePanel
 import io.radar.example.store.LocalLogStore
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarAutocompleteSession
 import java.util.EnumSet
 
 @Composable
@@ -73,44 +74,25 @@ fun SearchPanel() {
             }
         }
         ActionButton("autocomplete") {
-            Radar.autocomplete("brooklyn", origin, arrayOf("locality"), 10, "US") { status, addresses ->
-                log.writeStatus(status, "autocomplete: ${Utils.stringForRadarStatus(status)}", "results = ${addresses?.size ?: 0}\nfirst = ${addresses?.firstOrNull()?.formattedAddress}")
-            }
-            // validateAddress needs a postal code plus a street and number or an address
-            // label, so the validating searches ask for street addresses, not localities.
-            Radar.autocomplete("20 jay st", origin, arrayOf("address"), 10, "US") { _, addresses ->
-                val address = addresses?.firstOrNull() ?: return@autocomplete
-                Radar.validateAddress(
-                    street = address.street ?: "",
-                    number = address.number ?: "",
-                    unit = address.unit,
-                    city = address.city ?: "",
-                    stateCode = address.stateCode ?: "",
-                    postalCode = address.postalCode ?: "",
-                    countryCode = address.countryCode ?: "",
-                ) { status, validated, verificationStatus ->
-                    log.writeStatus(
-                        status,
-                        "validateAddress (from autocomplete): ${Utils.stringForRadarStatus(status)}",
-                        "address = ${validated?.formattedAddress}\nverification = ${Radar.stringForVerificationStatus(verificationStatus)}",
-                    )
+            // one session per input: autocomplete within it, then report the pick
+            val session = RadarAutocompleteSession()
+            session.autocomplete(query = "123 Main", near = origin, limit = 5, country = "US") { status, addresses ->
+                val selected = addresses?.firstOrNull()
+                log.writeStatus(
+                    status,
+                    "autocomplete: ${Utils.stringForRadarStatus(status)}",
+                    "results = ${addresses?.size ?: 0}\nfirst = ${selected?.formattedAddress}",
+                )
+                if (selected == null) {
+                    return@autocomplete
                 }
-            }
-            Radar.autocomplete("20 jay st", origin, arrayOf("address"), 10, "US", mailable = true) { _, addresses ->
-                val address = addresses?.firstOrNull() ?: return@autocomplete
-                Radar.validateAddress(
-                    addressLabel = address.addressLabel ?: "",
-                    unit = address.unit,
-                    city = address.city ?: "",
-                    stateCode = address.stateCode ?: "",
-                    postalCode = address.postalCode ?: "",
-                    countryCode = address.countryCode ?: "",
-                ) { status, validated, verificationStatus ->
-                    log.writeStatus(
-                        status,
-                        "validateAddress (from mailable autocomplete): ${Utils.stringForRadarStatus(status)}",
-                        "address = ${validated?.formattedAddress}\nverification = ${Radar.stringForVerificationStatus(verificationStatus)}",
-                    )
+                session.select(selected) { selectStatus, enriched ->
+                    // only an address result has anything to enrich; everything else is
+                    // recorded and comes back without one
+                    val detail = enriched?.let {
+                        "address = ${it.formattedAddress}\nusage = ${it.locationDetails.usage}\ndwelling = ${it.locationDetails.dwelling}"
+                    } ?: "recorded, no enrichment for this result"
+                    log.writeStatus(selectStatus, "select: ${Utils.stringForRadarStatus(selectStatus)}", detail)
                 }
             }
         }

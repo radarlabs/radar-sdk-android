@@ -1,5 +1,6 @@
 package io.radar.sdk.util
 
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -20,3 +21,14 @@ internal fun JSONObject.optDoubleOrNull(name: String): Double? = if (has(name) &
  * Returns the boolean for [name], or null if the key is missing or JSON null.
  */
 internal fun JSONObject.optBooleanOrNull(name: String): Boolean? = if (has(name) && !isNull(name)) optBoolean(name) else null
+
+/**
+ * Returns the non-empty strings in this array, or an empty array if it is null.
+ */
+internal fun JSONArray?.toStringArray(): Array<String> {
+    if (this == null) {
+        return emptyArray()
+    }
+
+    return (0 until length()).mapNotNull { index -> optString(index).takeIf { it.isNotEmpty() } }.toTypedArray()
+}
