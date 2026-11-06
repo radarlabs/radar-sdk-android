@@ -19,8 +19,8 @@ class RadarAddress(
     val formattedAddress: String? = null,
 
     /**
-    * The name of the country of the address.
-    */
+     * The name of the country of the address.
+     */
     val country: String? = null,
 
     /**
@@ -184,6 +184,7 @@ class RadarAddress(
         private const val FIELD_TIME_ZONE = "timeZone"
         private const val FIELD_CATEGORIES = "categories"
         private const val FIELD_RESULT_ID = "resultId"
+
         @JvmStatic
         fun fromJson(obj: JSONObject?): RadarAddress? {
             if (obj == null) {
@@ -213,7 +214,7 @@ class RadarAddress(
             val distance = obj.optInt(FIELD_DISTANCE)
             val layer = obj.optString(FIELD_LAYER) ?: null
             val metadata: JSONObject? = obj.optJSONObject(FIELD_METADATA) ?: null
-            val confidence = when(obj.optString(FIELD_CONFIDENCE)) {
+            val confidence = when (obj.optString(FIELD_CONFIDENCE)) {
                 "exact" -> RadarAddressConfidence.EXACT
                 "interpolated" -> RadarAddressConfidence.INTERPOLATED
                 "fallback" -> RadarAddressConfidence.FALLBACK
@@ -287,21 +288,18 @@ class RadarAddress(
         }
 
         @JvmStatic
-        fun stringForConfidence(confidence: RadarAddressConfidence): String {
-            return when(confidence) {
-                RadarAddressConfidence.EXACT -> "exact"
-                RadarAddressConfidence.INTERPOLATED -> "interpolated"
-                RadarAddressConfidence.FALLBACK -> "fallback"
-                else -> "none"
-            }
+        fun stringForConfidence(confidence: RadarAddressConfidence): String = when (confidence) {
+            RadarAddressConfidence.EXACT -> "exact"
+            RadarAddressConfidence.INTERPOLATED -> "interpolated"
+            RadarAddressConfidence.FALLBACK -> "fallback"
+            else -> "none"
         }
     }
 
     fun toJson(): JSONObject {
-
         var latitude = this.coordinate.latitude
         var longitude = this.coordinate.longitude
-        //check that lat and long are valid double numbers
+        // check that lat and long are valid double numbers
         if (latitude.isNaN() || longitude.isNaN()) {
             latitude = 0.0
             longitude = 0.0
@@ -334,13 +332,15 @@ class RadarAddress(
         obj.putOpt(FIELD_METADATA, this.metadata)
         obj.putOpt(FIELD_CONFIDENCE, stringForConfidence(this.confidence))
         obj.putOpt(FIELD_TIME_ZONE, this.timeZone?.toJson())
-        obj.putOpt(FIELD_CATEGORIES, this.categories?.let { categories ->
-            JSONArray().apply {
-                categories.forEach { put(it) }
+        obj.putOpt(
+            FIELD_CATEGORIES,
+            this.categories?.let { categories ->
+                JSONArray().apply {
+                    categories.forEach { put(it) }
+                }
             }
-        })
+        )
         obj.putOpt(FIELD_RESULT_ID, this.resultId)
         return obj
     }
-
 }

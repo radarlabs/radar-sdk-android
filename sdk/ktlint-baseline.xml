@@ -245,20 +245,6 @@
         <error line="87" column="9" source="standard:wrapping" />
         <error line="92" column="1" source="standard:final-newline" />
     </file>
-    <file name="src/main/java/io/radar/sdk/model/RadarAddress.kt">
-        <error line="22" column="1" source="standard:indent" />
-        <error line="23" column="1" source="standard:indent" />
-        <error line="187" column="1" source="standard:spacing-between-declarations-with-annotations" />
-        <error line="216" column="34" source="standard:keyword-spacing" />
-        <error line="290" column="77" source="standard:function-expression-body" />
-        <error line="291" column="24" source="standard:keyword-spacing" />
-        <error line="301" column="1" source="standard:no-empty-first-line-in-method-block" />
-        <error line="304" column="9" source="standard:comment-spacing" />
-        <error line="337" column="20" source="standard:wrapping" />
-        <error line="337" column="37" source="standard:wrapping" />
-        <error line="341" column="9" source="standard:wrapping" />
-        <error line="345" column="1" source="standard:no-blank-line-before-rbrace" />
-    </file>
     <file name="src/main/java/io/radar/sdk/model/RadarBeacon.kt">
         <error line="11" column="18" source="standard:paren-spacing" />
         <error line="74" column="9" source="standard:spacing-between-declarations-with-comments" />
