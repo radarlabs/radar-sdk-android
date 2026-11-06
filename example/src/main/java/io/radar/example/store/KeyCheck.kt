@@ -42,7 +42,7 @@ object KeyChecker {
     private val executor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    /** NOTE(jasonl): Check the configured API hosts off the main thread, then return on main. */
+    /** Probes the configured hosts off the main thread; calls back on main. */
     fun check(publishableKey: String, hosts: Map<RadarEnvironment, String>, onResult: (KeyCheck.Done) -> Unit) {
         executor.execute {
             val validOn = mutableListOf<RadarEnvironment>()

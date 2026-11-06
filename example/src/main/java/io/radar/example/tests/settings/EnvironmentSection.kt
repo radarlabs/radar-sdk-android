@@ -28,7 +28,7 @@ import io.radar.example.store.LocalSettingsStore
 import io.radar.example.store.RadarEnvironment
 
 /**
- * NOTE(jasonl): Edit the environment, key, and hosts together. Changes apply after restart.
+ * Picks the Radar environment, publishable key, and host overrides. Changes apply on relaunch.
  */
 @Composable
 fun EnvironmentSection() {

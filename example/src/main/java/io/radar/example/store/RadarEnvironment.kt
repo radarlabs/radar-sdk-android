@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.core.content.edit
 
 /**
- * NOTE(jasonl): Default API hosts for each environment. Settings can override either host.
- * The example permits local HTTP URLs through `network_security_config.xml`.
+ * The Radar API environment the example app talks to, picked in Settings → Environment.
+ * [LOCAL] accepts separate API and verified host URLs (e.g.
+ * `http://192.168.X.X:8081`, or `http://10.0.2.2:8081` on the emulator). The example permits
+ * cleartext traffic for this (see `network_security_config.xml`).
  */
 enum class RadarEnvironment(
     val label: String,
@@ -21,7 +23,7 @@ enum class RadarEnvironment(
 
     fun verifiedHost(localUrl: String): String = fixedVerifiedHost ?: localUrl
 
-    /** NOTE(jasonl): Set both SDK hosts before initialization. */
+    /** Writes the SDK's host overrides. */
     fun applyTo(context: Context, host: String, verifiedHost: String) {
         context.getSharedPreferences(SDK_PREFS, Context.MODE_PRIVATE).edit {
             putString(SDK_KEY_HOST, host)
@@ -30,7 +32,7 @@ enum class RadarEnvironment(
     }
 
     companion object {
-        /** NOTE(jasonl): Check keys on environments with default API hosts. */
+        /** Environments with fixed hosts, which the key check probes. */
         val checkable = listOf(PRODUCTION, STAGING)
 
         fun fromName(name: String?): RadarEnvironment = entries.firstOrNull { it.name == name } ?: PRODUCTION

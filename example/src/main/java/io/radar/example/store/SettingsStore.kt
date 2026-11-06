@@ -10,7 +10,8 @@ import io.radar.sdk.Radar
 import org.json.JSONObject
 
 /**
- * NOTE(jasonl): SDK identity and tracking state, plus the saved environment, keys, and host overrides.
+ * SDK-backed identity + tracking snapshot, plus the persisted environment: which
+ * [RadarEnvironment] to use, a publishable key and host overrides per environment, and the Local server URL.
  *
  * The environment applied at launch is fixed for the life of the process. Changing it goes
  * through [saveEnvironment] followed by a restart (see `MainActivity.restart`).
@@ -22,13 +23,13 @@ class SettingsStore(context: Context) {
     /** The environment this process was launched with. */
     val environment: RadarEnvironment = RadarEnvironment.fromName(prefs.getString(KEY_ENVIRONMENT, null))
 
-    /** NOTE(jasonl): Keep the saved Local URL as a default for existing installs. */
+    /** The saved Local server URL, used as a fallback for host overrides. */
     val localUrl: String = prefs.getString(KEY_LOCAL_URL, "") ?: ""
 
     /** The key for [environment], or "" if none is set. */
     val resolvedPublishableKey: String = publishableKey(environment)
 
-    /** NOTE(jasonl): The API hosts used by this process. */
+    /** The API host for [environment]. */
     val host: String = apiHost(environment)
     val verifiedHost: String = verifiedHostOverride(environment).ifBlank { environment.verifiedHost(localUrl) }
 
@@ -48,7 +49,7 @@ class SettingsStore(context: Context) {
 
     fun apiHost(env: RadarEnvironment): String = hostOverride(env).ifBlank { env.host(localUrl) }
 
-    /** NOTE(jasonl): Save the environment settings for the next launch. */
+    /** Persists the environment settings. Takes effect on the next launch. */
     fun saveEnvironment(env: RadarEnvironment, publishableKey: String, hostOverride: String, verifiedHostOverride: String) {
         prefs.edit(commit = true) {
             putString(KEY_ENVIRONMENT, env.name)
