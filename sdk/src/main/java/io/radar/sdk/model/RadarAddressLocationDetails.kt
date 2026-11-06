@@ -19,7 +19,7 @@ class RadarAddressLocationDetails(
     val dwelling: String,
 
     /**
-     * The grounds of the location.
+     * The grounds of the location, like `campus` or `base`.
      */
     val grounds: Array<String>,
 

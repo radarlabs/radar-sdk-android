@@ -1351,6 +1351,8 @@ internal class RadarApiClient(
         if (mailable != null) {
             queryParams.append("&mailable=$mailable")
         }
+        // Sessions only apply to autocomplete for now. RadarAutocompleteSession is the only caller
+        // that supplies a token.
         if (sessionToken != null) {
             queryParams.append("&sessionToken=$sessionToken")
         }
