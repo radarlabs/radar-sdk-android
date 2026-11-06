@@ -25,4 +25,10 @@ internal fun JSONObject.optBooleanOrNull(name: String): Boolean? = if (has(name)
 /**
  * Returns the non-empty strings in this array, or an empty array if it is null.
  */
-internal fun JSONArray?.toStringArray(): Array<String> = if (this == null) emptyArray() else (0 until length()).mapNotNull { optString(it).ifEmpty { null } }.toTypedArray()
+internal fun JSONArray?.toStringArray(): Array<String> {
+    if (this == null) {
+        return emptyArray()
+    }
+
+    return (0 until length()).mapNotNull { index -> optString(index).takeIf { it.isNotEmpty() } }.toTypedArray()
+}
