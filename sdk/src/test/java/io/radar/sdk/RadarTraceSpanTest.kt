@@ -377,6 +377,38 @@ class RadarTraceSpanTest {
         assertEquals((0 until spans).map { "span-$it" }.toSet(), apiHelper.capturedTraceSpans().map { it.getString("name") }.toSet())
     }
 
+    @Test
+    fun flushWhenEndedFlushesOnceSpanEnds() {
+        val root = RadarTraceSpan.start("root")
+        root.child("POST /v1/track", RadarSpanKind.CLIENT).end(Radar.RadarStatus.SUCCESS)
+
+        root.flushWhenEnded()
+        manager.awaitDiskForTesting()
+        assertTrue(apiHelper.capturedTracePayloads.isEmpty())
+
+        root.end(Radar.RadarStatus.SUCCESS)
+        manager.awaitDiskForTesting()
+        manager.waitForFlushForTesting()
+
+        // One upload holds the whole trace, root included.
+        val payload = apiHelper.capturedTracePayloads.single()
+        val spans = payload.getJSONArray("resourceSpans").getJSONObject(0)
+            .getJSONArray("scopeSpans").getJSONObject(0).getJSONArray("spans")
+        assertEquals(setOf("root", "POST /v1/track"), (0 until spans.length()).map { spans.getJSONObject(it).getString("name") }.toSet())
+    }
+
+    @Test
+    fun flushWhenEndedFlushesNowIfSpanAlreadyEnded() {
+        val root = RadarTraceSpan.start("root")
+        root.end(Radar.RadarStatus.SUCCESS)
+
+        root.flushWhenEnded()
+        manager.awaitDiskForTesting()
+        manager.waitForFlushForTesting()
+
+        assertEquals(listOf("root"), apiHelper.capturedTraceSpans().map { it.getString("name") })
+    }
+
     private fun uploadedSpans(): Map<String, JSONObject> {
         manager.flushAndWaitForTesting()
         return apiHelper.capturedTraceSpans().associateBy { it.getString("name") }

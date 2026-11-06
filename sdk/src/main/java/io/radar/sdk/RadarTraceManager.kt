@@ -482,7 +482,8 @@ internal class RadarTraceManager(
     }
 
     /** Waits until no flush is in progress. Throws after 10 seconds so a stuck flush fails the test. */
-    private fun waitForFlushForTesting() {
+    @VisibleForTesting
+    internal fun waitForFlushForTesting() {
         val deadline = System.currentTimeMillis() + 10_000
         while (isFlushing.get() && System.currentTimeMillis() < deadline) {
             try {

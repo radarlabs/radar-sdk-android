@@ -1535,6 +1535,13 @@ class RadarTest {
         traceManager.awaitDiskForTesting()
 
         assertTrue(apiHelperMock.capturedTraceSpans().any { it.getString("spanId") == "00000000000000a1" })
+        // The flush waits for the track's trace to end, so one upload holds the whole trace, root included.
+        val uploads = apiHelperMock.capturedTracePayloads.map { payload ->
+            val spans = payload.getJSONArray("resourceSpans").getJSONObject(0)
+                .getJSONArray("scopeSpans").getJSONObject(0).getJSONArray("spans")
+            (0 until spans.length()).map { spans.getJSONObject(it).getString("name") }
+        }
+        assertTrue(uploads.any { it.containsAll(listOf("radar.track_once_with_location", "POST /v1/track")) })
     }
 
     @Test
