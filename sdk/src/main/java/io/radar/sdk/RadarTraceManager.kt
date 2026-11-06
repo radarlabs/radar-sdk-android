@@ -106,9 +106,10 @@ internal class RadarTraceManager(
     /**
      * Applies the server's sampling decision for [sessionId], which must be the session sent with the request,
      * not the current one: the session can change while the request is in flight. Pending spans from that
-     * session become uploadable if sampled and are deleted otherwise.
+     * session become uploadable if sampled and are deleted otherwise. A sampled decision flushes them, or with
+     * [flushAfter], flushes when that span ends, so a trace that's still open uploads whole.
      */
-    fun onSamplingDecision(sessionId: String, sampled: Boolean) {
+    fun onSamplingDecision(sessionId: String, sampled: Boolean, flushAfter: RadarTraceSpan? = null) {
         synchronized(decisions) {
             // Return early if there was already a sampling decision for this session. This prevents the sampling
             // decision from changing mid session. While the server should return a stable decision for the same session,
@@ -121,7 +122,11 @@ internal class RadarTraceManager(
         }
         runOnDisk { resolvePending(sessionId, sampled) }
         if (sampled) {
-            flush()
+            if (flushAfter != null) {
+                flushAfter.flushWhenEnded()
+            } else {
+                flush()
+            }
         }
     }
 
