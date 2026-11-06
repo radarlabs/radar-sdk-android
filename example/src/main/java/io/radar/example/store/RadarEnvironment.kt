@@ -4,10 +4,8 @@ import android.content.Context
 import androidx.core.content.edit
 
 /**
- * The Radar API environment the example app talks to, picked in Settings → Environment.
- * [LOCAL] points both the regular and verified host at a dev server URL (e.g.
- * `http://192.168.X.X:8081`, or `http://10.0.2.2:8081` on the emulator). The example permits
- * cleartext traffic for this (see `network_security_config.xml`).
+ * NOTE(jasonl): Default API hosts for each environment. Settings can override either host.
+ * The example permits local HTTP URLs through `network_security_config.xml`.
  */
 enum class RadarEnvironment(
     val label: String,
@@ -23,21 +21,16 @@ enum class RadarEnvironment(
 
     fun verifiedHost(localUrl: String): String = fixedVerifiedHost ?: localUrl
 
-    /** Writes the SDK's host overrides. Production clears them so the SDK uses its built-in defaults. */
-    fun applyTo(context: Context, localUrl: String) {
+    /** NOTE(jasonl): Set both SDK hosts before initialization. */
+    fun applyTo(context: Context, host: String, verifiedHost: String) {
         context.getSharedPreferences(SDK_PREFS, Context.MODE_PRIVATE).edit {
-            if (this@RadarEnvironment == PRODUCTION) {
-                remove(SDK_KEY_HOST)
-                remove(SDK_KEY_VERIFIED_HOST)
-            } else {
-                putString(SDK_KEY_HOST, host(localUrl))
-                putString(SDK_KEY_VERIFIED_HOST, verifiedHost(localUrl))
-            }
+            putString(SDK_KEY_HOST, host)
+            putString(SDK_KEY_VERIFIED_HOST, verifiedHost)
         }
     }
 
     companion object {
-        /** Environments with fixed hosts, which the key check probes. */
+        /** NOTE(jasonl): Check keys on environments with default API hosts. */
         val checkable = listOf(PRODUCTION, STAGING)
 
         fun fromName(name: String?): RadarEnvironment = entries.firstOrNull { it.name == name } ?: PRODUCTION

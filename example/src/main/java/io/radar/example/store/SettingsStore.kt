@@ -10,8 +10,7 @@ import io.radar.sdk.Radar
 import org.json.JSONObject
 
 /**
- * SDK-backed identity + tracking snapshot, plus the persisted environment: which
- * [RadarEnvironment] to use, a publishable key per environment, and the Local server URL.
+ * NOTE(jasonl): SDK identity and tracking state, plus the saved environment, keys, and host overrides.
  *
  * The environment applied at launch is fixed for the life of the process. Changing it goes
  * through [saveEnvironment] followed by a restart (see `MainActivity.restart`).
@@ -23,15 +22,15 @@ class SettingsStore(context: Context) {
     /** The environment this process was launched with. */
     val environment: RadarEnvironment = RadarEnvironment.fromName(prefs.getString(KEY_ENVIRONMENT, null))
 
-    /** The Local server URL this process was launched with. */
+    /** NOTE(jasonl): Keep the saved Local URL as a default for existing installs. */
     val localUrl: String = prefs.getString(KEY_LOCAL_URL, "") ?: ""
 
     /** The key for [environment], or "" if none is set. */
     val resolvedPublishableKey: String = publishableKey(environment)
 
-    /** The API host for [environment]. */
-    val host: String
-        get() = environment.host(localUrl)
+    /** NOTE(jasonl): The API hosts used by this process. */
+    val host: String = apiHost(environment)
+    val verifiedHost: String = verifiedHostOverride(environment).ifBlank { environment.verifiedHost(localUrl) }
 
     /** Which environments [resolvedPublishableKey] is valid on. */
     var keyCheck by mutableStateOf<KeyCheck>(KeyCheck.NotChecked)
@@ -41,12 +40,21 @@ class SettingsStore(context: Context) {
     fun publishableKey(env: RadarEnvironment): String =
         prefs.getString(keyPrefsKey(env), null) ?: defaultPublishableKey(env)
 
-    /** Persists the environment settings. Takes effect on the next launch. */
-    fun saveEnvironment(env: RadarEnvironment, publishableKey: String, localUrl: String) {
+    fun hostOverride(env: RadarEnvironment): String =
+        prefs.getString("host.${env.name}", null) ?: if (env == RadarEnvironment.LOCAL) localUrl else ""
+
+    fun verifiedHostOverride(env: RadarEnvironment): String =
+        prefs.getString("verifiedHost.${env.name}", null) ?: if (env == RadarEnvironment.LOCAL) localUrl else ""
+
+    fun apiHost(env: RadarEnvironment): String = hostOverride(env).ifBlank { env.host(localUrl) }
+
+    /** NOTE(jasonl): Save the environment settings for the next launch. */
+    fun saveEnvironment(env: RadarEnvironment, publishableKey: String, hostOverride: String, verifiedHostOverride: String) {
         prefs.edit(commit = true) {
             putString(KEY_ENVIRONMENT, env.name)
             putString(keyPrefsKey(env), publishableKey.trim())
-            putString(KEY_LOCAL_URL, localUrl.trim())
+            putString("host.${env.name}", normalizeHost(hostOverride))
+            putString("verifiedHost.${env.name}", normalizeHost(verifiedHostOverride))
         }
     }
 
@@ -61,7 +69,7 @@ class SettingsStore(context: Context) {
             return
         }
         keyCheck = KeyCheck.Checking
-        KeyChecker.check(key) { result ->
+        KeyChecker.check(key, RadarEnvironment.checkable.associateWith(::apiHost)) { result ->
             keyCheck = result
             if (result.mismatches(environment)) {
                 logStore.writeError(
@@ -76,7 +84,7 @@ class SettingsStore(context: Context) {
 
     /** Where requests go, e.g. `env = Staging; host = https://…; key = prj_test_pk_ab12…; key check = …`. */
     fun environmentSummary(): String =
-        "env = ${environment.label}; host = $host; key = ${keyPrefix(resolvedPublishableKey)}; key check = ${keyCheck.summary()}"
+        "env = ${environment.label}; host = $host; verified host = $verifiedHost; key = ${keyPrefix(resolvedPublishableKey)}; key check = ${keyCheck.summary()}"
 
     // Identity
     var userId by mutableStateOf("")
@@ -146,6 +154,10 @@ class SettingsStore(context: Context) {
         private const val KEY_LOCAL_URL = "localUrl"
 
         private fun keyPrefsKey(env: RadarEnvironment) = "publishableKey.${env.name}"
+
+        private fun normalizeHost(value: String): String = value.trim().trimEnd('/').let {
+            if (it.isBlank() || it.contains("://")) it else "https://$it"
+        }
 
         private fun defaultPublishableKey(env: RadarEnvironment): String {
             val key = when (env) {

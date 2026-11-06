@@ -114,7 +114,7 @@ class MainActivity : AppCompatActivity() {
             silentPush = true,
             activity = this,
         )
-        settingsStore.environment.applyTo(this, settingsStore.localUrl)
+        settingsStore.environment.applyTo(this, settingsStore.host, settingsStore.verifiedHost)
         Log.i("radar-env", settingsStore.environmentSummary())
         logStore.writeResult("radar-env: ${settingsStore.environmentSummary()}")
         Radar.initialize(this, settingsStore.resolvedPublishableKey, options)
