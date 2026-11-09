@@ -4476,11 +4476,7 @@ object Radar {
         if (!initialized) {
             return
         }
-        if (after != null) {
-            after.flushWhenEnded()
-        } else {
-            traceManager?.flush()
-        }
+        traceManager?.flush(after = after)
     }
 
     /**

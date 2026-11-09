@@ -378,11 +378,11 @@ class RadarTraceSpanTest {
     }
 
     @Test
-    fun flushWhenEndedFlushesOnceSpanEnds() {
+    fun managerFlushAfterWaitsForSpanEnd() {
         val root = RadarTraceSpan.start("root")
         root.child("POST /v1/track", RadarSpanKind.CLIENT).end(Radar.RadarStatus.SUCCESS)
 
-        root.flushWhenEnded()
+        manager.flush(after = root)
         manager.awaitDiskForTesting()
         assertTrue(apiHelper.capturedTracePayloads.isEmpty())
 
@@ -398,15 +398,28 @@ class RadarTraceSpanTest {
     }
 
     @Test
-    fun flushWhenEndedFlushesNowIfSpanAlreadyEnded() {
+    fun managerFlushAfterAlreadyEndedSpanRunsNow() {
         val root = RadarTraceSpan.start("root")
         root.end(Radar.RadarStatus.SUCCESS)
 
-        root.flushWhenEnded()
+        manager.flush(after = root)
         manager.awaitDiskForTesting()
         manager.waitForFlushForTesting()
 
         assertEquals(listOf("root"), apiHelper.capturedTraceSpans().map { it.getString("name") })
+    }
+
+    @Test
+    fun managerFlushAfterDiscardedSpanUploadsEarlierSpans() {
+        RadarTraceSpan.start("earlier").end(Radar.RadarStatus.SUCCESS)
+        val root = RadarTraceSpan.start("discarded")
+
+        manager.flush(after = root)
+        root.discard()
+        manager.awaitDiskForTesting()
+        manager.waitForFlushForTesting()
+
+        assertEquals(listOf("earlier"), apiHelper.capturedTraceSpans().map { it.getString("name") })
     }
 
     @Test

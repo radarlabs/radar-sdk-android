@@ -52,9 +52,9 @@ internal class RadarTraceSpan private constructor(
     private val startedAtUnixMs = wallClockMs()
     private val lock = Any()
 
-    // Guarded by lock, along with attributes.
+    // Guarded by lock, along with attributes and endCallbacks. Set after the record is queued or discarded.
     private var ended = false
-    private var flushOnEnd = false
+    private val endCallbacks = mutableListOf<() -> Unit>()
 
     /**
      * False only for the shared no-op span: tracing is off, or the session isn't sampled. A span whose session's
@@ -120,58 +120,56 @@ internal class RadarTraceSpan private constructor(
      * ended are still recorded, so only discard a span that has no children.
      */
     fun discard() {
-        synchronized(lock) {
+        val callbacks = synchronized(lock) {
+            if (ended) return
             ended = true
+            endCallbacks.toList().also { endCallbacks.clear() }
         }
+        callbacks.forEach { it() }
     }
 
     /**
-     * Flushes traces when this span ends, so the upload includes it.
-     *
-     * Intended to be used after successful v1/track calls. Uploading immediately after the successful call
-     * would upload the current track trace without its root. Waiting until the trace ends uploads the full trace.
+     * Calls [callback] after this span's record has been queued or the span has been discarded.
+     * A late listener runs immediately.
      */
-    fun flushWhenEnded() {
-        // Spans that are not recorded never upload so there is no need to wait. Flushing can still upload
-        // spans left from an earlier sampled session.
-        val flushNow = !isRecording || synchronized(lock) {
-            flushOnEnd = true
-            ended
+    fun onEnded(callback: () -> Unit) {
+        val runNow = !isRecording || synchronized(lock) {
+            if (ended) {
+                true
+            } else {
+                endCallbacks.add(callback)
+                false
+            }
         }
-        if (flushNow) {
-            manager?.flush() ?: Radar.flushTraces()
-        }
+        if (runNow) callback()
     }
 
     fun end(status: Radar.RadarStatus) {
         if (!isRecording) {
             return
         }
-        val (snapshot, flush) = synchronized(lock) {
+        val callbacks = synchronized(lock) {
             if (ended) {
                 return
             }
+            val elapsedMs = SystemClock.elapsedRealtime() - startedAtElapsedMs
+            val completed = RadarCompletedSpan(
+                name,
+                traceId,
+                spanId,
+                parentSpanId,
+                kind,
+                startedAtUnixMs * 1_000_000,
+                (startedAtUnixMs + elapsedMs) * 1_000_000,
+                status,
+                attributes.toMap()
+            )
+            // Queue the write before an end listener can queue a flush.
+            manager?.record(completed, project, sessionId)
             ended = true
-            attributes.toMap() to flushOnEnd
+            endCallbacks.toList().also { endCallbacks.clear() }
         }
-        val elapsedMs = SystemClock.elapsedRealtime() - startedAtElapsedMs
-        val completed = RadarCompletedSpan(
-            name,
-            traceId,
-            spanId,
-            parentSpanId,
-            kind,
-            startedAtUnixMs * 1_000_000,
-            (startedAtUnixMs + elapsedMs) * 1_000_000,
-            status,
-            snapshot
-        )
-        manager?.record(completed, project, sessionId)
-        // After record(), which queues the write, so the upload that flush() queues on the same disk worker sees
-        // this span.
-        if (flush) {
-            manager?.flush()
-        }
+        callbacks.forEach { it() }
     }
 
     companion object {
