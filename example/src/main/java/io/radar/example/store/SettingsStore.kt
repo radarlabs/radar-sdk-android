@@ -29,6 +29,12 @@ class SettingsStore(context: Context) {
     /** The key for [environment], or "" if none is set. */
     val resolvedPublishableKey: String = publishableKey(environment)
 
+    /** Whether [environment] initializes with an auth token instead of the publishable key. */
+    val useAuthToken: Boolean = useAuthToken(environment)
+
+    /** The auth token passed to `Radar.initialize`, or null when [environment] uses the publishable key. */
+    val resolvedAuthToken: String? = if (useAuthToken) authToken(environment).ifBlank { null } else null
+
     /** The API host for [environment]. */
     val host: String = apiHost(environment)
     val verifiedHost: String = verifiedHostOverride(environment).ifBlank { environment.verifiedHost(localUrl) }
@@ -41,6 +47,11 @@ class SettingsStore(context: Context) {
     fun publishableKey(env: RadarEnvironment): String =
         prefs.getString(keyPrefsKey(env), null) ?: defaultPublishableKey(env)
 
+    fun useAuthToken(env: RadarEnvironment): Boolean = prefs.getBoolean("useAuthToken.${env.name}", false)
+
+    /** The saved auth token (a JWT) for [env], or "" if none is set. */
+    fun authToken(env: RadarEnvironment): String = prefs.getString("authToken.${env.name}", null) ?: ""
+
     fun hostOverride(env: RadarEnvironment): String =
         prefs.getString("host.${env.name}", null) ?: if (env == RadarEnvironment.LOCAL) localUrl else ""
 
@@ -50,10 +61,19 @@ class SettingsStore(context: Context) {
     fun apiHost(env: RadarEnvironment): String = hostOverride(env).ifBlank { env.host(localUrl) }
 
     /** Persists the environment settings. Takes effect on the next launch. */
-    fun saveEnvironment(env: RadarEnvironment, publishableKey: String, hostOverride: String, verifiedHostOverride: String) {
+    fun saveEnvironment(
+        env: RadarEnvironment,
+        publishableKey: String,
+        hostOverride: String,
+        verifiedHostOverride: String,
+        useAuthToken: Boolean,
+        authToken: String,
+    ) {
         prefs.edit(commit = true) {
             putString(KEY_ENVIRONMENT, env.name)
             putString(keyPrefsKey(env), publishableKey.trim())
+            putBoolean("useAuthToken.${env.name}", useAuthToken)
+            putString("authToken.${env.name}", authToken.trim())
             putString("host.${env.name}", normalizeHost(hostOverride))
             putString("verifiedHost.${env.name}", normalizeHost(verifiedHostOverride))
         }
@@ -64,9 +84,10 @@ class SettingsStore(context: Context) {
      * valid on the selected one.
      */
     fun runKeyCheck(logStore: LogStore) {
-        val key = resolvedPublishableKey
+        val key = if (useAuthToken) resolvedAuthToken?.let { "Bearer $it" } ?: "" else resolvedPublishableKey
         if (key.isBlank()) {
-            logStore.writeError("No publishable key set for ${environment.label}", "Set one in Settings → Environment.")
+            val what = if (useAuthToken) "auth token" else "publishable key"
+            logStore.writeError("No $what set for ${environment.label}", "Set one in Settings → Environment.")
             return
         }
         keyCheck = KeyCheck.Checking
@@ -85,7 +106,14 @@ class SettingsStore(context: Context) {
 
     /** Where requests go, e.g. `env = Staging; host = https://…; key = prj_test_pk_ab12…; key check = …`. */
     fun environmentSummary(): String =
-        "env = ${environment.label}; host = $host; verified host = $verifiedHost; key = ${keyPrefix(resolvedPublishableKey)}; key check = ${keyCheck.summary()}"
+        "env = ${environment.label}; host = $host; verified host = $verifiedHost; ${credentialSummary()}; key check = ${keyCheck.summary()}"
+
+    /** `key = prj_…` or `auth token = kid …, expires …`. */
+    private fun credentialSummary(): String = when {
+        !useAuthToken -> "key = ${keyPrefix(resolvedPublishableKey)}"
+        resolvedAuthToken == null -> "auth token = (none)"
+        else -> "auth token = ${AuthTokenInfo.describe(resolvedAuthToken)}"
+    }
 
     // Identity
     var userId by mutableStateOf("")
