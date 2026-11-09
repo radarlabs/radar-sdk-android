@@ -1621,7 +1621,7 @@ class RadarTest {
         traceManager.awaitDiskForTesting()
 
         assertEquals(RadarTraceManager.SamplingState.NOT_SAMPLED, traceManager.samplingState(sessionId))
-        assertTrue(File(context.filesDir, "radar_traces").listFiles()!!.none { it.extension == "pending" })
+        assertTrue(File(context.noBackupFilesDir, "radar_traces").listFiles()!!.none { it.extension == "pending" })
     }
 
     @Test

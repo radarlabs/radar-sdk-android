@@ -45,7 +45,7 @@ class RadarTraceSpanTest {
     fun setUp() {
         val application = ApplicationProvider.getApplicationContext<Context>()
         context = object : ContextWrapper(application) {
-            override fun getFilesDir(): File = temp.root
+            override fun getNoBackupFilesDir(): File = temp.root
         }
         RadarSettings.setPublishableKey(context, "prj_test_pk_trace")
         logger = RadarLogger(context)
