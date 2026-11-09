@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
 import android.os.Build
+import android.util.Base64
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.helpers.RadarApiHelperMock
@@ -17,6 +18,7 @@ import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeFalse
@@ -282,6 +284,58 @@ class RadarTraceManagerTest {
         manager.flushAndWaitForTesting()
         assertTrue(traceFiles().isEmpty())
         assertEquals(1, apiHelper.capturedTracePayloads.size)
+    }
+
+    @Test
+    fun refreshedAuthTokenWithSameKidUploadsEarlierSpans() {
+        RadarSettings.setPublishableKey(context, authToken(kid = "kid-a", exp = 1))
+        recordSpans(1)
+
+        val refreshed = authToken(kid = "kid-a", exp = 2)
+        RadarSettings.setPublishableKey(context, refreshed)
+        manager.flushAndWaitForTesting()
+
+        assertTrue(traceFiles().isEmpty())
+        assertEquals(1, apiHelper.capturedTracePayloads.size)
+        assertEquals(refreshed, apiHelper.lastCapturedTraceHeaders?.get("Authorization"))
+    }
+
+    @Test
+    fun authTokenWithDifferentKidDoesNotUploadEarlierSpans() {
+        RadarSettings.setPublishableKey(context, authToken(kid = "kid-a"))
+        recordSpans(1)
+
+        RadarSettings.setPublishableKey(context, authToken(kid = "kid-b"))
+        manager.flushAndWaitForTesting()
+
+        assertEquals(1, traceFiles().size)
+        assertTrue(apiHelper.capturedTracePayloads.isEmpty())
+    }
+
+    @Test
+    fun unreadableAuthTokenFallsBackToWholeValue() {
+        val malformed = "Bearer not-a-jwt"
+        RadarSettings.setPublishableKey(context, malformed)
+        recordSpans(1)
+
+        // A different token without a readable kid doesn't match.
+        RadarSettings.setPublishableKey(context, "Bearer ${base64Url("{\"alg\":\"RS256\"}")}.e30.sig")
+        manager.flushAndWaitForTesting()
+        assertTrue(apiHelper.capturedTracePayloads.isEmpty())
+
+        // The same value does.
+        RadarSettings.setPublishableKey(context, malformed)
+        manager.flushAndWaitForTesting()
+        assertEquals(1, apiHelper.capturedTracePayloads.size)
+    }
+
+    @Test
+    fun authTokenFingerprintDiffersFromPublishableKey() {
+        val publishableKeyFingerprint = manager.currentProjectFingerprint()
+
+        RadarSettings.setPublishableKey(context, authToken(kid = PUBLISHABLE_KEY))
+
+        assertNotEquals(publishableKeyFingerprint, manager.currentProjectFingerprint())
     }
 
     // Storage
@@ -637,6 +691,11 @@ class RadarTraceManagerTest {
             .put("span", span("span", spanId).toJson())
         File(directory, name).writeText(record.toString())
     }
+
+    /** An unsigned auth token as `Radar.initialize` stores it. Only the header is read. */
+    private fun authToken(kid: String, exp: Long = 1): String = "Bearer ${base64Url("{\"alg\":\"RS256\",\"typ\":\"JWT\",\"kid\":\"$kid\"}")}.${base64Url("{\"exp\":$exp}")}.signature"
+
+    private fun base64Url(json: String): String = Base64.encodeToString(json.toByteArray(), Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
 
     private fun traceDirectory(): File = File(temp.root, "radar_traces").apply { mkdirs() }
 
