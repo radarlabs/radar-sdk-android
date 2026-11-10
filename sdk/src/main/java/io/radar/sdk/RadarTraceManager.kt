@@ -124,13 +124,7 @@ internal class RadarTraceManager(
             decisions[sessionId] = sampled
         }
         runOnDisk { resolvePending(sessionId, sampled) }
-        if (sampled) {
-            if (flushAfter != null) {
-                flushAfter.flushWhenEnded()
-            } else {
-                flush()
-            }
-        }
+        if (sampled) flush(after = flushAfter)
     }
 
     /**
@@ -174,7 +168,11 @@ internal class RadarTraceManager(
      * Uploads batches on the disk worker until the queue is empty or an upload does not succeed. The storage
      * limits keep a full backlog to about 5 batches.
      */
-    fun flush() {
+    fun flush(after: RadarTraceSpan? = null) {
+        if (after != null) {
+            after.onEnded { flush() }
+            return
+        }
         if (!isFlushing.compareAndSet(false, true)) return
         runOnDisk { uploadNextBatch() }
     }
