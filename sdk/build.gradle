@@ -41,6 +41,7 @@ android {
         minSdk 23
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
         multiDexEnabled = true
+        consumerProguardFiles "consumer-rules.pro"
     }
     buildTypes {
         release {
