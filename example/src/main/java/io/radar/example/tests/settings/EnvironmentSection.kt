@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.radar.example.MainActivity
 import io.radar.example.components.FieldEditor
+import io.radar.example.store.AuthTokenInfo
 import io.radar.example.store.LocalSettingsStore
 import io.radar.example.store.RadarEnvironment
 
@@ -39,6 +40,8 @@ fun EnvironmentSection() {
     var key by remember(selected) { mutableStateOf(settings.publishableKey(selected)) }
     var host by remember(selected) { mutableStateOf(settings.hostOverride(selected)) }
     var verifiedHost by remember(selected) { mutableStateOf(settings.verifiedHostOverride(selected)) }
+    var useAuthToken by remember(selected) { mutableStateOf(settings.useAuthToken(selected)) }
+    var authToken by remember(selected) { mutableStateOf(settings.authToken(selected)) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Environment", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -61,6 +64,30 @@ fun EnvironmentSection() {
         }
 
         FieldEditor("${selected.label} publishable key", key, { key = it }, placeholder = "prj_test_pk_…")
+
+        val credentials = listOf("Publishable key" to false, "Auth token" to true)
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            credentials.forEachIndexed { index, (label, value) ->
+                SegmentedButton(
+                    selected = useAuthToken == value,
+                    onClick = { useAuthToken = value },
+                    shape = SegmentedButtonDefaults.itemShape(index, credentials.size),
+                ) { Text(label) }
+            }
+        }
+        if (useAuthToken) {
+            FieldEditor("${selected.label} auth token (JWT)", authToken, { authToken = it }, placeholder = "eyJ…")
+            Text(
+                if (authToken.isBlank()) "No token set" else AuthTokenInfo.describe(authToken.trim()),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                "Initializes with the token instead of the publishable key. The publishable key is still used for map styles.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         HostOverrideEditor(
             "API host override",
             host,
@@ -85,10 +112,11 @@ fun EnvironmentSection() {
 
         Button(
             onClick = {
-                settings.saveEnvironment(selected, key, host, verifiedHost)
+                settings.saveEnvironment(selected, key, host, verifiedHost, useAuthToken, authToken)
                 MainActivity.restart(context)
             },
-            enabled = selected != RadarEnvironment.LOCAL || settings.localUrl.isNotBlank() || (host.isNotBlank() && verifiedHost.isNotBlank()),
+            enabled = (selected != RadarEnvironment.LOCAL || settings.localUrl.isNotBlank() || (host.isNotBlank() && verifiedHost.isNotBlank())) &&
+                (!useAuthToken || authToken.isNotBlank()),
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         ) { Text("Apply & restart") }
     }

@@ -117,7 +117,13 @@ class MainActivity : AppCompatActivity() {
         settingsStore.environment.applyTo(this, settingsStore.host, settingsStore.verifiedHost)
         Log.i("radar-env", settingsStore.environmentSummary())
         logStore.writeResult("radar-env: ${settingsStore.environmentSummary()}")
-        Radar.initialize(this, settingsStore.resolvedPublishableKey, options)
+        val authToken = settingsStore.resolvedAuthToken
+        if (settingsStore.useAuthToken) {
+            // The SDK uses the publishable key if both are set, so pass only the token.
+            Radar.initialize(this, options.copy(authToken = authToken))
+        } else {
+            Radar.initialize(this, settingsStore.resolvedPublishableKey, options)
+        }
         settingsStore.runKeyCheck(logStore)
 
         Radar.setUserId("android-test-user")
