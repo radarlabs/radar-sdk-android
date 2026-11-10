@@ -3,6 +3,7 @@ package io.radar.sdk
 import android.content.Context
 import android.os.Build
 import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
 import java.io.File
 import java.io.FileOutputStream
 import java.security.MessageDigest
@@ -61,7 +62,9 @@ internal class RadarTraceManager(
     }
 
     private val disk = Executors.newSingleThreadExecutor()
-    private val directory = File(context.filesDir, DIR)
+
+    // Excluded from Auto Backup, so spans are not copied to cloud backups or restored onto another device.
+    private val directory = File(ContextCompat.getNoBackupFilesDir(context), DIR)
     private val isFlushing = AtomicBoolean(false)
     private val pendingWrites = AtomicInteger(0)
     private val droppedWrites = AtomicInteger(0)
