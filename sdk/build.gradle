@@ -84,6 +84,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "androidx.core:core-ktx:1.7.0"
     implementation "com.google.android.gms:play-services-location:21.0.1"
+    // compileOnly classes that SDK code references need a -dontwarn rule in consumer-rules.pro.
     compileOnly "com.huawei.hms:location:6.16.0.302"
     compileOnly "com.google.android.play:integrity:1.6.0"
 
