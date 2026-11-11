@@ -106,12 +106,12 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
     internal fun setInAppMessageReceiver(inAppMessageReceiver: RadarInAppMessageReceiver) {
         this.inAppMessageReceiver = inAppMessageReceiver
     }
-   
-   internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>) {
-       for (inAppMessage in inAppMessages) {
-           if (inAppMessageReceiver != null) {
-               inAppMessageReceiver?.onNewInAppMessage(inAppMessage)
-           }
-       }
-   }
+
+    internal fun showInAppMessages(inAppMessages: Array<RadarInAppMessage>) {
+        for (inAppMessage in inAppMessages) {
+            if (inAppMessageReceiver != null) {
+                inAppMessageReceiver?.onNewInAppMessage(inAppMessage)
+            }
+        }
+    }
 }
