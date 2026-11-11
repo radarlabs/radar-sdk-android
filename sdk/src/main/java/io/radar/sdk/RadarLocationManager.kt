@@ -64,8 +64,13 @@ internal class RadarLocationManager(
         private const val SYNCED_GEOFENCES_REQUEST_ID_PREFIX = "radar_sync"
         internal const val HUAWEI_LOCATION_CLASS = "com.huawei.hms.location.FusedLocationProviderClient"
 
+        internal const val HUAWEI_UNAVAILABLE_MESSAGE =
+            "HUAWEI location services provider set, but com.huawei.hms:location is not in the app. " +
+                "Add the dependency to get locations."
+
         // HMS location is a compileOnly dependency. If the app sets the HUAWEI provider but does not
-        // include HMS location, use the Google client instead of a crash on the first location call.
+        // include HMS location, use a client that logs an error and fails each call. Do not crash the
+        // app, and do not use Google location services when the app asked for HUAWEI.
         internal fun createLocationClient(
             context: Context,
             logger: RadarLogger,
@@ -76,12 +81,8 @@ internal class RadarLocationManager(
                 return RadarGoogleLocationClient(context, logger)
             }
             if (!isClassAvailable(HUAWEI_LOCATION_CLASS)) {
-                logger.e(
-                    "HUAWEI location services provider set, but com.huawei.hms:location is not in the app. " +
-                        "Add the dependency. Using Google location services instead.",
-                    RadarLogType.SDK_ERROR
-                )
-                return RadarGoogleLocationClient(context, logger)
+                logger.e(HUAWEI_UNAVAILABLE_MESSAGE, RadarLogType.SDK_ERROR)
+                return RadarUnavailableLocationClient(logger, HUAWEI_UNAVAILABLE_MESSAGE)
             }
             return RadarHuaweiLocationClient(context, logger)
         }
