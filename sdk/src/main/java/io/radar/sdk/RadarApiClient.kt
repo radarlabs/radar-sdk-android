@@ -14,6 +14,7 @@ import io.radar.sdk.model.RadarAutocompleteEnrichedAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarConversion
 import io.radar.sdk.model.RadarCoordinate
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
@@ -110,7 +111,7 @@ internal class RadarApiClient(
         fun onComplete(
             status: RadarStatus,
             res: JSONObject? = null,
-            event: RadarEvent? = null
+            conversion: RadarConversion? = null
         )
     }
 
@@ -1876,17 +1877,15 @@ internal class RadarApiClient(
                         return
                     }
 
-                    val conversionEvent = res.optJSONObject("event")?.let { eventObj ->
-                        RadarEvent.fromJson(eventObj)
-                    }
+                    val conversion = RadarConversion.fromJson(res.optJSONObject("event"))
 
-                    if (conversionEvent == null) {
+                    if (conversion == null) {
                         callback.onComplete(RadarStatus.ERROR_SERVER)
 
                         return
                     }
 
-                    callback.onComplete(RadarStatus.SUCCESS, res, conversionEvent)
+                    callback.onComplete(RadarStatus.SUCCESS, res, conversion)
                 }
             }
         )

@@ -311,9 +311,12 @@ class RadarEvent(
                 return null
             }
 
-            val id = obj.optString(FIELD_ID) ?: ""
-            val createdAt = RadarUtils.isoStringToDate(obj.optString(FIELD_CREATED_AT)) ?: Date()
-            val actualCreatedAt = RadarUtils.isoStringToDate(obj.optString(FIELD_ACTUAL_CREATED_AT)) ?: Date()
+            // An event must have a real ID, dates, and location. Conversions have no location; they parse as
+            // `RadarConversion`.
+            val id = obj.opt(FIELD_ID) as? String ?: return null
+            val createdAt = RadarEventParsing.date(obj, FIELD_CREATED_AT) ?: return null
+            val actualCreatedAt = RadarEventParsing.date(obj, FIELD_ACTUAL_CREATED_AT) ?: return null
+            val location = locationFromJson(obj, createdAt) ?: return null
             val live = obj.optBoolean(FIELD_LIVE)
             val type = when (obj.optString(FIELD_TYPE)) {
                 "user.entered_geofence" -> USER_ENTERED_GEOFENCE
@@ -375,29 +378,8 @@ class RadarEvent(
                 else -> RadarEventConfidence.NONE
             }
             val duration = obj.optDouble(FIELD_DURATION, 0.0).toFloat()
-            val locationObj = obj.optJSONObject(FIELD_LOCATION)
-            val locationCoordinatesObj = locationObj?.optJSONArray(FIELD_COORDINATES)
-            val location = Location("RadarSDK").apply {
-                longitude = locationCoordinatesObj?.optDouble(0) ?: 0.0
-                latitude = locationCoordinatesObj?.optDouble(1) ?: 0.0
-                if (obj.has(FIELD_LOCATION_ACCURACY)) {
-                    accuracy = obj.optDouble(FIELD_LOCATION_ACCURACY).toFloat()
-                }
-                time = createdAt.time
-            }
-
             val replayed = obj.optBoolean(FIELD_REPLAYED)
-
-            val metadataStr = obj.optString(FIELD_METADATA)
-            val metadataJson = if (!metadataStr.isNullOrEmpty()) {
-                try {
-                    JSONObject(metadataStr)
-                } catch (e: Exception) {
-                    null
-                }
-            } else {
-                null
-            }
+            val metadataJson = RadarEventParsing.metadata(obj, FIELD_METADATA)
 
             val event = RadarEvent(
                 id, createdAt, actualCreatedAt, live, type, conversionName, geofence, place, region, beacon, trip, fraud,
@@ -405,6 +387,26 @@ class RadarEvent(
             )
 
             return event
+        }
+
+        // Returns null unless `location.coordinates` holds a numeric longitude and latitude, and optionally an
+        // altitude.
+        private fun locationFromJson(obj: JSONObject, createdAt: Date): Location? {
+            val coordinates = obj.optJSONObject(FIELD_LOCATION)?.optJSONArray(FIELD_COORDINATES) ?: return null
+            if (coordinates.length() != 2 && coordinates.length() != 3) {
+                return null
+            }
+            val longitude = coordinates.opt(0) as? Number ?: return null
+            val latitude = coordinates.opt(1) as? Number ?: return null
+
+            return Location("RadarSDK").apply {
+                this.longitude = longitude.toDouble()
+                this.latitude = latitude.toDouble()
+                if (obj.has(FIELD_LOCATION_ACCURACY)) {
+                    accuracy = obj.optDouble(FIELD_LOCATION_ACCURACY).toFloat()
+                }
+                time = createdAt.time
+            }
         }
 
         @JvmStatic

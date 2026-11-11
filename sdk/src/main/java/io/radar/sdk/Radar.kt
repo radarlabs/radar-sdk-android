@@ -14,6 +14,7 @@ import io.radar.sdk.model.RadarAutocompleteEnrichedAddress
 import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarConversion
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarEvent.RadarEventVerification
 import io.radar.sdk.model.RadarGeofence
@@ -325,15 +326,15 @@ object Radar {
      */
     interface RadarLogConversionCallback {
         /**
-         * Called when a request to log a conversion succeeds, fails, or times out. Receives the request status and, if successful, the conversion event generated.
+         * Called when a request to log a conversion succeeds, fails, or times out. Receives the request status and, if successful, the conversion.
          *
          * @param[status] RadarStatus The request status.
-         * @param[event] RadarEvent? If successful, the conversion event.
+         * @param[conversion] RadarConversion? If successful, the conversion.
          *
          */
         fun onComplete(
             status: RadarStatus,
-            event: RadarEvent? = null
+            conversion: RadarConversion? = null
         )
     }
 
@@ -4262,7 +4263,7 @@ object Radar {
     fun logConversion(
         name: String,
         metadata: JSONObject? = null,
-        block: (status: RadarStatus, event: RadarEvent?) -> Unit
+        block: (status: RadarStatus, conversion: RadarConversion?) -> Unit
     ) {
         logConversion(
             name,
@@ -4270,9 +4271,9 @@ object Radar {
             object : RadarLogConversionCallback {
                 override fun onComplete(
                     status: RadarStatus,
-                    event: RadarEvent?
+                    conversion: RadarConversion?
                 ) {
-                    block(status, event)
+                    block(status, conversion)
                 }
             }
         )
@@ -4316,7 +4317,7 @@ object Radar {
         name: String,
         revenue: Double,
         metadata: JSONObject? = null,
-        block: (status: RadarStatus, RadarEvent?) -> Unit
+        block: (status: RadarStatus, conversion: RadarConversion?) -> Unit
     ) {
         logConversion(
             name,
@@ -4325,9 +4326,9 @@ object Radar {
             object : RadarLogConversionCallback {
                 override fun onComplete(
                     status: RadarStatus,
-                    event: RadarEvent?
+                    conversion: RadarConversion?
                 ) {
-                    block(status, event)
+                    block(status, conversion)
                 }
             }
         )
@@ -4347,7 +4348,7 @@ object Radar {
                 override fun onComplete(
                     status: RadarStatus,
                     res: JSONObject?,
-                    event: RadarEvent?
+                    conversion: RadarConversion?
                 ) {
                     if (status != RadarStatus.SUCCESS) {
                         handler.post {
@@ -4358,7 +4359,7 @@ object Radar {
                     }
 
                     handler.post {
-                        callback.onComplete(status, event)
+                        callback.onComplete(status, conversion)
                     }
                 }
             }
@@ -4393,8 +4394,8 @@ object Radar {
                 "opened_app",
                 jsonObject,
                 callback = object : RadarLogConversionCallback {
-                    override fun onComplete(status: RadarStatus, event: RadarEvent?) {
-                        logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
+                    override fun onComplete(status: RadarStatus, conversion: RadarConversion?) {
+                        logger.i("Conversion name = ${conversion?.name}: status = $status; conversion = ${conversion?.toJson()}")
                     }
                 }
             )
@@ -4413,8 +4414,8 @@ object Radar {
             sendLogConversionRequest(
                 "opened_app",
                 callback = object : RadarLogConversionCallback {
-                    override fun onComplete(status: RadarStatus, event: RadarEvent?) {
-                        logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
+                    override fun onComplete(status: RadarStatus, conversion: RadarConversion?) {
+                        logger.i("Conversion name = ${conversion?.name}: status = $status; conversion = ${conversion?.toJson()}")
                     }
                 }
             )

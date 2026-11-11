@@ -63,18 +63,14 @@
         <error line="205" column="1" source="standard:final-newline" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarInAppMessageManager.kt">
-        <error line="9" column="1" source="standard:no-unused-imports" />
-        <error line="36" column="35" source="standard:wrapping" />
-        <error line="36" column="60" source="standard:wrapping" />
-        <error line="40" column="9" source="standard:wrapping" />
-        <error line="105" column="1" source="standard:no-trailing-spaces" />
-        <error line="106" column="1" source="standard:indent" />
-        <error line="107" column="1" source="standard:indent" />
-        <error line="108" column="1" source="standard:indent" />
-        <error line="109" column="1" source="standard:indent" />
+        <error line="109" column="1" source="standard:no-trailing-spaces" />
         <error line="110" column="1" source="standard:indent" />
         <error line="111" column="1" source="standard:indent" />
         <error line="112" column="1" source="standard:indent" />
+        <error line="113" column="1" source="standard:indent" />
+        <error line="114" column="1" source="standard:indent" />
+        <error line="115" column="1" source="standard:indent" />
+        <error line="116" column="1" source="standard:indent" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarInAppMessageReceiver.kt">
         <error line="16" column="1" source="standard:no-trailing-spaces" />

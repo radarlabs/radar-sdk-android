@@ -6,9 +6,8 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.net.toUri
-import io.radar.sdk.Radar.RadarLogConversionCallback
 import io.radar.sdk.Radar.RadarStatus
-import io.radar.sdk.model.RadarEvent
+import io.radar.sdk.model.RadarConversion
 import io.radar.sdk.model.RadarInAppMessage
 import org.json.JSONObject
 
@@ -33,11 +32,16 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
         }
         val campaign = message.metadata.optString("radar:campaignId")
 
-        Radar.apiClient.sendEvent(name, metadata, campaign, object : RadarApiClient.RadarSendEventApiCallback {
-            override fun onComplete(status: RadarStatus, res: JSONObject?, event: RadarEvent?) {
-                Radar.logger.i("Conversion name = ${event?.conversionName}: status = $status; event = $event")
+        Radar.apiClient.sendEvent(
+            name,
+            metadata,
+            campaign,
+            object : RadarApiClient.RadarSendEventApiCallback {
+                override fun onComplete(status: RadarStatus, res: JSONObject?, conversion: RadarConversion?) {
+                    Radar.logger.i("Conversion name = ${conversion?.name}: status = $status; conversion = ${conversion?.toJson()}")
+                }
             }
-        })
+        )
     }
 
     internal fun showInAppMessage(payload: RadarInAppMessage) {

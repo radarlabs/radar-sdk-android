@@ -1,5 +1,13 @@
 # Migration guides
 
+## 4.x to 5.0.x
+
+- `Radar.logConversion()` now returns a `RadarConversion` instead of a `RadarEvent`. A conversion has no location, so it is not an event. `RadarConversion` has `_id`, `name`, `createdAt`, `actualCreatedAt` (nullable), `live`, `metadata` (nullable), and `toJson()`.
+  - `Radar.RadarLogConversionCallback.onComplete(status, event: RadarEvent?)` is now `onComplete(status, conversion: RadarConversion?)`. The block overloads change the same way.
+  - Replace `event.conversionName` with `conversion.name`. Code that reads `event.location`, `event.type`, or `event.confidence` in these callbacks must change.
+  - `RadarConversion.toJson()` writes `_id`, `type` (always `"custom"`), `name`, `live`, `metadata`, `createdAt`, and `actualCreatedAt`. It does not write `location`, `confidence`, or `replayed`.
+- `RadarEvent` now always has a real `_id`, `createdAt`, `actualCreatedAt`, and `location`. Before, the SDK used `""`, the current time, or a `(0, 0)` location when the server did not send a value. Now an event without one of these values does not parse, and the SDK drops it from the events array.
+
 ## 3.x to 4.0.x
 
 - The SDK no longer declares `RadarForegroundService` in its manifest, so apps that only use geofencing don't ship a location foreground service. Google Play no longer accepts geofencing as a foreground service use case. If you use `RadarTrackingOptions.CONTINUOUS`, set `foregroundServiceEnabled = true`, or enable the foreground service in remote tracking options, declare the service and the `FOREGROUND_SERVICE_LOCATION` permission in your app manifest. If the service is not declared, the SDK logs an error and tracks without a foreground service.

@@ -29,6 +29,7 @@ import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarChain
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarContext
+import io.radar.sdk.model.RadarConversion
 import io.radar.sdk.model.RadarCoordinate
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarFraud
@@ -4271,15 +4272,15 @@ class RadarTest {
         val conversionType = "test_event" // has to match the property in the conversion_event.json file!
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
-        var callbackEvent: RadarEvent? = null
+        var callbackConversion: RadarConversion? = null
         val metadata = JSONObject()
         metadata.put("foo", "bar")
 
-        Radar.logConversion(conversionType, metadata) { status, event ->
+        Radar.logConversion(conversionType, metadata) { status, conversion ->
             callbackStatus = status
-            callbackEvent = event
+            callbackConversion = conversion
 
-            val conversionMetadata = event?.metadata
+            val conversionMetadata = conversion?.metadata
             assertNotNull(conversionMetadata)
             assertEquals("bar", conversionMetadata!!.get("foo"))
 
@@ -4290,7 +4291,7 @@ class RadarTest {
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertConversionEvent(callbackEvent, conversionType, metadata)
+        assertConversion(callbackConversion, conversionType, metadata)
     }
 
     @Test
@@ -4300,16 +4301,16 @@ class RadarTest {
         val conversionType = "test_event" // has to match the property in the conversion_event.json file!
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null
-        var callbackEvent: RadarEvent? = null
+        var callbackConversion: RadarConversion? = null
         val revenue = 0.2
         val metadata = JSONObject()
         metadata.put("foo", "bar")
 
-        Radar.logConversion(conversionType, revenue, metadata) { status, event ->
+        Radar.logConversion(conversionType, revenue, metadata) { status, conversion ->
             callbackStatus = status
-            callbackEvent = event
+            callbackConversion = conversion
 
-            val conversionMetadata = event?.metadata
+            val conversionMetadata = conversion?.metadata
             assertNotNull(conversionMetadata)
             assertEquals("bar", conversionMetadata!!.get("foo"))
             assertEquals(revenue, conversionMetadata!!.get("revenue"))
@@ -4321,19 +4322,52 @@ class RadarTest {
         latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
 
         assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
-        assertConversionEvent(callbackEvent, conversionType, metadata)
+        assertConversion(callbackConversion, conversionType, metadata)
     }
 
-    private fun assertConversionEvent(
-        event: RadarEvent?,
+    @Test
+    fun test_Radar_logConversionWithCallback_passesRadarConversion() {
+        setUpLogConversionTest()
+
+        val conversionType = "test_event" // has to match the property in the conversion_event.json file!
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackConversion: RadarConversion? = null
+        val metadata = JSONObject()
+        metadata.put("foo", "bar")
+
+        Radar.logConversion(
+            conversionType,
+            metadata,
+            object : Radar.RadarLogConversionCallback {
+                override fun onComplete(status: Radar.RadarStatus, conversion: RadarConversion?) {
+                    callbackStatus = status
+                    callbackConversion = conversion
+                    latch.countDown()
+                }
+            }
+        )
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertConversion(callbackConversion, conversionType, metadata)
+        assertEquals("custom", callbackConversion!!.toJson().getString("type"))
+        assertEquals(conversionType, callbackConversion!!.toJson().getString("name"))
+    }
+
+    private fun assertConversion(
+        conversion: RadarConversion?,
         conversionType: String,
         metadata: JSONObject
     ) {
-        assertNotNull(event)
-        assertEquals(conversionType, event!!.conversionName)
-        assertNotNull(event!!.conversionName)
+        assertNotNull(conversion)
+        assertEquals(conversionType, conversion!!.name)
+        assertEquals("userId", conversion._id)
+        assertNotNull(conversion.actualCreatedAt)
 
-        val returnedMetadata = event!!.metadata
+        val returnedMetadata = conversion.metadata
         assertNotNull(returnedMetadata)
         assertEquals(metadata.get("foo"), returnedMetadata!!["foo"])
     }
