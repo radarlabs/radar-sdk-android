@@ -1,6 +1,7 @@
 package io.radar.sdk.model
 
 import android.location.Location
+import io.radar.sdk.Radar
 import io.radar.sdk.RadarUtils
 import io.radar.sdk.model.RadarEvent.RadarEventType.CONVERSION
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_APPROACHING_TRIP_DESTINATION
@@ -54,9 +55,9 @@ class RadarEvent(
     val createdAt: Date,
 
     /**
-     * The datetime when the event was created on the server.
+     * The datetime when the event was created on the server. May be `null`, for example for conversion events.
      */
-    val actualCreatedAt: Date,
+    val actualCreatedAt: Date?,
 
     /**
      * A boolean indicating whether the event was generated with your live API key.
@@ -129,9 +130,9 @@ class RadarEvent(
     val duration: Float,
 
     /**
-     * The location of the event.
+     * The location of the event. May be `null`, for example for conversion events, which have no location.
      */
-    val location: Location,
+    val location: Location?,
 
     /**
      * Whether the event was from a replayed location.
@@ -313,7 +314,7 @@ class RadarEvent(
 
             val id = obj.optString(FIELD_ID) ?: ""
             val createdAt = RadarUtils.isoStringToDate(obj.optString(FIELD_CREATED_AT)) ?: Date()
-            val actualCreatedAt = RadarUtils.isoStringToDate(obj.optString(FIELD_ACTUAL_CREATED_AT)) ?: Date()
+            val actualCreatedAt = RadarUtils.isoStringToDate(obj.optString(FIELD_ACTUAL_CREATED_AT))
             val live = obj.optBoolean(FIELD_LIVE)
             val type = when (obj.optString(FIELD_TYPE)) {
                 "user.entered_geofence" -> USER_ENTERED_GEOFENCE
@@ -375,15 +376,24 @@ class RadarEvent(
                 else -> RadarEventConfidence.NONE
             }
             val duration = obj.optDouble(FIELD_DURATION, 0.0).toFloat()
-            val locationObj = obj.optJSONObject(FIELD_LOCATION)
-            val locationCoordinatesObj = locationObj?.optJSONArray(FIELD_COORDINATES)
-            val location = Location("RadarSDK").apply {
-                longitude = locationCoordinatesObj?.optDouble(0) ?: 0.0
-                latitude = locationCoordinatesObj?.optDouble(1) ?: 0.0
-                if (obj.has(FIELD_LOCATION_ACCURACY)) {
-                    accuracy = obj.optDouble(FIELD_LOCATION_ACCURACY).toFloat()
+            val location: Location?
+            if (obj.isNull(FIELD_LOCATION)) {
+                // Conversion events have no location.
+                location = null
+            } else {
+                val coordinates = parseCoordinates(obj.opt(FIELD_LOCATION))
+                if (coordinates == null) {
+                    logWarning("Dropping event $id: the location is not valid")
+                    return null
                 }
-                time = createdAt.time
+                location = Location("RadarSDK").apply {
+                    longitude = coordinates.first
+                    latitude = coordinates.second
+                    if (obj.has(FIELD_LOCATION_ACCURACY)) {
+                        accuracy = obj.optDouble(FIELD_LOCATION_ACCURACY).toFloat()
+                    }
+                    time = createdAt.time
+                }
             }
 
             val replayed = obj.optBoolean(FIELD_REPLAYED)
@@ -405,6 +415,25 @@ class RadarEvent(
             )
 
             return event
+        }
+
+        /**
+         * Returns the (longitude, latitude) pair of a GeoJSON point, or `null` if the value is not
+         * an object with a `coordinates` array of 2 or 3 numbers.
+         */
+        private fun parseCoordinates(value: Any?): Pair<Double, Double>? {
+            val coordinates = (value as? JSONObject)?.opt(FIELD_COORDINATES) as? JSONArray ?: return null
+            if (coordinates.length() !in 2..3) {
+                return null
+            }
+            val values = (0 until coordinates.length()).map { coordinates.opt(it) as? Number ?: return null }
+            return Pair(values[0].toDouble(), values[1].toDouble())
+        }
+
+        private fun logWarning(message: String) {
+            if (Radar.isLoggerInitialized()) {
+                Radar.logger.w(message)
+            }
         }
 
         @JvmStatic
@@ -485,13 +514,15 @@ class RadarEvent(
         obj.putOpt(FIELD_TRIP, this.trip?.toJson())
         obj.putOpt(FIELD_FRAUD, this.fraud?.toJson())
         obj.putOpt(FIELD_ALTERNATE_PLACES, RadarPlace.toJson(this.alternatePlaces))
-        val locationObj = JSONObject()
-        locationObj.putOpt("type", "Point")
-        val coordinatesArr = JSONArray()
-        coordinatesArr.put(this.location.longitude)
-        coordinatesArr.put(this.location.latitude)
-        locationObj.putOpt("coordinates", coordinatesArr)
-        obj.putOpt(FIELD_LOCATION, locationObj)
+        this.location?.let { location ->
+            val locationObj = JSONObject()
+            locationObj.putOpt("type", "Point")
+            val coordinatesArr = JSONArray()
+            coordinatesArr.put(location.longitude)
+            coordinatesArr.put(location.latitude)
+            locationObj.putOpt("coordinates", coordinatesArr)
+            obj.putOpt(FIELD_LOCATION, locationObj)
+        }
         obj.putOpt(FIELD_REPLAYED, this.replayed)
         obj.putOpt(FIELD_METADATA, metadata)
 

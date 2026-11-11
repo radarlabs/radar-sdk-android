@@ -1,5 +1,20 @@
 # Migration guides
 
+## 4.2.x to 4.3.0
+
+- `RadarEvent.location` is now nullable (`Location?`). It is `null` when the server sends no location. For example, conversion events from `Radar.logConversion()` have no location. Before, the SDK used a location with coordinates `(0, 0)`. If the server sends a location that is not valid, the SDK drops that event and logs a warning.
+- `RadarEvent.actualCreatedAt` is now nullable (`Date?`). It is `null` when the server sends no value or a value that is not valid. Before, the SDK used the time when it parsed the event.
+- `RadarEvent.toJson()` does not write `location` or `actualCreatedAt` when they are `null`.
+- Kotlin callers must handle `null`. Java callers see these getters as `@Nullable`.
+
+```kotlin
+// 4.2.x
+val latitude = event.location.latitude
+
+// 4.3.0
+val latitude = event.location?.latitude
+```
+
 ## 3.x to 4.0.x
 
 - The SDK no longer declares `RadarForegroundService` in its manifest, so apps that only use geofencing don't ship a location foreground service. Google Play no longer accepts geofencing as a foreground service use case. If you use `RadarTrackingOptions.CONTINUOUS`, set `foregroundServiceEnabled = true`, or enable the foreground service in remote tracking options, declare the service and the `FOREGROUND_SERVICE_LOCATION` permission in your app manifest. If the service is not declared, the SDK logs an error and tracks without a foreground service.
