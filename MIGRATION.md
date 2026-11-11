@@ -1,6 +1,6 @@
 # Migration guides
 
-## 4.x to 5.0.x
+## 4.2.x to 4.3.0
 
 - `Radar.logConversion()` now returns a `RadarConversion` instead of a `RadarEvent`. A conversion has no location, so it is not an event. `RadarConversion` has `_id`, `name`, `createdAt`, `actualCreatedAt` (nullable), `live`, `metadata` (nullable), and `toJson()`.
   - `Radar.RadarLogConversionCallback.onComplete(status, event: RadarEvent?)` is now `onComplete(status, conversion: RadarConversion?)`. The block overloads change the same way.
