@@ -563,9 +563,11 @@ object Radar {
     private var verifiedReceiver: RadarVerifiedReceiver? = null
     internal lateinit var logger: RadarLogger
 
-    // Models can parse before `initialize()` sets the logger, so they check this first.
+    // RadarEvent.fromJson logs through this logger. Code can call it before initialize() sets the
+    // logger, for example in unit tests, so check this first.
     internal val isLoggerInitialized: Boolean
         get() = this::logger.isInitialized
+
     internal lateinit var apiClient: RadarApiClient
     internal var traceManager: RadarTraceManager? = null
     internal lateinit var locationManager: RadarLocationManager
