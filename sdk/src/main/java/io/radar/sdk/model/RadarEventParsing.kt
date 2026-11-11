@@ -13,6 +13,13 @@ internal object RadarEventParsing {
         return RadarUtils.isoStringToDate(str)
     }
 
+    // Accepts a boolean, a number (not zero is true), or the string "true" or "false". Returns false for all
+    // other values.
+    fun boolean(obj: JSONObject, key: String): Boolean = when (val value = obj.opt(key)) {
+        is Number -> value.toDouble() != 0.0
+        else -> obj.optBoolean(key)
+    }
+
     // Accepts a JSON object or a string that holds a JSON object. Returns null for all other values.
     fun metadata(obj: JSONObject, key: String): JSONObject? = when (val value = obj.opt(key)) {
         is JSONObject -> value

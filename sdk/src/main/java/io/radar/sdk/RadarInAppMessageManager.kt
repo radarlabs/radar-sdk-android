@@ -38,7 +38,7 @@ class RadarInAppMessageManager(private val activity: Activity, private val conte
             campaign,
             object : RadarApiClient.RadarSendEventApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, conversion: RadarConversion?) {
-                    Radar.logger.i("Conversion name = ${conversion?.name}: status = $status; conversion = ${conversion?.toJson()}")
+                    Radar.logger.i("Conversion name = ${conversion?.name}: status = $status; _id = ${conversion?._id}")
                 }
             }
         )

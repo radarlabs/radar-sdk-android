@@ -66,6 +66,14 @@ class RadarConversionTest {
     }
 
     @Test
+    fun testParsesLiveFromNumberOrString() {
+        assertTrue(RadarConversion.fromJson(baseConversionJson().put("live", 1))!!.live)
+        assertFalse(RadarConversion.fromJson(baseConversionJson().put("live", 0))!!.live)
+        assertTrue(RadarConversion.fromJson(baseConversionJson().put("live", "true"))!!.live)
+        assertFalse(RadarConversion.fromJson(baseConversionJson().put("live", "yes"))!!.live)
+    }
+
+    @Test
     fun testParsesMetadataFromJsonObjectString() {
         val json = baseConversionJson().put("metadata", "{\"revenue\": 0.2}")
 

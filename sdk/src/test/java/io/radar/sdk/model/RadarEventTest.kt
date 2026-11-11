@@ -6,8 +6,10 @@ import io.radar.sdk.RadarUtils
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
@@ -87,9 +89,31 @@ class RadarEventTest {
 
     @Test
     fun testParsesLocationWithAltitude() {
-        val json = eventJson().put("location", locationJson(JSONArray().put(-73.975365).put(40.783825).put(10)))
+        val json = eventJson().put("location", locationJson(JSONArray().put(-73.975365).put(40.783825).put(10.5)))
 
-        assertNotNull(RadarEvent.fromJson(json))
+        val location = RadarEvent.fromJson(json)!!.location
+        assertTrue(location.hasAltitude())
+        assertEquals(10.5, location.altitude, 0.0)
+        assertFalse(RadarEvent.fromJson(eventJson())!!.location.hasAltitude())
+    }
+
+    @Test
+    fun testIgnoresNonNumericLocationAccuracy() {
+        assertFalse(RadarEvent.fromJson(eventJson().put("locationAccuracy", JSONObject.NULL))!!.location.hasAccuracy())
+        assertFalse(RadarEvent.fromJson(eventJson().put("locationAccuracy", "high"))!!.location.hasAccuracy())
+
+        val location = RadarEvent.fromJson(eventJson().put("locationAccuracy", 12.5))!!.location
+        assertTrue(location.hasAccuracy())
+        assertEquals(12.5f, location.accuracy, 0f)
+    }
+
+    @Test
+    fun testParsesLiveAndReplayedFromNumbers() {
+        val event = RadarEvent.fromJson(eventJson().put("live", 1).put("replayed", 1))!!
+
+        assertTrue(event.live)
+        assertTrue(event.replayed)
+        assertFalse(RadarEvent.fromJson(eventJson().put("live", 0))!!.live)
     }
 
     @Test

@@ -562,6 +562,10 @@ object Radar {
     private var receiver: RadarReceiver? = null
     private var verifiedReceiver: RadarVerifiedReceiver? = null
     internal lateinit var logger: RadarLogger
+
+    // Models can parse before `initialize()` sets the logger, so they check this first.
+    internal val isLoggerInitialized: Boolean
+        get() = this::logger.isInitialized
     internal lateinit var apiClient: RadarApiClient
     internal var traceManager: RadarTraceManager? = null
     internal lateinit var locationManager: RadarLocationManager
@@ -4395,7 +4399,7 @@ object Radar {
                 jsonObject,
                 callback = object : RadarLogConversionCallback {
                     override fun onComplete(status: RadarStatus, conversion: RadarConversion?) {
-                        logger.i("Conversion name = ${conversion?.name}: status = $status; conversion = ${conversion?.toJson()}")
+                        logger.i("Conversion name = ${conversion?.name}: status = $status; _id = ${conversion?._id}")
                     }
                 }
             )
@@ -4415,7 +4419,7 @@ object Radar {
                 "opened_app",
                 callback = object : RadarLogConversionCallback {
                     override fun onComplete(status: RadarStatus, conversion: RadarConversion?) {
-                        logger.i("Conversion name = ${conversion?.name}: status = $status; conversion = ${conversion?.toJson()}")
+                        logger.i("Conversion name = ${conversion?.name}: status = $status; _id = ${conversion?._id}")
                     }
                 }
             )

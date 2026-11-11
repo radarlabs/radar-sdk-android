@@ -48,7 +48,8 @@ class RadarConversion internal constructor(
         private const val FIELD_LIVE = "live"
         private const val FIELD_METADATA = "metadata"
 
-        // The value that `RadarEvent` wrote as `type` for a conversion. Hybrid SDK wrappers read it.
+        // The `type` value that iOS wrote for a conversion. Android wrote no `type` for a conversion. Both SDKs now
+        // write this value, so the hybrid SDK wrappers get the same JSON on both platforms.
         private const val TYPE_CUSTOM = "custom"
 
         /**
@@ -71,15 +72,16 @@ class RadarConversion internal constructor(
                 name = name,
                 createdAt = createdAt,
                 actualCreatedAt = RadarEventParsing.date(obj, FIELD_ACTUAL_CREATED_AT),
-                live = obj.optBoolean(FIELD_LIVE),
+                live = RadarEventParsing.boolean(obj, FIELD_LIVE),
                 metadata = RadarEventParsing.metadata(obj, FIELD_METADATA)
             )
         }
     }
 
     /**
-     * Writes the keys that `RadarEvent.toJson()` wrote for a conversion, with `type` set to `"custom"`, and adds
-     * `name`. Hybrid SDK wrappers read these keys.
+     * Writes the same keys as iOS `RadarConversion.dictionaryValue()`: `_id`, `type` (always `"custom"`), `name`,
+     * `live`, `metadata` (only when present), `createdAt`, and `actualCreatedAt` (only when present). Hybrid SDK
+     * wrappers read these keys.
      */
     fun toJson(): JSONObject {
         val obj = JSONObject()

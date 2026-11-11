@@ -1,6 +1,7 @@
 package io.radar.sdk.model
 
 import android.location.Location
+import io.radar.sdk.Radar
 import io.radar.sdk.RadarUtils
 import io.radar.sdk.model.RadarEvent.RadarEventType.CONVERSION
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_APPROACHING_TRIP_DESTINATION
@@ -139,7 +140,7 @@ class RadarEvent(
     val replayed: Boolean,
 
     /**
-     * The metadata of the event. Present on conversions only.
+     * The metadata of the event. May be `null`. Events that the SDK generates offline have `{"offline": true}`.
      */
     val metadata: JSONObject?
 ) {
@@ -317,7 +318,7 @@ class RadarEvent(
             val createdAt = RadarEventParsing.date(obj, FIELD_CREATED_AT) ?: return null
             val actualCreatedAt = RadarEventParsing.date(obj, FIELD_ACTUAL_CREATED_AT) ?: return null
             val location = locationFromJson(obj, createdAt) ?: return null
-            val live = obj.optBoolean(FIELD_LIVE)
+            val live = RadarEventParsing.boolean(obj, FIELD_LIVE)
             val type = when (obj.optString(FIELD_TYPE)) {
                 "user.entered_geofence" -> USER_ENTERED_GEOFENCE
                 "user.exited_geofence" -> USER_EXITED_GEOFENCE
@@ -378,7 +379,7 @@ class RadarEvent(
                 else -> RadarEventConfidence.NONE
             }
             val duration = obj.optDouble(FIELD_DURATION, 0.0).toFloat()
-            val replayed = obj.optBoolean(FIELD_REPLAYED)
+            val replayed = RadarEventParsing.boolean(obj, FIELD_REPLAYED)
             val metadataJson = RadarEventParsing.metadata(obj, FIELD_METADATA)
 
             val event = RadarEvent(
@@ -390,7 +391,7 @@ class RadarEvent(
         }
 
         // Returns null unless `location.coordinates` holds a numeric longitude and latitude, and optionally an
-        // altitude.
+        // altitude. A non-numeric altitude or `locationAccuracy` is ignored.
         private fun locationFromJson(obj: JSONObject, createdAt: Date): Location? {
             val coordinates = obj.optJSONObject(FIELD_LOCATION)?.optJSONArray(FIELD_COORDINATES) ?: return null
             if (coordinates.length() != 2 && coordinates.length() != 3) {
@@ -398,12 +399,17 @@ class RadarEvent(
             }
             val longitude = coordinates.opt(0) as? Number ?: return null
             val latitude = coordinates.opt(1) as? Number ?: return null
+            val altitude = coordinates.opt(2) as? Number
+            val accuracy = obj.opt(FIELD_LOCATION_ACCURACY) as? Number
 
             return Location("RadarSDK").apply {
                 this.longitude = longitude.toDouble()
                 this.latitude = latitude.toDouble()
-                if (obj.has(FIELD_LOCATION_ACCURACY)) {
-                    accuracy = obj.optDouble(FIELD_LOCATION_ACCURACY).toFloat()
+                if (altitude != null) {
+                    this.altitude = altitude.toDouble()
+                }
+                if (accuracy != null) {
+                    this.accuracy = accuracy.toFloat()
                 }
                 time = createdAt.time
             }
@@ -415,8 +421,14 @@ class RadarEvent(
                 return null
             }
 
+            // Drop each event that does not parse, and log a warning so that the dropped event is visible.
             return Array(arr.length()) { index ->
-                fromJson(arr.optJSONObject(index))
+                val obj = arr.optJSONObject(index)
+                val event = fromJson(obj)
+                if (event == null && Radar.isLoggerInitialized) {
+                    Radar.logger.w("Dropped an event that did not parse | type = ${obj?.opt(FIELD_TYPE)}; _id = ${obj?.opt(FIELD_ID)}")
+                }
+                event
             }.filterNotNull().toTypedArray()
         }
 

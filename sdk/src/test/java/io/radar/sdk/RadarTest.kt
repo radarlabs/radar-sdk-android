@@ -4357,6 +4357,34 @@ class RadarTest {
         assertEquals(conversionType, callbackConversion!!.toJson().getString("name"))
     }
 
+    @Test
+    fun test_Radar_logConversion_errorServerWithoutValidConversion() {
+        setUpLogConversionTest()
+        // The response has an event without `_id`, so it does not parse as a conversion.
+        apiHelperMock.addMockResponse(
+            "v1/events",
+            JSONObject()
+                .put("meta", JSONObject().put("code", 200))
+                .put("event", JSONObject().put("type", "test_event").put("createdAt", "2022-07-26T00:58:17.701Z"))
+        )
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackConversion: RadarConversion? = null
+
+        Radar.logConversion("test_event", JSONObject()) { status, conversion ->
+            callbackStatus = status
+            callbackConversion = conversion
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_SERVER, callbackStatus)
+        assertNull(callbackConversion)
+    }
+
     private fun assertConversion(
         conversion: RadarConversion?,
         conversionType: String,
