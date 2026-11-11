@@ -2,6 +2,7 @@ package io.radar.sdk
 
 import android.content.Context
 import android.os.Build
+import android.util.Base64
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import java.io.File
@@ -56,6 +57,9 @@ internal class RadarTraceManager(
         // a trace resulting in a new sampling decision. A minimum of two decisions need to be retained. Retaining 5
         // allows for cases where multiple session changes could occur between trace start and end.
         private const val MAX_DECISIONS = 5
+
+        // How Radar.initialize stores an auth token in place of the publishable key.
+        private const val AUTH_TOKEN_PREFIX = "Bearer "
 
         // Spans waiting for the disk worker. Past this, storing a new span would only evict an older one.
         private const val MAX_PENDING_WRITES = MAX_FILES
@@ -451,10 +455,32 @@ internal class RadarTraceManager(
     /**
      * Tags each span record with its project so spans are only uploaded under the key they were recorded with,
      * without writing the key (or an auth token) to disk.
+     *
+     * An auth token is fingerprinted by its signing key's ID (`kid`), so spans recorded before the app refreshes its
+     * token are still uploaded with the new one. A `kid` belongs to one project and environment, so tokens with the same
+     * `kid` belong to the same project.
      */
     private fun fingerprint(key: String): String {
-        val hash = MessageDigest.getInstance("SHA-256").digest(key.toByteArray(Charsets.UTF_8))
+        val identity = authTokenKid(key)?.let { "kid:$it" } ?: key
+        val hash = MessageDigest.getInstance("SHA-256").digest(identity.toByteArray(Charsets.UTF_8))
         return hash.take(8).joinToString("") { String.format(Locale.US, "%02x", it) }
+    }
+
+    /**
+     * The `kid` from an auth token's JWT header, or null if [key] isn't an auth token or the header can't be read.
+     * The signature isn't verified; the server does that, and this is only used to group spans.
+     */
+    private fun authTokenKid(key: String): String? {
+        if (!key.startsWith(AUTH_TOKEN_PREFIX)) return null
+        return try {
+            // A JWT is `header.payload.signature`; the header holds the kid.
+            val header = key.removePrefix(AUTH_TOKEN_PREFIX).substringBefore('.')
+            // JWTs use the URL-safe Base64 alphabet (`-` and `_`) without padding, which the decoder accepts.
+            val json = String(Base64.decode(header, Base64.URL_SAFE), Charsets.UTF_8)
+            JSONObject(json).optString("kid").ifEmpty { null }
+        } catch (_: Exception) {
+            null
+        }
     }
 
     /** An OTLP string attribute. */
