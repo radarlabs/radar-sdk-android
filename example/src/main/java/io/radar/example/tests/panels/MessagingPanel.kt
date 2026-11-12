@@ -37,7 +37,11 @@ fun MessagingPanel() {
         ActionButton("logConversion") {
             val metadata = JSONObject().apply { put("one", "two") }
             Radar.logConversion("app_open_android", metadata) { status, event ->
-                log.writeStatus(status, "logConversion: ${Utils.stringForRadarStatus(status)}", "name = ${event?.conversionName}")
+                log.writeStatus(
+                    status,
+                    "logConversion: ${Utils.stringForRadarStatus(status)}",
+                    "name = ${event?.conversionName}, ${event?.let { Utils.stringForRadarEventDetails(it) }}",
+                )
             }
         }
     }

@@ -2,6 +2,9 @@ package io.radar.example
 
 import io.radar.sdk.Radar
 import io.radar.sdk.model.RadarEvent
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
 class Utils {
 
@@ -52,6 +55,19 @@ class Utils {
                 RadarEvent.RadarEventType.CONVERSION -> "Received conversion event with name ${event.conversionName}"
                 else -> "Unknown"
             }
+        }
+
+        /** Shows the event location and actualCreatedAt. Both can be null, for example for conversion events. */
+        fun stringForRadarEventDetails(event: RadarEvent): String {
+            val location = event.location?.let {
+                String.format(Locale.US, "%.5f, %.5f", it.latitude, it.longitude)
+            } ?: "null"
+            val actualCreatedAt = event.actualCreatedAt?.let {
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }.format(it)
+            } ?: "null"
+            return "location = $location, actualCreatedAt = $actualCreatedAt"
         }
 
         fun stringForRadarEventConfidence(confidence: RadarEvent.RadarEventConfidence): String {

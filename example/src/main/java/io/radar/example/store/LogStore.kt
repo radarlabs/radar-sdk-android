@@ -108,8 +108,8 @@ class LogStore : RadarReceiver() {
     private fun summarize(event: RadarEvent): String {
         val type = Utils.stringForRadarEvent(event)
         val externalId = event.geofence?.externalId
-        if (!externalId.isNullOrEmpty()) return "$type — $externalId"
-        return type
+        val title = if (!externalId.isNullOrEmpty()) "$type — $externalId" else type
+        return "$title\n${Utils.stringForRadarEventDetails(event)}"
     }
 
     private fun detailJson(event: RadarEvent): String? =
