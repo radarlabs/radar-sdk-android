@@ -882,6 +882,8 @@ object Radar {
     @JvmStatic
     fun isInitialized(): Boolean = initialized
 
+    internal fun isLoggerInitialized(): Boolean = this::logger.isInitialized
+
     internal fun handleForegroundProcessStart() {
         if (didEvaluateForegroundProcess || !initialized || !isMainProcess(context)) {
             return

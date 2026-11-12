@@ -237,10 +237,11 @@ class TripBuilderStore {
             for (event in events) {
                 if (!forced && event.type !in TRIP_EVENT_TYPES) continue
                 if (tripEventMarkers.any { it.id == event._id }) continue
+                val location = event.location ?: continue
                 tripEventMarkers.add(
                     TripEventMarker(
                         id = event._id,
-                        coordinate = LatLng(event.location.latitude, event.location.longitude),
+                        coordinate = LatLng(location.latitude, location.longitude),
                         type = event.type,
                         timestamp = event.createdAt.time,
                     ),
