@@ -2,7 +2,7 @@
 
 ## 4.2.x to 4.3.0
 
-- `RadarEvent.location` is now nullable (`Location?`). It is `null` when the server sends no location. For example, conversion events from `Radar.logConversion()` have no location. Before, the SDK used a location with coordinates `(0, 0)`. If the server sends a location that is not valid, the SDK drops that event and logs a warning.
+- `RadarEvent.location` is now nullable (`Location?`). It is `null` when the server sends no location. For example, conversion events from `Radar.logConversion()` have no location. Before, the SDK used a location with coordinates `(0, 0)`. If the server sends a location that is not valid, the SDK drops that event and logs a warning. For `Radar.logConversion()`, this gives `ERROR_SERVER` and a `null` event.
 - `RadarEvent.actualCreatedAt` is now nullable (`Date?`). It is `null` when the server sends no value or a value that is not valid. Before, the SDK used the time when it parsed the event.
 - `RadarEvent.toJson()` does not write `location` or `actualCreatedAt` when they are `null`.
 - Kotlin callers must handle `null`. Java callers see these getters as `@Nullable`.

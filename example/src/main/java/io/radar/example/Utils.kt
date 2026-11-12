@@ -1,5 +1,6 @@
 package io.radar.example
 
+import android.location.Location
 import io.radar.sdk.Radar
 import io.radar.sdk.model.RadarEvent
 import java.text.SimpleDateFormat
@@ -57,16 +58,18 @@ class Utils {
             }
         }
 
+        private val isoDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+
+        fun stringForLatLng(location: Location): String =
+            String.format(Locale.US, "%.5f, %.5f", location.latitude, location.longitude)
+
         /** Shows the event location and actualCreatedAt. Both can be null, for example for conversion events. */
         fun stringForRadarEventDetails(event: RadarEvent): String {
-            val location = event.location?.let {
-                String.format(Locale.US, "%.5f, %.5f", it.latitude, it.longitude)
-            } ?: "null"
-            val actualCreatedAt = event.actualCreatedAt?.let {
-                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
-                    timeZone = TimeZone.getTimeZone("UTC")
-                }.format(it)
-            } ?: "null"
+            val location = event.location?.let { stringForLatLng(it) } ?: "null"
+            // SimpleDateFormat is not thread-safe.
+            val actualCreatedAt = event.actualCreatedAt?.let { synchronized(isoDateFormat) { isoDateFormat.format(it) } } ?: "null"
             return "location = $location, actualCreatedAt = $actualCreatedAt"
         }
 

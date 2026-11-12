@@ -109,7 +109,7 @@ class LogStore : RadarReceiver() {
         val type = Utils.stringForRadarEvent(event)
         val externalId = event.geofence?.externalId
         val title = if (!externalId.isNullOrEmpty()) "$type — $externalId" else type
-        return "$title\n${Utils.stringForRadarEventDetails(event)}"
+        return "$title · ${Utils.stringForRadarEventDetails(event)}"
     }
 
     private fun detailJson(event: RadarEvent): String? =
@@ -120,9 +120,7 @@ class LogStore : RadarReceiver() {
         }
 
     private fun summarize(location: Location): String {
-        val lat = String.format("%.5f", location.latitude)
-        val lng = String.format("%.5f", location.longitude)
         val acc = location.accuracy.toInt()
-        return "$lat, $lng  ±${acc}m"
+        return "${Utils.stringForLatLng(location)}  ±${acc}m"
     }
 }

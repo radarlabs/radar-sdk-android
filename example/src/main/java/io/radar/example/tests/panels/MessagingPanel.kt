@@ -40,7 +40,7 @@ fun MessagingPanel() {
                 log.writeStatus(
                     status,
                     "logConversion: ${Utils.stringForRadarStatus(status)}",
-                    "name = ${event?.conversionName}, ${event?.let { Utils.stringForRadarEventDetails(it) }}",
+                    event?.let { "name = ${it.conversionName}, ${Utils.stringForRadarEventDetails(it)}" },
                 )
             }
         }

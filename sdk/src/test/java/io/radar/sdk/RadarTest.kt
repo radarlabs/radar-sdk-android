@@ -4324,6 +4324,59 @@ class RadarTest {
         assertConversionEvent(callbackEvent, conversionType, metadata)
     }
 
+    @Test
+    fun test_Radar_logConversion_documentedResponse_hasNoLocation() {
+        setUpLogConversionTest()
+        // The documented response of POST /v1/events has no location and no actualCreatedAt.
+        apiHelperMock.addMockResponse(
+            "v1/events",
+            RadarTestUtils.jsonObjectFromResource("/conversion_event_documented.json")!!
+        )
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackEvent: RadarEvent? = null
+
+        Radar.logConversion("test_event", JSONObject()) { status, event ->
+            callbackStatus = status
+            callbackEvent = event
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertEquals(RadarEvent.RadarEventType.CONVERSION, callbackEvent?.type)
+        assertEquals("test_event", callbackEvent?.conversionName)
+        assertNull(callbackEvent?.location)
+        assertNull(callbackEvent?.actualCreatedAt)
+    }
+
+    @Test
+    fun test_Radar_logConversion_malformedLocation_returnsServerError() {
+        setUpLogConversionTest()
+        val response = RadarTestUtils.jsonObjectFromResource("/conversion_event_documented.json")!!
+        response.getJSONObject("event").put("location", JSONObject())
+        apiHelperMock.addMockResponse("v1/events", response)
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        var callbackEvent: RadarEvent? = null
+
+        Radar.logConversion("test_event", JSONObject()) { status, event ->
+            callbackStatus = status
+            callbackEvent = event
+            latch.countDown()
+        }
+
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
+
+        assertEquals(Radar.RadarStatus.ERROR_SERVER, callbackStatus)
+        assertNull(callbackEvent)
+    }
+
     private fun assertConversionEvent(
         event: RadarEvent?,
         conversionType: String,

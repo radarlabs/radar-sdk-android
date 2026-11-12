@@ -1,7 +1,7 @@
 package io.radar.sdk.model
 
 import android.location.Location
-import io.radar.sdk.Radar
+import io.radar.sdk.RadarLogger
 import io.radar.sdk.RadarUtils
 import io.radar.sdk.model.RadarEvent.RadarEventType.CONVERSION
 import io.radar.sdk.model.RadarEvent.RadarEventType.USER_APPROACHING_TRIP_DESTINATION
@@ -383,7 +383,7 @@ class RadarEvent(
             } else {
                 val coordinates = parseCoordinates(obj.opt(FIELD_LOCATION))
                 if (coordinates == null) {
-                    logWarning("Dropping event $id: the location is not valid")
+                    RadarLogger.warnIfInitialized("Dropping event $id: the location is not valid")
                     return null
                 }
                 location = Location("RadarSDK").apply {
@@ -426,14 +426,12 @@ class RadarEvent(
             if (coordinates.length() !in 2..3) {
                 return null
             }
-            val values = (0 until coordinates.length()).map { coordinates.opt(it) as? Number ?: return null }
-            return Pair(values[0].toDouble(), values[1].toDouble())
-        }
-
-        private fun logWarning(message: String) {
-            if (Radar.isLoggerInitialized()) {
-                Radar.logger.w(message)
+            for (i in 0 until coordinates.length()) {
+                if (coordinates.opt(i) !is Number) {
+                    return null
+                }
             }
+            return Pair(coordinates.getDouble(0), coordinates.getDouble(1))
         }
 
         @JvmStatic
