@@ -195,14 +195,14 @@
     </file>
     <file name="src/main/java/io/radar/sdk/RadarSensorsManager.kt">
         <error line="14" column="36" source="standard:no-multi-spaces" />
-        <error line="17" column="17" source="standard:property-naming" />
-        <error line="23" column="24" source="standard:wrapping" />
-        <error line="23" column="59" source="standard:no-trailing-spaces" />
-        <error line="25" column="40" source="standard:wrapping" />
-        <error line="36" column="1" source="standard:no-trailing-spaces" />
-        <error line="41" column="1" source="standard:no-trailing-spaces" />
-        <error line="44" column="1" source="standard:no-trailing-spaces" />
-        <error line="68" column="1" source="standard:final-newline" />
+        <error line="16" column="17" source="standard:property-naming" />
+        <error line="22" column="24" source="standard:wrapping" />
+        <error line="22" column="59" source="standard:no-trailing-spaces" />
+        <error line="24" column="40" source="standard:wrapping" />
+        <error line="35" column="1" source="standard:no-trailing-spaces" />
+        <error line="40" column="1" source="standard:no-trailing-spaces" />
+        <error line="43" column="1" source="standard:no-trailing-spaces" />
+        <error line="67" column="1" source="standard:final-newline" />
     </file>
     <file name="src/main/java/io/radar/sdk/RadarSyncManager.kt">
         <error line="16" column="1" source="standard:no-wildcard-imports" />
