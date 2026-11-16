@@ -23,6 +23,9 @@ enum class RadarEnvironment(
 
     fun verifiedHost(localUrl: String): String = fixedVerifiedHost ?: localUrl
 
+    /** Whether a fraud key override can be saved for this environment. Production always uses the SDK's key. */
+    val allowsFraudKeyOverride: Boolean get() = this != PRODUCTION
+
     /** Writes the SDK's host overrides. */
     fun applyTo(context: Context, host: String, verifiedHost: String) {
         context.getSharedPreferences(SDK_PREFS, Context.MODE_PRIVATE).edit {

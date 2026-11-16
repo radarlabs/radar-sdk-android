@@ -29,7 +29,7 @@ import io.radar.example.store.LocalSettingsStore
 import io.radar.example.store.RadarEnvironment
 
 /**
- * Picks the Radar environment, publishable key, and host overrides. Changes apply on relaunch.
+ * Picks the Radar environment, publishable key, host overrides, and fraud key override. Changes apply on relaunch.
  */
 @Composable
 fun EnvironmentSection() {
@@ -42,6 +42,9 @@ fun EnvironmentSection() {
     var verifiedHost by remember(selected) { mutableStateOf(settings.verifiedHostOverride(selected)) }
     var useAuthToken by remember(selected) { mutableStateOf(settings.useAuthToken(selected)) }
     var authToken by remember(selected) { mutableStateOf(settings.authToken(selected)) }
+    var fraudPublicKey by remember(selected) { mutableStateOf(settings.fraudPublicKey(selected)) }
+    var fraudKeyVersion by remember(selected) { mutableStateOf(settings.fraudKeyVersion(selected).toString()) }
+    val parsedFraudKeyVersion = fraudKeyVersion.trim().toIntOrNull()?.takeIf { it > 0 }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Environment", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -110,13 +113,39 @@ fun EnvironmentSection() {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
+        if (selected.allowsFraudKeyOverride) {
+            FieldEditor(
+                "${selected.label} fraud public key override",
+                fraudPublicKey,
+                { fraudPublicKey = it },
+                placeholder = "Base64 P-256 public key (optional)",
+            )
+            FieldEditor("${selected.label} fraud key version", fraudKeyVersion, { fraudKeyVersion = it }, placeholder = "1")
+            Text(
+                "Encrypts fraud payloads to this key instead of the SDK's built-in production key. " +
+                    "Leave empty to use the built-in key. Saved on this device.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
         Button(
             onClick = {
-                settings.saveEnvironment(selected, key, host, verifiedHost, useAuthToken, authToken)
+                settings.saveEnvironment(
+                    selected,
+                    key,
+                    host,
+                    verifiedHost,
+                    useAuthToken,
+                    authToken,
+                    fraudPublicKey,
+                    parsedFraudKeyVersion ?: 1,
+                )
                 MainActivity.restart(context)
             },
             enabled = (selected != RadarEnvironment.LOCAL || settings.localUrl.isNotBlank() || (host.isNotBlank() && verifiedHost.isNotBlank())) &&
-                (!useAuthToken || authToken.isNotBlank()),
+                (!useAuthToken || authToken.isNotBlank()) &&
+                (fraudPublicKey.isBlank() || parsedFraudKeyVersion != null),
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         ) { Text("Apply & restart") }
     }

@@ -115,6 +115,7 @@ class MainActivity : AppCompatActivity() {
             activity = this,
         )
         settingsStore.environment.applyTo(this, settingsStore.host, settingsStore.verifiedHost)
+        applyFraudKeyOverride(settingsStore, logStore)
         Log.i("radar-env", settingsStore.environmentSummary())
         logStore.writeResult("radar-env: ${settingsStore.environmentSummary()}")
         val authToken = settingsStore.resolvedAuthToken
@@ -201,6 +202,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun isGranted(permission: String): Boolean =
         ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+
+    /**
+     * Sets the saved fraud key override for this environment, if any, before the first verified
+     * request. Without one, the internal API isn't called and the SDK uses its built-in key. The
+     * environment is fixed for the life of the process, so the override never needs clearing.
+     */
+    private fun applyFraudKeyOverride(settingsStore: SettingsStore, logStore: LogStore) {
+        val setting = settingsStore.resolvedFraudKeyOverride ?: return
+        try {
+            FraudKeyOverrideBridge.set(setting)
+        } catch (e: Exception) {
+            logStore.writeError("Fraud key override not applied", e.message)
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createCustomNotification(): Notification {

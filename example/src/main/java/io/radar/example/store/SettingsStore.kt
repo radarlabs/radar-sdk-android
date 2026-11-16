@@ -9,9 +9,13 @@ import io.radar.example.MainActivity
 import io.radar.sdk.Radar
 import org.json.JSONObject
 
+/** A saved fraud public key (base64) and key version that replace the SDK's built-in key. */
+data class FraudKeyOverrideSetting(val publicKeyBase64: String, val keyVersion: Int)
+
 /**
  * SDK-backed identity + tracking snapshot, plus the persisted environment: which
- * [RadarEnvironment] to use, a publishable key and host overrides per environment, and the Local server URL.
+ * [RadarEnvironment] to use, a publishable key, host overrides, and a fraud key override per environment, and the
+ * Local server URL.
  *
  * The environment applied at launch is fixed for the life of the process. Changing it goes
  * through [saveEnvironment] followed by a restart (see `MainActivity.restart`).
@@ -39,6 +43,9 @@ class SettingsStore(context: Context) {
     val host: String = apiHost(environment)
     val verifiedHost: String = verifiedHostOverride(environment).ifBlank { environment.verifiedHost(localUrl) }
 
+    /** The fraud key override for [environment], or null to use the SDK's built-in production key. */
+    val resolvedFraudKeyOverride: FraudKeyOverrideSetting? = fraudKeyOverride(environment)
+
     /** Which environments [resolvedPublishableKey] is valid on. */
     var keyCheck by mutableStateOf<KeyCheck>(KeyCheck.NotChecked)
         private set
@@ -60,6 +67,17 @@ class SettingsStore(context: Context) {
 
     fun apiHost(env: RadarEnvironment): String = hostOverride(env).ifBlank { env.host(localUrl) }
 
+    /** The saved fraud public key (base64) for [env], or "" if none is set. Production is never overridden. */
+    fun fraudPublicKey(env: RadarEnvironment): String =
+        if (env.allowsFraudKeyOverride) prefs.getString("fraudPublicKey.${env.name}", null) ?: "" else ""
+
+    /** The saved fraud key version for [env], defaulting to 1. */
+    fun fraudKeyVersion(env: RadarEnvironment): Int = prefs.getInt("fraudKeyVersion.${env.name}", 1)
+
+    /** The fraud key override for [env], or null if none is saved. */
+    fun fraudKeyOverride(env: RadarEnvironment): FraudKeyOverrideSetting? =
+        fraudPublicKey(env).ifBlank { null }?.let { FraudKeyOverrideSetting(it, fraudKeyVersion(env)) }
+
     /** Persists the environment settings. Takes effect on the next launch. */
     fun saveEnvironment(
         env: RadarEnvironment,
@@ -68,9 +86,15 @@ class SettingsStore(context: Context) {
         verifiedHostOverride: String,
         useAuthToken: Boolean,
         authToken: String,
+        fraudPublicKey: String,
+        fraudKeyVersion: Int,
     ) {
         prefs.edit(commit = true) {
             putString(KEY_ENVIRONMENT, env.name)
+            if (env.allowsFraudKeyOverride) {
+                putString("fraudPublicKey.${env.name}", fraudPublicKey.filterNot { it.isWhitespace() })
+                putInt("fraudKeyVersion.${env.name}", fraudKeyVersion)
+            }
             putString(keyPrefsKey(env), publishableKey.trim())
             putBoolean("useAuthToken.${env.name}", useAuthToken)
             putString("authToken.${env.name}", authToken.trim())
@@ -106,7 +130,8 @@ class SettingsStore(context: Context) {
 
     /** Where requests go, e.g. `env = Staging; host = https://…; key = prj_test_pk_ab12…; key check = …`. */
     fun environmentSummary(): String =
-        "env = ${environment.label}; host = $host; verified host = $verifiedHost; ${credentialSummary()}; key check = ${keyCheck.summary()}"
+        "env = ${environment.label}; host = $host; verified host = $verifiedHost; ${credentialSummary()}; " +
+            "fraud key = ${resolvedFraudKeyOverride?.let { "override v${it.keyVersion}" } ?: "built-in"}; key check = ${keyCheck.summary()}"
 
     /** `key = prj_…` or `auth token = kid …, expires …`. */
     private fun credentialSummary(): String = when {
