@@ -16,6 +16,7 @@ import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarGeofence
 import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarResponseFormat
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import java.net.InetAddress
 import java.net.NetworkInterface
@@ -329,7 +330,7 @@ internal class RadarVerificationManager(
 
         var minInterval: Int = verificationManager.startedInterval
 
-        this.lastToken?.let {
+        this.lastToken?.takeIf { it.format != RadarResponseFormat.ID }?.let {
             val lastTokenElapsed = (SystemClock.elapsedRealtime() - this.lastTokenElapsedRealtime).toInt() / 1000
 
             // if expiresIn is shorter than interval, override interval
