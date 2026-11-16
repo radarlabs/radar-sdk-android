@@ -1,0 +1,17 @@
+{
+    "meta": {
+        "code": 200
+    },
+    "event": {
+        "_id": "5f3e50491c2b7d005c81f5d9",
+        "createdAt": "2026-06-26T12:00:00.000Z",
+        "live": false,
+        "type": "test_event",
+        "confidence": 3,
+        "user": {
+            "_id": "userId",
+            "userId": "userId",
+            "deviceId": "deviceId"
+        }
+    }
+}

@@ -21,6 +21,16 @@ internal class RadarLogger(
 
     internal companion object {
         private const val TAG = "RadarLogger"
+
+        /**
+         * Logs a warning with `Radar.logger`. Does nothing if the SDK is not initialized.
+         * Use this from code that can run before `Radar.initialize()`, for example model parsing.
+         */
+        fun warnIfInitialized(message: String) {
+            if (Radar.isLoggerInitialized()) {
+                Radar.logger.w(message)
+            }
+        }
     }
 
     fun d(message: String, type: RadarLogType? = null, throwable: Throwable? = null) {
