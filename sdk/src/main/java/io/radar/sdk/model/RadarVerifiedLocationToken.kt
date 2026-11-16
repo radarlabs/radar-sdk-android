@@ -1,62 +1,53 @@
 package io.radar.sdk.model
 
 import io.radar.sdk.RadarUtils
-import org.json.JSONArray
-import org.json.JSONObject
 import java.util.Date
+import org.json.JSONObject
 
 /**
  * Represents a user's verified location.
  *
  * @see [](https://radar.com/documentation/fraud)
  */
-class RadarVerifiedLocationToken(
-    /**
-     * The user.
-     */
-    val user: RadarUser,
+class RadarVerifiedLocationToken @JvmOverloads constructor(
+    /** The user. Available for JWS responses. */
+    val user: RadarUser?,
+
+    /** The events. Available for JWS responses. */
+    val events: Array<RadarEvent>?,
 
     /**
-     * An array of events.
+     * The response token. Relay it to the backend for verification.
+     * JWE tokens must first be decrypted by the backend.
      */
-    val events: Array<RadarEvent>,
+    val token: String?,
 
-    /**
-     * A signed JSON Web Token (JWT) containing the user and array of events. Verify the token server-side using your secret key.
-     */
-    val token: String,
+    /** The token expiration datetime. Unavailable for ID responses. */
+    val expiresAt: Date?,
 
-    /**
-     * The datetime when the token expires.
-     */
-    val expiresAt: Date,
-
-    /**
-     * The number of seconds until the token expires.
-     */
+    /** The token lifetime in seconds. Zero for ID responses. */
     val expiresIn: Int,
 
     /**
-     * A boolean indicating whether the user passed all jurisdiction and fraud detection checks.
+     * Whether the evaluation passed. Unavailable for ID responses, which return false.
+     * Authorization decisions require backend verification.
      */
     val passed: Boolean,
 
-    /**
-     * An array of failure reasons for jurisdiction and fraud detection checks.
-     */
-    val failureReasons: Array<String>,
+    /** Failure reasons. Available for JWS responses. */
+    val failureReasons: Array<String>?,
 
-    /**
-     * The Radar ID of the location check.
-     */
+    /** The Radar ID of the location check. */
     val _id: String,
 
-    /**
-     * The full JSON value of the token.
-     */
+    /** The response JSON. Reduced responses contain only their clear fields. */
     val fullJson: JSONObject,
+
+    /** The response format selected by the server. */
+    val format: RadarResponseFormat = RadarResponseFormat.JWS
 ) {
     internal companion object {
+        private const val FIELD_FORMAT = "format"
         private const val FIELD_USER = "user"
         private const val FIELD_EVENTS = "events"
         private const val FIELD_TOKEN = "token"
@@ -71,29 +62,95 @@ class RadarVerifiedLocationToken(
                 return null
             }
 
-            val user: RadarUser? = RadarUser.fromJson(obj.optJSONObject(FIELD_USER))
-            val events: Array<RadarEvent>? = RadarEvent.fromJson(obj.optJSONArray(FIELD_EVENTS))
+            val format = RadarResponseFormat.fromJson(obj.opt(FIELD_FORMAT))
+                ?: return null
+
+            return when (format) {
+                RadarResponseFormat.JWS -> fromJwsJson(obj)
+                RadarResponseFormat.JWE -> fromJweJson(obj)
+                RadarResponseFormat.ID -> fromIdJson(obj)
+            }
+        }
+
+        private fun fromJwsJson(obj: JSONObject): RadarVerifiedLocationToken? {
+            // Preserve the existing JWS parser and its defaults.
+            val user = RadarUser.fromJson(obj.optJSONObject(FIELD_USER))
+            val events = RadarEvent.fromJson(obj.optJSONArray(FIELD_EVENTS))
             val token: String? = obj.optString(FIELD_TOKEN)
-            val expiresAt: Date? = RadarUtils.isoStringToDate(obj.optString(FIELD_EXPIRES_AT))
-            val expiresIn: Int = obj.optInt(FIELD_EXPIRES_IN)
-            val passed: Boolean = obj.optBoolean(FIELD_PASSED)
-            val failureReasons = obj.optJSONArray(FIELD_FAILURE_REASONS)?.let { failureReasons ->
-                Array<String>(failureReasons.length()) {
-                    failureReasons.optString(it)
-                }
+            val expiresAt = RadarUtils.isoStringToDate(obj.optString(FIELD_EXPIRES_AT))
+            val expiresIn = obj.optInt(FIELD_EXPIRES_IN)
+            val passed = obj.optBoolean(FIELD_PASSED)
+            val failureReasons = obj.optJSONArray(FIELD_FAILURE_REASONS)?.let { reasons ->
+                Array(reasons.length()) { reasons.optString(it) }
             } ?: emptyArray()
-            val id = obj.optString(FIELD_ID) ?: ""
+            val id = obj.optString(FIELD_ID)
 
             if (user == null || events == null || token == null || expiresAt == null) {
                 return null
             }
 
-            return RadarVerifiedLocationToken(user, events, token, expiresAt, expiresIn, passed, failureReasons, id, obj)
+            return RadarVerifiedLocationToken(
+                user, events, token, expiresAt, expiresIn,
+                passed, failureReasons, id, obj
+            )
+        }
+
+        private fun fromJweJson(obj: JSONObject): RadarVerifiedLocationToken? {
+            val id = (obj.opt(FIELD_ID) as? String)
+                ?.takeIf { it.isNotEmpty() } ?: return null
+            val token = (obj.opt(FIELD_TOKEN) as? String)
+                ?.takeIf { it.isNotEmpty() } ?: return null
+            val expiration = obj.opt(FIELD_EXPIRES_AT) as? String ?: return null
+            val expiresAt = RadarUtils.isoStringToDate(expiration) ?: return null
+            val lifetime = obj.opt(FIELD_EXPIRES_IN) as? Number ?: return null
+            val expiresIn = lifetime.toInt()
+            val passed = obj.opt(FIELD_PASSED) as? Boolean ?: return null
+
+            // Reject fractional or out-of-range lifetimes instead of truncating them.
+            if (lifetime.toDouble() != expiresIn.toDouble()) {
+                return null
+            }
+
+            val clearJson = JSONObject(
+                obj,
+                arrayOf(
+                    "meta", FIELD_FORMAT, FIELD_ID, FIELD_TOKEN,
+                    FIELD_EXPIRES_AT, FIELD_EXPIRES_IN, FIELD_PASSED
+                )
+            )
+
+            return RadarVerifiedLocationToken(
+                user = null,
+                events = null,
+                token = token,
+                expiresAt = expiresAt,
+                expiresIn = expiresIn,
+                passed = passed,
+                failureReasons = null,
+                _id = id,
+                fullJson = clearJson,
+                format = RadarResponseFormat.JWE
+            )
+        }
+
+        private fun fromIdJson(obj: JSONObject): RadarVerifiedLocationToken? {
+            val id = (obj.opt(FIELD_ID) as? String)
+                ?.takeIf { it.isNotEmpty() } ?: return null
+
+            return RadarVerifiedLocationToken(
+                user = null,
+                events = null,
+                token = null,
+                expiresAt = null,
+                expiresIn = 0,
+                passed = false,
+                failureReasons = null,
+                _id = id,
+                fullJson = JSONObject(obj, arrayOf("meta", FIELD_FORMAT, FIELD_ID)),
+                format = RadarResponseFormat.ID
+            )
         }
     }
 
-    fun toJson(): JSONObject {
-        return fullJson
-    }
-
+    fun toJson(): JSONObject = fullJson
 }

@@ -513,15 +513,16 @@ internal class RadarVerificationManager(
     fun isLastTokenValid(): Boolean {
         val lastToken = this.lastToken ?: return false
 
-        val lastTokenElapsed = (SystemClock.elapsedRealtime() - this.lastTokenElapsedRealtime) / 1000
-        val lastDistanceToStateBorder = lastToken.user.state?.distanceToBorder ?: -1.0
+        val lastTokenElapsed =
+            (SystemClock.elapsedRealtime() - this.lastTokenElapsedRealtime) / 1000
 
-        val lastTokenValid = lastTokenElapsed < lastToken.expiresIn && lastToken.passed && lastDistanceToStateBorder > 1609
+        val lastTokenValid =
+            lastTokenElapsed < lastToken.expiresIn && lastToken.passed
 
         if (lastTokenValid) {
-            Radar.logger.d("Last token valid | lastToken.expiresIn = ${lastToken.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${lastToken.passed}; lastDistanceToStateBorder = $lastDistanceToStateBorder")
+            Radar.logger.d("Last token valid | lastToken.expiresIn = ${lastToken.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${lastToken.passed}")
         } else {
-            Radar.logger.d("Last token invalid | lastToken.expiresIn = ${lastToken.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${lastToken.passed}; lastDistanceToStateBorder = $lastDistanceToStateBorder")
+            Radar.logger.d("Last token invalid | lastToken.expiresIn = ${lastToken.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${lastToken.passed}")
         }
 
         return lastTokenValid
