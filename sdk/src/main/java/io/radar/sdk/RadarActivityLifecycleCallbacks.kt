@@ -3,6 +3,7 @@ package io.radar.sdk
 import android.Manifest
 import android.app.Activity
 import android.app.Application
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -47,26 +48,39 @@ internal class RadarActivityLifecycleCallbacks(
         val window = activity.window
         val originalCallback = window.callback
 
-        window.callback = object : Window.Callback by originalCallback {
-            override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-                try {
-                    val inputDevice = InputDevice.getDevice(event.deviceId)
-
-                    if (
-                        event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN ||
-                        inputDevice?.isVirtual == true
-                    ) {
-                        RadarSettings.setSharing(activity.applicationContext, true)
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, e.message, e)
-                }
-
-                return originalCallback.dispatchTouchEvent(event)
-            }
+        // Each Radar.initialize() makes a new callbacks object, so an earlier one can have wrapped this
+        // window already. Do not add a second layer.
+        if (originalCallback !is RadarTouchWindowCallback) {
+            window.callback = RadarTouchWindowCallback(originalCallback, activity.applicationContext)
         }
 
         wrappedActivities.add(activity)
+    }
+
+    /**
+     * Sets the sharing flag when a touch comes from a virtual or unknown input device, then passes the
+     * event to [original].
+     */
+    internal class RadarTouchWindowCallback(
+        internal val original: Window.Callback,
+        private val context: Context
+    ) : Window.Callback by original {
+        override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+            try {
+                val inputDevice = InputDevice.getDevice(event.deviceId)
+
+                if (
+                    event.getToolType(0) == MotionEvent.TOOL_TYPE_UNKNOWN ||
+                    inputDevice?.isVirtual == true
+                ) {
+                    RadarSettings.setSharing(context, true)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, e.message, e)
+            }
+
+            return original.dispatchTouchEvent(event)
+        }
     }
 
     override fun onActivityResumed(activity: Activity) {
