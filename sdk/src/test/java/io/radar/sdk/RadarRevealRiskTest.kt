@@ -7,6 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.helpers.RadarApiHelperMock
 import io.radar.sdk.helpers.RadarTestUtils
+import io.radar.sdk.model.RadarResponseFormat
 import io.radar.sdk.model.RadarRevealRiskToken
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -109,31 +110,34 @@ class RadarRevealRiskTest {
 
         // The response was parsed into a fully-populated token.
         val token = callbackToken!!
+        val risk = requireNotNull(token.risk)
+        val network = requireNotNull(token.network)
+        val device = requireNotNull(token.device)
         assertEquals("risk-token-123", token.id)
         assertEquals("signed-jwt-token", token.token)
         assertEquals("2026-07-14T12:00:00.000Z", token.expiresAt)
         assertEquals(3600, token.expiresIn)
 
-        assertEquals(RadarRevealRiskToken.RiskLevel.MEDIUM, token.risk.level)
-        assertArrayEquals(arrayOf("proxy_detected", "vpn_detected"), token.risk.reasons)
+        assertEquals(RadarRevealRiskToken.RiskLevel.MEDIUM, risk.level)
+        assertArrayEquals(arrayOf("proxy_detected", "vpn_detected"), risk.reasons)
 
-        assertEquals("US", token.network.ipAddress?.countryCode)
-        assertEquals("New York", token.network.ipAddress?.city)
-        assertEquals(true, token.network.ipAddress?.countryAllowed)
-        assertEquals(true, token.network.ipAddress?.stateAllowed)
+        assertEquals("US", network.ipAddress?.countryCode)
+        assertEquals("New York", network.ipAddress?.city)
+        assertEquals(true, network.ipAddress?.countryAllowed)
+        assertEquals(true, network.ipAddress?.stateAllowed)
 
-        assertEquals(true, token.network.privacy?.proxy)
-        assertEquals(true, token.network.privacy?.vpn)
-        assertEquals(false, token.network.privacy?.hosting)
-        assertEquals("SomeVPN", token.network.privacy?.service)
+        assertEquals(true, network.privacy?.proxy)
+        assertEquals(true, network.privacy?.vpn)
+        assertEquals(false, network.privacy?.hosting)
+        assertEquals("SomeVPN", network.privacy?.service)
 
-        assertEquals("CLOUDFLARENET", token.network.asn?.name)
-        assertEquals("AS13335", token.network.asn?.asn)
-        assertEquals("cloudflare.com", token.network.asn?.domain)
+        assertEquals("CLOUDFLARENET", network.asn?.name)
+        assertEquals("AS13335", network.asn?.asn)
+        assertEquals("cloudflare.com", network.asn?.domain)
 
-        assertEquals("Android", token.device.deviceType)
-        assertEquals("install-xyz", token.device.installId)
-        assertEquals("com.radar.example", token.device.appId)
+        assertEquals("Android", device.deviceType)
+        assertEquals("install-xyz", device.installId)
+        assertEquals("com.radar.example", device.appId)
     }
 
     /**
@@ -226,11 +230,11 @@ class RadarRevealRiskTest {
 
     @Test
     fun test_RadarRevealRiskToken_fromJson_riskLevels() {
-        assertEquals(RadarRevealRiskToken.RiskLevel.LOW, tokenWithRiskLevel("low").risk.level)
-        assertEquals(RadarRevealRiskToken.RiskLevel.MEDIUM, tokenWithRiskLevel("medium").risk.level)
-        assertEquals(RadarRevealRiskToken.RiskLevel.HIGH, tokenWithRiskLevel("high").risk.level)
+        assertEquals(RadarRevealRiskToken.RiskLevel.LOW, tokenWithRiskLevel("low").risk!!.level)
+        assertEquals(RadarRevealRiskToken.RiskLevel.MEDIUM, tokenWithRiskLevel("medium").risk!!.level)
+        assertEquals(RadarRevealRiskToken.RiskLevel.HIGH, tokenWithRiskLevel("high").risk!!.level)
         // An unknown or missing level falls back to NONE.
-        assertEquals(RadarRevealRiskToken.RiskLevel.NONE, tokenWithRiskLevel("bogus").risk.level)
+        assertEquals(RadarRevealRiskToken.RiskLevel.NONE, tokenWithRiskLevel("bogus").risk!!.level)
     }
 
     @Test
@@ -243,16 +247,18 @@ class RadarRevealRiskTest {
         }
 
         val token = RadarRevealRiskToken.fromJson(obj)!!
+        val risk = requireNotNull(token.risk)
+        val network = requireNotNull(token.network)
 
         assertEquals("risk-token-123", token.id)
-        assertEquals(RadarRevealRiskToken.RiskLevel.HIGH, token.risk.level)
-        assertTrue(token.risk.reasons.isEmpty())
+        assertEquals(RadarRevealRiskToken.RiskLevel.HIGH, risk.level)
+        assertTrue(risk.reasons.isEmpty())
         assertNull(token.token)
         assertNull(token.expiresAt)
         assertNull(token.expiresIn)
-        assertNull(token.network.ipAddress)
-        assertNull(token.network.privacy)
-        assertNull(token.network.asn)
+        assertNull(network.ipAddress)
+        assertNull(network.privacy)
+        assertNull(network.asn)
     }
 
     @Test
@@ -281,4 +287,80 @@ class RadarRevealRiskTest {
         }
         return RadarRevealRiskToken.fromJson(obj)!!
     }
+
+    @Test
+    fun test_revealRisk_acceptsJweAndIdResponses() {
+        listOf("jwe", "id").forEach { format ->
+            apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+            apiHelperMock.mockResponse = reducedResponse(format)
+            apiHelperMock.clearCapturedParams()
+
+            var callbackCount = 0
+            var callbackStatus: Radar.RadarStatus? = null
+            var callbackToken: RadarRevealRiskToken? = null
+
+            Radar.apiClient.revealRisk(
+                RadarPreparedFraudPayload(RecordingFraudHandle())
+            ) { status, token ->
+                callbackCount++
+                callbackStatus = status
+                callbackToken = token
+            }
+
+            assertEquals(1, callbackCount)
+            assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+            assertEquals("v1/reveal/risk", apiHelperMock.lastCapturedPath)
+            assertTrue(apiHelperMock.lastCapturedVerified)
+
+            val token = requireNotNull(callbackToken)
+            assertEquals(RadarResponseFormat.fromJson(format), token.format)
+            assertEquals("risk-id", token.id)
+            assertNull(token.risk)
+            assertNull(token.network)
+            assertNull(token.device)
+            assertEquals(if (format == "jwe") "opaque-token" else null, token.token)
+        }
+    }
+
+    @Test
+    fun test_revealRisk_rejectsMalformedReducedResponses() {
+        val responses = listOf(
+            reducedResponse("unknown"),
+            reducedResponse("jwe").apply { remove("token") },
+            reducedResponse("jwe").put("expiresIn", "90"),
+            reducedResponse("id").apply { remove("_id") }
+        )
+
+        responses.forEach { response ->
+            apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+            apiHelperMock.mockResponse = response
+
+            var callbackCount = 0
+            var callbackStatus: Radar.RadarStatus? = null
+            var callbackToken: RadarRevealRiskToken? = null
+
+            Radar.apiClient.revealRisk(
+                RadarPreparedFraudPayload(RecordingFraudHandle())
+            ) { status, token ->
+                callbackCount++
+                callbackStatus = status
+                callbackToken = token
+            }
+
+            assertEquals(1, callbackCount)
+            assertEquals(Radar.RadarStatus.ERROR_SERVER, callbackStatus)
+            assertNull(callbackToken)
+        }
+    }
+
+    private fun reducedResponse(format: String): JSONObject =
+        JSONObject().apply {
+            put("format", format)
+            put("_id", "risk-id")
+            if (format == "jwe") {
+                put("token", "opaque-token")
+                put("expiresAt", "2030-01-01T00:00:00.000Z")
+                put("expiresIn", 90)
+            }
+        }
 }
