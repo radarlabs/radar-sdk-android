@@ -17,24 +17,22 @@ import org.robolectric.annotation.Config
 @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
 class RadarRevealRiskTokenFormatTest {
 
-    private fun response(format: String? = null): JSONObject =
-        JSONObject().apply {
-            put("meta", JSONObject().put("code", 200))
-            put("_id", "risk-id")
-            put("token", "opaque-token")
-            put("expiresAt", "2030-01-01T00:00:00.000Z")
-            put("expiresIn", 90)
-            put("risk", JSONObject().put("level", "low").put("reasons", JSONArray()))
-            put("network", JSONObject())
-            put("device", JSONObject())
-            put("extra", "legacy-field")
-            if (format != null) {
-                put("format", format)
-            }
+    private fun response(format: String? = null): JSONObject = JSONObject().apply {
+        put("meta", JSONObject().put("code", 200))
+        put("_id", "risk-id")
+        put("token", "opaque-token")
+        put("expiresAt", "2030-01-01T00:00:00.000Z")
+        put("expiresIn", 90)
+        put("risk", JSONObject().put("level", "low").put("reasons", JSONArray()))
+        put("network", JSONObject())
+        put("device", JSONObject())
+        put("extra", "legacy-field")
+        if (format != null) {
+            put("format", format)
         }
+    }
 
-    private fun parse(obj: JSONObject): RadarRevealRiskToken =
-        requireNotNull(RadarRevealRiskToken.fromJson(obj))
+    private fun parse(obj: JSONObject): RadarRevealRiskToken = requireNotNull(RadarRevealRiskToken.fromJson(obj))
 
     @Test
     fun legacyAndExplicitJwsPreserveUnsignedResponses() {

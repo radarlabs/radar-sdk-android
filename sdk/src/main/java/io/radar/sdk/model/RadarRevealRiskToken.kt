@@ -1,9 +1,9 @@
 package io.radar.sdk.model
 
+import io.radar.sdk.RadarUtils
 import io.radar.sdk.util.optBooleanOrNull
 import io.radar.sdk.util.optDoubleOrNull
 import io.radar.sdk.util.optStringOrNull
-import io.radar.sdk.RadarUtils
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -395,7 +395,13 @@ class RadarRevealRiskToken(
             val fields = obj.keys().asSequence().filter { it != "meta" }.toList()
 
             return RadarRevealRiskToken(
-                id, risk, network, device, token, expiresAt, expiresIn,
+                id,
+                risk,
+                network,
+                device,
+                token,
+                expiresAt,
+                expiresIn,
                 copyFields(obj, fields)
             )
         }
@@ -426,8 +432,11 @@ class RadarRevealRiskToken(
                 fullJson = copyFields(
                     obj,
                     listOf(
-                        FIELD_FORMAT, FIELD_ID, FIELD_TOKEN,
-                        FIELD_EXPIRES_AT, FIELD_EXPIRES_IN
+                        FIELD_FORMAT,
+                        FIELD_ID,
+                        FIELD_TOKEN,
+                        FIELD_EXPIRES_AT,
+                        FIELD_EXPIRES_IN
                     )
                 )
             )
@@ -446,14 +455,13 @@ class RadarRevealRiskToken(
             )
         }
 
-        private fun copyFields(obj: JSONObject, fields: List<String>): JSONObject =
-            JSONObject().apply {
-                fields.forEach { field ->
-                    if (obj.has(field)) {
-                        put(field, obj.get(field))
-                    }
+        private fun copyFields(obj: JSONObject, fields: List<String>): JSONObject = JSONObject().apply {
+            fields.forEach { field ->
+                if (obj.has(field)) {
+                    put(field, obj.get(field))
                 }
             }
+        }
     }
 
     fun toJson(): JSONObject = fullJson

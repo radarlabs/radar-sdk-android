@@ -25,25 +25,23 @@ import org.robolectric.shadows.ShadowSystemClock
 @Config(sdk = [Build.VERSION_CODES.UPSIDE_DOWN_CAKE])
 class RadarVerifiedLocationTokenFormatTest {
 
-    private fun response(format: String? = null): JSONObject =
-        JSONObject().apply {
-            put("meta", JSONObject().put("code", 200))
-            put("_id", "evaluation-id")
-            put("token", "opaque-token")
-            put("expiresAt", "2030-01-01T00:00:00.000Z")
-            put("expiresIn", 90)
-            put("passed", true)
-            put("user", JSONObject().put("_id", "user-id"))
-            put("events", JSONArray())
-            put("failureReasons", JSONArray())
-            put("extra", "legacy-field")
-            if (format != null) {
-                put("format", format)
-            }
+    private fun response(format: String? = null): JSONObject = JSONObject().apply {
+        put("meta", JSONObject().put("code", 200))
+        put("_id", "evaluation-id")
+        put("token", "opaque-token")
+        put("expiresAt", "2030-01-01T00:00:00.000Z")
+        put("expiresIn", 90)
+        put("passed", true)
+        put("user", JSONObject().put("_id", "user-id"))
+        put("events", JSONArray())
+        put("failureReasons", JSONArray())
+        put("extra", "legacy-field")
+        if (format != null) {
+            put("format", format)
         }
+    }
 
-    private fun parse(obj: JSONObject): RadarVerifiedLocationToken =
-        requireNotNull(RadarVerifiedLocationToken.fromJson(obj))
+    private fun parse(obj: JSONObject): RadarVerifiedLocationToken = requireNotNull(RadarVerifiedLocationToken.fromJson(obj))
 
     @Test
     fun legacyAndExplicitJwsPreserveTheFullResponse() {
@@ -104,8 +102,13 @@ class RadarVerifiedLocationTokenFormatTest {
             assertNull(token.failureReasons)
             assertEquals(
                 setOf(
-                    "meta", "format", "_id", "token",
-                    "expiresAt", "expiresIn", "passed"
+                    "meta",
+                    "format",
+                    "_id",
+                    "token",
+                    "expiresAt",
+                    "expiresIn",
+                    "passed"
                 ),
                 token.toJson().keys().asSequence().toSet()
             )

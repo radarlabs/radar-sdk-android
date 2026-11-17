@@ -114,8 +114,13 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
             val clearJson = JSONObject(
                 obj,
                 arrayOf(
-                    "meta", FIELD_FORMAT, FIELD_ID, FIELD_TOKEN,
-                    FIELD_EXPIRES_AT, FIELD_EXPIRES_IN, FIELD_PASSED
+                    "meta",
+                    FIELD_FORMAT,
+                    FIELD_ID,
+                    FIELD_TOKEN,
+                    FIELD_EXPIRES_AT,
+                    FIELD_EXPIRES_IN,
+                    FIELD_PASSED
                 )
             )
 

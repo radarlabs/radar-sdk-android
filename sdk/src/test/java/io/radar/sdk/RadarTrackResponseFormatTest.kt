@@ -31,8 +31,7 @@ import org.robolectric.annotation.Config
 class RadarTrackResponseFormatTest {
 
     class StubFraudHandle {
-        fun seal(options: Map<String, Any?>): Map<String, Any?> =
-            mapOf("payload" to """{"encv":1}""")
+        fun seal(options: Map<String, Any?>): Map<String, Any?> = mapOf("payload" to """{"encv":1}""")
     }
 
     private val context: Context = ApplicationProvider.getApplicationContext()
@@ -223,36 +222,35 @@ class RadarTrackResponseFormatTest {
         assertTrue(verifiedReceiver.tokens.isEmpty())
     }
 
-    private fun response(format: String? = null): JSONObject =
-        JSONObject().apply {
-            put(
-                "meta",
-                JSONObject().put(
-                    "trackingOptions",
-                    JSONObject().put("desiredMovingUpdateInterval", 17)
-                )
+    private fun response(format: String? = null): JSONObject = JSONObject().apply {
+        put(
+            "meta",
+            JSONObject().put(
+                "trackingOptions",
+                JSONObject().put("desiredMovingUpdateInterval", 17)
             )
-            put("_id", "evaluation-id")
-            put("token", "opaque-token")
-            put("expiresAt", "2030-01-01T00:00:00.000Z")
-            put("expiresIn", 90)
-            put("passed", true)
-            put("user", JSONObject().put("_id", "response-user"))
-            put(
-                "events",
-                JSONArray().put(
-                    JSONObject()
-                        .put("_id", "event-id")
-                        .put("type", "user.entered_geofence")
-                        .put("createdAt", "2030-01-01T00:00:00.000Z")
-                )
+        )
+        put("_id", "evaluation-id")
+        put("token", "opaque-token")
+        put("expiresAt", "2030-01-01T00:00:00.000Z")
+        put("expiresIn", 90)
+        put("passed", true)
+        put("user", JSONObject().put("_id", "response-user"))
+        put(
+            "events",
+            JSONArray().put(
+                JSONObject()
+                    .put("_id", "event-id")
+                    .put("type", "user.entered_geofence")
+                    .put("createdAt", "2030-01-01T00:00:00.000Z")
             )
-            put("failureReasons", JSONArray())
-            put("nearbyGeofences", JSONArray())
-            if (format != null) {
-                put("format", format)
-            }
+        )
+        put("failureReasons", JSONArray())
+        put("nearbyGeofences", JSONArray())
+        if (format != null) {
+            put("format", format)
         }
+    }
 
     private fun stateSnapshot(): List<Any?> = listOf(
         RadarSettings.getId(context),

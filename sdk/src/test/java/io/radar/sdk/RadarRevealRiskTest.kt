@@ -353,14 +353,13 @@ class RadarRevealRiskTest {
         }
     }
 
-    private fun reducedResponse(format: String): JSONObject =
-        JSONObject().apply {
-            put("format", format)
-            put("_id", "risk-id")
-            if (format == "jwe") {
-                put("token", "opaque-token")
-                put("expiresAt", "2030-01-01T00:00:00.000Z")
-                put("expiresIn", 90)
-            }
+    private fun reducedResponse(format: String): JSONObject = JSONObject().apply {
+        put("format", format)
+        put("_id", "risk-id")
+        if (format == "jwe") {
+            put("token", "opaque-token")
+            put("expiresAt", "2030-01-01T00:00:00.000Z")
+            put("expiresIn", 90)
         }
+    }
 }

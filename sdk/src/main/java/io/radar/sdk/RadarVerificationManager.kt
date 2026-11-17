@@ -15,8 +15,8 @@ import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarGeofence
-import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarResponseFormat
+import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import java.net.InetAddress
 import java.net.NetworkInterface
