@@ -29,6 +29,7 @@ enum class ConsoleKind {
  * [summary] is the compact one-line representation; [detail] is the optional multi-line
  * payload revealed when the row is expanded (pretty-printed event JSON, formatted SDK
  * result, full location vector, etc.).
+ * [relayJSON] contains the optional backend handoff exposed by the row's long-press action.
  */
 data class ConsoleEntry(
     val kind: ConsoleKind,
@@ -36,6 +37,7 @@ data class ConsoleEntry(
     val detail: String? = null,
     val timestamp: Long = System.currentTimeMillis(),
     val id: Long = nextId(),
+    val relayJSON: String? = null,
 ) {
     companion object {
         private val counter = AtomicLong(0)

@@ -36,8 +36,8 @@ class LogStore : RadarReceiver() {
 
     // MARK: - Public write API (used by ActionButton + the verified/IAM receivers)
 
-    fun write(kind: ConsoleKind, summary: String, detail: String? = null) {
-        append(ConsoleEntry(kind = kind, summary = summary, detail = detail))
+    fun write(kind: ConsoleKind, summary: String, detail: String? = null, relayJSON: String? = null) {
+        append(ConsoleEntry(kind = kind, summary = summary, detail = detail, relayJSON = relayJSON))
     }
 
     fun writeAction(title: String, detail: String? = null) = write(ConsoleKind.ACTION, title, detail)
@@ -49,6 +49,27 @@ class LogStore : RadarReceiver() {
     /** Write a RESULT on success, an ERROR otherwise — for SDK completion handlers. */
     fun writeStatus(status: Radar.RadarStatus, summary: String, detail: String? = null) {
         if (status == Radar.RadarStatus.SUCCESS) writeResult(summary, detail) else writeError(summary, detail)
+    }
+
+    fun writeVerifiedResponse(
+        status: Radar.RadarStatus,
+        action: String,
+        response: VerifiedResponse?,
+        elapsedMilliseconds: Long? = null,
+        includeBeacons: Boolean = false,
+    ) {
+        val summary = buildString {
+            append("$action: ${Utils.stringForRadarStatus(status)}")
+            elapsedMilliseconds?.let { append(" in $it ms") }
+            response?.let { append(" | ${it.summary}") }
+            if (includeBeacons && response != null) append(" | ${response.beaconSummary}")
+        }
+        write(
+            kind = if (status == Radar.RadarStatus.SUCCESS) ConsoleKind.RESULT else ConsoleKind.ERROR,
+            summary = summary,
+            detail = response?.detail ?: "No response returned.",
+            relayJSON = if (status == Radar.RadarStatus.SUCCESS) response?.relayJSON else null,
+        )
     }
 
     fun clear() {

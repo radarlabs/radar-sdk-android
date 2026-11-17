@@ -2,11 +2,11 @@ package io.radar.example.tests.panels
 
 import android.os.SystemClock
 import androidx.compose.runtime.Composable
-import io.radar.example.Utils
 import io.radar.example.components.ActionButton
 import io.radar.example.components.ActionButtonStyle
 import io.radar.example.components.TogglePanel
 import io.radar.example.store.LocalLogStore
+import io.radar.example.store.VerifiedResponse
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.model.RadarVerifiedLocationToken
@@ -26,24 +26,36 @@ fun VerifiedPanel() {
         }
         ActionButton("getVerifiedLocationToken") {
             Radar.getVerifiedLocationToken { status, token ->
-                log.writeStatus(status, "getVerifiedLocationToken: ${Utils.stringForRadarStatus(status)}", token?.toJson()?.toString(2))
+                log.writeVerifiedResponse(
+                    status,
+                    action = "getVerifiedLocationToken",
+                    response = token?.let { VerifiedResponse(it) },
+                )
             }
+        }
+        ActionButton("clearVerifiedLocationToken") {
+            Radar.clearVerifiedLocationToken()
+            log.writeResult("Verified token cache cleared; the next token request will fetch a fresh response.")
         }
         ActionButton("trackVerified") {
             Radar.trackVerified(false) { status, token ->
-                log.writeStatus(status, "trackVerified: ${Utils.stringForRadarStatus(status)}", token?.toJson()?.toString(2))
+                log.writeVerifiedResponse(
+                    status,
+                    action = "trackVerified",
+                    response = token?.let { VerifiedResponse(it) },
+                )
             }
         }
         ActionButton("trackVerified (beacons)") {
             val start = SystemClock.elapsedRealtime()
             Radar.trackVerified(true) { status, token ->
                 val elapsed = SystemClock.elapsedRealtime() - start
-                val beacons = token?.user?.beacons.orEmpty()
-                val beaconDesc = beacons.joinToString("\n") { "${it.description ?: it._id ?: "beacon"} (${it.uuid} ${it.major}/${it.minor})" }
-                log.writeStatus(
+                log.writeVerifiedResponse(
                     status,
-                    "trackVerified (beacons): ${Utils.stringForRadarStatus(status)} in $elapsed ms, ${beacons.size} beacons",
-                    beaconDesc
+                    action = "trackVerified (beacons)",
+                    response = token?.let { VerifiedResponse(it) },
+                    elapsedMilliseconds = elapsed,
+                    includeBeacons = true,
                 )
             }
         }
@@ -54,11 +66,11 @@ fun VerifiedPanel() {
                 RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.HIGH,
                 object : Radar.RadarTrackVerifiedCallback {
                     override fun onComplete(status: Radar.RadarStatus, token: RadarVerifiedLocationToken?) {
-                        val beacons = token?.user?.beacons.orEmpty()
-                        log.writeStatus(
+                        log.writeVerifiedResponse(
                             status,
-                            "trackVerified (callback, beacons, HIGH): ${Utils.stringForRadarStatus(status)}, ${beacons.size} beacons",
-                            token?.toJson()?.toString(2)
+                            action = "trackVerified (callback, beacons, HIGH)",
+                            response = token?.let { VerifiedResponse(it) },
+                            includeBeacons = true,
                         )
                     }
                 }
@@ -85,7 +97,11 @@ fun VerifiedPanel() {
         }
         ActionButton("revealRisk") {
             Radar.revealRisk { status, token ->
-                log.writeStatus(status, token?.toJson().toString())
+                log.writeVerifiedResponse(
+                    status,
+                    action = "revealRisk",
+                    response = token?.let { VerifiedResponse(it) },
+                )
             }
         }
         ActionButton("setExpectedAddress") {

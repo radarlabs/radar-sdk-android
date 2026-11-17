@@ -36,6 +36,7 @@ import io.radar.example.store.PermissionsStore
 import io.radar.example.store.ProvideStores
 import io.radar.example.store.SettingsStore
 import io.radar.example.store.TripBuilderStore
+import io.radar.example.store.VerifiedResponse
 import io.radar.example.theme.RadarExampleTheme
 import io.radar.sdk.Radar
 import io.radar.sdk.RadarForegroundService
@@ -133,7 +134,11 @@ class MainActivity : AppCompatActivity() {
 
         val verifiedReceiver = object : RadarVerifiedReceiver() {
             override fun onTokenUpdated(context: Context, token: RadarVerifiedLocationToken) {
-                logStore.write(ConsoleKind.RESULT, "verified token updated", token.toJson().toString(2))
+                logStore.writeVerifiedResponse(
+                    Radar.RadarStatus.SUCCESS,
+                    action = "onTokenUpdated",
+                    response = VerifiedResponse(token),
+                )
             }
 
             override fun onIpChanged(context: Context) {
