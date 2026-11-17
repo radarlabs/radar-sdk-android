@@ -13,6 +13,7 @@ import android.location.Location
 import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Looper
+import android.os.SystemClock
 import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -1979,7 +1980,7 @@ class RadarTest {
         // Time since boot, which an age computed from a missing elapsedRealtimeNanos would report.
         ShadowSystemClock.advanceBy(Duration.ofHours(1))
 
-        // Built like RadarJobScheduler and RadarState rebuild a location: time is restored, elapsedRealtimeNanos isn't.
+        // Built like RadarState rebuilds a location: time is restored, elapsedRealtimeNanos isn't.
         val rebuilt = Location("RadarSDK").apply {
             latitude = 40.78382
             longitude = -73.97536
@@ -1996,6 +1997,43 @@ class RadarTest {
         val root = uploadedTrace("radar.tracking_update").getValue("radar.tracking_update")
         val ageMs = traceAttribute(root, "radar.location.age_ms")!!.getString("intValue").toLong()
         assertTrue("age_ms = $ageMs", ageMs in 5_000L..6_000L)
+    }
+
+    @Test
+    fun test_RadarJobScheduler_rebuiltLocation_tracksAgeNotTimeSinceBoot() {
+        mockTrackOnceLocation()
+        RadarSettings.removeRemoteTrackingOptions(context)
+        RadarSettings.setTrackingOptions(context, RadarTrackingOptions.EFFICIENT)
+        resetTrackingUpdateState()
+        // Time since boot, which the track would report as the location's age if elapsedRealtimeNanos were lost.
+        ShadowSystemClock.advanceBy(Duration.ofHours(1))
+
+        val location = Location("fused").apply {
+            latitude = 40.78382
+            longitude = -73.97536
+            accuracy = 65f
+            time = System.currentTimeMillis() - 5_000
+            elapsedRealtimeNanos = SystemClock.elapsedRealtimeNanos() - 5_000_000_000
+        }
+        val extras = RadarJobScheduler.locationExtras(location, Radar.RadarLocationSource.BACKGROUND_LOCATION)
+        val rebuilt = RadarJobScheduler.locationFromExtras(extras)
+        assertEquals(location.elapsedRealtimeNanos, rebuilt.elapsedRealtimeNanos)
+
+        // Background tracks always send updatedAtMsDiff; foreground ones depend on SDK configuration.
+        val wasForeground = RadarActivityLifecycleCallbacks.foreground
+        setActivityForegroundForTest(false)
+        try {
+            withTestLocationManager {
+                Radar.handleLocation(context, rebuilt, Radar.RadarLocationSource.BACKGROUND_LOCATION)
+                ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+            }
+        } finally {
+            setActivityForegroundForTest(wasForeground)
+        }
+
+        val params = apiHelperMock.lastCapturedParams!!
+        assertEquals(location.elapsedRealtimeNanos / 1_000_000, params.getLong("locationMs"))
+        assertEquals(5_000L, params.getLong("updatedAtMsDiff"))
     }
 
     /**
