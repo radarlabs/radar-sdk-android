@@ -23,6 +23,7 @@ import io.radar.sdk.model.RadarLog
 import io.radar.sdk.model.RadarMeta
 import io.radar.sdk.model.RadarPlace
 import io.radar.sdk.model.RadarReplay
+import io.radar.sdk.model.RadarResponseFormat
 import io.radar.sdk.model.RadarRevealRiskToken
 import io.radar.sdk.model.RadarRouteMatrix
 import io.radar.sdk.model.RadarRoutes
@@ -633,6 +634,36 @@ internal class RadarApiClient(
 
                     val config = RadarConfig.fromJson(res)
 
+                    if (verified) {
+                        val format = RadarResponseFormat.fromJson(res.opt("format"))
+
+                        if (format == null) {
+                            Radar.sendError(RadarStatus.ERROR_SERVER)
+                            callback?.onComplete(RadarStatus.ERROR_SERVER)
+                            return
+                        }
+
+                        if (format != RadarResponseFormat.JWS) {
+                            val token = RadarVerifiedLocationToken.fromJson(res)
+
+                            if (token == null) {
+                                Radar.sendError(RadarStatus.ERROR_SERVER)
+                                callback?.onComplete(RadarStatus.ERROR_SERVER)
+                                return
+                            }
+
+                            Radar.sendToken(token)
+
+                            callback?.onComplete(
+                                status = RadarStatus.SUCCESS,
+                                res = token.toJson(),
+                                config = config,
+                                token = token
+                            )
+                            return
+                        }
+                    }
+
                     val events = res.optJSONArray("events")?.let { eventsArr ->
                         RadarEvent.fromJson(eventsArr)
                     }
@@ -714,7 +745,7 @@ internal class RadarApiClient(
                         return
                     }
 
-                    Radar.sendError(status)
+                    Radar.sendError(RadarStatus.ERROR_SERVER)
 
                     callback?.onComplete(RadarStatus.ERROR_SERVER)
                 }

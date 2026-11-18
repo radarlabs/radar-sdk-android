@@ -1,5 +1,6 @@
 package io.radar.sdk.model
 
+import io.radar.sdk.RadarUtils
 import io.radar.sdk.util.optBooleanOrNull
 import io.radar.sdk.util.optDoubleOrNull
 import io.radar.sdk.util.optStringOrNull
@@ -20,20 +21,21 @@ class RadarRevealRiskToken(
     /**
      * The risk information for the reveal risk check.
      */
-    val risk: Risk,
+    val risk: Risk?,
 
     /**
      * The network information for the reveal risk check.
      */
-    val network: Network,
+    val network: Network?,
 
     /**
      * The device information for the reveal risk check.
      */
-    val device: Device,
+    val device: Device?,
 
     /**
-     * A signed JSON Web Token (JWT) containing the risk, network, and device information. Verify the token server-side using your secret key.
+     * The response token. Relay it to the backend for verification.
+     * JWE tokens must first be decrypted by the backend.
      */
     val token: String? = null,
 
@@ -52,6 +54,10 @@ class RadarRevealRiskToken(
      */
     val fullJson: JSONObject
 ) {
+
+    /** The response format selected by the server. */
+    val format: RadarResponseFormat =
+        RadarResponseFormat.fromJson(fullJson.opt("format")) ?: RadarResponseFormat.JWS
 
     /**
      * Represents the risk level for a reveal risk check.
@@ -340,6 +346,7 @@ class RadarRevealRiskToken(
     }
 
     internal companion object {
+        private const val FIELD_FORMAT = "format"
         private const val FIELD_ID = "_id"
         private const val FIELD_RISK = "risk"
         private const val FIELD_NETWORK = "network"
@@ -362,6 +369,17 @@ class RadarRevealRiskToken(
                 return null
             }
 
+            val format = RadarResponseFormat.fromJson(obj.opt(FIELD_FORMAT))
+                ?: return null
+
+            return when (format) {
+                RadarResponseFormat.JWS -> fromJwsJson(obj)
+                RadarResponseFormat.JWE -> fromJweJson(obj)
+                RadarResponseFormat.ID -> fromIdJson(obj)
+            }
+        }
+
+        private fun fromJwsJson(obj: JSONObject): RadarRevealRiskToken? {
             val id = obj.optString(FIELD_ID)
             val risk = Risk.fromJson(obj.optJSONObject(FIELD_RISK)) ?: return null
             val network = Network.fromJson(obj.optJSONObject(FIELD_NETWORK)) ?: return null
@@ -374,9 +392,75 @@ class RadarRevealRiskToken(
                 null
             }
 
-            obj.remove("meta")
+            val fields = obj.keys().asSequence().filter { it != "meta" }.toList()
 
-            return RadarRevealRiskToken(id, risk, network, device, token, expiresAt, expiresIn, obj)
+            return RadarRevealRiskToken(
+                id,
+                risk,
+                network,
+                device,
+                token,
+                expiresAt,
+                expiresIn,
+                copyFields(obj, fields)
+            )
+        }
+
+        private fun fromJweJson(obj: JSONObject): RadarRevealRiskToken? {
+            val id = (obj.opt(FIELD_ID) as? String)
+                ?.takeIf { it.isNotEmpty() } ?: return null
+            val token = (obj.opt(FIELD_TOKEN) as? String)
+                ?.takeIf { it.isNotEmpty() } ?: return null
+            val expiresAt = obj.opt(FIELD_EXPIRES_AT) as? String ?: return null
+            val lifetime = obj.opt(FIELD_EXPIRES_IN) as? Number ?: return null
+            val expiresIn = lifetime.toInt()
+
+            if (RadarUtils.isoStringToDate(expiresAt) == null ||
+                lifetime.toDouble() != expiresIn.toDouble()
+            ) {
+                return null
+            }
+
+            return RadarRevealRiskToken(
+                id = id,
+                risk = null,
+                network = null,
+                device = null,
+                token = token,
+                expiresAt = expiresAt,
+                expiresIn = expiresIn,
+                fullJson = copyFields(
+                    obj,
+                    listOf(
+                        FIELD_FORMAT,
+                        FIELD_ID,
+                        FIELD_TOKEN,
+                        FIELD_EXPIRES_AT,
+                        FIELD_EXPIRES_IN
+                    )
+                )
+            )
+        }
+
+        private fun fromIdJson(obj: JSONObject): RadarRevealRiskToken? {
+            val id = (obj.opt(FIELD_ID) as? String)
+                ?.takeIf { it.isNotEmpty() } ?: return null
+
+            return RadarRevealRiskToken(
+                id = id,
+                risk = null,
+                network = null,
+                device = null,
+                fullJson = copyFields(obj, listOf(FIELD_FORMAT, FIELD_ID))
+            )
+        }
+
+        private fun copyFields(obj: JSONObject, fields: List<String>): JSONObject = JSONObject().apply {
+            fields.forEach { field ->
+                if (obj.has(field)) {
+                    put(field, obj.get(field))
+                }
+            }
         }
     }
 

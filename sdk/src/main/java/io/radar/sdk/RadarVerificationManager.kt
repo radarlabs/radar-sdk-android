@@ -15,6 +15,7 @@ import io.radar.sdk.model.RadarBeacon
 import io.radar.sdk.model.RadarConfig
 import io.radar.sdk.model.RadarEvent
 import io.radar.sdk.model.RadarGeofence
+import io.radar.sdk.model.RadarResponseFormat
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import java.net.InetAddress
@@ -329,7 +330,7 @@ internal class RadarVerificationManager(
 
         var minInterval: Int = verificationManager.startedInterval
 
-        this.lastToken?.let {
+        this.lastToken?.takeIf { it.format != RadarResponseFormat.ID }?.let {
             val lastTokenElapsed = (SystemClock.elapsedRealtime() - this.lastTokenElapsedRealtime).toInt() / 1000
 
             // if expiresIn is shorter than interval, override interval
@@ -513,15 +514,16 @@ internal class RadarVerificationManager(
     fun isLastTokenValid(): Boolean {
         val lastToken = this.lastToken ?: return false
 
-        val lastTokenElapsed = (SystemClock.elapsedRealtime() - this.lastTokenElapsedRealtime) / 1000
-        val lastDistanceToStateBorder = lastToken.user.state?.distanceToBorder ?: -1.0
+        val lastTokenElapsed =
+            (SystemClock.elapsedRealtime() - this.lastTokenElapsedRealtime) / 1000
 
-        val lastTokenValid = lastTokenElapsed < lastToken.expiresIn && lastToken.passed && lastDistanceToStateBorder > 1609
+        val lastTokenValid =
+            lastTokenElapsed < lastToken.expiresIn && lastToken.passed
 
         if (lastTokenValid) {
-            Radar.logger.d("Last token valid | lastToken.expiresIn = ${lastToken.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${lastToken.passed}; lastDistanceToStateBorder = $lastDistanceToStateBorder")
+            Radar.logger.d("Last token valid | lastToken.expiresIn = ${lastToken.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${lastToken.passed}")
         } else {
-            Radar.logger.d("Last token invalid | lastToken.expiresIn = ${lastToken.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${lastToken.passed}; lastDistanceToStateBorder = $lastDistanceToStateBorder")
+            Radar.logger.d("Last token invalid | lastToken.expiresIn = ${lastToken.expiresIn}; lastTokenElapsed = $lastTokenElapsed; lastToken.passed = ${lastToken.passed}")
         }
 
         return lastTokenValid
