@@ -1,19 +1,40 @@
 # Migration guides
 
-## 4.2.x to 4.3.0
+## 4.3.x to 5.0.0
 
+### Public API changes
+
+- `RadarVerifiedLocationToken.user`, `events`, `token`, `expiresAt`, and `failureReasons` are now nullable.
+- `RadarRevealRiskToken.risk`, `network`, and `device` are now nullable.
 - `RadarEvent.location` is now nullable (`Location?`). It is `null` when the server sends no location. For example, conversion events from `Radar.logConversion()` have no location. Before, the SDK used a location with coordinates `(0, 0)`. If the server sends a location that is not valid, the SDK drops that event and logs a warning. For `Radar.logConversion()`, this gives `ERROR_SERVER` and a `null` event.
 - `RadarEvent.actualCreatedAt` is now nullable (`Date?`). It is `null` when the server sends no value or a value that is not valid. Before, the SDK used the time when it parsed the event.
 - `RadarEvent.toJson()` does not write `location` or `actualCreatedAt` when they are `null`.
-- Kotlin callers must handle `null`. Java callers see these getters as `@Nullable`.
+- Kotlin callers must handle the newly nullable properties with safe calls or null checks, even if the project continues using legacy full responses. Java callers see these getters as `@Nullable`.
 
 ```kotlin
-// 4.2.x
+// 4.3.x
 val latitude = event.location.latitude
 
-// 4.3.0
+// 5.0.0
 val latitude = event.location?.latitude
 ```
+
+### Verified tracking and Reveal Risk responses
+
+`RadarVerifiedLocationToken` and `RadarRevealRiskToken` now expose a `format` property of type `RadarResponseFormat`. The response format is configured on the Radar project:
+
+| Format | Response | Backend handling |
+| --- | --- | --- |
+| `JWS` | Legacy full plaintext response, with a signed token when signing is configured | Preserve the existing integration and verify signed tokens on the backend |
+| `JWE` | Encrypted token and clear response metadata | Decrypt and verify the token on the backend |
+| `ID` | Evaluation `_id` | Retrieve the result on the backend using a secret API key |
+
+- For JWE and ID responses, Track's `user`, `events`, and `failureReasons`, and Reveal's `risk`, `network`, and `device`, are `null`. `fullJson` and `toJson()` remain available, but omit these sensitive fields.
+- For ID responses, `token` and expiration fields are unavailable. `RadarVerifiedLocationToken.expiresIn` is `0` and `passed` is `false`; these are placeholders, not the evaluation result.
+- Forward the available `token` and evaluation ID to your backend as `{ token, _id }`. The ID property is `_id` on `RadarVerifiedLocationToken` and `id` on `RadarRevealRiskToken`.
+- Move decisions based on user, event, beacon, or risk fields to the backend when using JWE or ID. The SDK does not decrypt JWE tokens, and client-side `passed` values must not be used as authorization decisions without backend verification.
+
+Existing legacy full responses and ordinary `trackOnce` / `startTracking` responses remain supported.
 
 ## 3.x to 4.0.x
 
