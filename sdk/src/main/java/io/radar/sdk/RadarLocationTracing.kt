@@ -24,8 +24,8 @@ internal fun RadarTraceSpan.locationQuality(location: Location, context: Context
 }
 
 /**
- * Uses the monotonic clock when the location has it. Locations the SDK rebuilds from saved fields (job extras,
- * RadarState) have no elapsedRealtimeNanos, so their age comes from the wall clock instead. Null when the location
+ * Uses the monotonic clock when the location has it. Locations the SDK rebuilds from saved fields (RadarState)
+ * have no elapsedRealtimeNanos, so their age comes from the wall clock instead. Null when the location
  * has neither timestamp.
  */
 private fun locationAgeMs(location: Location): Long? {
