@@ -37,6 +37,13 @@ android {
         jvmTarget = "17"
     }
     namespace 'io.radar.example'
+
+    sourceSets {
+        main {
+            // FraudKeyOverrideBridge calls the fraud SDK's internal key override only when sdk-fraud is included.
+            java.srcDirs += findProject(':sdk-fraud') != null ? 'src/withFraud/java' : 'src/withoutFraud/java'
+        }
+    }
 }
 
 dependencies {
