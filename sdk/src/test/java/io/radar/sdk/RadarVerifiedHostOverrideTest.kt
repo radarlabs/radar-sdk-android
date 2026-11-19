@@ -43,16 +43,6 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun `initialize removes the saved trackVerifiedAutoFailover setting`() {
-        val prefs = context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
-        prefs.edit().putBoolean("track_verified_auto_failover", false).commit()
-
-        Radar.initialize(context, publishableKey)
-
-        assertFalse(prefs.contains("track_verified_auto_failover"))
-    }
-
-    @Test
     fun `default verified host secondary is expected`() {
         assertEquals("https://api-verified.radar.com", RadarSettings.getDefaultVerifiedHostSecondary())
     }

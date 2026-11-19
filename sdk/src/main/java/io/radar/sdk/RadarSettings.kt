@@ -47,9 +47,6 @@ internal object RadarSettings {
     private const val KEY_NETWORK_TIMEOUT_MS = "network_timeout_ms"
     private const val KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS = "ip_change_debounce_interval_ms"
 
-    // Saved by SDK versions before 6.0.0. The SDK no longer reads it.
-    private const val KEY_LEGACY_TRACK_VERIFIED_AUTO_FAILOVER = "track_verified_auto_failover"
-
     private const val DEFAULT_NETWORK_TIMEOUT_MS = 10000
     private const val DEFAULT_IP_CHANGE_DEBOUNCE_INTERVAL_MS = 10000L
 
@@ -160,10 +157,6 @@ internal object RadarSettings {
 
     internal fun setNetworkTimeoutMs(context: Context, timeoutMs: Int) {
         getSharedPreferences(context).edit { putInt(KEY_NETWORK_TIMEOUT_MS, timeoutMs) }
-    }
-
-    internal fun removeLegacyTrackVerifiedAutoFailover(context: Context) {
-        getSharedPreferences(context).edit { remove(KEY_LEGACY_TRACK_VERIFIED_AUTO_FAILOVER) }
     }
 
     internal fun getIpChangeDebounceIntervalMs(context: Context): Long = getSharedPreferences(context).getLong(KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS, DEFAULT_IP_CHANGE_DEBOUNCE_INTERVAL_MS)

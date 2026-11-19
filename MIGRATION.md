@@ -5,7 +5,7 @@
 ### Public API changes
 
 - `RadarInitializeOptions.trackVerifiedAutoFailover` and `RadarInitializeOptions.Builder.trackVerifiedAutoFailover()` are removed. Failover is now always on for every request. Remove the option from your code. Kotlin and Java code that sets it no longer compiles.
-- The SDK no longer reads the value that older SDK versions saved for this option, so a saved `false` does not turn off failover. `Radar.initialize()` deletes the saved value.
+- The SDK no longer reads the value that older SDK versions saved for this option, so a saved `false` does not turn off failover.
 - Before 4.2.0, failover was off by default. If you upgrade from 4.1.x or earlier, or if you set the option to `false`, `Radar.trackVerified()` can now send requests to the secondary verified host, `api-verified.radar.com`. If your app limits which hosts it can reach or pins certificates (for example, in `network_security_config.xml`), allow this host.
 
 ## 4.3.x to 5.0.0
