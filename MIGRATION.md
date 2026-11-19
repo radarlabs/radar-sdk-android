@@ -1,6 +1,6 @@
 # Migration guides
 
-## 5.x to 6.0.0
+## 5.x to 5.x
 
 ### Public API changes
 
