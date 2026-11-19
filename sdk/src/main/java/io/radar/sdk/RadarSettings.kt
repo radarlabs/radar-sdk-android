@@ -44,7 +44,6 @@ internal object RadarSettings {
     private const val KEY_X_PLATFORM_SDK_VERSION = "x_platform_sdk_version"
     private const val KEY_USER_TAGS = "user_tags"
     private const val KEY_FRAUD_ENABLED = "fraudEnabled"
-    private const val KEY_TRACK_VERIFIED_AUTO_FAILOVER = "track_verified_auto_failover"
     private const val KEY_NETWORK_TIMEOUT_MS = "network_timeout_ms"
     private const val KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS = "ip_change_debounce_interval_ms"
 
@@ -164,12 +163,6 @@ internal object RadarSettings {
 
     internal fun setIpChangeDebounceIntervalMs(context: Context, intervalMs: Long) {
         getSharedPreferences(context).edit { putLong(KEY_IP_CHANGE_DEBOUNCE_INTERVAL_MS, intervalMs) }
-    }
-
-    internal fun getTrackVerifiedAutoFailover(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_TRACK_VERIFIED_AUTO_FAILOVER, true)
-
-    internal fun setTrackVerifiedAutoFailover(context: Context, enabled: Boolean) {
-        getSharedPreferences(context).edit { putBoolean(KEY_TRACK_VERIFIED_AUTO_FAILOVER, enabled) }
     }
 
     internal fun getTracking(context: Context): Boolean = getSharedPreferences(context).getBoolean(KEY_TRACKING, false)

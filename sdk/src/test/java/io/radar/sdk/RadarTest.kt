@@ -4760,6 +4760,28 @@ class RadarTest {
         assertEquals(true, traceAttribute(root, "radar.verified.failover")?.get("boolValue"))
     }
 
+    // An older SDK saved trackVerifiedAutoFailover in shared preferences. A saved false
+    // value must not turn off failover.
+    @Test
+    fun test_Radar_trackVerified_failover_ignoresSavedAutoFailoverPreference() {
+        context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit()
+            .putBoolean("track_verified_auto_failover", false)
+            .commit()
+        Radar.traceManager!!.overrideSampledForTesting(true)
+        mockTrackVerifiedBeacons()
+        apiHelperMock.queueMockResponses(
+            "v1/config",
+            listOf(JSONObject().put("error", "not a radar response"), RadarTestUtils.jsonObjectFromResource("/get_config_response.json"))
+        )
+
+        assertEquals(Radar.RadarStatus.SUCCESS, trackVerifiedAndWait())
+
+        val spans = uploadedTraceSpans("radar.track_verified")
+        assertEquals(2, spans.count { it.getString("name") == "GET /v1/config" })
+        val root = spans.single { it.getString("name") == "radar.track_verified" }
+        assertEquals(true, traceAttribute(root, "radar.verified.failover")?.get("boolValue"))
+    }
+
     @Test
     fun test_Radar_trackVerified_locationFailure_endsTrace() {
         Radar.traceManager!!.overrideSampledForTesting(true)

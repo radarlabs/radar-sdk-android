@@ -25,7 +25,7 @@
             <pin digest="SHA-256">09MICn++JSUz2tk36fH+5qiuUAbbxx4JzrAHR3QHu/I=</pin>
         </pin-set>
     </domain-config>
-    <!-- Secondary verified host used by trackVerifiedAutoFailover. Amazon Trust Services SPKI pins. -->
+    <!-- Secondary verified host used by verified host failover. Amazon Trust Services SPKI pins. -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">api-verified.radar.com</domain>
         <pin-set>
