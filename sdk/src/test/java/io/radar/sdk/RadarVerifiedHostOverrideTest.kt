@@ -43,35 +43,6 @@ class RadarVerifiedHostOverrideTest {
     }
 
     @Test
-    fun `trackVerifiedAutoFailover defaults to true`() {
-        assertTrue(RadarInitializeOptions().trackVerifiedAutoFailover)
-        assertTrue(RadarInitializeOptions.builder().build().trackVerifiedAutoFailover)
-    }
-
-    @Test
-    fun `trackVerifiedAutoFailover setting defaults to true before initialize`() {
-        context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit().clear().commit()
-        assertTrue(RadarSettings.getTrackVerifiedAutoFailover(context))
-    }
-
-    @Test
-    fun `trackVerifiedAutoFailover persists through initialize`() {
-        Radar.initialize(
-            context,
-            publishableKey,
-            RadarInitializeOptions(trackVerifiedAutoFailover = true)
-        )
-        assertTrue(RadarSettings.getTrackVerifiedAutoFailover(context))
-
-        Radar.initialize(
-            context,
-            publishableKey,
-            RadarInitializeOptions(trackVerifiedAutoFailover = false)
-        )
-        assertFalse(RadarSettings.getTrackVerifiedAutoFailover(context))
-    }
-
-    @Test
     fun `default verified host secondary is expected`() {
         assertEquals("https://api-verified.radar.com", RadarSettings.getDefaultVerifiedHostSecondary())
     }

@@ -777,8 +777,6 @@ object Radar {
 
         RadarSettings.setFraudEnabled(this.context, options.fraud)
 
-        RadarSettings.setTrackVerifiedAutoFailover(this.context, options.trackVerifiedAutoFailover)
-
         options.networkTimeout?.let { desiredTimeout ->
             if (!desiredTimeout.isFinite() || desiredTimeout.isNegative()) {
                 this.logger.d("networkTimeout ignored: must be finite and non-negative | value = $desiredTimeout")

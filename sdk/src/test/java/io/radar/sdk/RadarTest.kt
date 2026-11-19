@@ -4745,6 +4745,11 @@ class RadarTest {
 
     @Test
     fun test_Radar_trackVerified_failover_tracesBothConfigRequests() {
+        // An older SDK saved trackVerifiedAutoFailover in shared preferences. A saved false
+        // value must not turn off failover.
+        context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit()
+            .putBoolean("track_verified_auto_failover", false)
+            .commit()
         Radar.traceManager!!.overrideSampledForTesting(true)
         mockTrackVerifiedBeacons()
         apiHelperMock.queueMockResponses(
