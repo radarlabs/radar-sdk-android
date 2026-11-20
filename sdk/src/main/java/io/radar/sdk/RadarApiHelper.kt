@@ -273,17 +273,6 @@ internal open class RadarApiHelper(
                             }
                         }
                     } else {
-                        val status = when (urlConnection.responseCode) {
-                            400 -> Radar.RadarStatus.ERROR_BAD_REQUEST
-                            401 -> Radar.RadarStatus.ERROR_UNAUTHORIZED
-                            402 -> Radar.RadarStatus.ERROR_PAYMENT_REQUIRED
-                            403 -> Radar.RadarStatus.ERROR_FORBIDDEN
-                            404 -> Radar.RadarStatus.ERROR_NOT_FOUND
-                            429 -> Radar.RadarStatus.ERROR_RATE_LIMIT
-                            in (500 until 600) -> Radar.RadarStatus.ERROR_SERVER
-                            else -> Radar.RadarStatus.ERROR_UNKNOWN
-                        }
-
                         val body = urlConnection.errorStream.readAll()
                         if (body == null) {
                             traceSpan?.end(Radar.RadarStatus.ERROR_SERVER)
@@ -294,6 +283,30 @@ internal open class RadarApiHelper(
                         }
 
                         val res = JSONObject(body)
+
+                        val status = when (urlConnection.responseCode) {
+                            400 -> {
+                                if (res.optJSONObject("meta")?.opt("errorCode") == "unsupported_sdk_version") {
+                                    Radar.RadarStatus.ERROR_UNSUPPORTED_SDK_VERSION
+                                } else {
+                                    Radar.RadarStatus.ERROR_BAD_REQUEST
+                                }
+                            }
+
+                            401 -> Radar.RadarStatus.ERROR_UNAUTHORIZED
+
+                            402 -> Radar.RadarStatus.ERROR_PAYMENT_REQUIRED
+
+                            403 -> Radar.RadarStatus.ERROR_FORBIDDEN
+
+                            404 -> Radar.RadarStatus.ERROR_NOT_FOUND
+
+                            429 -> Radar.RadarStatus.ERROR_RATE_LIMIT
+
+                            in (500 until 600) -> Radar.RadarStatus.ERROR_SERVER
+
+                            else -> Radar.RadarStatus.ERROR_UNKNOWN
+                        }
 
                         logger?.e("📍 Radar API response | method = $method; url = $url; responseCode = ${urlConnection.responseCode}; res = $res", RadarLogType.SDK_ERROR)
 

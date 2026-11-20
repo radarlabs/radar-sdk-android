@@ -384,7 +384,10 @@ object Radar {
         ERROR_SERVER,
 
         /** Unknown error */
-        ERROR_UNKNOWN
+        ERROR_UNKNOWN,
+
+        /** SDK version does not support the project's response format */
+        ERROR_UNSUPPORTED_SDK_VERSION
     }
 
     /**
