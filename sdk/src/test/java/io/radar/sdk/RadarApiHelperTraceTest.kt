@@ -206,12 +206,134 @@ class RadarApiHelperTraceTest {
         assertEquals("1", attribute(uploadedSpans().getValue("POST /v1/track"), "http.request.resend_count")?.get("intValue"))
     }
 
+    @Test
+    fun badRequestsRecognizeOnlyTheExactUnsupportedSdkVersionCode() {
+        val cases = listOf(
+            """{"meta":{"errorCode":"unsupported_sdk_version"}}""" to
+                Radar.RadarStatus.ERROR_UNSUPPORTED_SDK_VERSION,
+            """{"meta":{"errorCode":"other_error"}}""" to
+                Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{"errorCode":"UNSUPPORTED_SDK_VERSION"}}""" to
+                Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{"errorCode":null}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{"errorCode":123}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{"errorCode":true}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{"errorCode":[]}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{"errorCode":{}}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":null}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":"invalid"}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":[]}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"errorCode":"unsupported_sdk_version"}""" to
+                Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{}""" to Radar.RadarStatus.ERROR_BAD_REQUEST
+        )
+
+        for (path in listOf("v1/track", "v1/reveal/risk")) {
+            cases.forEachIndexed { index, (body, expected) ->
+                val name = "POST /$path case $index"
+                val callback = RecordingCallback()
+
+                helper(responseStatus = 400, responseBody = body).request(
+                    context,
+                    "POST",
+                    path,
+                    null,
+                    JSONObject(),
+                    false,
+                    callback,
+                    verified = true,
+                    traceSpan = clientSpan(name)
+                )
+
+                callback.await(expected)
+                assertEquals(body, callback.response?.toString())
+
+                val span = uploadedSpans().getValue(name)
+                assertEquals(2, span.getJSONObject("status").getInt("code"))
+                assertEquals(expected.name, attribute(span, "error.type")?.get("stringValue"))
+            }
+        }
+    }
+
+    @Test
+    fun unsupportedSdkVersionCodeDoesNotOverrideOtherHttpStatuses() {
+        val body = """{"meta":{"errorCode":"unsupported_sdk_version"}}"""
+        val cases = listOf(
+            401 to Radar.RadarStatus.ERROR_UNAUTHORIZED,
+            402 to Radar.RadarStatus.ERROR_PAYMENT_REQUIRED,
+            403 to Radar.RadarStatus.ERROR_FORBIDDEN,
+            404 to Radar.RadarStatus.ERROR_NOT_FOUND,
+            429 to Radar.RadarStatus.ERROR_RATE_LIMIT,
+            500 to Radar.RadarStatus.ERROR_SERVER,
+            503 to Radar.RadarStatus.ERROR_SERVER,
+            418 to Radar.RadarStatus.ERROR_UNKNOWN
+        )
+
+        for (path in listOf("v1/track", "v1/reveal/risk")) {
+            for ((responseStatus, expected) in cases) {
+                val callback = RecordingCallback()
+
+                helper(responseStatus = responseStatus, responseBody = body).request(
+                    context,
+                    "POST",
+                    path,
+                    null,
+                    JSONObject(),
+                    false,
+                    callback,
+                    verified = true
+                )
+
+                callback.await(expected)
+                assertEquals(body, callback.response?.toString())
+            }
+        }
+    }
+
+    @Test
+    fun malformedErrorBodiesRetainServerErrorStatus() {
+        for (path in listOf("v1/track", "v1/reveal/risk")) {
+            for (body in listOf("", "not JSON", "[]")) {
+                val callback = RecordingCallback()
+
+                helper(responseStatus = 400, responseBody = body).request(
+                    context,
+                    "POST",
+                    path,
+                    null,
+                    JSONObject(),
+                    false,
+                    callback,
+                    verified = true
+                )
+
+                callback.await(Radar.RadarStatus.ERROR_SERVER)
+                assertNull(callback.response)
+            }
+        }
+    }
+
+    @Test
+    fun unsupportedSdkVersionStatusPreservesExistingOrdinals() {
+        assertEquals(14, Radar.RadarStatus.ERROR_UNKNOWN.ordinal)
+        assertEquals(15, Radar.RadarStatus.ERROR_UNSUPPORTED_SDK_VERSION.ordinal)
+        assertEquals(
+            "ERROR_UNSUPPORTED_SDK_VERSION",
+            Radar.RadarStatus.ERROR_UNSUPPORTED_SDK_VERSION.toString()
+        )
+    }
+
     private fun clientSpan(name: String): RadarTraceSpan = RadarTraceSpan.start("root").child(name, RadarSpanKind.CLIENT)
 
-    private fun helper(failure: IOException? = null) = RadarApiHelper(
+    private fun helper(
+        failure: IOException? = null,
+        responseStatus: Int = 200,
+        responseBody: String = "{}"
+    ) = RadarApiHelper(
         connectionFactory = { url ->
             held[url.path.removePrefix("/")]?.await(LATCH_TIMEOUT, TimeUnit.SECONDS)
-            StubConnection(url, failure)
+            StubConnection(url, failure, responseStatus, responseBody)
         }
     )
 
@@ -245,11 +367,13 @@ class RadarApiHelperTraceTest {
     private class RecordingCallback : RadarApiHelper.RadarApiCallback {
         private val latch = CountDownLatch(1)
         var status: Radar.RadarStatus? = null
+        var response: JSONObject? = null
 
         val completed: Boolean get() = latch.count == 0L
 
         override fun onComplete(status: Radar.RadarStatus, res: JSONObject?, throwable: Throwable?) {
             this.status = status
+            response = res
             latch.countDown()
         }
 
@@ -264,8 +388,13 @@ class RadarApiHelperTraceTest {
         }
     }
 
-    /** Returns 200 with an empty JSON body, or throws [failure] when the response is read. */
-    private inner class StubConnection(url: URL, private val failure: IOException?) : HttpURLConnection(url) {
+    /** Returns the configured response, or throws [failure] when the response is read. */
+    private inner class StubConnection(
+        url: URL,
+        private val failure: IOException?,
+        private val responseStatus: Int = 200,
+        private val responseBody: String = "{}"
+    ) : HttpURLConnection(url) {
         private val path = url.path.removePrefix("/")
 
         override fun setRequestProperty(key: String, value: String) {
@@ -276,10 +405,11 @@ class RadarApiHelperTraceTest {
         override fun disconnect() {}
         override fun usingProxy(): Boolean = false
         override fun getOutputStream() = ByteArrayOutputStream()
-        override fun getInputStream() = ByteArrayInputStream("{}".toByteArray(Charsets.UTF_8))
+        override fun getInputStream() = ByteArrayInputStream(responseBody.toByteArray(Charsets.UTF_8))
+        override fun getErrorStream() = ByteArrayInputStream(responseBody.toByteArray(Charsets.UTF_8))
         override fun getResponseCode(): Int {
             failure?.let { throw it }
-            return 200
+            return responseStatus
         }
     }
 
