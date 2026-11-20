@@ -23,7 +23,8 @@ import org.robolectric.shadows.ShadowSystemClock
 class RadarVerifiedRefreshSchedulingTest {
 
     @Test
-    fun idUsesConfiguredIntervalWithoutTokenExpiry() {
+    fun cachedIdFromOneShotDoesNotDriveRefreshExpiry() {
+        // A prior one-shot ID can remain cached before a continuous request completes.
         assertScheduledAfter(
             token = token("id"),
             elapsedSeconds = 0,

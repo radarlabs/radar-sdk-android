@@ -643,6 +643,16 @@ internal class RadarApiClient(
                             return
                         }
 
+                        if (format == RadarResponseFormat.ID && Radar.isTrackingVerified()) {
+                            Radar.stopTrackingVerified()
+                            Radar.sendError(
+                                RadarStatus.ERROR_BAD_REQUEST,
+                                "ID responses do not support startTrackingVerified()."
+                            )
+                            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+                            return
+                        }
+
                         if (format != RadarResponseFormat.JWS) {
                             val token = RadarVerifiedLocationToken.fromJson(res)
 
