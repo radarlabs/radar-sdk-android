@@ -207,24 +207,26 @@ class RadarApiHelperTraceTest {
     }
 
     @Test
-    fun badRequestsRecognizeOnlyTheExactUnsupportedSdkVersionCode() {
+    fun badRequestsRecognizeOnlyTheExactUnsupportedSdkVersionType() {
         val cases = listOf(
-            """{"meta":{"errorCode":"unsupported_sdk_version"}}""" to
+            """{"meta":{"errorType":"unsupported_sdk_version"}}""" to
                 Radar.RadarStatus.ERROR_UNSUPPORTED_SDK_VERSION,
-            """{"meta":{"errorCode":"other_error"}}""" to
+            """{"meta":{"errorType":"other_error"}}""" to
                 Radar.RadarStatus.ERROR_BAD_REQUEST,
-            """{"meta":{"errorCode":"UNSUPPORTED_SDK_VERSION"}}""" to
+            """{"meta":{"errorType":"UNSUPPORTED_SDK_VERSION"}}""" to
                 Radar.RadarStatus.ERROR_BAD_REQUEST,
-            """{"meta":{"errorCode":null}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
-            """{"meta":{"errorCode":123}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
-            """{"meta":{"errorCode":true}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
-            """{"meta":{"errorCode":[]}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
-            """{"meta":{"errorCode":{}}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{"errorType":null}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{"errorType":123}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{"errorType":true}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{"errorType":[]}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{"errorType":{}}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
             """{"meta":{}}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
             """{"meta":null}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
             """{"meta":"invalid"}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
             """{"meta":[]}""" to Radar.RadarStatus.ERROR_BAD_REQUEST,
-            """{"errorCode":"unsupported_sdk_version"}""" to
+            """{"errorType":"unsupported_sdk_version"}""" to
+                Radar.RadarStatus.ERROR_BAD_REQUEST,
+            """{"meta":{"errorCode":"unsupported_sdk_version"}}""" to
                 Radar.RadarStatus.ERROR_BAD_REQUEST,
             """{}""" to Radar.RadarStatus.ERROR_BAD_REQUEST
         )
@@ -257,8 +259,8 @@ class RadarApiHelperTraceTest {
     }
 
     @Test
-    fun unsupportedSdkVersionCodeDoesNotOverrideOtherHttpStatuses() {
-        val body = """{"meta":{"errorCode":"unsupported_sdk_version"}}"""
+    fun unsupportedSdkVersionTypeDoesNotOverrideOtherHttpStatuses() {
+        val body = """{"meta":{"errorType":"unsupported_sdk_version"}}"""
         val cases = listOf(
             401 to Radar.RadarStatus.ERROR_UNAUTHORIZED,
             402 to Radar.RadarStatus.ERROR_PAYMENT_REQUIRED,

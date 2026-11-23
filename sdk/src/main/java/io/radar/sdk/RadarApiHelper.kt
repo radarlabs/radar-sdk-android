@@ -286,7 +286,7 @@ internal open class RadarApiHelper(
 
                         val status = when (urlConnection.responseCode) {
                             400 -> {
-                                if (res.optJSONObject("meta")?.opt("errorCode") == "unsupported_sdk_version") {
+                                if (res.optJSONObject("meta")?.opt("errorType") == "unsupported_sdk_version") {
                                     Radar.RadarStatus.ERROR_UNSUPPORTED_SDK_VERSION
                                 } else {
                                     Radar.RadarStatus.ERROR_BAD_REQUEST
