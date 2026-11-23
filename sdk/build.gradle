@@ -62,6 +62,11 @@ android {
                 // OOM-killer (which was killing the Gradle daemon in CI mid-test).
                 maxHeapSize = "2048m"
                 forkEvery = 80
+
+                // Serialization snapshots (io.radar.sdk.snapshots): pass
+                // -Pradar.recordSnapshots=true to write snapshots instead of comparing.
+                systemProperty "radar.recordSnapshots", project.findProperty("radar.recordSnapshots") ?: "false"
+                systemProperty "radar.testResourcesDir", file("src/test/resources").absolutePath
             }
         }
     }
@@ -96,6 +101,7 @@ dependencies {
     testImplementation "androidx.test.ext:junit:1.1.5"
     testImplementation "org.robolectric:robolectric:4.16.1"
     testImplementation 'org.json:json:20211205'
+    testImplementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     compileOnly "com.google.firebase:firebase-messaging:25.0.1"
 }
 
