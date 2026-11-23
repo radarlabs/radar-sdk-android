@@ -46,7 +46,9 @@ internal class RadarTraceSpan private constructor(
     private val manager: RadarTraceManager?,
     private val project: String?,
     private val sessionId: String,
-    private val kind: RadarSpanKind
+    private val kind: RadarSpanKind,
+    /** The root span's name. Every descendant records it as `radar.operation`. */
+    private val operation: String
 ) {
     private val startedAtElapsedMs = SystemClock.elapsedRealtime()
     private val startedAtUnixMs = wallClockMs()
@@ -101,9 +103,17 @@ internal class RadarTraceSpan private constructor(
         }
     }
 
-    /** Starts a child span in this trace. Children of a no-op span are the same no-op span. */
+    /**
+     * Starts a child span in this trace. Children of a no-op span are the same no-op span.
+     *
+     * The child records its root span's name as `radar.operation`, so spans shared by several operations, such as
+     * `POST /v1/track`, can be grouped by the operation that made them. Trace backends can't join a span to its root.
+     */
     fun child(name: String, kind: RadarSpanKind = RadarSpanKind.INTERNAL): RadarTraceSpan = if (isRecording) {
-        RadarTraceSpan(name, traceId, newSpanId(), spanId, mutableMapOf(), manager, project, sessionId, kind)
+        RadarTraceSpan(
+            name, traceId, newSpanId(), spanId, mutableMapOf(OPERATION_ATTRIBUTE to operation), manager, project,
+            sessionId, kind, operation
+        )
     } else {
         this
     }
@@ -181,7 +191,9 @@ internal class RadarTraceSpan private constructor(
         internal var wallClockMs: () -> Long = { System.currentTimeMillis() }
 
         /** Shared span returned when tracing is off. It records nothing, so one instance serves every caller. */
-        private val NOOP = RadarTraceSpan("", "", "", null, mutableMapOf(), null, null, "", RadarSpanKind.INTERNAL)
+        private val NOOP = RadarTraceSpan("", "", "", null, mutableMapOf(), null, null, "", RadarSpanKind.INTERNAL, "")
+
+        private const val OPERATION_ATTRIBUTE = "radar.operation"
 
         /**
          * Starts a root span and calls [setAttributes] on it. [setAttributes] only runs when the span records, so
@@ -198,7 +210,10 @@ internal class RadarTraceSpan private constructor(
             ) {
                 return NOOP
             }
-            return RadarTraceSpan(name, newTraceId(), newSpanId(), null, attributes.toMutableMap(), manager, project, sessionId, RadarSpanKind.INTERNAL)
+            return RadarTraceSpan(
+                name, newTraceId(), newSpanId(), null, attributes.toMutableMap(), manager, project, sessionId,
+                RadarSpanKind.INTERNAL, name
+            )
         }
 
         private val random = Random()
