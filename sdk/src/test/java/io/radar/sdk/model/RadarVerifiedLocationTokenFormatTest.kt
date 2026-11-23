@@ -6,6 +6,7 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.model.RadarResponseFormat
+import io.radar.sdk.model.RadarVerificationLevel
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import java.time.Duration
 import org.json.JSONArray
@@ -218,6 +219,64 @@ class RadarVerifiedLocationTokenFormatTest {
 
         assertEquals(RadarResponseFormat.JWS, token.format)
         assertEquals(original.token, token.token)
+    }
+
+    @Test
+    fun allFormatsParseVerificationLevels() {
+        listOf("jws", "jwe", "id").forEach { format ->
+            val ipStepUp = parse(
+                response(format)
+                    .put("verificationLevel", "ip")
+                    .put("requiredVerificationLevel", "precise")
+            )
+            assertEquals(format, RadarVerificationLevel.IP, ipStepUp.verificationLevel)
+            assertEquals(format, RadarVerificationLevel.PRECISE, ipStepUp.requiredVerificationLevel)
+
+            val precise = parse(response(format).put("verificationLevel", "precise"))
+            assertEquals(format, RadarVerificationLevel.PRECISE, precise.verificationLevel)
+            assertNull(format, precise.requiredVerificationLevel)
+        }
+    }
+
+    @Test
+    fun missingVerificationLevelsAreNull() {
+        listOf("jws", "jwe", "id").forEach { format ->
+            val token = parse(response(format))
+
+            assertNull(format, token.verificationLevel)
+            assertNull(format, token.requiredVerificationLevel)
+        }
+    }
+
+    @Test
+    fun invalidVerificationLevelsAreNullAndDoNotRejectTheToken() {
+        listOf("jws", "jwe", "id").forEach { format ->
+            listOf("unknown", "", "IP", JSONObject.NULL, 42, true, JSONObject()).forEach { value ->
+                val token = RadarVerifiedLocationToken.fromJson(
+                    response(format)
+                        .put("verificationLevel", value)
+                        .put("requiredVerificationLevel", value)
+                )
+
+                assertNotNull("$format: $value", token)
+                assertNull("$format: $value", token!!.verificationLevel)
+                assertNull("$format: $value", token.requiredVerificationLevel)
+            }
+        }
+    }
+
+    @Test
+    fun reducedResponsesKeepVerificationLevels() {
+        listOf("jwe", "id").forEach { format ->
+            val json = parse(
+                response(format)
+                    .put("verificationLevel", "ip")
+                    .put("requiredVerificationLevel", "precise")
+            ).toJson()
+
+            assertEquals(format, "ip", json.getString("verificationLevel"))
+            assertEquals(format, "precise", json.getString("requiredVerificationLevel"))
+        }
     }
 
     @Test

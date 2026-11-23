@@ -44,7 +44,17 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
     val fullJson: JSONObject,
 
     /** The response format selected by the server. */
-    val format: RadarResponseFormat = RadarResponseFormat.JWS
+    val format: RadarResponseFormat = RadarResponseFormat.JWS,
+
+    /** The level of the check that ran. Null if the response does not include it. */
+    val verificationLevel: RadarVerificationLevel? = null,
+
+    /**
+     * The level that the app must run next. [RadarVerificationLevel.PRECISE] means that the app
+     * must run a precise check. Null means that no further check is necessary.
+     * Use this field, not [passed], to decide on a step-up. The backend must verify the result.
+     */
+    val requiredVerificationLevel: RadarVerificationLevel? = null
 ) {
     internal companion object {
         private const val FIELD_FORMAT = "format"
@@ -56,6 +66,8 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
         private const val FIELD_PASSED = "passed"
         private const val FIELD_FAILURE_REASONS = "failureReasons"
         private const val FIELD_ID = "_id"
+        private const val FIELD_VERIFICATION_LEVEL = "verificationLevel"
+        private const val FIELD_REQUIRED_VERIFICATION_LEVEL = "requiredVerificationLevel"
 
         fun fromJson(obj: JSONObject?): RadarVerifiedLocationToken? {
             if (obj == null) {
@@ -91,7 +103,9 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
 
             return RadarVerifiedLocationToken(
                 user, events, token, expiresAt, expiresIn,
-                passed, failureReasons, id, obj
+                passed, failureReasons, id, obj,
+                verificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_VERIFICATION_LEVEL)),
+                requiredVerificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_REQUIRED_VERIFICATION_LEVEL))
             )
         }
 
@@ -120,7 +134,9 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
                     FIELD_TOKEN,
                     FIELD_EXPIRES_AT,
                     FIELD_EXPIRES_IN,
-                    FIELD_PASSED
+                    FIELD_PASSED,
+                    FIELD_VERIFICATION_LEVEL,
+                    FIELD_REQUIRED_VERIFICATION_LEVEL
                 )
             )
 
@@ -134,7 +150,9 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
                 failureReasons = null,
                 _id = id,
                 fullJson = clearJson,
-                format = RadarResponseFormat.JWE
+                format = RadarResponseFormat.JWE,
+                verificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_VERIFICATION_LEVEL)),
+                requiredVerificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_REQUIRED_VERIFICATION_LEVEL))
             )
         }
 
@@ -151,8 +169,19 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
                 passed = false,
                 failureReasons = null,
                 _id = id,
-                fullJson = JSONObject(obj, arrayOf("meta", FIELD_FORMAT, FIELD_ID)),
-                format = RadarResponseFormat.ID
+                fullJson = JSONObject(
+                    obj,
+                    arrayOf(
+                        "meta",
+                        FIELD_FORMAT,
+                        FIELD_ID,
+                        FIELD_VERIFICATION_LEVEL,
+                        FIELD_REQUIRED_VERIFICATION_LEVEL
+                    )
+                ),
+                format = RadarResponseFormat.ID,
+                verificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_VERIFICATION_LEVEL)),
+                requiredVerificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_REQUIRED_VERIFICATION_LEVEL))
             )
         }
     }
