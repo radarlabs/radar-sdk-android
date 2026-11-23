@@ -1,0 +1,45 @@
+{
+  "addressLabel": "20 Jay St",
+  "borough": "Brooklyn",
+  "categories": [
+    "office",
+    "commercial"
+  ],
+  "city": "Brooklyn",
+  "confidence": "exact",
+  "country": "United States",
+  "countryCode": "US",
+  "countryFlag": "🇺🇸",
+  "county": "Kings County",
+  "distance": 42,
+  "dma": "New York",
+  "dmaCode": "501",
+  "formattedAddress": "20 Jay St Suite 410, Brooklyn, NY 11201 US",
+  "latitude": 40.7039,
+  "layer": "address",
+  "longitude": -73.9867,
+  "metadata": {
+    "floors": 12,
+    "tags": [
+      "hq"
+    ]
+  },
+  "neighborhood": "DUMBO",
+  "number": "20",
+  "placeLabel": "Radar HQ",
+  "plus4": "1234",
+  "postalCode": "11201",
+  "resultId": "result_123",
+  "state": "New York",
+  "stateCode": "NY",
+  "street": "Jay St",
+  "timeZone": {
+    "code": "EST",
+    "currentTime": "2025-01-21T12:19:23-05:00",
+    "dstOffset": 0,
+    "id": "America/New_York",
+    "name": "Eastern Standard Time",
+    "utcOffset": -18000
+  },
+  "unit": "Suite 410"
+}
