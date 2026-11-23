@@ -104,6 +104,18 @@ internal class RadarTraceSpan private constructor(
     }
 
     /**
+     * Copies the attributes in [keys] that [source] has set onto this span, so a child can be grouped by its parent's
+     * attributes. Keys [source] hasn't set are skipped.
+     */
+    fun copyAttributes(source: RadarTraceSpan, keys: Collection<String>) = apply {
+        if (!isRecording) {
+            return@apply
+        }
+        val values = synchronized(source.lock) { source.attributes.filterKeys { it in keys } }
+        values.forEach { (key, value) -> putAttribute(key, value) }
+    }
+
+    /**
      * Starts a child span in this trace. Children of a no-op span are the same no-op span.
      *
      * The child records its root span's name as `radar.operation`, so spans shared by several operations, such as
