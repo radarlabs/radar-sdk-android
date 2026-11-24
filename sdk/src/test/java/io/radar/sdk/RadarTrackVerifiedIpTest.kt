@@ -169,14 +169,6 @@ class RadarTrackVerifiedIpTest {
     }
 
     @Test
-    fun ipRequestRequiresVerified() {
-        val result = track(response(), location = null, verified = false)
-
-        assertEquals(RadarStatus.ERROR_BAD_REQUEST, result.status)
-        assertNull(apiHelper.lastCapturedPath)
-    }
-
-    @Test
     fun ipJwsResponseWithoutUserOrEventsFails() {
         val before = stateSnapshot()
         val result = track(response().apply { remove("events") }, location = null)
@@ -243,7 +235,6 @@ class RadarTrackVerifiedIpTest {
     private fun track(
         obj: JSONObject,
         location: Location?,
-        verified: Boolean = true,
         status: RadarStatus = RadarStatus.SUCCESS,
         handle: RecordingFraudHandle = RecordingFraudHandle()
     ): Result {
@@ -259,31 +250,45 @@ class RadarTrackVerifiedIpTest {
         var result: Result? = null
         var callbackCount = 0
 
-        Radar.apiClient.track(
-            location = location,
-            stopped = false,
-            foreground = true,
-            source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
-            replayed = false,
-            beacons = null,
-            verified = verified,
-            reason = "ip reason",
-            preparedFraudPayload = if (verified) RadarPreparedFraudPayload(handle) else null,
-            callback = object : RadarApiClient.RadarTrackApiCallback {
-                override fun onComplete(
-                    status: RadarStatus,
-                    res: JSONObject?,
-                    events: Array<RadarEvent>?,
-                    user: RadarUser?,
-                    nearbyGeofences: Array<RadarGeofence>?,
-                    config: RadarConfig?,
-                    token: RadarVerifiedLocationToken?
-                ) {
-                    callbackCount++
-                    result = Result(status, res, events, user, nearbyGeofences, config, token)
-                }
+        val callback = object : RadarApiClient.RadarTrackApiCallback {
+            override fun onComplete(
+                status: RadarStatus,
+                res: JSONObject?,
+                events: Array<RadarEvent>?,
+                user: RadarUser?,
+                nearbyGeofences: Array<RadarGeofence>?,
+                config: RadarConfig?,
+                token: RadarVerifiedLocationToken?
+            ) {
+                callbackCount++
+                result = Result(status, res, events, user, nearbyGeofences, config, token)
             }
-        )
+        }
+
+        val payload = RadarPreparedFraudPayload(handle)
+        if (location == null) {
+            Radar.apiClient.trackIp(
+                stopped = false,
+                foreground = true,
+                source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
+                reason = "ip reason",
+                preparedFraudPayload = payload,
+                callback = callback
+            )
+        } else {
+            Radar.apiClient.track(
+                location = location,
+                stopped = false,
+                foreground = true,
+                source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
+                replayed = false,
+                beacons = null,
+                verified = true,
+                reason = "ip reason",
+                preparedFraudPayload = payload,
+                callback = callback
+            )
+        }
 
         assertEquals("Callback must run exactly once", 1, callbackCount)
         assertNotNull(result)

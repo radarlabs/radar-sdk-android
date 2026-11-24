@@ -335,12 +335,9 @@ internal class RadarApiClient(
         )
     }
 
-    /**
-     * Sends a track request. A null [location] sends an IP-only verified check: the request has no
-     * device location, and the response does not change location, geofence, or trip state.
-     */
+    /** Sends a track request with a device location. */
     internal fun track(
-        location: Location?,
+        location: Location,
         stopped: Boolean,
         foreground: Boolean,
         source: RadarLocationSource,
@@ -359,6 +356,91 @@ internal class RadarApiClient(
         verifiedHostOverride: String? = null,
         parentSpan: RadarTraceSpan? = null
     ) {
+        trackInternal(
+            location,
+            stopped,
+            foreground,
+            source,
+            replayed,
+            beacons,
+            verified,
+            encrypted,
+            expectedCountryCode,
+            expectedStateCode,
+            expectedAddress,
+            reason,
+            transactionId,
+            revealRiskId,
+            preparedFraudPayload,
+            callback,
+            verifiedHostOverride,
+            parentSpan
+        )
+    }
+
+    /**
+     * Sends an IP-only verified track request. The request has no device location, and the
+     * response does not change location, geofence, or trip state.
+     */
+    internal fun trackIp(
+        stopped: Boolean,
+        foreground: Boolean,
+        source: RadarLocationSource,
+        encrypted: Boolean? = false,
+        expectedCountryCode: String? = null,
+        expectedStateCode: String? = null,
+        expectedAddress: String? = null,
+        reason: String? = null,
+        transactionId: String? = null,
+        revealRiskId: String? = null,
+        preparedFraudPayload: RadarPreparedFraudPayload? = null,
+        callback: RadarTrackApiCallback? = null,
+        verifiedHostOverride: String? = null,
+        parentSpan: RadarTraceSpan? = null
+    ) {
+        trackInternal(
+            location = null,
+            stopped = stopped,
+            foreground = foreground,
+            source = source,
+            replayed = false,
+            beacons = null,
+            verified = true,
+            encrypted = encrypted,
+            expectedCountryCode = expectedCountryCode,
+            expectedStateCode = expectedStateCode,
+            expectedAddress = expectedAddress,
+            reason = reason,
+            transactionId = transactionId,
+            revealRiskId = revealRiskId,
+            preparedFraudPayload = preparedFraudPayload,
+            callback = callback,
+            verifiedHostOverride = verifiedHostOverride,
+            parentSpan = parentSpan
+        )
+    }
+
+    /** A null [location] is only valid for a verified request (see [trackIp]). */
+    private fun trackInternal(
+        location: Location?,
+        stopped: Boolean,
+        foreground: Boolean,
+        source: RadarLocationSource,
+        replayed: Boolean,
+        beacons: Array<RadarBeacon>?,
+        verified: Boolean,
+        encrypted: Boolean?,
+        expectedCountryCode: String?,
+        expectedStateCode: String?,
+        expectedAddress: String?,
+        reason: String?,
+        transactionId: String?,
+        revealRiskId: String?,
+        preparedFraudPayload: RadarPreparedFraudPayload?,
+        callback: RadarTrackApiCallback?,
+        verifiedHostOverride: String?,
+        parentSpan: RadarTraceSpan?
+    ) {
         val publishableKey = RadarSettings.getPublishableKey(context)
         if (publishableKey == null) {
             callback?.onComplete(RadarStatus.ERROR_PUBLISHABLE_KEY)
@@ -366,12 +448,6 @@ internal class RadarApiClient(
             return
         }
 
-        // Only verified checks can run without a device location.
-        if (location == null && !verified) {
-            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
-
-            return
-        }
         val requestedLevel = if (location == null) RadarVerificationLevel.IP else RadarVerificationLevel.PRECISE
 
         val params = JSONObject()
