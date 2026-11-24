@@ -4706,6 +4706,88 @@ class RadarTest {
         Radar.setExpectedAddress(null)
     }
 
+    private fun mockTrackVerifiedSuccess() {
+        permissionsHelperMock.mockFineLocationPermissionGranted = true
+        apiHelperMock.mockStatus = Radar.RadarStatus.SUCCESS
+        apiHelperMock.queueMockResponses(
+            "v1/config",
+            listOf(RadarTestUtils.jsonObjectFromResource("/get_config_response.json"))
+        )
+        apiHelperMock.addMockResponse("v1/track", RadarTestUtils.jsonObjectFromResource("/track.json")!!)
+
+        val mockLocation = Location("RadarSDK")
+        mockLocation.latitude = 40.78382
+        mockLocation.longitude = -73.97536
+        mockLocation.accuracy = 65f
+        mockLocation.time = System.currentTimeMillis()
+        locationClientMock.mockLocation = mockLocation
+    }
+
+    private fun lastTrackVerifiedBody(): JSONObject = JSONObject(fraudMock.lastHandle!!.sealOptions.single()["body"] as String)
+
+    @Test
+    fun test_Radar_trackVerified_options_sendsReasonAndTransactionId() {
+        mockTrackVerifiedSuccess()
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        Radar.trackVerified(
+            RadarTrackVerifiedOptions(reason = "options reason", transactionId = "options-tx"),
+            object : Radar.RadarTrackVerifiedCallback {
+                override fun onComplete(status: Radar.RadarStatus, token: RadarVerifiedLocationToken?) {
+                    callbackStatus = status
+                    latch.countDown()
+                }
+            }
+        )
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS))
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        assertEquals("v1/track", apiHelperMock.lastCapturedPath)
+        assertTrue(apiHelperMock.lastCapturedVerified)
+        val params = lastTrackVerifiedBody()
+        assertEquals("options reason", params.getString("reason"))
+        assertEquals("options-tx", params.getString("transactionId"))
+    }
+
+    @Test
+    fun test_Radar_trackVerified_optionsBlock_sendsReasonAndTransactionId() {
+        mockTrackVerifiedSuccess()
+
+        val latch = CountDownLatch(1)
+        var callbackStatus: Radar.RadarStatus? = null
+        val options = RadarTrackVerifiedOptions.builder()
+            .reason("builder reason")
+            .transactionId("builder-tx")
+            .build()
+        Radar.trackVerified(options) { status, _ ->
+            callbackStatus = status
+            latch.countDown()
+        }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS))
+
+        assertEquals(Radar.RadarStatus.SUCCESS, callbackStatus)
+        val params = lastTrackVerifiedBody()
+        assertEquals("builder reason", params.getString("reason"))
+        assertEquals("builder-tx", params.getString("transactionId"))
+    }
+
+    @Test
+    fun test_Radar_trackVerified_defaultOptions_matchNoArgumentCall() {
+        mockTrackVerifiedSuccess()
+
+        val latch = CountDownLatch(1)
+        Radar.trackVerified(RadarTrackVerifiedOptions()) { _, _ -> latch.countDown() }
+        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        assertTrue(latch.await(LATCH_TIMEOUT, TimeUnit.SECONDS))
+
+        val params = lastTrackVerifiedBody()
+        assertEquals("manual", params.getString("reason"))
+        assertFalse(params.has("transactionId"))
+    }
+
     private fun trackVerifiedAndWait(): Radar.RadarStatus? {
         val latch = CountDownLatch(1)
         var callbackStatus: Radar.RadarStatus? = null

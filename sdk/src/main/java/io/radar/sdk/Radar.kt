@@ -1621,6 +1621,54 @@ object Radar {
     }
 
     /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[options] The options for the location check.
+     * @param[callback] An optional callback.
+     */
+    @JvmStatic
+    fun trackVerified(
+        options: RadarTrackVerifiedOptions,
+        callback: RadarTrackVerifiedCallback? = null
+    ) {
+        trackVerified(
+            options.beacons,
+            options.desiredAccuracy,
+            options.reason,
+            options.transactionId,
+            callback
+        )
+    }
+
+    /**
+     * Tracks the user's location with device integrity information for location verification use cases.
+     *
+     * Note that you must configure SSL pinning before calling this method.
+     *
+     * @see [](https://radar.com/documentation/fraud)
+     *
+     * @param[options] The options for the location check.
+     * @param[block] A block callback.
+     */
+    @JvmStatic
+    fun trackVerified(
+        options: RadarTrackVerifiedOptions,
+        block: (status: RadarStatus, token: RadarVerifiedLocationToken?) -> Unit
+    ) {
+        trackVerified(
+            options.beacons,
+            options.desiredAccuracy,
+            options.reason,
+            options.transactionId,
+            block
+        )
+    }
+
+    /**
      * Starts tracking the user's location with device integrity information for location verification use cases.
      *
      * Note that you must configure SSL pinning before calling this method.
