@@ -3,6 +3,8 @@ package io.radar.sdk
 import android.content.Context
 import android.location.Location
 import android.os.Build
+import android.os.Looper
+import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.Radar.RadarStatus
@@ -13,10 +15,12 @@ import io.radar.sdk.model.RadarGeofence
 import io.radar.sdk.model.RadarResponseFormat
 import io.radar.sdk.model.RadarUser
 import io.radar.sdk.model.RadarVerifiedLocationToken
+import java.util.concurrent.TimeUnit
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -24,6 +28,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
@@ -38,6 +43,8 @@ class RadarTrackResponseFormatTest {
     private val apiHelper = RadarApiHelperMock()
     private val receiver = RecordingReceiver()
     private val verifiedReceiver = RecordingVerifiedReceiver()
+    private var testVerificationManager: RadarVerificationManager? = null
+    private var previousVerificationManager: Any? = null
 
     @Before
     fun setUp() {
@@ -72,8 +79,73 @@ class RadarTrackResponseFormatTest {
 
     @After
     fun tearDown() {
+        testVerificationManager?.stopTrackingVerified()
         Radar.setReceiver(null)
         Radar.setVerifiedReceiver(null)
+        if (testVerificationManager != null) {
+            Radar::class.java.getDeclaredField("verificationManager").apply {
+                isAccessible = true
+                set(Radar, previousVerificationManager)
+            }
+        }
+    }
+
+    @Test
+    fun idResponseStopsContinuousTrackingWithoutPublishingAToken() {
+        var refreshCount = 0
+        startVerifiedTracking { refreshCount++ }
+        val before = stateSnapshot()
+        val idResponse = JSONObject()
+            .put("format", "id")
+            .put("_id", "evaluation-id")
+
+        val result = track(idResponse)
+
+        assertEquals(RadarStatus.ERROR_BAD_REQUEST, result.status)
+        assertNull(result.response)
+        assertNull(result.token)
+        assertNull(result.user)
+        assertNull(result.events)
+        assertFalse(Radar.isTrackingVerified())
+        assertTrue(verifiedReceiver.tokens.isEmpty())
+        assertEquals(listOf(RadarStatus.ERROR_BAD_REQUEST), receiver.errors)
+        assertEquals(0, receiver.locations)
+        assertEquals(0, receiver.eventBatches)
+        assertEquals(before, stateSnapshot())
+
+        shadowOf(Looper.getMainLooper()).idleFor(60, TimeUnit.SECONDS)
+
+        assertEquals("Pending refresh must be cancelled", 0, refreshCount)
+        assertEquals(
+            "Tracking must not issue another request",
+            1,
+            apiHelper.capturedPaths.count { it == "v1/track" }
+        )
+
+        val oneShot = track(idResponse)
+
+        assertEquals(RadarStatus.SUCCESS, oneShot.status)
+        assertEquals(RadarResponseFormat.ID, oneShot.token?.format)
+        assertEquals(listOf(oneShot.token), verifiedReceiver.tokens)
+        assertTrue(receiver.errors.isEmpty())
+        assertFalse(Radar.isTrackingVerified())
+    }
+
+    @Test
+    fun legacyJwsAndJweResponsesKeepContinuousTrackingActive() {
+        for (format in listOf(null, "jws", "jwe")) {
+            startVerifiedTracking()
+
+            val result = track(response(format))
+
+            assertEquals(RadarStatus.SUCCESS, result.status)
+            assertNotNull(result.token)
+            assertTrue(Radar.isTrackingVerified())
+            assertEquals(listOf(result.token), verifiedReceiver.tokens)
+            assertTrue(receiver.errors.isEmpty())
+
+            Radar.stopTrackingVerified()
+        }
     }
 
     @Test
@@ -220,6 +292,40 @@ class RadarTrackResponseFormatTest {
         assertEquals(RadarStatus.ERROR_SERVER, result.status)
         assertEquals(listOf(RadarStatus.ERROR_SERVER), receiver.errors)
         assertTrue(verifiedReceiver.tokens.isEmpty())
+    }
+
+    private fun startVerifiedTracking(onRefresh: () -> Unit = {}) {
+        val manager = testVerificationManager ?: RadarVerificationManager(
+            context,
+            Radar.logger,
+            RadarRevealRiskManager(context, Radar.logger)
+        ).also { newManager ->
+            Radar::class.java.getDeclaredField("verificationManager").apply {
+                isAccessible = true
+                previousVerificationManager = get(Radar)
+                set(Radar, newManager)
+            }
+            testVerificationManager = newManager
+        }
+
+        // Start from a valid cached token so no location or network work is needed.
+        val fields = mapOf(
+            "lastToken" to requireNotNull(
+                RadarVerifiedLocationToken.fromJson(response("jwe"))
+            ),
+            "lastTokenElapsedRealtime" to SystemClock.elapsedRealtime(),
+            "runnable" to Runnable { onRefresh() }
+        )
+
+        fields.forEach { (name, value) ->
+            RadarVerificationManager::class.java.getDeclaredField(name).apply {
+                isAccessible = true
+                set(manager, value)
+            }
+        }
+
+        Radar.startTrackingVerified(interval = 60, beacons = false)
+        assertTrue(Radar.isTrackingVerified())
     }
 
     private fun response(format: String? = null): JSONObject = JSONObject().apply {

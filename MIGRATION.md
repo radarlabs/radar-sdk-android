@@ -8,6 +8,10 @@
 - The SDK no longer reads the value that older SDK versions saved for this option, so a saved `false` does not turn off failover.
 - Before 4.2.0, failover was off by default. If you upgrade from 4.1.x or earlier, or if you set the option to `false`, `Radar.trackVerified()` can now send requests to the secondary verified host, `api-verified.radar.com`. If your app limits which hosts it can reach or pins certificates (for example, in `network_security_config.xml`), allow this host.
 
+### Verified tracking
+
+- `Radar.startTrackingVerified()` supports JWS and JWE responses only. Receiving an ID response while verified tracking is active stops tracking and reports `ERROR_BAD_REQUEST` through `RadarReceiver.onError()`, without delivering the token. This also applies to an explicit `Radar.trackVerified()` call made while verified tracking is active; its callback receives `ERROR_BAD_REQUEST` and a `null` token. Standalone `Radar.trackVerified()` calls with verified tracking stopped, and `Radar.revealRisk()` calls, continue to support ID responses.
+
 ## 4.3.x to 5.0.0
 
 ### Public API changes
