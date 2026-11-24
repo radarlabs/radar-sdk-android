@@ -30,6 +30,7 @@ import io.radar.sdk.model.RadarRoutes
 import io.radar.sdk.model.RadarTrip
 import io.radar.sdk.model.RadarTripLeg
 import io.radar.sdk.model.RadarUser
+import io.radar.sdk.model.RadarVerificationLevel
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import java.net.URLEncoder
 import java.util.EnumSet
@@ -334,8 +335,12 @@ internal class RadarApiClient(
         )
     }
 
+    /**
+     * Sends a track request. A null [location] sends an IP-only verified check: the request has no
+     * device location, and the response does not change location, geofence, or trip state.
+     */
     internal fun track(
-        location: Location,
+        location: Location?,
         stopped: Boolean,
         foreground: Boolean,
         source: RadarLocationSource,
@@ -361,6 +366,14 @@ internal class RadarApiClient(
             return
         }
 
+        // Only verified checks can run without a device location.
+        if (location == null && !verified) {
+            callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
+
+            return
+        }
+        val requestedLevel = if (location == null) RadarVerificationLevel.IP else RadarVerificationLevel.PRECISE
+
         val params = JSONObject()
         val options = Radar.getTrackingOptions()
         val tripOptions = RadarSettings.getTripOptions(context)
@@ -381,43 +394,47 @@ internal class RadarApiClient(
                 putUserParameters(params, sessionId)
             }
 
-            params.putOpt("latitude", location.latitude)
-            params.putOpt("longitude", location.longitude)
-            var accuracy = location.accuracy
-            if (!location.hasAccuracy() || location.accuracy.isNaN() || accuracy <= 0) {
-                accuracy = 1F
-            }
-            params.putOpt("accuracy", accuracy)
-            if (location.hasSpeed() && !location.speed.isNaN()) {
-                params.putOpt("speed", location.speed)
-            }
-            if (location.hasBearing() && !location.bearing.isNaN()) {
-                params.putOpt("course", location.bearing)
-            }
+            if (location != null) {
+                params.putOpt("latitude", location.latitude)
+                params.putOpt("longitude", location.longitude)
+                var accuracy = location.accuracy
+                if (!location.hasAccuracy() || location.accuracy.isNaN() || accuracy <= 0) {
+                    accuracy = 1F
+                }
+                params.putOpt("accuracy", accuracy)
+                if (location.hasSpeed() && !location.speed.isNaN()) {
+                    params.putOpt("speed", location.speed)
+                }
+                if (location.hasBearing() && !location.bearing.isNaN()) {
+                    params.putOpt("course", location.bearing)
+                }
 
-            if (location.hasAltitude() && !location.altitude.isNaN()) {
-                params.putOpt("altitude", location.getAltitude())
-                locationMetadata.putOpt("altitude", location.getAltitude())
-            }
+                if (location.hasAltitude() && !location.altitude.isNaN()) {
+                    params.putOpt("altitude", location.getAltitude())
+                    locationMetadata.putOpt("altitude", location.getAltitude())
+                }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                if (location.hasVerticalAccuracy() && !location.verticalAccuracyMeters.isNaN()) {
-                    params.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    if (location.hasVerticalAccuracy() && !location.verticalAccuracyMeters.isNaN()) {
+                        params.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
+                    }
+                    if (location.hasSpeedAccuracy() && !location.speedAccuracyMetersPerSecond.isNaN()) {
+                        params.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
+                    }
+                    if (location.hasBearingAccuracy() && !location.bearingAccuracyDegrees.isNaN()) {
+                        params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
+                    }
                 }
-                if (location.hasSpeedAccuracy() && !location.speedAccuracyMetersPerSecond.isNaN()) {
-                    params.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
+                val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
+                val locationMs = location.elapsedRealtimeNanos / 1000000
+                val updatedAtMsDiff = (nowMs - locationMs)
+                if (RadarSettings.getSdkConfiguration(context).useForegroundLocationUpdatedAtMsDiff || !foreground) {
+                    params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
                 }
-                if (location.hasBearingAccuracy() && !location.bearingAccuracyDegrees.isNaN()) {
-                    params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
-                }
+                params.putOpt("locationMs", locationMs)
+            } else {
+                params.putOpt("verificationLevel", RadarVerificationLevel.IP.value)
             }
-            val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
-            val locationMs = location.elapsedRealtimeNanos / 1000000
-            val updatedAtMsDiff = (nowMs - locationMs)
-            if (RadarSettings.getSdkConfiguration(context).useForegroundLocationUpdatedAtMsDiff || !foreground) {
-                params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
-            }
-            params.putOpt("locationMs", locationMs)
 
             params.putOpt("foreground", foreground)
             params.putOpt("stopped", stopped)
@@ -435,7 +452,7 @@ internal class RadarApiClient(
                 tripOptionsObj.putOpt("mode", Radar.stringForMode(tripOptions.mode))
                 params.putOpt("tripOptions", tripOptionsObj)
             }
-            if (options.syncGeofences != RadarTrackingOptions.RadarTrackingOptionsSyncGeofences.NONE) {
+            if (location != null && options.syncGeofences != RadarTrackingOptions.RadarTrackingOptionsSyncGeofences.NONE) {
                 params.putOpt("nearbyGeofences", true)
                 params.putOpt("nearbyGeofencesLimit", options.syncGeofencesLimit)
             }
@@ -476,10 +493,10 @@ internal class RadarApiClient(
 
             if (Radar.getTrackingOptions().useMotion) {
                 locationMetadata.putOpt("motionActivityData", RadarState.getLastMotionActivity(context))
-                if (location.hasSpeed() && !location.speed.isNaN()) {
+                if (location != null && location.hasSpeed() && !location.speed.isNaN()) {
                     locationMetadata.putOpt("speed", location.speed)
                 }
-                if (location.hasBearing() && !location.bearing.isNaN()) {
+                if (location != null && location.hasBearing() && !location.bearing.isNaN()) {
                     locationMetadata.putOpt("bearing", location.bearing)
                 }
 
@@ -592,6 +609,13 @@ internal class RadarApiClient(
             callback = object : RadarApiHelper.RadarApiCallback {
                 override fun onComplete(status: RadarStatus, res: JSONObject?, throwable: Throwable?) {
                     if (status != RadarStatus.SUCCESS || res == null) {
+                        if (location == null) {
+                            // An IP-only check has no location to replay or to generate offline events from.
+                            Radar.sendError(status)
+                            callback?.onComplete(status)
+                            return
+                        }
+
                         if (options.replay == RadarTrackingOptions.RadarTrackingOptionsReplay.ALL) {
                             val replayParams = JSONObject(params.toString())
                             if (verified) {
@@ -654,7 +678,7 @@ internal class RadarApiClient(
                         }
 
                         if (format != RadarResponseFormat.JWS) {
-                            val token = RadarVerifiedLocationToken.fromJson(res)
+                            val token = RadarVerifiedLocationToken.fromJson(res, requestedLevel)
 
                             if (token == null) {
                                 Radar.sendError(RadarStatus.ERROR_SERVER)
@@ -677,6 +701,27 @@ internal class RadarApiClient(
                     val events = res.optJSONArray("events")?.let { eventsArr ->
                         RadarEvent.fromJson(eventsArr)
                     }
+
+                    if (location == null) {
+                        // IP-only JWS response: deliver the token and the events, but do not change
+                        // location, geofence, place, region, beacon, or trip state.
+                        val user = res.optJSONObject("user")?.let { userObj -> RadarUser.fromJson(userObj) }
+                        val token = RadarVerifiedLocationToken.fromJson(res, requestedLevel)
+                        if (events == null || user == null || token == null) {
+                            Radar.sendError(RadarStatus.ERROR_SERVER)
+                            callback?.onComplete(RadarStatus.ERROR_SERVER)
+                            return
+                        }
+
+                        if (events.isNotEmpty()) {
+                            Radar.sendEvents(events, user)
+                        }
+                        Radar.sendToken(token)
+
+                        callback?.onComplete(RadarStatus.SUCCESS, res, events, user, null, config, token)
+                        return
+                    }
+
                     val user = res.optJSONObject("user")?.let { userObj ->
                         // Extract and store altitudeAdjustments from user object
                         val altitudeAdjustmentsObj = userObj.optJSONArray("altitudeAdjustments")
