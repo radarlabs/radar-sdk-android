@@ -46,8 +46,11 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
     /** The response format selected by the server. */
     val format: RadarResponseFormat = RadarResponseFormat.JWS,
 
-    /** The level of the check that ran. Null if the response does not include it. */
-    val verificationLevel: RadarVerificationLevel? = null,
+    /**
+     * The level of the check that ran. If the response does not include a known level, this is
+     * the level that the SDK requested.
+     */
+    val verificationLevel: RadarVerificationLevel = RadarVerificationLevel.PRECISE,
 
     /**
      * The level that the app must run next. [RadarVerificationLevel.PRECISE] means that the app
@@ -69,7 +72,14 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
         private const val FIELD_VERIFICATION_LEVEL = "verificationLevel"
         private const val FIELD_REQUIRED_VERIFICATION_LEVEL = "requiredVerificationLevel"
 
-        fun fromJson(obj: JSONObject?): RadarVerifiedLocationToken? {
+        /**
+         * Parses a verified track response. [requestedLevel] is the level that the SDK requested.
+         * It is the [verificationLevel] when the response does not include a known level.
+         */
+        fun fromJson(
+            obj: JSONObject?,
+            requestedLevel: RadarVerificationLevel = RadarVerificationLevel.PRECISE
+        ): RadarVerifiedLocationToken? {
             if (obj == null) {
                 return null
             }
@@ -78,13 +88,13 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
                 ?: return null
 
             return when (format) {
-                RadarResponseFormat.JWS -> fromJwsJson(obj)
-                RadarResponseFormat.JWE -> fromJweJson(obj)
-                RadarResponseFormat.ID -> fromIdJson(obj)
+                RadarResponseFormat.JWS -> fromJwsJson(obj, requestedLevel)
+                RadarResponseFormat.JWE -> fromJweJson(obj, requestedLevel)
+                RadarResponseFormat.ID -> fromIdJson(obj, requestedLevel)
             }
         }
 
-        private fun fromJwsJson(obj: JSONObject): RadarVerifiedLocationToken? {
+        private fun fromJwsJson(obj: JSONObject, requestedLevel: RadarVerificationLevel): RadarVerifiedLocationToken? {
             // Preserve the existing JWS parser and its defaults.
             val user = RadarUser.fromJson(obj.optJSONObject(FIELD_USER))
             val events = RadarEvent.fromJson(obj.optJSONArray(FIELD_EVENTS))
@@ -104,12 +114,12 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
             return RadarVerifiedLocationToken(
                 user, events, token, expiresAt, expiresIn,
                 passed, failureReasons, id, obj,
-                verificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_VERIFICATION_LEVEL)),
+                verificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_VERIFICATION_LEVEL)) ?: requestedLevel,
                 requiredVerificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_REQUIRED_VERIFICATION_LEVEL))
             )
         }
 
-        private fun fromJweJson(obj: JSONObject): RadarVerifiedLocationToken? {
+        private fun fromJweJson(obj: JSONObject, requestedLevel: RadarVerificationLevel): RadarVerifiedLocationToken? {
             val id = (obj.opt(FIELD_ID) as? String)
                 ?.takeIf { it.isNotEmpty() } ?: return null
             val token = (obj.opt(FIELD_TOKEN) as? String)
@@ -151,12 +161,12 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
                 _id = id,
                 fullJson = clearJson,
                 format = RadarResponseFormat.JWE,
-                verificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_VERIFICATION_LEVEL)),
+                verificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_VERIFICATION_LEVEL)) ?: requestedLevel,
                 requiredVerificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_REQUIRED_VERIFICATION_LEVEL))
             )
         }
 
-        private fun fromIdJson(obj: JSONObject): RadarVerifiedLocationToken? {
+        private fun fromIdJson(obj: JSONObject, requestedLevel: RadarVerificationLevel): RadarVerifiedLocationToken? {
             val id = (obj.opt(FIELD_ID) as? String)
                 ?.takeIf { it.isNotEmpty() } ?: return null
 
@@ -180,7 +190,7 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
                     )
                 ),
                 format = RadarResponseFormat.ID,
-                verificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_VERIFICATION_LEVEL)),
+                verificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_VERIFICATION_LEVEL)) ?: requestedLevel,
                 requiredVerificationLevel = RadarVerificationLevel.fromJson(obj.opt(FIELD_REQUIRED_VERIFICATION_LEVEL))
             )
         }
