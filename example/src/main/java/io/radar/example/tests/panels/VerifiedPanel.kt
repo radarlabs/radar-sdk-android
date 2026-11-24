@@ -8,6 +8,7 @@ import io.radar.example.components.TogglePanel
 import io.radar.example.store.LocalLogStore
 import io.radar.example.store.VerifiedResponse
 import io.radar.sdk.Radar
+import io.radar.sdk.RadarTrackVerifiedOptions
 import io.radar.sdk.RadarTrackingOptions
 import io.radar.sdk.model.RadarVerifiedLocationToken
 
@@ -42,6 +43,17 @@ fun VerifiedPanel() {
                 log.writeVerifiedResponse(
                     status,
                     action = "trackVerified",
+                    response = token?.let { VerifiedResponse(it) },
+                )
+            }
+        }
+        ActionButton("trackVerified (options)") {
+            // Exercises the options overload trackVerified(options, block).
+            val options = RadarTrackVerifiedOptions(reason = "example", transactionId = "example-tx")
+            Radar.trackVerified(options) { status, token ->
+                log.writeVerifiedResponse(
+                    status,
+                    action = "trackVerified (options)",
                     response = token?.let { VerifiedResponse(it) },
                 )
             }
