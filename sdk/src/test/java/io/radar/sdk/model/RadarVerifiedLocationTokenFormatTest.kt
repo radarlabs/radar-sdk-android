@@ -6,6 +6,7 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.radar.sdk.model.RadarResponseFormat
+import io.radar.sdk.model.RadarVerificationLevel
 import io.radar.sdk.model.RadarVerifiedLocationToken
 import java.time.Duration
 import org.json.JSONArray
@@ -218,6 +219,108 @@ class RadarVerifiedLocationTokenFormatTest {
 
         assertEquals(RadarResponseFormat.JWS, token.format)
         assertEquals(original.token, token.token)
+    }
+
+    @Test
+    fun allFormatsParseVerificationLevels() {
+        listOf("jws", "jwe", "id").forEach { format ->
+            val ipStepUp = parse(
+                response(format)
+                    .put("verificationLevel", "ip")
+                    .put("requiredVerificationLevel", "precise")
+            )
+            assertEquals(format, RadarVerificationLevel.IP, ipStepUp.verificationLevel)
+            assertEquals(format, RadarVerificationLevel.PRECISE, ipStepUp.requiredVerificationLevel)
+
+            val precise = parse(response(format).put("verificationLevel", "precise"))
+            assertEquals(format, RadarVerificationLevel.PRECISE, precise.verificationLevel)
+            assertNull(format, precise.requiredVerificationLevel)
+        }
+    }
+
+    @Test
+    fun missingVerificationLevelUsesTheRequestedLevel() {
+        listOf("jws", "jwe", "id").forEach { format ->
+            val token = parse(response(format))
+
+            assertEquals(format, RadarVerificationLevel.PRECISE, token.verificationLevel)
+            assertNull(format, token.requiredVerificationLevel)
+
+            val ipToken = requireNotNull(
+                RadarVerifiedLocationToken.fromJson(response(format), RadarVerificationLevel.IP)
+            )
+            assertEquals(format, RadarVerificationLevel.IP, ipToken.verificationLevel)
+            assertNull(format, ipToken.requiredVerificationLevel)
+        }
+    }
+
+    @Test
+    fun responseLevelWinsOverTheRequestedLevel() {
+        listOf("jws", "jwe", "id").forEach { format ->
+            val token = requireNotNull(
+                RadarVerifiedLocationToken.fromJson(
+                    response(format).put("verificationLevel", "precise"),
+                    RadarVerificationLevel.IP
+                )
+            )
+
+            assertEquals(format, RadarVerificationLevel.PRECISE, token.verificationLevel)
+        }
+    }
+
+    @Test
+    fun invalidVerificationLevelsUseTheFallbackAndDoNotRejectTheToken() {
+        listOf("jws", "jwe", "id").forEach { format ->
+            listOf("unknown", "", "IP", JSONObject.NULL, 42, true, JSONObject()).forEach { value ->
+                val obj = response(format)
+                    .put("verificationLevel", value)
+                    .put("requiredVerificationLevel", value)
+                val token = RadarVerifiedLocationToken.fromJson(obj)
+                val ipToken = RadarVerifiedLocationToken.fromJson(obj, RadarVerificationLevel.IP)
+
+                assertNotNull("$format: $value", token)
+                assertEquals("$format: $value", RadarVerificationLevel.PRECISE, token!!.verificationLevel)
+                assertNull("$format: $value", token.requiredVerificationLevel)
+                assertEquals("$format: $value", RadarVerificationLevel.IP, ipToken!!.verificationLevel)
+            }
+        }
+    }
+
+    @Test
+    fun javaConstructorsDefaultToPrecise() {
+        val original = parse(response())
+        val constructor = RadarVerifiedLocationToken::class.java.constructors.single {
+            it.parameterTypes.size == 9
+        }
+
+        val token = constructor.newInstance(
+            original.user,
+            original.events,
+            original.token,
+            original.expiresAt,
+            original.expiresIn,
+            original.passed,
+            original.failureReasons,
+            original._id,
+            original.fullJson
+        ) as RadarVerifiedLocationToken
+
+        assertEquals(RadarVerificationLevel.PRECISE, token.verificationLevel)
+        assertNull(token.requiredVerificationLevel)
+    }
+
+    @Test
+    fun reducedResponsesKeepVerificationLevels() {
+        listOf("jwe", "id").forEach { format ->
+            val json = parse(
+                response(format)
+                    .put("verificationLevel", "ip")
+                    .put("requiredVerificationLevel", "precise")
+            ).toJson()
+
+            assertEquals(format, "ip", json.getString("verificationLevel"))
+            assertEquals(format, "precise", json.getString("requiredVerificationLevel"))
+        }
     }
 
     @Test
