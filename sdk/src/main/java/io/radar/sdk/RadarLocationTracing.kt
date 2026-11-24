@@ -37,10 +37,23 @@ private fun locationAgeMs(location: Location): Long? {
     return ageMs.coerceAtLeast(0)
 }
 
-/** Traces getting a location as a `radar.location.get` child of [parent]. A small age means a cached location. */
+/**
+ * Root attributes that change how long getting a location takes. `radar.location.get` copies them, so its latency can
+ * be grouped by them without joining it to its root.
+ */
+private val LOCATION_GET_ROOT_CONTEXT = setOf(
+    "radar.location.desired_accuracy",
+    "radar.app.foreground",
+    "radar.location.accuracy_authorization"
+)
+
+/**
+ * Traces getting a location as a `radar.location.get` child of [parent], with [parent]'s desired accuracy and app
+ * state. A small age means a cached location.
+ */
 internal fun Radar.RadarLocationCallback.traced(parent: RadarTraceSpan, context: Context): Radar.RadarLocationCallback {
     val callback = this
-    val span = parent.child("radar.location.get")
+    val span = parent.child("radar.location.get").copyAttributes(parent, LOCATION_GET_ROOT_CONTEXT)
     return object : Radar.RadarLocationCallback {
         override fun onComplete(status: RadarStatus, location: Location?, stopped: Boolean) {
             if (location != null) {

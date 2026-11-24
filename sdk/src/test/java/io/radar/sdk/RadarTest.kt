@@ -1725,11 +1725,18 @@ class RadarTest {
         assertEquals(root.getString("spanId"), locationSpan.getString("parentSpanId"))
         assertEquals(65.0, traceAttribute(locationSpan, "radar.location.accuracy_m")!!.getDouble("doubleValue"), 0.0)
         assertNotNull(traceAttribute(locationSpan, "radar.location.age_ms")?.get("intValue"))
-        assertNull(traceAttribute(locationSpan, "radar.location.desired_accuracy"))
+        assertEquals("radar.track_once", traceAttribute(locationSpan, "radar.operation")?.get("stringValue"))
+        // Copied from the root, so location latency can be grouped by them.
+        listOf("radar.location.desired_accuracy", "radar.app.foreground", "radar.location.accuracy_authorization").forEach { key ->
+            val rootValue = traceAttribute(root, key)
+            assertNotNull(key, rootValue)
+            assertEquals(key, rootValue.toString(), traceAttribute(locationSpan, key).toString())
+        }
 
         val trackSpan = spans.getValue("POST /v1/track")
         assertEquals(root.getString("spanId"), trackSpan.getString("parentSpanId"))
         assertEquals(RadarSpanKind.CLIENT.otlpValue, trackSpan.getInt("kind"))
+        assertEquals("radar.track_once", traceAttribute(trackSpan, "radar.operation")?.get("stringValue"))
         assertEquals(
             "00-${root.getString("traceId")}-${trackSpan.getString("spanId")}-01",
             apiHelperMock.capturedHeadersByPath["v1/track"]?.get("traceparent")

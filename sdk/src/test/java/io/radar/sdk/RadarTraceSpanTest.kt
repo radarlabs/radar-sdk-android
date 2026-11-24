@@ -88,6 +88,23 @@ class RadarTraceSpanTest {
     }
 
     @Test
+    fun descendantsRecordRootNameAsOperation() {
+        val root = RadarTraceSpan.start("radar.track_once")
+        val child = root.child("radar.location.get")
+        val grandchild = child.child("POST /v1/track", RadarSpanKind.CLIENT)
+        grandchild.end(Radar.RadarStatus.SUCCESS)
+        child.end(Radar.RadarStatus.SUCCESS)
+        root.end(Radar.RadarStatus.SUCCESS)
+
+        val spans = uploadedSpans()
+        // The root's name is its span name, so the root doesn't repeat it.
+        assertNull(attribute(spans.getValue("radar.track_once"), "radar.operation"))
+        listOf("radar.location.get", "POST /v1/track").forEach { name ->
+            assertEquals(name, "radar.track_once", attribute(spans.getValue(name), "radar.operation")?.getString("stringValue"))
+        }
+    }
+
+    @Test
     fun idsAreLowercaseHexAndUnique() {
         val spans = (1..50).map { RadarTraceSpan.start("root") }
 
