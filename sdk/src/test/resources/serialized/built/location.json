@@ -1,0 +1,12 @@
+{
+  "accuracy": 5.0,
+  "altitude": 10.5,
+  "course": 90.0,
+  "courseAccuracy": 10.0,
+  "latitude": 40.7039,
+  "longitude": -73.9867,
+  "mocked": true,
+  "speed": 1.5,
+  "speedAccuracy": 0.5,
+  "verticalAccuracy": 3.0
+}
