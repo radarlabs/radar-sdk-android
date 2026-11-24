@@ -63,6 +63,9 @@ internal class RadarTraceManager(
 
         // Spans waiting for the disk worker. Past this, storing a new span would only evict an older one.
         private const val MAX_PENDING_WRITES = MAX_FILES
+
+        // The X-Radar-X-Platform-SDK-Type value for apps that call the SDK directly instead of through a wrapper.
+        private const val NATIVE_X_PLATFORM_TYPE = "Native"
     }
 
     private val disk = Executors.newSingleThreadExecutor()
@@ -137,9 +140,14 @@ internal class RadarTraceManager(
      */
     fun record(span: RadarCompletedSpan, project: String?, sessionId: String) {
         try {
+            // The framework is stored with each span, so spans recorded before a wrapper upgrade keep the version
+            // that recorded them. Matches the X-Radar-X-Platform-SDK-* headers.
+            val xPlatform = RadarSettings.isXPlatform(context)
             val record = JSONObject()
                 .put("project", project)
                 .put("sdkVersion", RadarUtils.SDK_VERSION)
+                .put("xPlatformType", if (xPlatform) RadarSettings.getXPlatformSDKType(context) else NATIVE_X_PLATFORM_TYPE)
+                .putOpt("xPlatformVersion", if (xPlatform) RadarSettings.getXPlatformSDKVersion(context) else null)
                 .put("span", span.toJson())
             // If spans are created faster than they can be written, drop new ones instead of queuing without limit.
             if (pendingWrites.incrementAndGet() > MAX_PENDING_WRITES) {
@@ -312,8 +320,15 @@ internal class RadarTraceManager(
     /** Span files selected for one upload, and the OTLP request body built from them. */
     private class Batch(val files: List<File>, val payload: JSONObject)
 
+    /**
+     * The SDK that recorded a span, which [otlpPayload] puts on the batch's resource. [xPlatformType] and
+     * [xPlatformVersion] are null for spans stored before they were recorded; the server fills them in from the
+     * upload's headers.
+     */
+    private data class SpanSource(val sdkVersion: String, val xPlatformType: String?, val xPlatformVersion: String?)
+
     /** A span record read from disk. */
-    private class StoredSpan(val file: File, val project: String, val sdkVersion: String, val span: JSONObject)
+    private class StoredSpan(val file: File, val project: String, val source: SpanSource, val span: JSONObject)
 
     /** Builds the next OTLP batch from the oldest spans for a project, or null if there are none. */
     private fun select(project: String): Batch? {
@@ -330,7 +345,7 @@ internal class RadarTraceManager(
         if (selected.isEmpty()) return null
         val files = selected.map { it.file }
         inFlightFiles = files.toSet()
-        return Batch(files, otlpPayload(selected.map { it.span }, selected.first().sdkVersion))
+        return Batch(files, otlpPayload(selected.map { it.span }, selected.first().source))
     }
 
     /** Reads a span record, deleting it if it is corrupt. */
@@ -345,16 +360,21 @@ internal class RadarTraceManager(
             file.delete()
             return null
         }
-        return StoredSpan(file, record.optString("project"), record.optString("sdkVersion"), span)
+        val source = SpanSource(
+            sdkVersion = record.optString("sdkVersion"),
+            xPlatformType = record.optString("xPlatformType").ifEmpty { null },
+            xPlatformVersion = record.optString("xPlatformVersion").ifEmpty { null }
+        )
+        return StoredSpan(file, record.optString("project"), source, span)
     }
 
     /**
-     * A batch holds spans from one SDK version, up to the span and byte limits. The first span always fits.
-     * One version per batch because [otlpPayload] stamps the version on the batch's single resource.
+     * A batch holds spans from one [SpanSource], up to the span and byte limits. The first span always fits.
+     * One source per batch because [otlpPayload] stamps it on the batch's single resource.
      */
     private fun fitsInBatch(selected: List<StoredSpan>, bytes: Long, next: StoredSpan): Boolean {
         if (selected.isEmpty()) return true
-        return next.sdkVersion == selected.first().sdkVersion &&
+        return next.source == selected.first().source &&
             selected.size < MAX_BATCH_SPANS &&
             bytes + next.file.length() <= MAX_BATCH_BYTES
     }
@@ -365,19 +385,19 @@ internal class RadarTraceManager(
      * Note: device attributes are read at upload time, so spans recorded before an OS update are labeled with the
      * new `os.version`.
      */
-    private fun otlpPayload(spans: List<JSONObject>, sdkVersion: String): JSONObject {
-        val resource = JSONObject().put(
-            "attributes",
-            JSONArray()
-                .put(attribute("service.name", "radar-client"))
-                .put(attribute("os.type", "android"))
-                .put(attribute("radar.sdk.version", sdkVersion))
-                .put(attribute("os.version", Build.VERSION.RELEASE))
-                .put(attribute("device.manufacturer", Build.MANUFACTURER))
-                .put(attribute("device.model.identifier", Build.MODEL))
-        )
+    private fun otlpPayload(spans: List<JSONObject>, source: SpanSource): JSONObject {
+        val attributes = JSONArray()
+            .put(attribute("service.name", "radar-client"))
+            .put(attribute("os.type", "android"))
+            .put(attribute("radar.sdk.version", source.sdkVersion))
+            .put(attribute("os.version", Build.VERSION.RELEASE))
+            .put(attribute("device.manufacturer", Build.MANUFACTURER))
+            .put(attribute("device.model.identifier", Build.MODEL))
+        source.xPlatformType?.let { attributes.put(attribute("radar.sdk.xplatform.type", it)) }
+        source.xPlatformVersion?.let { attributes.put(attribute("radar.sdk.xplatform.version", it)) }
+        val resource = JSONObject().put("attributes", attributes)
         val scopeSpans = JSONObject()
-            .put("scope", JSONObject().put("name", "io.radar.sdk").put("version", sdkVersion))
+            .put("scope", JSONObject().put("name", "io.radar.sdk").put("version", source.sdkVersion))
             .put("spans", JSONArray(spans))
         val resourceSpans = JSONObject()
             .put("resource", resource)
@@ -389,7 +409,8 @@ internal class RadarTraceManager(
      * Atomically writes one span record, then enforces the storage limits.
      *
      * Each span is one file, `<directory>/<millis>-<sequence>-<uuid>.json`, containing
-     * `{"project": <key fingerprint>, "sdkVersion": <version>, "span": <OTLP span>}`. A span waiting for its
+     * `{"project": <key fingerprint>, "sdkVersion": <version>, "xPlatformType": <framework>,
+     * "xPlatformVersion": <wrapper version, if any>, "span": <OTLP span>}`. A span waiting for its
      * session's sampling decision is written as `<millis>-<sequence>-<uuid>.<sessionId>.pending` instead and
      * renamed when the decision arrives. Names sort oldest first: millis, then a sequence for spans written in
      * the same millisecond. The file is written to a `.tmp` file, synced, and renamed, so readers never see a

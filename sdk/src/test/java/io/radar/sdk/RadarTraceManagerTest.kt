@@ -20,6 +20,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeFalse
 import org.junit.Before
@@ -219,6 +220,44 @@ class RadarTraceManagerTest {
 
         assertEquals(listOf("3.37.0", "3.38.0"), apiHelper.capturedTracePayloads.map { resourceAttribute(it, "radar.sdk.version") })
         assertEquals(listOf(2, 1), batchSizes())
+    }
+
+    @Test
+    fun nativeAppSpansReportNativeFrameworkWithoutVersion() {
+        recordSpans(1)
+
+        manager.flushAndWaitForTesting()
+
+        val payload = apiHelper.capturedTracePayloads.single()
+        assertEquals("Native", resourceAttribute(payload, "radar.sdk.xplatform.type"))
+        assertNull(resourceAttribute(payload, "radar.sdk.xplatform.version"))
+    }
+
+    @Test
+    fun spansReportTheWrapperThatRecordedThem() {
+        setXPlatform("ReactNative", "3.20.0")
+        recordSpans(2)
+        setXPlatform("ReactNative", "3.21.0")
+        recordSpans(1, firstId = 3)
+
+        manager.flushAndWaitForTesting()
+
+        val payloads = apiHelper.capturedTracePayloads
+        assertEquals(listOf("ReactNative", "ReactNative"), payloads.map { resourceAttribute(it, "radar.sdk.xplatform.type") })
+        assertEquals(listOf("3.20.0", "3.21.0"), payloads.map { resourceAttribute(it, "radar.sdk.xplatform.version") })
+        assertEquals(listOf(2, 1), batchSizes())
+    }
+
+    @Test
+    fun spansStoredWithoutFrameworkOmitItAndUploadSeparately() {
+        writeRecordFile("1000-000000001-a.json", spanId(1))
+        recordSpans(1, firstId = 2)
+
+        manager.flushAndWaitForTesting()
+
+        val payloads = apiHelper.capturedTracePayloads
+        assertEquals(listOf(null, "Native"), payloads.map { resourceAttribute(it, "radar.sdk.xplatform.type") })
+        assertEquals(listOf(1, 1), batchSizes())
     }
 
     @Test
@@ -681,6 +720,14 @@ class RadarTraceManagerTest {
     private fun recordSpans(count: Int, firstId: Int = 1, attributes: Map<String, Any> = emptyMap()) {
         (firstId until firstId + count).forEach { manager.record(span("span", spanId(it), attributes = attributes), manager.currentProjectFingerprint(), manager.currentSessionId()) }
         manager.awaitDiskForTesting()
+    }
+
+    /** Stores a wrapper's framework and version the way the cross-platform SDKs do. */
+    private fun setXPlatform(type: String, version: String) {
+        context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE).edit()
+            .putString("x_platform_sdk_type", type)
+            .putString("x_platform_sdk_version", version)
+            .commit()
     }
 
     private fun writeRecordFile(name: String, spanId: String, sdkVersion: String = RadarUtils.SDK_VERSION) {
