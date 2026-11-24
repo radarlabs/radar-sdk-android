@@ -124,6 +124,7 @@ class RadarTrackVerifiedIpTest {
         val token = requireNotNull(result.token)
         assertEquals(RadarVerificationLevel.IP, token.verificationLevel)
         assertEquals(token, verifiedReceiver.tokens.single())
+        assertNotNull(result.user)
         assertEquals(1, receiver.eventBatches)
         assertEquals(0, receiver.locations)
         assertNull(result.nearbyGeofences)
@@ -169,7 +170,33 @@ class RadarTrackVerifiedIpTest {
     }
 
     @Test
-    fun ipJwsResponseWithoutUserOrEventsFails() {
+    fun ipJwsResponseWithoutUserLocationStillDeliversTokenAndEvents() {
+        val before = stateSnapshot()
+        val obj = response().apply { getJSONObject("user").remove("location") }
+
+        val result = track(obj, location = null)
+
+        assertEquals(RadarStatus.SUCCESS, result.status)
+        assertNull(result.user)
+        assertEquals(1, receiver.eventBatches)
+        assertEquals(RadarVerificationLevel.IP, verifiedReceiver.tokens.single().verificationLevel)
+        assertEquals(before, stateSnapshot())
+    }
+
+    @Test
+    fun ipRequestIsNotBatched() {
+        RadarSettings.setTrackingOptions(context, Radar.getTrackingOptions().copy(batchSize = 10))
+        val handle = RecordingFraudHandle()
+
+        val result = track(response(), location = null, handle = handle)
+
+        assertEquals(RadarStatus.SUCCESS, result.status)
+        assertEquals("FOREGROUND_LOCATION", JSONObject(handle.bodies.single()).getString("source"))
+        assertNotNull(result.token)
+    }
+
+    @Test
+    fun ipJwsResponseWithoutEventsFails() {
         val before = stateSnapshot()
         val result = track(response().apply { remove("events") }, location = null)
 
@@ -200,6 +227,10 @@ class RadarTrackVerifiedIpTest {
             "user",
             JSONObject()
                 .put("_id", "response-user")
+                .put(
+                    "location",
+                    JSONObject().put("type", "Point").put("coordinates", JSONArray().put(-73.0).put(40.0))
+                )
                 .put("geofences", JSONArray().put(JSONObject().put("_id", "response-geofence")))
                 .put("altitudeAdjustments", JSONArray().put(JSONObject().put("offset", 999)))
         )
@@ -270,7 +301,6 @@ class RadarTrackVerifiedIpTest {
             Radar.apiClient.trackIp(
                 stopped = false,
                 foreground = true,
-                source = Radar.RadarLocationSource.FOREGROUND_LOCATION,
                 reason = "ip reason",
                 preparedFraudPayload = payload,
                 callback = callback

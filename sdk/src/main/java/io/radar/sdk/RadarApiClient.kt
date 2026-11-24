@@ -380,12 +380,12 @@ internal class RadarApiClient(
 
     /**
      * Sends an IP-only verified track request. The request has no device location, and the
-     * response does not change location, geofence, or trip state.
+     * response does not change location, geofence, or trip state. The source is always
+     * FOREGROUND_LOCATION, so the request is sent now and never batched.
      */
     internal fun trackIp(
         stopped: Boolean,
         foreground: Boolean,
-        source: RadarLocationSource,
         encrypted: Boolean? = false,
         expectedCountryCode: String? = null,
         expectedStateCode: String? = null,
@@ -402,7 +402,8 @@ internal class RadarApiClient(
             location = null,
             stopped = stopped,
             foreground = foreground,
-            source = source,
+            // A foreground source also keeps the request out of the track batch.
+            source = RadarLocationSource.FOREGROUND_LOCATION,
             replayed = false,
             beacons = null,
             verified = true,
@@ -777,14 +778,15 @@ internal class RadarApiClient(
         callback: RadarTrackApiCallback?
     ) {
         val events = res.optJSONArray("events")?.let { eventsArr -> RadarEvent.fromJson(eventsArr) }
-        val user = res.optJSONObject("user")?.let { userObj -> RadarUser.fromJson(userObj) }
         val token = RadarVerifiedLocationToken.fromJson(res, RadarVerificationLevel.IP)
-        if (events == null || user == null || token == null) {
+        if (events == null || token == null) {
             Radar.sendError(RadarStatus.ERROR_SERVER)
             callback?.onComplete(RadarStatus.ERROR_SERVER)
             return
         }
 
+        // The user is optional: it is null when the response user has no location.
+        val user = token.user
         if (events.isNotEmpty()) {
             Radar.sendEvents(events, user)
         }
