@@ -693,16 +693,11 @@ internal class RadarApiClient(
 
                     val config = RadarConfig.fromJson(res)
 
-                    when {
-                        verified -> handleVerifiedResponse(res, config, location, requestedLevel, callback)
-
-                        location != null -> handleTrackResponse(res, config, location, callback)
-
-                        // Not reachable: only trackIp omits the location, and it always sets verified.
-                        else -> {
-                            Radar.sendError(RadarStatus.ERROR_SERVER)
-                            callback?.onComplete(RadarStatus.ERROR_SERVER)
-                        }
+                    // An IP-only request (no location) is always verified.
+                    if (verified || location == null) {
+                        handleVerifiedResponse(res, config, location, requestedLevel, callback)
+                    } else {
+                        handleTrackResponse(res, config, location, callback)
                     }
                 }
             }
