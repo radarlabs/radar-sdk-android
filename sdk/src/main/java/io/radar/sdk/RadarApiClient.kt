@@ -471,43 +471,7 @@ internal class RadarApiClient(
             }
 
             if (location != null) {
-                params.putOpt("latitude", location.latitude)
-                params.putOpt("longitude", location.longitude)
-                var accuracy = location.accuracy
-                if (!location.hasAccuracy() || location.accuracy.isNaN() || accuracy <= 0) {
-                    accuracy = 1F
-                }
-                params.putOpt("accuracy", accuracy)
-                if (location.hasSpeed() && !location.speed.isNaN()) {
-                    params.putOpt("speed", location.speed)
-                }
-                if (location.hasBearing() && !location.bearing.isNaN()) {
-                    params.putOpt("course", location.bearing)
-                }
-
-                if (location.hasAltitude() && !location.altitude.isNaN()) {
-                    params.putOpt("altitude", location.getAltitude())
-                    locationMetadata.putOpt("altitude", location.getAltitude())
-                }
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    if (location.hasVerticalAccuracy() && !location.verticalAccuracyMeters.isNaN()) {
-                        params.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
-                    }
-                    if (location.hasSpeedAccuracy() && !location.speedAccuracyMetersPerSecond.isNaN()) {
-                        params.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
-                    }
-                    if (location.hasBearingAccuracy() && !location.bearingAccuracyDegrees.isNaN()) {
-                        params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
-                    }
-                }
-                val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
-                val locationMs = location.elapsedRealtimeNanos / 1000000
-                val updatedAtMsDiff = (nowMs - locationMs)
-                if (RadarSettings.getSdkConfiguration(context).useForegroundLocationUpdatedAtMsDiff || !foreground) {
-                    params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
-                }
-                params.putOpt("locationMs", locationMs)
+                putLocationParameters(params, locationMetadata, location, foreground)
             } else {
                 params.putOpt("verificationLevel", RadarVerificationLevel.IP.value)
             }
@@ -569,12 +533,7 @@ internal class RadarApiClient(
 
             if (Radar.getTrackingOptions().useMotion) {
                 locationMetadata.putOpt("motionActivityData", RadarState.getLastMotionActivity(context))
-                if (location != null && location.hasSpeed() && !location.speed.isNaN()) {
-                    locationMetadata.putOpt("speed", location.speed)
-                }
-                if (location != null && location.hasBearing() && !location.bearing.isNaN()) {
-                    locationMetadata.putOpt("bearing", location.bearing)
-                }
+                location?.let { putMotionMetadata(locationMetadata, it) }
 
                 params.putOpt("locationMetadata", locationMetadata)
             }
@@ -2190,6 +2149,61 @@ internal class RadarApiClient(
                 }
             }
         )
+    }
+
+    /** Writes the device location fields of a track request. An IP-only request has none of them. */
+    private fun putLocationParameters(
+        params: JSONObject,
+        locationMetadata: JSONObject,
+        location: Location,
+        foreground: Boolean
+    ) {
+        params.putOpt("latitude", location.latitude)
+        params.putOpt("longitude", location.longitude)
+        var accuracy = location.accuracy
+        if (!location.hasAccuracy() || location.accuracy.isNaN() || accuracy <= 0) {
+            accuracy = 1F
+        }
+        params.putOpt("accuracy", accuracy)
+        if (location.hasSpeed() && !location.speed.isNaN()) {
+            params.putOpt("speed", location.speed)
+        }
+        if (location.hasBearing() && !location.bearing.isNaN()) {
+            params.putOpt("course", location.bearing)
+        }
+
+        if (location.hasAltitude() && !location.altitude.isNaN()) {
+            params.putOpt("altitude", location.getAltitude())
+            locationMetadata.putOpt("altitude", location.getAltitude())
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (location.hasVerticalAccuracy() && !location.verticalAccuracyMeters.isNaN()) {
+                params.putOpt("verticalAccuracy", location.verticalAccuracyMeters)
+            }
+            if (location.hasSpeedAccuracy() && !location.speedAccuracyMetersPerSecond.isNaN()) {
+                params.putOpt("speedAccuracy", location.speedAccuracyMetersPerSecond)
+            }
+            if (location.hasBearingAccuracy() && !location.bearingAccuracyDegrees.isNaN()) {
+                params.putOpt("courseAccuracy", location.bearingAccuracyDegrees)
+            }
+        }
+        val nowMs = SystemClock.elapsedRealtimeNanos() / 1000000
+        val locationMs = location.elapsedRealtimeNanos / 1000000
+        val updatedAtMsDiff = (nowMs - locationMs)
+        if (RadarSettings.getSdkConfiguration(context).useForegroundLocationUpdatedAtMsDiff || !foreground) {
+            params.putOpt("updatedAtMsDiff", updatedAtMsDiff)
+        }
+        params.putOpt("locationMs", locationMs)
+    }
+
+    private fun putMotionMetadata(locationMetadata: JSONObject, location: Location) {
+        if (location.hasSpeed() && !location.speed.isNaN()) {
+            locationMetadata.putOpt("speed", location.speed)
+        }
+        if (location.hasBearing() && !location.bearing.isNaN()) {
+            locationMetadata.putOpt("bearing", location.bearing)
+        }
     }
 
     private fun putUserParameters(params: JSONObject, sessionId: String = RadarSettings.getSessionId(context)) {
