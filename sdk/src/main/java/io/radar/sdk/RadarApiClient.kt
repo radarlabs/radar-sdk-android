@@ -647,8 +647,7 @@ internal class RadarApiClient(
                     if (status != RadarStatus.SUCCESS || res == null) {
                         if (location == null) {
                             // An IP-only check has no location to replay or to generate offline events from.
-                            Radar.sendError(status)
-                            callback?.onComplete(status)
+                            failTrack(callback, status)
                             return
                         }
 
@@ -677,9 +676,7 @@ internal class RadarApiClient(
                             }
                         }
 
-                        Radar.sendError(status)
-
-                        callback?.onComplete(status)
+                        failTrack(callback, status)
 
                         return
                     }
@@ -715,8 +712,7 @@ internal class RadarApiClient(
     ) {
         when (RadarResponseFormat.fromJson(res.opt("format"))) {
             null -> {
-                Radar.sendError(RadarStatus.ERROR_SERVER)
-                callback?.onComplete(RadarStatus.ERROR_SERVER)
+                failTrack(callback, RadarStatus.ERROR_SERVER)
             }
 
             RadarResponseFormat.JWS -> {
@@ -732,11 +728,11 @@ internal class RadarApiClient(
             RadarResponseFormat.ID -> {
                 if (Radar.isTrackingVerified()) {
                     Radar.stopTrackingVerified()
-                    Radar.sendError(
+                    failTrack(
+                        callback,
                         RadarStatus.ERROR_BAD_REQUEST,
                         "ID responses do not support startTrackingVerified()."
                     )
-                    callback?.onComplete(RadarStatus.ERROR_BAD_REQUEST)
                 } else {
                     handleTokenOnlyResponse(res, config, requestedLevel, callback)
                 }
@@ -753,8 +749,7 @@ internal class RadarApiClient(
     ) {
         val token = RadarVerifiedLocationToken.fromJson(res, requestedLevel)
         if (token == null) {
-            Radar.sendError(RadarStatus.ERROR_SERVER)
-            callback?.onComplete(RadarStatus.ERROR_SERVER)
+            failTrack(callback, RadarStatus.ERROR_SERVER)
             return
         }
 
@@ -780,8 +775,7 @@ internal class RadarApiClient(
         val events = res.optJSONArray("events")?.let { eventsArr -> RadarEvent.fromJson(eventsArr) }
         val token = RadarVerifiedLocationToken.fromJson(res, RadarVerificationLevel.IP)
         if (events == null || token == null) {
-            Radar.sendError(RadarStatus.ERROR_SERVER)
-            callback?.onComplete(RadarStatus.ERROR_SERVER)
+            failTrack(callback, RadarStatus.ERROR_SERVER)
             return
         }
 
@@ -884,9 +878,7 @@ internal class RadarApiClient(
             return
         }
 
-        Radar.sendError(RadarStatus.ERROR_SERVER)
-
-        callback?.onComplete(RadarStatus.ERROR_SERVER)
+        failTrack(callback, RadarStatus.ERROR_SERVER)
     }
 
     internal fun revealRisk(
@@ -2146,6 +2138,12 @@ internal class RadarApiClient(
                 }
             }
         )
+    }
+
+    /** Sends [status] to the receiver as an error, then completes the track [callback] with it. */
+    private fun failTrack(callback: RadarTrackApiCallback?, status: RadarStatus, message: String? = null) {
+        Radar.sendError(status, message)
+        callback?.onComplete(status)
     }
 
     /** Writes the device location fields of a track request. An IP-only request has none of them. */
