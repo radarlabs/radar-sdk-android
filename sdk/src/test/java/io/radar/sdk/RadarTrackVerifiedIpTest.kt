@@ -76,6 +76,16 @@ class RadarTrackVerifiedIpTest {
             context,
             JSONArray().put(JSONObject().put("offset", 123))
         )
+        RadarState.setLastFailedStoppedLocation(
+            context,
+            Location("test").apply {
+                latitude = 1.0
+                longitude = 2.0
+            }
+        )
+        RadarSettings.updateLastTrackedTime(context)
+        // An IP check that wrote the last tracked time would now write a later value.
+        Thread.sleep(5)
     }
 
     @After
@@ -184,6 +194,17 @@ class RadarTrackVerifiedIpTest {
     }
 
     @Test
+    fun ipJwsResponseWithNullUserLocationLeavesTheUserOut() {
+        val obj = response().apply { getJSONObject("user").put("location", JSONObject.NULL) }
+
+        val result = track(obj, location = null)
+
+        assertEquals(RadarStatus.SUCCESS, result.status)
+        assertNull(result.user)
+        assertNull(verifiedReceiver.tokens.single().user)
+    }
+
+    @Test
     fun ipRequestIsNotBatched() {
         RadarSettings.setTrackingOptions(context, Radar.getTrackingOptions().copy(batchSize = 10))
         val handle = RecordingFraudHandle()
@@ -260,7 +281,9 @@ class RadarTrackVerifiedIpTest {
         RadarState.getPlaceId(context),
         RadarState.getRegionIds(context)?.toSet(),
         RadarState.getBeaconIds(context)?.toSet(),
-        RadarState.getAltitudeAdjustments(context)?.toString()
+        RadarState.getAltitudeAdjustments(context)?.toString(),
+        RadarState.getLastFailedStoppedLocation(context)?.let { "${it.latitude},${it.longitude}" },
+        RadarSettings.getLastTrackedTime(context)
     )
 
     private fun track(

@@ -99,7 +99,7 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
             // Preserve the existing JWS parser and its defaults. An IP check's user can have no
             // location; leave it out instead of parsing it at 0,0.
             val userObj = obj.optJSONObject(FIELD_USER)
-            val ipUserWithoutLocation = requestedLevel == RadarVerificationLevel.IP && userObj?.has(FIELD_LOCATION) != true
+            val ipUserWithoutLocation = requestedLevel == RadarVerificationLevel.IP && userObj?.optJSONObject(FIELD_LOCATION) == null
             val user = if (ipUserWithoutLocation) null else RadarUser.fromJson(userObj)
             val events = RadarEvent.fromJson(obj.optJSONArray(FIELD_EVENTS))
             val token: String? = obj.optString(FIELD_TOKEN)

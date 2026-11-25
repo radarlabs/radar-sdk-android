@@ -681,13 +681,19 @@ internal class RadarApiClient(
                         return
                     }
 
-                    RadarState.setLastFailedStoppedLocation(context, null)
+                    // An IP-only check sends no location, so it does not reset the stop to replay or
+                    // the time of the last location sync.
+                    if (location != null) {
+                        RadarState.setLastFailedStoppedLocation(context, null)
+                    }
                     Radar.flushLogs()
                     sessionId?.let {
                         applyTraceSamplingDecision(it, res.optJSONObject("meta")?.optJSONObject("featureSettings"), after = parentSpan)
                     }
                     Radar.flushTraces(after = parentSpan)
-                    RadarSettings.updateLastTrackedTime(context)
+                    if (location != null) {
+                        RadarSettings.updateLastTrackedTime(context)
+                    }
 
                     val config = RadarConfig.fromJson(res)
 
