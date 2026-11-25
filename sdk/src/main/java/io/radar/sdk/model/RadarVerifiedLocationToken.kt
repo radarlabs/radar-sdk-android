@@ -62,6 +62,7 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
     internal companion object {
         private const val FIELD_FORMAT = "format"
         private const val FIELD_USER = "user"
+        private const val FIELD_LOCATION = "location"
         private const val FIELD_EVENTS = "events"
         private const val FIELD_TOKEN = "token"
         private const val FIELD_EXPIRES_AT = "expiresAt"
@@ -95,8 +96,11 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
         }
 
         private fun fromJwsJson(obj: JSONObject, requestedLevel: RadarVerificationLevel): RadarVerifiedLocationToken? {
-            // Preserve the existing JWS parser and its defaults.
-            val user = RadarUser.fromJson(obj.optJSONObject(FIELD_USER))
+            // Preserve the existing JWS parser and its defaults. An IP check's user can have no
+            // location; leave it out instead of parsing it at 0,0.
+            val userObj = obj.optJSONObject(FIELD_USER)
+            val ipUserWithoutLocation = requestedLevel == RadarVerificationLevel.IP && userObj?.optJSONObject(FIELD_LOCATION) == null
+            val user = if (ipUserWithoutLocation) null else RadarUser.fromJson(userObj)
             val events = RadarEvent.fromJson(obj.optJSONArray(FIELD_EVENTS))
             val token: String? = obj.optString(FIELD_TOKEN)
             val expiresAt = RadarUtils.isoStringToDate(obj.optString(FIELD_EXPIRES_AT))
@@ -107,7 +111,7 @@ class RadarVerifiedLocationToken @JvmOverloads constructor(
             } ?: emptyArray()
             val id = obj.optString(FIELD_ID)
 
-            if (user == null || events == null || token == null || expiresAt == null) {
+            if ((user == null && !ipUserWithoutLocation) || events == null || token == null || expiresAt == null) {
                 return null
             }
 
